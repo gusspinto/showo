@@ -2602,34 +2602,37 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
               <div style={{ flex: 1, overflowY: 'scroll', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', padding: '12px 14px' }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Ordem da página</div>
                 <p style={{ margin: '0 0 12px', fontSize: 11, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
-                  Arrasta para reordenar. Podes intercalar blocos com secções livremente. Toca em <Eye size={10} style={{ verticalAlign: 'middle' }} /> para ocultar uma secção.
+                  Usa as setas para reordenar. Podes intercalar blocos com secções livremente. Toca em <Eye size={10} style={{ verticalAlign: 'middle' }} /> para ocultar uma secção.
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {layoutDisplay.map((item, idx) => {
+                    const arrowBtnStyle = (disabled) => ({
+                      background: 'none', border: 'none', padding: '2px 3px', cursor: disabled ? 'default' : 'pointer',
+                      color: disabled ? 'var(--color-border)' : 'var(--color-text-secondary)', fontSize: 10, lineHeight: 1,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 4,
+                      opacity: disabled ? 0.3 : 1, flexShrink: 0,
+                    })
                     if (item.kind === 'block') {
                       const block = blocksById[item.id]
                       if (!block) return null
                       const bt = BLOCK_TYPES.find(b => b.type === block.type) || BLOCK_TYPES[0]
                       const BIcon = bt.Icon
-                      const isOver = dragOverSectionIdx === idx
                       const previewText = block.content || block.cardTitle || block.label || bt.label
                       return (
-                        <div key={block.id} draggable
-                          onDragStart={() => { sectionDragRef.current = idx }}
-                          onDragOver={e => { e.preventDefault(); if (dragOverSectionIdx !== idx) setDragOverSectionIdx(idx) }}
-                          onDragLeave={() => setDragOverSectionIdx(null)}
-                          onDrop={e => { e.preventDefault(); setDragOverSectionIdx(null); moveLayoutItem(sectionDragRef.current, idx) }}
-                          onDragEnd={() => setDragOverSectionIdx(null)}
+                        <div key={block.id}
                           style={{
                             display: 'flex', alignItems: 'center', gap: 8,
-                            background: isOver ? 'var(--color-primary-subtle)' : 'var(--color-bg-alt)',
-                            border: `1px solid ${isOver ? 'var(--color-primary)' : 'var(--color-primary-subtle)'}`,
+                            background: 'var(--color-bg-alt)',
+                            border: '1px solid var(--color-primary-subtle)',
                             borderLeft: '3px solid var(--color-primary)',
                             borderRadius: 10, padding: '8px 10px',
-                            userSelect: 'none', cursor: 'grab',
+                            userSelect: 'none',
                           }}
                         >
-                          <div style={{ cursor: 'grab', color: 'var(--color-text-tertiary)', display: 'flex', flexShrink: 0 }}><GripVertical size={14} /></div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 1, flexShrink: 0 }}>
+                            <button style={arrowBtnStyle(idx === 0)} disabled={idx === 0} onClick={() => moveLayoutItem(idx, idx - 1)}>▲</button>
+                            <button style={arrowBtnStyle(idx === layoutDisplay.length - 1)} disabled={idx === layoutDisplay.length - 1} onClick={() => moveLayoutItem(idx, idx + 1)}>▼</button>
+                          </div>
                           <div style={{ width: 26, height: 26, borderRadius: 7, flexShrink: 0, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)' }}>
                             <BIcon size={12} strokeWidth={2} />
                           </div>
@@ -2651,24 +2654,20 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                     const media = previewStyle.sectionMedia?.[key]
                     return (
                       <div key={key}>
-                      <div draggable
-                        onDragStart={() => { sectionDragRef.current = idx }}
-                        onDragOver={e => { e.preventDefault(); if (dragOverSectionIdx !== idx) setDragOverSectionIdx(idx) }}
-                        onDragLeave={() => setDragOverSectionIdx(null)}
-                        onDrop={e => { e.preventDefault(); setDragOverSectionIdx(null); moveLayoutItem(sectionDragRef.current, idx) }}
-                        onDragEnd={() => setDragOverSectionIdx(null)}
+                      <div
                         style={{
                           display: 'flex', alignItems: 'center', gap: 8,
-                          background: isOver ? 'var(--color-primary-subtle)' : isHidden ? 'var(--color-bg)' : hasContent ? 'var(--color-bg-alt)' : 'var(--color-bg)',
-                          border: `1px solid ${isOver ? 'var(--color-primary)' : isHidden ? 'var(--color-border)' : hasContent ? 'var(--color-primary-subtle)' : 'var(--color-border)'}`,
+                          background: isHidden ? 'var(--color-bg)' : hasContent ? 'var(--color-bg-alt)' : 'var(--color-bg)',
+                          border: `1px solid ${isHidden ? 'var(--color-border)' : hasContent ? 'var(--color-primary-subtle)' : 'var(--color-border)'}`,
                           borderLeft: `3px solid ${hasContent && !isHidden ? 'var(--color-primary)' : 'var(--color-border)'}`,
                           borderRadius: 10, padding: '8px 10px',
                           opacity: hasContent ? 1 : 0.45, transition: 'all 0.12s',
-                          userSelect: 'none', cursor: hasContent ? 'grab' : 'default',
+                          userSelect: 'none',
                         }}
                       >
-                        <div style={{ cursor: 'grab', color: 'var(--color-text-tertiary)', display: 'flex', flexShrink: 0 }}>
-                          <GripVertical size={14} />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 1, flexShrink: 0 }}>
+                          <button style={arrowBtnStyle(idx === 0)} disabled={idx === 0} onClick={() => moveLayoutItem(idx, idx - 1)}>▲</button>
+                          <button style={arrowBtnStyle(idx === layoutDisplay.length - 1)} disabled={idx === layoutDisplay.length - 1} onClick={() => moveLayoutItem(idx, idx + 1)}>▼</button>
                         </div>
                         <div style={{ width: 26, height: 26, borderRadius: 7, flexShrink: 0, background: isHidden ? 'var(--color-bg-alt)' : 'var(--color-primary-subtle)', border: `1px solid ${isHidden ? 'var(--color-border)' : 'var(--color-primary-subtle)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: isHidden ? 'var(--color-text-tertiary)' : 'var(--color-primary)' }}>
                           <SIcon size={12} strokeWidth={2} />
