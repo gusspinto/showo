@@ -7765,6 +7765,8 @@ export default function ProjectPage() {
         )}
 
 
+        {project.github_url && <GitHubCard githubUrl={project.github_url} />}
+
         </div>{/* end overview tab section */}
 
         <div style={{ textAlign: 'center', padding: '40px 0 0', color: colors.subtle, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexWrap: 'wrap' }}>
