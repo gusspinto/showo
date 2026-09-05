@@ -1300,29 +1300,46 @@ const SECTION_COLORS = {
   learnings: 'EC4899', closing: '1a1a1a',
 }
 
+function extractBullets(text, max = 5) {
+  if (!text) return []
+  const lines = text.split(/\n+/).map(l => l.replace(/^[-•*]\s*/, '').trim()).filter(Boolean)
+  if (lines.length <= max) return lines
+  const short = lines.filter(l => l.length < 120)
+  return short.slice(0, max)
+}
+
 function exportPptx(project, aiData) {
   const pptx = new PptxGenJS()
   pptx.title = project.name || 'Apresentação'
   pptx.author = 'Showo'
   pptx.layout = 'LAYOUT_WIDE'
 
-  // Cover slide
+  const FONT = 'Calibri'
+  const BG = 'FFFFFF'
+  const TEXT_DARK = '1E1E1E'
+  const TEXT_MID = '555555'
+  const TEXT_LIGHT = '999999'
+  const CARD_BG = 'F3F4F6'
+
+  // Cover slide — dark, minimal
   const cover = pptx.addSlide()
-  cover.background = { color: '0f0f0f' }
+  cover.background = { color: '111111' }
+  const coverAccent = SECTION_COLORS[buildSections(project)[0]?.id] || 'D97706'
+  cover.addShape(pptx.ShapeType.rect, { x: 0.8, y: 3.0, w: 1.2, h: 0.06, fill: { color: coverAccent } })
   cover.addText(project.name || 'Projeto', {
-    x: 0.8, y: 1.5, w: '85%',
-    fontSize: 44, fontFace: 'Calibri', bold: true, color: 'FFFFFF',
+    x: 0.8, y: 1.2, w: 11,
+    fontSize: 44, fontFace: FONT, bold: true, color: 'FFFFFF',
   })
-  if (project.area) {
-    cover.addText(project.area, {
-      x: 0.8, y: 3.2, w: '85%',
-      fontSize: 18, fontFace: 'Calibri', color: 'AAAAAA',
-    })
-  }
   if (project.ai_tagline) {
     cover.addText(project.ai_tagline, {
-      x: 0.8, y: 4.0, w: '85%',
-      fontSize: 16, fontFace: 'Calibri', italic: true, color: '888888',
+      x: 0.8, y: 3.4, w: 11,
+      fontSize: 18, fontFace: FONT, italic: true, color: '888888', lineSpacingMultiple: 1.3,
+    })
+  }
+  if (project.area) {
+    cover.addText(project.area.toUpperCase(), {
+      x: 0.8, y: 6.4, w: 11,
+      fontSize: 12, fontFace: FONT, color: '666666', charSpacing: 3,
     })
   }
   const coverNote = aiData?.slide_notes?.cover
@@ -1333,68 +1350,83 @@ function exportPptx(project, aiData) {
 
   for (const section of contentSections) {
     const slide = pptx.addSlide()
+    slide.background = { color: BG }
     const keyPoints = aiData?.key_points?.[section.id] ?? []
     const speakerNote = aiData?.slide_notes?.[section.id] ?? ''
     const accent = SECTION_COLORS[section.id] || '1a1a1a'
+    const content = getSlideContent(project, section.id)
+    const bullets = extractBullets(content, 5)
 
-    // Accent bar
-    slide.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: 0.15, h: '100%', fill: { color: accent } })
+    // Top accent line
+    slide.addShape(pptx.ShapeType.rect, { x: 0.8, y: 0.55, w: 0.8, h: 0.05, fill: { color: accent } })
 
     // Section title
     slide.addText(section.label, {
-      x: 0.6, y: 0.4, w: '88%',
-      fontSize: 28, fontFace: 'Calibri', bold: true, color: accent,
+      x: 0.8, y: 0.7, w: 8,
+      fontSize: 28, fontFace: FONT, bold: true, color: TEXT_DARK,
     })
 
-    // Content as structured text
-    const content = getSlideContent(project, section.id)
-    if (content) {
-      const paragraphs = content.split(/\n+/).filter(Boolean)
-      const truncated = paragraphs.slice(0, 4).join('\n\n')
-      slide.addText(truncated, {
-        x: 0.6, y: 1.3, w: '55%', h: 5.0,
-        fontSize: 14, fontFace: 'Calibri', color: '333333',
-        valign: 'top', wrap: true, lineSpacingMultiple: 1.3,
+    // Main content bullets (left side, or full width if no key points)
+    const hasRight = keyPoints.length > 0
+    const contentW = hasRight ? 6.5 : 11
+    if (bullets.length) {
+      const bulletRows = bullets.map(b => ({
+        text: b, options: { bullet: { code: '2022', color: accent }, indentLevel: 0 },
+      }))
+      slide.addText(bulletRows, {
+        x: 0.8, y: 1.5, w: contentW, h: 5.2,
+        fontSize: 16, fontFace: FONT, color: TEXT_MID,
+        valign: 'top', lineSpacingMultiple: 1.5, paraSpaceAfter: 8,
+      })
+    } else if (content) {
+      slide.addText(content.slice(0, 400), {
+        x: 0.8, y: 1.5, w: contentW, h: 5.2,
+        fontSize: 15, fontFace: FONT, color: TEXT_MID,
+        valign: 'top', wrap: true, lineSpacingMultiple: 1.4,
       })
     }
 
-    // Key points on the right as visual cards
-    if (keyPoints.length) {
-      const startX = content ? 8.2 : 0.6
-      const pointW = content ? 4.5 : '88%'
-      slide.addText('Pontos-chave', {
-        x: startX, y: 1.3, w: pointW,
-        fontSize: 11, fontFace: 'Calibri', bold: true, color: '999999',
+    // Key points on right as cards
+    if (hasRight) {
+      slide.addText('PONTOS-CHAVE', {
+        x: 8.0, y: 1.5, w: 4.5,
+        fontSize: 10, fontFace: FONT, bold: true, color: TEXT_LIGHT, charSpacing: 2,
       })
-      keyPoints.forEach((p, i) => {
+      keyPoints.slice(0, 4).forEach((p, i) => {
+        const cardY = 2.0 + i * 1.1
         slide.addShape(pptx.ShapeType.roundRect, {
-          x: startX, y: 1.7 + i * 0.85, w: pointW, h: 0.7,
-          fill: { color: 'F5F5F5' }, rectRadius: 0.08,
+          x: 8.0, y: cardY, w: 4.5, h: 0.9,
+          fill: { color: CARD_BG }, rectRadius: 0.06,
+        })
+        slide.addShape(pptx.ShapeType.rect, {
+          x: 8.0, y: cardY, w: 0.08, h: 0.9, fill: { color: accent },
         })
         slide.addText(p, {
-          x: startX + 0.15, y: 1.7 + i * 0.85, w: parseFloat(pointW) - 0.3 || 4.2, h: 0.7,
-          fontSize: 12, fontFace: 'Calibri', color: '333333', valign: 'middle',
+          x: 8.3, y: cardY, w: 4.0, h: 0.9,
+          fontSize: 12, fontFace: FONT, color: TEXT_DARK, valign: 'middle', lineSpacingMultiple: 1.2,
         })
       })
     }
 
-    // Speaker notes = key points + AI note (the real value for Presenter View)
+    // Speaker notes
     const noteParts = []
     if (keyPoints.length) noteParts.push('PONTOS-CHAVE:\n' + keyPoints.map((p, i) => `${i + 1}. ${p}`).join('\n'))
     if (speakerNote) noteParts.push('\nO QUE DIZER:\n' + speakerNote)
+    if (content) noteParts.push('\nCONTEÚDO COMPLETO:\n' + content)
     if (noteParts.length) slide.addNotes(noteParts.join('\n'))
   }
 
   // Closing slide
   const closing = pptx.addSlide()
-  closing.background = { color: '0f0f0f' }
+  closing.background = { color: '111111' }
   closing.addText('Obrigado', {
-    x: 0.8, y: 2.0, w: '85%',
-    fontSize: 40, fontFace: 'Calibri', bold: true, color: 'FFFFFF', align: 'center',
+    x: 0, y: 2.2, w: '100%',
+    fontSize: 44, fontFace: FONT, bold: true, color: 'FFFFFF', align: 'center',
   })
+  closing.addShape(pptx.ShapeType.rect, { x: 5.9, y: 3.6, w: 1.2, h: 0.05, fill: { color: coverAccent } })
   closing.addText(project.name || '', {
-    x: 0.8, y: 3.5, w: '85%',
-    fontSize: 18, fontFace: 'Calibri', color: '888888', align: 'center',
+    x: 0, y: 3.9, w: '100%',
+    fontSize: 16, fontFace: FONT, color: '666666', align: 'center',
   })
   const closingNote = aiData?.slide_notes?.closing
   if (closingNote) closing.addNotes(closingNote)
