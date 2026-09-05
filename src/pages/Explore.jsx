@@ -644,14 +644,14 @@ export default function Explore() {
                             )}
                           </div>
                           {p.skills && p.skills.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-2">
-                              {p.skills.slice(0, 4).map(skill => (
+                            <div className="explore-person-skills">
+                              {p.skills.slice(0, 2).map(skill => (
                                 <span key={skill} className={`explore-skill-tag${filterSkill === skill ? ' active' : ''}`}>
                                   {skill}
                                 </span>
                               ))}
-                              {p.skills.length > 4 && (
-                                <span className="text-2xs text-subtle">+{p.skills.length - 4}</span>
+                              {p.skills.length > 2 && (
+                                <span className="text-2xs text-subtle flex-shrink-0">+{p.skills.length - 2}</span>
                               )}
                             </div>
                           )}
