@@ -5922,7 +5922,7 @@ export default function ProjectPage() {
 
       {defenseMode && (
         <DefenseMode
-          project={project}
+          project={{ ...project, journal: projectJournalEntries, teacher_feedback: teacherFeedback }}
           isOwner={isOwner}
           collaboratorSections={collaboratorSections}
           onClose={() => setDefenseMode(false)}

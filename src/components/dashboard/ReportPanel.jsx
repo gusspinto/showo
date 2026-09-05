@@ -48,17 +48,18 @@ export default function ReportPanel({ project, entries, coverage, onClose, onDra
       // anterior nem metadados da página.
       const { report_draft, report_updated_at, ...projectFields } = project
 
+      const { data: fbRows } = await supabase.from('teacher_feedback').select('field_key, comment, status').eq('project_id', project.id)
+
       const { data, error: fnErr } = await supabase.functions.invoke('generate-report', {
         body: {
           project: projectFields,
           type: project.is_pap || project.project_type === 'pap' ? 'pap' : 'estagio',
-          // O diário é o que distingue este rascunho de um gerado só a partir do
-          // formulário: traz o percurso real, com datas, decisões e obstáculos.
           journal: entries.map(e => ({
             kind: e.kind,
             date: e.created_at,
             content: e.content,
           })),
+          teacher_feedback: fbRows || [],
         },
       })
       if (fnErr || data?.error) { setError(data?.error || 'Não foi possível gerar agora.'); return }

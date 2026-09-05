@@ -43,6 +43,25 @@ Deno.serve(async (req) => {
       .map(s => `${s}: ${clip(project[s], 500)}`)
       .join('\n')
 
+    let diaryBlock = ''
+    const entries = Array.isArray(project?.journal) ? project.journal.filter((e: { content?: string }) => e.content) : []
+    if (entries.length) {
+      const sorted = entries.sort((a: { created_at: string }, b: { created_at: string }) => a.created_at < b.created_at ? -1 : 1).slice(-20)
+      const lines = sorted.map((e: { kind: string; content: string; created_at: string }) =>
+        `[${e.created_at?.slice(0, 10)}] (${e.kind}) ${(e.content || '').slice(0, 300)}`
+      ).join('\n')
+      diaryBlock = `\n\nDIÁRIO DO PROJETO:\n${lines}`
+    }
+
+    let feedbackBlock = ''
+    const fb = Array.isArray(project?.teacher_feedback) ? project.teacher_feedback.filter((f: { comment?: string }) => f.comment) : []
+    if (fb.length) {
+      const lines = fb.map((f: { field_key: string; comment: string; status: string }) =>
+        `- [${f.field_key}] ${f.status === 'resolved' ? '(resolvido)' : '(pendente)'}: ${(f.comment || '').slice(0, 300)}`
+      ).join('\n')
+      feedbackBlock = `\n\nFEEDBACK DO PROFESSOR:\n${lines}`
+    }
+
     const msg = await client.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 1500,
@@ -52,7 +71,7 @@ Deno.serve(async (req) => {
 
 PROJETO DO ESTUDANTE:
 Nome: ${clip(project?.name, 200)}
-${projectContext}
+${projectContext}${diaryBlock}${feedbackBlock}
 
 TRANSCRICAO DA APRESENTACAO (${Math.round((durationSeconds || 0) / 60)} minutos):
 ${clip(transcript, 8000)}

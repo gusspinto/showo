@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { project, type, journal } = await req.json()
+    const { project, type, journal, teacher_feedback } = await req.json()
     const client = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') ?? '' })
 
     const isPap = type === 'pap'
@@ -97,7 +97,14 @@ O diário é ouro: tem decisões reais, dificuldades reais e a voz do aluno. Usa
 - Referir dificuldades reais e como foram superadas.
 - Dar vida ao relatório com detalhe que o formulário não captura.
 Se o diário estiver vazio, baseia-te apenas nos campos do formulário e escreve de forma mais geral.
-
+${(() => {
+  const fb = Array.isArray(teacher_feedback) ? teacher_feedback.filter((f: { comment?: string }) => f.comment) : []
+  if (!fb.length) return ''
+  const lines = fb.map((f: { field_key: string; comment: string; status: string }) =>
+    `- [${f.field_key}] ${f.status === 'resolved' ? '(resolvido)' : '(pendente)'}: ${(f.comment || '').slice(0, 300)}`
+  ).join('\n')
+  return `\nFEEDBACK DO PROFESSOR:\n━━━━━━━━━━━━━━━━\n${lines}\n━━━━━━━━━━━━━━━━\nO professor deu feedback sobre o projeto. Usa os pontos resolvidos como evidência de iteração e melhoria no relatório.\n`
+})()}
 Cada secção deve ter 2-4 parágrafos fluidos. Qualidade > quantidade — é melhor um parágrafo sólido do que dois com enchimento.
 
 Devolve APENAS este JSON (sem markdown, sem \`\`\`, só o objeto):
