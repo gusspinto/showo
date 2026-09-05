@@ -819,21 +819,21 @@ const SECTION_LABELS = { cover: 'Introdução', problem: 'Problema', solution: '
 
 // ── Block types for preview workspace ─────────────────────────────────────────
 const BLOCK_TYPES = [
-  { type: 'note',    label: 'Nota',          Icon: AlignLeft,  desc: 'Mensagem tua para visitantes', cat: 'Texto' },
-  { type: 'heading', label: 'Título',        Icon: Type,       desc: 'Título de secção personalizado', cat: 'Texto' },
-  { type: 'callout', label: 'Destaque',      Icon: Sparkles,   desc: 'Caixa em destaque colorida', cat: 'Texto' },
-  { type: 'quote',   label: 'Citação',       Icon: Quote,      desc: 'Frase ou citação marcante', cat: 'Texto' },
-  { type: 'metric',  label: 'Métrica',       Icon: Star,       desc: 'Número ou dado relevante', cat: 'Dados' },
-  { type: 'stats',   label: 'Estatísticas',  Icon: BarChart2,  desc: '3 métricas lado a lado', cat: 'Dados' },
-  { type: 'card',    label: 'Card',          Icon: ClipboardList, desc: 'Cartão livre. Título + dados', cat: 'Dados' },
-  { type: 'image',   label: 'Imagem',        Icon: Image,      desc: 'Imagem por URL ou upload', cat: 'Media' },
-  { type: 'gallery', label: 'Galeria',       Icon: Layout,     desc: 'Até 3 imagens lado a lado', cat: 'Media' },
-  { type: 'video',   label: 'Vídeo',         Icon: Video,      desc: 'YouTube ou Vimeo embed', cat: 'Media' },
-  { type: 'github',  label: 'GitHub',        Icon: FileText,   desc: 'Card do repositório com linguagens', cat: 'Links' },
-  { type: 'linkedin', label: 'LinkedIn',    Icon: User,       desc: 'Card do perfil LinkedIn', cat: 'Links' },
-  { type: 'cta',     label: 'Botão CTA',     Icon: ArrowRight, desc: 'Chamada à ação destacada', cat: 'Links' },
-  { type: 'link',    label: 'Link',          Icon: Link,       desc: 'GitHub, demo, portfolio...', cat: 'Links' },
-  { type: 'divider', label: 'Divisor',       Icon: Minus,      desc: 'Linha separadora', cat: 'Layout' },
+  { type: 'note',    label: 'Nota',          Icon: AlignLeft,  desc: 'Mensagem tua para visitantes' },
+  { type: 'heading', label: 'Título',        Icon: Type,       desc: 'Título de secção personalizado' },
+  { type: 'callout', label: 'Destaque',      Icon: Sparkles,   desc: 'Caixa em destaque colorida' },
+  { type: 'quote',   label: 'Citação',       Icon: Quote,      desc: 'Frase ou citação marcante' },
+  { type: 'metric',  label: 'Métrica',       Icon: Star,       desc: 'Número ou dado relevante' },
+  { type: 'stats',   label: 'Estatísticas',  Icon: BarChart2,  desc: '3 métricas lado a lado' },
+  { type: 'image',   label: 'Imagem',        Icon: Image,      desc: 'Imagem por URL ou upload' },
+  { type: 'gallery', label: 'Galeria',       Icon: Layout,     desc: 'Até 3 imagens lado a lado' },
+  { type: 'video',   label: 'Vídeo',         Icon: Video,      desc: 'YouTube ou Vimeo embed' },
+  { type: 'card',    label: 'Card',          Icon: ClipboardList, desc: 'Cartão livre. Título + dados (ex: idade, função...)' },
+  { type: 'cta',     label: 'Botão CTA',     Icon: ArrowRight, desc: 'Chamada à ação destacada' },
+  { type: 'link',    label: 'Link',          Icon: Link,       desc: 'GitHub, demo, portfolio...' },
+  { type: 'github',  label: 'GitHub',        Icon: FileText,   desc: 'Card do repositório com linguagens' },
+  { type: 'linkedin', label: 'LinkedIn',    Icon: User,       desc: 'Card do perfil LinkedIn' },
+  { type: 'divider', label: 'Divisor',       Icon: Minus,      desc: 'Linha separadora de secções' },
 ]
 
 function newBlock(type, posIndex = 0) {
@@ -2314,17 +2314,11 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                 </button>
               </div>
 
-              {/* Block type picker — grouped by category */}
+              {/* Block type picker — compact 3-col chip grid */}
               <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--color-border)' }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Adicionar bloco</div>
-                {['Texto', 'Dados', 'Media', 'Links', 'Layout'].map(cat => {
-                  const items = BLOCK_TYPES.filter(b => b.cat === cat)
-                  if (!items.length) return null
-                  return (
-                    <div key={cat} style={{ marginBottom: 8 }}>
-                      <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{cat}</div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                  {items.map(bt => {
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 5 }}>
+                  {BLOCK_TYPES.map(bt => {
                     const BtIcon = bt.Icon
                     return (
                       <button key={bt.type} title={bt.desc} onClick={() => {
@@ -2340,22 +2334,21 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                         }}
                         style={{
                           background: 'var(--color-bg)', border: '1px solid var(--color-border)',
-                          borderRadius: 6, padding: '4px 8px',
-                          cursor: 'pointer', fontFamily: 'inherit',
-                          transition: 'all 0.13s', display: 'flex', alignItems: 'center', gap: 5,
+                          borderRadius: 8, padding: '7px 6px',
+                          cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center',
+                          transition: 'all 0.13s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
                         }}
                         onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-primary-subtle)'; e.currentTarget.style.borderColor = 'var(--color-primary-subtle)' }}
                         onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-bg)'; e.currentTarget.style.borderColor = 'var(--color-border)' }}
                       >
-                        <BtIcon size={11} color="var(--color-primary)" />
+                        <div style={{ width: 26, height: 26, borderRadius: 7, background: 'var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <BtIcon size={12} color="var(--color-primary)" />
+                        </div>
                         <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--color-text)', lineHeight: 1.2 }}>{bt.label}</span>
                       </button>
                     )
                   })}
-                      </div>
-                    </div>
-                  )
-                })}
+                </div>
               </div>
 
               {/* Existing blocks list */}
@@ -2608,8 +2601,13 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
               <div style={{ flex: 1, overflowY: 'scroll', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', padding: '12px 14px' }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Ordem da página</div>
                 <p style={{ margin: '0 0 12px', fontSize: 11, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
-                  Usa as setas para reordenar. Podes intercalar blocos com secções livremente. Toca em <Eye size={10} style={{ verticalAlign: 'middle' }} /> para ocultar uma secção.
+                  Usa as setas para reordenar. Toca em <Eye size={10} style={{ verticalAlign: 'middle' }} /> para ocultar.
                 </p>
+                {previewStyle.canvasMode && previewBlocks.length > 0 && (
+                  <div style={{ margin: '0 0 10px', padding: '6px 10px', borderRadius: 8, background: 'rgba(255,180,0,0.1)', border: '1px solid rgba(255,180,0,0.25)', fontSize: 11, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+                    ⚠️ <strong>Posição livre</strong> está ativa — os blocos flutuam livremente e não seguem esta ordem. Desativa na tab Blocos para os intercalar com secções.
+                  </div>
+                )}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {layoutDisplay.map((item, idx) => {
                     const arrowBtnStyle = (disabled) => ({
