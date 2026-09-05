@@ -2079,32 +2079,6 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                     </button>
                   </div>
                 </div>
-                <div style={{ marginBottom: 12 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-                    <div>
-                      <div style={wsControlLabel}>Blocos em canvas livre</div>
-                      <div style={{ fontSize: 10, color: 'var(--color-text-tertiary)', marginTop: 1 }}>
-                        Arrasta os blocos para qualquer posição, em vez de em lista
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => setPreviewStyle(ps => ({ ...ps, canvasMode: !ps.canvasMode }))}
-                      style={{
-                        width: 42, height: 24, borderRadius: 99, flexShrink: 0,
-                        background: previewStyle.canvasMode ? 'var(--color-primary)' : 'var(--color-border)',
-                        border: 'none', cursor: 'pointer',
-                        transition: 'background 0.2s', position: 'relative',
-                      }}
-                    >
-                      <div style={{
-                        width: 18, height: 18, borderRadius: '50%', background: '#fff',
-                        position: 'absolute', top: 3,
-                        left: previewStyle.canvasMode ? 21 : 3,
-                        transition: 'left 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
-                      }} />
-                    </button>
-                  </div>
-                </div>
                 <div>
                   <div style={wsControlLabel}>Tagline personalizada</div>
                   <input
@@ -2318,6 +2292,28 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
           {/* ── TAB: BLOCOS ── */}
           {previewTab === 'blocos' && (
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+              {/* Canvas mode toggle */}
+              <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: previewStyle.canvasMode ? 'var(--color-primary)' : 'var(--color-text-secondary)' }}>
+                  📐 Posição livre
+                </div>
+                <button
+                  onClick={() => setPreviewStyle(ps => ({ ...ps, canvasMode: !ps.canvasMode }))}
+                  style={{
+                    width: 38, height: 22, borderRadius: 99, flexShrink: 0,
+                    background: previewStyle.canvasMode ? 'var(--color-primary)' : 'var(--color-border)',
+                    border: 'none', cursor: 'pointer', transition: 'background 0.2s', position: 'relative',
+                  }}
+                >
+                  <div style={{
+                    width: 16, height: 16, borderRadius: '50%', background: '#fff',
+                    position: 'absolute', top: 3,
+                    left: previewStyle.canvasMode ? 19 : 3,
+                    transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                  }} />
+                </button>
+              </div>
+
               {/* Block type picker — compact 3-col chip grid */}
               <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--color-border)' }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Adicionar bloco</div>
