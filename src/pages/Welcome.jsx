@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
@@ -30,21 +30,64 @@ export default function Welcome() {
   const { user, profile, loading, refreshProfile } = useAuth()
   const navigate = useNavigate()
   const { theme } = useTheme()
-  const [step, setStep] = useState('role') // 'role' | 'pending' | 'code'
-  const [selectedRole, setSelectedRole] = useState(null)
+  // Consome o "intent" do Google (papel/categoria escolhidos no /register)
+  // uma única vez, logo no primeiro render, para o passo inicial já ser o
+  // certo e não haver um flash do seletor antes do useEffect correr.
+  const googleIntent = useRef(undefined)
+  if (googleIntent.current === undefined) {
+    try {
+      const raw = localStorage.getItem('showo_google_intent')
+      googleIntent.current = raw ? JSON.parse(raw) : null
+      if (raw) localStorage.removeItem('showo_google_intent')
+    } catch { googleIntent.current = null }
+  }
+  const intentStep = (() => {
+    const i = googleIntent.current
+    if (!i) return 'role'
+    if (i.role === 'professor') return 'code'
+    if (i.role === 'aluno_institucional') return 'classcode'
+    if (i.role === 'recrutador' || i.role === 'empresa') return 'pending'
+    return 'role' // individual → o useEffect encaminha para a dashboard
+  })()
+
+  const [step, setStep] = useState(intentStep) // 'role' | 'pending' | 'code' | 'classcode'
+  const [selectedRole, setSelectedRole] = useState(
+    ['professor', 'aluno_institucional', 'recrutador', 'empresa'].includes(googleIntent.current?.role)
+      ? googleIntent.current.role : null
+  )
   const [emailSent, setEmailSent] = useState(false)
-  const [school, setSchool] = useState('')
-  const [inviteCode, setInviteCode] = useState('')
+  const [school, setSchool] = useState(googleIntent.current?.school || '')
+  const [inviteCode, setInviteCode] = useState(googleIntent.current?.inviteCode || '')
+  const [classCode, setClassCode] = useState(googleIntent.current?.classCode || '')
   const [codeError, setCodeError] = useState('')
   const [redeeming, setRedeeming] = useState(false)
+  const intentHandled = useRef(false)
 
   const flagKey = user ? `showo_needs_role_${user.id}` : null
-  const needsRoleSelect = flagKey && localStorage.getItem(flagKey) === '1'
+  // O trigger no servidor cria já a linha de perfil, por isso o flag
+  // showo_needs_role nem sempre chega a ser posto. Um intent do Google
+  // (escola/professor) é razão suficiente para mostrar o passo seguinte —
+  // exceto se a conta já estiver configurada como escola/professor.
+  const hasFollowUpIntent = ['professor', 'aluno_institucional', 'recrutador', 'empresa'].includes(googleIntent.current?.role)
+  const alreadyConfigured = profile?.role === 'professor' || profile?.account_type === 'school'
+  const needsRoleSelect =
+    (flagKey && localStorage.getItem(flagKey) === '1') ||
+    (hasFollowUpIntent && !alreadyConfigured)
 
   useEffect(() => {
     if (loading) return
     if (!user) { navigate('/login', { replace: true }); return }
     if (!needsRoleSelect) { navigate('/dashboard', { replace: true }); return }
+
+    // Seguimento do clique no botão do Google no /register (ver googleIntent
+    // acima): o passo inicial já foi decidido no render. Aqui só falta o caso
+    // "individual", que não tem ecrã nenhum — entra direto na dashboard.
+    if (intentHandled.current) return
+    intentHandled.current = true
+    const r = googleIntent.current?.role
+    if (r && r !== 'professor' && r !== 'aluno_institucional' && r !== 'recrutador' && r !== 'empresa') {
+      finishAsAluno()
+    }
   }, [user, loading, needsRoleSelect, navigate])
 
   function finishAsAluno() {
@@ -71,6 +114,29 @@ export default function Welcome() {
     if (error) {
       setRedeeming(false)
       setCodeError('Código inválido ou já utilizado. Verifica o código e tenta novamente.')
+      return
+    }
+    await refreshProfile()
+    if (flagKey) localStorage.removeItem(flagKey)
+    navigate('/dashboard', { replace: true })
+  }
+
+  async function handleJoinClass(e) {
+    e.preventDefault()
+    if (!classCode.trim()) return
+    setRedeeming(true)
+    setCodeError('')
+    const { data: regResult } = await supabase.rpc('register_institutional_student', {
+      p_class_code: classCode.trim(),
+      p_email: user.email,
+    })
+    if (!regResult?.ok) {
+      setRedeeming(false)
+      if (regResult?.reason === 'domain_mismatch') {
+        setCodeError(`O teu email tem de ser @${regResult.expected_domain} para entrar na turma de ${regResult.school_name}.`)
+      } else {
+        setCodeError('Código de turma inválido. Verifica com o teu professor.')
+      }
       return
     }
     await refreshProfile()
@@ -195,6 +261,58 @@ export default function Welcome() {
               }}
             >
               Ainda não tenho um código
+            </button>
+          </>
+        ) : step === 'classcode' ? (
+          <>
+            <h1 style={{ color: C.text, fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 12px', letterSpacing: '-0.5px' }}>
+              Entrar na turma
+            </h1>
+            <p style={{ color: C.muted, fontSize: 14, margin: '0 0 24px', lineHeight: 1.65 }}>
+              Introduz o código de turma que o teu professor te deu para ligares a conta à tua escola.
+            </p>
+
+            <form onSubmit={handleJoinClass}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 6 }}>Código da turma</label>
+              <input
+                value={classCode}
+                onChange={e => setClassCode(e.target.value.toUpperCase())}
+                placeholder="Ex: ABC123"
+                required
+                style={{
+                  width: '100%', boxSizing: 'border-box', border: `1px solid ${C.border}`, borderRadius: 8,
+                  padding: '11px 12px', fontSize: 14, fontFamily: 'inherit', color: C.text, background: 'var(--color-bg)',
+                  marginBottom: codeError ? 8 : 20,
+                }}
+              />
+              {codeError && (
+                <p style={{ color: 'var(--color-error, #d33)', fontSize: 13, margin: '0 0 16px' }}>{codeError}</p>
+              )}
+
+              <button
+                type="submit"
+                disabled={redeeming}
+                style={{
+                  width: '100%', background: 'var(--color-text)', color: 'var(--color-bg)',
+                  border: 'none', borderRadius: 10, padding: '13px 0', fontSize: 15, fontWeight: 700,
+                  cursor: redeeming ? 'default' : 'pointer', fontFamily: 'inherit', opacity: redeeming ? 0.6 : 1,
+                  marginBottom: 12,
+                }}
+              >
+                {redeeming ? 'A confirmar...' : 'Entrar na turma'}
+              </button>
+            </form>
+
+            <button
+              onClick={finishAsAluno}
+              style={{
+                width: '100%', background: 'none',
+                border: `1px solid ${C.border}`, borderRadius: 10,
+                padding: '12px 0', fontSize: 14, color: C.muted,
+                cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              Não tenho código — continuar como conta individual
             </button>
           </>
         ) : !emailSent ? (

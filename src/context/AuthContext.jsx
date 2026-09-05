@@ -103,10 +103,16 @@ export function AuthProvider({ children }) {
       if (meta.pending_phone) {
         await supabase.from('profiles').update({ phone: meta.pending_phone }).eq('id', uid)
         await supabase.auth.updateUser({ data: { pending_phone: null } })
+        // `data` foi lido antes desta escrita — reflete-a já em memória, senão
+        // o perfil no estado fica com o valor antigo até um refresh futuro.
+        if (data) data = { ...data, phone: meta.pending_phone }
       }
       if (meta.pending_occupation) {
         await supabase.from('profiles').update({ occupation: meta.pending_occupation }).eq('id', uid)
         await supabase.auth.updateUser({ data: { pending_occupation: null } })
+        // Sem isto o OccupationGate volta a pedir a ocupação que o registo já
+        // gravou — o `data` local ainda a tinha a null.
+        if (data) data = { ...data, occupation: meta.pending_occupation }
       }
     }
 

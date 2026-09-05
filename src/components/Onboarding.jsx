@@ -70,7 +70,7 @@ function FillBeat({ active }) {
   return (
     <div className="onb-fill-wrap">
       <div className="onb-fill-header" style={{ animation: 'onb-fade 0.4s both' }}>
-        <span className="onb-ai-badge">✦ IA</span>
+        <span className="onb-ai-badge">IA</span>
         <div className="onb-fill-line" style={{ animation: 'onb-grow 0.6s 0.15s cubic-bezier(0.22,1,0.36,1) both' }} />
       </div>
       {FIELDS.map((f, i) => (

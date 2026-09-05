@@ -5940,74 +5940,59 @@ export default function ProjectPage() {
             position: 'fixed', inset: 0, zIndex: 700,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             padding: '20px 16px',
-            background: 'rgba(7,13,26,0.96)',
-            backdropFilter: 'blur(16px)',
-            animation: 'fadeIn 0.4s ease',
+            background: 'color-mix(in srgb, var(--color-bg) 72%, transparent)',
+            backdropFilter: 'blur(8px)',
+            animation: 'fadeIn 0.3s ease',
           }}
           onClick={() => { setShowLaunchOverlay(false); window.history.replaceState({}, ''); if (tourPendingRef.current) { tourPendingRef.current = false; setShowTour(true) } }}
         >
           <div
             onClick={e => e.stopPropagation()}
             style={{
-              width: '100%', maxWidth: 440,
-              background: '#152030',
-              border: '1px solid var(--color-primary-subtle)',
+              width: '100%', maxWidth: 420,
+              background: 'var(--color-bg)',
+              border: '1px solid var(--color-border)',
               borderRadius: 14,
-              padding: '44px 36px 36px',
-              textAlign: 'center',
-              position: 'relative',
-              boxShadow: 'none',
-              overflow: 'hidden',
+              padding: '36px 32px 28px',
             }}
           >
-            {/* Glow blobs */}
-            <div style={{ position: 'absolute', top: -80, left: '50%', transform: 'translateX(-50%)', width: 360, height: 360, borderRadius: '50%', background: 'radial-gradient(ellipse, var(--color-primary-subtle) 0%, transparent 70%)', pointerEvents: 'none' }} />
-            <div style={{ position: 'absolute', bottom: -60, right: -40, width: 240, height: 240, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(79,70,229,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
-
-            {/* Star icon */}
-            <div style={{ fontSize: 40, marginBottom: 20, lineHeight: 1, position: 'relative', color: 'var(--color-primary)', letterSpacing: 4 }}>✦</div>
-
-            <h2 style={{
-              margin: '0 0 10px',
-              fontFamily: 'var(--font-heading)',
-              fontSize: 28,
-              fontWeight: 400,
-              color: '#e8f2ff',
-              letterSpacing: '-0.02em',
-              lineHeight: 1.2,
-              position: 'relative',
-            }}>
-              O teu projeto está no ar.
-            </h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+              <Check size={22} color="var(--color-success)" />
+              <h2 style={{
+                margin: 0,
+                fontFamily: 'var(--font-heading)',
+                fontSize: 22,
+                fontWeight: 400,
+                color: 'var(--color-text)',
+                letterSpacing: '-0.5px',
+                lineHeight: 1.2,
+              }}>
+                O teu projeto está no ar
+              </h2>
+            </div>
 
             <p style={{
-              margin: '0 0 28px',
-              fontSize: 16,
-              color: 'rgba(232,242,255,0.6)',
+              margin: '0 0 24px',
+              fontSize: 14,
+              color: 'var(--color-text-secondary)',
               lineHeight: 1.6,
-              position: 'relative',
             }}>
               Partilha com alguém que importa.
             </p>
 
             {/* URL copy field */}
-            <div style={{
-              display: 'flex',
-              gap: 8,
-              marginBottom: 16,
-              position: 'relative',
-            }}>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
               <input
                 readOnly
                 value={`${window.location.origin}/projeto/${project.slug}`}
                 style={{
                   flex: 1,
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid var(--color-primary-subtle)',
+                  background: 'var(--color-bg-alt)',
+                  border: '1px solid var(--color-border)',
                   borderRadius: 10,
                   padding: '11px 14px',
                   fontSize: 13,
-                  color: 'rgba(232,242,255,0.7)',
+                  color: 'var(--color-text-secondary)',
                   fontFamily: 'monospace',
                   outline: 'none',
                   cursor: 'text',
@@ -6022,20 +6007,20 @@ export default function ProjectPage() {
                   setTimeout(() => setLaunchCopied(false), 2500)
                 }}
                 style={{
-                  background: launchCopied ? 'var(--color-success-subtle)' : 'var(--color-primary-subtle)',
-                  border: `1px solid ${launchCopied ? 'var(--color-success-subtle)' : 'var(--color-primary-subtle)'}`,
+                  background: launchCopied ? 'var(--color-success-subtle)' : 'var(--color-bg-alt)',
+                  border: `1px solid ${launchCopied ? 'var(--color-success-subtle)' : 'var(--color-border)'}`,
                   borderRadius: 10,
                   padding: '11px 16px',
                   cursor: 'pointer',
-                  color: launchCopied ? 'var(--color-success)' : '#5a9ff5',
+                  color: launchCopied ? 'var(--color-success)' : 'var(--color-text)',
                   fontSize: 13,
                   fontWeight: 600,
                   whiteSpace: 'nowrap',
-                  transition: 'all 0.2s',
+                  transition: 'all 0.15s',
                   flexShrink: 0,
                 }}
               >
-                {launchCopied ? '✓ Copiado' : 'Copiar'}
+                {launchCopied ? 'Copiado' : 'Copiar'}
               </button>
             </div>
 
@@ -6045,32 +6030,29 @@ export default function ProjectPage() {
               style={{
                 display: 'block',
                 width: '100%',
-                background: 'var(--color-primary)',
+                background: 'var(--color-text)',
                 border: 'none',
                 borderRadius: 10,
-                padding: '14px 24px',
-                color: '#fff',
-                fontSize: 16,
+                padding: '13px 24px',
+                color: 'var(--color-bg)',
+                fontSize: 15,
                 fontWeight: 700,
                 cursor: 'pointer',
-                letterSpacing: '-0.2px',
-                boxShadow: '0 2px 8px var(--color-primary-subtle)',
+                fontFamily: 'inherit',
                 transition: 'opacity 0.15s',
-                position: 'relative',
               }}
               onMouseEnter={e => { e.currentTarget.style.opacity = '0.88' }}
               onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
             >
-              Ver a minha página →
+              Ver a minha página
             </button>
 
             {!user && (
               <div style={{
                 marginTop: 18, paddingTop: 18,
-                borderTop: '1px solid rgba(255,255,255,0.08)',
-                position: 'relative',
+                borderTop: '1px solid var(--color-border)',
               }}>
-                <p style={{ margin: '0 0 12px', fontSize: 13, color: 'rgba(232,242,255,0.55)', lineHeight: 1.6 }}>
+                <p style={{ margin: '0 0 12px', fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
                   Criaste este projeto sem conta. Se perderes o link, não há forma de o recuperar.
                   Cria uma conta para o guardar.
                 </p>
@@ -6079,13 +6061,13 @@ export default function ProjectPage() {
                   style={{
                     display: 'block', width: '100%',
                     background: 'transparent',
-                    border: '1px solid var(--color-primary-subtle)',
+                    border: '1px solid var(--color-border)',
                     borderRadius: 10, padding: '11px 24px',
-                    color: '#5a9ff5', fontSize: 14, fontWeight: 700,
-                    cursor: 'pointer', letterSpacing: '-0.2px',
+                    color: 'var(--color-text)', fontSize: 14, fontWeight: 700,
+                    cursor: 'pointer',
                     transition: 'background 0.15s',
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-primary-subtle)' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-bg-alt)' }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
                 >
                   Criar conta e guardar projeto

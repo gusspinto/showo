@@ -29,7 +29,7 @@ const VARIANTS = {
   },
 }
 
-export default function GoogleButton({ label = 'Continuar com Google', redirectTo, variant = 'default' }) {
+export default function GoogleButton({ label = 'Continuar com Google', redirectTo, variant = 'default', intent }) {
   const [loading, setLoading] = useState(false)
   const [err, setErr] = useState('')
   const s = VARIANTS[variant] ?? VARIANTS.default
@@ -37,6 +37,15 @@ export default function GoogleButton({ label = 'Continuar com Google', redirectT
   async function go() {
     setErr('')
     setLoading(true)
+    // Carrega o papel/categoria escolhidos no /register através do redirect do
+    // OAuth (o localStorage sobrevive à ida e volta ao Google). É isto que o
+    // /welcome lê à chegada para dar seguimento certo — individual vai direto
+    // para a dashboard, escola pede código de turma, etc. Sem intent (Google
+    // a partir da Home ou do Login) o /welcome mostra o seletor normal.
+    try {
+      if (intent) localStorage.setItem('showo_google_intent', JSON.stringify(intent))
+      else localStorage.removeItem('showo_google_intent')
+    } catch { /* localStorage indisponível — o /welcome cai no seletor */ }
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: redirectTo || `${window.location.origin}/welcome` },

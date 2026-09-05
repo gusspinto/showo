@@ -815,7 +815,10 @@ export default function Register() {
                 Os teus dados
               </h1>
 
-              <GoogleButton label="Continuar com Google" />
+              <GoogleButton
+                label="Continuar com Google"
+                intent={role ? { role, category, classCode: classCode.trim() || null, school: school.trim() || null, inviteCode: inviteCode.trim() || null } : undefined}
+              />
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0' }}>
                 <div style={{ flex: 1, height: 1, background: C.border }} />
                 <span style={{ fontSize: 12, color: 'var(--color-text-tertiary)', fontWeight: 600 }}>ou</span>
