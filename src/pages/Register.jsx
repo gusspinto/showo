@@ -253,16 +253,21 @@ export default function Register() {
     // Store geolocation and referrer on the new profile (phone is collected
     // later by PhoneGate, after login — same for every signup path, Google
     // included, so it doesn't need to live in this form).
+    // Feito em fire-and-forget: são só campos de analytics, não vale a pena
+    // segurar a navegação para a dashboard pelos ~3s do lookup de geo — é
+    // justamente esse atraso que se sentia depois de confirmar o email
+    // no telemóvel e voltar ao PC.
     const params = new URLSearchParams(window.location.search)
-    const geo = await getGeoInfo()
     const { data: { user: newUser } } = await supabase.auth.getUser()
     if (newUser) {
-      await supabase.from('profiles').update({
-        signup_country: geo?.country || null,
-        signup_city: geo?.city || null,
-        signup_referrer: document.referrer || null,
-        signup_utm_source: params.get('utm_source') || null,
-      }).eq('id', newUser.id)
+      getGeoInfo().then(geo => {
+        supabase.from('profiles').update({
+          signup_country: geo?.country || null,
+          signup_city: geo?.city || null,
+          signup_referrer: document.referrer || null,
+          signup_utm_source: params.get('utm_source') || null,
+        }).eq('id', newUser.id)
+      })
     }
 
     // Claim referral code (ambassador system)

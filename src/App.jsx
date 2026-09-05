@@ -107,7 +107,7 @@ function PhoneGate({ children }) {
   const [error, setError] = useState('')
 
   const isPublic = PUBLIC_PATHS.has(location.pathname) || PUBLIC_PREFIXES.some(p => location.pathname.startsWith(p))
-  const needsPhone = !isPublic && user && profile && !profile.phone
+  const needsPhone = !isPublic && user && profile && profile.role !== 'professor' && !profile.phone
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -123,23 +123,22 @@ function PhoneGate({ children }) {
 
   return (
     <div style={{
-      position: 'fixed', inset: 0, zIndex: 99998,
-      background: 'var(--color-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      position: 'fixed', inset: 0, zIndex: 99998, background: 'rgba(0,0,0,0.6)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontFamily: 'var(--font-body)', padding: 24,
     }}>
       <div style={{
-        width: '100%', maxWidth: 360,
+        width: '100%', maxWidth: 380,
         background: 'var(--color-surface)', border: '1px solid var(--color-border)',
-        borderRadius: 20, padding: '32px 28px',
-        display: 'flex', flexDirection: 'column', gap: 20,
-        boxShadow: '0 8px 40px rgba(0,0,0,0.18)',
+        borderRadius: 'var(--radius-xl)', padding: '32px 28px',
+        display: 'flex', flexDirection: 'column', gap: 16,
       }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <img src="/darkmode_icon_logo.png" alt="Showo" style={{ height: 24, width: 'auto', objectFit: 'contain', alignSelf: 'flex-start', marginBottom: 4 }} />
-          <h1 style={{ margin: 0, fontSize: 18, fontWeight: 700, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px', color: 'var(--color-text)' }}>
+          <p style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
             Uma última coisa
-          </h1>
-          <p style={{ margin: 0, fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
+          </p>
+          <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
             Deixa o teu telemóvel para activarmos o teu acesso gratuito. Nunca partilhado, só usado pela nossa equipa.
           </p>
         </div>
@@ -148,10 +147,10 @@ function PhoneGate({ children }) {
           <div style={{
             display: 'flex', alignItems: 'center',
             background: 'var(--color-bg)', border: '1px solid var(--color-border)',
-            borderRadius: 10, overflow: 'hidden',
+            borderRadius: 'var(--radius-md)', overflow: 'hidden',
           }}>
             <span style={{
-              padding: '11px 12px', fontSize: 14, color: 'var(--color-text-secondary)',
+              padding: '9px 12px', fontSize: '0.85rem', color: 'var(--color-text-secondary)',
               borderRight: '1px solid var(--color-border)', flexShrink: 0, userSelect: 'none',
             }}>+351</span>
             <input
@@ -162,28 +161,30 @@ function PhoneGate({ children }) {
               autoFocus
               style={{
                 flex: 1, background: 'transparent', border: 'none', outline: 'none',
-                fontSize: 15, color: 'var(--color-text)', fontFamily: 'inherit',
-                padding: '11px 14px',
+                fontSize: '0.88rem', color: 'var(--color-text)', fontFamily: 'inherit',
+                padding: '9px 14px',
               }}
             />
           </div>
 
           {error && (
-            <p style={{ margin: 0, fontSize: 12, color: 'var(--color-error)' }}>{error}</p>
+            <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--color-error)' }}>{error}</p>
           )}
 
-          <button
-            type="submit"
-            disabled={saving}
-            style={{
-              background: saving ? 'var(--color-border)' : 'var(--color-primary)',
-              color: '#fff', border: 'none', borderRadius: 10, padding: '12px 0',
-              fontSize: 14, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer',
-              fontFamily: 'inherit',
-            }}
-          >
-            {saving ? 'A guardar…' : 'Activar acesso gratuito'}
-          </button>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
+            <button
+              type="submit"
+              disabled={saving}
+              style={{
+                padding: '9px 18px', borderRadius: 'var(--radius-md)', border: 'none',
+                background: saving ? 'var(--color-border)' : 'var(--color-text)',
+                color: 'var(--color-bg)', fontWeight: 600, fontSize: '0.85rem',
+                cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-body)',
+              }}
+            >
+              {saving ? 'A guardar…' : 'Activar acesso gratuito'}
+            </button>
+          </div>
         </form>
       </div>
     </div>
