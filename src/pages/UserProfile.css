@@ -728,12 +728,19 @@
     font-size: 19px;
   }
 
+  /* Os botões (Personalizar/Editar/etc.) ficam ao lado do nome, na mesma
+     linha do avatar — não empilhados por baixo do "@user · Ocupação",
+     onde ficavam espremidos contra a margem esquerda. Nome com ellipsis
+     para nunca empurrar os botões para fora do ecrã. */
   .up-head-top {
-    flex-direction: column;
     gap: 10px;
   }
+  .up-head-identity { flex: 1; }
+  .up-name {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
+  }
   .up-head-actions {
-    justify-content: flex-start;
+    justify-content: flex-end;
   }
 
   .up-projects-grid,

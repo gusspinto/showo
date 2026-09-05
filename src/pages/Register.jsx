@@ -17,6 +17,8 @@ import GoogleButton from '../components/GoogleButton'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import { getGeoInfo } from '../lib/geolocation'
+import { OCCUPATIONS } from '../lib/occupations'
+import { Select } from '../components/ui'
 
 const C = {
   bg:          'var(--color-bg)',
@@ -34,11 +36,35 @@ const REGISTER_PHRASES = [
 ]
 
 const ROLES = [
-  { id: 'aluno',               icon: <DiplomaIcon size={23} />,           label: 'Aluno',               sub: 'Conta pessoal',             color: 'var(--color-primary)' },
-  { id: 'aluno_institucional', icon: <UsersGroupRoundedIcon size={23} />, label: 'Aluno Institucional',  sub: 'Tenho código de turma',     color: 'var(--color-info)' },
+  // Rótulo "Individual" e não "Aluno" — o valor interno do role continua
+  // 'aluno' (sem role novo na base de dados), mas quem já saiu da escola e
+  // usa a Showo como portefólio/procura de emprego não devia ver-se
+  // chamado de "Aluno" no ecrã.
+  { id: 'aluno',               icon: <DiplomaIcon size={23} />,           label: 'Individual',          sub: 'Conta pessoal',             color: 'var(--color-primary)' },
+  { id: 'aluno_institucional', icon: <UsersGroupRoundedIcon size={23} />, label: 'Aluno Institucional',  sub: 'Tenho código de turma',     color: 'var(--color-primary)' },
   { id: 'professor',           icon: <Book2Icon size={23} />,             label: 'Professor',            sub: 'Gerir turmas e alunos',     color: 'var(--color-success)' },
   { id: 'recrutador',          icon: <MagnifierIcon size={21} />,         label: 'Recrutador',           color: 'var(--color-accent)', disabled: true },
   { id: 'empresa',             icon: <Buildings2Icon size={23} />,        label: 'Empresa',              color: 'var(--color-warning)', disabled: true },
+]
+
+// Nível 1 do registo: primeiro escolhe-se a categoria, só depois (quando há
+// mais que um papel dentro dela) o papel específico. "Individual" fica só
+// com Aluno — serve tanto quem ainda estuda como quem já saiu da escola e
+// usa a Showo como portfólio/procura de emprego; não há um papel
+// "freelancer" à parte, seria distinção sem diferença nas funcionalidades.
+const CATEGORIES = [
+  {
+    id: 'individual', label: 'Conta Individual', sub: 'Aluno ou já a começar carreira',
+    icon: <DiplomaIcon size={23} />, roleIds: ['aluno'],
+  },
+  {
+    id: 'escola', label: 'Versão Escola', sub: 'Aluno institucional ou Professor',
+    icon: <UsersGroupRoundedIcon size={23} />, roleIds: ['aluno_institucional', 'professor'],
+  },
+  {
+    id: 'empresa', label: 'Empresa', sub: 'Recrutadores', disabled: true,
+    icon: <Buildings2Icon size={23} />, roleIds: ['recrutador'],
+  },
 ]
 
 function EyeIcon({ visible }) {
@@ -123,16 +149,39 @@ export default function Register() {
   const params = new URLSearchParams(location.search)
   const professorCodeParam = params.get('professor_code') ?? ''
   const autoRole = claimSlug ? 'aluno' : professorCodeParam ? 'professor' : ''
+  const autoCategory = autoRole === 'aluno' ? 'individual' : autoRole === 'professor' ? 'escola' : ''
 
-  const [step, setStep] = useState(autoRole ? 'form' : 'role')
+  // Passos: 'category' → 'role' (só quando a categoria tem mais que um
+  // papel) → 'identity' (nome, email, campos específicos do papel) →
+  // 'security' (password + telemóvel — só aqui, no fluxo por email; quem
+  // usa Google nunca passa por este passo).
+  const [step, setStep] = useState(autoRole ? 'identity' : 'category')
+  const [category, setCategory] = useState(autoCategory)
   const [role, setRole] = useState(autoRole)
   const [name, setName] = useState('')
   const [company, setCompany] = useState('')
   const [school, setSchool] = useState('')
+  const [occupation, setOccupation] = useState('')
   // Pré-preenchido quando se vem do passo "Continuar com email" da home
   // mobile — a pessoa já escreveu o email lá, não devia ter de o repetir.
   const [email, setEmail] = useState(() => params.get('email') || '')
   const [password, setPassword] = useState('')
+  const [phone, setPhone] = useState('')
+
+  const selectedCategory = CATEGORIES.find(c => c.id === category)
+
+  function selectCategory(catId) {
+    const cat = CATEGORIES.find(c => c.id === catId)
+    if (!cat || cat.disabled) return
+    setCategory(catId)
+    if (cat.roleIds.length === 1) {
+      setRole(cat.roleIds[0])
+      setStep('identity')
+    } else {
+      setRole('')
+      setStep('role')
+    }
+  }
 
   const [inviteCode, setInviteCode] = useState(professorCodeParam)
   const [accountCreated, setAccountCreated] = useState(false)
@@ -163,9 +212,10 @@ export default function Register() {
       if (err || !row) { setPartnerInvite('invalid'); return }
       setPartnerInvite(row)
       if (!row.already_claimed) {
+        setCategory('empresa')
         setRole('empresa')
         setCompany(row.name || '')
-        setStep('form')
+        setStep('identity')
       }
     })
   }, [partnerToken])
@@ -184,6 +234,9 @@ export default function Register() {
   const needsSchool = role === 'professor'
   const needsInviteCode = role === 'professor'
   const needsClassCode = role === 'aluno_institucional'
+  // Só a conta Individual pergunta "o que fazes" — institucional/professor/
+  // empresa já dizem isso pelo próprio papel escolhido.
+  const needsOccupation = role === 'aluno' && category === 'individual'
   const effectiveRole = role === 'aluno_institucional' ? 'aluno' : role
 
   async function redeemInviteCode() {
@@ -355,6 +408,7 @@ export default function Register() {
     if (needsInviteCode && !inviteCode.trim()) { setError('Introduz o código de acesso enviado pela Showo.'); return }
     if (needsClassCode && !classCode.trim()) { setError('Introduz o código da turma fornecido pelo professor.'); return }
     if (password.length < 6) { setError('A palavra-passe tem de ter pelo menos 6 caracteres.'); return }
+    if (!phone.trim()) { setError('Introduz o teu número de telemóvel.'); return }
 
     // Validate email domain against class's school before creating account
     if (needsClassCode) {
@@ -381,11 +435,13 @@ export default function Register() {
         full_name: name.trim(),
         company: needsCompany ? company.trim() : null,
         school: needsSchool ? school.trim() : null,
+        pending_occupation: needsOccupation ? occupation : null,
         account_type: needsClassCode ? 'school' : 'individual',
         pending_class_code: needsClassCode ? classCode.trim() : null,
         pending_invite_code: needsInviteCode ? inviteCode.trim() : null,
         pending_school: needsSchool ? school.trim() : null,
         pending_partner_token: isPartnerFlow ? partnerToken : null,
+        pending_phone: phone.trim() || null,
       } },
     })
     if (err) {
@@ -627,12 +683,9 @@ export default function Register() {
                 </button>
               )}
             </div>
-          ) : step === 'role' ? (
-            /* ── STEP 1: escolha de tipo de conta ── */
+          ) : step === 'category' ? (
+            /* ── STEP 1: categoria de conta ── */
             <>
-              {/* "Criar conta" saiu — dizia o óbvio (a pessoa já sabe que
-                  está a criar conta) e duplicava o que a pergunta a seguir
-                  já diz. Fica só a pergunta, centrada. */}
               <h1 style={{ color: C.text, fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 28px', letterSpacing: '-0.4px', textAlign: 'center' }}>
                 Como vais usar o Showo?
               </h1>
@@ -648,15 +701,52 @@ export default function Register() {
                 </div>
               )}
 
-              {/* Cada papel tinha a sua cor (azul, verde, info) — bonito
-                  isoladamente, mas ao lado do herói novo (Google/email a
-                  branco, sem cor nenhuma a mais) lia-se como duas linguagens
-                  visuais diferentes na mesma jornada. Um estado só —
-                  selecionado ou não — como o resto do fluxo de auth agora
-                  usa: neutro, com o branco (var(--color-text)) a marcar a
-                  escolha, não uma cor por papel. */}
+              {/* Três divisões — Individual / Escola / Empresa. Um estado só
+                  (selecionado ou não), neutro, sem cor por categoria. */}
+              <div className="register-role-grid" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 10, marginBottom: 28 }}>
+                {CATEGORIES.map(cat => (
+                  <div
+                    key={cat.id}
+                    className="role-card"
+                    onClick={() => selectCategory(cat.id)}
+                    style={{
+                      border: `1px solid ${C.border}`,
+                      borderRadius: 10, padding: '16px',
+                      display: 'flex', alignItems: 'center', gap: 12,
+                      opacity: cat.disabled ? 0.45 : 1,
+                      cursor: cat.disabled ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    <span style={{ color: C.muted, display: 'flex', flexShrink: 0 }}>{cat.icon}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>
+                        {cat.label}{cat.disabled && ' — brevemente'}
+                      </div>
+                      <div style={{ fontSize: 12, color: C.muted, fontWeight: 400 }}>{cat.sub}</div>
+                    </div>
+                    {!cat.disabled && <ArrowLeft size={16} style={{ color: C.muted, transform: 'rotate(180deg)', flexShrink: 0 }} />}
+                  </div>
+                ))}
+              </div>
+            </>
+
+          ) : step === 'role' ? (
+            /* ── STEP 2: papel dentro da categoria ── */
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 28 }}>
+                <button
+                  onClick={() => { setStep('category'); setRole('') }}
+                  style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', padding: 4, display: 'flex' }}
+                >
+                  <ArrowLeft size={18} />
+                </button>
+                <h1 style={{ color: C.text, fontSize: 20, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: 0, letterSpacing: '-0.4px' }}>
+                  {selectedCategory?.label}
+                </h1>
+              </div>
+
               <div className="register-role-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 28 }}>
-                {ROLES.filter(r => !r.disabled).map(r => {
+                {ROLES.filter(r => selectedCategory?.roleIds.includes(r.id)).map(r => {
                   const selected = role === r.id
                   return (
                     <div
@@ -664,45 +754,39 @@ export default function Register() {
                       className="role-card"
                       onClick={() => setRole(r.id)}
                       style={{
-                        border: `1px solid ${selected ? C.text : C.border}`,
+                        border: `1.5px solid ${selected ? r.color : C.border}`,
                         borderRadius: 8, padding: '14px',
                         display: 'flex', flexDirection: 'column', alignItems: 'center',
                         gap: 3, textAlign: 'center', cursor: 'pointer',
                       }}
                     >
-                      {/* Ícone ao lado do nome, não por cima — três linhas
-                          por cartão (ícone sozinho, nome, subtítulo) fazia
-                          cada cartão mais alto do que precisava. O bloco
-                          continua centrado no cartão, só a organização
-                          interna muda de vertical para uma linha + legenda. */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ color: selected ? C.text : C.muted, display: 'flex', alignItems: 'center' }}>{r.icon}</span>
-                        <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{r.label}</span>
+                        <span style={{ color: selected ? r.color : C.muted, display: 'flex', alignItems: 'center' }}>{r.icon}</span>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: selected ? r.color : C.text }}>{r.label}</span>
                       </div>
-                      {r.sub && <div style={{ fontSize: 11, color: C.muted, fontWeight: 400 }}>{r.sub}</div>}
                     </div>
                   )
                 })}
               </div>
 
               <button
-                onClick={() => { if (role) setStep('form') }}
+                onClick={() => { if (role) setStep('identity') }}
                 disabled={!role}
                 className="auth-submit"
                 style={{
                   width: '100%',
-                  background: role ? C.text : 'var(--color-border)',
-                  color: role ? C.bg : C.muted, border: 'none', borderRadius: 10, padding: '12px 0',
+                  background: role ? selectedRole?.color : 'var(--color-border)',
+                  color: role ? '#fff' : C.muted, border: 'none', borderRadius: 10, padding: '12px 0',
                   fontSize: 15, fontWeight: 700, cursor: role ? 'pointer' : 'not-allowed',
                   fontFamily: 'inherit',
                 }}
               >
-                {role ? `Continuar como ${selectedRole?.label}` : 'Escolhe um tipo de conta'}
+                {role ? `Continuar como ${selectedRole?.label}` : 'Escolhe um papel'}
               </button>
             </>
 
-          ) : (
-            /* ── STEP 2: formulário ── */
+          ) : step === 'identity' ? (
+            /* ── STEP 3: nome e email (+ campos do papel) ── */
             <>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -713,7 +797,7 @@ export default function Register() {
                 </div>
                 {!isPartnerFlow && !autoRole && (
                   <button
-                    onClick={() => setStep('role')}
+                    onClick={() => { setError(''); setStep(selectedCategory?.roleIds.length > 1 ? 'role' : 'category') }}
                     style={{ background: 'none', border: 'none', color: C.muted, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', padding: 0, display: 'flex', alignItems: 'center', gap: 5 }}
                   >
                     <ArrowLeft size={14} />Alterar
@@ -728,19 +812,132 @@ export default function Register() {
               )}
 
               <h1 style={{ color: C.text, fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 24px', letterSpacing: '-0.5px' }}>
-                {accountCreated ? (isPartnerFlow ? 'Só falta ligar à empresa' : 'Só falta o código') : 'Os teus dados'}
+                Os teus dados
               </h1>
 
-              {!accountCreated && (
-                <>
-                  <GoogleButton label="Continuar com Google" />
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0' }}>
-                    <div style={{ flex: 1, height: 1, background: C.border }} />
-                    <span style={{ fontSize: 12, color: 'var(--color-text-tertiary)', fontWeight: 600 }}>ou</span>
-                    <div style={{ flex: 1, height: 1, background: C.border }} />
+              <GoogleButton label="Continuar com Google" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0' }}>
+                <div style={{ flex: 1, height: 1, background: C.border }} />
+                <span style={{ fontSize: 12, color: 'var(--color-text-tertiary)', fontWeight: 600 }}>ou</span>
+                <div style={{ flex: 1, height: 1, background: C.border }} />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+                <Field label={role === 'empresa' ? 'Nome do responsável' : 'O teu nome'}>
+                  <Input value={name} onChange={e => setName(e.target.value)} placeholder="Ex: João Silva" required />
+                </Field>
+                {needsCompany && (
+                  <Field label="Nome da empresa">
+                    <Input value={company} onChange={e => setCompany(e.target.value)} placeholder="Ex: Google, NOS, Altice..." required />
+                  </Field>
+                )}
+                {needsSchool && (
+                  <Field label="Nome da escola">
+                    <Input value={school} onChange={e => setSchool(e.target.value)} placeholder="Ex: Escola Secundária de..." required />
+                  </Field>
+                )}
+                {needsInviteCode && (
+                  <Field label="Código de acesso">
+                    <Input value={inviteCode} onChange={e => setInviteCode(e.target.value)} placeholder="Código enviado pela Showo" required />
+                  </Field>
+                )}
+                {needsClassCode && (
+                  <Field label="Código da turma">
+                    <Input value={classCode} onChange={e => setClassCode(e.target.value.toUpperCase())} placeholder="Ex: ABC123" required />
+                  </Field>
+                )}
+                {needsOccupation && (
+                  <Select
+                    label="O que fazes?"
+                    value={occupation}
+                    onChange={setOccupation}
+                    options={OCCUPATIONS}
+                    placeholder="Seleciona uma opção"
+                    required
+                  />
+                )}
+                <Field label="Email">
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={e => { setEmail(e.target.value); checkEmailDomain(e.target.value) }}
+                    placeholder="tu@email.com"
+                    required
+                  />
+                  {detectedOrg && (
+                    <div style={{
+                      marginTop: 8, display: 'flex', alignItems: 'center', gap: 8,
+                      background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)',
+                      borderRadius: 8, padding: '8px 12px', fontSize: 13, color: C.text,
+                    }}>
+                      <DiplomaIcon size={14} />
+                      <span>Conta escolar — <strong>{detectedOrg.name}</strong></span>
+                    </div>
+                  )}
+                </Field>
+
+                {error && (
+                  <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 10, padding: '10px 14px', color: C.error, fontSize: 14 }}>
+                    {error}
                   </div>
-                </>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setError('')
+                    if (!name.trim()) { setError('Introduz o teu nome.'); return }
+                    if (needsCompany && !company.trim()) { setError('Introduz o nome da empresa.'); return }
+                    if (needsSchool && !school.trim()) { setError('Introduz o nome da escola.'); return }
+                    if (needsInviteCode && !inviteCode.trim()) { setError('Introduz o código de acesso enviado pela Showo.'); return }
+                    if (needsClassCode && !classCode.trim()) { setError('Introduz o código da turma fornecido pelo professor.'); return }
+                    if (needsOccupation && !occupation) { setError('Seleciona o que fazes.'); return }
+                    if (!email.trim()) { setError('Introduz o teu email.'); return }
+                    setStep('security')
+                  }}
+                  className="auth-submit"
+                  style={{
+                    width: '100%', background: C.text, color: C.bg, border: 'none',
+                    borderRadius: 10, padding: '12px 0', fontSize: 15, fontWeight: 700,
+                    cursor: 'pointer', fontFamily: 'inherit', marginTop: 4,
+                  }}
+                >
+                  Continuar
+                </button>
+              </div>
+            </>
+
+          ) : (
+            /* ── STEP 4: palavra-passe + telemóvel (só no fluxo por email —
+               quem entra por Google nunca chega aqui, o telemóvel fica só
+               para o PhoneGate depois do login). ── */
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ color: C.text, display: 'flex', alignItems: 'center', transform: 'scale(0.85)' }}>{selectedRole?.icon}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>
+                    {selectedRole?.label}
+                  </span>
+                </div>
+                {!isPartnerFlow && !accountCreated && (
+                  <button
+                    onClick={() => { setError(''); setStep('identity') }}
+                    style={{ background: 'none', border: 'none', color: C.muted, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', padding: 0, display: 'flex', alignItems: 'center', gap: 5 }}
+                  >
+                    <ArrowLeft size={14} />Alterar
+                  </button>
+                )}
+              </div>
+
+              {isPartnerFlow && (
+                <div style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 8, padding: '10px 14px', marginBottom: 20, color: C.text, fontSize: 13, lineHeight: 1.5 }}>
+                  Foste convidado como parceiro de estágio de <strong>{partnerInvite.name}</strong>. Ao criar conta vais ver os alunos que o professor já assinalou como interessados.
+                </div>
               )}
+
+              <h1 style={{ color: C.text, fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 24px', letterSpacing: '-0.5px' }}>
+                {accountCreated ? (isPartnerFlow ? 'Só falta ligar à empresa' : 'Só falta o código') : 'Palavra-passe'}
+              </h1>
 
               <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
                 {accountCreated ? (
@@ -759,50 +956,11 @@ export default function Register() {
                   )
                 ) : (
                   <>
-                    <Field label={role === 'empresa' ? 'Nome do responsável' : 'O teu nome'}>
-                      <Input value={name} onChange={e => setName(e.target.value)} placeholder="Ex: João Silva" required />
-                    </Field>
-                    {needsCompany && (
-                      <Field label="Nome da empresa">
-                        <Input value={company} onChange={e => setCompany(e.target.value)} placeholder="Ex: Google, NOS, Altice..." required />
-                      </Field>
-                    )}
-                    {needsSchool && (
-                      <Field label="Nome da escola">
-                        <Input value={school} onChange={e => setSchool(e.target.value)} placeholder="Ex: Escola Secundária de..." required />
-                      </Field>
-                    )}
-                    {needsInviteCode && (
-                      <Field label="Código de acesso">
-                        <Input value={inviteCode} onChange={e => setInviteCode(e.target.value)} placeholder="Código enviado pela Showo" required />
-                      </Field>
-                    )}
-                    {needsClassCode && (
-                      <Field label="Código da turma">
-                        <Input value={classCode} onChange={e => setClassCode(e.target.value.toUpperCase())} placeholder="Ex: ABC123" required />
-                      </Field>
-                    )}
-                    <Field label="Email">
-                      <Input
-                        type="email"
-                        value={email}
-                        onChange={e => { setEmail(e.target.value); checkEmailDomain(e.target.value) }}
-                        placeholder="tu@email.com"
-                        required
-                      />
-                      {detectedOrg && (
-                        <div style={{
-                          marginTop: 8, display: 'flex', alignItems: 'center', gap: 8,
-                          background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)',
-                          borderRadius: 8, padding: '8px 12px', fontSize: 13, color: C.text,
-                        }}>
-                          <DiplomaIcon size={14} />
-                          <span>Conta escolar — <strong>{detectedOrg.name}</strong></span>
-                        </div>
-                      )}
-                    </Field>
                     <Field label="Palavra-passe">
                       <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" required />
+                    </Field>
+                    <Field label="Telemóvel">
+                      <Input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="912 345 678" required />
                     </Field>
                   </>
                 )}

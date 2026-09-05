@@ -33,6 +33,7 @@ import { CropModal } from '../components/CropModal'
 import { containsProfanity } from '../lib/profanity'
 import SkillsPicker from '../components/SkillsPicker'
 import { Select } from '../components/ui'
+import { OCCUPATIONS } from '../lib/occupations'
 import ExportProjectsModal from '../components/ExportProjectsModal'
 import './Settings.css'
 
@@ -218,6 +219,7 @@ export default function Settings() {
   const [companyIndustry, setCompanyIndustry] = useState('')
   const [companySize, setCompanySize] = useState('')
   const [area, setArea] = useState('')
+  const [occupation, setOccupation] = useState('')
   const [skills, setSkills] = useState([])
   const [phone, setPhone] = useState('')
   const [currentPw, setCurrentPw] = useState('')
@@ -250,7 +252,7 @@ export default function Settings() {
   useEffect(() => {
     if (!user) return
     setFullName(user.user_metadata?.full_name ?? '')
-    supabase.from('profiles').select('username, bio, role, avatar_url, monthly_report_opt_in, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, area, phone, notify_newsletter, notify_marketing, notify_product_updates, notify_project_activity, profile_visibility, show_email_publicly, weekly_recap_email_opt_in').eq('id', user.id).single().then(({ data }) => {
+    supabase.from('profiles').select('username, bio, role, avatar_url, monthly_report_opt_in, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, area, occupation, phone, notify_newsletter, notify_marketing, notify_product_updates, notify_project_activity, profile_visibility, show_email_publicly, weekly_recap_email_opt_in').eq('id', user.id).single().then(({ data }) => {
       if (data) {
         setUsername(data.username ?? '')
         setOriginalUsername(data.username ?? '')
@@ -270,6 +272,7 @@ export default function Settings() {
         setCompanySize(data.company_size ?? '')
         setSkills(data.skills ?? [])
         setArea(data.area ?? '')
+        setOccupation(data.occupation ?? '')
         setPhone(data.phone ?? '')
         setNotifyNewsletter(data.notify_newsletter ?? true)
         setNotifyMarketing(data.notify_marketing ?? true)
@@ -370,6 +373,7 @@ export default function Settings() {
         p_available_for_work:      false,
         p_skills:                  (role === 'aluno' || role === 'professor') ? skills : [],
         p_area:                    role === 'aluno' ? (area || null) : null,
+        p_occupation:              role === 'aluno' ? (occupation || null) : null,
         p_monthly_report_opt_in:   role === 'professor' ? monthlyReportOptIn : false,
         p_notify_newsletter:       notifyNewsletter,
         p_notify_marketing:        notifyMarketing,
@@ -613,6 +617,14 @@ export default function Settings() {
                   <Textarea label={isRecruiter ? 'Apresentação' : 'Bio'} value={bio} onChange={setBio} placeholder={isRecruiter ? 'Apresenta a tua empresa ou o teu trabalho como recrutador...' : 'Conta um pouco sobre ti e os teus projetos...'} hint="Aparece no teu perfil público." />
 
                   <Input label="Telemóvel (opcional)" value={phone} onChange={setPhone} placeholder="912 345 678" hint="Para te contactarmos sobre o teu portfolio e oportunidades. Nunca partilhado publicamente." />
+
+                  {role === 'aluno' && (
+                    <div className="settings-field">
+                      <label className="settings-label">O que fazes?</label>
+                      <Select value={occupation} onChange={setOccupation} placeholder="Seleciona uma opção" options={OCCUPATIONS} />
+                      <p className="settings-hint">Aparece no teu perfil público.</p>
+                    </div>
+                  )}
 
                   {role === 'aluno' && (
                     <div className="settings-field">

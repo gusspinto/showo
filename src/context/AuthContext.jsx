@@ -104,6 +104,10 @@ export function AuthProvider({ children }) {
         await supabase.from('profiles').update({ phone: meta.pending_phone }).eq('id', uid)
         await supabase.auth.updateUser({ data: { pending_phone: null } })
       }
+      if (meta.pending_occupation) {
+        await supabase.from('profiles').update({ occupation: meta.pending_occupation }).eq('id', uid)
+        await supabase.auth.updateUser({ data: { pending_occupation: null } })
+      }
     }
 
     setProfile(data ?? null)
