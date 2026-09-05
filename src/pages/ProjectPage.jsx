@@ -5033,8 +5033,8 @@ export default function ProjectPage() {
         setShowConfetti(true)
         setTimeout(() => setShowConfetti(false), 5000)
       }
-      // MISSION_COMPLETE notification
       if (user?.id) {
+        supabase.rpc('award_xp', { p_reason: 'mission_complete' })
         supabase.rpc('create_notification', {
           p_user_id: user.id,
           p_type: 'MISSION_COMPLETE',
