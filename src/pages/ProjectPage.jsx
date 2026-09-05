@@ -819,21 +819,21 @@ const SECTION_LABELS = { cover: 'Introdução', problem: 'Problema', solution: '
 
 // ── Block types for preview workspace ─────────────────────────────────────────
 const BLOCK_TYPES = [
-  { type: 'note',    label: 'Nota',          Icon: AlignLeft,  desc: 'Mensagem tua para visitantes' },
-  { type: 'heading', label: 'Título',        Icon: Type,       desc: 'Título de secção personalizado' },
-  { type: 'callout', label: 'Destaque',      Icon: Sparkles,   desc: 'Caixa em destaque colorida' },
-  { type: 'quote',   label: 'Citação',       Icon: Quote,      desc: 'Frase ou citação marcante' },
-  { type: 'metric',  label: 'Métrica',       Icon: Star,       desc: 'Número ou dado relevante' },
-  { type: 'stats',   label: 'Estatísticas',  Icon: BarChart2,  desc: '3 métricas lado a lado' },
-  { type: 'image',   label: 'Imagem',        Icon: Image,      desc: 'Imagem por URL ou upload' },
-  { type: 'gallery', label: 'Galeria',       Icon: Layout,     desc: 'Até 3 imagens lado a lado' },
-  { type: 'video',   label: 'Vídeo',         Icon: Video,      desc: 'YouTube ou Vimeo embed' },
-  { type: 'card',    label: 'Card',          Icon: ClipboardList, desc: 'Cartão livre. Título + dados (ex: idade, função...)' },
-  { type: 'cta',     label: 'Botão CTA',     Icon: ArrowRight, desc: 'Chamada à ação destacada' },
-  { type: 'link',    label: 'Link',          Icon: Link,       desc: 'GitHub, demo, portfolio...' },
-  { type: 'github',  label: 'GitHub',        Icon: FileText,   desc: 'Card do repositório com linguagens' },
-  { type: 'linkedin', label: 'LinkedIn',    Icon: User,       desc: 'Card do perfil LinkedIn' },
-  { type: 'divider', label: 'Divisor',       Icon: Minus,      desc: 'Linha separadora de secções' },
+  { type: 'note',    label: 'Nota',          Icon: AlignLeft,  desc: 'Mensagem tua para visitantes', cat: 'Texto' },
+  { type: 'heading', label: 'Título',        Icon: Type,       desc: 'Título de secção personalizado', cat: 'Texto' },
+  { type: 'callout', label: 'Destaque',      Icon: Sparkles,   desc: 'Caixa em destaque colorida', cat: 'Texto' },
+  { type: 'quote',   label: 'Citação',       Icon: Quote,      desc: 'Frase ou citação marcante', cat: 'Texto' },
+  { type: 'metric',  label: 'Métrica',       Icon: Star,       desc: 'Número ou dado relevante', cat: 'Dados' },
+  { type: 'stats',   label: 'Estatísticas',  Icon: BarChart2,  desc: '3 métricas lado a lado', cat: 'Dados' },
+  { type: 'card',    label: 'Card',          Icon: ClipboardList, desc: 'Cartão livre. Título + dados', cat: 'Dados' },
+  { type: 'image',   label: 'Imagem',        Icon: Image,      desc: 'Imagem por URL ou upload', cat: 'Media' },
+  { type: 'gallery', label: 'Galeria',       Icon: Layout,     desc: 'Até 3 imagens lado a lado', cat: 'Media' },
+  { type: 'video',   label: 'Vídeo',         Icon: Video,      desc: 'YouTube ou Vimeo embed', cat: 'Media' },
+  { type: 'github',  label: 'GitHub',        Icon: FileText,   desc: 'Card do repositório com linguagens', cat: 'Links' },
+  { type: 'linkedin', label: 'LinkedIn',    Icon: User,       desc: 'Card do perfil LinkedIn', cat: 'Links' },
+  { type: 'cta',     label: 'Botão CTA',     Icon: ArrowRight, desc: 'Chamada à ação destacada', cat: 'Links' },
+  { type: 'link',    label: 'Link',          Icon: Link,       desc: 'GitHub, demo, portfolio...', cat: 'Links' },
+  { type: 'divider', label: 'Divisor',       Icon: Minus,      desc: 'Linha separadora', cat: 'Layout' },
 ]
 
 function newBlock(type, posIndex = 0) {
@@ -2314,42 +2314,48 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                 </button>
               </div>
 
-              {/* Block type picker — compact 3-col chip grid */}
+              {/* Block type picker — grouped by category */}
               <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--color-border)' }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Adicionar bloco</div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 5 }}>
-                  {BLOCK_TYPES.map(bt => {
+                {['Texto', 'Dados', 'Media', 'Links', 'Layout'].map(cat => {
+                  const items = BLOCK_TYPES.filter(b => b.cat === cat)
+                  if (!items.length) return null
+                  return (
+                    <div key={cat} style={{ marginBottom: 8 }}>
+                      <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{cat}</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                  {items.map(bt => {
                     const BtIcon = bt.Icon
                     return (
                       <button key={bt.type} title={bt.desc} onClick={() => {
                           const b = newBlock(bt.type, previewBlocks.length)
                           setPreviewBlocks(bs => [b, ...bs])
-                          // New blocks always land at the very top of the page,
-                          // whether or not the order has been customized yet.
+                          // New blocks land at the bottom of the page.
                           setPreviewStyle(ps => {
                             const base = ps.layoutOrder?.length
                               ? ps.layoutOrder
-                              : [...previewBlocks.map(pb => ({ kind: 'block', id: pb.id })), ...orderedSections.map(key => ({ kind: 'section', key }))]
-                            return { ...ps, layoutOrder: [{ kind: 'block', id: b.id }, ...base] }
+                              : [...orderedSections.map(key => ({ kind: 'section', key })), ...previewBlocks.map(pb => ({ kind: 'block', id: pb.id }))]
+                            return { ...ps, layoutOrder: [...base, { kind: 'block', id: b.id }] }
                           })
                         }}
                         style={{
                           background: 'var(--color-bg)', border: '1px solid var(--color-border)',
-                          borderRadius: 8, padding: '7px 6px',
-                          cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center',
-                          transition: 'all 0.13s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
+                          borderRadius: 6, padding: '4px 8px',
+                          cursor: 'pointer', fontFamily: 'inherit',
+                          transition: 'all 0.13s', display: 'flex', alignItems: 'center', gap: 5,
                         }}
                         onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-primary-subtle)'; e.currentTarget.style.borderColor = 'var(--color-primary-subtle)' }}
                         onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-bg)'; e.currentTarget.style.borderColor = 'var(--color-border)' }}
                       >
-                        <div style={{ width: 26, height: 26, borderRadius: 7, background: 'var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <BtIcon size={12} color="var(--color-primary)" />
-                        </div>
+                        <BtIcon size={11} color="var(--color-primary)" />
                         <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--color-text)', lineHeight: 1.2 }}>{bt.label}</span>
                       </button>
                     )
                   })}
-                </div>
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
 
               {/* Existing blocks list */}
@@ -2592,9 +2598,9 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
             const layoutDisplay = previewStyle.layoutOrder?.length ? previewStyle.layoutOrder : defaultLayout
 
             function moveLayoutItem(from, to) {
-              if (from === to) return
+              if (from === to || from < 0 || to < 0 || from >= layoutDisplay.length || to >= layoutDisplay.length) return
               const next = [...layoutDisplay]
-              next.splice(to, 0, next.splice(from, 1)[0])
+              ;[next[from], next[to]] = [next[to], next[from]]
               setPreviewStyle(ps => ({ ...ps, layoutOrder: next }))
             }
 
