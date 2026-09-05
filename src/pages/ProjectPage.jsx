@@ -793,6 +793,7 @@ const BLOCK_TYPES = [
   { type: 'cta',     label: 'Botão CTA',     Icon: ArrowRight, desc: 'Chamada à ação destacada' },
   { type: 'link',    label: 'Link',          Icon: Link,       desc: 'GitHub, demo, portfolio...' },
   { type: 'github',  label: 'GitHub',        Icon: FileText,   desc: 'Card do repositório com linguagens' },
+  { type: 'linkedin', label: 'LinkedIn',    Icon: User,       desc: 'Card do perfil LinkedIn' },
   { type: 'divider', label: 'Divisor',       Icon: Minus,      desc: 'Linha separadora de secções' },
 ]
 
@@ -2382,6 +2383,10 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                       {block.type === 'github' && (
                         <input value={block.url || ''} onChange={e => upd(block.id, 'url', e.target.value)} placeholder="https://github.com/user/repo" style={wsInputNew} />
                       )}
+                      {block.type === 'linkedin' && (<>
+                        <input value={block.url || ''} onChange={e => upd(block.id, 'url', e.target.value)} placeholder="https://linkedin.com/in/username" style={{ ...wsInputNew, marginBottom: 5 }} />
+                        <input value={block.label || ''} onChange={e => upd(block.id, 'label', e.target.value)} placeholder="Nome (opcional)" style={wsInputNew} />
+                      </>)}
                       {block.type === 'metric' && (<>
                         <input value={block.label || ''} onChange={e => upd(block.id, 'label', e.target.value)} placeholder="Valor (ex: 2.500)" style={{ ...wsInputNew, marginBottom: 5, fontWeight: 800 }} />
                         <input value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)} placeholder="Descrição" style={wsInputNew} />
@@ -2980,6 +2985,34 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
           if (block.type === 'github' && block.url) return (
             <div key={block.id}><GitHubCard githubUrl={block.url} /></div>
           )
+
+          if (block.type === 'linkedin' && block.url) {
+            const liSlug = block.url.match(/linkedin\.com\/in\/([^/?#]+)/)?.[1]
+            const liName = block.label || (liSlug ? liSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'LinkedIn')
+            return (
+              <div key={block.id} style={{
+                background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12,
+                padding: 20, display: 'flex', alignItems: 'center', gap: 16,
+              }}>
+                <div style={{
+                  width: 48, height: 48, borderRadius: 10, background: '#0a66c2',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                }}>
+                  <svg viewBox="0 0 24 24" width={24} height={24} fill="#fff">
+                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                  </svg>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-text)' }}>{liName}</div>
+                  <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)', marginTop: 2 }}>Perfil LinkedIn</div>
+                </div>
+                <a href={block.url} target="_blank" rel="noopener noreferrer" style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6, background: '#0a66c2', color: '#fff',
+                  borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, textDecoration: 'none', flexShrink: 0,
+                }}>Ver perfil</a>
+              </div>
+            )
+          }
 
           if (block.type === 'metric' && block.label) return (
             <div key={block.id} style={{ background: 'var(--color-surface)', border: `1px solid ${accent}33`, borderRadius: 12, padding: '24px 28px', textAlign: align }}>
