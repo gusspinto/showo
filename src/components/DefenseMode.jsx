@@ -25,6 +25,8 @@ import { Tuning2Icon as SlidersHorizontal } from '@solar-icons/react/bold/tuning
 import { AlignLeftIcon as AlignLeft } from '@solar-icons/react/bold/align-left'
 import { PlayCircleIcon as Play } from '@solar-icons/react/bold/play-circle'
 import { PauseCircleIcon as Pause } from '@solar-icons/react/bold/pause-circle'
+import { DownloadIcon as FileDown } from '@solar-icons/react/bold/download'
+import PptxGenJS from 'pptxgenjs'
 
 const C = {
   bg: 'var(--color-bg)',
@@ -1290,6 +1292,66 @@ function GrupoPanel({ project }) {
   )
 }
 
+// ─── PowerPoint export ──────────────────────────────────────────────────────
+
+function exportPptx(project, aiData) {
+  const pptx = new PptxGenJS()
+  pptx.title = project.name || 'Apresentação'
+  pptx.author = 'Showo'
+  pptx.layout = 'LAYOUT_WIDE'
+
+  const sections = buildSections(project)
+
+  for (const section of sections) {
+    const slide = pptx.addSlide()
+    const keyPoints = aiData?.key_points?.[section.id] ?? []
+    const speakerNote = aiData?.slide_notes?.[section.id] ?? ''
+
+    slide.addText(section.label, {
+      x: 0.8, y: 0.6, w: '85%',
+      fontSize: 32, fontFace: 'Calibri', bold: true,
+      color: '1a1a1a',
+    })
+
+    const content = getSlideContent(project, section.id)
+    if (content) {
+      slide.addText(content, {
+        x: 0.8, y: 1.6, w: '85%', h: 3.5,
+        fontSize: 16, fontFace: 'Calibri',
+        color: '444444', valign: 'top', wrap: true,
+      })
+    }
+
+    if (keyPoints.length) {
+      slide.addText(
+        keyPoints.map(p => ({ text: p, options: { bullet: true, fontSize: 14, color: '333333' } })),
+        { x: 0.8, y: content ? 5.2 : 1.6, w: '85%', fontFace: 'Calibri', valign: 'top' }
+      )
+    }
+
+    if (speakerNote) {
+      slide.addNotes(speakerNote)
+    }
+  }
+
+  const slug = (project.slug || project.name || 'apresentacao').replace(/[^a-z0-9_-]/gi, '_')
+  pptx.writeFile({ fileName: `${slug}_notas.pptx` })
+}
+
+function getSlideContent(project, sectionId) {
+  const map = {
+    cover: [project.name, project.area, project.ai_tagline].filter(Boolean).join('\n'),
+    problem: project.problem,
+    solution: project.solution,
+    features: project.features,
+    technologies: project.technologies,
+    results: project.results,
+    learnings: project.learnings,
+    closing: '',
+  }
+  return (map[sectionId] || '').trim()
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function DefenseMode({ project, isOwner, collaboratorSections, onClose }) {
@@ -1302,9 +1364,9 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
   const [aiData, setAiData]       = useState(project.defense_ai_data || null)
   const [loadingAI, setLoadingAI] = useState(false)
   const [aiError, setAiError]     = useState(false)
-  const [guideMode, setGuideMode] = useState(false)
   const [guideConfig, setGuideConfig] = useState(project.guide_config || null)
   const [showGuideEditor, setShowGuideEditor] = useState(false)
+  const [exporting, setExporting] = useState(false)
   const [confirmUse, setConfirmUse] = useState(null)
   const effectiveProject = { ...project, guide_config: guideConfig }
 
@@ -1315,10 +1377,10 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
 
 
   useEffect(() => {
-    function onKey(e) { if (e.key === 'Escape' && !guideMode) onClose() }
+    function onKey(e) { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [guideMode])
+  }, [])
 
   function tryLoadAI() {
     const gate = checkGate('defense')
@@ -1348,18 +1410,11 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
       .finally(() => setLoadingAI(false))
   }
 
-  if (guideMode) return (
-    <PresenterGuide
-      project={effectiveProject}
-      aiData={aiData}
-      loadingAI={loadingAI}
-      aiError={aiError}
-      onRetry={tryLoadAI}
-      onClose={() => setGuideMode(false)}
-      collaboratorSections={collaboratorSections}
-      studentName={studentName}
-    />
-  )
+  async function handleExportPptx() {
+    if (!aiData) { tryLoadAI(); return }
+    setExporting(true)
+    try { exportPptx(effectiveProject, aiData) } finally { setExporting(false) }
+  }
 
   const tabs = [
     { id: 'notes', label: 'Notas',    show: canSeeFullPrep },
@@ -1457,7 +1512,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
                 <GuideEditor project={effectiveProject} onSave={saveGuideConfig} />
               )}
 
-              {/* Preview card — sempre escuro, como o herói (preto plano, não gradiente). */}
+              {/* PowerPoint export card */}
               <div style={{
                 position: 'relative', overflow: 'hidden',
                 background: '#000000',
@@ -1473,36 +1528,43 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
                     width: 48, height: 48, borderRadius: 14, marginBottom: 14,
                     background: 'rgba(255,255,255,0.16)', border: '1px solid rgba(255,255,255,0.25)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}><Smartphone size={24} color="#fff" /></div>
-                  <h3 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 800, color: '#fff' }}>Guia do Apresentador</h3>
+                  }}><FileDown size={24} color="#fff" /></div>
+                  <h3 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 800, color: '#fff' }}>Notas para PowerPoint</h3>
                   <p style={{ margin: '0 0 16px', fontSize: 14, color: 'rgba(255,255,255,0.85)', lineHeight: 1.6 }}>
-                    Um guia no telemóvel enquanto apresentas no Canva ou PowerPoint. Acompanha as tuas secções, faz check dos pontos-chave e consulta o que dizer se ficares em branco.
+                    Exporta um PowerPoint com as notas do apresentador em cada slide. Abre no PowerPoint, usa a Vista do Apresentador, e tens tudo o que precisas de dizer no ecrã à tua frente.
                   </p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
-                    {['Pontos-chave interativos', 'Modo teleponto', 'Temporizador', 'Swipe entre secções'].map(f => (
+                    {['Notas por secção', 'Pontos-chave', 'Vista do Apresentador', 'Funciona offline'].map(f => (
                       <span key={f} style={{ background: 'rgba(255,255,255,0.14)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.28)', borderRadius: 999, padding: '5px 12px', fontSize: 12, fontWeight: 600, color: '#fff' }}>{f}</span>
                     ))}
                   </div>
                   <button
-                    onClick={() => setGuideMode(true)}
+                    onClick={handleExportPptx}
+                    disabled={exporting || loadingAI}
                     className="dm-cta-btn"
                     style={{
                       width: '100%', padding: '14px 0',
                       background: '#fff',
                       border: 'none', borderRadius: 12,
                       color: '#000000', fontSize: 15, fontWeight: 700,
-                      cursor: 'pointer', fontFamily: 'inherit',
+                      cursor: exporting || loadingAI ? 'wait' : 'pointer', fontFamily: 'inherit',
                       boxShadow: '0 8px 28px rgba(0,0,0,0.25)',
+                      opacity: exporting || loadingAI ? 0.7 : 1,
                     }}
                   >
-                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>Abrir guia <ArrowRight size={15} /></span>
+                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+                      {loadingAI ? 'A gerar notas...' : exporting ? 'A exportar...' : !aiData ? 'Gerar e exportar PowerPoint' : 'Exportar PowerPoint'}
+                      {!loadingAI && !exporting && <FileDown size={15} />}
+                    </span>
                   </button>
                 </div>
               </div>
 
-              <p style={{ fontSize: 12, color: C.subtle, textAlign: 'center', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
-                <Lightbulb size={12} /> Abre num segundo ecrã ou telemóvel durante a apresentação real
-              </p>
+              {!aiData && (
+                <p style={{ fontSize: 12, color: C.subtle, textAlign: 'center', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+                  <Lightbulb size={12} /> A AI gera notas e pontos-chave para cada secção da tua apresentação
+                </p>
+              )}
             </div>
           )}
         </div>
