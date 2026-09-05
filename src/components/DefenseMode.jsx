@@ -25,6 +25,8 @@ import { Tuning2Icon as SlidersHorizontal } from '@solar-icons/react/bold/tuning
 import { AlignLeftIcon as AlignLeft } from '@solar-icons/react/bold/align-left'
 import { PlayCircleIcon as Play } from '@solar-icons/react/bold/play-circle'
 import { PauseCircleIcon as Pause } from '@solar-icons/react/bold/pause-circle'
+import { DownloadIcon as FileDown } from '@solar-icons/react/bold/download'
+import PptxGenJS from 'pptxgenjs'
 
 const C = {
   bg: 'var(--color-bg)',
@@ -1290,6 +1292,401 @@ function GrupoPanel({ project }) {
   )
 }
 
+// ─── PowerPoint export ──────────────────────────────────────────────────────
+
+const SECTION_COLORS = {
+  cover: '1a1a1a', problem: 'D97706', solution: '059669',
+  features: '0891B2', technologies: '6366F1', results: '059669',
+  learnings: 'EC4899', closing: '1a1a1a',
+}
+
+function extractBullets(text, aiNote, max = 5) {
+  const sources = [text, aiNote].filter(Boolean).join('\n')
+  if (!sources) return []
+  const seen = new Set()
+  const lines = sources.split(/[\n.!?]+/)
+    .map(l => l.replace(/^[-•*\d]+[.)]\s*/, '').replace(/^(PONTOS-CHAVE|O QUE DIZER):?\s*/i, '').trim())
+    .filter(l => l.length > 15 && l.length < 150 && !seen.has(l.toLowerCase()) && (seen.add(l.toLowerCase()), true))
+  return lines.slice(0, max)
+}
+
+function exportPptx(project, aiData) {
+  const pptx = new PptxGenJS()
+  pptx.title = project.name || 'Apresentação'
+  pptx.author = 'Showo'
+  pptx.layout = 'LAYOUT_WIDE'
+
+  const FONT = 'Calibri'
+  const BG = 'FFFFFF'
+  const TEXT_DARK = '1E1E1E'
+  const TEXT_MID = '555555'
+  const TEXT_LIGHT = '999999'
+  const CARD_BG = 'F3F4F6'
+
+  // Cover slide — dark, minimal
+  const cover = pptx.addSlide()
+  cover.background = { color: '111111' }
+  const coverAccent = SECTION_COLORS[buildSections(project)[0]?.id] || 'D97706'
+  cover.addShape(pptx.ShapeType.rect, { x: 0.8, y: 3.0, w: 1.2, h: 0.06, fill: { color: coverAccent } })
+  cover.addText(project.name || 'Projeto', {
+    x: 0.8, y: 1.2, w: 11,
+    fontSize: 44, fontFace: FONT, bold: true, color: 'FFFFFF',
+  })
+  if (project.ai_tagline) {
+    cover.addText(project.ai_tagline, {
+      x: 0.8, y: 3.4, w: 11,
+      fontSize: 18, fontFace: FONT, italic: true, color: '888888', lineSpacingMultiple: 1.3,
+    })
+  }
+  if (project.area) {
+    cover.addText(project.area.toUpperCase(), {
+      x: 0.8, y: 6.4, w: 11,
+      fontSize: 12, fontFace: FONT, color: '666666', charSpacing: 3,
+    })
+  }
+  const coverNote = aiData?.slide_notes?.cover
+  if (coverNote) cover.addNotes(coverNote)
+
+  // Content slides
+  const contentSections = buildSections(project).filter(s => s.id !== 'cover' && s.id !== 'closing')
+
+  for (const section of contentSections) {
+    const slide = pptx.addSlide()
+    slide.background = { color: BG }
+    const keyPoints = aiData?.key_points?.[section.id] ?? []
+    const speakerNote = aiData?.slide_notes?.[section.id] ?? ''
+    const accent = SECTION_COLORS[section.id] || '1a1a1a'
+    const content = getSlideContent(project, section.id)
+    const bullets = extractBullets(content, speakerNote, 5)
+
+    // Top accent line
+    slide.addShape(pptx.ShapeType.rect, { x: 0.8, y: 0.55, w: 0.8, h: 0.05, fill: { color: accent } })
+
+    // Section title
+    slide.addText(section.label, {
+      x: 0.8, y: 0.7, w: 8,
+      fontSize: 28, fontFace: FONT, bold: true, color: TEXT_DARK,
+    })
+
+    // Main content bullets (left side, or full width if no key points)
+    const hasRight = keyPoints.length > 0
+    const contentW = hasRight ? 6.5 : 11
+    if (bullets.length) {
+      const bulletRows = bullets.map(b => ({
+        text: b, options: { bullet: { code: '2022', color: accent }, indentLevel: 0 },
+      }))
+      slide.addText(bulletRows, {
+        x: 0.8, y: 1.5, w: contentW, h: 5.2,
+        fontSize: 16, fontFace: FONT, color: TEXT_MID,
+        valign: 'top', lineSpacingMultiple: 1.5, paraSpaceAfter: 8,
+      })
+    } else if (content) {
+      slide.addText(content.slice(0, 400), {
+        x: 0.8, y: 1.5, w: contentW, h: 5.2,
+        fontSize: 15, fontFace: FONT, color: TEXT_MID,
+        valign: 'top', wrap: true, lineSpacingMultiple: 1.4,
+      })
+    }
+
+    // Key points on right as cards
+    if (hasRight) {
+      slide.addText('PONTOS-CHAVE', {
+        x: 8.0, y: 1.5, w: 4.5,
+        fontSize: 10, fontFace: FONT, bold: true, color: TEXT_LIGHT, charSpacing: 2,
+      })
+      keyPoints.slice(0, 4).forEach((p, i) => {
+        const cardY = 2.0 + i * 1.1
+        slide.addShape(pptx.ShapeType.roundRect, {
+          x: 8.0, y: cardY, w: 4.5, h: 0.9,
+          fill: { color: CARD_BG }, rectRadius: 0.06,
+        })
+        slide.addShape(pptx.ShapeType.rect, {
+          x: 8.0, y: cardY, w: 0.08, h: 0.9, fill: { color: accent },
+        })
+        slide.addText(p, {
+          x: 8.3, y: cardY, w: 4.0, h: 0.9,
+          fontSize: 12, fontFace: FONT, color: TEXT_DARK, valign: 'middle', lineSpacingMultiple: 1.2,
+        })
+      })
+    }
+
+    // Speaker notes
+    const noteParts = []
+    if (keyPoints.length) noteParts.push('PONTOS-CHAVE:\n' + keyPoints.map((p, i) => `${i + 1}. ${p}`).join('\n'))
+    if (speakerNote) noteParts.push('\nO QUE DIZER:\n' + speakerNote)
+    if (content) noteParts.push('\nCONTEÚDO COMPLETO:\n' + content)
+    if (noteParts.length) slide.addNotes(noteParts.join('\n'))
+  }
+
+  // Closing slide
+  const closing = pptx.addSlide()
+  closing.background = { color: '111111' }
+  closing.addText('Obrigado', {
+    x: 0, y: 2.2, w: '100%',
+    fontSize: 44, fontFace: FONT, bold: true, color: 'FFFFFF', align: 'center',
+  })
+  closing.addShape(pptx.ShapeType.rect, { x: 5.9, y: 3.6, w: 1.2, h: 0.05, fill: { color: coverAccent } })
+  closing.addText(project.name || '', {
+    x: 0, y: 3.9, w: '100%',
+    fontSize: 16, fontFace: FONT, color: '666666', align: 'center',
+  })
+  const closingNote = aiData?.slide_notes?.closing
+  if (closingNote) closing.addNotes(closingNote)
+
+  const slug = (project.slug || project.name || 'apresentacao').replace(/[^a-z0-9_-]/gi, '_')
+  pptx.writeFile({ fileName: `${slug}_notas.pptx` })
+}
+
+function getSlideContent(project, sectionId) {
+  const map = {
+    problem: project.problem,
+    solution: project.solution,
+    features: project.features,
+    technologies: project.technologies,
+    results: project.results,
+    learnings: project.learnings,
+  }
+  return (map[sectionId] || '').trim()
+}
+
+// ─── Defense Training (record + AI feedback) ────────────────────────────────
+
+function DefenseTraining({ project, checkGate, consumeAI }) {
+  const [phase, setPhase] = useState('idle') // idle | recording | processing | done | error | unsupported
+  const [transcript, setTranscript] = useState('')
+  const [feedback, setFeedback] = useState(null)
+  const [error, setError] = useState('')
+  const [elapsed, setElapsed] = useState(0)
+  const recognitionRef = useRef(null)
+  const timerRef = useRef(null)
+  const transcriptRef = useRef('')
+
+  const SpeechRecognition = typeof window !== 'undefined'
+    ? window.SpeechRecognition || window.webkitSpeechRecognition
+    : null
+
+  function startRecording() {
+    const gate = checkGate('defenseTraining')
+    if (!gate.allowed) { setError(gate.message?.body || 'Limite de treinos atingido.'); return }
+
+    if (!SpeechRecognition) { setPhase('unsupported'); return }
+
+    setError('')
+    setTranscript('')
+    setFeedback(null)
+    transcriptRef.current = ''
+
+    const recognition = new SpeechRecognition()
+    recognition.lang = 'pt-PT'
+    recognition.continuous = true
+    recognition.interimResults = true
+    recognition.maxAlternatives = 1
+
+    recognition.onresult = (e) => {
+      let full = ''
+      for (let i = 0; i < e.results.length; i++) {
+        full += e.results[i][0].transcript + ' '
+      }
+      transcriptRef.current = full.trim()
+      setTranscript(full.trim())
+    }
+
+    recognition.onerror = (e) => {
+      if (e.error === 'not-allowed') setError('Permissão de microfone negada. Permite o acesso nas definições do browser.')
+      else if (e.error !== 'aborted') setError('Erro no reconhecimento de voz: ' + e.error)
+    }
+
+    recognition.onend = () => {
+      if (phase === 'recording') recognition.start()
+    }
+
+    recognitionRef.current = recognition
+    recognition.start()
+    setPhase('recording')
+    setElapsed(0)
+    timerRef.current = setInterval(() => setElapsed(e => e + 1), 1000)
+  }
+
+  async function stopRecording() {
+    clearInterval(timerRef.current)
+    if (recognitionRef.current) {
+      recognitionRef.current.onend = null
+      recognitionRef.current.stop()
+    }
+
+    const finalTranscript = transcriptRef.current
+    if (finalTranscript.length < 50) {
+      setError('Transcrição demasiado curta. Tenta apresentar pelo menos 1 minuto.')
+      setPhase('idle')
+      return
+    }
+
+    setPhase('processing')
+    try {
+      const { data, error: fnErr } = await supabase.functions.invoke('defense-training', {
+        body: { transcript: finalTranscript, project, durationSeconds: elapsed },
+      })
+      if (fnErr || data?.error) {
+        setError(data?.error || 'Erro ao obter feedback.')
+        setPhase('error')
+        return
+      }
+      consumeAI('defenseTraining')
+      setFeedback(data)
+      setPhase('done')
+    } catch {
+      setError('Erro de ligação.')
+      setPhase('error')
+    }
+  }
+
+  const formatTime = (s) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`
+
+  if (phase === 'unsupported') {
+    return (
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 20, textAlign: 'center' }}>
+        <p style={{ margin: 0, color: C.muted, fontSize: 14 }}>O teu browser não suporta reconhecimento de voz. Usa o Chrome ou o Edge.</p>
+      </div>
+    )
+  }
+
+  if (phase === 'done' && feedback) {
+    const scoreColor = feedback.score >= 70 ? 'var(--color-success)' : feedback.score >= 40 ? 'var(--color-warning)' : 'var(--color-error)'
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {/* Score header */}
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
+          <span style={{ fontSize: 36, fontWeight: 900, color: scoreColor }}>{feedback.score}</span>
+          <div>
+            <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>Pontuação geral</span>
+            <p style={{ margin: '4px 0 0', fontSize: 12, color: C.muted }}>{feedback.duration_feedback}</p>
+          </div>
+        </div>
+
+        {/* Content coverage */}
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '18px 20px' }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Cobertura de conteúdo</span>
+          {feedback.content_coverage?.covered?.length > 0 && (
+            <div style={{ marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {feedback.content_coverage.covered.map((s, i) => (
+                <span key={i} style={{ background: 'var(--color-success-subtle)', color: 'var(--color-success)', borderRadius: 6, padding: '3px 8px', fontSize: 11, fontWeight: 600 }}>{s}</span>
+              ))}
+            </div>
+          )}
+          {feedback.content_coverage?.missing?.length > 0 && (
+            <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {feedback.content_coverage.missing.map((s, i) => (
+                <span key={i} style={{ background: 'var(--color-error-subtle)', color: 'var(--color-error)', borderRadius: 6, padding: '3px 8px', fontSize: 11, fontWeight: 600 }}>{s}</span>
+              ))}
+            </div>
+          )}
+          {feedback.content_coverage?.comment && <p style={{ margin: '10px 0 0', fontSize: 13, color: C.text, lineHeight: 1.6 }}>{feedback.content_coverage.comment}</p>}
+        </div>
+
+        {/* Clarity */}
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '18px 20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Clareza</span>
+            <span style={{ fontSize: 13, fontWeight: 800, color: feedback.clarity?.score >= 70 ? 'var(--color-success)' : 'var(--color-warning)' }}>{feedback.clarity?.score}/100</span>
+          </div>
+          {feedback.clarity?.strengths?.map((s, i) => <p key={i} style={{ margin: '4px 0', fontSize: 13, color: C.text }}>✓ {s}</p>)}
+          {feedback.clarity?.improvements?.map((s, i) => <p key={i} style={{ margin: '4px 0', fontSize: 13, color: C.muted }}>→ {s}</p>)}
+        </div>
+
+        {/* Filler words */}
+        {feedback.filler_words?.detected?.length > 0 && (
+          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '18px 20px' }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Palavras de preenchimento</span>
+            <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {feedback.filler_words.detected.map((w, i) => (
+                <span key={i} style={{ background: 'var(--color-warning-subtle)', color: 'var(--color-warning)', borderRadius: 6, padding: '3px 8px', fontSize: 11, fontWeight: 600 }}>"{w}"</span>
+              ))}
+            </div>
+            {feedback.filler_words.comment && <p style={{ margin: '8px 0 0', fontSize: 13, color: C.muted }}>{feedback.filler_words.comment}</p>}
+          </div>
+        )}
+
+        {/* Top tips */}
+        {feedback.top_tips?.length > 0 && (
+          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '18px 20px' }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Dicas para a próxima</span>
+            {feedback.top_tips.map((t, i) => <p key={i} style={{ margin: '8px 0 0', fontSize: 13, color: C.text, lineHeight: 1.6 }}>{i + 1}. {t}</p>)}
+          </div>
+        )}
+
+        <button
+          onClick={() => { setPhase('idle'); setFeedback(null); setTranscript(''); setElapsed(0) }}
+          style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 0', color: C.text, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+        >Treinar outra vez</button>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '24px 20px', textAlign: 'center' }}>
+      {phase === 'idle' && (
+        <>
+          <Mic size={32} color={C.blue} style={{ marginBottom: 12 }} />
+          <h3 style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 800, color: C.text }}>Treina a tua defesa</h3>
+          <p style={{ margin: '0 0 20px', fontSize: 13, color: C.muted, lineHeight: 1.6 }}>
+            Carrega em gravar e apresenta o teu projeto como se estivesses frente ao júri. A IA vai analisar o conteúdo, a clareza e dar-te dicas.
+          </p>
+          {error && <p style={{ margin: '0 0 12px', fontSize: 12, color: C.red }}>{typeof error === 'string' ? error : error.body || 'Erro'}</p>}
+          <button
+            onClick={startRecording}
+            style={{
+              background: C.blue, border: 'none', borderRadius: 10, padding: '12px 28px',
+              color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+            }}
+          ><Mic size={16} /> Começar a gravar</button>
+        </>
+      )}
+
+      {phase === 'recording' && (
+        <>
+          <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--color-error-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', animation: 'pulse 1.5s ease-in-out infinite' }}>
+            <Mic size={28} color="var(--color-error)" />
+          </div>
+          <style>{`@keyframes pulse { 0%,100% { transform: scale(1); opacity: 1 } 50% { transform: scale(1.08); opacity: 0.8 } }`}</style>
+          <p style={{ fontSize: 28, fontWeight: 900, color: C.text, margin: '0 0 4px', fontVariantNumeric: 'tabular-nums' }}>{formatTime(elapsed)}</p>
+          <p style={{ fontSize: 12, color: C.muted, margin: '0 0 4px' }}>A ouvir...</p>
+          {transcript && (
+            <p style={{ fontSize: 12, color: C.muted, margin: '8px 0 16px', maxHeight: 60, overflow: 'auto', textAlign: 'left', background: 'var(--color-bg)', borderRadius: 8, padding: '8px 10px', lineHeight: 1.5 }}>
+              {transcript.slice(-200)}
+            </p>
+          )}
+          <button
+            onClick={stopRecording}
+            style={{
+              background: 'var(--color-error)', border: 'none', borderRadius: 10, padding: '12px 28px',
+              color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+            }}
+          >Parar e obter feedback</button>
+        </>
+      )}
+
+      {phase === 'processing' && (
+        <>
+          <div style={{ width: 32, height: 32, border: '3px solid var(--color-border)', borderTopColor: C.blue, borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 16px' }} />
+          <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: '0 0 4px' }}>A analisar a tua apresentação...</p>
+          <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>Isto demora alguns segundos.</p>
+        </>
+      )}
+
+      {phase === 'error' && (
+        <>
+          <p style={{ fontSize: 14, color: C.red, margin: '0 0 12px' }}>{error}</p>
+          <button
+            onClick={() => { setPhase('idle'); setError('') }}
+            style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: '10px 20px', color: C.text, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+          >Tentar outra vez</button>
+        </>
+      )}
+    </div>
+  )
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function DefenseMode({ project, isOwner, collaboratorSections, onClose }) {
@@ -1302,9 +1699,9 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
   const [aiData, setAiData]       = useState(project.defense_ai_data || null)
   const [loadingAI, setLoadingAI] = useState(false)
   const [aiError, setAiError]     = useState(false)
-  const [guideMode, setGuideMode] = useState(false)
   const [guideConfig, setGuideConfig] = useState(project.guide_config || null)
   const [showGuideEditor, setShowGuideEditor] = useState(false)
+  const [exporting, setExporting] = useState(false)
   const [confirmUse, setConfirmUse] = useState(null)
   const effectiveProject = { ...project, guide_config: guideConfig }
 
@@ -1315,10 +1712,10 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
 
 
   useEffect(() => {
-    function onKey(e) { if (e.key === 'Escape' && !guideMode) onClose() }
+    function onKey(e) { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [guideMode])
+  }, [])
 
   function tryLoadAI() {
     const gate = checkGate('defense')
@@ -1348,18 +1745,11 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
       .finally(() => setLoadingAI(false))
   }
 
-  if (guideMode) return (
-    <PresenterGuide
-      project={effectiveProject}
-      aiData={aiData}
-      loadingAI={loadingAI}
-      aiError={aiError}
-      onRetry={tryLoadAI}
-      onClose={() => setGuideMode(false)}
-      collaboratorSections={collaboratorSections}
-      studentName={studentName}
-    />
-  )
+  async function handleExportPptx() {
+    if (!aiData) { tryLoadAI(); return }
+    setExporting(true)
+    try { exportPptx(effectiveProject, aiData) } finally { setExporting(false) }
+  }
 
   const tabs = [
     { id: 'notes', label: 'Notas',    show: canSeeFullPrep },
@@ -1457,7 +1847,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
                 <GuideEditor project={effectiveProject} onSave={saveGuideConfig} />
               )}
 
-              {/* Preview card — sempre escuro, como o herói (preto plano, não gradiente). */}
+              {/* PowerPoint export card */}
               <div style={{
                 position: 'relative', overflow: 'hidden',
                 background: '#000000',
@@ -1473,36 +1863,46 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
                     width: 48, height: 48, borderRadius: 14, marginBottom: 14,
                     background: 'rgba(255,255,255,0.16)', border: '1px solid rgba(255,255,255,0.25)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}><Smartphone size={24} color="#fff" /></div>
-                  <h3 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 800, color: '#fff' }}>Guia do Apresentador</h3>
+                  }}><FileDown size={24} color="#fff" /></div>
+                  <h3 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 800, color: '#fff' }}>Notas para PowerPoint</h3>
                   <p style={{ margin: '0 0 16px', fontSize: 14, color: 'rgba(255,255,255,0.85)', lineHeight: 1.6 }}>
-                    Um guia no telemóvel enquanto apresentas no Canva ou PowerPoint. Acompanha as tuas secções, faz check dos pontos-chave e consulta o que dizer se ficares em branco.
+                    Exporta um PowerPoint com as notas do apresentador em cada slide. Abre no PowerPoint, usa a Vista do Apresentador, e tens tudo o que precisas de dizer no ecrã à tua frente.
                   </p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
-                    {['Pontos-chave interativos', 'Modo teleponto', 'Temporizador', 'Swipe entre secções'].map(f => (
+                    {['Notas por secção', 'Pontos-chave', 'Vista do Apresentador', 'Funciona offline'].map(f => (
                       <span key={f} style={{ background: 'rgba(255,255,255,0.14)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.28)', borderRadius: 999, padding: '5px 12px', fontSize: 12, fontWeight: 600, color: '#fff' }}>{f}</span>
                     ))}
                   </div>
                   <button
-                    onClick={() => setGuideMode(true)}
+                    onClick={handleExportPptx}
+                    disabled={exporting || loadingAI}
                     className="dm-cta-btn"
                     style={{
                       width: '100%', padding: '14px 0',
                       background: '#fff',
                       border: 'none', borderRadius: 12,
                       color: '#000000', fontSize: 15, fontWeight: 700,
-                      cursor: 'pointer', fontFamily: 'inherit',
+                      cursor: exporting || loadingAI ? 'wait' : 'pointer', fontFamily: 'inherit',
                       boxShadow: '0 8px 28px rgba(0,0,0,0.25)',
+                      opacity: exporting || loadingAI ? 0.7 : 1,
                     }}
                   >
-                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>Abrir guia <ArrowRight size={15} /></span>
+                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+                      {loadingAI ? 'A gerar notas...' : exporting ? 'A exportar...' : !aiData ? 'Gerar e exportar PowerPoint' : 'Exportar PowerPoint'}
+                      {!loadingAI && !exporting && <FileDown size={15} />}
+                    </span>
                   </button>
                 </div>
               </div>
 
-              <p style={{ fontSize: 12, color: C.subtle, textAlign: 'center', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
-                <Lightbulb size={12} /> Abre num segundo ecrã ou telemóvel durante a apresentação real
-              </p>
+              {!aiData && (
+                <p style={{ fontSize: 12, color: C.subtle, textAlign: 'center', margin: '0 0 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+                  <Lightbulb size={12} /> A AI gera notas e pontos-chave para cada secção da tua apresentação
+                </p>
+              )}
+
+              {/* Defense training */}
+              {canSeeFullPrep && <DefenseTraining project={project} checkGate={checkGate} consumeAI={consumeAI} />}
             </div>
           )}
         </div>

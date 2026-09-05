@@ -9,6 +9,7 @@ export const PLANS = {
       interviewProject: Infinity,
       coach: Infinity,
       defense: Infinity,
+      defenseTraining: 2,
       diaryReport: Infinity,
       narrative: Infinity,
       analyzeProject: Infinity,
@@ -28,6 +29,7 @@ export const PLANS = {
       interviewProject: 0,
       coach: 10,
       defense: 1,
+      defenseTraining: 0,
       diaryReport: 1,
       narrative: 1,
       analyzeProject: 0,
@@ -47,6 +49,7 @@ export const PLANS = {
       interviewProject: Infinity,
       coach: Infinity,
       defense: Infinity,
+      defenseTraining: 0,
       diaryReport: Infinity,
       narrative: Infinity,
       analyzeProject: Infinity,
@@ -69,6 +72,7 @@ export const PLANS = {
       interviewProject: Infinity,
       coach: Infinity,
       defense: Infinity,
+      defenseTraining: 0,
       diaryReport: Infinity,
       narrative: Infinity,
       analyzeProject: Infinity,
@@ -113,6 +117,7 @@ export const AI_FEATURE_LABELS = {
   diaryReport: 'Relatório do diário',
   narrative: 'Narrativa IA',
   analyzeProject: 'Análise de projeto',
+  defenseTraining: 'Treino de defesa',
   coverLetter: 'Carta de apresentação',
 }
 
@@ -150,6 +155,10 @@ export const PLAN_GATE_MESSAGES = {
   analyzeProject: () => ({
     title: 'Análise completa de projeto',
     body: 'A IA revê o teu projeto secção a secção e diz-te exatamente o que melhorar para subir o score. Disponível no Build.',
+  }),
+  defenseTraining: () => ({
+    title: 'Treino de defesa',
+    body: 'Grava-te a apresentar o projeto e recebe feedback da IA sobre conteúdo, clareza e oratória. Disponível para contas de escola.',
   }),
   coverLetter: () => ({
     title: 'Carta de apresentação IA',
