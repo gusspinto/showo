@@ -3455,6 +3455,9 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
             </div>
           )}
 
+          {/* GitHub */}
+          {project.github_url && <GitHubCard githubUrl={project.github_url} />}
+
           {/* Comentários */}
           <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '22px 24px', fontFamily: 'var(--font-body, system-ui, sans-serif)' }}>
             <ProjectComments projectId={project.id} projectAuthorId={project.user_id} />
