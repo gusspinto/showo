@@ -174,7 +174,7 @@ export default function Pricing() {
             const isCurrent = user && plan.id === planId
             return (
               <div key={plan.id} className={`pricing-card${plan.popular ? ' is-popular' : ''}${plan.career ? ' is-career' : ''}`}>
-                {plan.popular && <span className="pricing-flag">Mais escolhido</span>}
+                {plan.popular && <span className="pricing-flag"><span className="pricing-flag-text">Mais escolhido</span></span>}
                 {plan.career && <span className="pricing-flag pricing-flag--career">Carreira</span>}
 
                 <div className="pricing-card-head">
@@ -224,8 +224,8 @@ export default function Pricing() {
                 {plan.career && (
                   <div className="pricing-career">
                     <div className="pricing-career-head">
-                      <Sparkles size={13} />
-                      <span>Carreira · só no Launch</span>
+                      <Sparkles size={13} className="pricing-career-head-icon" />
+                      <span className="pricing-career-head-text">Carreira · só no Launch</span>
                     </div>
                     <ul className="pricing-career-list">
                       {CAREER_FEATURES.map(({ Icon, title, desc }) => (

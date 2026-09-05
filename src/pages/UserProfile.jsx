@@ -398,7 +398,7 @@ export default function UserProfile() {
                 <div className="up-meta-row">
                   {profile.username && <span>@{profile.username}</span>}
                   {profile.occupation && <><span className="up-meta-sep">·</span><span>{profile.occupation}</span></>}
-                  {(profile.area || profile.course) && <><span className="up-meta-sep">·</span><span>{profile.area || profile.course}</span></>}
+                  {!profile.occupation && (profile.area || profile.course) && <><span className="up-meta-sep">·</span><span>{profile.area || profile.course}</span></>}
                   {profile.school && <><span className="up-meta-sep">·</span><span>{profile.school}</span></>}
                   {profile.role === 'professor' && <><span className="up-meta-sep">·</span><span>Professor</span></>}
                 </div>
