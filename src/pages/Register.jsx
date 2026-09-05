@@ -133,7 +133,6 @@ export default function Register() {
   // mobile — a pessoa já escreveu o email lá, não devia ter de o repetir.
   const [email, setEmail] = useState(() => params.get('email') || '')
   const [password, setPassword] = useState('')
-  const [phone, setPhone] = useState('')
 
   const [inviteCode, setInviteCode] = useState(professorCodeParam)
   const [accountCreated, setAccountCreated] = useState(false)
@@ -251,7 +250,9 @@ export default function Register() {
       await supabase.rpc('associate_organization_by_email').catch(() => {})
     }
 
-    // Store geolocation, referrer and phone on the new profile
+    // Store geolocation and referrer on the new profile (phone is collected
+    // later by PhoneGate, after login — same for every signup path, Google
+    // included, so it doesn't need to live in this form).
     const params = new URLSearchParams(window.location.search)
     const geo = await getGeoInfo()
     const { data: { user: newUser } } = await supabase.auth.getUser()
@@ -261,7 +262,6 @@ export default function Register() {
         signup_city: geo?.city || null,
         signup_referrer: document.referrer || null,
         signup_utm_source: params.get('utm_source') || null,
-        phone: phone.trim() || null,
       }).eq('id', newUser.id)
     }
 
@@ -350,7 +350,6 @@ export default function Register() {
     if (needsInviteCode && !inviteCode.trim()) { setError('Introduz o código de acesso enviado pela Showo.'); return }
     if (needsClassCode && !classCode.trim()) { setError('Introduz o código da turma fornecido pelo professor.'); return }
     if (password.length < 6) { setError('A palavra-passe tem de ter pelo menos 6 caracteres.'); return }
-    if (!phone.trim()) { setError('Introduz o teu número de telemóvel.'); return }
 
     // Validate email domain against class's school before creating account
     if (needsClassCode) {
@@ -382,7 +381,6 @@ export default function Register() {
         pending_invite_code: needsInviteCode ? inviteCode.trim() : null,
         pending_school: needsSchool ? school.trim() : null,
         pending_partner_token: isPartnerFlow ? partnerToken : null,
-        pending_phone: phone.trim() || null,
       } },
     })
     if (err) {
@@ -800,9 +798,6 @@ export default function Register() {
                     </Field>
                     <Field label="Palavra-passe">
                       <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" required />
-                    </Field>
-                    <Field label="Telemóvel">
-                      <Input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="912 345 678" required />
                     </Field>
                   </>
                 )}
