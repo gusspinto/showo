@@ -318,11 +318,19 @@ function parseGitHubUrl(url) {
   return m ? { owner: m[1], repo: m[2].replace(/\.git$/, '') } : null
 }
 
-const GitHubCard = memo(function GitHubCard({ githubUrl }) {
+const GH_ICON = <svg viewBox="0 0 16 16" width={16} height={16} fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+
+const GH_VARIANTS = [
+  { id: 'full', label: 'Completo' },
+  { id: 'compact', label: 'Compacto' },
+  { id: 'badge', label: 'Badge' },
+  { id: 'langs', label: 'Linguagens' },
+]
+
+function useGitHubRepo(githubUrl) {
   const [data, setData] = useState(null)
   const [langs, setLangs] = useState(null)
   const parsed = useMemo(() => parseGitHubUrl(githubUrl), [githubUrl])
-
   useEffect(() => {
     if (!parsed) return
     let cancelled = false
@@ -337,79 +345,110 @@ const GitHubCard = memo(function GitHubCard({ githubUrl }) {
     }).catch(() => {})
     return () => { cancelled = true }
   }, [parsed])
-
-  if (!parsed || !data) return null
-
   const totalBytes = langs ? Object.values(langs).reduce((a, b) => a + b, 0) : 0
   const topLangs = langs ? Object.entries(langs).slice(0, 6).map(([name, bytes]) => ({
     name, pct: Math.round(bytes / totalBytes * 100),
   })) : []
+  return { parsed, data, topLangs }
+}
 
+function LangBar({ topLangs }) {
+  if (!topLangs.length) return null
   return (
-    <div style={{
-      background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 12,
-      padding: 20, marginTop: 16,
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-        <svg viewBox="0 0 16 16" width={20} height={20} fill={colors.text}>
-          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
-        </svg>
-        <a href={githubUrl} target="_blank" rel="noopener noreferrer"
-          style={{ fontSize: 15, fontWeight: 600, color: colors.text, textDecoration: 'none' }}>
-          {parsed.owner}/{parsed.repo}
-        </a>
-        {data.stargazers_count > 0 && (
-          <span style={{ fontSize: 12, color: colors.muted, display: 'flex', alignItems: 'center', gap: 3 }}>
-            ⭐ {data.stargazers_count}
-          </span>
-        )}
-        {data.forks_count > 0 && (
-          <span style={{ fontSize: 12, color: colors.muted }}>🍴 {data.forks_count}</span>
-        )}
+    <>
+      <div style={{ display: 'flex', height: 8, borderRadius: 4, overflow: 'hidden', marginBottom: 8 }}>
+        {topLangs.map(l => (
+          <div key={l.name} style={{ width: `${l.pct}%`, background: LANG_COLORS[l.name] || '#8b8b8b', minWidth: l.pct > 0 ? 3 : 0 }} />
+        ))}
       </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px' }}>
+        {topLangs.map(l => (
+          <span key={l.name} style={{ fontSize: 12, color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: 5 }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: LANG_COLORS[l.name] || '#8b8b8b', display: 'inline-block' }} />
+            {l.name} <span style={{ color: 'var(--color-text-tertiary)' }}>{l.pct}%</span>
+          </span>
+        ))}
+      </div>
+    </>
+  )
+}
 
-      {data.description && (
-        <p style={{ fontSize: 13, color: colors.muted, margin: '0 0 14px', lineHeight: 1.5 }}>
-          {data.description}
-        </p>
+const GitHubCard = memo(function GitHubCard({ githubUrl, variant = 'full' }) {
+  const { parsed, data, topLangs } = useGitHubRepo(githubUrl)
+  if (!parsed || !data) return null
+
+  const repoLink = <a href={githubUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>{parsed.owner}/{parsed.repo}</a>
+  const stats = (
+    <span style={{ display: 'inline-flex', gap: 10, fontSize: 12, color: 'var(--color-text-secondary)' }}>
+      {data.stargazers_count > 0 && <span>⭐ {data.stargazers_count}</span>}
+      {data.forks_count > 0 && <span>🍴 {data.forks_count}</span>}
+    </span>
+  )
+
+  if (variant === 'badge') return (
+    <a href={githubUrl} target="_blank" rel="noopener noreferrer" style={{
+      display: 'inline-flex', alignItems: 'center', gap: 8,
+      background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 8,
+      padding: '8px 14px', fontSize: 13, fontWeight: 600, color: 'var(--color-text)', textDecoration: 'none',
+    }}>
+      {GH_ICON} {parsed.owner}/{parsed.repo}
+      {data.stargazers_count > 0 && <span style={{ color: 'var(--color-text-secondary)', fontWeight: 400 }}>⭐ {data.stargazers_count}</span>}
+      {topLangs[0] && (
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--color-text-tertiary)', fontWeight: 400 }}>
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: LANG_COLORS[topLangs[0].name] || '#8b8b8b' }} />
+          {topLangs[0].name}
+        </span>
       )}
+    </a>
+  )
 
+  if (variant === 'langs') return (
+    <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, fontSize: 13, fontWeight: 600, color: 'var(--color-text)' }}>
+        {GH_ICON} {repoLink}
+      </div>
+      <LangBar topLangs={topLangs} />
+    </div>
+  )
+
+  if (variant === 'compact') return (
+    <div style={{
+      background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12,
+      padding: 16, display: 'flex', alignItems: 'center', gap: 14,
+    }}>
+      <div style={{ color: 'var(--color-text)', flexShrink: 0 }}>{GH_ICON}</div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)' }}>{repoLink}</div>
+        {data.description && <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{data.description}</div>}
+      </div>
+      {stats}
       {topLangs.length > 0 && (
-        <>
-          <div style={{
-            display: 'flex', height: 8, borderRadius: 4, overflow: 'hidden', marginBottom: 8,
-          }}>
-            {topLangs.map(l => (
-              <div key={l.name} style={{
-                width: `${l.pct}%`, background: LANG_COLORS[l.name] || '#8b8b8b',
-                minWidth: l.pct > 0 ? 3 : 0,
-              }} />
-            ))}
-          </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px' }}>
-            {topLangs.map(l => (
-              <span key={l.name} style={{ fontSize: 12, color: colors.muted, display: 'flex', alignItems: 'center', gap: 5 }}>
-                <span style={{
-                  width: 8, height: 8, borderRadius: '50%',
-                  background: LANG_COLORS[l.name] || '#8b8b8b', display: 'inline-block',
-                }} />
-                {l.name} <span style={{ color: colors.subtle }}>{l.pct}%</span>
-              </span>
-            ))}
-          </div>
-        </>
+        <div style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
+          {topLangs.slice(0, 4).map(l => (
+            <span key={l.name} title={`${l.name} ${l.pct}%`} style={{ width: 10, height: 10, borderRadius: '50%', background: LANG_COLORS[l.name] || '#8b8b8b' }} />
+          ))}
+        </div>
       )}
+    </div>
+  )
 
-      <div style={{
-        display: 'flex', gap: 16, marginTop: topLangs.length ? 14 : 0,
-        fontSize: 12, color: colors.subtle,
-      }}>
+  // full (default)
+  return (
+    <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: 20 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+        <span style={{ color: 'var(--color-text)' }}>{GH_ICON}</span>
+        <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-text)' }}>{repoLink}</span>
+        {stats}
+      </div>
+      {data.description && (
+        <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', margin: '0 0 14px', lineHeight: 1.5 }}>{data.description}</p>
+      )}
+      <LangBar topLangs={topLangs} />
+      <div style={{ display: 'flex', gap: 16, marginTop: topLangs.length ? 14 : 0, fontSize: 12, color: 'var(--color-text-tertiary)' }}>
         {data.updated_at && (
           <span>Último update: {new Date(data.pushed_at || data.updated_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
         )}
-        {data.license?.spdx_id && data.license.spdx_id !== 'NOASSERTION' && (
-          <span>📄 {data.license.spdx_id}</span>
-        )}
+        {data.license?.spdx_id && data.license.spdx_id !== 'NOASSERTION' && <span>📄 {data.license.spdx_id}</span>}
       </div>
     </div>
   )
@@ -792,6 +831,8 @@ const BLOCK_TYPES = [
   { type: 'card',    label: 'Card',          Icon: ClipboardList, desc: 'Cartão livre. Título + dados (ex: idade, função...)' },
   { type: 'cta',     label: 'Botão CTA',     Icon: ArrowRight, desc: 'Chamada à ação destacada' },
   { type: 'link',    label: 'Link',          Icon: Link,       desc: 'GitHub, demo, portfolio...' },
+  { type: 'github',  label: 'GitHub',        Icon: FileText,   desc: 'Card do repositório com linguagens' },
+  { type: 'linkedin', label: 'LinkedIn',    Icon: User,       desc: 'Card do perfil LinkedIn' },
   { type: 'divider', label: 'Divisor',       Icon: Minus,      desc: 'Linha separadora de secções' },
 ]
 
@@ -2038,32 +2079,6 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                     </button>
                   </div>
                 </div>
-                <div style={{ marginBottom: 12 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-                    <div>
-                      <div style={wsControlLabel}>Blocos em canvas livre</div>
-                      <div style={{ fontSize: 10, color: 'var(--color-text-tertiary)', marginTop: 1 }}>
-                        Arrasta os blocos para qualquer posição, em vez de em lista
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => setPreviewStyle(ps => ({ ...ps, canvasMode: !ps.canvasMode }))}
-                      style={{
-                        width: 42, height: 24, borderRadius: 99, flexShrink: 0,
-                        background: previewStyle.canvasMode ? 'var(--color-primary)' : 'var(--color-border)',
-                        border: 'none', cursor: 'pointer',
-                        transition: 'background 0.2s', position: 'relative',
-                      }}
-                    >
-                      <div style={{
-                        width: 18, height: 18, borderRadius: '50%', background: '#fff',
-                        position: 'absolute', top: 3,
-                        left: previewStyle.canvasMode ? 21 : 3,
-                        transition: 'left 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
-                      }} />
-                    </button>
-                  </div>
-                </div>
                 <div>
                   <div style={wsControlLabel}>Tagline personalizada</div>
                   <input
@@ -2277,6 +2292,28 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
           {/* ── TAB: BLOCOS ── */}
           {previewTab === 'blocos' && (
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+              {/* Canvas mode toggle */}
+              <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: previewStyle.canvasMode ? 'var(--color-primary)' : 'var(--color-text-secondary)' }}>
+                  📐 Posição livre
+                </div>
+                <button
+                  onClick={() => setPreviewStyle(ps => ({ ...ps, canvasMode: !ps.canvasMode }))}
+                  style={{
+                    width: 38, height: 22, borderRadius: 99, flexShrink: 0,
+                    background: previewStyle.canvasMode ? 'var(--color-primary)' : 'var(--color-border)',
+                    border: 'none', cursor: 'pointer', transition: 'background 0.2s', position: 'relative',
+                  }}
+                >
+                  <div style={{
+                    width: 16, height: 16, borderRadius: '50%', background: '#fff',
+                    position: 'absolute', top: 3,
+                    left: previewStyle.canvasMode ? 19 : 3,
+                    transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                  }} />
+                </button>
+              </div>
+
               {/* Block type picker — compact 3-col chip grid */}
               <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--color-border)' }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Adicionar bloco</div>
@@ -2287,13 +2324,12 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                       <button key={bt.type} title={bt.desc} onClick={() => {
                           const b = newBlock(bt.type, previewBlocks.length)
                           setPreviewBlocks(bs => [b, ...bs])
-                          // New blocks always land at the very top of the page,
-                          // whether or not the order has been customized yet.
+                          // New blocks land at the bottom of the page.
                           setPreviewStyle(ps => {
                             const base = ps.layoutOrder?.length
                               ? ps.layoutOrder
-                              : [...previewBlocks.map(pb => ({ kind: 'block', id: pb.id })), ...orderedSections.map(key => ({ kind: 'section', key }))]
-                            return { ...ps, layoutOrder: [{ kind: 'block', id: b.id }, ...base] }
+                              : [...orderedSections.map(key => ({ kind: 'section', key })), ...previewBlocks.map(pb => ({ kind: 'block', id: pb.id }))]
+                            return { ...ps, layoutOrder: [...base, { kind: 'block', id: b.id }] }
                           })
                         }}
                         style={{
@@ -2377,6 +2413,21 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                       {block.type === 'link' && (<>
                         <input value={block.label || ''} onChange={e => upd(block.id, 'label', e.target.value)} placeholder="Texto (ex: Ver demo)" style={{ ...wsInputNew, marginBottom: 5 }} />
                         <input value={block.url || ''} onChange={e => upd(block.id, 'url', e.target.value)} placeholder="URL (https://...)" style={wsInputNew} />
+                      </>)}
+                      {block.type === 'github' && (<>
+                        <input value={block.url || ''} onChange={e => upd(block.id, 'url', e.target.value)} placeholder="https://github.com/user/repo" style={{ ...wsInputNew, marginBottom: 5 }} />
+                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                          {GH_VARIANTS.map(v => (
+                            <button key={v.id} onClick={() => upd(block.id, 'color', v.id)}
+                              style={{ fontSize: 11, padding: '3px 8px', borderRadius: 5, border: '1px solid var(--color-border)', background: (block.color || 'full') === v.id ? 'var(--color-primary)' : 'transparent', color: (block.color || 'full') === v.id ? '#fff' : 'var(--color-text-secondary)', cursor: 'pointer' }}>
+                              {v.label}
+                            </button>
+                          ))}
+                        </div>
+                      </>)}
+                      {block.type === 'linkedin' && (<>
+                        <input value={block.url || ''} onChange={e => upd(block.id, 'url', e.target.value)} placeholder="https://linkedin.com/in/username" style={{ ...wsInputNew, marginBottom: 5 }} />
+                        <input value={block.label || ''} onChange={e => upd(block.id, 'label', e.target.value)} placeholder="Nome (opcional)" style={wsInputNew} />
                       </>)}
                       {block.type === 'metric' && (<>
                         <input value={block.label || ''} onChange={e => upd(block.id, 'label', e.target.value)} placeholder="Valor (ex: 2.500)" style={{ ...wsInputNew, marginBottom: 5, fontWeight: 800 }} />
@@ -2534,15 +2585,15 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
             const hidden = new Set(previewStyle.hiddenSections || [])
             const blocksById = Object.fromEntries(previewBlocks.map(b => [b.id, b]))
             const defaultLayout = [
-              ...previewBlocks.map(b => ({ kind: 'block', id: b.id })),
               ...orderedSections.map(key => ({ kind: 'section', key })),
+              ...previewBlocks.map(b => ({ kind: 'block', id: b.id })),
             ]
             const layoutDisplay = previewStyle.layoutOrder?.length ? previewStyle.layoutOrder : defaultLayout
 
             function moveLayoutItem(from, to) {
-              if (from === to) return
+              if (from === to || from < 0 || to < 0 || from >= layoutDisplay.length || to >= layoutDisplay.length) return
               const next = [...layoutDisplay]
-              next.splice(to, 0, next.splice(from, 1)[0])
+              ;[next[from], next[to]] = [next[to], next[from]]
               setPreviewStyle(ps => ({ ...ps, layoutOrder: next }))
             }
 
@@ -2550,34 +2601,42 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
               <div style={{ flex: 1, overflowY: 'scroll', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', padding: '12px 14px' }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Ordem da página</div>
                 <p style={{ margin: '0 0 12px', fontSize: 11, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
-                  Arrasta para reordenar. Podes intercalar blocos com secções livremente. Toca em <Eye size={10} style={{ verticalAlign: 'middle' }} /> para ocultar uma secção.
+                  Usa as setas para reordenar. Toca em <Eye size={10} style={{ verticalAlign: 'middle' }} /> para ocultar.
                 </p>
+                {previewStyle.canvasMode && previewBlocks.length > 0 && (
+                  <div style={{ margin: '0 0 10px', padding: '6px 10px', borderRadius: 8, background: 'rgba(255,180,0,0.1)', border: '1px solid rgba(255,180,0,0.25)', fontSize: 11, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+                    ⚠️ <strong>Posição livre</strong> está ativa — os blocos flutuam livremente e não seguem esta ordem. Desativa na tab Blocos para os intercalar com secções.
+                  </div>
+                )}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {layoutDisplay.map((item, idx) => {
+                    const arrowBtnStyle = (disabled) => ({
+                      background: 'none', border: 'none', padding: '2px 3px', cursor: disabled ? 'default' : 'pointer',
+                      color: disabled ? 'var(--color-border)' : 'var(--color-text-secondary)', fontSize: 10, lineHeight: 1,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 4,
+                      opacity: disabled ? 0.3 : 1, flexShrink: 0,
+                    })
                     if (item.kind === 'block') {
                       const block = blocksById[item.id]
                       if (!block) return null
                       const bt = BLOCK_TYPES.find(b => b.type === block.type) || BLOCK_TYPES[0]
                       const BIcon = bt.Icon
-                      const isOver = dragOverSectionIdx === idx
                       const previewText = block.content || block.cardTitle || block.label || bt.label
                       return (
-                        <div key={block.id} draggable
-                          onDragStart={() => { sectionDragRef.current = idx }}
-                          onDragOver={e => { e.preventDefault(); if (dragOverSectionIdx !== idx) setDragOverSectionIdx(idx) }}
-                          onDragLeave={() => setDragOverSectionIdx(null)}
-                          onDrop={e => { e.preventDefault(); setDragOverSectionIdx(null); moveLayoutItem(sectionDragRef.current, idx) }}
-                          onDragEnd={() => setDragOverSectionIdx(null)}
+                        <div key={block.id}
                           style={{
                             display: 'flex', alignItems: 'center', gap: 8,
-                            background: isOver ? 'var(--color-primary-subtle)' : 'var(--color-bg-alt)',
-                            border: `1px solid ${isOver ? 'var(--color-primary)' : 'var(--color-primary-subtle)'}`,
+                            background: 'var(--color-bg-alt)',
+                            border: '1px solid var(--color-primary-subtle)',
                             borderLeft: '3px solid var(--color-primary)',
                             borderRadius: 10, padding: '8px 10px',
-                            userSelect: 'none', cursor: 'grab',
+                            userSelect: 'none',
                           }}
                         >
-                          <div style={{ cursor: 'grab', color: 'var(--color-text-tertiary)', display: 'flex', flexShrink: 0 }}><GripVertical size={14} /></div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 1, flexShrink: 0 }}>
+                            <button style={arrowBtnStyle(idx === 0)} disabled={idx === 0} onClick={() => moveLayoutItem(idx, idx - 1)}>▲</button>
+                            <button style={arrowBtnStyle(idx === layoutDisplay.length - 1)} disabled={idx === layoutDisplay.length - 1} onClick={() => moveLayoutItem(idx, idx + 1)}>▼</button>
+                          </div>
                           <div style={{ width: 26, height: 26, borderRadius: 7, flexShrink: 0, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)' }}>
                             <BIcon size={12} strokeWidth={2} />
                           </div>
@@ -2599,24 +2658,20 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                     const media = previewStyle.sectionMedia?.[key]
                     return (
                       <div key={key}>
-                      <div draggable
-                        onDragStart={() => { sectionDragRef.current = idx }}
-                        onDragOver={e => { e.preventDefault(); if (dragOverSectionIdx !== idx) setDragOverSectionIdx(idx) }}
-                        onDragLeave={() => setDragOverSectionIdx(null)}
-                        onDrop={e => { e.preventDefault(); setDragOverSectionIdx(null); moveLayoutItem(sectionDragRef.current, idx) }}
-                        onDragEnd={() => setDragOverSectionIdx(null)}
+                      <div
                         style={{
                           display: 'flex', alignItems: 'center', gap: 8,
-                          background: isOver ? 'var(--color-primary-subtle)' : isHidden ? 'var(--color-bg)' : hasContent ? 'var(--color-bg-alt)' : 'var(--color-bg)',
-                          border: `1px solid ${isOver ? 'var(--color-primary)' : isHidden ? 'var(--color-border)' : hasContent ? 'var(--color-primary-subtle)' : 'var(--color-border)'}`,
+                          background: isHidden ? 'var(--color-bg)' : hasContent ? 'var(--color-bg-alt)' : 'var(--color-bg)',
+                          border: `1px solid ${isHidden ? 'var(--color-border)' : hasContent ? 'var(--color-primary-subtle)' : 'var(--color-border)'}`,
                           borderLeft: `3px solid ${hasContent && !isHidden ? 'var(--color-primary)' : 'var(--color-border)'}`,
                           borderRadius: 10, padding: '8px 10px',
                           opacity: hasContent ? 1 : 0.45, transition: 'all 0.12s',
-                          userSelect: 'none', cursor: hasContent ? 'grab' : 'default',
+                          userSelect: 'none',
                         }}
                       >
-                        <div style={{ cursor: 'grab', color: 'var(--color-text-tertiary)', display: 'flex', flexShrink: 0 }}>
-                          <GripVertical size={14} />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 1, flexShrink: 0 }}>
+                          <button style={arrowBtnStyle(idx === 0)} disabled={idx === 0} onClick={() => moveLayoutItem(idx, idx - 1)}>▲</button>
+                          <button style={arrowBtnStyle(idx === layoutDisplay.length - 1)} disabled={idx === layoutDisplay.length - 1} onClick={() => moveLayoutItem(idx, idx + 1)}>▼</button>
                         </div>
                         <div style={{ width: 26, height: 26, borderRadius: 7, flexShrink: 0, background: isHidden ? 'var(--color-bg-alt)' : 'var(--color-primary-subtle)', border: `1px solid ${isHidden ? 'var(--color-border)' : 'var(--color-primary-subtle)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: isHidden ? 'var(--color-text-tertiary)' : 'var(--color-primary)' }}>
                           <SIcon size={12} strokeWidth={2} />
@@ -2973,6 +3028,38 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
             </div>
           )
 
+          if (block.type === 'github' && block.url) return (
+            <div key={block.id}><GitHubCard githubUrl={block.url} variant={block.color || 'full'} /></div>
+          )
+
+          if (block.type === 'linkedin' && block.url) {
+            const liSlug = block.url.match(/linkedin\.com\/in\/([^/?#]+)/)?.[1]
+            const liName = block.label || (liSlug ? liSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'LinkedIn')
+            return (
+              <div key={block.id} style={{
+                background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12,
+                padding: 20, display: 'flex', alignItems: 'center', gap: 16,
+              }}>
+                <div style={{
+                  width: 48, height: 48, borderRadius: 10, background: '#0a66c2',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                }}>
+                  <svg viewBox="0 0 24 24" width={24} height={24} fill="#fff">
+                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                  </svg>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-text)' }}>{liName}</div>
+                  <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)', marginTop: 2 }}>Perfil LinkedIn</div>
+                </div>
+                <a href={block.url} target="_blank" rel="noopener noreferrer" style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6, background: '#0a66c2', color: '#fff',
+                  borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, textDecoration: 'none', flexShrink: 0,
+                }}>Ver perfil</a>
+              </div>
+            )
+          }
+
           if (block.type === 'metric' && block.label) return (
             <div key={block.id} style={{ background: 'var(--color-surface)', border: `1px solid ${accent}33`, borderRadius: 12, padding: '24px 28px', textAlign: align }}>
               <div style={{ fontSize: 'clamp(36px,5vw,56px)', fontWeight: 900, color: accent, letterSpacing: '-2px', lineHeight: 1, marginBottom: 8 }}>{block.label}</div>
@@ -3212,8 +3299,8 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
         // before this existed, so nothing shifts for existing customizations.
         const blocksById = Object.fromEntries(previewBlocks.map(b => [b.id, b]))
         const defaultLayout = [
-          ...previewBlocks.map(b => ({ kind: 'block', id: b.id })),
           ...orderedSections.map(key => ({ kind: 'section', key })),
+          ...previewBlocks.map(b => ({ kind: 'block', id: b.id })),
         ]
         const layout = (previewStyle.layoutOrder?.length ? previewStyle.layoutOrder : defaultLayout)
           .filter(item => item.kind === 'block' ? !!blocksById[item.id] : !hiddenSections.has(item.key))
@@ -3413,9 +3500,6 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
               </div>
             </div>
           )}
-
-          {/* GitHub */}
-          {project.github_url && <GitHubCard githubUrl={project.github_url} />}
 
           {/* Comentários */}
           <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '22px 24px', fontFamily: 'var(--font-body, system-ui, sans-serif)' }}>
@@ -7726,8 +7810,6 @@ export default function ProjectPage() {
           </div>
         )}
 
-
-        {project.github_url && <GitHubCard githubUrl={project.github_url} />}
 
         </div>{/* end overview tab section */}
 
