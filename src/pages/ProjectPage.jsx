@@ -304,6 +304,117 @@ const ScoreRing = memo(function ScoreRing({ score, size = 108 }) {
 const SECTION_CLAMP_LINES = 8  // max lines before "ver mais"
 const APPROX_CHARS_PER_LINE = 70
 
+const LANG_COLORS = {
+  JavaScript: '#f1e05a', TypeScript: '#3178c6', Python: '#3572A5', Java: '#b07219',
+  'C#': '#178600', 'C++': '#f34b7d', C: '#555555', Ruby: '#701516', Go: '#00ADD8',
+  Rust: '#dea584', Swift: '#F05138', Kotlin: '#A97BFF', PHP: '#4F5D95', Dart: '#00B4AB',
+  HTML: '#e34c26', CSS: '#563d7c', Shell: '#89e051', Lua: '#000080', R: '#198CE7',
+  Vue: '#41b883', SCSS: '#c6538c', Svelte: '#ff3e00',
+}
+
+function parseGitHubUrl(url) {
+  if (!url) return null
+  const m = url.match(/github\.com\/([^/]+)\/([^/?\s#]+)/)
+  return m ? { owner: m[1], repo: m[2].replace(/\.git$/, '') } : null
+}
+
+const GitHubCard = memo(function GitHubCard({ githubUrl }) {
+  const [data, setData] = useState(null)
+  const [langs, setLangs] = useState(null)
+  const parsed = useMemo(() => parseGitHubUrl(githubUrl), [githubUrl])
+
+  useEffect(() => {
+    if (!parsed) return
+    let cancelled = false
+    const base = `https://api.github.com/repos/${parsed.owner}/${parsed.repo}`
+    Promise.all([
+      fetch(base).then(r => r.ok ? r.json() : null),
+      fetch(`${base}/languages`).then(r => r.ok ? r.json() : null),
+    ]).then(([repo, languages]) => {
+      if (cancelled) return
+      if (repo) setData(repo)
+      if (languages) setLangs(languages)
+    }).catch(() => {})
+    return () => { cancelled = true }
+  }, [parsed])
+
+  if (!parsed || !data) return null
+
+  const totalBytes = langs ? Object.values(langs).reduce((a, b) => a + b, 0) : 0
+  const topLangs = langs ? Object.entries(langs).slice(0, 6).map(([name, bytes]) => ({
+    name, pct: Math.round(bytes / totalBytes * 100),
+  })) : []
+
+  return (
+    <div style={{
+      background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 12,
+      padding: 20, marginTop: 16,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+        <svg viewBox="0 0 16 16" width={20} height={20} fill={colors.text}>
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>
+        <a href={githubUrl} target="_blank" rel="noopener noreferrer"
+          style={{ fontSize: 15, fontWeight: 600, color: colors.text, textDecoration: 'none' }}>
+          {parsed.owner}/{parsed.repo}
+        </a>
+        {data.stargazers_count > 0 && (
+          <span style={{ fontSize: 12, color: colors.muted, display: 'flex', alignItems: 'center', gap: 3 }}>
+            ⭐ {data.stargazers_count}
+          </span>
+        )}
+        {data.forks_count > 0 && (
+          <span style={{ fontSize: 12, color: colors.muted }}>🍴 {data.forks_count}</span>
+        )}
+      </div>
+
+      {data.description && (
+        <p style={{ fontSize: 13, color: colors.muted, margin: '0 0 14px', lineHeight: 1.5 }}>
+          {data.description}
+        </p>
+      )}
+
+      {topLangs.length > 0 && (
+        <>
+          <div style={{
+            display: 'flex', height: 8, borderRadius: 4, overflow: 'hidden', marginBottom: 8,
+          }}>
+            {topLangs.map(l => (
+              <div key={l.name} style={{
+                width: `${l.pct}%`, background: LANG_COLORS[l.name] || '#8b8b8b',
+                minWidth: l.pct > 0 ? 3 : 0,
+              }} />
+            ))}
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px' }}>
+            {topLangs.map(l => (
+              <span key={l.name} style={{ fontSize: 12, color: colors.muted, display: 'flex', alignItems: 'center', gap: 5 }}>
+                <span style={{
+                  width: 8, height: 8, borderRadius: '50%',
+                  background: LANG_COLORS[l.name] || '#8b8b8b', display: 'inline-block',
+                }} />
+                {l.name} <span style={{ color: colors.subtle }}>{l.pct}%</span>
+              </span>
+            ))}
+          </div>
+        </>
+      )}
+
+      <div style={{
+        display: 'flex', gap: 16, marginTop: topLangs.length ? 14 : 0,
+        fontSize: 12, color: colors.subtle,
+      }}>
+        {data.updated_at && (
+          <span>Último update: {new Date(data.pushed_at || data.updated_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+        )}
+        {data.license?.spdx_id && data.license.spdx_id !== 'NOASSERTION' && (
+          <span>📄 {data.license.spdx_id}</span>
+        )}
+      </div>
+    </div>
+  )
+})
+
 const Section = memo(function Section({ fieldKey, content, isOwner, canEdit, onImprove }) {
   const meta    = SECTION_META[fieldKey] ?? { Icon: Wrench, label: fieldKey }
   const fieldCfg = PROFILE_SCORE_FIELDS.find(f => f.key === fieldKey)
@@ -7612,6 +7723,8 @@ export default function ProjectPage() {
           </div>
         )}
 
+
+        {project.github_url && <GitHubCard githubUrl={project.github_url} />}
 
         </div>{/* end overview tab section */}
 
