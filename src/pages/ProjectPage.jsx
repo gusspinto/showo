@@ -792,6 +792,7 @@ const BLOCK_TYPES = [
   { type: 'card',    label: 'Card',          Icon: ClipboardList, desc: 'Cartão livre. Título + dados (ex: idade, função...)' },
   { type: 'cta',     label: 'Botão CTA',     Icon: ArrowRight, desc: 'Chamada à ação destacada' },
   { type: 'link',    label: 'Link',          Icon: Link,       desc: 'GitHub, demo, portfolio...' },
+  { type: 'github',  label: 'GitHub',        Icon: FileText,   desc: 'Card do repositório com linguagens' },
   { type: 'divider', label: 'Divisor',       Icon: Minus,      desc: 'Linha separadora de secções' },
 ]
 
@@ -2378,6 +2379,9 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                         <input value={block.label || ''} onChange={e => upd(block.id, 'label', e.target.value)} placeholder="Texto (ex: Ver demo)" style={{ ...wsInputNew, marginBottom: 5 }} />
                         <input value={block.url || ''} onChange={e => upd(block.id, 'url', e.target.value)} placeholder="URL (https://...)" style={wsInputNew} />
                       </>)}
+                      {block.type === 'github' && (
+                        <input value={block.url || ''} onChange={e => upd(block.id, 'url', e.target.value)} placeholder="https://github.com/user/repo" style={wsInputNew} />
+                      )}
                       {block.type === 'metric' && (<>
                         <input value={block.label || ''} onChange={e => upd(block.id, 'label', e.target.value)} placeholder="Valor (ex: 2.500)" style={{ ...wsInputNew, marginBottom: 5, fontWeight: 800 }} />
                         <input value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)} placeholder="Descrição" style={wsInputNew} />
@@ -2973,6 +2977,10 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
             </div>
           )
 
+          if (block.type === 'github' && block.url) return (
+            <div key={block.id}><GitHubCard githubUrl={block.url} /></div>
+          )
+
           if (block.type === 'metric' && block.label) return (
             <div key={block.id} style={{ background: 'var(--color-surface)', border: `1px solid ${accent}33`, borderRadius: 12, padding: '24px 28px', textAlign: align }}>
               <div style={{ fontSize: 'clamp(36px,5vw,56px)', fontWeight: 900, color: accent, letterSpacing: '-2px', lineHeight: 1, marginBottom: 8 }}>{block.label}</div>
@@ -3413,9 +3421,6 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
               </div>
             </div>
           )}
-
-          {/* GitHub */}
-          {project.github_url && <GitHubCard githubUrl={project.github_url} />}
 
           {/* Comentários */}
           <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '22px 24px', fontFamily: 'var(--font-body, system-ui, sans-serif)' }}>
@@ -7726,8 +7731,6 @@ export default function ProjectPage() {
           </div>
         )}
 
-
-        {project.github_url && <GitHubCard githubUrl={project.github_url} />}
 
         </div>{/* end overview tab section */}
 
