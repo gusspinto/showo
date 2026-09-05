@@ -1120,6 +1120,53 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
   const [templateApplied, setTemplateApplied] = useState('')
   const sectionDragRef = useRef(null)
   const [dragOverSectionIdx, setDragOverSectionIdx] = useState(null)
+  const layoutListRef = useRef(null)
+
+  const layoutDragOverRef = useRef(null)
+  function startLayoutDrag(e, fromIdx) {
+    e.preventDefault()
+    sectionDragRef.current = fromIdx
+    layoutDragOverRef.current = null
+    const el = e.currentTarget.closest('[data-layout-idx]')
+    if (!el) return
+    el.setPointerCapture(e.pointerId)
+    const onMove = (ev) => {
+      if (!layoutListRef.current) return
+      const items = [...layoutListRef.current.querySelectorAll('[data-layout-idx]')]
+      let closest = -1, closestDist = Infinity
+      for (const child of items) {
+        const rect = child.getBoundingClientRect()
+        const mid = rect.top + rect.height / 2
+        const dist = Math.abs(ev.clientY - mid)
+        const idx = parseInt(child.dataset.layoutIdx, 10)
+        if (dist < closestDist) { closestDist = dist; closest = idx }
+      }
+      layoutDragOverRef.current = closest >= 0 ? closest : null
+      setDragOverSectionIdx(layoutDragOverRef.current)
+    }
+    const onUp = () => {
+      el.releasePointerCapture(e.pointerId)
+      el.removeEventListener('pointermove', onMove)
+      el.removeEventListener('pointerup', onUp)
+      el.removeEventListener('pointercancel', onUp)
+      const from = sectionDragRef.current
+      const to = layoutDragOverRef.current
+      setDragOverSectionIdx(null)
+      if (to != null && from !== to) {
+        setPreviewStyle(ps => {
+          const base = ps.layoutOrder?.length ? [...ps.layoutOrder] : [
+            ...orderedSections.map(key => ({ kind: 'section', key })),
+            ...previewBlocks.map(b => ({ kind: 'block', id: b.id })),
+          ]
+          ;[base[from], base[to]] = [base[to], base[from]]
+          return { ...ps, layoutOrder: base }
+        })
+      }
+    }
+    el.addEventListener('pointermove', onMove)
+    el.addEventListener('pointerup', onUp)
+    el.addEventListener('pointercancel', onUp)
+  }
   const [mediaEditKey, setMediaEditKey] = useState(null)
   const canvasRef = useRef(null)
   const { onPointerDown: onCanvasPointerDown } = useCanvasDrag(canvasRef, setPreviewBlocks)
@@ -2601,21 +2648,15 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
               <div style={{ flex: 1, overflowY: 'scroll', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', padding: '12px 14px' }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Ordem da página</div>
                 <p style={{ margin: '0 0 12px', fontSize: 11, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
-                  Usa as setas para reordenar. Toca em <Eye size={10} style={{ verticalAlign: 'middle' }} /> para ocultar.
+                  Arrasta o ≡ para reordenar. Toca em <Eye size={10} style={{ verticalAlign: 'middle' }} /> para ocultar.
                 </p>
                 {previewStyle.canvasMode && previewBlocks.length > 0 && (
                   <div style={{ margin: '0 0 10px', padding: '6px 10px', borderRadius: 8, background: 'rgba(255,180,0,0.1)', border: '1px solid rgba(255,180,0,0.25)', fontSize: 11, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
                     ⚠️ <strong>Posição livre</strong> está ativa — os blocos flutuam livremente e não seguem esta ordem. Desativa na tab Blocos para os intercalar com secções.
                   </div>
                 )}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div ref={layoutListRef} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {layoutDisplay.map((item, idx) => {
-                    const arrowBtnStyle = (disabled) => ({
-                      background: 'none', border: 'none', padding: '2px 3px', cursor: disabled ? 'default' : 'pointer',
-                      color: disabled ? 'var(--color-border)' : 'var(--color-text-secondary)', fontSize: 10, lineHeight: 1,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 4,
-                      opacity: disabled ? 0.3 : 1, flexShrink: 0,
-                    })
                     if (item.kind === 'block') {
                       const block = blocksById[item.id]
                       if (!block) return null
@@ -2623,20 +2664,20 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                       const BIcon = bt.Icon
                       const previewText = block.content || block.cardTitle || block.label || bt.label
                       return (
-                        <div key={block.id}
+                        <div key={block.id} data-layout-idx={idx}
                           style={{
                             display: 'flex', alignItems: 'center', gap: 8,
-                            background: 'var(--color-bg-alt)',
-                            border: '1px solid var(--color-primary-subtle)',
+                            background: dragOverSectionIdx === idx ? 'var(--color-primary-subtle)' : 'var(--color-bg-alt)',
+                            border: `1px solid ${dragOverSectionIdx === idx ? 'var(--color-primary)' : 'var(--color-primary-subtle)'}`,
                             borderLeft: '3px solid var(--color-primary)',
                             borderRadius: 10, padding: '8px 10px',
-                            userSelect: 'none',
+                            userSelect: 'none', transition: 'background 0.1s, border-color 0.1s',
                           }}
                         >
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 1, flexShrink: 0 }}>
-                            <button style={arrowBtnStyle(idx === 0)} disabled={idx === 0} onClick={() => moveLayoutItem(idx, idx - 1)}>▲</button>
-                            <button style={arrowBtnStyle(idx === layoutDisplay.length - 1)} disabled={idx === layoutDisplay.length - 1} onClick={() => moveLayoutItem(idx, idx + 1)}>▼</button>
-                          </div>
+                          <div
+                            onPointerDown={e => startLayoutDrag(e, idx)}
+                            style={{ cursor: 'grab', color: 'var(--color-text-tertiary)', display: 'flex', flexShrink: 0, touchAction: 'none' }}
+                          ><GripVertical size={14} /></div>
                           <div style={{ width: 26, height: 26, borderRadius: 7, flexShrink: 0, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)' }}>
                             <BIcon size={12} strokeWidth={2} />
                           </div>
@@ -2654,25 +2695,24 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                     const isHidden = hidden.has(key)
                     const hasContent = key === 'features' ? features.length > 0 : key === 'technologies' ? tech.length > 0 : !!(project[key]?.trim())
                     const SIcon = s.Icon
-                    const isOver = dragOverSectionIdx === idx
                     const media = previewStyle.sectionMedia?.[key]
                     return (
                       <div key={key}>
-                      <div
+                      <div data-layout-idx={idx}
                         style={{
                           display: 'flex', alignItems: 'center', gap: 8,
-                          background: isHidden ? 'var(--color-bg)' : hasContent ? 'var(--color-bg-alt)' : 'var(--color-bg)',
-                          border: `1px solid ${isHidden ? 'var(--color-border)' : hasContent ? 'var(--color-primary-subtle)' : 'var(--color-border)'}`,
+                          background: dragOverSectionIdx === idx ? 'var(--color-primary-subtle)' : isHidden ? 'var(--color-bg)' : hasContent ? 'var(--color-bg-alt)' : 'var(--color-bg)',
+                          border: `1px solid ${dragOverSectionIdx === idx ? 'var(--color-primary)' : isHidden ? 'var(--color-border)' : hasContent ? 'var(--color-primary-subtle)' : 'var(--color-border)'}`,
                           borderLeft: `3px solid ${hasContent && !isHidden ? 'var(--color-primary)' : 'var(--color-border)'}`,
                           borderRadius: 10, padding: '8px 10px',
                           opacity: hasContent ? 1 : 0.45, transition: 'all 0.12s',
                           userSelect: 'none',
                         }}
                       >
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 1, flexShrink: 0 }}>
-                          <button style={arrowBtnStyle(idx === 0)} disabled={idx === 0} onClick={() => moveLayoutItem(idx, idx - 1)}>▲</button>
-                          <button style={arrowBtnStyle(idx === layoutDisplay.length - 1)} disabled={idx === layoutDisplay.length - 1} onClick={() => moveLayoutItem(idx, idx + 1)}>▼</button>
-                        </div>
+                        <div
+                          onPointerDown={e => startLayoutDrag(e, idx)}
+                          style={{ cursor: 'grab', color: 'var(--color-text-tertiary)', display: 'flex', flexShrink: 0, touchAction: 'none' }}
+                        ><GripVertical size={14} /></div>
                         <div style={{ width: 26, height: 26, borderRadius: 7, flexShrink: 0, background: isHidden ? 'var(--color-bg-alt)' : 'var(--color-primary-subtle)', border: `1px solid ${isHidden ? 'var(--color-border)' : 'var(--color-primary-subtle)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: isHidden ? 'var(--color-text-tertiary)' : 'var(--color-primary)' }}>
                           <SIcon size={12} strokeWidth={2} />
                           </div>
