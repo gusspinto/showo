@@ -10,8 +10,8 @@ import { Folder2Icon as FolderOpen } from '@solar-icons/react/bold/folder-2'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { DownloadIcon as Download } from '@solar-icons/react/bold/download'
 import { QrCodeIcon as QrCode } from '@solar-icons/react/bold/qr-code'
-import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
 import { SquareArrowRightUpIcon as ExternalLink } from '@solar-icons/react/bold/square-arrow-right-up'
+import { PaletteIcon as Palette } from '@solar-icons/react/bold/palette'
 import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
 import { StarIcon as Star } from '@solar-icons/react/bold/star'
 import { ChatRoundLineIcon as MessageSquare } from '@solar-icons/react/bold/chat-round-line'
@@ -437,7 +437,7 @@ export default function UserProfile() {
               <div className="up-head-actions">
                 {isOwnProfile && (
                   <button onClick={openCustomizer} className="up-icon-btn up-personalize" title="Editar perfil" aria-label="Editar perfil">
-                    <Pencil size={15} />
+                    <Palette size={15} />
                   </button>
                 )}
                 <button onClick={() => setShowQR(true)} className="up-icon-btn" title="QR Code" aria-label="QR Code">
