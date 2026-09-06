@@ -121,7 +121,7 @@ Devolve APENAS este JSON (sem markdown, sem \`\`\`, só o objeto):
 }`
 
     const message = await client.messages.create({
-      model: 'claude-opus-4-5',
+      model: 'claude-sonnet-4-6',
       max_tokens: 4000,
       messages: [{ role: 'user', content: prompt }],
     })
