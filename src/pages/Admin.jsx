@@ -1040,13 +1040,13 @@ function OrgsTab() {
   const [loadingOrgs, setLoadingOrgs] = useState(true)
   const [name, setName] = useState('')
   const [domain, setDomain] = useState('')
-  const [plan, setPlan] = useState('build')
+  const [plan, setPlan] = useState('plus')
   const [creating, setCreating] = useState(false)
   const [createMsg, setCreateMsg] = useState(null)
   const [editing, setEditing] = useState(null)
   const [editName, setEditName] = useState('')
   const [editDomain, setEditDomain] = useState('')
-  const [editPlan, setEditPlan] = useState('build')
+  const [editPlan, setEditPlan] = useState('plus')
   const [saving, setSaving] = useState(false)
 
   const fieldStyle = {
@@ -1129,8 +1129,8 @@ function OrgsTab() {
             <div>
               <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 5 }}>Plano</label>
               <select value={plan} onChange={e => setPlan(e.target.value)} style={{ ...fieldStyle, width: 'auto', paddingRight: 28 }}>
-                <option value="build">Build</option>
-                <option value="launch">Launch</option>
+                <option value="plus">Plus</option>
+                <option value="pro">Pro</option>
               </select>
             </div>
             <button type="submit" disabled={creating} style={{
@@ -1170,8 +1170,8 @@ function OrgsTab() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <select value={editPlan} onChange={e => setEditPlan(e.target.value)} style={{ ...fieldStyle, width: 'auto', paddingRight: 28 }}>
-                    <option value="build">Build</option>
-                    <option value="launch">Launch</option>
+                    <option value="plus">Plus</option>
+                    <option value="pro">Pro</option>
                   </select>
                   <button onClick={saveEdit} disabled={saving} style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '7px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
                     {saving ? 'A guardar…' : 'Guardar'}
