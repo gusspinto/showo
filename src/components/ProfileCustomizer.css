@@ -165,10 +165,12 @@
   /* Alvos de toque maiores + grelha estável: com flex-wrap as 11 bolinhas
      partiam numa segunda linha órfã de 2. Grelha de 6 dá duas linhas
      equilibradas e sempre centradas, sem encostar às margens. */
-  .pc-swatch { width: 30px; height: 30px; }
+  /* O reset global de mobile força `button { min-height: 44px }` (alvos de
+     toque). Numa bolinha redonda isso dava uma elipse 34x44. Anular aqui. */
+  .pc-swatch { width: 34px; height: 34px; min-height: 0; }
   .pc-swatches {
     display: grid; grid-template-columns: repeat(6, 1fr);
-    justify-items: center; gap: 12px 8px;
+    justify-items: center; gap: 14px 8px;
   }
   .pc-swatch-custom-wrap { display: flex; justify-content: center; }
   /* Tipografia: 2x2 em vez de wrap imprevisível 3+1 */
