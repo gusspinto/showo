@@ -21,43 +21,51 @@ Sistema de vagas completo em [Vagas.jsx](../src/pages/Vagas.jsx):
 - [Candidatos.jsx](../src/pages/Candidatos.jsx), `saved_candidates`, convites por
   vaga ([ConvidarVagaModal](../src/components/ConvidarVagaModal.jsx)).
 
-### O que a reunião acrescenta
-1. **Professor/escola publica estágios** (hoje só recrutador). Estágios locais que
-   a escola conhece, para os alunos da turma.
-2. **10-15 perguntas de screening** por vaga → o aluno responde antes de
-   candidatar → o recrutador vê candidatos já filtrados/pontuados, não fala com
-   toda a gente.
+### Decisões (fechadas com o Bruno)
+- **Vagas volta para o lado escola**, mas visível **só a alunos de 11.º e 12.º ano**.
+  Alunos do 10.º para baixo não veem a secção.
+- **O ano (10.º/11.º/12.º) passa a ser definido na criação da turma** pelo professor.
+- **O aluno que entra pelo código da turma herda esse ano no perfil.**
+- **Recrutador e professor** veem a candidatura do aluno.
+- **Qualquer aluno** (11.º/12.º) pode candidatar-se a qualquer vaga.
+- **O recrutador cria as perguntas** de screening e **filtra ele próprio** quem
+  quer chamar, com base nas respostas. (Sem score automático da IA por agora.)
 
 ### Schema
 ```sql
+-- Ano da turma (10.º/11.º/12.º) — distinto de academic_year ("2025/2026")
+ALTER TABLE public.classes
+  ADD COLUMN grade_level text;   -- '10' | '11' | '12' | null
+
+-- Ano do aluno, herdado da turma ao entrar
+ALTER TABLE public.profiles
+  ADD COLUMN grade_level text;
+
 ALTER TABLE public.vagas
-  ADD COLUMN screening_questions jsonb NOT NULL DEFAULT '[]',  -- [{id, q, type:'text'|'choice', options?, required}]
-  ADD COLUMN publisher_role text NOT NULL DEFAULT 'recrutador'; -- 'recrutador' | 'professor'
+  ADD COLUMN screening_questions jsonb NOT NULL DEFAULT '[]';  -- [{id, q, type:'text'|'choice', options?, required}]
 
 ALTER TABLE public.candidaturas
-  ADD COLUMN screening_answers jsonb NOT NULL DEFAULT '[]',      -- [{id, answer}]
-  ADD COLUMN screening_score int;                                -- 0-100, calculado
+  ADD COLUMN screening_answers jsonb NOT NULL DEFAULT '[]';    -- [{id, answer}]
 ```
-RLS: permitir `INSERT`/`UPDATE` em `vagas` a `role = 'professor'` para vagas da
-sua escola; alunos só veem vagas da própria escola quando `publisher_role='professor'`.
+- `join_class` (RPC, mig 117/118) passa a copiar `classes.grade_level` para
+  `profiles.grade_level` ao entrar.
+- Gate da secção Estágios/Vagas: `account_type='school'` **e** `grade_level in ('11','12')`.
 
 ### Fluxo
-- Publicar: modal ganha secção "Perguntas de triagem" (add/remove, tipo, obrigatória).
-- Candidatar-se: se a vaga tem perguntas, abre formulário → só depois cria a
+- **Criar turma:** o modal ganha um seletor de ano (10.º / 11.º / 12.º).
+- **Publicar vaga (recrutador):** modal ganha secção "Perguntas de triagem"
+  (add/remove, tipo texto ou escolha, obrigatória).
+- **Candidatar-se:** se a vaga tem perguntas, abre formulário → só depois cria a
   `candidatura`.
-- Recrutador: no cartão da candidatura, expandir mostra respostas + um
-  `screening_score` (IA lê respostas + perguntas + projetos do aluno e dá um 0-100
-  com 1 frase de razão — função nova `score-candidate`, haiku).
-- Match: passar a usar as **tecnologias demonstradas** (`tech_stack` agregado dos
-  projetos, ver feature 2) além das `profile.skills` declaradas.
+- **Ver candidaturas:** recrutador **e** professor da turma do aluno veem as
+  respostas; o recrutador marca as que quer chamar (status na `candidatura`).
+- **Match:** passa a usar as tecnologias demonstradas (`tech_stack` dos projetos,
+  feature 2) além das `profile.skills` declaradas.
 
-### Decisões a fechar
-- **Vagas está fora da nav** (decisão de reestruturação de julho). Reconciliar:
-  o módulo de estágios volta à nav só para escolas/turmas? Ou vive dentro da
-  página da turma?
-- Screening: perguntas livres por vaga, ou um banco de perguntas por área que o
-  recrutador escolhe?
-- O professor vê as candidaturas dos seus alunos?
+### Ainda por decidir
+- Onde vive a secção: entrada própria na nav (só 11.º/12.º) ou dentro da turma?
+- Turmas antigas sem `grade_level` — pedir ao professor para preencher, ou inferir
+  de `academic_year`/`school_year`?
 
 **Esforço:** alto (2-3 sessões).
 
@@ -88,8 +96,14 @@ sua escola; alunos só veem vagas da própria escola quando `publisher_role='pro
    aluno normalizam contra ela.
 5. Chips de `tech_stack` nos cartões de projeto do Explore.
 
-### Decisões a fechar
-- Lista canónica: fixa nossa, ou deixa criar novas e só sugere as conhecidas?
+### Lista canónica (decidido: híbrido)
+- `src/lib/technologies.js` — ~150 tecnologias comuns para autocomplete + um mapa
+  de aliases (`reactjs`→`React`, `js`→`JavaScript`, `postgres`→`PostgreSQL`…).
+- O input do aluno e a `extract-skills` normalizam contra a lista.
+- **Entrada livre é permitida** para o que não está na lista (nicho). Se uma
+  entrada livre passar a ser usada por muitos projetos, promove-se para a lista.
+- Assim os filtros não fragmentam ("Vue"/"Vue.js"/"VueJS" colapsam num só) sem
+  prender ninguém a uma lista fechada.
 
 **Esforço:** baixo-médio — 70% já está.
 
@@ -233,13 +247,13 @@ Leitura pública de `project_milestones` quando `projects.timeline_public = true
   entrada → hoje, pontos nos marcos, linha do score (de `project_score_history`).
 - Sinal de consistência: badge "23 registos ao longo de 5 meses".
 
-### Decisões a fechar
-- Marcos curados pelo aluno (recomendado) vs marcar entradas do diário como
-  públicas uma a uma?
-- A IA sugere marcos a partir do diário ("isto parece um marco: mudaste de
-  abordagem a 12/03")?
+### Decisões (fechadas com o Bruno)
+- **Marcos curados pelo aluno** — não é o diário em bruto tornado público.
+- **A IA sugere marcos** a partir do diário ("isto parece um marco: mudaste de
+  abordagem a 12/03; a primeira demo funcional foi a 4/05"). O aluno aceita/edita/
+  ignora. Função nova `suggest-milestones` (haiku, lê o diário do projeto).
 
-**Esforço:** médio — os dados já existem, falta a curadoria e a vista.
+**Esforço:** médio — os dados já existem, falta a curadoria, a sugestão IA e a vista.
 
 ---
 
