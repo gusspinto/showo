@@ -162,10 +162,18 @@
   .pc-panel { width: 100vw; }
   /* Rodapé encostado ao fundo respeita o notch/gesture bar */
   .pc-foot { padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
-  /* Alvos de toque maiores */
+  /* Alvos de toque maiores + grelha estável: com flex-wrap as 11 bolinhas
+     partiam numa segunda linha órfã de 2. Grelha de 6 dá duas linhas
+     equilibradas e sempre centradas, sem encostar às margens. */
   .pc-swatch { width: 30px; height: 30px; }
-  .pc-swatches { gap: 10px; }
-  .pc-option { padding: 9px 13px; font-size: 13px; }
+  .pc-swatches {
+    display: grid; grid-template-columns: repeat(6, 1fr);
+    justify-items: center; gap: 12px 8px;
+  }
+  .pc-swatch-custom-wrap { display: flex; justify-content: center; }
+  /* Tipografia: 2x2 em vez de wrap imprevisível 3+1 */
+  .pc-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .pc-option { display: flex; padding: 10px 13px; font-size: 13px; justify-content: center; }
   .pc-headline-input { font-size: 16px; }  /* evita zoom automático do iOS */
   .pc-banner-position { gap: 12px; margin-top: 14px; }
   .pc-banner-position input[type="range"] { height: 4px; }
