@@ -114,7 +114,9 @@ export function ConfirmUseModal({ feature, remaining, limit, onConfirm, onCancel
 //   showLabel  — mostra também o nome do plano ao lado do glyph
 export function PlanBadge({ style, showLabel = false }) {
   const { planId } = useAuth()
-  if (!planId || planId === 'free') return null
+  // A BD pode ter os IDs antigos (build/launch) ou os novos (plus/pro).
+  const resolved = planId === 'build' ? 'plus' : planId === 'launch' ? 'pro' : planId
+  if (!resolved || resolved === 'free') return null
 
   const wrap = (color, glyph, label) => (
     <span title={`Plano ${label}`} aria-label={`Plano ${label}`} style={{
@@ -126,10 +128,9 @@ export function PlanBadge({ style, showLabel = false }) {
     </span>
   )
 
-  if (planId === 'school') {
+  if (resolved === 'school') {
     return wrap('var(--color-success)', <GraduationCap size={14} />, 'Escola')
   }
-  const color = planId === 'launch' ? '#C49A20' : 'var(--color-primary)'
-  const label = planId === 'launch' ? 'Launch' : 'Build'
-  return wrap(color, <ShowoMark size={13} />, label)
+  const isPro = resolved === 'pro'
+  return wrap(isPro ? '#C49A20' : 'var(--color-primary)', <ShowoMark size={13} />, isPro ? 'Pro' : 'Plus')
 }
