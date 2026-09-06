@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getPlan } from '../lib/plans'
+import { ShowoMark } from './icons/ShowoMark'
+import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/square-academic-cap'
 
 const C = {
   overlay: {
@@ -107,23 +109,27 @@ export function ConfirmUseModal({ feature, remaining, limit, onConfirm, onCancel
   )
 }
 
-// Inline badge showing current plan
-export function PlanBadge({ style }) {
+// Marca do plano ao lado do nome — a marca Showo tingida pela cor do plano
+// (grátis não tem badge). Escola tem glyph próprio, não a marca.
+//   showLabel  — mostra também o nome do plano ao lado do glyph
+export function PlanBadge({ style, showLabel = false }) {
   const { planId } = useAuth()
   if (!planId || planId === 'free') return null
-  const colors  = { build: '#2B7EF5', launch: '#C49A20', school: '#2B7EF5' }
-  const labels  = { build: 'Build', launch: 'Launch', school: 'Escola' }
-  const color   = colors[planId] ?? '#2B7EF5'
-  return (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center',
-      padding: '2px 10px', borderRadius: '100px',
-      fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.04em',
-      background: color + '22', color,
-      border: `1px solid ${color}44`,
-      ...style,
+
+  const wrap = (color, glyph, label) => (
+    <span title={`Plano ${label}`} aria-label={`Plano ${label}`} style={{
+      display: 'inline-flex', alignItems: 'center', gap: 5,
+      color, flexShrink: 0, ...style,
     }}>
-      {labels[planId] ?? planId}
+      {glyph}
+      {showLabel && <span style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.02em' }}>{label}</span>}
     </span>
   )
+
+  if (planId === 'school') {
+    return wrap('var(--color-success)', <GraduationCap size={14} />, 'Escola')
+  }
+  const color = planId === 'launch' ? '#C49A20' : 'var(--color-primary)'
+  const label = planId === 'launch' ? 'Launch' : 'Build'
+  return wrap(color, <ShowoMark size={13} />, label)
 }
