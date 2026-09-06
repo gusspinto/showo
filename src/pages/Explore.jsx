@@ -152,7 +152,7 @@ export default function Explore() {
     async function load() {
       const { data, error } = await supabase
         .from('projects')
-        .select('id,name,slug,area,creator_name,course,school_year,ai_tagline,project_type,is_pap,score,created_at,technologies,views,cover_url,user_id,tags,preview_style')
+        .select('id,name,slug,area,creator_name,course,school_year,ai_tagline,project_type,is_pap,score,created_at,technologies,tech_stack,views,cover_url,user_id,tags,preview_style')
         .or('visibility.eq.public,visibility.is.null')
         // Itens da Biblioteca (ficheiro + nome, sem ficha nenhuma) nunca
         // aparecem aqui — já vêm 'private' desde a origem, isto é só
@@ -259,8 +259,6 @@ export default function Explore() {
     return true
   }), [projects, query, filterArea, filterType, filterMinScore, filterZone, filterAvailable, filterTech])
 
-  // tech_stack só existe depois da migração 126 — quando estiver aplicada,
-  // acrescentar 'tech_stack' ao .select() acima para o dropdown se popular.
   const techOptions = useMemo(
     () => [...new Set(projects.flatMap(p => Array.isArray(p.tech_stack) ? p.tech_stack : []))].sort(),
     [projects],

@@ -117,8 +117,6 @@ function LibAddedTile({ item, onOpen, onDelete, removing, editing, onTogglePin, 
             <span className="lib-tile-name">{item.name}</span>
             {item.library_description && <span className="lib-tile-area">{item.library_description}</span>}
             {(() => {
-              // skills/tech_stack só depois da migração 126 (acrescentar ao
-              // .select() dos itens); até lá cai no library_skills de sempre.
               const tags = [...(item.skills || []), ...(item.tech_stack || [])]
               const shown = tags.length ? tags : (item.library_skills || [])
               return shown.length > 0 && (
@@ -230,7 +228,7 @@ export default function Biblioteca() {
     let cancelled = false
     supabase
       .from('projects')
-      .select('id, user_id, name, slug, entry_kind, area, score, ai_tagline, cover_url, library_description, library_skills, library_file_url, library_file_name, library_file_type, library_thumb_url, library_pdf_url, profile_featured, profile_featured_order, profile_layout, created_at')
+      .select('id, user_id, name, slug, entry_kind, area, score, ai_tagline, cover_url, library_description, library_skills, skills, tech_stack, library_file_url, library_file_name, library_file_type, library_thumb_url, library_pdf_url, profile_featured, profile_featured_order, profile_layout, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .then(async ({ data }) => {

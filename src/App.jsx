@@ -59,6 +59,7 @@ const EditProject  = lazy(() => import('./pages/EditProject'))
 const Explore      = lazy(() => import('./pages/Explore'))
 const Dashboard    = lazy(() => import('./pages/Dashboard'))
 const Biblioteca   = lazy(() => import('./pages/Biblioteca'))
+const RecompensaLab = lazy(() => import('./pages/RecompensaLab'))
 const Settings     = lazy(() => import('./pages/Settings'))
 const UserProfile  = lazy(() => import('./pages/UserProfile'))
 const Admin        = lazy(() => import('./pages/Admin'))
@@ -551,6 +552,7 @@ export default function App() {
               <Route path="/register"      element={<Register />}    />
               <Route path="/dashboard"     element={<Dashboard />}   />
               <Route path="/biblioteca"    element={<Biblioteca />}  />
+              <Route path="/recompensa"    element={<RecompensaLab />} />
               <Route path="/settings"      element={<Settings />}    />
               <Route path="/u/:username"   element={<UserProfile />} />
               <Route path="/admin"         element={<Admin />}       />
