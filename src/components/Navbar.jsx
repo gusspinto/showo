@@ -829,6 +829,12 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
   const isTeacher = profile?.role === 'professor'
   const recruiterAccent = 'var(--color-accent)'
 
+  // No próprio perfil o "+" de criar projeto passa para a secção Trabalho —
+  // não fica no topo. Evita dois botões com gradiente no mesmo ecrã.
+  const onOwnProfile = !!profile?.username &&
+    location.pathname.toLowerCase() === `/u/${profile.username.toLowerCase()}`
+  const showCreateCta = !isTeacher && !isAdmin && !onOwnProfile
+
   const [unreadMsgs, setUnreadMsgs] = useState(0)
   useEffect(() => {
     if (!user) return
@@ -1145,7 +1151,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                     <Paintbrush size={18} strokeWidth={2} />
                   </button>
                 </>
-              ) : !isTeacher && !isAdmin ? (
+              ) : showCreateCta ? (
                 <button className="mob-nav-icon-btn primary gradient-cta" onMouseMove={handleGradientMove} onMouseLeave={handleGradientLeave} onClick={() => navigate('/novo')} aria-label="Criar projeto">
                   <Plus size={15} />
                 </button>
@@ -1192,7 +1198,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           )}
 
           {/* Mobile quick-create button — only on mobile (not tablet) */}
-          {showLinks && !isTeacher && !isAdmin && (
+          {showLinks && showCreateCta && (
             <button
               className="ham-btn mob-only-create gradient-cta"
               onClick={() => navigate('/novo')}
@@ -1432,7 +1438,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 <BookMarked size={16} />{!collapsed && showLabels && <span>Aprende a usar</span>}
               </button>
 
-              {user && !isTeacher && !isAdmin && (
+              {user && showCreateCta && (
                 <div className="sb-create-wrap visible">
                   <div className="sb-create-inner">
                     <button className="sb-create gradient-cta" onMouseMove={handleGradientMove} onMouseLeave={handleGradientLeave} onClick={() => navigate('/novo')}>

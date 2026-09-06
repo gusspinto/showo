@@ -527,17 +527,20 @@ export default function UserProfile() {
 
                 {headline && <p className="up-headline">{headline}</p>}
 
-                <div className="up-meta-row">
-                  {profile.username && <span>@{profile.username}</span>}
-                  {!occupationLabel && (profile.area || profile.course) && <><span className="up-meta-sep">·</span><span>{profile.area || profile.course}</span></>}
-                  {profile.school && <><span className="up-meta-sep">·</span><span>{profile.school}</span></>}
-                  {profile.linkedin_url && (
-                    <>
-                      <span className="up-meta-sep">·</span>
-                      <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer" className="up-meta-link">LinkedIn</a>
-                    </>
-                  )}
-                </div>
+                {(() => {
+                  const bits = []
+                  if (!occupationLabel && (profile.area || profile.course)) bits.push(<span key="a">{profile.area || profile.course}</span>)
+                  if (profile.school) bits.push(<span key="s">{profile.school}</span>)
+                  if (profile.linkedin_url) bits.push(
+                    <a key="li" href={profile.linkedin_url} target="_blank" rel="noopener noreferrer" className="up-meta-link">LinkedIn</a>
+                  )
+                  if (!bits.length) return null
+                  return (
+                    <div className="up-meta-row">
+                      {bits.flatMap((b, i) => i === 0 ? [b] : [<span key={'sep' + i} className="up-meta-sep">·</span>, b])}
+                    </div>
+                  )
+                })()}
               </div>
 
               <div className="up-head-actions">
@@ -576,10 +579,18 @@ export default function UserProfile() {
 
         {/* ── Trabalho ── */}
         <div className="up-work">
-          <p className="up-section-label">
-            Trabalho
-            {projects.length > 0 && <span className="up-section-count">({projects.length})</span>}
-          </p>
+          <div className="up-work-head">
+            <p className="up-section-label">
+              Trabalho
+              {projects.length > 0 && <span className="up-section-count">({projects.length})</span>}
+            </p>
+            {isOwnProfile && myProfile?.role !== 'professor' && (
+              <button className="up-work-add" onClick={() => navigate('/biblioteca')}
+                title="Adicionar ou escolher o que aparece" aria-label="Gerir o que aparece">
+                <Plus size={13} />
+              </button>
+            )}
+          </div>
 
           {projects.length === 0 ? (
             isOwnProfile ? (

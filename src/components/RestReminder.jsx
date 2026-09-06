@@ -37,7 +37,7 @@ export default function RestReminder() {
     || user?.email?.split('@')[0] || ''
 
   useEffect(() => {
-    if (!user) return
+    if (!user) { setVisible(false); setStandby(false); setPhase(null); return }
     if (isAuthPath) return
     // Skip for teachers
     if (profile?.role === 'professor') return
@@ -100,7 +100,7 @@ export default function RestReminder() {
     setStandby(false)
   }
 
-  if (isAuthPath) return null
+  if (!user || isAuthPath) return null
 
   // Standby screen
   if (standby) {
@@ -154,8 +154,6 @@ export default function RestReminder() {
   return (
     <>
       <div className="rest-reminder-card" style={{
-        position: 'fixed', zIndex: 9991,
-        width: 'min(92vw, 340px)',
         background: C.card,
         border: `1px solid ${C.border}`,
         borderRadius: 16,
@@ -236,8 +234,11 @@ export default function RestReminder() {
           to   { opacity: 1; transform: translateY(0); }
         }
         .rest-reminder-card {
+          position: fixed;
+          z-index: 9991;
           top: 20px;
           right: 20px;
+          width: min(92vw, 340px);
         }
         @media (max-width: 600px) {
           .rest-reminder-card {
