@@ -49,6 +49,7 @@ const PLANS = [
         items: [
           { label: 'Coach IA', value: '15 msgs' },
           { label: 'Criar projeto com IA', value: '3x' },
+          { label: 'Entrevista guiada', value: '3x' },
           { label: 'Análise IA', value: '1x' },
           { label: 'Relatório do projeto', value: '1x' },
           { label: 'Narrativa IA', value: '1x' },
@@ -76,8 +77,10 @@ const PLANS = [
           { label: '15 projetos' },
           { label: 'Coach IA', value: '100 msgs' },
           { label: 'Criar com IA', value: '15x' },
+          { label: 'Entrevista guiada', value: '15x' },
           { label: 'Análise IA', value: '10x' },
           { label: 'Relatório', value: '5x' },
+          { label: 'Narrativa IA', value: '10x' },
           { label: 'Defesa IA', value: '10x' },
           { label: 'Treino de defesa', value: '5x' },
           { label: 'Carta de apresentação', value: '5x' },
