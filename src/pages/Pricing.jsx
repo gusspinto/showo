@@ -38,7 +38,7 @@ const PLANS = [
       {
         label: 'Inclui',
         items: [
-          { label: '5 projetos' },
+          { label: '3 projetos' },
           { label: 'Editor completo e página pública' },
           { label: 'Diário, agenda e lembretes' },
           { label: 'Certificado de projeto' },
@@ -47,7 +47,7 @@ const PLANS = [
       {
         label: 'IA (limitada por mês)',
         items: [
-          { label: 'Coach IA', value: '15 msgs' },
+          { label: 'Coach IA', value: '10 msgs' },
           { label: 'Criar projeto com IA', value: '3x' },
           { label: 'Entrevista guiada', value: '3x' },
           { label: 'Análise IA', value: '1x' },

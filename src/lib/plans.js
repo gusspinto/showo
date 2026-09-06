@@ -23,11 +23,11 @@ export const PLANS = {
   free: {
     id: 'free',
     name: 'Grátis',
-    maxProjects: 5,
+    maxProjects: 3,
     ai: {
       createProject: 3,
       interviewProject: 3,
-      coach: 15,
+      coach: 10,
       defense: 1,
       defenseTraining: 0,
       diaryReport: 1,
@@ -133,7 +133,9 @@ export const PLAN_GATE_MESSAGES = {
     title: 'Limite de projetos atingido',
     body: plan === 'school'
       ? `A conta escolar permite até ${getPlan(plan).maxProjects} projetos. Para projetos ilimitados, cria uma conta pessoal Pro.`
-      : `O plano ${getPlan(plan).name} permite até ${getPlan(plan).maxProjects} projetos. Faz upgrade para teres mais.`,
+      : plan === 'free'
+        ? 'Já tens 3 projetos — o máximo do plano Grátis. Com o Plus tens 15 projetos e muito mais IA.'
+        : `O plano ${getPlan(plan).name} permite até ${getPlan(plan).maxProjects} projetos. Faz upgrade para teres mais.`,
   }),
   createProject: (plan) => ({
     title: 'Limite mensal atingido',
@@ -145,7 +147,9 @@ export const PLAN_GATE_MESSAGES = {
   }),
   coach: (plan) => ({
     title: 'Limite do Coach IA atingido',
-    body: `Chegaste ao limite de mensagens do Coach este mês no plano ${getPlan(plan).name}. Com o Plus tens 100 mensagens por mês.`,
+    body: plan === 'free'
+      ? 'Já usaste as 10 mensagens do Coach este mês. Com o Plus tens 100 por mês — continua exatamente de onde paraste.'
+      : `Chegaste ao limite de mensagens do Coach este mês no plano ${getPlan(plan).name}. Faz upgrade para teres mais.`,
   }),
   defense: (plan) => ({
     title: 'Limite da Defesa IA atingido',
