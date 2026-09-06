@@ -130,11 +130,19 @@
   width: 14px; height: 14px; border-radius: 50%; border: none;
   background: var(--color-text); cursor: pointer;
 }
-.pc-textbtn {
-  margin-top: 8px; padding: 0; border: none; background: none;
-  color: var(--color-text-secondary); font-size: 12px; font-weight: 700;
-  cursor: pointer; font-family: inherit; text-decoration: underline;
+.pc-banner-change {
+  display: inline-flex; align-items: center; gap: 7px;
+  margin-top: 10px; padding: 8px 13px; border-radius: 8px;
+  border: 1px solid var(--color-border); background: var(--color-surface);
+  color: var(--color-text-secondary); font-size: 12.5px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+  transition: border-color 0.14s, color 0.14s, background 0.14s;
 }
+.pc-banner-change:hover {
+  border-color: var(--color-border-hover); color: var(--color-text);
+  background: var(--color-surface-hover);
+}
+.pc-banner-change:disabled { opacity: 0.5; cursor: default; }
 .pc-err { margin: 8px 0 0; font-size: 12px; color: var(--color-error); }
 
 /* Footer */

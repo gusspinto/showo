@@ -74,8 +74,9 @@ export default function ProfileCustomizer({
                     onChange={e => set({ bannerPosition: Number(e.target.value) })}
                   />
                 </div>
-                <button className="pc-textbtn" onClick={() => fileRef.current?.click()} disabled={bannerBusy}>
-                  {bannerBusy ? 'A carregar…' : 'Trocar'}
+                <button className="pc-banner-change" onClick={() => fileRef.current?.click()} disabled={bannerBusy}>
+                  <ImageIcon size={14} />
+                  {bannerBusy ? 'A carregar…' : 'Trocar imagem'}
                 </button>
               </>
             ) : (
