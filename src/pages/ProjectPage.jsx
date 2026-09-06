@@ -7993,9 +7993,11 @@ export default function ProjectPage() {
             // Class-criteria weighted system
             const critRatedCount = classCriteria.filter(c => criterionScores[c.id] != null).length
             const allCritRated   = critRatedCount === classCriteria.length && classCriteria.length > 0
+            const critWeightSum  = classCriteria.reduce((s, c) => s + Number(c.weight), 0)
+            const critWeightsValid = !useClassCriteria || Math.abs(critWeightSum - 100) < 0.1
             const weightedTotal  = (() => {
               if (!allCritRated) return null
-              const sumW = classCriteria.reduce((s, c) => s + Number(c.weight), 0)
+              const sumW = critWeightSum
               if (!sumW) return null
               const sumWS = classCriteria.reduce((s, c) => s + Number(c.weight) * Number(criterionScores[c.id]), 0)
               return Math.round((sumWS / sumW) * 10) / 10
@@ -8003,7 +8005,7 @@ export default function ProjectPage() {
             const scoreColorFor = s => s >= 16 ? 'var(--color-success)' : s >= 10 ? 'var(--color-primary)' : 'var(--color-warning)'
             const hasSavedScore = project.teacher_score != null
             const finalScore    = useClassCriteria ? weightedTotal : totalScore
-            const canSave       = useClassCriteria ? allCritRated  : allRated
+            const canSave       = useClassCriteria ? (allCritRated && critWeightsValid) : allRated
 
             return (
               <div style={{ ...colors.glassStyle, background: colors.glass, border: `1px solid ${colors.glassBorder}`, borderRadius: 12, overflow: 'hidden', marginBottom: 4 }}>
@@ -8125,6 +8127,14 @@ export default function ProjectPage() {
                         <span style={{ fontSize: 15, fontWeight: 900, color: scoreColorFor(finalScore) }}>{finalScore}<span style={{ fontSize: 10, color: colors.muted, fontWeight: 500 }}>/20</span></span>
                       )}
                     </div>
+
+                    {useClassCriteria && !critWeightsValid && (
+                      <div style={{ padding: '0 16px 8px' }}>
+                        <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: 'var(--color-warning)' }}>
+                          Os critérios da turma somam {critWeightSum.toFixed(0)}%. Ajusta para 100% na página da turma antes de avaliar.
+                        </p>
+                      </div>
+                    )}
 
                     {/* Note */}
                     <div style={{ padding: '8px 16px 12px' }}>

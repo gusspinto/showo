@@ -765,6 +765,11 @@ export default function TurmaPage() {
     const name = newCritName.trim()
     const weight = parseFloat(newCritWeight)
     if (!name || !weight || weight <= 0 || !turma) return
+    const currentTotal = criteria.reduce((s, c) => s + Number(c.weight), 0)
+    if (currentTotal + weight > 100.1) {
+      showToast(`Os pesos não podem passar de 100%. Restam ${Math.max(0, 100 - currentTotal)}%.`)
+      return
+    }
     setCritSaving(true)
     const { data, error } = await supabase
       .from('class_evaluation_criteria')
@@ -787,6 +792,11 @@ export default function TurmaPage() {
     const name = editingCrit.name.trim()
     const weight = parseFloat(editingCrit.weight)
     if (!name || !weight || weight <= 0) return
+    const othersTotal = criteria.reduce((s, c) => s + (c.id === editingCrit.id ? 0 : Number(c.weight)), 0)
+    if (othersTotal + weight > 100.1) {
+      showToast(`Os pesos não podem passar de 100%. Máximo para este critério: ${Math.max(0, 100 - othersTotal)}%.`)
+      return
+    }
     setCritSaving(true)
     const { error } = await supabase
       .from('class_evaluation_criteria')
@@ -1416,7 +1426,7 @@ export default function TurmaPage() {
                   </button>
                 )}
                 <button
-                  onClick={() => { setCriteriaAdding(true); setNewCritName(''); setNewCritWeight('25') }}
+                  onClick={() => { setCriteriaAdding(true); setNewCritName(''); setNewCritWeight(String(Math.max(0, 100 - criteria.reduce((s, c) => s + Number(c.weight), 0))) || '25') }}
                   style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 7, padding: '6px 12px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
                 >
                   <Plus size={13} /> Critério
@@ -1510,7 +1520,7 @@ export default function TurmaPage() {
                   return (
                     <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '4px 4px 0' }}>
                       <span style={{ fontSize: 11, fontWeight: 700, color: ok ? C.green : C.yellow }}>
-                        Total: {total.toFixed(0)}% {ok ? '✓' : '(idealmente 100%)'}
+                        Total: {total.toFixed(0)}% {ok ? '✓' : total < 100 ? `faltam ${(100 - total).toFixed(0)}% para poder avaliar` : 'tem de ser 100% para poder avaliar'}
                       </span>
                     </div>
                   )
