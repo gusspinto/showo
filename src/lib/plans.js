@@ -13,6 +13,7 @@ export const PLANS = {
       narrative: Infinity,
       analyzeProject: Infinity,
       coverLetter: 0,
+      exportPptx: Infinity,
     },
     career: {
       internshipPage: false,
@@ -33,6 +34,7 @@ export const PLANS = {
       narrative: 1,
       analyzeProject: 1,
       coverLetter: 0,
+      exportPptx: 3,
     },
     career: {
       internshipPage: false,
@@ -56,6 +58,7 @@ export const PLANS = {
       narrative: 10,
       analyzeProject: 10,
       coverLetter: 5,
+      exportPptx: 15,
     },
     career: {
       internshipPage: false,
@@ -79,6 +82,7 @@ export const PLANS = {
       narrative: 25,
       analyzeProject: 25,
       coverLetter: 25,
+      exportPptx: Infinity,
     },
     career: {
       internshipPage: true,
@@ -121,6 +125,7 @@ export const AI_FEATURE_LABELS = {
   analyzeProject: 'Análise de projeto',
   defenseTraining: 'Treino de defesa',
   coverLetter: 'Carta de apresentação',
+  exportPptx: 'Exportar PowerPoint',
 }
 
 export const PLAN_GATE_MESSAGES = {
@@ -169,6 +174,12 @@ export const PLAN_GATE_MESSAGES = {
     body: plan === 'free' || plan === 'school'
       ? 'A carta de apresentação com IA está disponível a partir do plano Plus.'
       : `Já usaste as cartas de apresentação deste mês no plano ${getPlan(plan).name}. Faz upgrade para teres mais.`,
+  }),
+  exportPptx: (plan) => ({
+    title: 'Limite de exportações PowerPoint',
+    body: plan === 'free'
+      ? 'Já exportaste os 3 PowerPoints deste mês no plano Grátis. Com o Plus tens 15 por mês.'
+      : `Já usaste as exportações PPT deste mês no plano ${getPlan(plan).name}. Faz upgrade para teres mais.`,
   }),
   weeklyRecap: () => ({
     title: 'Recap semanal',

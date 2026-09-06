@@ -70,9 +70,11 @@ function Textarea({ label, value, onChange, placeholder, hint }) {
 
 const PLAN_META = {
   free:   { name: 'Grátis',  color: 'var(--color-text-tertiary)', desc: 'O plano base, sem custos.' },
-  build:  { name: 'Build',   color: '#2B7EF5', desc: 'IA sem limites em cada projeto.' },
-  launch: { name: 'Launch',  color: '#C49A20', desc: 'Do projeto à oportunidade de carreira.' },
-  school: { name: 'Escola',  color: '#2B7EF5', desc: 'Plano Build incluído pela tua instituição.' },
+  plus:   { name: 'Plus',    color: '#2B7EF5', desc: 'Tudo o que precisas para a PAP e estágio.' },
+  pro:    { name: 'Pro',     color: '#C49A20', desc: 'Sem limites, sem preocupações.' },
+  build:  { name: 'Plus',    color: '#2B7EF5', desc: 'Tudo o que precisas para a PAP e estágio.' },
+  launch: { name: 'Pro',     color: '#C49A20', desc: 'Sem limites, sem preocupações.' },
+  school: { name: 'Escola',  color: '#2B7EF5', desc: 'Plano incluído pela tua instituição.' },
 }
 
 function PlanSection({ planId, navigate }) {

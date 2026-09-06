@@ -53,6 +53,7 @@ const PLANS = [
           { label: 'Relatório do projeto', value: '1x' },
           { label: 'Narrativa IA', value: '1x' },
           { label: 'Defesa IA', value: '1x' },
+          { label: 'Exportar PowerPoint', value: '3x' },
         ],
       },
     ],
@@ -80,6 +81,7 @@ const PLANS = [
           { label: 'Defesa IA', value: '10x' },
           { label: 'Treino de defesa', value: '5x' },
           { label: 'Carta de apresentação', value: '5x' },
+          { label: 'Exportar PowerPoint', value: '15x' },
           { label: 'Recap semanal' },
         ],
       },
@@ -103,6 +105,7 @@ const PLANS = [
           { label: 'Projetos ilimitados' },
           { label: 'Coach IA', value: '300 msgs' },
           { label: 'Todas as features IA', value: '25x' },
+          { label: 'Exportar PowerPoint', value: 'ilimitado' },
           { label: 'Portfólio pro com link limpo' },
           { label: 'Página de estágio' },
         ],
@@ -233,7 +236,7 @@ export default function Pricing() {
                   <div className="pricing-career">
                     <div className="pricing-career-head">
                       <Sparkles size={13} className="pricing-career-head-icon" />
-                      <span className="pricing-career-head-text">Carreira · só no Launch</span>
+                      <span className="pricing-career-head-text">Carreira · só no Pro</span>
                     </div>
                     <ul className="pricing-career-list">
                       {CAREER_FEATURES.map(({ Icon, title, desc }) => (
@@ -254,7 +257,7 @@ export default function Pricing() {
         </div>
 
         <p className="pricing-foot">
-          Muda ou cancela quando quiseres. Contas de escola têm o Build incluído para todos os alunos.
+          Muda ou cancela quando quiseres. Contas de escola têm acesso incluído para todos os alunos.
         </p>
       </div>
     </div>
