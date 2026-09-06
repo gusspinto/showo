@@ -14,6 +14,8 @@ import { SquareArrowRightUpIcon as ExternalLink } from '@solar-icons/react/bold/
 import { PaletteIcon as Palette } from '@solar-icons/react/bold/palette'
 import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
 import { StarIcon as Star } from '@solar-icons/react/bold/star'
+import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
+import { PlusIcon as Plus } from '../components/icons/PlusIcon'
 import { ChatRoundLineIcon as MessageSquare } from '@solar-icons/react/bold/chat-round-line'
 import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/square-academic-cap'
 import { PlaneIcon as Send } from '@solar-icons/react/bold/plane'
@@ -202,6 +204,8 @@ export default function UserProfile() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [profile, setProfile] = useState(null)
   const [projects, setProjects] = useState([])
+  const [skillProjects, setSkillProjects] = useState([])   // {id,name,slug,skills,tech_stack} de todos os projetos
+  const [skillSuggestions, setSkillSuggestions] = useState([]) // {project_id,skills,technologies} por rever (dono)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [showQR, setShowQR] = useState(false)
@@ -279,6 +283,21 @@ export default function UserProfile() {
       if (isRecruiterVisitor) setSaved(!!sc)
 
       setLoading(false)
+
+      // Competências: agregadas de TODOS os projetos do utilizador (não só
+      // os 3 em destaque). RLS trata da visibilidade.
+      supabase.from('projects')
+        .select('id, name, slug, skills, tech_stack')
+        .eq('user_id', profileData.id)
+        .is('parent_project_id', null)
+        .then(({ data }) => setSkillProjects(data || []))
+
+      // Sugestões da IA por rever — só o dono.
+      if (user && profileData.id === user.id) {
+        supabase.from('project_skill_suggestions')
+          .select('project_id, skills, technologies')
+          .then(({ data }) => setSkillSuggestions(data || []))
+      }
     }
     load()
   }, [username])
@@ -317,6 +336,86 @@ export default function UserProfile() {
     || profile?.username || 'Utilizador'
   const previewBio    = customizing ? draftBio.trim() : profile?.bio
   const previewSkills  = customizing ? draftSkills : (profile?.skills || [])
+  // Ocupação ("o que faz") ao lado do nome — mais limpo que enfiado na meta-row.
+  const occupationLabel = profile?.occupation
+    || (profile?.role === 'professor' ? 'Professor' : null)
+    || ((profile?.role === 'recrutador' || profile?.role === 'empresa') ? (profile?.company_role || null) : null)
+
+  // ── Competências: manual + comprovadas pelos projetos ──
+  const norm = s => String(s || '').trim().toLowerCase()
+  const dedupe = arr => {
+    const seen = new Set(); const out = []
+    for (const s of arr) { const k = norm(s); if (s && !seen.has(k)) { seen.add(k); out.push(String(s).trim()) } }
+    return out
+  }
+  const projectSkills = dedupe(skillProjects.flatMap(p => Array.isArray(p.skills) ? p.skills : []))
+  const projectTech   = dedupe(skillProjects.flatMap(p => Array.isArray(p.tech_stack) ? p.tech_stack : []))
+  const proofCount = skill => skillProjects.filter(p => (p.skills || []).some(s => norm(s) === norm(skill))).length
+  const manualSkills = previewSkills || []
+  const suggestedSkills = projectSkills.filter(s => !manualSkills.some(m => norm(m) === norm(s)))
+
+  // Sugestões da IA por rever (dono): agrega por competência/tecnologia,
+  // guardando em que projetos apareceu.
+  const pendingSkillMap = {}
+  const pendingTechMap = {}
+  if (isOwnProfile) {
+    for (const s of skillSuggestions) {
+      for (const sk of (s.skills || [])) {
+        if (manualSkills.some(m => norm(m) === norm(sk))) continue
+        if (projectSkills.some(p => norm(p) === norm(sk))) continue
+        ;(pendingSkillMap[norm(sk)] ??= { label: sk, projectIds: [] }).projectIds.push(s.project_id)
+      }
+      for (const t of (s.technologies || [])) {
+        if (projectTech.some(p => norm(p) === norm(t))) continue
+        ;(pendingTechMap[norm(t)] ??= { label: t, projectIds: [] }).projectIds.push(s.project_id)
+      }
+    }
+  }
+  const pendingSkills = Object.values(pendingSkillMap)
+  const pendingTech = Object.values(pendingTechMap)
+
+  async function addSkillToProfile(skill) {
+    if (!isOwnProfile || manualSkills.some(m => norm(m) === norm(skill))) return
+    const next = [...manualSkills, skill].slice(0, 12)
+    setProfile(p => ({ ...p, skills: next }))
+    await supabase.from('profiles').update({ skills: next }).eq('id', user.id)
+  }
+
+  // Confirma uma sugestão da IA: escreve-a em projects.skills/tech_stack de
+  // cada projeto onde apareceu, e tira-a da lista de pendentes.
+  async function confirmSuggestion(kind, label, projectIds) {
+    const col = kind === 'tech' ? 'tech_stack' : 'skills'
+    await Promise.all(projectIds.map(async pid => {
+      const proj = skillProjects.find(p => p.id === pid)
+      const current = (proj?.[col] || [])
+      if (current.some(s => norm(s) === norm(label))) return
+      const next = [...current, label]
+      await supabase.from('projects').update({ [col]: next }).eq('id', pid)
+      setSkillProjects(prev => prev.map(p => p.id === pid ? { ...p, [col]: next } : p))
+    }))
+    dismissSuggestion(kind, label, projectIds)
+    if (kind === 'skill') addSkillToProfile(label)
+  }
+
+  async function dismissSuggestion(kind, label, projectIds) {
+    setSkillSuggestions(prev => prev.map(s => projectIds.includes(s.project_id)
+      ? {
+          ...s,
+          skills: kind === 'skill' ? (s.skills || []).filter(x => norm(x) !== norm(label)) : s.skills,
+          technologies: kind === 'tech' ? (s.technologies || []).filter(x => norm(x) !== norm(label)) : s.technologies,
+        }
+      : s))
+    await Promise.all(projectIds.map(pid => {
+      const s = skillSuggestions.find(x => x.project_id === pid)
+      if (!s) return null
+      const nextSkills = kind === 'skill' ? (s.skills || []).filter(x => norm(x) !== norm(label)) : (s.skills || [])
+      const nextTech = kind === 'tech' ? (s.technologies || []).filter(x => norm(x) !== norm(label)) : (s.technologies || [])
+      if (!nextSkills.length && !nextTech.length) {
+        return supabase.from('project_skill_suggestions').delete().eq('project_id', pid)
+      }
+      return supabase.from('project_skill_suggestions').update({ skills: nextSkills, technologies: nextTech }).eq('project_id', pid)
+    }))
+  }
 
   const canEditSkills = profile?.role === 'aluno' || profile?.role === 'professor'
 
@@ -415,6 +514,9 @@ export default function UserProfile() {
               <div className="up-head-identity">
                 <div className="up-name-row">
                   <h1 className="up-name">{displayName}</h1>
+                  {occupationLabel && (
+                    <span className="up-occupation"><span className="up-occupation-sep">·</span>{occupationLabel}</span>
+                  )}
                   {isOwnProfile && <PlanBadge />}
                   {projects.some(p => (p.score || 0) >= 100) && (
                     <span className="up-perfect-badge" title="Tem um projeto com score perfeito">
@@ -427,10 +529,14 @@ export default function UserProfile() {
 
                 <div className="up-meta-row">
                   {profile.username && <span>@{profile.username}</span>}
-                  {profile.occupation && <><span className="up-meta-sep">·</span><span>{profile.occupation}</span></>}
-                  {!profile.occupation && (profile.area || profile.course) && <><span className="up-meta-sep">·</span><span>{profile.area || profile.course}</span></>}
+                  {!occupationLabel && (profile.area || profile.course) && <><span className="up-meta-sep">·</span><span>{profile.area || profile.course}</span></>}
                   {profile.school && <><span className="up-meta-sep">·</span><span>{profile.school}</span></>}
-                  {profile.role === 'professor' && <><span className="up-meta-sep">·</span><span>Professor</span></>}
+                  {profile.linkedin_url && (
+                    <>
+                      <span className="up-meta-sep">·</span>
+                      <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer" className="up-meta-link">LinkedIn</a>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -465,19 +571,6 @@ export default function UserProfile() {
             </div>
 
             {previewBio && <p className="up-bio">{previewBio}</p>}
-
-            {(previewSkills?.length > 0 || profile.linkedin_url) && (
-              <div className="up-chips-row">
-                {profile.linkedin_url && (
-                  <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer" className="up-chip up-chip--link">
-                    <ExternalLink size={11} /> LinkedIn
-                  </a>
-                )}
-                {previewSkills?.map(skill => (
-                  <span key={skill} className="up-chip">{skill}</span>
-                ))}
-              </div>
-            )}
           </div>
         </header>
 
@@ -529,6 +622,67 @@ export default function UserProfile() {
             </div>
           )}
         </div>
+
+        {/* ── Competências ── */}
+        {(manualSkills.length > 0 || suggestedSkills.length > 0 || projectTech.length > 0 || pendingSkills.length > 0 || pendingTech.length > 0) && (
+          <div className="up-skills-section">
+
+            {/* Review: sugestões da IA (só o dono) */}
+            {isOwnProfile && (pendingSkills.length > 0 || pendingTech.length > 0) && (
+              <div className="up-skills-review">
+                <p className="up-skills-review-title">A IA encontrou isto nos teus projetos</p>
+                <p className="up-skills-review-sub">Confirma o que faz sentido. Só aparece no perfil depois de confirmares.</p>
+                <div className="up-chips-row">
+                  {[...pendingSkills.map(s => ({ ...s, kind: 'skill' })), ...pendingTech.map(t => ({ ...t, kind: 'tech' }))].map(item => (
+                    <span key={item.kind + item.label} className="up-chip up-chip--pending">
+                      {item.label}
+                      <button onClick={() => confirmSuggestion(item.kind, item.label, item.projectIds)} title="Confirmar" className="up-chip-act up-chip-act--ok"><Check size={12} /></button>
+                      <button onClick={() => dismissSuggestion(item.kind, item.label, item.projectIds)} title="Dispensar" className="up-chip-act"><X size={12} /></button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {(manualSkills.length > 0 || suggestedSkills.length > 0) && (
+              <>
+                <p className="up-section-label">Competências</p>
+                <div className="up-chips-row">
+                  {manualSkills.map(skill => {
+                    const n = proofCount(skill)
+                    return (
+                      <span key={skill} className={`up-chip${n > 0 ? ' up-chip--proven' : ''}`}
+                        title={n > 0 ? `Demonstrada em ${n} projeto${n !== 1 ? 's' : ''}` : undefined}>
+                        {n > 0 && <Check size={11} />} {skill}
+                      </span>
+                    )
+                  })}
+                  {suggestedSkills.map(skill => (
+                    isOwnProfile ? (
+                      <button key={skill} className="up-chip up-chip--add" onClick={() => addSkillToProfile(skill)}
+                        title="Demonstrada nos teus projetos — adicionar à lista">
+                        <Check size={11} /> {skill} <Plus size={11} />
+                      </button>
+                    ) : (
+                      <span key={skill} className="up-chip up-chip--proven"><Check size={11} /> {skill}</span>
+                    )
+                  ))}
+                </div>
+              </>
+            )}
+
+            {projectTech.length > 0 && (
+              <>
+                <p className="up-section-label" style={{ marginTop: 28 }}>Tecnologias</p>
+                <div className="up-chips-row">
+                  {projectTech.map(t => (
+                    <span key={t} className="up-chip up-chip--tech" onClick={() => navigate(`/explorar?tech=${encodeURIComponent(t)}`)} role="link" tabIndex={0}>{t}</span>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {viewingFile && <LibFileViewer item={viewingFile} onClose={() => setViewingFile(null)} />}

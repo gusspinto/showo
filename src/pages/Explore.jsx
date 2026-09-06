@@ -129,6 +129,7 @@ export default function Explore() {
   const [filterType, setFilterType] = useState('')
   const [filterMinScore] = useState(0)
   const [filterZone, setFilterZone] = useState('')
+  const [filterTech, setFilterTech] = useState(() => searchParams.get('tech') || '')
   const [areas, setAreas] = useState([])
   const [sortBy, setSortBy] = useState('views')
   const [filterAvailable, setFilterAvailable] = useState(false)
@@ -144,7 +145,7 @@ export default function Explore() {
   const [peopleSearch, setPeopleSearch] = useState('')
   const [filterSkill, setFilterSkill] = useState('')
   const [filterPeopleArea, setFilterPeopleArea] = useState('')
-  const [showFilters, setShowFilters] = useState(false)
+  const [showFilters, setShowFilters] = useState(() => !!searchParams.get('tech'))
   const [showPeopleFilters, setShowPeopleFilters] = useState(false)
 
   useEffect(() => {
@@ -249,11 +250,24 @@ export default function Explore() {
       if (!p.school_year?.includes(filterZone) && !p.course?.includes(filterZone) && !p.creator_name?.includes(filterZone)) return false
     }
     if (filterAvailable && !p.available_for_work) return false
+    if (filterTech) {
+      const tl = filterTech.toLowerCase()
+      const inStack = (p.tech_stack || []).some(t => String(t).toLowerCase() === tl)
+      const inText = String(p.technologies || '').toLowerCase().includes(tl)
+      if (!inStack && !inText) return false
+    }
     return true
-  }), [projects, query, filterArea, filterType, filterMinScore, filterZone, filterAvailable])
+  }), [projects, query, filterArea, filterType, filterMinScore, filterZone, filterAvailable, filterTech])
 
-  const hasFilters = filterArea || filterType || filterZone || filterAvailable
-  const activeFilterCount = [filterArea, filterType, filterZone, filterAvailable].filter(Boolean).length
+  // tech_stack só existe depois da migração 126 — quando estiver aplicada,
+  // acrescentar 'tech_stack' ao .select() acima para o dropdown se popular.
+  const techOptions = useMemo(
+    () => [...new Set(projects.flatMap(p => Array.isArray(p.tech_stack) ? p.tech_stack : []))].sort(),
+    [projects],
+  )
+
+  const hasFilters = filterArea || filterType || filterZone || filterAvailable || filterTech
+  const activeFilterCount = [filterArea, filterType, filterZone, filterAvailable, filterTech].filter(Boolean).length
 
   const peopleQuery = peopleSearch.toLowerCase().trim()
   const filteredPeople = useMemo(() => people.filter(p => {
@@ -279,7 +293,7 @@ export default function Explore() {
     return new Date(b.created_at) - new Date(a.created_at)
   }), [filtered, sortBy])
 
-  useEffect(() => { setVisibleCount(24) }, [query, filterArea, filterType, filterZone, filterAvailable, sortBy])
+  useEffect(() => { setVisibleCount(24) }, [query, filterArea, filterType, filterZone, filterAvailable, filterTech, sortBy])
 
   return (
     <div className="min-h-screen bg-page font-body">
@@ -361,6 +375,11 @@ export default function Explore() {
               <SelectFilter value={filterArea} onChange={setFilterArea} options={areas} label="Filtrar por área" />
               <SelectFilter value={filterType} onChange={setFilterType} options={PROJECT_TYPES} label="Filtrar por tipo" />
               <SelectFilter value={filterZone} onChange={setFilterZone} options={ZONES} label="Filtrar por zona" />
+              {techOptions.length > 0 && (
+                <SelectFilter value={filterTech} onChange={setFilterTech}
+                  options={[{ id: '', label: 'Todas as tecnologias' }, ...techOptions.map(t => ({ id: t, label: t }))]}
+                  label="Filtrar por tecnologia" />
+              )}
               <SelectFilter value={sortBy} onChange={setSortBy} options={SORT_OPTIONS} label="Ordenar por" />
 
               <button
@@ -373,7 +392,7 @@ export default function Explore() {
               {hasFilters && (
                 <button
                   className="filter-clear-btn"
-                  onClick={() => { setFilterArea(''); setFilterType(''); setFilterZone(''); setFilterAvailable(false); setFilterSkill('') }}
+                  onClick={() => { setFilterArea(''); setFilterType(''); setFilterZone(''); setFilterAvailable(false); setFilterSkill(''); setFilterTech('') }}
                 >
                   <X size={13} /> Limpar filtros
                 </button>

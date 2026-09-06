@@ -65,7 +65,7 @@ export async function saveProject(formData, aiResult, userId, opts = {}) {
     score,
   }
 
-  const { data, error } = await supabase.from('projects').insert([payload]).select().single()
+  let { data, error } = await supabase.from('projects').insert([payload]).select().single()
 
   if (error) {
     if (error.code === '23505') {
@@ -76,9 +76,15 @@ export async function saveProject(formData, aiResult, userId, opts = {}) {
         .select()
         .single()
       if (retryError) throw retryError
-      return retryData
+      data = retryData
+    } else {
+      throw error
     }
-    throw error
+  }
+
+  // IA lê o projeto e propõe competências/tecnologias para o aluno confirmar.
+  if (data?.id) {
+    supabase.functions.invoke('extract-skills', { body: { projectId: data.id } }).catch(() => {})
   }
 
   return data

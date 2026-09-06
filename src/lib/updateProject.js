@@ -53,5 +53,12 @@ export async function updateProject(id, formData, editToken = null) {
     .single()
 
   if (error) throw error
+
+  // No publish, a IA relê o projeto e propõe competências/tecnologias.
+  // Fica em ai_skill_suggestions à espera de o aluno confirmar. Fire-and-forget.
+  if ((payload.visibility || 'public') === 'public') {
+    supabase.functions.invoke('extract-skills', { body: { projectId: id } }).catch(() => {})
+  }
+
   return data
 }

@@ -168,6 +168,81 @@
   color: var(--color-text);
 }
 
+/* Competência comprovada por um projeto */
+.up-chip--proven {
+  color: var(--color-text);
+  border-color: var(--color-success-subtle, var(--color-border));
+  background: var(--color-success-subtle);
+}
+.up-chip--proven svg { color: var(--color-success); flex-shrink: 0; }
+
+/* Competência sugerida pelos projetos, ainda não no perfil (dono) */
+.up-chip--add {
+  cursor: pointer;
+  font-family: inherit;
+  border-style: dashed;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.up-chip--add:hover {
+  border-color: var(--color-text);
+  color: var(--color-text);
+  background: var(--color-bg-alt);
+}
+
+/* ── Ocupação ao lado do nome ── */
+.up-occupation {
+  font-family: var(--font-heading);
+  font-size: 17px;
+  font-weight: 400;
+  letter-spacing: -0.2px;
+  color: var(--color-text-tertiary);
+  white-space: nowrap;
+}
+.up-occupation-sep { margin-right: 7px; opacity: 0.55; }
+
+.up-meta-link {
+  color: var(--color-text-secondary);
+  text-decoration: none;
+}
+.up-meta-link:hover { color: var(--color-text); text-decoration: underline; }
+
+/* ── Secção Competências ── */
+.up-skills-section { margin-top: 40px; }
+.up-skills-sub {
+  margin: 14px 0 10px;
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+}
+
+.up-chip--tech { cursor: pointer; }
+.up-chip--tech:hover { border-color: var(--color-border-hover); color: var(--color-text); }
+
+/* Bloco de revisão das sugestões da IA */
+.up-skills-review {
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 28px;
+  background: var(--color-bg-alt);
+}
+.up-skills-review-title { margin: 0; font-size: 13px; font-weight: 700; color: var(--color-text); }
+.up-skills-review-sub { margin: 3px 0 12px; font-size: 12px; color: var(--color-text-tertiary); }
+
+.up-chip--pending {
+  gap: 6px;
+  border-style: dashed;
+  color: var(--color-text);
+}
+.up-chip-act {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; padding: 0; margin: 0 -2px;
+  border: none; border-radius: 5px; cursor: pointer;
+  background: var(--color-surface-hover); color: var(--color-text-secondary);
+  transition: background 0.14s, color 0.14s;
+}
+.up-chip-act:hover { background: var(--color-error-subtle); color: var(--color-error); }
+.up-chip-act--ok:hover { background: var(--color-success-subtle); color: var(--color-success); }
+
 /* ── Action buttons ── */
 .up-action-btn {
   background: transparent;
@@ -727,6 +802,8 @@
   .up-name {
     font-size: 19px;
   }
+  .up-occupation { font-size: 13.5px; }
+  .up-skills-section { margin-top: 32px; }
 
   /* Os botões (Personalizar/Editar/etc.) ficam ao lado do nome, na mesma
      linha do avatar — não empilhados por baixo do "@user · Ocupação",

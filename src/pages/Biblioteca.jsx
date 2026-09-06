@@ -116,11 +116,17 @@ function LibAddedTile({ item, onOpen, onDelete, removing, editing, onTogglePin, 
           <span className="lib-tile-text">
             <span className="lib-tile-name">{item.name}</span>
             {item.library_description && <span className="lib-tile-area">{item.library_description}</span>}
-            {item.library_skills?.length > 0 && (
-              <span className="lib-tile-skills">
-                {item.library_skills.slice(0, 3).map(s => <span key={s} className="lib-tile-skill">{s}</span>)}
-              </span>
-            )}
+            {(() => {
+              // skills/tech_stack só depois da migração 126 (acrescentar ao
+              // .select() dos itens); até lá cai no library_skills de sempre.
+              const tags = [...(item.skills || []), ...(item.tech_stack || [])]
+              const shown = tags.length ? tags : (item.library_skills || [])
+              return shown.length > 0 && (
+                <span className="lib-tile-skills">
+                  {shown.slice(0, 3).map(s => <span key={s} className="lib-tile-skill">{s}</span>)}
+                </span>
+              )
+            })()}
           </span>
         </span>
       </button>
