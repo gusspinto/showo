@@ -84,7 +84,6 @@ export default function ProfileCustomizer({
               value={headline || ''}
               onChange={e => onHeadlineChange(e.target.value)}
             />
-            <p className="pc-hint">{(headline || '').length}/{HEADLINE_MAX} — aparece por baixo do teu nome</p>
           </section>
 
           {/* Bio */}
@@ -98,15 +97,16 @@ export default function ProfileCustomizer({
               value={bio || ''}
               onChange={e => onBioChange(e.target.value)}
             />
-            <p className="pc-hint">{(bio || '').length}/{BIO_MAX} — aparece no teu perfil público</p>
           </section>
 
           {/* Competências */}
           {canEditSkills && (
             <section className="pc-group">
-              <SkillsPicker value={skills || []} onChange={onSkillsChange} max={12} label="Competências" />
+              <SkillsPicker value={skills || []} onChange={onSkillsChange} max={12} label="Competências" showHint={false} />
             </section>
           )}
+
+          <p className="pc-subhead">Aparência</p>
 
           {/* Banner */}
           <section className="pc-group">

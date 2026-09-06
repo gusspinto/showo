@@ -31,7 +31,7 @@ const POPULAR_SKILLS = [
   'Criatividade', 'Organização', 'Adaptabilidade',
 ]
 
-export default function SkillsPicker({ value = [], onChange, max = 10, label = 'Competências' }) {
+export default function SkillsPicker({ value = [], onChange, max = 10, label = 'Competências', showHint = true }) {
   const [input, setInput] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
   const inputRef = useRef(null)
@@ -164,7 +164,7 @@ export default function SkillsPicker({ value = [], onChange, max = 10, label = '
         </div>
       )}
 
-      {selected.length > 0 && (
+      {showHint && selected.length > 0 && (
         <p style={{ margin: 0, fontSize: 11, color: 'var(--color-text-secondary)' }}>
           {selected.length}/{max} · Carrega Enter ou vírgula para adicionar
         </p>

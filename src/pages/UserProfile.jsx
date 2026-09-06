@@ -17,7 +17,6 @@ import { StarIcon as Star } from '@solar-icons/react/bold/star'
 import { ChatRoundLineIcon as MessageSquare } from '@solar-icons/react/bold/chat-round-line'
 import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/square-academic-cap'
 import { PlaneIcon as Send } from '@solar-icons/react/bold/plane'
-import { PaletteIcon as Palette } from '@solar-icons/react/bold/palette'
 import ConvidarVagaModal from '../components/ConvidarVagaModal'
 import ProfileCustomizer from '../components/ProfileCustomizer'
 import LibFileViewer from '../components/LibFileViewer'
@@ -437,14 +436,9 @@ export default function UserProfile() {
 
               <div className="up-head-actions">
                 {isOwnProfile && (
-                  <>
-                    <button onClick={openCustomizer} className="up-icon-btn up-personalize" title="Personalizar perfil" aria-label="Personalizar perfil">
-                      <Palette size={15} />
-                    </button>
-                    <button onClick={() => navigate('/settings')} className="up-icon-btn" title="Editar perfil" aria-label="Editar perfil">
-                      <Pencil size={15} />
-                    </button>
-                  </>
+                  <button onClick={openCustomizer} className="up-icon-btn up-personalize" title="Editar perfil" aria-label="Editar perfil">
+                    <Pencil size={15} />
+                  </button>
                 )}
                 <button onClick={() => setShowQR(true)} className="up-icon-btn" title="QR Code" aria-label="QR Code">
                   <QrCode size={15} />
