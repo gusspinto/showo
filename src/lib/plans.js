@@ -1,5 +1,4 @@
 export const PLANS = {
-  // school plan = build features, assigned automatically to org accounts
   school: {
     id: 'school',
     name: 'Escola',
@@ -9,7 +8,7 @@ export const PLANS = {
       interviewProject: Infinity,
       coach: Infinity,
       defense: Infinity,
-      defenseTraining: 2,
+      defenseTraining: Infinity,
       diaryReport: Infinity,
       narrative: Infinity,
       analyzeProject: Infinity,
@@ -23,16 +22,16 @@ export const PLANS = {
   free: {
     id: 'free',
     name: 'Grátis',
-    maxProjects: 3,
+    maxProjects: 5,
     ai: {
-      createProject: 2,
-      interviewProject: 0,
-      coach: 10,
+      createProject: 3,
+      interviewProject: 3,
+      coach: 15,
       defense: 1,
       defenseTraining: 0,
       diaryReport: 1,
       narrative: 1,
-      analyzeProject: 0,
+      analyzeProject: 1,
       coverLetter: 0,
     },
     career: {
@@ -40,43 +39,46 @@ export const PLANS = {
       weeklyRecap: false,
     },
   },
-  build: {
-    id: 'build',
-    name: 'Build',
-    maxProjects: 10,
+  plus: {
+    id: 'plus',
+    name: 'Plus',
+    stripePriceId: typeof window !== 'undefined' && window.location?.hostname === 'localhost'
+      ? 'price_1U3YjERzbl5ql7IdG7Yf5MhC'
+      : 'price_1U3kJ92MED6Xa6YrWrLvrdXG',
+    maxProjects: 15,
     ai: {
-      createProject: Infinity,
-      interviewProject: Infinity,
-      coach: Infinity,
-      defense: Infinity,
-      defenseTraining: 0,
-      diaryReport: Infinity,
-      narrative: Infinity,
-      analyzeProject: Infinity,
-      coverLetter: 0,
+      createProject: 15,
+      interviewProject: 15,
+      coach: 100,
+      defense: 10,
+      defenseTraining: 5,
+      diaryReport: 5,
+      narrative: 10,
+      analyzeProject: 10,
+      coverLetter: 5,
     },
-    // Sem carreira, de propósito: o Build é para construir e organizar o
-    // percurso escolar. Tudo o que aponta ao mercado de trabalho — recap
-    // semanal, página de estágio, carta de apresentação — é o Launch.
     career: {
       internshipPage: false,
-      weeklyRecap: false,
+      weeklyRecap: true,
     },
   },
-  launch: {
-    id: 'launch',
-    name: 'Launch',
+  pro: {
+    id: 'pro',
+    name: 'Pro',
+    stripePriceId: typeof window !== 'undefined' && window.location?.hostname === 'localhost'
+      ? 'price_1U3YjvRzbl5ql7Id7uUcwFFD'
+      : 'price_1U3kJA2MED6Xa6YrEQMfJ0q3',
     maxProjects: Infinity,
     ai: {
-      createProject: Infinity,
-      interviewProject: Infinity,
-      coach: Infinity,
-      defense: Infinity,
-      defenseTraining: 0,
-      diaryReport: Infinity,
-      narrative: Infinity,
-      analyzeProject: Infinity,
-      coverLetter: Infinity,
+      createProject: 30,
+      interviewProject: 30,
+      coach: 300,
+      defense: 25,
+      defenseTraining: 25,
+      diaryReport: 10,
+      narrative: 25,
+      analyzeProject: 25,
+      coverLetter: 25,
     },
     career: {
       internshipPage: true,
@@ -85,12 +87,14 @@ export const PLANS = {
   },
 }
 
+// Alias old plan IDs to new ones
+const PLAN_ALIASES = { build: 'plus', launch: 'pro' }
+
 export function getPlan(planId) {
-  return PLANS[planId] ?? PLANS.free
+  const resolved = PLAN_ALIASES[planId] || planId
+  return PLANS[resolved] ?? PLANS.free
 }
 
-// Returns remaining uses for a feature this month using server-side usage data.
-// usageMap is { feature: usedCount } from get_ai_usage() RPC.
 export function remainingUses(planId, feature, usageMap) {
   const limit = getPlan(planId).ai[feature]
   if (limit === Infinity) return Infinity
@@ -99,12 +103,10 @@ export function remainingUses(planId, feature, usageMap) {
   return Math.max(0, limit - used)
 }
 
-// Returns the monthly limit for a feature on a plan
 export function featureLimit(planId, feature) {
   return getPlan(planId).ai[feature] ?? 0
 }
 
-// Returns the used count for a feature from usage map
 export function featureUsed(feature, usageMap) {
   return usageMap?.[feature] ?? 0
 }
@@ -114,7 +116,7 @@ export const AI_FEATURE_LABELS = {
   interviewProject: 'Entrevista guiada',
   coach: 'Coach IA',
   defense: 'Defesa IA',
-  diaryReport: 'Relatório do diário',
+  diaryReport: 'Relatório do projeto',
   narrative: 'Narrativa IA',
   analyzeProject: 'Análise de projeto',
   defenseTraining: 'Treino de defesa',
@@ -125,53 +127,55 @@ export const PLAN_GATE_MESSAGES = {
   maxProjects: (plan) => ({
     title: 'Limite de projetos atingido',
     body: plan === 'school'
-      ? `A conta escolar permite até ${getPlan(plan).maxProjects} projetos. Para projetos ilimitados, cria uma conta pessoal Launch.`
-      : `O plano ${getPlan(plan).name} permite até ${getPlan(plan).maxProjects} projetos. Com o Build tens até 10 — e no Launch são ilimitados.`,
+      ? `A conta escolar permite até ${getPlan(plan).maxProjects} projetos. Para projetos ilimitados, cria uma conta pessoal Pro.`
+      : `O plano ${getPlan(plan).name} permite até ${getPlan(plan).maxProjects} projetos. Faz upgrade para teres mais.`,
   }),
   createProject: (plan) => ({
     title: 'Limite mensal atingido',
-    body: `Já criaste o máximo de projetos com IA este mês no plano ${getPlan(plan).name}. Com o Build podes criar sem limites todos os meses.`,
+    body: `Já criaste o máximo de projetos com IA este mês no plano ${getPlan(plan).name}. Faz upgrade para criares mais.`,
   }),
-  interviewProject: () => ({
-    title: 'Entrevista guiada IA',
-    body: 'A IA faz-te perguntas sobre o teu projeto e constrói o conteúdo a partir das tuas respostas — ideal quando não sabes por onde começar. Disponível no Build.',
+  interviewProject: (plan) => ({
+    title: 'Limite da entrevista guiada atingido',
+    body: `Já usaste todas as entrevistas guiadas deste mês no plano ${getPlan(plan).name}. Faz upgrade para teres mais.`,
   }),
   coach: (plan) => ({
     title: 'Limite do Coach IA atingido',
-    body: `Chegaste ao limite de mensagens do Coach este mês no plano ${getPlan(plan).name}. Com o Build tens Coach ilimitado para melhorares o projeto sempre que quiseres.`,
+    body: `Chegaste ao limite de mensagens do Coach este mês no plano ${getPlan(plan).name}. Com o Plus tens 100 mensagens por mês.`,
   }),
   defense: (plan) => ({
     title: 'Limite da Defesa IA atingido',
-    body: `Já usaste a Defesa com IA este mês no plano ${getPlan(plan).name}. Com o Build podes preparar a defesa sem limites — notas por slide, perguntas prováveis do júri, tudo.`,
+    body: `Já usaste a Defesa com IA este mês no plano ${getPlan(plan).name}. Com o Plus tens 10 por mês.`,
   }),
   diaryReport: (plan) => ({
-    title: 'Limite do Relatório IA atingido',
-    body: `Chegaste ao limite de relatórios do diário este mês no plano ${getPlan(plan).name}. Com o Build a IA transforma o teu diário num relatório completo sempre que precisares.`,
+    title: 'Limite do Relatório atingido',
+    body: `Chegaste ao limite de relatórios este mês no plano ${getPlan(plan).name}. Com o Plus tens 5 por mês.`,
   }),
   narrative: (plan) => ({
     title: 'Limite da Narrativa IA atingido',
-    body: `Já usaste a Narrativa IA este mês no plano ${getPlan(plan).name}. Com o Build a IA reescreve a apresentação do teu projeto sem limites.`,
+    body: `Já usaste a Narrativa IA este mês no plano ${getPlan(plan).name}. Com o Plus tens 10 por mês.`,
   }),
-  analyzeProject: () => ({
-    title: 'Análise completa de projeto',
-    body: 'A IA revê o teu projeto secção a secção e diz-te exatamente o que melhorar para subir o score. Disponível no Build.',
+  analyzeProject: (plan) => ({
+    title: 'Limite da Análise atingido',
+    body: `Já usaste a Análise IA este mês no plano ${getPlan(plan).name}. Com o Plus tens 10 por mês.`,
   }),
-  defenseTraining: () => ({
+  defenseTraining: (plan) => ({
     title: 'Treino de defesa',
-    body: 'Grava-te a apresentar o projeto e recebe feedback da IA sobre conteúdo, clareza e oratória. Disponível para contas de escola.',
+    body: plan === 'free'
+      ? 'O treino de defesa está disponível a partir do plano Plus.'
+      : `Já usaste o treino de defesa este mês no plano ${getPlan(plan).name}. Faz upgrade para teres mais.`,
   }),
-  coverLetter: () => ({
+  coverLetter: (plan) => ({
     title: 'Carta de apresentação IA',
-    body: 'A IA escreve uma carta de apresentação personalizada para cada vaga, usando os teus projetos reais como base. Disponível no Launch.',
+    body: plan === 'free' || plan === 'school'
+      ? 'A carta de apresentação com IA está disponível a partir do plano Plus.'
+      : `Já usaste as cartas de apresentação deste mês no plano ${getPlan(plan).name}. Faz upgrade para teres mais.`,
   }),
-  // checkGate('weeklyRecap') devolvia sempre message: undefined — a única
-  // funcionalidade de carreira sem explicação nenhuma quando era bloqueada.
   weeklyRecap: () => ({
     title: 'Recap semanal',
-    body: 'Todas as segundas recebes um resumo do que fizeste na semana anterior: o que avançou, o que ficou parado e o próximo passo. Chega por email e fica na app. Disponível no Launch.',
+    body: 'Todas as segundas recebes um resumo do que fizeste na semana anterior. Disponível a partir do Plus.',
   }),
   internshipPage: () => ({
     title: 'Página de estágio',
-    body: 'Uma página do teu portfolio organizada especificamente para recrutadores — projetos destacados, skills e contacto num só lugar. Disponível no Launch.',
+    body: 'Uma página do teu portfólio organizada para recrutadores. Disponível no Pro.',
   }),
 }

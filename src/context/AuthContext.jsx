@@ -167,7 +167,7 @@ export function AuthProvider({ children }) {
 
   const isAdmin         = profile?.is_admin === true
   const isSchoolAccount = !!profile?.organization_id
-  const planId          = profile?.role === 'professor' ? 'launch'
+  const planId          = profile?.role === 'professor' ? 'pro'
                         : isSchoolAccount ? 'school'
                         : (profile?.plan ?? 'free')
   const plan            = getPlan(planId)

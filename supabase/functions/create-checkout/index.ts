@@ -19,6 +19,8 @@ Deno.serve(async (req) => {
     const PRICE_IDS: Record<string, string> = {
       build: Deno.env.get('STRIPE_PRICE_BUILD')!,
       launch: Deno.env.get('STRIPE_PRICE_LAUNCH')!,
+      plus: Deno.env.get('STRIPE_PRICE_BUILD')!,
+      pro: Deno.env.get('STRIPE_PRICE_LAUNCH')!,
     }
 
     const priceId = PRICE_IDS[plan]

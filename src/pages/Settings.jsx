@@ -116,10 +116,10 @@ function PlanSection({ planId, navigate }) {
           <span className="settings-hint" style={{ margin: 0 }}>{meta.desc}</span>
         </div>
 
-        {planId !== 'launch' && planId !== 'school' && (
+        {planId !== 'pro' && planId !== 'launch' && planId !== 'school' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <button className="settings-save-btn" onClick={() => navigate('/pricing')}>
-              {planId === 'free' ? 'Fazer upgrade' : 'Upgrade para Launch'}
+              {planId === 'free' ? 'Fazer upgrade' : 'Upgrade para Pro'}
             </button>
           </div>
         )}
