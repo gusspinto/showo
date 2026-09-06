@@ -32,7 +32,6 @@ import { ShieldCheckIcon as Shield } from '@solar-icons/react/bold/shield-check'
 import { CardIcon as CreditCard } from '@solar-icons/react/bold/card'
 import { CropModal } from '../components/CropModal'
 import { containsProfanity } from '../lib/profanity'
-import SkillsPicker from '../components/SkillsPicker'
 import { Select } from '../components/ui'
 import { OCCUPATIONS } from '../lib/occupations'
 import ExportProjectsModal from '../components/ExportProjectsModal'
@@ -618,9 +617,17 @@ export default function Settings() {
               <>
                 <SectionCard title="Perfil público">
                   {avatarBlock}
-                  <Input label="Nome" value={fullName} onChange={setFullName} placeholder="O teu nome" />
+                  {/* Nome, Bio e Competências passaram para "Editar perfil" na
+                      própria página do perfil (com preview ao vivo). Recrutadores
+                      não têm esse painel, por isso mantêm aqui o nome e a
+                      apresentação. */}
+                  {isRecruiter && (
+                    <>
+                      <Input label="Nome" value={fullName} onChange={setFullName} placeholder="O teu nome" />
+                      <Textarea label="Apresentação" value={bio} onChange={setBio} placeholder="Apresenta a tua empresa ou o teu trabalho como recrutador..." hint="Aparece no teu perfil público." />
+                    </>
+                  )}
                   <Input label="Username" value={username} onChange={v => setUsername(v.toLowerCase().replace(/[^a-z0-9_]/g, ''))} placeholder={isRecruiter ? 'ex: rh_empresa' : 'ex: gustavo_silva'} prefix="@" hint={usernameHint} />
-                  <Textarea label={isRecruiter ? 'Apresentação' : 'Bio'} value={bio} onChange={setBio} placeholder={isRecruiter ? 'Apresenta a tua empresa ou o teu trabalho como recrutador...' : 'Conta um pouco sobre ti e os teus projetos...'} hint="Aparece no teu perfil público." />
 
                   <Input label="Telemóvel (opcional)" value={phone} onChange={setPhone} placeholder="912 345 678" hint="Para te contactarmos sobre o teu portfolio e oportunidades. Nunca partilhado publicamente." />
 
@@ -675,10 +682,6 @@ export default function Settings() {
                       </button>
                     </div>
                   )}
-
-                  <div className="settings-field">
-                    <SkillsPicker value={skills} onChange={setSkills} max={12} label="Competências" />
-                  </div>
 
                   {roleBadge}
                   {saveBlock}

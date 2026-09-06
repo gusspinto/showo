@@ -144,6 +144,9 @@
 }
 .pc-banner-change:disabled { opacity: 0.5; cursor: default; }
 .pc-err { margin: 8px 0 0; font-size: 12px; color: var(--color-error); }
+.pc-err--foot {
+  margin: 0; padding: 10px 16px 0; font-weight: 600;
+}
 
 /* Footer */
 .pc-foot {

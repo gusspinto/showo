@@ -5,15 +5,20 @@ import { GalleryIcon as ImageIcon } from '@solar-icons/react/bold/gallery'
 import { TrashBinTrashIcon as Trash } from '@solar-icons/react/bold/trash-bin-trash'
 import { ACCENT_SWATCHES, FONTS, DEFAULT_ACCENT } from '../lib/profileAppearance'
 import ColorPicker from './ColorPicker'
+import SkillsPicker from './SkillsPicker'
 import './ProfileCustomizer.css'
 
 const HEADLINE_MAX = 90
+const BIO_MAX = 400
 
-/* Painel de identidade do perfil-portefólio, ao vivo. O preview acontece na
+/* Painel de edição do perfil-portefólio, ao vivo. O preview acontece na
    própria página (o pai aplica os valores enquanto o painel está aberto).
-   Só duas coisas de marca — cor e tipografia — mais o headline e o banner. */
+   Junta o conteúdo visível do perfil (nome, frase, bio, competências) com a
+   marca (banner, cor, tipografia) num só sítio. */
 export default function ProfileCustomizer({
-  appearance, onChange, headline, onHeadlineChange, onSave, onClose, saving, userId,
+  appearance, onChange, headline, onHeadlineChange,
+  fullName, onFullNameChange, bio, onBioChange, skills, onSkillsChange, canEditSkills,
+  error, onSave, onClose, saving, userId,
 }) {
   const a = appearance || {}
   const fileRef = useRef(null)
@@ -50,11 +55,59 @@ export default function ProfileCustomizer({
       <div className="pc-scrim" onClick={onClose} />
       <aside className="pc-panel" role="dialog" aria-label="Personalizar perfil">
         <header className="pc-head">
-          <span className="pc-title">Identidade do perfil</span>
+          <span className="pc-title">Editar perfil</span>
           <button className="pc-x" onClick={onClose} aria-label="Fechar"><X size={16} /></button>
         </header>
 
         <div className="pc-body">
+          {/* Nome */}
+          <section className="pc-group">
+            <p className="pc-label">Nome</p>
+            <input
+              className="pc-headline-input"
+              type="text"
+              maxLength={80}
+              placeholder="O teu nome"
+              value={fullName || ''}
+              onChange={e => onFullNameChange(e.target.value)}
+            />
+          </section>
+
+          {/* Headline */}
+          <section className="pc-group">
+            <p className="pc-label">Frase de topo</p>
+            <textarea
+              className="pc-headline-input"
+              rows={2}
+              maxLength={HEADLINE_MAX}
+              placeholder="Ex.: Designer de interação a fazer coisas que ninguém pediu"
+              value={headline || ''}
+              onChange={e => onHeadlineChange(e.target.value)}
+            />
+            <p className="pc-hint">{(headline || '').length}/{HEADLINE_MAX} — aparece por baixo do teu nome</p>
+          </section>
+
+          {/* Bio */}
+          <section className="pc-group">
+            <p className="pc-label">Bio</p>
+            <textarea
+              className="pc-headline-input"
+              rows={3}
+              maxLength={BIO_MAX}
+              placeholder="Conta um pouco sobre ti e os teus projetos…"
+              value={bio || ''}
+              onChange={e => onBioChange(e.target.value)}
+            />
+            <p className="pc-hint">{(bio || '').length}/{BIO_MAX} — aparece no teu perfil público</p>
+          </section>
+
+          {/* Competências */}
+          {canEditSkills && (
+            <section className="pc-group">
+              <SkillsPicker value={skills || []} onChange={onSkillsChange} max={12} label="Competências" />
+            </section>
+          )}
+
           {/* Banner */}
           <section className="pc-group">
             <p className="pc-label">Imagem de topo</p>
@@ -87,20 +140,6 @@ export default function ProfileCustomizer({
             )}
             {bannerErr && <p className="pc-err">{bannerErr}</p>}
             <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={pickBanner} />
-          </section>
-
-          {/* Headline */}
-          <section className="pc-group">
-            <p className="pc-label">Frase de topo</p>
-            <textarea
-              className="pc-headline-input"
-              rows={2}
-              maxLength={HEADLINE_MAX}
-              placeholder="Ex.: Designer de interação a fazer coisas que ninguém pediu"
-              value={headline || ''}
-              onChange={e => onHeadlineChange(e.target.value)}
-            />
-            <p className="pc-hint">{(headline || '').length}/{HEADLINE_MAX} — aparece por baixo do teu nome</p>
           </section>
 
           {/* Accent */}
@@ -153,6 +192,7 @@ export default function ProfileCustomizer({
           </section>
         </div>
 
+        {error && <p className="pc-err pc-err--foot">{error}</p>}
         <footer className="pc-foot">
           <button className="pc-reset" onClick={() => { onChange({ bannerUrl: a.bannerUrl || null }); }} disabled={saving}>
             Repor cor e fonte

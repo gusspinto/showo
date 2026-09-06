@@ -24,6 +24,7 @@ import LibFileViewer from '../components/LibFileViewer'
 import { PlanBadge } from '../components/PlanGate'
 import { DocumentTextIcon as FileText } from '@solar-icons/react/bold/document-text'
 import { appearanceVars } from '../lib/profileAppearance'
+import { containsProfanity } from '../lib/profanity'
 import { fileTypeStyle, withSignedLibraryUrls } from '../lib/libraryFile'
 import './UserProfile.css'
 
@@ -213,7 +214,11 @@ export default function UserProfile() {
   const [customizing, setCustomizing] = useState(false)
   const [draftAppearance, setDraftAppearance] = useState({})
   const [draftHeadline, setDraftHeadline] = useState('')
+  const [draftFullName, setDraftFullName] = useState('')
+  const [draftBio, setDraftBio] = useState('')
+  const [draftSkills, setDraftSkills] = useState([])
   const [savingAppearance, setSavingAppearance] = useState(false)
+  const [customizeError, setCustomizeError] = useState('')
 
   useEffect(() => {
     async function load() {
@@ -304,30 +309,56 @@ export default function UserProfile() {
   }
 
   const isOwnProfile = user?.id === profile?.id
-  const displayName  = profile?.full_name || profile?.username || 'Utilizador'
   const profileUrl   = window.location.href
 
   // Preview ao vivo: o rascunho enquanto o painel está aberto, senão o guardado.
   const appearance = customizing ? draftAppearance : (profile?.profile_appearance || {})
   const headline   = customizing ? draftHeadline : (profile?.profile_headline || '')
+  const displayName = (customizing ? draftFullName.trim() : profile?.full_name)
+    || profile?.username || 'Utilizador'
+  const previewBio    = customizing ? draftBio.trim() : profile?.bio
+  const previewSkills  = customizing ? draftSkills : (profile?.skills || [])
+
+  const canEditSkills = profile?.role === 'aluno' || profile?.role === 'professor'
 
   function openCustomizer() {
     setDraftAppearance(profile?.profile_appearance || {})
     setDraftHeadline(profile?.profile_headline || '')
+    setDraftFullName(profile?.full_name || '')
+    setDraftBio(profile?.bio || '')
+    setDraftSkills(Array.isArray(profile?.skills) ? profile.skills : [])
+    setCustomizeError('')
     setCustomizing(true)
   }
 
   async function saveAppearance() {
+    if (containsProfanity(draftFullName) || containsProfanity(draftBio)) {
+      setCustomizeError('Linguagem inapropriada detetada. Mantém o perfil respeitoso.')
+      return
+    }
+    setCustomizeError('')
     setSavingAppearance(true)
     const cleanHeadline = draftHeadline.trim() || null
-    const { error } = await supabase
-      .from('profiles')
-      .update({ profile_appearance: draftAppearance, profile_headline: cleanHeadline })
-      .eq('id', user.id)
+    const cleanName = draftFullName.trim()
+    const cleanBio = draftBio.trim() || null
+    const cleanSkills = canEditSkills ? draftSkills : (profile?.skills ?? [])
+    const patch = {
+      profile_appearance: draftAppearance,
+      profile_headline: cleanHeadline,
+      bio: cleanBio,
+      skills: cleanSkills,
+    }
+    if (cleanName) patch.full_name = cleanName
+    const { error } = await supabase.from('profiles').update(patch).eq('id', user.id)
+    if (!error && cleanName && cleanName !== (profile?.full_name || '')) {
+      supabase.auth.updateUser({ data: { full_name: cleanName } })
+    }
     setSavingAppearance(false)
     if (!error) {
-      setProfile(p => ({ ...p, profile_appearance: draftAppearance, profile_headline: cleanHeadline }))
+      setProfile(p => ({ ...p, ...patch }))
       setCustomizing(false)
+    } else {
+      setCustomizeError('Não foi possível guardar. Tenta de novo.')
     }
   }
 
@@ -439,16 +470,16 @@ export default function UserProfile() {
               </div>
             </div>
 
-            {profile.bio && <p className="up-bio">{profile.bio}</p>}
+            {previewBio && <p className="up-bio">{previewBio}</p>}
 
-            {(profile.skills?.length > 0 || profile.linkedin_url) && (
+            {(previewSkills?.length > 0 || profile.linkedin_url) && (
               <div className="up-chips-row">
                 {profile.linkedin_url && (
                   <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer" className="up-chip up-chip--link">
                     <ExternalLink size={11} /> LinkedIn
                   </a>
                 )}
-                {profile.skills?.map(skill => (
+                {previewSkills?.map(skill => (
                   <span key={skill} className="up-chip">{skill}</span>
                 ))}
               </div>
@@ -514,6 +545,14 @@ export default function UserProfile() {
           onChange={setDraftAppearance}
           headline={draftHeadline}
           onHeadlineChange={setDraftHeadline}
+          fullName={draftFullName}
+          onFullNameChange={setDraftFullName}
+          bio={draftBio}
+          onBioChange={setDraftBio}
+          skills={draftSkills}
+          onSkillsChange={setDraftSkills}
+          canEditSkills={canEditSkills}
+          error={customizeError}
           onSave={saveAppearance}
           onClose={() => setCustomizing(false)}
           saving={savingAppearance}
