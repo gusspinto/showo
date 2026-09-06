@@ -581,7 +581,7 @@ export default function UserProfile() {
         <div className="up-work">
           <div className="up-work-head">
             <p className="up-section-label">
-              Trabalho
+              Projetos
               {projects.length > 0 && <span className="up-section-count">({projects.length})</span>}
             </p>
             {isOwnProfile && myProfile?.role !== 'professor' && (

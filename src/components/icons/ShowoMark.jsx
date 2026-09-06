@@ -17,8 +17,10 @@ export const ShowoMark = forwardRef(({ size = 14, style, ...props }, ref) => {
       style={style}
       {...props}
     >
-      <rect x="8.5" y="2.5" width="13" height="13" rx="3.2" stroke="currentColor" strokeWidth="2.6" />
-      <rect x="2.5" y="8.5" width="13" height="13" rx="3.2" fill="currentColor" />
+      {/* dois quadrados sólidos sobrepostos — a marca Showo. O de trás fica
+          a meia opacidade para se ver a sobreposição mesmo a 13px. */}
+      <rect x="8" y="2.5" width="13.5" height="13.5" rx="3.4" fill="currentColor" opacity="0.45" />
+      <rect x="2.5" y="8" width="13.5" height="13.5" rx="3.4" fill="currentColor" />
     </svg>
   )
 })
