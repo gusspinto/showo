@@ -3544,6 +3544,9 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
             </div>
           )}
 
+          {/* Percurso / timeline */}
+          {project.user_id && <ProjectTimeline project={project} isOwner={isOwner} />}
+
           {/* Comentários */}
           <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '22px 24px', fontFamily: 'var(--font-body, system-ui, sans-serif)' }}>
             <ProjectComments projectId={project.id} projectAuthorId={project.user_id} />
@@ -8556,8 +8559,9 @@ export default function ProjectPage() {
 
       </>)}{/* end owner/collaborator conditional */}
 
-      {/* ── Percurso / timeline — visível a todos (o componente trata do gate) ── */}
-      {project && project.user_id && (
+      {/* ── Percurso / timeline — na vista de dono/professor. Na vista pública
+             (visitante ou preview) o timeline vem dentro do PublicView. ── */}
+      {project && project.user_id && (isOwner || isProfessor || collaboratorSections !== null) && !viewAsPublic && (
         <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 32px' }}>
           <ProjectTimeline project={project} isOwner={isOwner} />
         </div>
