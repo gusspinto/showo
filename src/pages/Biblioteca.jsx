@@ -251,6 +251,21 @@ export default function Biblioteca() {
         if (cancelled) return
         const withUrls = await withSignedLibraryUrls(data ?? [])
         if (!cancelled) setItems(withUrls)
+
+        // Word/PowerPoint sem miniatura (upload antigo, ou o conversor
+        // falhou na altura): gera-a agora em segundo plano, um de cada vez.
+        // O realtime em baixo troca o cartão assim que a linha atualiza.
+        const OFFICE = /officedocument\.(wordprocessingml|presentationml)/
+        const pending = withUrls.filter(i =>
+          i.entry_kind === 'library' && !i.library_thumb_url &&
+          OFFICE.test(i.library_file_type || '') && i._signedFileUrl)
+        if (pending.length) {
+          const { backfillOfficeThumbnail } = await import('../lib/officeThumb')
+          for (const it of pending) {
+            if (cancelled) break
+            await backfillOfficeThumbnail(it)
+          }
+        }
       })
     return () => { cancelled = true }
   }, [user])
