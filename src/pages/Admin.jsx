@@ -415,7 +415,16 @@ function OverviewTab({ users, projects, activityLog, aiUsageSummary, funnelSumma
   const activeThisWeek = new Set(activityLog.filter(e => new Date(e.created_at) > weekAgo).map(e => e.user_id)).size
   const activeThisMonth = new Set(activityLog.filter(e => new Date(e.created_at) > monthAgo).map(e => e.user_id)).size
   const neverActive = users.filter(u => !u.last_active_at).length
-  const retentionRate = totalUsers > 0 ? Math.round((activeThisMonth / totalUsers) * 100) : 0
+
+  // "Voltou" só faz sentido para quem já cá estava antes destes 30 dias —
+  // um registo de hoje que entra às 14h não "voltou", nunca saiu. Contar
+  // isso como retenção infla o número com o próprio crescimento recente.
+  const priorUserIds = new Set(users.filter(u => new Date(u.created_at).getTime() < monthAgo).map(u => u.id))
+  const priorUsersCount = priorUserIds.size
+  const priorUsersReturned = new Set(
+    activityLog.filter(e => new Date(e.created_at).getTime() > monthAgo && priorUserIds.has(e.user_id)).map(e => e.user_id)
+  ).size
+  const retentionRate = priorUsersCount > 0 ? Math.round((priorUsersReturned / priorUsersCount) * 100) : 0
   const planCounts = { free: 0, school: 0, plus: 0, pro: 0 }
   users.forEach(u => { const p = resolvePlanId(u); planCounts[p] = (planCounts[p] || 0) + 1 })
 
@@ -593,7 +602,7 @@ function OverviewTab({ users, projects, activityLog, aiUsageSummary, funnelSumma
         <StatCard icon={<User size={20} />} label="Utilizadores" value={totalUsers} color={C.blue} sub={`+${newUsersWeek} semana · +${newUsersMonth} mês`} />
         <StatCard icon={<Folder size={20} />} label="Projetos" value={totalProjects} color={C.green} sub={`+${newThisWeek} semana · ${usersWithoutProjects} sem projeto`} />
         <StatCard icon={<BarChart2 size={20} />} label="Ativos (semana)" value={activeThisWeek} color={activeThisWeek > 0 ? C.green : C.red} sub={`${activeThisMonth} mês · ${neverActive} nunca`} />
-        <StatCard icon={<Star size={20} />} label="Retenção mensal" value={`${retentionRate}%`} color={retentionRate > 30 ? C.green : retentionRate > 10 ? C.yellow : C.red} sub={`${activeThisMonth}/${totalUsers} voltaram`} />
+        <StatCard icon={<Star size={20} />} label="Retenção mensal" value={`${retentionRate}%`} color={retentionRate > 30 ? C.green : retentionRate > 10 ? C.yellow : C.red} sub={`${priorUsersReturned}/${priorUsersCount} de quem já cá estava`} />
         <StatCard icon={<Star size={20} />} label="Score médio" value={avgScore} color={C.yellow} sub={`${scores.length} com score`} />
         <StatCard icon={<Star size={20} />} label="Assinantes reais" value={paidUsers} color={paidUsers > 0 ? C.green : C.muted} sub={`${realPlusCount} Plus · ${realProCount} Pro · pagam via Stripe`} />
         <StatCard icon={<Star size={20} />} label="MRR real" value={`€${mrrEstimate.toFixed(2)}`} color={mrrEstimate > 0 ? C.green : C.muted} sub="Só assinantes Stripe, preço de lista" />
