@@ -143,8 +143,8 @@ export default function ProjectTimeline({ project, isOwner }) {
       <div className="ptl-card ptl-card--empty">
         {header}
         <p className="ptl-empty-text">
-          Regista os momentos que marcaram o projeto. No perfil, prova a quem
-          contrata que trabalhaste isto ao longo do tempo.
+          Regista os momentos importantes do projeto. No perfil, mostram a um
+          recrutador que trabalhaste nele ao longo do tempo.
         </p>
         {ownerActions}
         {form && <MilestoneForm form={form} setForm={setForm} onSave={saveMilestone} busy={busy} />}
