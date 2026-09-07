@@ -56,36 +56,39 @@ export async function extractOfficeThumbnail(file) {
 /* Itens já na Biblioteca sem miniatura (o Gotenberg falhou no upload):
    ao abrir o ficheiro, o dono gera a miniatura embutida e grava-a. */
 export async function backfillOfficeThumbnail(item) {
+  const L = (...a) => console.info('[thumb]', ...a)
   if (!item || item.library_thumb_url || !item._signedFileUrl) return null
   try {
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user || (item.user_id && user.id !== item.user_id)) return null
+    if (!user || (item.user_id && user.id !== item.user_id)) { L('não é o dono'); return null }
     const res = await fetch(item._signedFileUrl)
-    if (!res.ok) return null
+    if (!res.ok) { L('fetch ficheiro falhou', res.status); return null }
     let blob = await extractOfficeThumbnail(await res.blob())
+    L(blob ? 'miniatura embutida OK' : 'sem miniatura embutida, tenta conversor')
 
     // Sem miniatura embutida (ex.: thumbnail em EMF, ou Word sem ela):
     // converte para PDF pelo Gotenberg e desenha a 1.ª página.
     if (!blob) {
       const { storagePath } = await import('./libraryFile')
       const p = storagePath(item.library_file_url)
-      if (!p) return null
+      if (!p) { L('sem storage path'); return null }
       const { data, error } = await supabase.functions.invoke('office-thumbnail', {
         body: { name: item.library_file_name || item.name, type: item.library_file_type, path: p },
       })
-      if (error || !data?.pdf) return null
+      if (error || !data?.pdf) { L('conversor falhou:', error?.message || data?.error || error); return null }
       const bin = atob(data.pdf)
       const pdfBytes = new Uint8Array(bin.length)
       for (let i = 0; i < bin.length; i++) pdfBytes[i] = bin.charCodeAt(i)
       const { renderPdfThumbnail } = await import('./pdfThumbnail')
       blob = await renderPdfThumbnail(new Blob([pdfBytes], { type: 'application/pdf' }))
     }
-    if (!blob) return null
+    if (!blob) { L('sem blob final'); return null }
     const ext = blob.type === 'image/png' ? 'png' : 'jpg'
     const path = `${user.id}/thumbs/${Date.now()}-${item.id}.${ext}`
     const up = await supabase.storage.from('library-files').upload(path, blob, { contentType: blob.type, upsert: true })
-    if (up.error) return null
+    if (up.error) { L('upload miniatura falhou:', up.error.message); return null }
     await supabase.from('projects').update({ library_thumb_url: path }).eq('id', item.id)
+    L('miniatura gravada', path)
     return path
-  } catch { return null }
+  } catch (e) { L('erro:', e?.message); return null }
 }

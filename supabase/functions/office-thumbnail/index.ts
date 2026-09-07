@@ -1,4 +1,5 @@
 import { checkRateLimit, getAuthUser, getCorsHeaders } from '../_shared/rateLimit.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 /* ══════════════════════════════════════════════════════════════════════════
    PREVIEW DE .docx/.pptx PARA A BIBLIOTECA
@@ -25,12 +26,10 @@ const EXT_FOR_TYPE: Record<string, string> = {
    PowerPoint pesados). */
 async function downloadFromStorage(path: string): Promise<Uint8Array> {
   const clean = path.replace(/^\/+/, '').replace(/^library-files\//, '')
-  const resp = await fetch(
-    `${SUPABASE_URL}/storage/v1/object/library-files/${clean.split('/').map(encodeURIComponent).join('/')}`,
-    { headers: { Authorization: `Bearer ${SERVICE_KEY}`, apikey: SERVICE_KEY ?? '' } },
-  )
-  if (!resp.ok) throw new Error(`storage ${resp.status}`)
-  return new Uint8Array(await resp.arrayBuffer())
+  const sb = createClient(SUPABASE_URL ?? '', SERVICE_KEY ?? '')
+  const { data, error } = await sb.storage.from('library-files').download(clean)
+  if (error || !data) throw new Error(`storage: ${error?.message || 'sem ficheiro'}`)
+  return new Uint8Array(await data.arrayBuffer())
 }
 
 function bytesToB64(bytes: Uint8Array): string {
