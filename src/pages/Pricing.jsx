@@ -216,7 +216,7 @@ function FaqItem({ q, a }) {
 
 export default function Pricing() {
   const navigate = useNavigate()
-  const { user, planId, profile, isSchoolAccount } = useAuth()
+  const { user, planId, profile, isSchoolAccount, logFunnelEvent } = useAuth()
   const [loading, setLoading] = useState(null)
 
   const isTeacher = profile?.role === 'professor'
@@ -235,6 +235,7 @@ export default function Pricing() {
     if (!user) { navigate('/register'); return }
     if (plan.id === 'free') { navigate('/dashboard'); return }
     if (plan.id === planId) return
+    logFunnelEvent('checkout_started', plan.id)
     setLoading(plan.id)
     setError('')
     try {

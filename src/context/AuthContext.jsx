@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { identifyUser, resetAnalytics } from '../lib/analytics'
-import { getPlan, remainingUses, PLAN_GATE_MESSAGES } from '../lib/plans'
+import { getPlan, remainingUses, resolvePlanId, PLAN_GATE_MESSAGES } from '../lib/plans'
 
 const AuthContext = createContext({})
 
@@ -213,9 +213,7 @@ export function AuthProvider({ children }) {
 
   const isAdmin         = profile?.is_admin === true
   const isSchoolAccount = !!profile?.organization_id
-  const planId          = profile?.role === 'professor' ? 'pro'
-                        : isSchoolAccount ? 'school'
-                        : (profile?.plan ?? 'free')
+  const planId          = resolvePlanId(profile)
   const plan            = getPlan(planId)
 
   function checkGate(feature, projectCount) {
@@ -247,8 +245,15 @@ export function AuthProvider({ children }) {
     await fetchAiUsage()
   }
 
+  // Best-effort funnel tracking (nudge shown/clicked, checkout started) —
+  // never blocks the UI if it fails, this is purely for the admin funnel view.
+  function logFunnelEvent(event, feature = null) {
+    if (!user) return
+    supabase.from('funnel_events').insert({ user_id: user.id, event, feature }).then(() => {})
+  }
+
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signOut, refreshProfile, isAdmin, plan, planId, isSchoolAccount, checkGate, consumeAI, aiUsage, refreshAiUsage: fetchAiUsage }}>
+    <AuthContext.Provider value={{ user, profile, loading, signOut, refreshProfile, isAdmin, plan, planId, isSchoolAccount, checkGate, consumeAI, aiUsage, refreshAiUsage: fetchAiUsage, logFunnelEvent }}>
       {children}
     </AuthContext.Provider>
   )

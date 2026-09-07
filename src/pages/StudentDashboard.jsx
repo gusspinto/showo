@@ -153,7 +153,7 @@ function JoinTurmaStudentModal({ onClose, onJoined }) {
 export default function StudentDashboard({ user, profile }) {
   const navigate = useNavigate()
   const location = useLocation()
-  const { checkGate, isSchoolAccount, refreshProfile, aiUsage, planId } = useAuth()
+  const { checkGate, isSchoolAccount, refreshProfile, aiUsage, planId, logFunnelEvent } = useAuth()
   /* ── Dados ── */
   const [projects, setProjects] = useState([])
   const [loadingProjects, setLoadingProjects] = useState(true)
@@ -176,6 +176,27 @@ export default function StudentDashboard({ user, profile }) {
   const [nudgeDismissed, setNudgeDismissed] = useState(() => {
     try { return !!localStorage.getItem(nudgeKey) } catch { return false }
   })
+
+  // Logged once per month, purely for the admin funnel view — not tied to
+  // the dismiss state, so it fires even if the banner was already dismissed
+  // earlier and reappears because a different feature ran low.
+  useEffect(() => {
+    if (planId !== 'free' || !aiUsage) return
+    const NUDGE_FEATURES = ['coach', 'createProject', 'defense', 'narrative', 'exportPptx']
+    const hasSignal = NUDGE_FEATURES.some(f => {
+      const limit = getPlan(planId).ai[f]
+      if (!(limit > 0)) return false
+      const remaining = remainingUses(planId, f, aiUsage)
+      return remaining <= Math.max(1, Math.ceil(limit * 0.3))
+    })
+    if (!hasSignal) return
+    const shownKey = `showo_nudge_shown_${user.id}_${new Date().toISOString().slice(0, 7)}`
+    try {
+      if (localStorage.getItem(shownKey)) return
+      localStorage.setItem(shownKey, '1')
+    } catch { /* ignore */ }
+    logFunnelEvent('nudge_shown')
+  }, [planId, aiUsage, user.id, logFunnelEvent])
 
   /* ── UI ── */
   const [tutorialPotentialSeen, setTutorialPotentialSeen] = useState(() => !!localStorage.getItem(`showo_tut_potential_${user.id}`))
@@ -817,7 +838,7 @@ export default function StudentDashboard({ user, profile }) {
                   </span>
                 </div>
               )}
-              <button className="sdb-usage-nudge-cta" onClick={() => navigate('/pricing')}>
+              <button className="sdb-usage-nudge-cta" onClick={() => { logFunnelEvent('nudge_clicked'); navigate('/pricing') }}>
                 Ver planos <ArrowRight size={13} />
               </button>
             </div>

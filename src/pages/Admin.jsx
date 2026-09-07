@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import { resolvePlanId, getPlan, AI_FEATURE_LABELS } from '../lib/plans'
 import { Navbar } from '../components/Navbar'
 import { DangerTriangleIcon as AlertTriangle } from '@solar-icons/react/bold/danger-triangle'
 import { QuestionCircleIcon as HelpCircle } from '@solar-icons/react/bold/question-circle'
@@ -56,8 +57,11 @@ const C = {
 // fails outright and silently returns no rows.
 const PROFILE_COLUMNS = 'id, username, total_xp, created_at, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, project_draft, signup_country, signup_city, signup_referrer, signup_utm_source, last_active_at, last_action, plan, account_type, organization_id'
 
-const PLAN_COLORS = { free: '#6b7280', build: '#2B7EF5', launch: '#C49A20' }
-const PLAN_LABELS = { free: 'Free', build: 'Build', launch: 'Launch' }
+// build/launch are legacy plan names still sitting in old profile rows —
+// resolvePlanId() normalizes those to plus/pro, but these maps stay here as
+// a fallback for any raw value that slips through un-resolved.
+const PLAN_COLORS = { free: '#6b7280', school: '#8B5CF6', plus: '#2B7EF5', pro: '#C49A20', build: '#2B7EF5', launch: '#C49A20' }
+const PLAN_LABELS = { free: 'Free', school: 'Escola', plus: 'Plus', pro: 'Pro', build: 'Plus', launch: 'Pro' }
 
 function StatCard({ icon, label, value, color = C.blue, sub }) {
   return (
@@ -78,6 +82,15 @@ function StatCard({ icon, label, value, color = C.blue, sub }) {
         <div style={{ fontSize: 13, color: C.muted, fontWeight: 500, marginTop: 4 }}>{label}</div>
         {sub && <div style={{ fontSize: 11, color: C.subtle, marginTop: 3 }}>{sub}</div>}
       </div>
+    </div>
+  )
+}
+
+function FunnelStep({ label, value }) {
+  return (
+    <div style={{ padding: '12px 14px', background: C.bgAlt, borderRadius: 10, border: `1px solid ${C.border}` }}>
+      <div style={{ fontSize: 22, fontWeight: 400, color: C.text, fontFamily: 'var(--font-heading)' }}>{value}</div>
+      <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{label}</div>
     </div>
   )
 }
@@ -353,7 +366,7 @@ function generateMeetingSummary(users, projects, activityLog, range) {
   return md
 }
 
-function OverviewTab({ users, projects, activityLog }) {
+function OverviewTab({ users, projects, activityLog, aiUsageSummary, funnelSummary }) {
   const [userSearch, setUserSearch] = useState('')
   const [sort, setSort] = useState('active')
   const [range, setRange] = useState(TIME_RANGES[1])
@@ -377,9 +390,29 @@ function OverviewTab({ users, projects, activityLog }) {
   const activeThisMonth = new Set(activityLog.filter(e => new Date(e.created_at) > monthAgo).map(e => e.user_id)).size
   const neverActive = users.filter(u => !u.last_active_at).length
   const retentionRate = totalUsers > 0 ? Math.round((activeThisMonth / totalUsers) * 100) : 0
-  const planCounts = { free: 0, build: 0, launch: 0 }
-  users.forEach(u => { const p = u.plan || 'free'; if (planCounts[p] !== undefined) planCounts[p]++; else planCounts[p] = 1 })
-  const paidUsers = planCounts.build + planCounts.launch
+  const planCounts = { free: 0, school: 0, plus: 0, pro: 0 }
+  users.forEach(u => { const p = resolvePlanId(u); planCounts[p] = (planCounts[p] || 0) + 1 })
+  const paidUsers = planCounts.plus + planCounts.pro
+
+  // Quem bateu mesmo num limite de IA este mês (dados reais de ai_usage, não
+  // estimativa) — e o funil desde aí até ao início do checkout.
+  const usersAtLimitSet = new Set()
+  const limitHitsByFeature = {}
+  ;(aiUsageSummary || []).forEach(row => {
+    const resolved = resolvePlanId(row)
+    const limit = getPlan(resolved).ai[row.feature]
+    if (limit > 0 && limit !== Infinity && row.used >= limit) {
+      limitHitsByFeature[row.feature] = (limitHitsByFeature[row.feature] || 0) + 1
+      usersAtLimitSet.add(row.user_id)
+    }
+  })
+  const usersAtLimit = usersAtLimitSet.size
+
+  const funnelMap = {}
+  ;(funnelSummary || []).forEach(row => { funnelMap[row.event] = (funnelMap[row.event] || 0) + Number(row.count) })
+  const nudgeShown = funnelMap.nudge_shown || 0
+  const nudgeClicked = funnelMap.nudge_clicked || 0
+  const checkoutStarted = funnelMap.checkout_started || 0
 
   // Registrations per week
   const numWeeks = Math.min(Math.ceil(days / 7), 12)
@@ -514,7 +547,28 @@ function OverviewTab({ users, projects, activityLog }) {
         <StatCard icon={<BarChart2 size={20} />} label="Ativos (semana)" value={activeThisWeek} color={activeThisWeek > 0 ? C.green : C.red} sub={`${activeThisMonth} mês · ${neverActive} nunca`} />
         <StatCard icon={<Star size={20} />} label="Retenção mensal" value={`${retentionRate}%`} color={retentionRate > 30 ? C.green : retentionRate > 10 ? C.yellow : C.red} sub={`${activeThisMonth}/${totalUsers} voltaram`} />
         <StatCard icon={<Star size={20} />} label="Score médio" value={avgScore} color={C.yellow} sub={`${scores.length} com score`} />
-        <StatCard icon={<Star size={20} />} label="Planos pagos" value={paidUsers} color={paidUsers > 0 ? C.green : C.muted} sub={`${planCounts.build} Build · ${planCounts.launch} Launch`} />
+        <StatCard icon={<Star size={20} />} label="Planos pagos" value={paidUsers} color={paidUsers > 0 ? C.green : C.muted} sub={`${planCounts.plus} Plus · ${planCounts.pro} Pro · ${planCounts.school} Escola`} />
+      </div>
+
+      {/* Funil de conversão */}
+      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px', marginBottom: 24 }}>
+        <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Funil de conversão · mês atual</h3>
+        <p style={{ margin: '0 0 14px', fontSize: 11, color: C.subtle }}>Do limite atingido ao início do checkout — dados reais, não estimativa</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 12 }}>
+          <FunnelStep label="Bateram num limite" value={usersAtLimit} />
+          <FunnelStep label="Viram o nudge" value={nudgeShown} />
+          <FunnelStep label="Clicaram no nudge" value={nudgeClicked} />
+          <FunnelStep label="Iniciaram checkout" value={checkoutStarted} />
+        </div>
+        {Object.keys(limitHitsByFeature).length > 0 && (
+          <div style={{ marginTop: 14, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {Object.entries(limitHitsByFeature).sort((a, b) => b[1] - a[1]).map(([f, n]) => (
+              <span key={f} style={{ fontSize: 11, padding: '3px 9px', borderRadius: 99, background: C.bgAlt, color: C.muted }}>
+                {AI_FEATURE_LABELS[f] || f}: {n}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Charts row */}
@@ -778,7 +832,7 @@ function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, 
                   <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{name}</span>
                   {u.username && <span style={{ fontSize: 12, color: C.subtle }}>@{u.username}</span>}
                   {u.is_admin && <Badge color={C.purple}><span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Shield size={11} /> Admin</span></Badge>}
-                  {u.plan && u.plan !== 'free' && <Badge color={PLAN_COLORS[u.plan] || C.blue}>{PLAN_LABELS[u.plan] || u.plan}</Badge>}
+                  {resolvePlanId(u) !== 'free' && <Badge color={PLAN_COLORS[resolvePlanId(u)] || C.blue}>{PLAN_LABELS[resolvePlanId(u)] || resolvePlanId(u)}</Badge>}
                   {u.banned_at && <Badge color={C.red}>Banido</Badge>}
                 </div>
                 <div style={{ fontSize: 12, color: C.muted }}>{u.email || '—'}</div>
@@ -1358,6 +1412,8 @@ export default function Admin() {
   const [toast, setToast] = useState('')
   const [signups, setSignups] = useState([])
   const [activityLog, setActivityLog] = useState([])
+  const [aiUsageSummary, setAiUsageSummary] = useState([])
+  const [funnelSummary, setFunnelSummary] = useState([])
   const [codes, setCodes] = useState([])
   const [codesLoading, setCodesLoading] = useState(false)
   const [codesLoaded, setCodesLoaded] = useState(false)
@@ -1389,13 +1445,17 @@ export default function Admin() {
   const loadData = useCallback(async () => {
     setLoading(true)
     try {
-      const [profilesRes, projectsRes, emailsRes, signupsRes, activityRes] = await Promise.all([
+      const [profilesRes, projectsRes, emailsRes, signupsRes, activityRes, aiUsageRes, funnelRes] = await Promise.all([
         supabase.from('profiles').select(PROFILE_COLUMNS).order('created_at', { ascending: false }),
         supabase.from('projects').select('*').order('created_at', { ascending: false }),
         supabase.rpc('admin_get_users'),
         supabase.from('waitlist_signups').select('*').order('created_at', { ascending: false }).limit(100),
         supabase.from('activity_log').select('user_id, action, created_at').order('created_at', { ascending: false }).limit(5000),
+        supabase.rpc('admin_get_ai_usage_summary'),
+        supabase.rpc('admin_get_funnel_summary'),
       ])
+      setAiUsageSummary(aiUsageRes.data || [])
+      setFunnelSummary(funnelRes.data || [])
       if (profilesRes.error) showToast('Erro ao carregar utilizadores: ' + profilesRes.error.message)
       if (projectsRes.error) showToast('Erro ao carregar projetos: ' + projectsRes.error.message)
 
@@ -1715,7 +1775,7 @@ export default function Admin() {
           </div>
         ) : (
           <>
-            {tab === 'overview' && <OverviewTab users={users} projects={projects} activityLog={activityLog} />}
+            {tab === 'overview' && <OverviewTab users={users} projects={projects} activityLog={activityLog} aiUsageSummary={aiUsageSummary} funnelSummary={funnelSummary} />}
             {tab === 'users' && (
               <UsersTab
                 users={users}

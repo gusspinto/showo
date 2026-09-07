@@ -99,6 +99,17 @@ export function getPlan(planId) {
   return PLANS[resolved] ?? PLANS.free
 }
 
+// Single source of truth for "which plan does this profile actually have".
+// Professor override and school-account override both live here so every
+// caller (AuthContext, Admin, anywhere else) agrees — duplicating this logic
+// inline is how the admin plan-count stat went stale after the Plus/Pro rename.
+export function resolvePlanId(profile) {
+  if (!profile) return 'free'
+  if (profile.role === 'professor') return 'pro'
+  if (profile.organization_id) return 'school'
+  return PLAN_ALIASES[profile.plan] || profile.plan || 'free'
+}
+
 export function remainingUses(planId, feature, usageMap) {
   const limit = getPlan(planId).ai[feature]
   if (limit === Infinity) return Infinity
