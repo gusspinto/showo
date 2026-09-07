@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { saveProject } from '../lib/saveProject'
 import { officeFileToPdfBlob, isOfficeFile } from '../lib/officeToPdf'
+import { markLibraryTagging } from '../lib/libraryTagging'
 import { StarsIcon as Sparkles } from '@solar-icons/react/bold/stars'
 import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
 import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
@@ -378,6 +379,7 @@ export default function NewProject() {
      e tira competências + área + resumo. Silencioso: nada de bloquear a
      navegação, nada de erros na cara se falhar. */
   async function tagLibraryItem(itemId, file, hadNotes) {
+    markLibraryTagging(itemId, true)
     try {
       let f = { name: file.name, type: file.type, data: await fileToBase64(file) }
       if (isOfficeFile(file)) {
@@ -397,7 +399,9 @@ export default function NewProject() {
       if (Object.keys(patch).length) {
         await supabase.from('projects').update(patch).eq('id', itemId).eq('user_id', user.id)
       }
-    } catch { /* background — silencioso */ }
+    } catch { /* background — silencioso */ } finally {
+      markLibraryTagging(itemId, false)
+    }
   }
 
   /* "Adicionar à Biblioteca" — cria o item leve (ficheiro + nome + descrição)

@@ -211,6 +211,26 @@
   overflow: hidden; line-height: 1.4;
 }
 .lib-tile-skills { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+
+/* "Em análise" enquanto a IA tira as competências do ficheiro. */
+.lib-tile-analyzing {
+  margin-top: 6px;
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--brand-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: lib-analyzing-pulse 1.5s ease-in-out infinite;
+}
+@keyframes lib-analyzing-pulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lib-tile-analyzing { animation: none; opacity: 0.9; }
+}
 .lib-tile-skill {
   font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 999px;
   background: var(--color-bg-alt); color: var(--color-text-secondary);

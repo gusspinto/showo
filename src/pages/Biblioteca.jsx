@@ -12,6 +12,7 @@ import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
 import { LibraryIcon } from '@solar-icons/react/bold/library'
 import { ArrowRightUpIcon as ExternalLink } from '@solar-icons/react/bold/arrow-right-up'
 import { fileTypeStyle, withSignedLibraryUrls } from '../lib/libraryFile'
+import { getTaggingIds, markLibraryTagging } from '../lib/libraryTagging'
 import LibFileViewer from '../components/LibFileViewer'
 import './Biblioteca.css'
 
@@ -92,7 +93,7 @@ function ProfileControls({ item, onTogglePin, onSetLayout, onToggleVisibility })
    se quer mostrar. Tile com preview de verdade quando é imagem; para o
    resto (PDF/Word/PowerPoint), um cartão colorido por tipo à Drive —
    ainda mais reconhecível que um ícone cinzento genérico. */
-function LibAddedTile({ item, onOpen, onDelete, removing, editing, onTogglePin, onSetLayout, onToggleVisibility, renaming, onStartRename, onRename, onCancelRename }) {
+function LibAddedTile({ item, onOpen, onDelete, removing, analyzing, editing, onTogglePin, onSetLayout, onToggleVisibility, renaming, onStartRename, onRename, onCancelRename }) {
   const isImage = item.library_file_type?.startsWith('image/')
   const previewSrc = isImage ? item._signedFileUrl : item._signedThumbUrl
   const ft = fileTypeStyle(item.library_file_type)
@@ -130,11 +131,13 @@ function LibAddedTile({ item, onOpen, onDelete, removing, editing, onTogglePin, 
             {(() => {
               const tags = [...(item.skills || []), ...(item.tech_stack || [])]
               const shown = tags.length ? tags : (item.library_skills || [])
-              return shown.length > 0 && (
+              if (shown.length > 0) return (
                 <span className="lib-tile-skills">
                   {shown.slice(0, 3).map(s => <span key={s} className="lib-tile-skill">{s}</span>)}
                 </span>
               )
+              if (analyzing) return <span className="lib-tile-analyzing">Em análise</span>
+              return null
             })()}
           </span>
         </span>
@@ -232,6 +235,14 @@ export default function Biblioteca() {
   const [toast, setToastRaw] = useState('')
   const setToast = msg => { setToastRaw(msg); setTimeout(() => setToastRaw(''), 3500) }
 
+  // Itens que a IA está a analisar (competências) — "Em análise" no cartão.
+  const [taggingIds, setTaggingIds] = useState(() => getTaggingIds())
+  useEffect(() => {
+    if (!taggingIds.size) return
+    const t = setInterval(() => setTaggingIds(getTaggingIds()), 1500)
+    return () => clearInterval(t)
+  }, [taggingIds.size])
+
   useEffect(() => {
     if (!viewing && !confirmingDelete) return
     const onKey = e => { if (e.key === 'Escape') { setViewing(null); setConfirmingDelete(null) } }
@@ -281,6 +292,10 @@ export default function Biblioteca() {
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'projects', filter: `user_id=eq.${user.id}` }, async payload => {
         const [signed] = await withSignedLibraryUrls([payload.new])
         setItems(prev => prev?.map(i => (i.id === signed.id ? { ...i, ...signed } : i)) ?? prev)
+        if (signed.library_skills?.length || signed.skills?.length || signed.tech_stack?.length) {
+          markLibraryTagging(signed.id, false)
+          setTaggingIds(getTaggingIds())
+        }
       })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'projects', filter: `user_id=eq.${user.id}` }, async payload => {
         const [signed] = await withSignedLibraryUrls([payload.new])
@@ -408,6 +423,7 @@ export default function Biblioteca() {
                 <div className="lib-tile-grid">
                   {added.map(item => (
                     <LibAddedTile key={item.id} item={item} removing={removing} onDelete={handleDelete}
+                      analyzing={taggingIds.has(item.id) && !(item.skills?.length || item.tech_stack?.length || item.library_skills?.length)}
                       editing={editing} onTogglePin={togglePin} onSetLayout={setLayout} onToggleVisibility={toggleVisibility}
                       renaming={renamingId === item.id}
                       onStartRename={setRenamingId}
