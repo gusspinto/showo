@@ -46,7 +46,17 @@ function safeFilename(name, type) {
    primeira vez que abre o ficheiro (persistLibraryPdf). Faz uma segunda
    tentativa: o Gotenberg no tier grátis adormece e a 1.ª chamada depois
    disso costuma falhar por cold start. */
-export async function officeToPdfBlob(fileUrl, name, type) {
+export async function officeToPdfBlob(fileUrl, name, type, storagePath) {
+  // Com o path do bucket, a edge function descarrega o ficheiro do lado do
+  // servidor (sem o limite de tamanho do corpo base64 — era o que
+  // rebentava os PowerPoint pesados).
+  if (storagePath) {
+    const { data, error } = await supabase.functions.invoke('office-thumbnail', {
+      body: { name, type, path: storagePath },
+    })
+    if (!error && data?.pdf) return new Blob([base64ToBytes(data.pdf)], { type: 'application/pdf' })
+    throw error || new Error(data?.error || 'conversão falhou')
+  }
   const res = await fetch(fileUrl)
   if (!res.ok) throw new Error(`fetch original ${res.status}`)
   return officeBytesToPdfBlob(new Uint8Array(await res.arrayBuffer()), name, type)

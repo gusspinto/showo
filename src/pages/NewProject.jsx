@@ -86,7 +86,7 @@ function safePathSegment(name) {
    não sabe abrir esses formatos sozinho) que devolve um PDF; a partir daí
    é o mesmo caminho. Nunca é crítico: falha em silêncio, fica só o cartão
    colorido por tipo de ficheiro na Biblioteca. */
-async function generateLibraryThumbnail(projectId, file) {
+async function generateLibraryThumbnail(projectId, file, storagePath) {
   const isOfficeDoc = file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     || file.type === 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
   if (file.type !== 'application/pdf' && !isOfficeDoc) return
@@ -120,10 +120,10 @@ async function generateLibraryThumbnail(projectId, file) {
     let pdfSource = file.type === 'application/pdf' ? file : null
     if (isOfficeDoc) {
       try {
-        const b64 = await fileToBase64(file)
-        const { data: convData, error: convErr } = await supabase.functions.invoke('office-thumbnail', {
-          body: { name: file.name, type: file.type, data: b64 },
-        })
+        const body = storagePath
+          ? { name: file.name, type: file.type, path: storagePath }
+          : { name: file.name, type: file.type, data: await fileToBase64(file) }
+        const { data: convData, error: convErr } = await supabase.functions.invoke('office-thumbnail', { body })
         if (!convErr && convData?.pdf) {
           pdfSource = new Blob([b64ToBytes(convData.pdf)], { type: 'application/pdf' })
           const pdfPath = `${user.id}/pdf/${Date.now()}-${baseName}.pdf`
@@ -438,7 +438,7 @@ export default function NewProject() {
         }).select('id').single()
         if (insErr) throw insErr
 
-        generateLibraryThumbnail(inserted.id, file) // fire-and-forget, não espera
+        generateLibraryThumbnail(inserted.id, file, path) // fire-and-forget, não espera
         tagLibraryItem(inserted.id, file, !!importNotes.trim()) // IA etiqueta por trás
       }
 
@@ -500,7 +500,7 @@ export default function NewProject() {
             if (upErr || !up?.path) return
             supabase.from('projects').update({
               library_file_url: up.path, library_file_name: f.name, library_file_type: f.type,
-            }).eq('id', project.id).then(() => generateLibraryThumbnail(project.id, f))
+            }).eq('id', project.id).then(() => generateLibraryThumbnail(project.id, f, up.path))
           })
       }
 

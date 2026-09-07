@@ -62,7 +62,24 @@ export async function backfillOfficeThumbnail(item) {
     if (!user || (item.user_id && user.id !== item.user_id)) return null
     const res = await fetch(item._signedFileUrl)
     if (!res.ok) return null
-    const blob = await extractOfficeThumbnail(await res.blob())
+    let blob = await extractOfficeThumbnail(await res.blob())
+
+    // Sem miniatura embutida (ex.: thumbnail em EMF, ou Word sem ela):
+    // converte para PDF pelo Gotenberg e desenha a 1.ª página.
+    if (!blob) {
+      const { storagePath } = await import('./libraryFile')
+      const p = storagePath(item.library_file_url)
+      if (!p) return null
+      const { data, error } = await supabase.functions.invoke('office-thumbnail', {
+        body: { name: item.library_file_name || item.name, type: item.library_file_type, path: p },
+      })
+      if (error || !data?.pdf) return null
+      const bin = atob(data.pdf)
+      const pdfBytes = new Uint8Array(bin.length)
+      for (let i = 0; i < bin.length; i++) pdfBytes[i] = bin.charCodeAt(i)
+      const { renderPdfThumbnail } = await import('./pdfThumbnail')
+      blob = await renderPdfThumbnail(new Blob([pdfBytes], { type: 'application/pdf' }))
+    }
     if (!blob) return null
     const ext = blob.type === 'image/png' ? 'png' : 'jpg'
     const path = `${user.id}/thumbs/${Date.now()}-${item.id}.${ext}`

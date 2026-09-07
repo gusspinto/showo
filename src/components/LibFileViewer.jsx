@@ -5,6 +5,7 @@ import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
 import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
 import PdfViewer from './PdfViewer'
 import { officeToPdfBlob, persistLibraryPdf } from '../lib/officeToPdf'
+import { storagePath } from '../lib/libraryFile'
 import './LibFileViewer.css'
 
 const OFFICE_TYPES = new Set([
@@ -165,6 +166,7 @@ function OfficeViewer({ item }) {
           item._signedFileUrl,
           item.library_file_name || item.name,
           item.library_file_type,
+          storagePath(item.library_file_url),
         )
         if (cancelled) return
         objUrlRef.current = URL.createObjectURL(blob)

@@ -12,6 +12,26 @@ import { checkRateLimit, getAuthUser, getCorsHeaders } from '../_shared/rateLimi
    ══════════════════════════════════════════════════════════════════════════ */
 
 const GOTENBERG_URL = Deno.env.get('GOTENBERG_URL')
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
+const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+
+const EXT_FOR_TYPE: Record<string, string> = {
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'pptx',
+}
+
+/* Descarrega o ficheiro do bucket (service role, sem limite de tamanho ao
+   contrário do corpo base64 do pedido — era isto que rebentava nos
+   PowerPoint pesados). */
+async function downloadFromStorage(path: string): Promise<Uint8Array> {
+  const clean = path.replace(/^\/+/, '').replace(/^library-files\//, '')
+  const resp = await fetch(
+    `${SUPABASE_URL}/storage/v1/object/library-files/${clean.split('/').map(encodeURIComponent).join('/')}`,
+    { headers: { Authorization: `Bearer ${SERVICE_KEY}`, apikey: SERVICE_KEY ?? '' } },
+  )
+  if (!resp.ok) throw new Error(`storage ${resp.status}`)
+  return new Uint8Array(await resp.arrayBuffer())
+}
 
 function bytesToB64(bytes: Uint8Array): string {
   let binary = ''
@@ -49,12 +69,22 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { name, type, data } = await req.json()
-    if (!name || !type || !data) return json({ error: 'faltam dados do ficheiro' }, 400)
+    const { name, type, data, path } = await req.json()
+    if (!type || (!data && !path)) return json({ error: 'faltam dados do ficheiro' }, 400)
 
-    const bytes = b64ToBytes(data)
+    let bytes: Uint8Array
+    if (path) {
+      if (!SUPABASE_URL || !SERVICE_KEY) return json({ error: 'storage não configurado' }, 500)
+      bytes = await downloadFromStorage(path)
+    } else {
+      bytes = b64ToBytes(data)
+    }
+
+    // O Gotenberg escolhe o conversor pela extensão do nome do ficheiro.
+    const ext = (name || '').match(/\.([a-z0-9]{2,5})$/i)?.[1]?.toLowerCase()
+      || EXT_FOR_TYPE[type] || 'docx'
     const form = new FormData()
-    form.append('files', new Blob([bytes], { type }), name)
+    form.append('files', new Blob([bytes], { type }), `ficheiro.${ext}`)
 
     // Nota: Render (tier grátis) "adormece" ao fim de inatividade — a
     // primeira conversão depois disso pode demorar 30-60s a arrancar.
@@ -64,14 +94,18 @@ Deno.serve(async (req) => {
     const resp = await fetch(`${GOTENBERG_URL}/forms/libreoffice/convert`, {
       method: 'POST',
       body: form,
-      signal: AbortSignal.timeout(45_000),
+      signal: AbortSignal.timeout(110_000),
     })
-    if (!resp.ok) throw new Error(`Gotenberg respondeu ${resp.status}`)
+    if (!resp.ok) {
+      const detail = await resp.text().catch(() => '')
+      throw new Error(`Gotenberg ${resp.status} ${detail.slice(0, 200)}`)
+    }
 
     const pdfBytes = new Uint8Array(await resp.arrayBuffer())
     return json({ pdf: bytesToB64(pdfBytes) })
   } catch (err) {
     console.error('[office-thumbnail]', err)
-    return json({ error: 'Não foi possível converter o ficheiro' }, 500)
+    const msg = err instanceof Error ? err.message : String(err)
+    return json({ error: `Não foi possível converter o ficheiro: ${msg}` }, 500)
   }
 })
