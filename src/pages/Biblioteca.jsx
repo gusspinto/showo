@@ -47,8 +47,8 @@ function CheckIcon({ on }) {
     </svg>
   )
 }
-/* Controlo de edição partilhado por tiles e linhas: liga/desliga "no perfil"
-   e, quando ligado, escolhe o layout (Capa | Linha). */
+/* Controlo de edição partilhado por tiles e linhas: liga/desliga "no
+   perfil", define visibilidade e, quando no perfil, o formato. */
 function ProfileControls({ item, onTogglePin, onSetLayout, onToggleVisibility }) {
   const on = item.profile_featured
   const isPrivate = item.visibility === 'private'
@@ -56,35 +56,38 @@ function ProfileControls({ item, onTogglePin, onSetLayout, onToggleVisibility })
     <div className="lib-edit-bar" onClick={e => e.stopPropagation()}>
       <button
         type="button"
-        className={`lib-check${on ? ' is-on' : ''}`}
+        className={`lib-toggle${on ? ' is-on' : ''}`}
         onClick={() => onTogglePin(item)}
         disabled={isPrivate && !on}
-        title={isPrivate && !on ? 'Torna o projeto público para o mostrares no perfil' : undefined}
+        title={isPrivate && !on ? 'Torna o item público para o mostrares no perfil' : undefined}
       >
         <CheckIcon on={on} />
         {on ? 'No perfil' : 'Mostrar no perfil'}
       </button>
-      <button
-        type="button"
-        className={`lib-vis${isPrivate ? ' is-private' : ''}`}
-        onClick={() => onToggleVisibility(item)}
-      >
-        {isPrivate ? 'Privado' : 'Público'}
-      </button>
-      {on && (
-        <span className="lib-seg" role="group" aria-label="Layout no perfil">
-          <button
-            type="button"
-            className={`lib-seg-btn${(item.profile_layout || 'tile') === 'tile' ? ' is-on' : ''}`}
-            onClick={() => onSetLayout(item, 'tile')}
-          >Capa</button>
-          <button
-            type="button"
-            className={`lib-seg-btn${item.profile_layout === 'row' ? ' is-on' : ''}`}
-            onClick={() => onSetLayout(item, 'row')}
-          >Linha</button>
+
+      <div className="lib-edit-opts">
+        <span className="lib-opt">
+          <span className="lib-opt-label">Visível</span>
+          <span className="lib-seg" role="group" aria-label="Visibilidade">
+            <button type="button" className={`lib-seg-btn${!isPrivate ? ' is-on' : ''}`}
+              onClick={() => { if (isPrivate) onToggleVisibility(item) }}>Público</button>
+            <button type="button" className={`lib-seg-btn${isPrivate ? ' is-on' : ''}`}
+              onClick={() => { if (!isPrivate) onToggleVisibility(item) }}>Privado</button>
+          </span>
         </span>
-      )}
+
+        {on && (
+          <span className="lib-opt">
+            <span className="lib-opt-label">Formato</span>
+            <span className="lib-seg" role="group" aria-label="Formato no perfil">
+              <button type="button" className={`lib-seg-btn${(item.profile_layout || 'tile') === 'tile' ? ' is-on' : ''}`}
+                onClick={() => onSetLayout(item, 'tile')}>Capa</button>
+              <button type="button" className={`lib-seg-btn${item.profile_layout === 'row' ? ' is-on' : ''}`}
+                onClick={() => onSetLayout(item, 'row')}>Linha</button>
+            </span>
+          </span>
+        )}
+      </div>
     </div>
   )
 }
@@ -93,7 +96,7 @@ function ProfileControls({ item, onTogglePin, onSetLayout, onToggleVisibility })
    se quer mostrar. Tile com preview de verdade quando é imagem; para o
    resto (PDF/Word/PowerPoint), um cartão colorido por tipo à Drive —
    ainda mais reconhecível que um ícone cinzento genérico. */
-function LibAddedTile({ item, onOpen, onDelete, removing, analyzing, editing, onTogglePin, onSetLayout, onToggleVisibility, renaming, onStartRename, onRename, onCancelRename }) {
+function LibAddedTile({ item, onOpen, onDelete, removing, analyzing, editing, onTogglePin, onSetLayout, onToggleVisibility, renaming, onStartRename, onRename, onCancelRename, onChangeCover }) {
   const isImage = item.library_file_type?.startsWith('image/')
   const previewSrc = isImage ? item._signedFileUrl : item._signedThumbUrl
   const ft = fileTypeStyle(item.library_file_type)
@@ -123,6 +126,17 @@ function LibAddedTile({ item, onOpen, onDelete, removing, analyzing, editing, on
             </span>
           )}
           {item.visibility === 'private' && <span className="lib-badge-private">Privado</span>}
+          {!isImage && onChangeCover && (
+            <span
+              role="button"
+              tabIndex={0}
+              className="lib-tile-cover-edit"
+              onClick={e => { e.stopPropagation(); onChangeCover(item) }}
+              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); onChangeCover(item) } }}
+            >
+              Mudar capa
+            </span>
+          )}
         </span>
         <span className="lib-tile-footer">
           <span className="lib-tile-text">
@@ -359,9 +373,30 @@ export default function Biblioteca() {
     patchItem(item.id, { profile_layout: layout })
   }
 
+  // "Mudar capa": o dono escolhe a imagem em vez da miniatura automática.
+  function changeCover(item) {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = 'image/png,image/jpeg,image/webp'
+    input.onchange = async () => {
+      const file = input.files?.[0]
+      if (!file) return
+      if (file.size > 8 * 1024 * 1024) { setToast('Imagem demasiado grande (máx. 8 MB).'); return }
+      setToast('A carregar a capa…')
+      const ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg'
+      const path = `${user.id}/thumbs/${Date.now()}-${item.id}.${ext}`
+      const up = await supabase.storage.from('library-files').upload(path, file, { contentType: file.type, upsert: true })
+      if (up.error) { setToast('Não foi possível carregar a imagem.'); return }
+      const { data: signed } = await supabase.storage.from('library-files').createSignedUrl(path, 3600)
+      setItems(prev => prev?.map(i => (i.id === item.id ? { ...i, library_thumb_url: path, _signedThumbUrl: signed?.signedUrl } : i)) ?? prev)
+      await supabase.from('projects').update({ library_thumb_url: path }).eq('id', item.id).eq('user_id', user.id)
+      setToast('Capa atualizada.')
+    }
+    input.click()
+  }
+
   const added = items?.filter(i => i.entry_kind === 'library') ?? []
   const building = items?.filter(i => i.entry_kind === 'full') ?? []
-  const featuredCount = (items ?? []).filter(i => i.profile_featured).length
 
   return (
     <div className="min-h-screen bg-page font-body">
@@ -392,14 +427,6 @@ export default function Biblioteca() {
           </div>
         </div>
 
-        {editing && (
-          <p className="lib-edit-hint">
-            Liga <strong>Mostrar no perfil</strong> nos itens que queres no teu perfil público
-            {featuredCount > 0 && <> — <strong>{featuredCount}</strong> {featuredCount === 1 ? 'ativo' : 'ativos'}</>}.
-            Escolhe <strong>Capa</strong> ou <strong>Linha</strong> para o formato de cada um.
-          </p>
-        )}
-
         {items === null ? (
           <div className="lib-tile-grid">
             {[0, 1, 2].map(i => <div key={i} className="lib-tile-main lib-tile--skeleton" />)}
@@ -429,6 +456,7 @@ export default function Biblioteca() {
                       onStartRename={setRenamingId}
                       onCancelRename={() => setRenamingId(null)}
                       onRename={name => patchItem(item.id, { name })}
+                      onChangeCover={changeCover}
                       onOpen={it => it.library_file_url && setViewing(it)} />
                   ))}
                 </div>
