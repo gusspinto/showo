@@ -56,7 +56,7 @@ const C = {
 // authenticated only has column-level SELECT grant on these (no email — that
 // comes from admin_get_users() instead) since migration 033; select('*')
 // fails outright and silently returns no rows.
-const PROFILE_COLUMNS = 'id, username, total_xp, created_at, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, project_draft, signup_country, signup_city, signup_referrer, signup_utm_source, last_active_at, last_action, plan, account_type, organization_id'
+const PROFILE_COLUMNS = 'id, username, total_xp, created_at, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, project_draft, signup_country, signup_city, signup_referrer, signup_utm_source, last_active_at, last_action, plan, account_type, organization_id, stripe_customer_id'
 
 // build/launch are legacy plan names still sitting in old profile rows —
 // resolvePlanId() normalizes those to plus/pro, but these maps stay here as
@@ -418,12 +418,23 @@ function OverviewTab({ users, projects, activityLog, aiUsageSummary, funnelSumma
   const retentionRate = totalUsers > 0 ? Math.round((activeThisMonth / totalUsers) * 100) : 0
   const planCounts = { free: 0, school: 0, plus: 0, pro: 0 }
   users.forEach(u => { const p = resolvePlanId(u); planCounts[p] = (planCounts[p] || 0) + 1 })
-  const paidUsers = planCounts.plus + planCounts.pro
 
-  // MRR estimado a partir dos planos ativos agora (preços fixos, sem promoções
+  // resolvePlanId dá o nível de ACESSO de cada utilizador, não se estão a
+  // pagar — um professor tem 'pro' por ser professor, não por ter cartão de
+  // crédito no Stripe. Contar isso como receita paga inflaciona o MRR com
+  // acessos oferecidos pela plataforma. Só stripe_customer_id prova que
+  // aquele utilizador passou pelo checkout — é o que distingue "paga" de
+  // "tem acesso Plus/Pro por outra via" (professor, oferta manual, escola).
+  const realSubscribers = users.filter(u => u.stripe_customer_id && (resolvePlanId(u) === 'plus' || resolvePlanId(u) === 'pro'))
+  const realPlusCount = realSubscribers.filter(u => resolvePlanId(u) === 'plus').length
+  const realProCount = realSubscribers.filter(u => resolvePlanId(u) === 'pro').length
+  const paidUsers = realSubscribers.length
+  const grantedUsers = planCounts.plus + planCounts.pro - paidUsers
+
+  // MRR a partir de quem realmente paga agora (preço de lista, sem promoções
   // aplicadas) — não é o valor exato faturado, mas dá o pulso do negócio sem
   // depender do Stripe estar acessível aqui.
-  const mrrEstimate = planCounts.plus * 4.99 + planCounts.pro * 9.99
+  const mrrEstimate = realPlusCount * 4.99 + realProCount * 9.99
 
   const billingMap = {}
   ;(billingSummary || []).forEach(row => { billingMap[row.event] = row })
@@ -584,8 +595,9 @@ function OverviewTab({ users, projects, activityLog, aiUsageSummary, funnelSumma
         <StatCard icon={<BarChart2 size={20} />} label="Ativos (semana)" value={activeThisWeek} color={activeThisWeek > 0 ? C.green : C.red} sub={`${activeThisMonth} mês · ${neverActive} nunca`} />
         <StatCard icon={<Star size={20} />} label="Retenção mensal" value={`${retentionRate}%`} color={retentionRate > 30 ? C.green : retentionRate > 10 ? C.yellow : C.red} sub={`${activeThisMonth}/${totalUsers} voltaram`} />
         <StatCard icon={<Star size={20} />} label="Score médio" value={avgScore} color={C.yellow} sub={`${scores.length} com score`} />
-        <StatCard icon={<Star size={20} />} label="Planos pagos" value={paidUsers} color={paidUsers > 0 ? C.green : C.muted} sub={`${planCounts.plus} Plus · ${planCounts.pro} Pro · ${planCounts.school} Escola`} />
-        <StatCard icon={<Star size={20} />} label="MRR estimado" value={`€${mrrEstimate.toFixed(2)}`} color={mrrEstimate > 0 ? C.green : C.muted} sub="A preço de lista, sem promoções" />
+        <StatCard icon={<Star size={20} />} label="Assinantes reais" value={paidUsers} color={paidUsers > 0 ? C.green : C.muted} sub={`${realPlusCount} Plus · ${realProCount} Pro · pagam via Stripe`} />
+        <StatCard icon={<Star size={20} />} label="MRR real" value={`€${mrrEstimate.toFixed(2)}`} color={mrrEstimate > 0 ? C.green : C.muted} sub="Só assinantes Stripe, preço de lista" />
+        <StatCard icon={<Star size={20} />} label="Acesso Plus/Pro oferecido" value={grantedUsers} color={C.purple} sub="Professores e ofertas manuais, sem Stripe" />
         <StatCard icon={<Star size={20} />} label="Subscrições novas" value={newSubsThisMonth} color={newSubsThisMonth > 0 ? C.green : C.muted} sub="Este mês" />
         <StatCard icon={<Star size={20} />} label="Cancelamentos" value={churnedThisMonth} color={churnedThisMonth > 0 ? C.red : C.muted} sub="Este mês" />
         <StatCard icon={<Star size={20} />} label="Receita cobrada" value={`€${revenueThisMonth.toFixed(2)}`} color={revenueThisMonth > 0 ? C.green : C.muted} sub="Faturas pagas este mês" />
@@ -755,7 +767,7 @@ function OverviewTab({ users, projects, activityLog, aiUsageSummary, funnelSumma
                       {u._orphan && <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: C.yellowSoft, color: C.yellow }}>sem perfil</span>}
                       {!u._orphan && pc === 0 && diffH > 48 && <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: C.redSoft, color: C.red }}>sem projeto</span>}
                     </div>
-                    <div style={{ fontSize: 11, color: C.subtle, marginTop: 2 }}>{u.email || '—'}</div>
+                    <div style={{ fontSize: 11, color: C.subtle, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.email || '—'}</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3, flexWrap: 'wrap' }}>
                       {u.signup_country && (
                         <span style={{ fontSize: 10, color: C.subtle, display: 'inline-flex', alignItems: 'center', gap: 2 }}>

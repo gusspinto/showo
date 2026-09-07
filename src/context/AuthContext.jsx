@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 import { supabase } from '../lib/supabase'
 import { identifyUser, resetAnalytics } from '../lib/analytics'
 import { getPlan, remainingUses, resolvePlanId, PLAN_GATE_MESSAGES } from '../lib/plans'
+import { getGeoInfo } from '../lib/geolocation'
 
 const AuthContext = createContext({})
 
@@ -33,7 +34,7 @@ export function AuthProvider({ children }) {
   const fetchProfile = useCallback(async (uid) => {
     if (!uid) { setProfile(null); setAiUsage({}); resetAnalytics(); return }
 
-    const PROFILE_SELECT = 'id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, occupation, plan, phone, organization_id, account_type'
+    const PROFILE_SELECT = 'id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, occupation, plan, phone, organization_id, account_type, signup_country'
     const PROFILE_SELECT_LEGACY = 'id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, occupation, plan, phone'
 
     const [profileRes, userRes] = await Promise.all([
@@ -125,9 +126,28 @@ export function AuthProvider({ children }) {
         // gravou — o `data` local ainda a tinha a null.
         if (data) data = { ...data, occupation: meta.pending_occupation }
       }
+      // Gravados aqui (não no Register) porque isto corre sempre que há
+      // sessão, incluindo depois de confirmação de email por outro
+      // caminho — o update direto no Register só corria num dos fluxos.
+      if (meta.pending_signup_referrer || meta.pending_signup_utm_source) {
+        const patch = { signup_referrer: meta.pending_signup_referrer || null, signup_utm_source: meta.pending_signup_utm_source || null }
+        await supabase.from('profiles').update(patch).eq('id', uid)
+        await supabase.auth.updateUser({ data: { pending_signup_referrer: null, pending_signup_utm_source: null } })
+        if (data) data = { ...data, ...patch }
+      }
     }
     } catch (e) {
       console.warn('[auth] ação pendente falhou, tenta na próxima:', e?.message)
+    }
+
+    // Geo é preenchido aqui (não no Register) porque só precisa de acontecer
+    // uma vez, na primeira vez que virmos signup_country vazio — cobre tanto
+    // quem confirma o email mais tarde como contas antigas nunca preenchidas.
+    if (data && !data.signup_country) {
+      getGeoInfo().then(geo => {
+        if (!geo) return
+        supabase.from('profiles').update({ signup_country: geo.country, signup_city: geo.city }).eq('id', uid).then(() => {})
+      })
     }
 
     setProfile(data ?? null)
