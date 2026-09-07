@@ -379,6 +379,7 @@ export default function NewProject() {
      e tira competências + área + resumo. Silencioso: nada de bloquear a
      navegação, nada de erros na cara se falhar. */
   async function tagLibraryItem(itemId, file, hadNotes) {
+    const L = (...a) => console.info('[tag]', ...a)
     markLibraryTagging(itemId, true)
     try {
       let f = { name: file.name, type: file.type, data: await fileToBase64(file) }
@@ -386,20 +387,30 @@ export default function NewProject() {
         try {
           const pdf = await officeFileToPdfBlob(file)
           f = { name: file.name.replace(/\.[^.]+$/, '') + '.pdf', type: 'application/pdf', data: await fileToBase64(pdf) }
-        } catch { /* envia original */ }
+        } catch (e) { L('office→pdf falhou, envia original:', e?.message) }
       }
-      const { data } = await supabase.functions.invoke('import-project', {
+      L('a pedir competências…', f.name, Math.round(f.data.length / 1024) + 'kb base64')
+      const { data, error } = await supabase.functions.invoke('import-project', {
         body: { files: [f], projectType: 'personal', light: true },
       })
-      if (!data) return
+      if (error || !data) {
+        let detail = error?.message
+        try { if (error?.context?.text) detail = await error.context.text() } catch { /* ignore */ }
+        L('import-project falhou:', detail)
+        return
+      }
+      L('resposta:', data.skills, data.area)
       const patch = {}
       if (Array.isArray(data.skills) && data.skills.length) patch.library_skills = data.skills.slice(0, 8)
       if (data.area) patch.area = data.area
       if (data.summary && !hadNotes) patch.library_description = data.summary
       if (Object.keys(patch).length) {
-        await supabase.from('projects').update(patch).eq('id', itemId).eq('user_id', user.id)
+        const { error: upErr } = await supabase.from('projects').update(patch).eq('id', itemId).eq('user_id', user.id)
+        L(upErr ? 'update falhou: ' + upErr.message : 'competências gravadas')
+      } else {
+        L('sem competências na resposta')
       }
-    } catch { /* background — silencioso */ } finally {
+    } catch (e) { L('erro:', e?.message) } finally {
       markLibraryTagging(itemId, false)
     }
   }

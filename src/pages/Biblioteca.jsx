@@ -92,6 +92,16 @@ function ProfileControls({ item, onTogglePin, onSetLayout, onToggleVisibility })
   )
 }
 
+/* "Em análise": marcado em localStorage ao adicionar (markLibraryTagging),
+   ou — rede de segurança — item de Biblioteca criado há < 3 min e ainda
+   sem competências nenhumas. Some assim que as competências chegam. */
+function isAnalyzing(item, taggingIds) {
+  if (item.entry_kind !== 'library') return false
+  if (item.skills?.length || item.tech_stack?.length || item.library_skills?.length) return false
+  if (taggingIds.has(item.id)) return true
+  return Date.now() - new Date(item.created_at).getTime() < 3 * 60 * 1000
+}
+
 /* Item da Biblioteca (entry_kind='library') — o portefólio, o que mais
    se quer mostrar. Tile com preview de verdade quando é imagem; para o
    resto (PDF/Word/PowerPoint), um cartão colorido por tipo à Drive —
@@ -251,11 +261,13 @@ export default function Biblioteca() {
 
   // Itens que a IA está a analisar (competências) — "Em análise" no cartão.
   const [taggingIds, setTaggingIds] = useState(() => getTaggingIds())
+  const [, forceTick] = useState(0)
+  const anyAnalyzing = (items ?? []).some(i => isAnalyzing(i, taggingIds))
   useEffect(() => {
-    if (!taggingIds.size) return
-    const t = setInterval(() => setTaggingIds(getTaggingIds()), 1500)
+    if (!anyAnalyzing) return
+    const t = setInterval(() => { setTaggingIds(getTaggingIds()); forceTick(n => n + 1) }, 2000)
     return () => clearInterval(t)
-  }, [taggingIds.size])
+  }, [anyAnalyzing])
 
   useEffect(() => {
     if (!viewing && !confirmingDelete) return
@@ -450,7 +462,7 @@ export default function Biblioteca() {
                 <div className="lib-tile-grid">
                   {added.map(item => (
                     <LibAddedTile key={item.id} item={item} removing={removing} onDelete={handleDelete}
-                      analyzing={taggingIds.has(item.id) && !(item.skills?.length || item.tech_stack?.length || item.library_skills?.length)}
+                      analyzing={isAnalyzing(item, taggingIds)}
                       editing={editing} onTogglePin={togglePin} onSetLayout={setLayout} onToggleVisibility={toggleVisibility}
                       renaming={renamingId === item.id}
                       onStartRename={setRenamingId}

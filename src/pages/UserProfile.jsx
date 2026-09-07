@@ -319,7 +319,7 @@ export default function UserProfile() {
       // Competências: agregadas de TODOS os projetos do utilizador (não só
       // os 3 em destaque). RLS trata da visibilidade.
       supabase.from('projects')
-        .select('id, name, slug, skills, tech_stack')
+        .select('id, name, slug, skills, tech_stack, library_skills')
         .eq('user_id', profileData.id)
         .is('parent_project_id', null)
         .then(({ data }) => setSkillProjects(data || []))
@@ -380,9 +380,12 @@ export default function UserProfile() {
     for (const s of arr) { const k = norm(s); if (s && !seen.has(k)) { seen.add(k); out.push(String(s).trim()) } }
     return out
   }
-  const projectSkills = dedupe(skillProjects.flatMap(p => Array.isArray(p.skills) ? p.skills : []))
+  // skills = projetos criados (extract-skills) + library_skills = ficheiros
+  // adicionados (tagLibraryItem). Ambos contam para o perfil.
+  const skillsOf = p => [...(Array.isArray(p.skills) ? p.skills : []), ...(Array.isArray(p.library_skills) ? p.library_skills : [])]
+  const projectSkills = dedupe(skillProjects.flatMap(skillsOf))
   const projectTech   = normalizeTechList(skillProjects.flatMap(p => Array.isArray(p.tech_stack) ? p.tech_stack : []))
-  const proofCount = skill => skillProjects.filter(p => (p.skills || []).some(s => norm(s) === norm(skill))).length
+  const proofCount = skill => skillProjects.filter(p => skillsOf(p).some(s => norm(s) === norm(skill))).length
   const manualSkills = previewSkills || []
   const suggestedSkills = projectSkills.filter(s => !manualSkills.some(m => norm(m) === norm(s)))
 
