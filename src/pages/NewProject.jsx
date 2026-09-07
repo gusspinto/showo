@@ -97,26 +97,50 @@ async function generateLibraryThumbnail(projectId, file) {
     const baseName = safePathSegment(file.name).replace(/\.[^.]+$/, '')
     const patch = {}
 
-    let pdfSource = file
+    // Word/PowerPoint: a miniatura embutida (docProps/thumbnail) resolve
+    // sem conversor — é o que garante preview aos PowerPoints que o
+    // Gotenberg não aguenta.
     if (isOfficeDoc) {
-      const b64 = await fileToBase64(file)
-      const { data: convData, error: convErr } = await supabase.functions.invoke('office-thumbnail', {
-        body: { name: file.name, type: file.type, data: b64 },
-      })
-      if (convErr || !convData?.pdf) throw convErr || new Error(convData?.error || 'conversão falhou')
-      pdfSource = new Blob([b64ToBytes(convData.pdf)], { type: 'application/pdf' })
-
-      // Guarda o PDF convertido — o visualizador (Biblioteca + perfil)
-      // mostra sempre este, sem reconverter.
-      const pdfPath = `${user.id}/pdf/${Date.now()}-${baseName}.pdf`
-      const { error: pdfErr } = await supabase.storage.from('library-files').upload(pdfPath, pdfSource, { contentType: 'application/pdf' })
-      if (!pdfErr) patch.library_pdf_url = pdfPath
+      try {
+        const { extractOfficeThumbnail } = await import('../lib/officeThumb')
+        const embedded = await extractOfficeThumbnail(file)
+        if (embedded) {
+          const ext = embedded.type === 'image/png' ? 'png' : 'jpg'
+          const p = `${user.id}/thumbs/${Date.now()}-${baseName}.${ext}`
+          const { error } = await supabase.storage.from('library-files').upload(p, embedded, { contentType: embedded.type })
+          if (!error) patch.library_thumb_url = p
+        }
+      } catch (e) {
+        console.warn('Miniatura embutida falhou:', e)
+      }
     }
 
-    const thumbBlob = await renderPdfThumbnail(pdfSource)
-    const thumbPath = `${user.id}/thumbs/${Date.now()}-${baseName}.jpg`
-    const { error: thumbErr } = await supabase.storage.from('library-files').upload(thumbPath, thumbBlob, { contentType: 'image/jpeg' })
-    if (!thumbErr) patch.library_thumb_url = thumbPath
+    // PDF do ficheiro (via Gotenberg) — dá preview offline e miniatura de
+    // reserva. Falha em silêncio (o visualizador já abre Office na mesma).
+    let pdfSource = file.type === 'application/pdf' ? file : null
+    if (isOfficeDoc) {
+      try {
+        const b64 = await fileToBase64(file)
+        const { data: convData, error: convErr } = await supabase.functions.invoke('office-thumbnail', {
+          body: { name: file.name, type: file.type, data: b64 },
+        })
+        if (!convErr && convData?.pdf) {
+          pdfSource = new Blob([b64ToBytes(convData.pdf)], { type: 'application/pdf' })
+          const pdfPath = `${user.id}/pdf/${Date.now()}-${baseName}.pdf`
+          const { error: pdfErr } = await supabase.storage.from('library-files').upload(pdfPath, pdfSource, { contentType: 'application/pdf' })
+          if (!pdfErr) patch.library_pdf_url = pdfPath
+        }
+      } catch (e) {
+        console.warn('Conversão Office→PDF falhou (não crítico):', e)
+      }
+    }
+
+    if (pdfSource && !patch.library_thumb_url) {
+      const thumbBlob = await renderPdfThumbnail(pdfSource)
+      const thumbPath = `${user.id}/thumbs/${Date.now()}-${baseName}.jpg`
+      const { error: thumbErr } = await supabase.storage.from('library-files').upload(thumbPath, thumbBlob, { contentType: 'image/jpeg' })
+      if (!thumbErr) patch.library_thumb_url = thumbPath
+    }
 
     if (Object.keys(patch).length) await supabase.from('projects').update(patch).eq('id', projectId)
   } catch (err) {

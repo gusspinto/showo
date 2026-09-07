@@ -116,6 +116,16 @@ export default function LibFileViewer({ item, onClose, onRename }) {
    (raro), fica o caminho antigo: converter para PDF ou transferir. */
 function OfficeEmbed({ item }) {
   const [mode, setMode] = useState('embed') // embed | convert
+
+  // Item antigo sem miniatura (o conversor falhou no upload): gera a
+  // miniatura embutida do ficheiro e grava-a, em segundo plano.
+  useEffect(() => {
+    if (item?.library_thumb_url || !item?._signedFileUrl) return
+    import('../lib/officeThumb')
+      .then(m => m.backfillOfficeThumbnail(item))
+      .catch(() => {})
+  }, [item])
+
   const src = item?._signedFileUrl
     ? `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(item._signedFileUrl)}`
     : null
