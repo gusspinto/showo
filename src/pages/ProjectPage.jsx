@@ -5939,7 +5939,7 @@ export default function ProjectPage() {
         />
       )}
 
-      {showStoryModal && <ShareStoryModal project={project} journal={projectJournalEntries} onClose={() => setShowStoryModal(false)} />}
+      {showStoryModal && <ShareStoryModal project={project} onClose={() => setShowStoryModal(false)} />}
 
       {showConfetti && <Confetti />}
       <Toast message={toast.message} visible={toast.visible} />

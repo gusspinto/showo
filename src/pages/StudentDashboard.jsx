@@ -262,13 +262,13 @@ export default function StudentDashboard({ user, profile }) {
     async function load() {
       let { data, error } = await supabase
         .from('projects')
-        .select('id, name, slug, score, area, created_at, ai_tagline, views, defense_date, cover_url, teacher_score, review_status, project_type, is_pap, featured, featured_order, dashboard_pinned, class_projects(class_id), collaborator_count:project_collaborators(count)')
+        .select('id, name, slug, score, area, created_at, ai_tagline, ai_highlights, creator_name, views, defense_date, cover_url, teacher_score, review_status, project_type, is_pap, featured, featured_order, dashboard_pinned, class_projects(class_id), collaborator_count:project_collaborators(count)')
         .eq('user_id', user.id)
         .eq('entry_kind', 'full')
         .order('created_at', { ascending: false })
       if (error) {
         const fallback = await supabase.from('projects')
-          .select('id, name, slug, score, area, created_at, ai_tagline, views, defense_date, cover_url, teacher_score, project_type, is_pap, dashboard_pinned')
+          .select('id, name, slug, score, area, created_at, ai_tagline, ai_highlights, creator_name, views, defense_date, cover_url, teacher_score, project_type, is_pap, dashboard_pinned')
           .eq('user_id', user.id).eq('entry_kind', 'full').order('created_at', { ascending: false })
         data = fallback.data
       }
@@ -718,15 +718,8 @@ export default function StudentDashboard({ user, profile }) {
         <ExportProjectsModal onClose={() => setShowExportModal(false)} />
       )}
 
-      {/* `entries` são as do projeto em foco — só passa o diário quando o
-          cartão partilhado é mesmo esse projeto, senão citaria a entrada
-          errada num projeto diferente. */}
       {shareProject && (
-        <ShareStoryModal
-          project={shareProject}
-          journal={shareProject.id === focusFull?.id ? entries : []}
-          onClose={() => setShareProject(null)}
-        />
+        <ShareStoryModal project={shareProject} onClose={() => setShareProject(null)} />
       )}
 
       {showRecap && (

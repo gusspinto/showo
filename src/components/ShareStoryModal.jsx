@@ -26,20 +26,25 @@ const TYPE_LABEL = {
  * fazem o trabalho parecer pequeno e não significam nada por fora; QR code —
  * inútil numa story, quem vê está a segurar o telemóvel que a mostra.
  *
- * Dois cartões: "Projeto" (o que construí) e "Progresso" (onde vou).
- * O de progresso mostra "Semana N" — leitura de capítulo, não total
- * acumulado: "Semana 1" lê-se como início de algo, "1 semana no total"
- * lê-se como pouco. O mesmo número, a moldura é que muda.
+ * Dois cartões: "Projeto" (o que é) e "Destaque" (porque tem valor).
+ *
+ * O segundo começou como cartão de progresso e foi refeito: percentagem de
+ * conclusão é mentira (o trabalho é aberto, e muita gente adiciona projetos
+ * já acabados há meses), "Semana N" mente nesses mesmos projetos, e uma
+ * entrada de diário é demasiado mundana para alguém publicar. Os
+ * ai_highlights resolvem os três problemas — são reconhecimento escrito na
+ * terceira pessoa ("Construiu X, mostrando Y"), existem em 86% dos
+ * projetos, não afirmam nada sobre datas, e é isso que dá orgulho.
  *
  * Props:
- *   project   { slug, name, creator_name, project_type, cover_url, ai_tagline, created_at }
- *   journal   [{ created_at, kind, content }]
+ *   project   { slug, name, creator_name, project_type, cover_url, ai_tagline, ai_highlights }
  *   onClose   Callback para fechar
  */
-export function ShareStoryModal({ project, journal = [], onClose }) {
+export function ShareStoryModal({ project, onClose }) {
   const canvasRef = useRef(null)
   const [exporting, setExporting] = useState(false)
   const [mode, setMode] = useState('projeto')
+  const [highlightIdx, setHighlightIdx] = useState(0)
 
   useEffect(() => {
     const prevOverflow = document.body.style.overflow
@@ -122,26 +127,11 @@ export function ShareStoryModal({ project, journal = [], onClose }) {
   const cover = project.cover_url
   const tagline = project.ai_tagline
 
-  // "Semana N" desde que o projeto começou — sempre >= 1, e lê-se bem tanto
-  // na semana 1 como na 14.
-  const startedAt = journal.length
-    ? new Date(Math.min(...journal.map(e => new Date(e.created_at).getTime())))
-    : project.created_at ? new Date(project.created_at) : null
-  const weekNumber = startedAt
-    ? Math.max(1, Math.ceil((Date.now() - startedAt.getTime()) / (7 * 86400000)))
-    : 1
-
-  // A última entrada do diário é a parte humana do cartão de progresso —
-  // o que a pessoa está mesmo a fazer, por palavras dela.
-  const lastEntry = journal.length
-    ? [...journal].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0]
-    : null
-  const lastEntryText = lastEntry?.content?.trim()
-    ? (lastEntry.content.trim().length > 120 ? lastEntry.content.trim().slice(0, 117) + '…' : lastEntry.content.trim())
-    : null
-  const updatedRecently = lastEntry
-    ? (Date.now() - new Date(lastEntry.created_at).getTime()) < 7 * 86400000
-    : false
+  const highlights = (Array.isArray(project.ai_highlights) ? project.ai_highlights : [])
+    .map(h => (typeof h === 'string' ? h : h?.text || ''))
+    .map(h => h.trim())
+    .filter(Boolean)
+  const highlight = highlights[highlightIdx % Math.max(1, highlights.length)] || null
 
   return createPortal(
     <div
@@ -156,7 +146,7 @@ export function ShareStoryModal({ project, journal = [], onClose }) {
 
         {/* Escolha do cartão: o que construí vs onde vou */}
         <div style={{ display: 'flex', gap: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 10, padding: 4 }}>
-          {[['projeto', 'Projeto'], ['progresso', 'Progresso']].map(([id, label]) => (
+          {[['projeto', 'Projeto'], ['destaque', 'Destaque']].map(([id, label]) => (
             <button
               key={id}
               onClick={() => setMode(id)}
@@ -220,45 +210,28 @@ export function ShareStoryModal({ project, journal = [], onClose }) {
               ) : (
                 <div style={{ padding: '26px 20px 20px' }}>
                   <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: '#8a8a94', textTransform: 'uppercase' }}>
-                    {TYPE_LABEL[project.project_type] || 'Projeto'} · a decorrer
+                    {TYPE_LABEL[project.project_type] || 'Projeto'} · destaque
                   </div>
 
-                  {/* "Semana N", não "N semanas no total" — funciona igual bem
-                      na primeira semana e na décima quarta. */}
-                  <div style={{ fontSize: 44, fontWeight: 400, color: '#fbfbfc', lineHeight: 1, marginTop: 10, fontFamily: FONT_DISPLAY }}>
-                    Semana {weekNumber}
-                  </div>
-
-                  <div style={{ fontSize: 13, fontWeight: 600, color: '#d8d8de', marginTop: 10, lineHeight: 1.3 }}>
-                    {project.name}
-                  </div>
-
-                  {/* O score é literalmente uma medida de completude (0-100):
-                      pontos por problema, solução, resultados, aprendizagens,
-                      capa, diário. Por isso "% completo" é honesto — e uma
-                      barra percebe-se sem saber o que é a Showo, ao
-                      contrário de "score 24". */}
-                  {project.score > 0 && (
-                    <div style={{ marginTop: 16 }}>
-                      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 7 }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: '#d8d8de' }}>{project.score}% completo</span>
-                        <span style={{ fontSize: 10, color: '#8a8a94' }}>{updatedRecently ? 'atualizado esta semana' : ''}</span>
-                      </div>
-                      <div style={{ height: 6, borderRadius: 99, background: 'rgba(255,255,255,0.09)', overflow: 'hidden' }}>
-                        <div style={{
-                          height: '100%', width: `${Math.min(100, project.score)}%`, borderRadius: 99,
-                          background: `linear-gradient(90deg, ${BRAND.blue}, ${BRAND.gold})`,
-                        }} />
-                      </div>
+                  {/* O destaque é a coisa que dá orgulho: está escrito na
+                      terceira pessoa, como reconhecimento, e percebe-se sem
+                      saber o que é a Showo. */}
+                  {highlight ? (
+                    <div style={{ fontSize: 18, fontWeight: 400, color: '#fbfbfc', lineHeight: 1.34, marginTop: 14, fontFamily: FONT_DISPLAY }}>
+                      {highlight}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: 26, fontWeight: 400, color: '#fbfbfc', lineHeight: 1.15, marginTop: 12, fontFamily: FONT_DISPLAY }}>
+                      {project.name}
                     </div>
                   )}
 
-                  {lastEntryText && (
-                    <div style={{
-                      fontSize: 12, color: '#a0a0aa', lineHeight: 1.5, marginTop: 14,
-                      paddingLeft: 12, borderLeft: `2px solid ${BRAND.blue}`,
-                    }}>
-                      {lastEntryText}
+                  {highlight && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 16 }}>
+                      <span style={{ width: 18, height: 2, borderRadius: 2, background: BRAND.gold, flexShrink: 0 }} />
+                      <span style={{ fontSize: 12, fontWeight: 600, color: '#d8d8de', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {project.name}
+                      </span>
                     </div>
                   )}
 
@@ -268,6 +241,13 @@ export function ShareStoryModal({ project, journal = [], onClose }) {
             </div>
           </div>
         </div>
+
+        {mode === 'destaque' && highlights.length > 1 && (
+          <button
+            onClick={() => setHighlightIdx(i => (i + 1) % highlights.length)}
+            style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.75)', borderRadius: 8, padding: '7px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+          >Outro destaque ({(highlightIdx % highlights.length) + 1}/{highlights.length})</button>
+        )}
 
         <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.5)', textAlign: 'center', maxWidth: 300, margin: 0, lineHeight: 1.5 }}>
           Guarda a imagem e adiciona-a à story por cima de uma foto tua. Para o link, usa o autocolante de link do Instagram.
