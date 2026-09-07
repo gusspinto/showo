@@ -3,12 +3,24 @@ import { supabase } from '../lib/supabase'
 import { Button, Modal, ModalActions, SectionLabel, Select } from './ui'
 import { academicYearOptions } from '../lib/academicYear'
 
-export const GRADE_OPTIONS = [
-  { value: '', label: 'Sem ano específico' },
-  { value: '10', label: '10.º ano' },
-  { value: '11', label: '11.º ano' },
-  { value: '12', label: '12.º ano' },
+const GRADE_SEGMENTS = [
+  { value: '', label: '—' },
+  { value: '10', label: '10.º' },
+  { value: '11', label: '11.º' },
+  { value: '12', label: '12.º' },
 ]
+
+const segWrap = {
+  display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
+  border: '1px solid var(--color-border)', borderRadius: 8, overflow: 'hidden',
+}
+const segBtn = {
+  padding: '9px 0', border: 'none', borderLeft: '1px solid var(--color-border)',
+  background: 'var(--color-bg)', color: 'var(--color-text-secondary)',
+  fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+  transition: 'background 0.12s, color 0.12s',
+}
+const segBtnOn = { background: 'var(--color-primary)', color: '#fff' }
 
 function generateCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
@@ -53,26 +65,33 @@ export default function CreateTurmaModal({ onClose, onCreated, user, profile }) 
   return (
     <Modal onClose={onClose} title="Nova turma">
       <form onSubmit={handleCreate}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div>
-            <SectionLabel>Nome da turma *</SectionLabel>
-            <input value={name} onChange={e => setName(e.target.value)} required placeholder="ex: Turma A, 11.º ano" className="dash-input" />
+            <SectionLabel>Nome da turma</SectionLabel>
+            <input value={name} onChange={e => setName(e.target.value)} required placeholder="ex: Turma A, 11.º ano" className="dash-input" autoFocus />
           </div>
           <div>
-            <SectionLabel>Disciplina (opcional)</SectionLabel>
+            <SectionLabel>Disciplina</SectionLabel>
             <input value={subject} onChange={e => setSubject(e.target.value)} placeholder="ex: Programação e Sistemas" className="dash-input" />
           </div>
-          <div>
-            <SectionLabel>Ano letivo</SectionLabel>
-            <Select value={academicYear} onChange={setAcademicYear} placeholder="Seleciona..."
-              options={academicYearOptions().map(y => ({ value: y, label: y }))} />
-          </div>
-          <div>
-            <SectionLabel>Ano de escolaridade</SectionLabel>
-            <Select value={gradeLevel} onChange={setGradeLevel} options={GRADE_OPTIONS} />
-            <p style={{ margin: '6px 0 0', fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)' }}>
-              Alunos de 11.º e 12.º passam a ver a secção de Estágios.
-            </p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <SectionLabel>Ano letivo</SectionLabel>
+              <Select value={academicYear} onChange={setAcademicYear} placeholder="Seleciona"
+                options={academicYearOptions().map(y => ({ value: y, label: y }))} />
+            </div>
+            <div>
+              <SectionLabel>Ano de escolaridade</SectionLabel>
+              <div role="radiogroup" aria-label="Ano de escolaridade" style={segWrap}>
+                {GRADE_SEGMENTS.map((g, i) => (
+                  <button key={g.value} type="button" role="radio" aria-checked={gradeLevel === g.value}
+                    onClick={() => setGradeLevel(g.value)}
+                    style={{ ...segBtn, borderLeft: i ? '1px solid var(--color-border)' : 'none', ...(gradeLevel === g.value ? segBtnOn : null) }}>
+                    {g.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
           {err && <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: 'var(--color-error)' }}>{err}</p>}
         </div>

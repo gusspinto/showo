@@ -6,12 +6,10 @@ export function getCurrentAcademicYear() {
   return now.getMonth() >= 8 ? `${y}/${y + 1}` : `${y - 1}/${y}`
 }
 
-// Newest first: one year ahead (for early setup) down through 3 past years.
+// Ano atual + o seguinte (para quem prepara a turma antes de setembro).
+// Chega para criar/editar uma turma; o modal de edição junta na mesma o
+// ano que a turma já tinha, se for outro.
 export function academicYearOptions() {
   const startY = parseInt(getCurrentAcademicYear().split('/')[0], 10)
-  const years = []
-  for (let offset = 1; offset >= -3; offset--) {
-    years.push(`${startY + offset}/${startY + offset + 1}`)
-  }
-  return years
+  return [`${startY}/${startY + 1}`, `${startY + 1}/${startY + 2}`]
 }
