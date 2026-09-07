@@ -517,7 +517,7 @@ export default function NewProject() {
       <NpShell>
         {gateMsg && <PlanGateModal message={gateMsg} onClose={() => setGateMsg(null)} />}
         <Toast {...toast} />
-        <Navbar showLinks={false} mobileLeft={<BackButton onClick={() => navigate(-1)} />} />
+        <Navbar showLinks={false} />
         <div className="np-center np-center--choose">
           <div className="np-wrap np-wrap--choose">
             <NpAnimatedTitle />
@@ -763,11 +763,9 @@ function NpShell({ children }) {
    palavra alternativa fica a gradiente (as três cores do ícone da
    Showo); "o teu" nunca muda. */
 const NP_TITLE_FRAMES = [
-  { word1: 'Cria',     alt1: false, word3: 'projeto',  alt3: false, hold: 2400 },
-  { word1: 'Adiciona', alt1: true,  word3: 'projeto',  alt3: false, hold: 2600 },
-  { word1: 'Cria',     alt1: false, word3: 'projeto',  alt3: false, hold: 1300 },
-  { word1: 'Cria',     alt1: false, word3: 'trabalho', alt3: true,  hold: 2600 },
-  { word1: 'Cria',     alt1: false, word3: 'projeto',  alt3: false, hold: 1300 },
+  { word1: 'Cria',     alt1: false, word3: 'projeto',  alt3: false, hold: 3400 },
+  { word1: 'Adiciona', alt1: true,  word3: 'projeto',  alt3: false, hold: 3000 },
+  { word1: 'Cria',     alt1: false, word3: 'trabalho', alt3: true,  hold: 3000 },
 ]
 
 // Gradiente aplicado LETRA A LETRA (não na palavra toda) — cada letra é o
@@ -813,22 +811,23 @@ function NpTitleWord({ text, gradient, animate }) {
 
 function NpAnimatedTitle() {
   const [frame, setFrame] = useState(0)
-  const animate = useRef(false)
-  const reducedMotion = useRef(typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
+  const [animate, setAnimate] = useState(false)
 
+  // As palavras alternam sempre. O efeito de letras-a-subir é que respeita
+  // prefers-reduced-motion — via CSS (@media reduce → animation: none), não
+  // aqui, para o título não ficar congelado numa palavra só.
   useEffect(() => {
-    if (reducedMotion.current) return
     const t = setTimeout(() => {
-      animate.current = true
+      setAnimate(true)
       setFrame(f => (f + 1) % NP_TITLE_FRAMES.length)
     }, NP_TITLE_FRAMES[frame].hold)
     return () => clearTimeout(t)
   }, [frame])
 
-  const f = NP_TITLE_FRAMES[reducedMotion.current ? 0 : frame]
+  const f = NP_TITLE_FRAMES[frame]
   return (
     <h1 className="np-headline np-headline-anim">
-      <NpTitleWord text={f.word1} gradient={f.alt1} animate={animate.current} />{' o teu '}<NpTitleWord text={f.word3} gradient={f.alt3} animate={animate.current} />
+      <NpTitleWord text={f.word1} gradient={f.alt1} animate={animate} />{' o teu '}<NpTitleWord text={f.word3} gradient={f.alt3} animate={animate} />
     </h1>
   )
 }

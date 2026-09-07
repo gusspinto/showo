@@ -32,8 +32,12 @@ export function AuthProvider({ children }) {
 
   const fetchProfile = useCallback(async (uid) => {
     if (!uid) { setProfile(null); setAiUsage({}); resetAnalytics(); return }
+
+    const PROFILE_SELECT = 'id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, occupation, plan, phone, organization_id, account_type'
+    const PROFILE_SELECT_LEGACY = 'id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, occupation, plan, phone'
+
     const [profileRes, userRes] = await Promise.all([
-      supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, occupation, plan, phone, organization_id, account_type').eq('id', uid).single(),
+      supabase.from('profiles').select(PROFILE_SELECT).eq('id', uid).single(),
       supabase.auth.getUser(),
     ])
     const meta = userRes.data?.user?.user_metadata ?? {}
@@ -42,10 +46,14 @@ export function AuthProvider({ children }) {
     if (!data && profileRes.error && profileRes.error.code !== 'PGRST116') {
       // Fallback sem organization_id — migration 056 pode ainda não estar aplicada
       const { data: fallbackData, error: fallbackErr } = await supabase
-        .from('profiles')
-        .select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, occupation, plan, phone')
-        .eq('id', uid).single()
-      if (fallbackErr && fallbackErr.code !== 'PGRST116') { setProfile(null); return }
+        .from('profiles').select(PROFILE_SELECT_LEGACY).eq('id', uid).single()
+      if (fallbackErr && fallbackErr.code !== 'PGRST116') {
+        // Erro real (400/rede/sessão a estabilizar logo após login). NÃO
+        // definir profile como null — isso deixava as páginas a fazer
+        // profile.role a rebentar ("algo correu mal"). Propaga para quem
+        // chama voltar a tentar.
+        throw fallbackErr
+      }
       data = fallbackData ?? null
     }
 
@@ -71,7 +79,10 @@ export function AuthProvider({ children }) {
       }
     }
 
-    // Process pending signup actions stored in user metadata
+    // Ações pendentes do registo, guardadas nos metadados. Uma falha aqui
+    // (RPC/rede) não pode impedir o perfil de ser aplicado — senão as
+    // páginas ficam com profile=null e rebentam. Correm noutra tentativa.
+    try {
     if (data && meta) {
       if (meta.pending_class_code) {
         const { data: regResult } = await supabase.rpc('register_institutional_student', {
@@ -115,6 +126,9 @@ export function AuthProvider({ children }) {
         if (data) data = { ...data, occupation: meta.pending_occupation }
       }
     }
+    } catch (e) {
+      console.warn('[auth] ação pendente falhou, tenta na próxima:', e?.message)
+    }
 
     setProfile(data ?? null)
     if (data) {
@@ -140,35 +154,49 @@ export function AuthProvider({ children }) {
   }, [fetchAiUsage])
 
   useEffect(() => {
+    let cancelled = false
     let sawInitial = false
     let lastUid = undefined
+
+    // Lê o perfil com re-tentativas. Logo após o login a sessão ainda está
+    // a assentar e uma query pode falhar (400/rede) — em vez de rebentar,
+    // tenta de novo com backoff curto.
+    async function loadProfile(u, attempt = 0) {
+      if (cancelled) return
+      try {
+        await fetchProfile(u?.id)
+        if (!sawInitial && !cancelled) { sawInitial = true; setLoading(false) }
+      } catch {
+        if (u?.id && attempt < 5 && !cancelled) {
+          setTimeout(() => loadProfile(u, attempt + 1), 500 + attempt * 500)
+        } else if (!sawInitial && !cancelled) {
+          // Desistimos — pelo menos não deixa o loader eterno.
+          sawInitial = true; setLoading(false)
+        }
+      }
+    }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       const u = session?.user ?? null
       setUser(u)
 
-      // Só um refresh de token — a sessão não mudou de dono. Não relê o perfil.
+      // Só um refresh de token / update de metadados — a sessão não mudou
+      // de dono. Não relê o perfil (evita loops).
       if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') return
 
-      // Mesmo utilizador que já tínhamos (ex: INITIAL_SESSION seguido de
-      // SIGNED_IN no arranque) — não vale a pena reler o perfil outra vez.
+      // Mesmo utilizador (ex: INITIAL_SESSION seguido de SIGNED_IN no
+      // arranque) — não relê outra vez.
       if (u?.id && u.id === lastUid) return
       lastUid = u?.id ?? null
 
-      // IMPORTANTE: nunca chamar métodos do supabase-js de forma síncrona
-      // dentro deste callback — ele segura um lock interno e chamadas aqui
-      // dentro entram em deadlock (refresh de token falha → logout sozinho,
-      // queries penduram → "algo correu mal"). Adiar para fora do callback.
-      setTimeout(() => {
-        fetchProfile(u?.id).then(() => {
-          if (!sawInitial) { sawInitial = true; setLoading(false) }
-        }).catch(() => {
-          if (!sawInitial) { sawInitial = true; setLoading(false) }
-        })
-      }, 0)
+      // NUNCA chamar métodos do supabase-js de forma síncrona dentro deste
+      // callback — ele segura um lock interno e chamadas aqui entram em
+      // deadlock (refresh de token falha → logout sozinho; queries penduram
+      // → "algo correu mal"). Adiar para fora do callback.
+      setTimeout(() => loadProfile(u), 0)
     })
 
-    return () => subscription.unsubscribe()
+    return () => { cancelled = true; subscription.unsubscribe() }
   }, [fetchProfile])
 
   async function signOut() {

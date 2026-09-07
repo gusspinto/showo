@@ -1061,7 +1061,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
       >
         {/* Mobile drawer trigger — leftmost, sidebar-panel icon. Yields to a
             page-provided back button (mobileLeft), e.g. inside a message thread. */}
-        {showLinks && !mobileLeft && (
+        {!mobileLeft && (
           <button
             className="mob-drawer-trigger"
             onClick={() => setMenuOpen(o => !o)}
@@ -1080,7 +1080,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
             desktop); sem isto não havia nenhuma marca visível na página até
             se abrir o menu, e quem chega de um link partilhado não tinha
             como saber, olhando para o topo, que app é esta. */}
-        {showLinks && !mobileLeft && (
+        {!mobileLeft && (
           <button className="nav-mob-logo" onClick={() => navigate(user ? '/dashboard' : '/')} aria-label="Showo">
             <img
               src={theme === 'light' ? '/lightmode_icon_logo.png' : '/darkmode_icon_logo.png'}

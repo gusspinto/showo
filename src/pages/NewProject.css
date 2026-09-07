@@ -78,14 +78,20 @@
 .np-title-word { display: inline-block; }
 .np-title-letter { display: inline-block; }
 .np-title-letter.is-rising {
-  animation: np-title-letter-in 0.45s cubic-bezier(0.22,1,0.36,1) both;
+  animation: np-title-letter-in 0.5s cubic-bezier(0.22,1,0.36,1) both;
 }
 @keyframes np-title-letter-in {
   from { opacity: 0; transform: translateY(55%); }
   to   { opacity: 1; transform: translateY(0); }
 }
+/* Reduced-motion: mantém a troca de palavras e um fade suave das letras,
+   sem o deslize vertical. */
 @media (prefers-reduced-motion: reduce) {
-  .np-title-letter.is-rising { animation: none; }
+  .np-title-letter.is-rising { animation: np-title-letter-fade 0.4s ease both; }
+}
+@keyframes np-title-letter-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 .np-add-card {
