@@ -16,6 +16,7 @@ import { useSidebar } from '../context/SidebarContext'
 import { useTheme } from '../context/ThemeContext'
 import DefenseMode from '../components/DefenseMode'
 import ProjectComments from '../components/ProjectComments'
+import ProjectTimeline from '../components/ProjectTimeline'
 import { analyzeProject } from '../lib/analyzeProject'
 import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
@@ -93,6 +94,8 @@ const ANON_PROJECT_COLUMNS = [
   'visibility', 'edit_token', 'notified_milestones',
   'library_file_url', 'library_file_name', 'library_file_type', 'parent_project_id',
 ].join(', ')
+// nota: timeline_public (migração 128) vem via select('*') do dono; o
+// visitante não precisa dele — o RPC get_project_timeline faz o gate.
 
 const colors = {
   bg: 'var(--color-bg)',
@@ -8552,6 +8555,13 @@ export default function ProjectPage() {
       </div>
 
       </>)}{/* end owner/collaborator conditional */}
+
+      {/* ── Percurso / timeline — visível a todos (o componente trata do gate) ── */}
+      {project && project.user_id && (
+        <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 32px' }}>
+          <ProjectTimeline project={project} isOwner={isOwner} />
+        </div>
+      )}
 
       {/* ── Likes + Interest + Comments — visible to ALL (owners, recruiters, visitors) ── */}
       {project && (

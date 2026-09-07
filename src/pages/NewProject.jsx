@@ -824,7 +824,7 @@ function NpAnimatedTitle() {
     return () => clearTimeout(t)
   }, [frame])
 
-  const f = NP_TITLE_FRAMES[frame]
+  const f = NP_TITLE_FRAMES[frame % NP_TITLE_FRAMES.length] || NP_TITLE_FRAMES[0]
   return (
     <h1 className="np-headline np-headline-anim">
       <NpTitleWord text={f.word1} gradient={f.alt1} animate={animate} />{' o teu '}<NpTitleWord text={f.word3} gradient={f.alt3} animate={animate} />
