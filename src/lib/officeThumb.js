@@ -9,6 +9,8 @@
 import { supabase } from './supabase'
 
 const LOCAL_SIG = 0x04034b50
+const CEN_SIG = 0x02014b50
+const EOCD_SIG = 0x06054b50
 
 async function inflateRaw(bytes) {
   if (typeof DecompressionStream === 'undefined') throw new Error('no DecompressionStream')
@@ -17,31 +19,45 @@ async function inflateRaw(bytes) {
   return new Uint8Array(await new Response(stream).arrayBuffer())
 }
 
-/* Lê as entradas do zip cujo nome passa em `want(name)`. Devolve
-   { name: Uint8Array }. Percorre os local file headers — chega para os
-   ficheiros Office (têm os tamanhos no header, sem data descriptor). */
+/* Lê as entradas do zip cujo nome passa em `want(name)`, pela DIRETORIA
+   CENTRAL (não pelos local headers — esses vêm com tamanho 0 quando o
+   ficheiro usa data descriptors, que era porque não aparecia nada). */
 async function readZipEntries(buf, want) {
   const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength)
   const dec = new TextDecoder()
   const out = {}
-  for (let i = 0; i + 30 < buf.length; i++) {
-    if (dv.getUint32(i, true) !== LOCAL_SIG) continue
-    const method = dv.getUint16(i + 8, true)
-    const compSize = dv.getUint32(i + 18, true)
-    const nameLen = dv.getUint16(i + 26, true)
-    const extraLen = dv.getUint16(i + 28, true)
-    const nameStart = i + 30
-    if (nameStart + nameLen > buf.length) break
-    const name = dec.decode(buf.subarray(nameStart, nameStart + nameLen))
-    const dataStart = nameStart + nameLen + extraLen
-    if (compSize && want(name)) {
-      const raw = buf.subarray(dataStart, dataStart + compSize)
-      try {
-        out[name] = method === 0 ? raw : method === 8 ? await inflateRaw(raw) : null
-      } catch { /* ignora entrada corrompida */ }
-    }
-    if (!compSize) continue // tamanho desconhecido: deixa o scan byte-a-byte achar o próximo header
-    i = dataStart + compSize - 1
+
+  // End of Central Directory: procura o assinatura a partir do fim.
+  let eocd = -1
+  for (let i = buf.length - 22; i >= 0 && i > buf.length - 22 - 65536; i--) {
+    if (dv.getUint32(i, true) === EOCD_SIG) { eocd = i; break }
+  }
+  if (eocd < 0) return out
+  const cdCount = dv.getUint16(eocd + 10, true)
+  let p = dv.getUint32(eocd + 16, true) // offset da diretoria central
+
+  for (let n = 0; n < cdCount && p + 46 <= buf.length; n++) {
+    if (dv.getUint32(p, true) !== CEN_SIG) break
+    const method = dv.getUint16(p + 10, true)
+    const compSize = dv.getUint32(p + 20, true)
+    const nameLen = dv.getUint16(p + 28, true)
+    const extraLen = dv.getUint16(p + 30, true)
+    const commentLen = dv.getUint16(p + 32, true)
+    const localOff = dv.getUint32(p + 42, true)
+    const name = dec.decode(buf.subarray(p + 46, p + 46 + nameLen))
+    p += 46 + nameLen + extraLen + commentLen
+
+    if (!compSize || !want(name)) continue
+    // No local header: os campos de tamanho podem estar a 0, mas o
+    // nameLen/extraLen são fiáveis e é o que precisamos para achar os dados.
+    if (dv.getUint32(localOff, true) !== LOCAL_SIG) continue
+    const lNameLen = dv.getUint16(localOff + 26, true)
+    const lExtraLen = dv.getUint16(localOff + 28, true)
+    const dataStart = localOff + 30 + lNameLen + lExtraLen
+    const raw = buf.subarray(dataStart, dataStart + compSize)
+    try {
+      out[name] = method === 0 ? raw : method === 8 ? await inflateRaw(raw) : null
+    } catch { /* ignora entrada corrompida */ }
   }
   return out
 }
