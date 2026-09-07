@@ -17,6 +17,7 @@ import { useTheme } from '../context/ThemeContext'
 import DefenseMode from '../components/DefenseMode'
 import ProjectComments from '../components/ProjectComments'
 import ProjectTimeline from '../components/ProjectTimeline'
+import { ShareStoryModal } from '../components/ShareStoryModal'
 import { analyzeProject } from '../lib/analyzeProject'
 import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
@@ -4569,6 +4570,7 @@ export default function ProjectPage() {
   const [toast, setToast] = useState({ visible: false, message: '' })
   const [showConfetti, setShowConfetti] = useState(false)
   const [defenseMode, setDefenseMode] = useState(false)
+  const [showStoryModal, setShowStoryModal] = useState(false)
   const [collaboratorSections, setCollaboratorSections] = useState(null) // null = not a collaborator
   const [members, setMembers] = useState([]) // [{ user_id, status, sections, profiles }]
   // A professor only gets evaluation tools on projects submitted by a student
@@ -4963,6 +4965,7 @@ export default function ProjectPage() {
         viewAsPublic,
         showCertificate: score >= 100,
         showDiary: true,
+        onShareStory: () => setShowStoryModal(true),
         onDefense: project.project_type === 'pap' ? () => setDefenseMode(true) : null,
         onAnalyze: handleAIClick,
         onTogglePublicView: () => {
@@ -5935,6 +5938,8 @@ export default function ProjectPage() {
           onClose={() => setDefenseMode(false)}
         />
       )}
+
+      {showStoryModal && <ShareStoryModal project={project} onClose={() => setShowStoryModal(false)} />}
 
       {showConfetti && <Confetti />}
       <Toast message={toast.message} visible={toast.visible} />

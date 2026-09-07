@@ -20,6 +20,17 @@ async function updatePlan(customerId: string, plan: string) {
   if (error) console.error('[stripe-webhook] updatePlan error:', error.message)
 }
 
+// Revenue history — profiles.plan only ever holds the *current* state, so a
+// cancellation erases what plan someone was on with no trace. This is the
+// only place MRR trend / new-subs / churn for the admin panel can come from.
+async function logBillingEvent(customerId: string, event: string, plan: string | null, amountCents: number | null) {
+  const sb = supabase()
+  const { data: profile } = await sb.from('profiles').select('id').eq('stripe_customer_id', customerId).single()
+  if (!profile) return
+  const { error } = await sb.from('billing_events').insert({ user_id: profile.id, event, plan, amount_cents: amountCents })
+  if (error) console.error('[stripe-webhook] logBillingEvent error:', error.message)
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { status: 200 })
@@ -41,8 +52,9 @@ Deno.serve(async (req) => {
       const session = event.data.object as Stripe.Checkout.Session
       if (session.mode === 'subscription' && session.subscription) {
         const sub = await stripe.subscriptions.retrieve(session.subscription as string)
-        const plan = sub.metadata?.plan || 'build'
+        const plan = sub.metadata?.plan || 'plus'
         await updatePlan(session.customer as string, plan)
+        await logBillingEvent(session.customer as string, 'subscription_started', plan, session.amount_total ?? null)
       }
       break
     }
@@ -50,7 +62,7 @@ Deno.serve(async (req) => {
     case 'customer.subscription.updated': {
       const sub = event.data.object as Stripe.Subscription
       if (sub.status === 'active' || sub.status === 'trialing') {
-        const plan = sub.metadata?.plan || 'build'
+        const plan = sub.metadata?.plan || 'plus'
         await updatePlan(sub.customer as string, plan)
       } else if (sub.status === 'past_due' || sub.status === 'unpaid') {
         // Keep plan active during grace period but log it
@@ -61,13 +73,17 @@ Deno.serve(async (req) => {
 
     case 'customer.subscription.deleted': {
       const sub = event.data.object as Stripe.Subscription
+      const plan = sub.metadata?.plan || null
       await updatePlan(sub.customer as string, 'free')
+      await logBillingEvent(sub.customer as string, 'subscription_churned', plan, null)
       break
     }
 
     case 'invoice.payment_succeeded': {
       const invoice = event.data.object as Stripe.Invoice
       if (!invoice.customer || !invoice.subscription) break
+
+      await logBillingEvent(invoice.customer as string, 'payment_succeeded', null, invoice.amount_paid ?? null)
 
       const sb = supabase()
       const { data: profile } = await sb

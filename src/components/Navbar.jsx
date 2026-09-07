@@ -5,6 +5,7 @@ import { useTheme } from '../context/ThemeContext'
 import { useSidebar } from '../context/SidebarContext'
 import { supabase } from '../lib/supabase'
 import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
+import { ShareIcon as Share2 } from '@solar-icons/react/bold/share'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { Folder2Icon as FolderOpen } from '@solar-icons/react/bold/folder-2'
 import { UserIcon as User } from '@solar-icons/react/bold/user'
@@ -1001,6 +1002,11 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                       <Trophy size={16} /> Certificado
                     </button>
                   )}
+                  {extras.onShareStory && (
+                    <button className="mobile-drawer-btn" onClick={() => { extras.onShareStory(); setOpen(false) }}>
+                      <Share2 size={16} /> Partilhar nas stories
+                    </button>
+                  )}
                   {extras.onTogglePublicView && (
                     <button className="mobile-drawer-btn" style={{ color: extras.viewAsPublic ? 'var(--color-text)' : undefined }}
                       onClick={() => { extras.onTogglePublicView(); setOpen(false) }}>
@@ -1298,6 +1304,11 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
             {extras.showCertificate && (
               <button className="mob-nav-btn" onClick={() => { navigate(`/certificado/${extras.slug}`); setProjMenuOpen(false) }}>
                 <Trophy size={18} /> Certificado
+              </button>
+            )}
+            {extras.onShareStory && (
+              <button className="mob-nav-btn" onClick={() => { extras.onShareStory(); setProjMenuOpen(false) }}>
+                <Share2 size={18} /> Partilhar nas stories
               </button>
             )}
             {extras.onTogglePublicView && (
@@ -1641,6 +1652,12 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
             <button className="pmf-btn" aria-label="Certificado" onClick={() => navigate(`/certificado/${extras.slug}`)}>
               <Trophy size={16} />
               <span className="pmf-tooltip">Certificado</span>
+            </button>
+          )}
+          {extras.onShareStory && (
+            <button className="pmf-btn" aria-label="Partilhar nas stories" onClick={extras.onShareStory}>
+              <Share2 size={16} />
+              <span className="pmf-tooltip">Partilhar nas stories</span>
             </button>
           )}
           {extras.onTogglePublicView && (

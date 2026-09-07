@@ -16,7 +16,6 @@ import AuthSidePanel from '../components/AuthSidePanel'
 import GoogleButton from '../components/GoogleButton'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
-import { getGeoInfo } from '../lib/geolocation'
 import { OCCUPATIONS } from '../lib/occupations'
 import { Select } from '../components/ui'
 
@@ -303,25 +302,13 @@ export default function Register() {
       await supabase.rpc('associate_organization_by_email').catch(() => {})
     }
 
-    // Store geolocation and referrer on the new profile (phone is collected
-    // later by PhoneGate, after login — same for every signup path, Google
-    // included, so it doesn't need to live in this form).
-    // Feito em fire-and-forget: são só campos de analytics, não vale a pena
-    // segurar a navegação para a dashboard pelos ~3s do lookup de geo — é
-    // justamente esse atraso que se sentia depois de confirmar o email
-    // no telemóvel e voltar ao PC.
-    const params = new URLSearchParams(window.location.search)
+    // Referrer/UTM já foram gravados via pending_signup_* no signUp() (sobrevivem
+    // à espera de confirmação de email, ao contrário de um update aqui, que só
+    // corria quando esta função era mesmo chamada — o que falhava sempre que a
+    // pessoa confirmava por outro caminho). A geolocalização é preenchida mais
+    // tarde, no primeiro login real, em AuthContext — não vale a pena bloquear
+    // aqui por um lookup de IP.
     const { data: { user: newUser } } = await supabase.auth.getUser()
-    if (newUser) {
-      getGeoInfo().then(geo => {
-        supabase.from('profiles').update({
-          signup_country: geo?.country || null,
-          signup_city: geo?.city || null,
-          signup_referrer: document.referrer || null,
-          signup_utm_source: params.get('utm_source') || null,
-        }).eq('id', newUser.id)
-      })
-    }
 
     // Claim referral code (ambassador system)
     if (newUser) {
@@ -442,6 +429,11 @@ export default function Register() {
         pending_school: needsSchool ? school.trim() : null,
         pending_partner_token: isPartnerFlow ? partnerToken : null,
         pending_phone: phone.trim() || null,
+        // Capturados já aqui (não depois) porque sobrevivem em user_metadata
+        // mesmo que a confirmação de email demore — document.referrer só é
+        // válido agora, nesta carga de página, não quando a pessoa voltar.
+        pending_signup_referrer: document.referrer || null,
+        pending_signup_utm_source: new URLSearchParams(window.location.search).get('utm_source') || null,
       } },
     })
     if (err) {

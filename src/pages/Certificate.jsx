@@ -34,7 +34,7 @@ export default function Certificate() {
     async function load() {
       const { data } = await supabase
         .from('projects')
-        .select('name, creator_name, score, created_at, slug, ai_tagline')
+        .select('id, name, creator_name, score, created_at, slug, ai_tagline, project_type')
         .eq('slug', slug)
         .single()
       setProject(data)

@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { identifyUser, resetAnalytics } from '../lib/analytics'
-import { getPlan, remainingUses, PLAN_GATE_MESSAGES } from '../lib/plans'
+import { getPlan, remainingUses, resolvePlanId, PLAN_GATE_MESSAGES } from '../lib/plans'
+import { getGeoInfo } from '../lib/geolocation'
 
 const AuthContext = createContext({})
 
@@ -33,7 +34,7 @@ export function AuthProvider({ children }) {
   const fetchProfile = useCallback(async (uid) => {
     if (!uid) { setProfile(null); setAiUsage({}); resetAnalytics(); return }
 
-    const PROFILE_SELECT = 'id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, occupation, plan, phone, organization_id, account_type'
+    const PROFILE_SELECT = 'id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, occupation, plan, phone, organization_id, account_type, signup_country'
     const PROFILE_SELECT_LEGACY = 'id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, occupation, plan, phone'
 
     const [profileRes, userRes] = await Promise.all([
@@ -125,9 +126,35 @@ export function AuthProvider({ children }) {
         // gravou — o `data` local ainda a tinha a null.
         if (data) data = { ...data, occupation: meta.pending_occupation }
       }
+      // Gravados aqui (não no Register) porque isto corre sempre que há
+      // sessão, incluindo depois de confirmação de email por outro
+      // caminho — o update direto no Register só corria num dos fluxos.
+      if (meta.pending_signup_referrer || meta.pending_signup_utm_source) {
+        const patch = { signup_referrer: meta.pending_signup_referrer || null, signup_utm_source: meta.pending_signup_utm_source || null }
+        await supabase.from('profiles').update(patch).eq('id', uid)
+        await supabase.auth.updateUser({ data: { pending_signup_referrer: null, pending_signup_utm_source: null } })
+        if (data) data = { ...data, ...patch }
+      }
     }
     } catch (e) {
       console.warn('[auth] ação pendente falhou, tenta na próxima:', e?.message)
+    }
+
+    // Geo é preenchido aqui (não no Register) porque só precisa de acontecer
+    // uma vez, na primeira vez que virmos signup_country vazio — cobre tanto
+    // quem confirma o email mais tarde como contas antigas nunca preenchidas.
+    if (data && !data.signup_country) {
+      getGeoInfo().then(geo => {
+        if (!geo) return
+        supabase.from('profiles').update({ signup_country: geo.country, signup_city: geo.city }).eq('id', uid).then(() => {})
+      })
+    }
+
+    // resolvePlanId precisa disto para distinguir Escola Plus de Escola Pro —
+    // organizations.plan não vem no select de profiles (não há FK embutida).
+    if (data?.organization_id) {
+      const { data: org } = await supabase.from('organizations').select('plan').eq('id', data.organization_id).single()
+      if (org) data = { ...data, organization_plan: org.plan }
     }
 
     setProfile(data ?? null)
@@ -213,9 +240,7 @@ export function AuthProvider({ children }) {
 
   const isAdmin         = profile?.is_admin === true
   const isSchoolAccount = !!profile?.organization_id
-  const planId          = profile?.role === 'professor' ? 'pro'
-                        : isSchoolAccount ? 'school'
-                        : (profile?.plan ?? 'free')
+  const planId          = resolvePlanId(profile)
   const plan            = getPlan(planId)
 
   function checkGate(feature, projectCount) {
@@ -233,13 +258,29 @@ export function AuthProvider({ children }) {
     return { allowed, remaining, limit, message: allowed ? null : PLAN_GATE_MESSAGES[feature]?.(planId) }
   }
 
+  // narrative and exportPptx run entirely client-side — no edge function ever
+  // calls check_ai_limit for them, so usage has to be recorded here instead.
+  // Every other feature is already incremented server-side inside its edge
+  // function call; calling consume_ai_usage again for those would double-count.
+  const LOCAL_AI_FEATURES = new Set(['narrative', 'exportPptx'])
+
   // After a successful AI call, refresh usage from server
-  async function consumeAI(_feature) {
+  async function consumeAI(feature) {
+    if (LOCAL_AI_FEATURES.has(feature)) {
+      await supabase.rpc('consume_ai_usage', { p_feature: feature })
+    }
     await fetchAiUsage()
   }
 
+  // Best-effort funnel tracking (nudge shown/clicked, checkout started) —
+  // never blocks the UI if it fails, this is purely for the admin funnel view.
+  function logFunnelEvent(event, feature = null) {
+    if (!user) return
+    supabase.from('funnel_events').insert({ user_id: user.id, event, feature }).then(() => {})
+  }
+
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signOut, refreshProfile, isAdmin, plan, planId, isSchoolAccount, checkGate, consumeAI, aiUsage, refreshAiUsage: fetchAiUsage }}>
+    <AuthContext.Provider value={{ user, profile, loading, signOut, refreshProfile, isAdmin, plan, planId, isSchoolAccount, checkGate, consumeAI, aiUsage, refreshAiUsage: fetchAiUsage, logFunnelEvent }}>
       {children}
     </AuthContext.Provider>
   )

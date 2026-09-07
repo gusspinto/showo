@@ -1,7 +1,7 @@
 export const PLANS = {
   school: {
     id: 'school',
-    name: 'Escola',
+    name: 'Escola Plus',
     maxProjects: 10,
     ai: {
       createProject: 15,
@@ -17,6 +17,27 @@ export const PLANS = {
     },
     career: {
       internshipPage: false,
+      weeklyRecap: true,
+    },
+  },
+  school_pro: {
+    id: 'school_pro',
+    name: 'Escola Pro',
+    maxProjects: 30,
+    ai: {
+      createProject: 30,
+      interviewProject: 30,
+      coach: 300,
+      defense: 25,
+      defenseTraining: 25,
+      diaryReport: 10,
+      narrative: 25,
+      analyzeProject: 25,
+      coverLetter: 25,
+      exportPptx: Infinity,
+    },
+    career: {
+      internshipPage: true,
       weeklyRecap: true,
     },
   },
@@ -99,6 +120,23 @@ export function getPlan(planId) {
   return PLANS[resolved] ?? PLANS.free
 }
 
+// Single source of truth for "which plan does this profile actually have".
+// Professor override and school-account override both live here so every
+// caller (AuthContext, Admin, anywhere else) agrees — duplicating this logic
+// inline is how the admin plan-count stat went stale after the Plus/Pro rename.
+// `organization_plan` is the organization's own plan tier ('plus' | 'pro'),
+// which the caller has to fetch and attach separately — profiles don't carry
+// it directly. Missing/unrecognized org plan defaults to the Plus tier.
+export function resolvePlanId(profile) {
+  if (!profile) return 'free'
+  if (profile.role === 'professor') return 'pro'
+  if (profile.organization_id) {
+    const orgPlan = PLAN_ALIASES[profile.organization_plan] || profile.organization_plan
+    return orgPlan === 'pro' ? 'school_pro' : 'school'
+  }
+  return PLAN_ALIASES[profile.plan] || profile.plan || 'free'
+}
+
 export function remainingUses(planId, feature, usageMap) {
   const limit = getPlan(planId).ai[feature]
   if (limit === Infinity) return Infinity
@@ -131,8 +169,8 @@ export const AI_FEATURE_LABELS = {
 export const PLAN_GATE_MESSAGES = {
   maxProjects: (plan) => ({
     title: 'Limite de projetos atingido',
-    body: plan === 'school'
-      ? `A conta escolar permite até ${getPlan(plan).maxProjects} projetos. Para projetos ilimitados, cria uma conta pessoal Pro.`
+    body: plan === 'school' || plan === 'school_pro'
+      ? `A conta escolar permite até ${getPlan(plan).maxProjects} projetos. Fala com o teu professor sobre o plano da escola.`
       : plan === 'free'
         ? 'Já tens 3 projetos — o máximo do plano Grátis. Com o Plus tens 15 projetos e muito mais IA.'
         : `O plano ${getPlan(plan).name} permite até ${getPlan(plan).maxProjects} projetos. Faz upgrade para teres mais.`,
@@ -176,7 +214,7 @@ export const PLAN_GATE_MESSAGES = {
   coverLetter: (plan) => ({
     title: 'Carta de apresentação IA',
     body: plan === 'free' || plan === 'school'
-      ? 'A carta de apresentação com IA está disponível a partir do plano Plus.'
+      ? 'A carta de apresentação com IA está disponível a partir do plano Plus (ou Escola Pro).'
       : `Já usaste as cartas de apresentação deste mês no plano ${getPlan(plan).name}. Faz upgrade para teres mais.`,
   }),
   exportPptx: (plan) => ({

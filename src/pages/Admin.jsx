@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import { resolvePlanId, getPlan, AI_FEATURE_LABELS } from '../lib/plans'
 import { Navbar } from '../components/Navbar'
 import { DangerTriangleIcon as AlertTriangle } from '@solar-icons/react/bold/danger-triangle'
 import { QuestionCircleIcon as HelpCircle } from '@solar-icons/react/bold/question-circle'
@@ -22,6 +23,7 @@ import { CopyIcon as Copy } from '@solar-icons/react/bold/copy'
 import { VolumeLoudIcon as Megaphone } from '@solar-icons/react/bold/volume-loud'
 import { PresentationGraphIcon as School } from '@solar-icons/react/bold/presentation-graph'
 import { TrashBinMinimalisticIcon as Trash2 } from '@solar-icons/react/bold/trash-bin-minimalistic'
+import { ArrowRightIcon as ArrowRight2 } from '@solar-icons/react/bold/arrow-right'
 import { Select } from '../components/ui'
 
 const C = {
@@ -54,10 +56,13 @@ const C = {
 // authenticated only has column-level SELECT grant on these (no email — that
 // comes from admin_get_users() instead) since migration 033; select('*')
 // fails outright and silently returns no rows.
-const PROFILE_COLUMNS = 'id, username, total_xp, created_at, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, project_draft, signup_country, signup_city, signup_referrer, signup_utm_source, last_active_at, last_action, plan, account_type, organization_id'
+const PROFILE_COLUMNS = 'id, username, total_xp, created_at, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, project_draft, signup_country, signup_city, signup_referrer, signup_utm_source, last_active_at, last_action, plan, account_type, organization_id, stripe_customer_id'
 
-const PLAN_COLORS = { free: '#6b7280', build: '#2B7EF5', launch: '#C49A20' }
-const PLAN_LABELS = { free: 'Free', build: 'Build', launch: 'Launch' }
+// build/launch are legacy plan names still sitting in old profile rows —
+// resolvePlanId() normalizes those to plus/pro, but these maps stay here as
+// a fallback for any raw value that slips through un-resolved.
+const PLAN_COLORS = { free: '#6b7280', school: '#8B5CF6', school_pro: '#6D28D9', plus: '#2B7EF5', pro: '#C49A20', build: '#2B7EF5', launch: '#C49A20' }
+const PLAN_LABELS = { free: 'Free', school: 'Escola Plus', school_pro: 'Escola Pro', plus: 'Plus', pro: 'Pro', build: 'Plus', launch: 'Pro' }
 
 function StatCard({ icon, label, value, color = C.blue, sub }) {
   return (
@@ -78,6 +83,47 @@ function StatCard({ icon, label, value, color = C.blue, sub }) {
         <div style={{ fontSize: 13, color: C.muted, fontWeight: 500, marginTop: 4 }}>{label}</div>
         {sub && <div style={{ fontSize: 11, color: C.subtle, marginTop: 3 }}>{sub}</div>}
       </div>
+    </div>
+  )
+}
+
+// Um funil é uma sequência a perder gente a cada passo — uma grelha de
+// números soltos não mostra isso. Cada barra é proporcional ao primeiro
+// passo, e a seta entre elas leva a taxa de passagem, que é a informação
+// que realmente interessa (não o valor absoluto de cada etapa isolada).
+function FunnelFlow({ steps }) {
+  const max = Math.max(1, ...steps.map(s => s.value))
+  return (
+    <div style={{ display: 'flex', alignItems: 'stretch', gap: 0, flexWrap: 'wrap' }}>
+      {steps.map((s, i) => {
+        const pct = Math.round((s.value / max) * 100)
+        const prev = i > 0 ? steps[i - 1].value : null
+        const dropPct = prev ? (prev === 0 ? 0 : Math.round((s.value / prev) * 100)) : null
+        return (
+          <div key={s.label} style={{ display: 'flex', alignItems: 'center', flex: '1 1 auto', minWidth: 140 }}>
+            {i > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '0 10px', flexShrink: 0 }}>
+                <ArrowRight2 size={13} color={C.subtle} />
+                <span style={{ fontSize: 10, fontWeight: 700, color: dropPct >= 50 ? C.green : dropPct >= 20 ? C.yellow : C.red, whiteSpace: 'nowrap' }}>{dropPct}%</span>
+              </div>
+            )}
+            <div
+              onClick={s.onClick}
+              style={{ flex: 1, minWidth: 0, cursor: s.onClick ? 'pointer' : 'default', borderRadius: 8, padding: 4, margin: -4 }}
+              onMouseEnter={e => { if (s.onClick) e.currentTarget.style.background = C.bgAlt }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+            >
+              <div style={{ fontSize: 20, fontWeight: 400, color: C.text, fontFamily: 'var(--font-heading)', lineHeight: 1 }}>{s.value}</div>
+              <div style={{ fontSize: 11, color: s.onClick ? C.blue : C.muted, marginTop: 4, marginBottom: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {s.label}{s.onClick && s.value > 0 ? ' →' : ''}
+              </div>
+              <div style={{ height: 6, borderRadius: 99, background: C.bgAlt, overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${Math.max(pct, s.value > 0 ? 4 : 0)}%`, borderRadius: 99, background: 'var(--brand-gradient)' }} />
+              </div>
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -312,7 +358,7 @@ const TIME_RANGES = [
   { id: 'all', label: 'Tudo', days: null },
 ]
 
-function generateMeetingSummary(users, projects, activityLog, range) {
+function generateMeetingSummary(users, projects, activityStats, range) {
   const now = Date.now()
   const totalUsers = users.length
   const totalProjects = projects.length
@@ -322,8 +368,8 @@ function generateMeetingSummary(users, projects, activityLog, range) {
   const newUsers = users.filter(u => new Date(u.created_at) > cutoff).length
   const newProjects = projects.filter(p => new Date(p.created_at) > cutoff).length
 
-  const uniqueActive = new Set(activityLog.filter(e => new Date(e.created_at) > cutoff).map(e => e.user_id)).size
-  const totalSessions = activityLog.filter(e => new Date(e.created_at) > cutoff && e.action === 'login').length
+  const uniqueActive = (activityStats?.active_range || []).length
+  const totalSessions = activityStats?.sessions_range || 0
 
   const projectCountMap = {}
   projects.forEach(p => { if (p.user_id) projectCountMap[p.user_id] = (projectCountMap[p.user_id] || 0) + 1 })
@@ -353,15 +399,30 @@ function generateMeetingSummary(users, projects, activityLog, range) {
   return md
 }
 
-function OverviewTab({ users, projects, activityLog }) {
+function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSummary }) {
   const [userSearch, setUserSearch] = useState('')
+  const [showLimitUsers, setShowLimitUsers] = useState(false)
   const [sort, setSort] = useState('active')
   const [range, setRange] = useState(TIME_RANGES[1])
+
+  // Contagens de utilizadores ativos vêm agregadas do servidor (nunca linhas
+  // cruas de activity_log) — fica correto para sempre, independente de
+  // quantos eventos a tabela acumular. Ver admin_get_activity_stats.
+  const [activityStats, setActivityStats] = useState(null)
+  const [loadingActivity, setLoadingActivity] = useState(true)
+  useEffect(() => {
+    let cancelled = false
+    setLoadingActivity(true)
+    supabase.rpc('admin_get_activity_stats', { p_days: range.days || 9999 }).then(({ data }) => {
+      if (!cancelled) { setActivityStats(data); setLoadingActivity(false) }
+    })
+    return () => { cancelled = true }
+  }, [range.days])
+
   const now = Date.now()
   const totalUsers = users.length
   const totalProjects = projects.length
   const days = range.days || 9999
-  const cutoff = now - days * 86400000
   const weekAgo = now - 7 * 86400000
   const monthAgo = now - 30 * 86400000
   const newThisWeek = projects.filter(p => new Date(p.created_at) > weekAgo).length
@@ -370,16 +431,71 @@ function OverviewTab({ users, projects, activityLog }) {
   const scores = projects.filter(p => p.score > 0).map(p => p.score)
   const avgScore = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0
 
-  // Real engagement from activity_log
-  const logInRange = activityLog.filter(e => new Date(e.created_at) > cutoff)
-  const activeUsersInRange = new Set(logInRange.map(e => e.user_id)).size
-  const activeThisWeek = new Set(activityLog.filter(e => new Date(e.created_at) > weekAgo).map(e => e.user_id)).size
-  const activeThisMonth = new Set(activityLog.filter(e => new Date(e.created_at) > monthAgo).map(e => e.user_id)).size
+  const activeWeekIds = new Set(activityStats?.active_week || [])
+  const activeMonthIds = new Set(activityStats?.active_month || [])
+  const activeThisWeek = activeWeekIds.size
+  const activeThisMonth = activeMonthIds.size
   const neverActive = users.filter(u => !u.last_active_at).length
-  const retentionRate = totalUsers > 0 ? Math.round((activeThisMonth / totalUsers) * 100) : 0
-  const planCounts = { free: 0, build: 0, launch: 0 }
-  users.forEach(u => { const p = u.plan || 'free'; if (planCounts[p] !== undefined) planCounts[p]++; else planCounts[p] = 1 })
-  const paidUsers = planCounts.build + planCounts.launch
+
+  // "Voltou" só faz sentido para quem já cá estava antes destes 30 dias —
+  // um registo de hoje que entra às 14h não "voltou", nunca saiu. Contar
+  // isso como retenção infla o número com o próprio crescimento recente.
+  const priorUserIds = new Set(users.filter(u => new Date(u.created_at).getTime() < monthAgo).map(u => u.id))
+  const priorUsersCount = priorUserIds.size
+  const priorUsersReturned = [...activeMonthIds].filter(id => priorUserIds.has(id)).length
+  const retentionRate = priorUsersCount > 0 ? Math.round((priorUsersReturned / priorUsersCount) * 100) : 0
+  const planCounts = { free: 0, school: 0, school_pro: 0, plus: 0, pro: 0 }
+  users.forEach(u => { const p = resolvePlanId(u); planCounts[p] = (planCounts[p] || 0) + 1 })
+
+  // resolvePlanId dá o nível de ACESSO de cada utilizador, não se estão a
+  // pagar — um professor tem 'pro' por ser professor, não por ter cartão de
+  // crédito no Stripe. Contar isso como receita paga inflaciona o MRR com
+  // acessos oferecidos pela plataforma. Só stripe_customer_id prova que
+  // aquele utilizador passou pelo checkout — é o que distingue "paga" de
+  // "tem acesso Plus/Pro por outra via" (professor, oferta manual, escola).
+  const realSubscribers = users.filter(u => u.stripe_customer_id && (resolvePlanId(u) === 'plus' || resolvePlanId(u) === 'pro'))
+  const realPlusCount = realSubscribers.filter(u => resolvePlanId(u) === 'plus').length
+  const realProCount = realSubscribers.filter(u => resolvePlanId(u) === 'pro').length
+  const paidUsers = realSubscribers.length
+  const grantedUsers = planCounts.plus + planCounts.pro - paidUsers
+
+  // MRR a partir de quem realmente paga agora (preço de lista, sem promoções
+  // aplicadas) — não é o valor exato faturado, mas dá o pulso do negócio sem
+  // depender do Stripe estar acessível aqui.
+  const mrrEstimate = realPlusCount * 4.99 + realProCount * 9.99
+
+  const billingMap = {}
+  ;(billingSummary || []).forEach(row => { billingMap[row.event] = row })
+  const newSubsThisMonth = billingMap.subscription_started?.count || 0
+  const churnedThisMonth = billingMap.subscription_churned?.count || 0
+  const revenueThisMonth = (billingMap.payment_succeeded?.total_amount_cents || 0) / 100
+
+  // Quem bateu mesmo num limite de IA este mês (dados reais de ai_usage, não
+  // estimativa) — e o funil desde aí até ao início do checkout. Com uma base
+  // pequena vale mais saber os nomes do que só o agregado, por isso guarda-se
+  // a lista de features por utilizador, não só a contagem.
+  const usersAtLimitMap = new Map() // user_id -> [feature, ...]
+  const limitHitsByFeature = {}
+  ;(aiUsageSummary || []).forEach(row => {
+    const resolved = resolvePlanId(row)
+    const limit = getPlan(resolved).ai[row.feature]
+    if (limit > 0 && limit !== Infinity && row.used >= limit) {
+      limitHitsByFeature[row.feature] = (limitHitsByFeature[row.feature] || 0) + 1
+      const existing = usersAtLimitMap.get(row.user_id) || []
+      usersAtLimitMap.set(row.user_id, [...existing, row.feature])
+    }
+  })
+  const usersAtLimit = usersAtLimitMap.size
+  const usersById = new Map(users.map(u => [u.id, u]))
+  const usersAtLimitList = [...usersAtLimitMap.entries()].map(([id, features]) => ({
+    id, features, user: usersById.get(id),
+  }))
+
+  const funnelMap = {}
+  ;(funnelSummary || []).forEach(row => { funnelMap[row.event] = (funnelMap[row.event] || 0) + Number(row.count) })
+  const nudgeShown = funnelMap.nudge_shown || 0
+  const nudgeClicked = funnelMap.nudge_clicked || 0
+  const checkoutStarted = funnelMap.checkout_started || 0
 
   // Registrations per week
   const numWeeks = Math.min(Math.ceil(days / 7), 12)
@@ -394,18 +510,18 @@ function OverviewTab({ users, projects, activityLog }) {
     return { label: `${d.getDate()}/${d.getMonth() + 1}`, value: count, highlight: i === numWeeks - 1 }
   })
 
-  // Daily active users from activity_log (real data)
+  // Daily active users — vem pré-agregado por dia (admin_get_activity_stats
+  // só olha para os últimos 31 dias no servidor, nunca linhas cruas).
   const numDays = Math.min(days, 30)
+  const dailyMap = {}
+  ;(activityStats?.daily || []).forEach(row => { dailyMap[row.day] = row.count })
   const dauLabels = []
   const dauData = Array.from({ length: numDays }, (_, i) => {
     const dayStart = now - (numDays - 1 - i) * 86400000
-    const dayEnd = dayStart + 86400000
     const d = new Date(dayStart)
     dauLabels.push(`${d.getDate()}/${d.getMonth() + 1}`)
-    return new Set(activityLog.filter(e => {
-      const t = new Date(e.created_at).getTime()
-      return t >= dayStart && t < dayEnd
-    }).map(e => e.user_id)).size
+    const key = d.toISOString().slice(0, 10)
+    return dailyMap[key] || 0
   })
 
   // Projects per week
@@ -463,7 +579,7 @@ function OverviewTab({ users, projects, activityLog }) {
     .slice(0, 8)
 
   const handleExport = () => {
-    const md = generateMeetingSummary(users, projects, activityLog, range)
+    const md = generateMeetingSummary(users, projects, activityStats, range)
     const blob = new Blob([md], { type: 'text/markdown' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -474,7 +590,7 @@ function OverviewTab({ users, projects, activityLog }) {
   }
 
   const handleCopySummary = () => {
-    const md = generateMeetingSummary(users, projects, activityLog, range)
+    const md = generateMeetingSummary(users, projects, activityStats, range)
     navigator.clipboard.writeText(md)
   }
 
@@ -512,9 +628,51 @@ function OverviewTab({ users, projects, activityLog }) {
         <StatCard icon={<User size={20} />} label="Utilizadores" value={totalUsers} color={C.blue} sub={`+${newUsersWeek} semana · +${newUsersMonth} mês`} />
         <StatCard icon={<Folder size={20} />} label="Projetos" value={totalProjects} color={C.green} sub={`+${newThisWeek} semana · ${usersWithoutProjects} sem projeto`} />
         <StatCard icon={<BarChart2 size={20} />} label="Ativos (semana)" value={activeThisWeek} color={activeThisWeek > 0 ? C.green : C.red} sub={`${activeThisMonth} mês · ${neverActive} nunca`} />
-        <StatCard icon={<Star size={20} />} label="Retenção mensal" value={`${retentionRate}%`} color={retentionRate > 30 ? C.green : retentionRate > 10 ? C.yellow : C.red} sub={`${activeThisMonth}/${totalUsers} voltaram`} />
+        <StatCard icon={<Star size={20} />} label="Retenção mensal" value={`${retentionRate}%`} color={retentionRate > 30 ? C.green : retentionRate > 10 ? C.yellow : C.red} sub={`${priorUsersReturned}/${priorUsersCount} de quem já cá estava`} />
         <StatCard icon={<Star size={20} />} label="Score médio" value={avgScore} color={C.yellow} sub={`${scores.length} com score`} />
-        <StatCard icon={<Star size={20} />} label="Planos pagos" value={paidUsers} color={paidUsers > 0 ? C.green : C.muted} sub={`${planCounts.build} Build · ${planCounts.launch} Launch`} />
+        <StatCard icon={<Star size={20} />} label="Assinantes reais" value={paidUsers} color={paidUsers > 0 ? C.green : C.muted} sub={`${realPlusCount} Plus · ${realProCount} Pro · pagam via Stripe`} />
+        <StatCard icon={<Star size={20} />} label="MRR real" value={`€${mrrEstimate.toFixed(2)}`} color={mrrEstimate > 0 ? C.green : C.muted} sub="Só assinantes Stripe, preço de lista" />
+        <StatCard icon={<Star size={20} />} label="Acesso Plus/Pro oferecido" value={grantedUsers} color={C.purple} sub="Professores e ofertas manuais, sem Stripe" />
+        <StatCard icon={<School size={20} />} label="Alunos de escola" value={planCounts.school + planCounts.school_pro} color={C.purple} sub={`${planCounts.school} Escola Plus · ${planCounts.school_pro} Escola Pro`} />
+        <StatCard icon={<Star size={20} />} label="Subscrições novas" value={newSubsThisMonth} color={newSubsThisMonth > 0 ? C.green : C.muted} sub="Este mês" />
+        <StatCard icon={<Star size={20} />} label="Cancelamentos" value={churnedThisMonth} color={churnedThisMonth > 0 ? C.red : C.muted} sub="Este mês" />
+        <StatCard icon={<Star size={20} />} label="Receita cobrada" value={`€${revenueThisMonth.toFixed(2)}`} color={revenueThisMonth > 0 ? C.green : C.muted} sub="Faturas pagas este mês" />
+      </div>
+
+      {/* Funil de conversão */}
+      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px', marginBottom: 24 }}>
+        <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Funil de conversão · mês atual</h3>
+        <p style={{ margin: '0 0 18px', fontSize: 11, color: C.subtle }}>Do limite atingido ao início do checkout — dados reais, não estimativa. A % é a taxa de passagem entre passos.</p>
+        <FunnelFlow steps={[
+          { label: 'Bateram num limite', value: usersAtLimit, onClick: usersAtLimit > 0 ? () => setShowLimitUsers(o => !o) : undefined },
+          { label: 'Viram o nudge', value: nudgeShown },
+          { label: 'Clicaram no nudge', value: nudgeClicked },
+          { label: 'Iniciaram checkout', value: checkoutStarted },
+        ]} />
+        {showLimitUsers && usersAtLimitList.length > 0 && (
+          <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {usersAtLimitList.map(({ id, features, user }) => (
+              <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12.5 }}>
+                <Avatar name={user?.full_name || user?.username || '?'} size={22} />
+                <span style={{ fontWeight: 600, color: C.text }}>{user?.full_name || user?.username || 'Utilizador removido'}</span>
+                {user?.email && <span style={{ color: C.subtle }}>{user.email}</span>}
+                <span style={{ marginLeft: 'auto', color: C.muted, fontSize: 11 }}>
+                  {features.map(f => AI_FEATURE_LABELS[f] || f).join(', ')}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+        {Object.keys(limitHitsByFeature).length > 0 && (
+          <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${C.border}`, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: C.subtle, textTransform: 'uppercase', letterSpacing: 0.5, marginRight: 4 }}>Por feature</span>
+            {Object.entries(limitHitsByFeature).sort((a, b) => b[1] - a[1]).map(([f, n]) => (
+              <span key={f} style={{ fontSize: 11, padding: '3px 9px', borderRadius: 99, background: C.bgAlt, color: C.muted }}>
+                {AI_FEATURE_LABELS[f] || f}: {n}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Charts row */}
@@ -524,9 +682,9 @@ function OverviewTab({ users, projects, activityLog }) {
           <p style={{ margin: '0 0 10px', fontSize: 11, color: C.subtle }}>Últimas {numWeeks} semanas</p>
           <BarChart data={regWeeks} color={C.blue} height={110} />
         </div>
-        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
+        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px', opacity: loadingActivity ? 0.5 : 1, transition: 'opacity 0.15s' }}>
           <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Atividade diária</h3>
-          <p style={{ margin: '0 0 10px', fontSize: 11, color: C.subtle }}>Users ativos / dia ({numDays} dias) — activity_log</p>
+          <p style={{ margin: '0 0 10px', fontSize: 11, color: C.subtle }}>Users ativos / dia ({numDays} dias)</p>
           <SparkLine data={dauData} labels={dauLabels} color={C.green} height={100} />
         </div>
         <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
@@ -659,7 +817,7 @@ function OverviewTab({ users, projects, activityLog }) {
                       {u._orphan && <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: C.yellowSoft, color: C.yellow }}>sem perfil</span>}
                       {!u._orphan && pc === 0 && diffH > 48 && <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: C.redSoft, color: C.red }}>sem projeto</span>}
                     </div>
-                    <div style={{ fontSize: 11, color: C.subtle, marginTop: 2 }}>{u.email || '—'}</div>
+                    <div style={{ fontSize: 11, color: C.subtle, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.email || '—'}</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3, flexWrap: 'wrap' }}>
                       {u.signup_country && (
                         <span style={{ fontSize: 10, color: C.subtle, display: 'inline-flex', alignItems: 'center', gap: 2 }}>
@@ -691,8 +849,70 @@ function OverviewTab({ users, projects, activityLog }) {
 // ─── USERS TAB ──────────────────────────────────────────────
 const ROLE_LABELS = { aluno: 'Individual', professor: 'Professor', recrutador: 'Recrutador', empresa: 'Empresa' }
 
+const USER_PLAN_FILTERS = [
+  { id: 'all', label: 'Todos' },
+  { id: 'free', label: 'Grátis' },
+  { id: 'plus', label: 'Plus' },
+  { id: 'pro', label: 'Pro' },
+  { id: 'school', label: 'Escola' },
+]
+
+// Kebab de ações: um botão "Eliminar" sempre visível ao lado de "Reset
+// password" dá-lhe o mesmo peso visual de uma ação de rotina — e numa lista
+// com dezenas de linhas é um clique errado à espera de acontecer. Trancado
+// atrás de um menu, continua a um clique de distância mas exige intenção.
+function RowMenu({ items }) {
+  const [open, setOpen] = useState(false)
+  const ref = useCallback(node => {
+    if (!node) return
+    function onDocClick(e) { if (!node.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', onDocClick)
+    return () => document.removeEventListener('mousedown', onDocClick)
+  }, [])
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        aria-label="Mais ações"
+        style={{
+          width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: open ? C.bgAlt : 'transparent', border: `1px solid ${open ? C.borderBright : C.border}`,
+          borderRadius: 7, color: C.muted, cursor: 'pointer', fontSize: 16, fontWeight: 700, lineHeight: 1,
+          fontFamily: 'inherit',
+        }}
+      >⋯</button>
+      {open && (
+        <div style={{
+          position: 'absolute', right: 0, top: 'calc(100% + 4px)', zIndex: 10,
+          background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 10,
+          padding: 4, minWidth: 168, boxShadow: '0 8px 24px rgba(0,0,0,0.28)',
+        }}>
+          {items.map((it, i) => (
+            <button
+              key={i}
+              onClick={() => { setOpen(false); it.onClick() }}
+              style={{
+                display: 'block', width: '100%', textAlign: 'left',
+                background: 'transparent', border: 'none', borderRadius: 6,
+                padding: '8px 10px', fontSize: 12.5, fontWeight: 600,
+                color: it.danger ? C.red : C.text, cursor: 'pointer', fontFamily: 'inherit',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = it.danger ? C.redSoft : C.bgAlt }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+            >{it.label}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+const usersTabCols = '38px minmax(180px,2fr) 90px 90px 130px 40px'
+
 function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, onResetPassword }) {
   const [search, setSearch] = useState('')
+  const [planFilter, setPlanFilter] = useState('all')
   const [confirm, setConfirm] = useState(null)
 
   const projectCount = {}
@@ -700,11 +920,13 @@ function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, 
 
   const filtered = users.filter(u => {
     const q = search.toLowerCase()
-    return (
+    const matchesSearch = !q || (
       (u.full_name || '').toLowerCase().includes(q) ||
       (u.username || '').toLowerCase().includes(q) ||
       (u.email || '').toLowerCase().includes(q)
     )
+    const matchesPlan = planFilter === 'all' || resolvePlanId(u) === planFilter
+    return matchesSearch && matchesPlan
   })
 
   return (
@@ -741,85 +963,98 @@ function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, 
         />
       )}
 
-      <div style={{ marginBottom: 16 }}>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' }}>
         <input
           value={search} onChange={e => setSearch(e.target.value)}
           placeholder="Pesquisar por nome, username ou email…"
           style={{
-            width: '100%', background: C.card, border: `1px solid ${C.border}`,
+            flex: '1 1 260px', background: C.card, border: `1px solid ${C.border}`,
             borderRadius: 10, padding: '10px 14px', color: C.text, fontSize: 14,
             outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
           }}
         />
+        <div style={{ display: 'flex', gap: 4, background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: 4 }}>
+          {USER_PLAN_FILTERS.map(f => (
+            <button
+              key={f.id}
+              onClick={() => setPlanFilter(f.id)}
+              style={{
+                background: planFilter === f.id ? C.blue : 'transparent',
+                color: planFilter === f.id ? '#fff' : C.muted,
+                border: 'none', borderRadius: 7, padding: '6px 12px', fontSize: 12, fontWeight: 600,
+                cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
+              }}
+            >{f.label}</button>
+          ))}
+        </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ fontSize: 12, color: C.subtle, marginBottom: 10 }}>
+        {filtered.length} utilizador{filtered.length !== 1 ? 'es' : ''}{planFilter !== 'all' || search ? ` de ${users.length}` : ''}
+      </div>
+
+      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, overflowX: 'auto', overflowY: 'hidden' }}>
+        <div style={{ minWidth: 620 }}>
+        <div style={{
+          display: 'grid', gridTemplateColumns: usersTabCols, gap: 14, alignItems: 'center',
+          padding: '10px 16px', borderBottom: `1px solid ${C.border}`,
+          fontSize: 10, fontWeight: 700, color: C.subtle, textTransform: 'uppercase', letterSpacing: 0.5,
+        }}>
+          <span></span>
+          <span>Utilizador</span>
+          <span style={{ textAlign: 'center' }}>Projetos</span>
+          <span>Registo</span>
+          <span>Cargo</span>
+          <span></span>
+        </div>
+
         {filtered.length === 0 && (
           <div style={{ textAlign: 'center', color: C.muted, padding: '40px 0', fontSize: 14 }}>Nenhum utilizador encontrado</div>
         )}
-        {filtered.map(u => {
+
+        {filtered.map((u, i) => {
           const name = u.full_name || u.username || 'Sem nome'
           const pCount = projectCount[u.id] || 0
           const joined = u.created_at ? new Date(u.created_at).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
+          const plan = resolvePlanId(u)
           return (
             <div key={u.id} style={{
-              ...C.glassStyle,
-              background: C.glass, border: `1px solid ${u.banned_at ? C.redBorder : C.glassBorder}`,
-              borderRadius: 12, padding: '14px 16px',
-              display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
+              display: 'grid', gridTemplateColumns: usersTabCols, gap: 14, alignItems: 'center',
+              padding: '11px 16px',
+              background: u.banned_at ? C.redSoft : (i % 2 === 1 ? C.bgAlt : 'transparent'),
+              borderBottom: i === filtered.length - 1 ? 'none' : `1px solid ${C.border}`,
             }}>
-              <Avatar
-                name={name}
-                color={u.is_admin ? 'var(--color-accent)' : 'var(--color-primary)'}
-                size={38}
-              />
-              <div style={{ flex: 1, minWidth: 180 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap', marginBottom: 3 }}>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{name}</span>
-                  {u.username && <span style={{ fontSize: 12, color: C.subtle }}>@{u.username}</span>}
-                  {u.is_admin && <Badge color={C.purple}><span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Shield size={11} /> Admin</span></Badge>}
-                  {u.plan && u.plan !== 'free' && <Badge color={PLAN_COLORS[u.plan] || C.blue}>{PLAN_LABELS[u.plan] || u.plan}</Badge>}
+              <Avatar name={name} color={u.is_admin ? 'var(--color-accent)' : 'var(--color-primary)'} size={30} />
+
+              <div style={{ minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 13.5, fontWeight: 700, color: C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
+                  {u.is_admin && <Shield size={12} color={C.purple} />}
+                  {plan !== 'free' && <Badge color={PLAN_COLORS[plan] || C.blue}>{PLAN_LABELS[plan] || plan}</Badge>}
                   {u.banned_at && <Badge color={C.red}>Banido</Badge>}
                 </div>
-                <div style={{ fontSize: 12, color: C.muted }}>{u.email || '—'}</div>
+                <div style={{ fontSize: 11.5, color: C.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.email || (u.username ? `@${u.username}` : '—')}</div>
               </div>
-              <div style={{ display: 'flex', gap: 20, alignItems: 'center', fontSize: 12, color: C.subtle }}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: C.text }}>{pCount}</div>
-                  <div>projeto{pCount !== 1 ? 's' : ''}</div>
-                </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontWeight: 600, color: C.muted }}>{joined}</div>
-                  <div>registo</div>
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap', alignItems: 'center' }}>
-                <Select value={u.role || 'aluno'} onChange={v => setConfirm({ type: 'changeRole', user: u, newRole: v })}
-                  options={Object.entries(ROLE_LABELS).map(([id, label]) => ({ value: id, label }))}
-                  inputStyle={{ background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 7, padding: '6px 24px 6px 8px', fontSize: 12, fontWeight: 600 }} />
-                <button
-                  onClick={() => setConfirm({ type: 'resetPassword', user: u })}
-                  style={{ background: 'transparent', border: `1px solid ${C.border}`, color: C.muted, borderRadius: 7, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-                >Reset password</button>
-                {u.is_admin ? (
-                  <button
-                    onClick={() => setConfirm({ type: 'revokeAdmin', user: u })}
-                    style={{ background: 'transparent', border: `1px solid ${C.purple}40`, color: C.purple, borderRadius: 7, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-                  >Revogar Admin</button>
-                ) : (
-                  <button
-                    onClick={() => setConfirm({ type: 'makeAdmin', user: u })}
-                    style={{ background: 'transparent', border: `1px solid ${C.purple}40`, color: C.purple, borderRadius: 7, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-                  >Tornar Admin</button>
-                )}
-                <button
-                  onClick={() => setConfirm({ type: 'delete', user: u })}
-                  style={{ background: 'transparent', border: `1px solid ${C.redBorder}`, color: C.red, borderRadius: 7, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-                >Eliminar</button>
-              </div>
+
+              <div style={{ textAlign: 'center', fontSize: 13, fontWeight: 700, color: C.text }}>{pCount}</div>
+
+              <div style={{ fontSize: 12, color: C.muted }}>{joined}</div>
+
+              <Select value={u.role || 'aluno'} onChange={v => setConfirm({ type: 'changeRole', user: u, newRole: v })}
+                options={Object.entries(ROLE_LABELS).map(([id, label]) => ({ value: id, label }))}
+                inputStyle={{ background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 7, padding: '5px 22px 5px 8px', fontSize: 11.5, fontWeight: 600 }} />
+
+              <RowMenu items={[
+                { label: 'Reset password', onClick: () => setConfirm({ type: 'resetPassword', user: u }) },
+                u.is_admin
+                  ? { label: 'Revogar Admin', onClick: () => setConfirm({ type: 'revokeAdmin', user: u }) }
+                  : { label: 'Tornar Admin', onClick: () => setConfirm({ type: 'makeAdmin', user: u }) },
+                { label: 'Eliminar utilizador', danger: true, onClick: () => setConfirm({ type: 'delete', user: u }) },
+              ]} />
             </div>
           )
         })}
+        </div>
       </div>
     </div>
   )
@@ -1112,7 +1347,7 @@ function OrgsTab() {
       <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '20px 22px' }}>
         <h3 style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 700, color: C.text }}>Registar escola</h3>
         <p style={{ margin: '0 0 16px', fontSize: 13, color: C.muted }}>
-          O domínio é opcional — se preenchido, alunos com esse email entram automaticamente. Sem domínio, os alunos entram pelo código de turma do professor.
+          O domínio é opcional — se preenchido, alunos com esse email entram automaticamente. Sem domínio, os alunos entram pelo código de turma do professor. O plano define os limites de IA de todos os alunos desta escola (Escola Pro tem o dobro ou mais em cada feature).
         </p>
         <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -1129,8 +1364,8 @@ function OrgsTab() {
             <div>
               <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 5 }}>Plano</label>
               <select value={plan} onChange={e => setPlan(e.target.value)} style={{ ...fieldStyle, width: 'auto', paddingRight: 28 }}>
-                <option value="plus">Plus</option>
-                <option value="pro">Pro</option>
+                <option value="plus">Escola Plus</option>
+                <option value="pro">Escola Pro</option>
               </select>
             </div>
             <button type="submit" disabled={creating} style={{
@@ -1170,8 +1405,8 @@ function OrgsTab() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <select value={editPlan} onChange={e => setEditPlan(e.target.value)} style={{ ...fieldStyle, width: 'auto', paddingRight: 28 }}>
-                    <option value="plus">Plus</option>
-                    <option value="pro">Pro</option>
+                    <option value="plus">Escola Plus</option>
+                    <option value="pro">Escola Pro</option>
                   </select>
                   <button onClick={saveEdit} disabled={saving} style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '7px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
                     {saving ? 'A guardar…' : 'Guardar'}
@@ -1357,7 +1592,9 @@ export default function Admin() {
   const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState('')
   const [signups, setSignups] = useState([])
-  const [activityLog, setActivityLog] = useState([])
+  const [aiUsageSummary, setAiUsageSummary] = useState([])
+  const [funnelSummary, setFunnelSummary] = useState([])
+  const [billingSummary, setBillingSummary] = useState([])
   const [codes, setCodes] = useState([])
   const [codesLoading, setCodesLoading] = useState(false)
   const [codesLoaded, setCodesLoaded] = useState(false)
@@ -1389,13 +1626,17 @@ export default function Admin() {
   const loadData = useCallback(async () => {
     setLoading(true)
     try {
-      const [profilesRes, projectsRes, emailsRes, signupsRes, activityRes] = await Promise.all([
+      const [profilesRes, projectsRes, emailsRes, signupsRes, aiUsageRes, funnelRes] = await Promise.all([
         supabase.from('profiles').select(PROFILE_COLUMNS).order('created_at', { ascending: false }),
         supabase.from('projects').select('*').order('created_at', { ascending: false }),
         supabase.rpc('admin_get_users'),
         supabase.from('waitlist_signups').select('*').order('created_at', { ascending: false }).limit(100),
-        supabase.from('activity_log').select('user_id, action, created_at').order('created_at', { ascending: false }).limit(5000),
+        supabase.rpc('admin_get_ai_usage_summary'),
+        supabase.rpc('admin_get_funnel_summary'),
       ])
+      setAiUsageSummary(aiUsageRes.data || [])
+      setFunnelSummary(funnelRes.data || [])
+      supabase.rpc('admin_get_billing_summary').then(({ data }) => setBillingSummary(data || []))
       if (profilesRes.error) showToast('Erro ao carregar utilizadores: ' + profilesRes.error.message)
       if (projectsRes.error) showToast('Erro ao carregar projetos: ' + projectsRes.error.message)
 
@@ -1433,19 +1674,21 @@ export default function Admin() {
           _orphan: true,
         }))
 
-      // Map org names to users
+      // Map org name + plan to users — organization_plan é o que resolvePlanId
+      // usa para distinguir Escola Plus de Escola Pro, sem isto todas as
+      // contas escolares apareciam como Escola Plus independentemente do que
+      // a escola realmente contratou.
       const orgIds = [...new Set(enrichedProfiles.map(p => p.organization_id).filter(Boolean))]
       let orgMap = {}
       if (orgIds.length) {
-        const { data: orgs } = await supabase.from('organizations').select('id, name').in('id', orgIds)
-        if (orgs) orgs.forEach(o => { orgMap[o.id] = o.name })
+        const { data: orgs } = await supabase.from('organizations').select('id, name, plan').in('id', orgIds)
+        if (orgs) orgs.forEach(o => { orgMap[o.id] = o })
       }
-      const withOrg = enrichedProfiles.map(p => ({ ...p, _orgName: orgMap[p.organization_id] || null }))
+      const withOrg = enrichedProfiles.map(p => ({ ...p, _orgName: orgMap[p.organization_id]?.name || null, organization_plan: orgMap[p.organization_id]?.plan || null }))
 
       setUsers([...withOrg, ...orphanUsers])
       setProjects(projectsRes.data || [])
       setSignups(signupsRes.data || [])
-      setActivityLog(activityRes.data || [])
     } catch (err) {
       console.error('Admin load error', err)
     }
@@ -1715,7 +1958,7 @@ export default function Admin() {
           </div>
         ) : (
           <>
-            {tab === 'overview' && <OverviewTab users={users} projects={projects} activityLog={activityLog} />}
+            {tab === 'overview' && <OverviewTab users={users} projects={projects} aiUsageSummary={aiUsageSummary} funnelSummary={funnelSummary} billingSummary={billingSummary} />}
             {tab === 'users' && (
               <UsersTab
                 users={users}

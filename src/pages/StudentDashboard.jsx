@@ -32,6 +32,7 @@ import { ClipboardTextIcon as ClipboardCheck } from '@solar-icons/react/bold/cli
 import { BookBookmarkIcon as BookMarked } from '@solar-icons/react/bold/book-bookmark'
 import { Button, Card, SectionLabel, Modal, Select } from '../components/ui'
 import { useAuth } from '../context/AuthContext'
+import { remainingUses, AI_FEATURE_LABELS, getPlan } from '../lib/plans'
 import ExportProjectsModal from '../components/ExportProjectsModal'
 
 // ProjectPulse removed — focus project now shown as auto-pinned card
@@ -152,7 +153,7 @@ function JoinTurmaStudentModal({ onClose, onJoined }) {
 export default function StudentDashboard({ user, profile }) {
   const navigate = useNavigate()
   const location = useLocation()
-  const { checkGate, isSchoolAccount, refreshProfile } = useAuth()
+  const { checkGate, isSchoolAccount, refreshProfile, aiUsage, planId, logFunnelEvent } = useAuth()
   /* ── Dados ── */
   const [projects, setProjects] = useState([])
   const [loadingProjects, setLoadingProjects] = useState(true)
@@ -171,6 +172,31 @@ export default function StudentDashboard({ user, profile }) {
   const [orgName, setOrgName] = useState(null)
   const [schoolClasses, setSchoolClasses] = useState([])
   const [showExportModal, setShowExportModal] = useState(false)
+  const nudgeKey = `showo_nudge_dismissed_${user.id}_${new Date().toISOString().slice(0, 7)}`
+  const [nudgeDismissed, setNudgeDismissed] = useState(() => {
+    try { return !!localStorage.getItem(nudgeKey) } catch { return false }
+  })
+
+  // Logged once per month, purely for the admin funnel view — not tied to
+  // the dismiss state, so it fires even if the banner was already dismissed
+  // earlier and reappears because a different feature ran low.
+  useEffect(() => {
+    if (planId !== 'free' || !aiUsage) return
+    const NUDGE_FEATURES = ['coach', 'createProject', 'defense', 'narrative', 'exportPptx']
+    const hasSignal = NUDGE_FEATURES.some(f => {
+      const limit = getPlan(planId).ai[f]
+      if (!(limit > 0)) return false
+      const remaining = remainingUses(planId, f, aiUsage)
+      return remaining <= Math.max(1, Math.ceil(limit * 0.3))
+    })
+    if (!hasSignal) return
+    const shownKey = `showo_nudge_shown_${user.id}_${new Date().toISOString().slice(0, 7)}`
+    try {
+      if (localStorage.getItem(shownKey)) return
+      localStorage.setItem(shownKey, '1')
+    } catch { /* ignore */ }
+    logFunnelEvent('nudge_shown')
+  }, [planId, aiUsage, user.id, logFunnelEvent])
 
   /* ── UI ── */
   const [tutorialPotentialSeen, setTutorialPotentialSeen] = useState(() => !!localStorage.getItem(`showo_tut_potential_${user.id}`))
@@ -774,6 +800,50 @@ export default function StudentDashboard({ user, profile }) {
             </button>
           </div>
         )}
+
+        {/* ══════════════ NUDGE DE LIMITES ══════════════ */}
+        {(() => {
+          if (planId !== 'free' || nudgeDismissed) return null
+          const NUDGE_FEATURES = ['coach', 'createProject', 'defense', 'narrative', 'exportPptx']
+          const warnings = NUDGE_FEATURES
+            .map(f => ({ feature: f, remaining: remainingUses(planId, f, aiUsage), limit: getPlan(planId).ai[f] }))
+            .filter(w => w.limit > 0 && w.remaining <= Math.max(1, Math.ceil(w.limit * 0.3)) && w.remaining > 0)
+          const exhausted = NUDGE_FEATURES
+            .map(f => ({ feature: f, remaining: remainingUses(planId, f, aiUsage), limit: getPlan(planId).ai[f] }))
+            .filter(w => w.limit > 0 && w.remaining === 0)
+          if (warnings.length === 0 && exhausted.length === 0) return null
+          return (
+            <div className="sdb-usage-nudge">
+              <button className="sdb-usage-nudge-close" onClick={() => { try { localStorage.setItem(nudgeKey, '1') } catch { /* ignore */ } setNudgeDismissed(true) }} aria-label="Fechar">✕</button>
+              {exhausted.length > 0 && (
+                <div className="sdb-usage-nudge-row sdb-usage-nudge-row--exhausted">
+                  <span className="sdb-usage-nudge-icon">🚫</span>
+                  <span>
+                    {exhausted.length === 1
+                      ? <><strong>{AI_FEATURE_LABELS[exhausted[0].feature]}</strong> esgotou este mês.</>
+                      : <><strong>{exhausted.map(w => AI_FEATURE_LABELS[w.feature]).join(', ')}</strong> esgotaram este mês.</>
+                    }
+                  </span>
+                </div>
+              )}
+              {warnings.length > 0 && (
+                <div className="sdb-usage-nudge-row">
+                  <span className="sdb-usage-nudge-icon">⚡</span>
+                  <span>
+                    {warnings.map(w => (
+                      <span key={w.feature} className="sdb-usage-nudge-chip">
+                        {AI_FEATURE_LABELS[w.feature]}: <strong>{w.remaining}</strong> restante{w.remaining !== 1 ? 's' : ''}
+                      </span>
+                    ))}
+                  </span>
+                </div>
+              )}
+              <button className="sdb-usage-nudge-cta" onClick={() => { logFunnelEvent('nudge_clicked'); navigate('/pricing') }}>
+                Ver planos <ArrowRight size={13} />
+              </button>
+            </div>
+          )
+        })()}
 
         {/* ══════════════ PROJETO DO MÊS ══════════════ */}
         {projectOfMonth && (() => {
