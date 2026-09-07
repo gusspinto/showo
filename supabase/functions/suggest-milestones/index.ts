@@ -47,9 +47,9 @@ Deno.serve(async (req) => {
 
 ${lines}
 
-Escolhe 3 a 6 MARCOS reais deste percurso — momentos que mostram evolução a um recrutador (mudança de abordagem, primeira versão a funcionar, primeiro utilizador a testar, problema grande resolvido, decisão importante). Nada de "comecei o projeto" ou "escrevi no diário".
+Escolhe 3 a 6 momentos reais deste percurso que mostram evolução a quem contrata: mudança de abordagem, primeira versão a funcionar, primeiro utilizador a testar, problema grande resolvido, decisão importante. Ignora "comecei o projeto" e "escrevi no diário".
 
-Para cada marco: um título curto (máx 8 palavras), a data (a do registo onde acontece, YYYY-MM-DD), e uma nota de 1 frase específica. Português de Portugal, sem inventar o que não está no diário.
+Para cada momento: um título curto (máx 8 palavras), a data (a do registo onde acontece, YYYY-MM-DD), e uma nota de 1 frase específica. Português de Portugal, sem travessões, sem inventar o que não está no diário.
 
 Devolve APENAS: {"milestones":[{"title":"","happened_on":"YYYY-MM-DD","note":""}]}`
 

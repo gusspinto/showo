@@ -43,13 +43,14 @@ export default function ProjectTimeline({ project, isOwner }) {
   useEffect(() => {
     let cancelled = false
     async function load() {
-      const [{ data: rpc }, { data: ms }] = await Promise.all([
+      const [rpcRes, msRes] = await Promise.allSettled([
         supabase.rpc('get_project_timeline', { p_project_id: project.id }),
         supabase.from('project_milestones').select('id, title, note, happened_on').eq('project_id', project.id).order('happened_on'),
       ])
       if (cancelled) return
-      setTl(rpc || null)
-      setMilestones(ms || [])
+      if (rpcRes.status === 'fulfilled' && rpcRes.value.error) console.warn('[timeline] rpc:', rpcRes.value.error.message)
+      setTl(rpcRes.status === 'fulfilled' ? (rpcRes.value.data ?? null) : null)
+      setMilestones(msRes.status === 'fulfilled' ? (msRes.value.data ?? []) : [])
     }
     load()
     return () => { cancelled = true }
@@ -126,7 +127,7 @@ export default function ProjectTimeline({ project, isOwner }) {
   const ownerActions = isOwner && (
     <div className="ptl-actions">
       <button className="ptl-btn" onClick={() => setForm({ title: '', happened_on: new Date().toISOString().slice(0, 10), note: '' })}>
-        <Plus size={13} /> Adicionar marco
+        <Plus size={13} /> Adicionar momento
       </button>
       {hasEntries && (
         <button className="ptl-btn ptl-btn--ai" onClick={fetchSuggestions} disabled={loadingAI}>
@@ -142,9 +143,8 @@ export default function ProjectTimeline({ project, isOwner }) {
       <div className="ptl-card ptl-card--empty">
         {header}
         <p className="ptl-empty-text">
-          Marca os momentos que contam — a primeira versão a funcionar, uma mudança
-          de rumo, o primeiro utilizador. Com o diário preenchido, a IA sugere-os
-          por ti. Um recrutador vê meses de trabalho consistente, não um sprint.
+          Regista os momentos que marcaram o projeto. No perfil, prova a quem
+          contrata que trabalhaste isto ao longo do tempo.
         </p>
         {ownerActions}
         {form && <MilestoneForm form={form} setForm={setForm} onSave={saveMilestone} busy={busy} />}
@@ -217,7 +217,7 @@ export default function ProjectTimeline({ project, isOwner }) {
           ))}
         </ol>
       ) : isOwner && (
-        <p className="ptl-nomarks">Ainda sem marcos. Adiciona o primeiro ou deixa a IA sugerir a partir do teu diário.</p>
+        <p className="ptl-nomarks">Ainda sem momentos. Adiciona o primeiro ou deixa a IA sugerir a partir do diário.</p>
       )}
     </div>
   )
@@ -245,10 +245,10 @@ function MilestoneForm({ form, setForm, onSave, busy }) {
 }
 
 function Suggestions({ list, onAccept, onDismiss }) {
-  if (list.length === 0) return <p className="ptl-nomarks">A IA não encontrou marcos novos no diário.</p>
+  if (list.length === 0) return <p className="ptl-nomarks">A IA não encontrou momentos novos no diário.</p>
   return (
     <div className="ptl-suggestions">
-      <p className="ptl-suggestions-hint"><Sparkles size={12} /> Encontrei isto no teu diário — aceita o que fizer sentido</p>
+      <p className="ptl-suggestions-hint"><Sparkles size={12} /> Encontrei isto no teu diário. Aceita o que fizer sentido</p>
       {list.map((s, i) => (
         <div key={i} className="ptl-sugg">
           <div className="ptl-sugg-body">
