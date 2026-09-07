@@ -787,8 +787,70 @@ function OverviewTab({ users, projects, activityLog, aiUsageSummary, funnelSumma
 // ─── USERS TAB ──────────────────────────────────────────────
 const ROLE_LABELS = { aluno: 'Individual', professor: 'Professor', recrutador: 'Recrutador', empresa: 'Empresa' }
 
+const USER_PLAN_FILTERS = [
+  { id: 'all', label: 'Todos' },
+  { id: 'free', label: 'Grátis' },
+  { id: 'plus', label: 'Plus' },
+  { id: 'pro', label: 'Pro' },
+  { id: 'school', label: 'Escola' },
+]
+
+// Kebab de ações: um botão "Eliminar" sempre visível ao lado de "Reset
+// password" dá-lhe o mesmo peso visual de uma ação de rotina — e numa lista
+// com dezenas de linhas é um clique errado à espera de acontecer. Trancado
+// atrás de um menu, continua a um clique de distância mas exige intenção.
+function RowMenu({ items }) {
+  const [open, setOpen] = useState(false)
+  const ref = useCallback(node => {
+    if (!node) return
+    function onDocClick(e) { if (!node.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', onDocClick)
+    return () => document.removeEventListener('mousedown', onDocClick)
+  }, [])
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        aria-label="Mais ações"
+        style={{
+          width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: open ? C.bgAlt : 'transparent', border: `1px solid ${open ? C.borderBright : C.border}`,
+          borderRadius: 7, color: C.muted, cursor: 'pointer', fontSize: 16, fontWeight: 700, lineHeight: 1,
+          fontFamily: 'inherit',
+        }}
+      >⋯</button>
+      {open && (
+        <div style={{
+          position: 'absolute', right: 0, top: 'calc(100% + 4px)', zIndex: 10,
+          background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 10,
+          padding: 4, minWidth: 168, boxShadow: '0 8px 24px rgba(0,0,0,0.28)',
+        }}>
+          {items.map((it, i) => (
+            <button
+              key={i}
+              onClick={() => { setOpen(false); it.onClick() }}
+              style={{
+                display: 'block', width: '100%', textAlign: 'left',
+                background: 'transparent', border: 'none', borderRadius: 6,
+                padding: '8px 10px', fontSize: 12.5, fontWeight: 600,
+                color: it.danger ? C.red : C.text, cursor: 'pointer', fontFamily: 'inherit',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = it.danger ? C.redSoft : C.bgAlt }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+            >{it.label}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+const usersTabCols = '38px minmax(180px,2fr) 90px 90px 130px 40px'
+
 function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, onResetPassword }) {
   const [search, setSearch] = useState('')
+  const [planFilter, setPlanFilter] = useState('all')
   const [confirm, setConfirm] = useState(null)
 
   const projectCount = {}
@@ -796,11 +858,13 @@ function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, 
 
   const filtered = users.filter(u => {
     const q = search.toLowerCase()
-    return (
+    const matchesSearch = !q || (
       (u.full_name || '').toLowerCase().includes(q) ||
       (u.username || '').toLowerCase().includes(q) ||
       (u.email || '').toLowerCase().includes(q)
     )
+    const matchesPlan = planFilter === 'all' || resolvePlanId(u) === planFilter
+    return matchesSearch && matchesPlan
   })
 
   return (
@@ -837,85 +901,98 @@ function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, 
         />
       )}
 
-      <div style={{ marginBottom: 16 }}>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' }}>
         <input
           value={search} onChange={e => setSearch(e.target.value)}
           placeholder="Pesquisar por nome, username ou email…"
           style={{
-            width: '100%', background: C.card, border: `1px solid ${C.border}`,
+            flex: '1 1 260px', background: C.card, border: `1px solid ${C.border}`,
             borderRadius: 10, padding: '10px 14px', color: C.text, fontSize: 14,
             outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
           }}
         />
+        <div style={{ display: 'flex', gap: 4, background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: 4 }}>
+          {USER_PLAN_FILTERS.map(f => (
+            <button
+              key={f.id}
+              onClick={() => setPlanFilter(f.id)}
+              style={{
+                background: planFilter === f.id ? C.blue : 'transparent',
+                color: planFilter === f.id ? '#fff' : C.muted,
+                border: 'none', borderRadius: 7, padding: '6px 12px', fontSize: 12, fontWeight: 600,
+                cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
+              }}
+            >{f.label}</button>
+          ))}
+        </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ fontSize: 12, color: C.subtle, marginBottom: 10 }}>
+        {filtered.length} utilizador{filtered.length !== 1 ? 'es' : ''}{planFilter !== 'all' || search ? ` de ${users.length}` : ''}
+      </div>
+
+      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, overflowX: 'auto', overflowY: 'hidden' }}>
+        <div style={{ minWidth: 620 }}>
+        <div style={{
+          display: 'grid', gridTemplateColumns: usersTabCols, gap: 14, alignItems: 'center',
+          padding: '10px 16px', borderBottom: `1px solid ${C.border}`,
+          fontSize: 10, fontWeight: 700, color: C.subtle, textTransform: 'uppercase', letterSpacing: 0.5,
+        }}>
+          <span></span>
+          <span>Utilizador</span>
+          <span style={{ textAlign: 'center' }}>Projetos</span>
+          <span>Registo</span>
+          <span>Cargo</span>
+          <span></span>
+        </div>
+
         {filtered.length === 0 && (
           <div style={{ textAlign: 'center', color: C.muted, padding: '40px 0', fontSize: 14 }}>Nenhum utilizador encontrado</div>
         )}
-        {filtered.map(u => {
+
+        {filtered.map((u, i) => {
           const name = u.full_name || u.username || 'Sem nome'
           const pCount = projectCount[u.id] || 0
           const joined = u.created_at ? new Date(u.created_at).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
+          const plan = resolvePlanId(u)
           return (
             <div key={u.id} style={{
-              ...C.glassStyle,
-              background: C.glass, border: `1px solid ${u.banned_at ? C.redBorder : C.glassBorder}`,
-              borderRadius: 12, padding: '14px 16px',
-              display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
+              display: 'grid', gridTemplateColumns: usersTabCols, gap: 14, alignItems: 'center',
+              padding: '11px 16px',
+              background: u.banned_at ? C.redSoft : (i % 2 === 1 ? C.bgAlt : 'transparent'),
+              borderBottom: i === filtered.length - 1 ? 'none' : `1px solid ${C.border}`,
             }}>
-              <Avatar
-                name={name}
-                color={u.is_admin ? 'var(--color-accent)' : 'var(--color-primary)'}
-                size={38}
-              />
-              <div style={{ flex: 1, minWidth: 180 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap', marginBottom: 3 }}>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{name}</span>
-                  {u.username && <span style={{ fontSize: 12, color: C.subtle }}>@{u.username}</span>}
-                  {u.is_admin && <Badge color={C.purple}><span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Shield size={11} /> Admin</span></Badge>}
-                  {resolvePlanId(u) !== 'free' && <Badge color={PLAN_COLORS[resolvePlanId(u)] || C.blue}>{PLAN_LABELS[resolvePlanId(u)] || resolvePlanId(u)}</Badge>}
+              <Avatar name={name} color={u.is_admin ? 'var(--color-accent)' : 'var(--color-primary)'} size={30} />
+
+              <div style={{ minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 13.5, fontWeight: 700, color: C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
+                  {u.is_admin && <Shield size={12} color={C.purple} />}
+                  {plan !== 'free' && <Badge color={PLAN_COLORS[plan] || C.blue}>{PLAN_LABELS[plan] || plan}</Badge>}
                   {u.banned_at && <Badge color={C.red}>Banido</Badge>}
                 </div>
-                <div style={{ fontSize: 12, color: C.muted }}>{u.email || '—'}</div>
+                <div style={{ fontSize: 11.5, color: C.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.email || (u.username ? `@${u.username}` : '—')}</div>
               </div>
-              <div style={{ display: 'flex', gap: 20, alignItems: 'center', fontSize: 12, color: C.subtle }}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: C.text }}>{pCount}</div>
-                  <div>projeto{pCount !== 1 ? 's' : ''}</div>
-                </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontWeight: 600, color: C.muted }}>{joined}</div>
-                  <div>registo</div>
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap', alignItems: 'center' }}>
-                <Select value={u.role || 'aluno'} onChange={v => setConfirm({ type: 'changeRole', user: u, newRole: v })}
-                  options={Object.entries(ROLE_LABELS).map(([id, label]) => ({ value: id, label }))}
-                  inputStyle={{ background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 7, padding: '6px 24px 6px 8px', fontSize: 12, fontWeight: 600 }} />
-                <button
-                  onClick={() => setConfirm({ type: 'resetPassword', user: u })}
-                  style={{ background: 'transparent', border: `1px solid ${C.border}`, color: C.muted, borderRadius: 7, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-                >Reset password</button>
-                {u.is_admin ? (
-                  <button
-                    onClick={() => setConfirm({ type: 'revokeAdmin', user: u })}
-                    style={{ background: 'transparent', border: `1px solid ${C.purple}40`, color: C.purple, borderRadius: 7, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-                  >Revogar Admin</button>
-                ) : (
-                  <button
-                    onClick={() => setConfirm({ type: 'makeAdmin', user: u })}
-                    style={{ background: 'transparent', border: `1px solid ${C.purple}40`, color: C.purple, borderRadius: 7, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-                  >Tornar Admin</button>
-                )}
-                <button
-                  onClick={() => setConfirm({ type: 'delete', user: u })}
-                  style={{ background: 'transparent', border: `1px solid ${C.redBorder}`, color: C.red, borderRadius: 7, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-                >Eliminar</button>
-              </div>
+
+              <div style={{ textAlign: 'center', fontSize: 13, fontWeight: 700, color: C.text }}>{pCount}</div>
+
+              <div style={{ fontSize: 12, color: C.muted }}>{joined}</div>
+
+              <Select value={u.role || 'aluno'} onChange={v => setConfirm({ type: 'changeRole', user: u, newRole: v })}
+                options={Object.entries(ROLE_LABELS).map(([id, label]) => ({ value: id, label }))}
+                inputStyle={{ background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 7, padding: '5px 22px 5px 8px', fontSize: 11.5, fontWeight: 600 }} />
+
+              <RowMenu items={[
+                { label: 'Reset password', onClick: () => setConfirm({ type: 'resetPassword', user: u }) },
+                u.is_admin
+                  ? { label: 'Revogar Admin', onClick: () => setConfirm({ type: 'revokeAdmin', user: u }) }
+                  : { label: 'Tornar Admin', onClick: () => setConfirm({ type: 'makeAdmin', user: u }) },
+                { label: 'Eliminar utilizador', danger: true, onClick: () => setConfirm({ type: 'delete', user: u }) },
+              ]} />
             </div>
           )
         })}
+        </div>
       </div>
     </div>
   )
