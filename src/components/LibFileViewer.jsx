@@ -115,6 +115,8 @@ export default function LibFileViewer({ item, onClose, onRename }) {
 function OfficeViewer({ item }) {
   const [state, setState] = useState('converting')
   const [pdfUrl, setPdfUrl] = useState(null)
+  const [errMsg, setErrMsg] = useState('')
+  const [attempt, setAttempt] = useState(0)
   const objUrlRef = useRef(null)
 
   useEffect(() => {
@@ -134,7 +136,12 @@ function OfficeViewer({ item }) {
         persistLibraryPdf(item, blob).catch(() => {})
       } catch (err) {
         console.error('[OfficeViewer]', err)
-        if (!cancelled) setState('error')
+        if (!cancelled) {
+          setErrMsg(err?.message?.includes('demasiado grande')
+            ? err.message
+            : 'O conversor de PowerPoint/Word está a arrancar ou indisponível. Tenta daqui a um minuto.')
+          setState('error')
+        }
       }
     }
     run()
@@ -142,13 +149,18 @@ function OfficeViewer({ item }) {
       cancelled = true
       if (objUrlRef.current) { URL.revokeObjectURL(objUrlRef.current); objUrlRef.current = null }
     }
-  }, [item])
+  }, [item, attempt])
 
-  if (state === 'converting') return <div className="lfv-msg">A preparar pré-visualização…</div>
+  if (state === 'converting') return <div className="lfv-msg">A preparar pré-visualização… (pode demorar até um minuto na primeira vez)</div>
   if (state === 'error') return (
     <div className="lfv-msg lfv-nopreview">
-      <p>Não foi possível pré-visualizar este ficheiro.</p>
-      <a className="lfv-download" href={item._signedFileUrl} target="_blank" rel="noopener noreferrer">Transferir ficheiro</a>
+      <p>{errMsg}</p>
+      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+        {!errMsg.includes('demasiado grande') && (
+          <button className="lfv-download" onClick={() => setAttempt(a => a + 1)}>Tentar de novo</button>
+        )}
+        <a className="lfv-download" href={item._signedFileUrl} target="_blank" rel="noopener noreferrer" style={{ background: 'transparent', border: '1px solid var(--color-border)' }}>Transferir ficheiro</a>
+      </div>
     </div>
   )
   return <PdfViewer url={pdfUrl} />

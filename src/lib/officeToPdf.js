@@ -61,10 +61,19 @@ export async function officeFileToPdfBlob(file) {
 }
 
 async function officeBytesToPdfBlob(bytes, name, type) {
+  // ~40MB de ficheiro já dá ~53MB de base64 no corpo do pedido — acima do
+  // que a edge function aceita. Falha cedo com uma mensagem útil.
+  if (bytes.length > 38 * 1024 * 1024) {
+    throw new Error('Ficheiro demasiado grande para pré-visualizar. Transfere-o para ver.')
+  }
   const body = { name: safeFilename(name, type), type, data: bytesToBase64(bytes) }
+  // O Gotenberg no tier grátis adormece — o primeiro pedido depois disso
+  // pode demorar 30-60s. 3 tentativas com esperas a crescer cobrem o
+  // arranque a frio.
+  const waits = [0, 12000, 25000]
   let lastErr
-  for (let attempt = 0; attempt < 2; attempt++) {
-    if (attempt) await new Promise(r => setTimeout(r, 6000))
+  for (let attempt = 0; attempt < waits.length; attempt++) {
+    if (waits[attempt]) await new Promise(r => setTimeout(r, waits[attempt]))
     const { data, error } = await supabase.functions.invoke('office-thumbnail', { body })
     if (!error && data?.pdf) return new Blob([base64ToBytes(data.pdf)], { type: 'application/pdf' })
     lastErr = error || new Error(data?.error || 'conversão falhou')
