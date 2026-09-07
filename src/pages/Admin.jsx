@@ -107,9 +107,16 @@ function FunnelFlow({ steps }) {
                 <span style={{ fontSize: 10, fontWeight: 700, color: dropPct >= 50 ? C.green : dropPct >= 20 ? C.yellow : C.red, whiteSpace: 'nowrap' }}>{dropPct}%</span>
               </div>
             )}
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <div
+              onClick={s.onClick}
+              style={{ flex: 1, minWidth: 0, cursor: s.onClick ? 'pointer' : 'default', borderRadius: 8, padding: 4, margin: -4 }}
+              onMouseEnter={e => { if (s.onClick) e.currentTarget.style.background = C.bgAlt }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+            >
               <div style={{ fontSize: 20, fontWeight: 400, color: C.text, fontFamily: 'var(--font-heading)', lineHeight: 1 }}>{s.value}</div>
-              <div style={{ fontSize: 11, color: C.muted, marginTop: 4, marginBottom: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.label}</div>
+              <div style={{ fontSize: 11, color: s.onClick ? C.blue : C.muted, marginTop: 4, marginBottom: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {s.label}{s.onClick && s.value > 0 ? ' →' : ''}
+              </div>
               <div style={{ height: 6, borderRadius: 99, background: C.bgAlt, overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: `${Math.max(pct, s.value > 0 ? 4 : 0)}%`, borderRadius: 99, background: 'var(--brand-gradient)' }} />
               </div>
@@ -394,6 +401,7 @@ function generateMeetingSummary(users, projects, activityStats, range) {
 
 function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSummary }) {
   const [userSearch, setUserSearch] = useState('')
+  const [showLimitUsers, setShowLimitUsers] = useState(false)
   const [sort, setSort] = useState('active')
   const [range, setRange] = useState(TIME_RANGES[1])
 
@@ -463,18 +471,25 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
   const revenueThisMonth = (billingMap.payment_succeeded?.total_amount_cents || 0) / 100
 
   // Quem bateu mesmo num limite de IA este mês (dados reais de ai_usage, não
-  // estimativa) — e o funil desde aí até ao início do checkout.
-  const usersAtLimitSet = new Set()
+  // estimativa) — e o funil desde aí até ao início do checkout. Com uma base
+  // pequena vale mais saber os nomes do que só o agregado, por isso guarda-se
+  // a lista de features por utilizador, não só a contagem.
+  const usersAtLimitMap = new Map() // user_id -> [feature, ...]
   const limitHitsByFeature = {}
   ;(aiUsageSummary || []).forEach(row => {
     const resolved = resolvePlanId(row)
     const limit = getPlan(resolved).ai[row.feature]
     if (limit > 0 && limit !== Infinity && row.used >= limit) {
       limitHitsByFeature[row.feature] = (limitHitsByFeature[row.feature] || 0) + 1
-      usersAtLimitSet.add(row.user_id)
+      const existing = usersAtLimitMap.get(row.user_id) || []
+      usersAtLimitMap.set(row.user_id, [...existing, row.feature])
     }
   })
-  const usersAtLimit = usersAtLimitSet.size
+  const usersAtLimit = usersAtLimitMap.size
+  const usersById = new Map(users.map(u => [u.id, u]))
+  const usersAtLimitList = [...usersAtLimitMap.entries()].map(([id, features]) => ({
+    id, features, user: usersById.get(id),
+  }))
 
   const funnelMap = {}
   ;(funnelSummary || []).forEach(row => { funnelMap[row.event] = (funnelMap[row.event] || 0) + Number(row.count) })
@@ -629,11 +644,25 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
         <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Funil de conversão · mês atual</h3>
         <p style={{ margin: '0 0 18px', fontSize: 11, color: C.subtle }}>Do limite atingido ao início do checkout — dados reais, não estimativa. A % é a taxa de passagem entre passos.</p>
         <FunnelFlow steps={[
-          { label: 'Bateram num limite', value: usersAtLimit },
+          { label: 'Bateram num limite', value: usersAtLimit, onClick: usersAtLimit > 0 ? () => setShowLimitUsers(o => !o) : undefined },
           { label: 'Viram o nudge', value: nudgeShown },
           { label: 'Clicaram no nudge', value: nudgeClicked },
           { label: 'Iniciaram checkout', value: checkoutStarted },
         ]} />
+        {showLimitUsers && usersAtLimitList.length > 0 && (
+          <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {usersAtLimitList.map(({ id, features, user }) => (
+              <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12.5 }}>
+                <Avatar name={user?.full_name || user?.username || '?'} size={22} />
+                <span style={{ fontWeight: 600, color: C.text }}>{user?.full_name || user?.username || 'Utilizador removido'}</span>
+                {user?.email && <span style={{ color: C.subtle }}>{user.email}</span>}
+                <span style={{ marginLeft: 'auto', color: C.muted, fontSize: 11 }}>
+                  {features.map(f => AI_FEATURE_LABELS[f] || f).join(', ')}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
         {Object.keys(limitHitsByFeature).length > 0 && (
           <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${C.border}`, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
             <span style={{ fontSize: 10, fontWeight: 700, color: C.subtle, textTransform: 'uppercase', letterSpacing: 0.5, marginRight: 4 }}>Por feature</span>
