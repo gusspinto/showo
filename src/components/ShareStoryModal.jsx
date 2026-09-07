@@ -49,7 +49,11 @@ export function ShareStoryModal({ project, onClose }) {
     // do sistema, que foi exatamente o que pareceu "não é a fonte certa".
     if (document.fonts?.ready) await document.fonts.ready
     const { default: html2canvas } = await import('html2canvas')
-    return html2canvas(canvasRef.current, { scale: 3, backgroundColor: null, useCORS: true, logging: false })
+    // scale alto de propósito: um PNG pequeno em pixels reais faz o
+    // Instagram inseri-lo já ampliado (e desfocado) por defeito, obrigando
+    // a afastar/centrar à mão. Com mais pixels reais, entra ao tamanho
+    // natural, já centrado, sem perder nitidez.
+    return html2canvas(canvasRef.current, { scale: 5, backgroundColor: null, useCORS: true, logging: false })
   }
 
   async function handleDownload() {
@@ -133,16 +137,16 @@ export function ShareStoryModal({ project, onClose }) {
           <div
             ref={canvasRef}
             style={{
-              width: 260, background: '#131316', borderRadius: 30,
+              width: 260, background: '#17171b', borderRadius: 42,
               boxShadow: '0 18px 50px rgba(0,0,0,0.45)',
               overflow: 'hidden', position: 'relative',
-              border: '1px solid rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.08)',
               fontFamily: FONT_BODY,
             }}
           >
             {/* fio de marca no topo — a única referência de cor da app,
                 sem precisar de escrever o nome */}
-            <div style={{ height: 4, background: `linear-gradient(90deg, ${BRAND.blue}, ${BRAND.red} 62%, ${BRAND.gold})` }} />
+            <div style={{ height: 6, background: `linear-gradient(90deg, ${BRAND.blue}, ${BRAND.red} 62%, ${BRAND.gold})` }} />
 
             <div style={{ padding: '22px 20px 18px' }}>
               <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', color: '#7c7c86', textTransform: 'uppercase' }}>
