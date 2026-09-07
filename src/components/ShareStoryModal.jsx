@@ -12,6 +12,10 @@ import { supabase } from '../lib/supabase'
 const BRAND = { blue: '#2478f0', red: '#db4a3d', gold: '#cc9a1e' }
 const FONT_HEADING = "'Geist', 'Helvetica World', Helvetica, Arial, sans-serif"
 const FONT_BODY = "'Montserrat', 'Inter', system-ui, sans-serif"
+// A fonte de destaque da marca (já usada no Score do dashboard, na Home) —
+// dá ao título uma voz própria em vez do geométrico Geist em tudo, que era
+// parte do porquê disto parecer "feito por template".
+const FONT_DISPLAY = "'Croogla', 'Poppins', system-ui, sans-serif"
 
 /**
  * ShareStoryModal — um autocolante para stories (fundo transparente à volta
@@ -168,26 +172,26 @@ export function ShareStoryModal({ project, onClose }) {
             imagem a inserir/redimensionar, não como fundo da story. */}
         <div style={{ overflowY: 'auto', maxHeight: 'calc(92vh - 90px)', background: 'repeating-conic-gradient(#242428 0% 25%, #1a1a1d 0% 50%) 0 0/24px 24px', borderRadius: 8, padding: 18 }}>
 
-          <div ref={canvasRef} style={{ padding: 26 }}>
+          <div ref={canvasRef} style={{ padding: 34 }}>
           <div
             style={{
-              width: 280, borderRadius: 44,
-              background: `radial-gradient(140% 90% at 100% 0%, rgba(36,120,240,0.22), transparent 60%), radial-gradient(120% 80% at 0% 100%, rgba(204,154,30,0.14), transparent 55%), #121215`,
-              boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+              width: 280, borderRadius: 26,
+              background: '#151517',
+              boxShadow: '0 14px 34px rgba(0,0,0,0.4)',
               overflow: 'hidden', position: 'relative',
-              border: '1px solid rgba(255,255,255,0.08)',
+              transform: 'rotate(-2deg)',
               fontFamily: FONT_BODY,
             }}
           >
             {/* fio de marca no topo — a única referência de cor da app,
                 sem precisar de escrever o nome */}
-            <div style={{ height: 6, background: `linear-gradient(90deg, ${BRAND.blue}, ${BRAND.red} 62%, ${BRAND.gold})` }} />
+            <div style={{ height: 5, background: `linear-gradient(90deg, ${BRAND.blue}, ${BRAND.red} 62%, ${BRAND.gold})` }} />
 
-            <div style={{ padding: '24px 22px 6px' }}>
+            <div style={{ padding: '22px 22px 6px' }}>
               <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', color: '#8a8a94', textTransform: 'uppercase' }}>
                 {TYPE_LABEL[project.project_type] || 'Projeto'}
               </div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: '#fbfbfc', lineHeight: 1.16, marginTop: 6, fontFamily: FONT_HEADING, letterSpacing: '-0.3px' }}>
+              <div style={{ fontSize: 25, fontWeight: 400, color: '#fbfbfc', lineHeight: 1.12, marginTop: 6, fontFamily: FONT_DISPLAY, letterSpacing: '-0.2px' }}>
                 {project.name}
               </div>
               {project.creator_name && (
