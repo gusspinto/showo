@@ -62,12 +62,10 @@ export async function extractOfficeThumbnail(file) {
 
   const entries = await readZipEntries(buf, n =>
     /^docProps\/thumbnail\./i.test(n) ||
-    n === 'ppt/slides/slide1.xml' ||
-    n === 'ppt/slides/_rels/slide1.xml.rels' ||
-    /^ppt\/media\//i.test(n),
+    /^(ppt|word)\/media\/.+\.(png|jpe?g)$/i.test(n),
   )
 
-  // 1. thumbnail embutida
+  // 1. thumbnail embutida (PowerPoint de secretária)
   for (const [name, bytes] of Object.entries(entries)) {
     if (/^docProps\/thumbnail\./i.test(name)) {
       const b = imageBlob(bytes)
@@ -75,25 +73,15 @@ export async function extractOfficeThumbnail(file) {
     }
   }
 
-  // 2. 1.ª imagem do 1.º slide
-  const slide = entries['ppt/slides/slide1.xml']
-  const rels = entries['ppt/slides/_rels/slide1.xml.rels']
-  if (slide && rels) {
-    const dec = new TextDecoder()
-    const embedId = dec.decode(slide).match(/r:embed="([^"]+)"/)?.[1]
-    if (embedId) {
-      const relsText = dec.decode(rels)
-      const target = new RegExp(`Id="${embedId}"[^>]*Target="([^"]+)"`).exec(relsText)?.[1]
-      if (target) {
-        const fname = target.split('/').pop().toLowerCase()
-        const key = Object.keys(entries).find(k => k.toLowerCase().endsWith('/' + fname))
-        const b = key && imageBlob(entries[key])
-        if (b) return b
-      }
-    }
+  // 2. a maior imagem lá dentro — num deck de campanha é quase sempre a
+  //    foto principal, dá uma capa decente sem conversor nenhum.
+  let best = null
+  const media = Object.entries(entries).filter(([n]) => /\/media\//i.test(n))
+  for (const [, bytes] of media) {
+    if (bytes && (!best || bytes.length > best.length)) best = bytes
   }
-
-  return null
+  console.info('[thumb] imagens no ficheiro:', media.length, 'maior:', best?.length ?? 0, 'bytes')
+  return imageBlob(best)
 }
 
 /* Itens já na Biblioteca sem miniatura: ao abrir o ficheiro, o dono gera-a
