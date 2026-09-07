@@ -1,41 +1,50 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { QRCodeSVG } from 'qrcode.react'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { DownloadIcon as Download } from '@solar-icons/react/bold/download'
 import { ShareIcon as Share2 } from '@solar-icons/react/bold/share'
-import { supabase } from '../lib/supabase'
 
-// Cores fixas do logótipo (tokens.css --brand-gradient) — escritas em bruto
-// porque html2canvas nem sempre resolve var() com fallback de fontes/cores
-// de forma fiável, e porque isto é a marca, não deve mudar com o tema.
 const BRAND = { blue: '#2478f0', red: '#db4a3d', gold: '#cc9a1e' }
-const FONT_HEADING = "'Geist', 'Helvetica World', Helvetica, Arial, sans-serif"
 const FONT_BODY = "'Montserrat', 'Inter', system-ui, sans-serif"
+const FONT_DISPLAY = "'Croogla', 'Poppins', system-ui, sans-serif"
+
+const TYPE_LABEL = {
+  pap: 'PAP', internship: 'Estágio', group: 'Trabalho de grupo',
+  personal: 'Projeto pessoal', competition: 'Competição', presentation: 'Apresentação',
+}
 
 /**
- * ShareStoryModal — um autocolante para stories (fundo transparente à volta
- * de um cartão redondo), não um ecrã cheio. É assim que o Strava/Duolingo
- * fazem: o cartão pousa por cima da foto do próprio aluno, não a substitui.
- * A identidade é só o logótipo (3 blocos de cor), sem escrever "Showo" —
- * reconhece-se pela forma, como o resto destas apps.
+ * ShareStoryModal — autocolante para stories.
+ *
+ * Regra de ouro: quem vê isto é um amigo no Instagram que nunca ouviu falar
+ * da Showo e olha 2 segundos. Por isso o cartão mostra só o que é legível
+ * sem contexto — a capa do projeto (é o "mapa do percurso" do Strava: vê-se
+ * e percebe-se), o nome, uma linha a dizer o que é, e quem fez.
+ *
+ * Fora de propósito (tentado e removido): heatmap do diário — um estranho
+ * não sabe o que são os quadrados; métricas internas (registos, score) —
+ * fazem o trabalho parecer pequeno e não significam nada por fora; QR code —
+ * inútil numa story, quem vê está a segurar o telemóvel que a mostra.
+ *
+ * Dois cartões: "Projeto" (o que é) e "Destaque" (porque tem valor).
+ *
+ * O segundo começou como cartão de progresso e foi refeito: percentagem de
+ * conclusão é mentira (o trabalho é aberto, e muita gente adiciona projetos
+ * já acabados há meses), "Semana N" mente nesses mesmos projetos, e uma
+ * entrada de diário é demasiado mundana para alguém publicar. Os
+ * ai_highlights resolvem os três problemas — são reconhecimento escrito na
+ * terceira pessoa ("Construiu X, mostrando Y"), existem em 86% dos
+ * projetos, não afirmam nada sobre datas, e é isso que dá orgulho.
  *
  * Props:
- *   project   { id, slug, name, creator_name, score, project_type }
+ *   project   { slug, name, creator_name, project_type, cover_url, ai_tagline, ai_highlights }
  *   onClose   Callback para fechar
  */
 export function ShareStoryModal({ project, onClose }) {
   const canvasRef = useRef(null)
-  const [timeline, setTimeline] = useState(null)
-  const [loading, setLoading] = useState(true)
   const [exporting, setExporting] = useState(false)
-
-  useEffect(() => {
-    supabase.rpc('get_project_timeline', { p_project_id: project.id }).then(({ data }) => {
-      setTimeline(data)
-      setLoading(false)
-    })
-  }, [project.id])
+  const [mode, setMode] = useState('projeto')
+  const [highlightIdx, setHighlightIdx] = useState(0)
 
   useEffect(() => {
     const prevOverflow = document.body.style.overflow
@@ -44,25 +53,46 @@ export function ShareStoryModal({ project, onClose }) {
   }, [])
 
   async function renderCanvas() {
-    // Espera as fontes reais carregarem — sem isto o html2canvas por vezes
-    // captura antes do Geist/Montserrat estarem prontos e cai para a fonte
-    // do sistema, que foi exatamente o que pareceu "não é a fonte certa".
+    // Espera as fontes reais (Croogla/Montserrat) — sem isto o html2canvas
+    // por vezes captura antes de estarem prontas e cai na fonte do sistema.
     if (document.fonts?.ready) await document.fonts.ready
     const { default: html2canvas } = await import('html2canvas')
-    return html2canvas(canvasRef.current, { scale: 3, backgroundColor: null, useCORS: true, logging: false })
+    // scale baixo de propósito: testado em telemóvel, mais pixels faz o
+    // Instagram inserir a imagem maior e cortada, não mais nítida.
+    return html2canvas(canvasRef.current, { scale: 2, backgroundColor: null, useCORS: true, logging: false })
   }
 
   async function handleDownload() {
     setExporting(true)
+    const isIOS = /iP(hone|od|ad)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+    // No iOS o window.open() tem de acontecer dentro do mesmo gesto de toque
+    // — depois de um await o Safari bloqueia como pop-up.
+    const preOpened = isIOS ? window.open() : null
+    if (preOpened) {
+      preOpened.document.write('<body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;color:#fff;font-family:sans-serif;font-size:14px">A preparar a imagem…</body>')
+    }
     try {
       const canvas = await renderCanvas()
       const url = canvas.toDataURL('image/png')
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `showo-${project.slug}.png`
-      a.click()
+      if (isIOS) {
+        // Safari no iOS ignora o atributo `download` — abrir numa aba deixa
+        // guardar com toque longo → Guardar Imagem.
+        if (preOpened) {
+          preOpened.document.open()
+          preOpened.document.write(`<title>showo-${project.slug}</title><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="${url}" style="max-width:100%;height:auto" /><p style="position:fixed;bottom:16px;left:0;right:0;text-align:center;color:#fff;font-family:sans-serif;font-size:14px">Mantém o dedo na imagem e escolhe "Guardar Imagem"</p></body>`)
+          preOpened.document.close()
+        } else {
+          window.location.href = url
+        }
+      } else {
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `showo-${project.slug}.png`
+        a.click()
+      }
     } catch (e) {
       console.error('Export falhou', e)
+      if (preOpened) preOpened.close()
     }
     setExporting(false)
   }
@@ -94,133 +124,161 @@ export function ShareStoryModal({ project, onClose }) {
     }
   }
 
-  const projectUrl = `${window.location.origin}/projeto/${project.slug}`
-  const weekly = timeline?.weekly || []
+  const cover = project.cover_url
+  const tagline = project.ai_tagline
 
-  // Últimas 20 semanas com atividade — um heatmap tipo GitHub, não um
-  // gráfico exato: o que importa é a sensação de trabalho constante.
-  const cells = Array.from({ length: 20 }, (_, i) => {
-    const w = weekly[weekly.length - 20 + i]
-    return w ? w.count : 0
-  })
-  const maxCount = Math.max(1, ...cells)
-
-  const months = timeline?.first_entry && timeline?.last_entry
-    ? Math.max(1, Math.round((new Date(timeline.last_entry) - new Date(timeline.first_entry)) / (1000 * 60 * 60 * 24 * 30)))
-    : null
-
-  const TYPE_LABEL = { pap: 'PAP', internship: 'Estágio', group: 'Trabalho de grupo', personal: 'Projeto pessoal', competition: 'Competição', presentation: 'Apresentação' }
+  const highlights = (Array.isArray(project.ai_highlights) ? project.ai_highlights : [])
+    .map(h => (typeof h === 'string' ? h : h?.text || ''))
+    .map(h => h.trim())
+    .filter(Boolean)
+  const highlight = highlights[highlightIdx % Math.max(1, highlights.length)] || null
 
   return createPortal(
     <div
       style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.78)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
       onClick={e => e.target === e.currentTarget && onClose()}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, maxHeight: '92vh' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18, maxHeight: '92vh' }}>
         <button
           onClick={onClose}
           style={{ position: 'absolute', top: 18, right: 18, width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         ><X size={16} /></button>
 
-        {/* Fundo cinza-escuro só para se ver o recorte contra algo — a
-            exportação real (backgroundColor: null) é transparente à volta
-            do cartão, como um autocolante. */}
-        <div style={{ overflowY: 'auto', maxHeight: 'calc(92vh - 90px)', background: 'repeating-conic-gradient(#242428 0% 25%, #1a1a1d 0% 50%) 0 0/24px 24px', borderRadius: 8, padding: 18 }}>
+        {/* Escolha do cartão: o que construí vs onde vou */}
+        <div style={{ display: 'flex', gap: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 10, padding: 4 }}>
+          {[['projeto', 'Projeto'], ['destaque', 'Destaque']].map(([id, label]) => (
+            <button
+              key={id}
+              onClick={() => setMode(id)}
+              style={{
+                background: mode === id ? '#fff' : 'transparent',
+                color: mode === id ? '#0a0a0c' : 'rgba(255,255,255,0.7)',
+                border: 'none', borderRadius: 7, padding: '7px 18px',
+                fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >{label}</button>
+          ))}
+        </div>
 
-          {/* Canvas 9:16 exportado — o cartão é uma fração deste espaço,
-              com margem transparente à volta (o que dá o efeito autocolante
-              quando colado numa story por cima de outra foto). */}
-          <div
-            ref={canvasRef}
-            style={{
-              width: 300, height: 533, position: 'relative',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontFamily: FONT_BODY,
-            }}
-          >
-            {/* O cartão em si */}
-            <div style={{
-              width: '84%', background: '#131316', borderRadius: 30,
-              boxShadow: '0 18px 50px rgba(0,0,0,0.45)',
-              overflow: 'hidden', position: 'relative',
-              border: '1px solid rgba(255,255,255,0.06)',
-            }}>
-              {/* fio de marca no topo — a única referência de cor da app,
-                  sem precisar de escrever o nome */}
-              <div style={{ height: 4, background: `linear-gradient(90deg, ${BRAND.blue}, ${BRAND.red} 62%, ${BRAND.gold})` }} />
+        {/* Xadrez só na pré-visualização, para se ver que a margem à volta
+            do cartão é mesmo transparente no PNG exportado. */}
+        <div style={{ overflowY: 'auto', maxHeight: 'calc(92vh - 190px)', background: 'repeating-conic-gradient(#242428 0% 25%, #1a1a1d 0% 50%) 0 0/24px 24px', borderRadius: 8, padding: 14 }}>
 
-              <div style={{ padding: '22px 20px 18px' }}>
-                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', color: '#7c7c86', textTransform: 'uppercase' }}>
-                  {TYPE_LABEL[project.project_type] || 'Projeto'}
-                </div>
-                <div style={{ fontSize: 21, fontWeight: 800, color: '#f7f7f8', lineHeight: 1.18, marginTop: 6, fontFamily: FONT_HEADING, letterSpacing: '-0.3px' }}>
-                  {project.name}
-                </div>
-                {project.creator_name && (
-                  <div style={{ fontSize: 11, color: '#9494a0', marginTop: 5, fontWeight: 500 }}>{project.creator_name}</div>
-                )}
-              </div>
+          <div ref={canvasRef} style={{ padding: 30 }}>
+            <div
+              style={{
+                width: 300, borderRadius: 24, background: '#141416',
+                boxShadow: '0 14px 34px rgba(0,0,0,0.42)',
+                overflow: 'hidden', transform: 'rotate(-1.5deg)',
+                fontFamily: FONT_BODY,
+              }}
+            >
+              {/* fio com as três cores da marca */}
+              <div style={{ height: 5, background: `linear-gradient(90deg, ${BRAND.blue}, ${BRAND.red} 62%, ${BRAND.gold})` }} />
 
-              {/* Heatmap solto no corpo do cartão, sem caixa dentro da caixa */}
-              <div style={{ padding: '0 20px' }}>
-                {loading ? (
-                  <div style={{ height: 40 }} />
-                ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(20,1fr)', gap: 2.5 }}>
-                    {cells.map((c, i) => {
-                      const opacity = c === 0 ? 0.07 : 0.3 + (c / maxCount) * 0.7
-                      return <div key={i} style={{ aspectRatio: '1', borderRadius: 1.5, background: `${BRAND.blue}`, opacity: opacity.toFixed(2) }} />
-                    })}
+              {mode === 'projeto' ? (
+                <>
+                  {/* A capa é o herói: é o que faz um estranho perceber, num
+                      relance, o que a pessoa construiu. */}
+                  {cover && (
+                    <img
+                      src={cover}
+                      crossOrigin="anonymous"
+                      alt=""
+                      style={{ display: 'block', width: '100%', height: 200, objectFit: 'cover' }}
+                    />
+                  )}
+
+                  <div style={{ padding: cover ? '18px 20px 18px' : '26px 20px 20px' }}>
+                    <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: '#8a8a94', textTransform: 'uppercase' }}>
+                      {TYPE_LABEL[project.project_type] || 'Projeto'}
+                    </div>
+
+                    <div style={{ fontSize: cover ? 24 : 30, fontWeight: 400, color: '#fbfbfc', lineHeight: 1.12, marginTop: 7, fontFamily: FONT_DISPLAY }}>
+                      {project.name}
+                    </div>
+
+                    {tagline && (
+                      <div style={{ fontSize: 12, color: '#a0a0aa', lineHeight: 1.45, marginTop: 9 }}>
+                        {tagline}
+                      </div>
+                    )}
+
+                    <Footer creatorName={project.creator_name} />
                   </div>
-                )}
-              </div>
-
-              {/* Estatísticas — um número herói, o resto secundário */}
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 16, padding: '18px 20px 20px' }}>
-                <div>
-                  <div style={{ fontSize: 34, fontWeight: 800, color: '#f7f7f8', lineHeight: 1, fontFamily: FONT_HEADING, fontVariantNumeric: 'tabular-nums' }}>
-                    {timeline?.entry_count ?? 0}
+                </>
+              ) : (
+                <div style={{ padding: '26px 20px 20px' }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: '#8a8a94', textTransform: 'uppercase' }}>
+                    {TYPE_LABEL[project.project_type] || 'Projeto'} · destaque
                   </div>
-                  <div style={{ fontSize: 10, color: '#9494a0', marginTop: 3, fontWeight: 600 }}>registos no diário</div>
-                </div>
-                {months && (
-                  <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: '#d5d5da' }}>{months} {months === 1 ? 'mês' : 'meses'}</div>
-                    {project.score > 0 && <div style={{ fontSize: 11, fontWeight: 700, color: BRAND.gold, marginTop: 2 }}>score {project.score}</div>}
-                  </div>
-                )}
-              </div>
 
-              {/* Rodapé: só a marca (3 blocos), sem palavra — reconhece-se
-                  pela forma, como o swoosh do Strava */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px 18px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <rect x="3" y="3" width="13" height="13" rx="3" fill={BRAND.blue} />
-                  <rect x="14" y="8" width="7" height="13" rx="2.5" fill={BRAND.red} />
-                  <rect x="9" y="14" width="7" height="7" rx="2" fill={BRAND.gold} />
-                </svg>
-                <div style={{ background: '#fff', borderRadius: 6, padding: 4 }}>
-                  <QRCodeSVG value={projectUrl} size={34} level="M" />
+                  {/* O destaque é a coisa que dá orgulho: está escrito na
+                      terceira pessoa, como reconhecimento, e percebe-se sem
+                      saber o que é a Showo. */}
+                  {highlight ? (
+                    <div style={{ fontSize: 18, fontWeight: 400, color: '#fbfbfc', lineHeight: 1.34, marginTop: 14, fontFamily: FONT_DISPLAY }}>
+                      {highlight}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: 26, fontWeight: 400, color: '#fbfbfc', lineHeight: 1.15, marginTop: 12, fontFamily: FONT_DISPLAY }}>
+                      {project.name}
+                    </div>
+                  )}
+
+                  {highlight && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 16 }}>
+                      <span style={{ width: 18, height: 2, borderRadius: 2, background: BRAND.gold, flexShrink: 0 }} />
+                      <span style={{ fontSize: 12, fontWeight: 600, color: '#d8d8de', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {project.name}
+                      </span>
+                    </div>
+                  )}
+
+                  <Footer creatorName={project.creator_name} />
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
 
+        {mode === 'destaque' && highlights.length > 1 && (
+          <button
+            onClick={() => setHighlightIdx(i => (i + 1) % highlights.length)}
+            style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.75)', borderRadius: 8, padding: '7px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+          >Outro destaque ({(highlightIdx % highlights.length) + 1}/{highlights.length})</button>
+        )}
+
+        <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.5)', textAlign: 'center', maxWidth: 300, margin: 0, lineHeight: 1.5 }}>
+          Guarda a imagem e adiciona-a à story por cima de uma foto tua. Para o link, usa o autocolante de link do Instagram.
+        </p>
+
         <div style={{ display: 'flex', gap: 10 }}>
           <button
             onClick={handleShare}
-            disabled={exporting || loading}
-            style={{ display: 'flex', alignItems: 'center', gap: 7, background: '#fff', color: '#0a0a0c', border: 'none', borderRadius: 10, padding: '12px 22px', fontSize: 14, fontWeight: 700, cursor: exporting ? 'default' : 'pointer', opacity: exporting ? 0.7 : 1, fontFamily: 'inherit' }}
+            disabled={exporting}
+            style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', borderRadius: 10, padding: '12px 22px', fontSize: 14, fontWeight: 700, cursor: exporting ? 'default' : 'pointer', opacity: exporting ? 0.7 : 1, fontFamily: 'inherit' }}
           ><Share2 size={15} /> Partilhar</button>
           <button
             onClick={handleDownload}
-            disabled={exporting || loading}
-            style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', borderRadius: 10, padding: '12px 22px', fontSize: 14, fontWeight: 700, cursor: exporting ? 'default' : 'pointer', opacity: exporting ? 0.7 : 1, fontFamily: 'inherit' }}
+            disabled={exporting}
+            style={{ display: 'flex', alignItems: 'center', gap: 7, background: '#fff', color: '#0a0a0c', border: 'none', borderRadius: 10, padding: '12px 22px', fontSize: 14, fontWeight: 700, cursor: exporting ? 'default' : 'pointer', opacity: exporting ? 0.7 : 1, fontFamily: 'inherit' }}
           ><Download size={15} /> Descarregar</button>
         </div>
       </div>
     </div>,
     document.body
+  )
+}
+
+function Footer({ creatorName }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 18, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+      <span style={{ fontSize: 12, fontWeight: 600, color: '#d8d8de', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        {creatorName || ''}
+      </span>
+      {/* logótipo real da app, não uma recriação */}
+      <img src="/darkmode_icon_logo.png" alt="Showo" style={{ height: 15, width: 'auto', flexShrink: 0, opacity: 0.95 }} />
+    </div>
   )
 }

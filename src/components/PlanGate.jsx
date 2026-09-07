@@ -113,9 +113,10 @@ export function ConfirmUseModal({ feature, remaining, limit, onConfirm, onCancel
 // (grátis não tem badge). Imagens em /public: plus.png, pro.png, escola.png.
 //   showLabel  — mostra também o nome do plano ao lado da marca
 const PLAN_BADGES = {
-  plus:   { src: '/plus.png',   label: 'Plus',   color: '#D6453B' },
-  pro:    { src: '/pro.png',    label: 'Pro',    color: '#C49A20' },
-  school: { src: '/escola.png', label: 'Escola', color: 'var(--color-primary)' },
+  plus:       { src: '/plus.png',   label: 'Plus',   color: '#D6453B' },
+  pro:        { src: '/pro.png',    label: 'Pro',    color: '#C49A20' },
+  school:     { src: '/escola.png', label: 'Escola', color: 'var(--color-primary)' },
+  school_pro: { src: '/escola.png', label: 'Escola', color: 'var(--color-primary)' },
 }
 
 export function PlanBadge({ style, showLabel = false, size = 14 }) {
