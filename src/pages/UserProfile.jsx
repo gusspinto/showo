@@ -242,7 +242,7 @@ export default function UserProfile() {
       // A secção "Projetos" mostra só o que o dono escolheu na Biblioteca
       // (profile_featured), pela ordem que definiu — projetos criados e
       // ficheiros adicionados juntos. Deixou de listar tudo por score.
-      const PROJECT_COLS = 'id, user_id, name, slug, score, area, ai_tagline, cover_url, created_at, views, entry_kind, profile_featured, profile_featured_order, profile_layout, library_description, library_file_url, library_file_name, library_file_type, library_thumb_url, library_pdf_url'
+      const PROJECT_COLS = 'id, user_id, name, slug, score, area, ai_tagline, cover_url, created_at, views, entry_kind, profile_featured, profile_featured_order, profile_layout, library_description, library_file_url, library_file_name, library_file_type, library_thumb_url, library_pdf_url, visibility'
       const projectsPromise = supabase
         .from('projects')
         .select(`${PROJECT_COLS}, collaborator_count:project_collaborators(count)`)
@@ -270,12 +270,16 @@ export default function UserProfile() {
         finalProjects = fallback
       }
 
-      const normalized = (finalProjects ?? []).map(p => ({
-        ...p,
-        collaborator_count: Array.isArray(p.collaborator_count)
-          ? (p.collaborator_count[0]?.count ?? 0)
-          : (p.collaborator_count ?? 0),
-      }))
+      const normalized = (finalProjects ?? [])
+        // Um projeto privado nunca aparece no perfil público, mesmo que
+        // tenha ficado marcado como destacado antes de ser tornado privado.
+        .filter(p => p.visibility !== 'private')
+        .map(p => ({
+          ...p,
+          collaborator_count: Array.isArray(p.collaborator_count)
+            ? (p.collaborator_count[0]?.count ?? 0)
+            : (p.collaborator_count ?? 0),
+        }))
 
       // Ficheiros da Biblioteca são privados (097); os que estão no perfil
       // ficam legíveis via signed URL graças à policy do 104. Assina-os aqui

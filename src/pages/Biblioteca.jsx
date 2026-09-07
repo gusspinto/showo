@@ -48,17 +48,27 @@ function CheckIcon({ on }) {
 }
 /* Controlo de edição partilhado por tiles e linhas: liga/desliga "no perfil"
    e, quando ligado, escolhe o layout (Capa | Linha). */
-function ProfileControls({ item, onTogglePin, onSetLayout }) {
+function ProfileControls({ item, onTogglePin, onSetLayout, onToggleVisibility }) {
   const on = item.profile_featured
+  const isPrivate = item.visibility === 'private'
   return (
     <div className="lib-edit-bar" onClick={e => e.stopPropagation()}>
       <button
         type="button"
         className={`lib-check${on ? ' is-on' : ''}`}
         onClick={() => onTogglePin(item)}
+        disabled={isPrivate && !on}
+        title={isPrivate && !on ? 'Torna o projeto público para o mostrares no perfil' : undefined}
       >
         <CheckIcon on={on} />
         {on ? 'No perfil' : 'Mostrar no perfil'}
+      </button>
+      <button
+        type="button"
+        className={`lib-vis${isPrivate ? ' is-private' : ''}`}
+        onClick={() => onToggleVisibility(item)}
+      >
+        {isPrivate ? 'Privado' : 'Público'}
       </button>
       {on && (
         <span className="lib-seg" role="group" aria-label="Layout no perfil">
@@ -82,7 +92,7 @@ function ProfileControls({ item, onTogglePin, onSetLayout }) {
    se quer mostrar. Tile com preview de verdade quando é imagem; para o
    resto (PDF/Word/PowerPoint), um cartão colorido por tipo à Drive —
    ainda mais reconhecível que um ícone cinzento genérico. */
-function LibAddedTile({ item, onOpen, onDelete, removing, editing, onTogglePin, onSetLayout, renaming, onStartRename, onRename, onCancelRename }) {
+function LibAddedTile({ item, onOpen, onDelete, removing, editing, onTogglePin, onSetLayout, onToggleVisibility, renaming, onStartRename, onRename, onCancelRename }) {
   const isImage = item.library_file_type?.startsWith('image/')
   const previewSrc = isImage ? item._signedFileUrl : item._signedThumbUrl
   const ft = fileTypeStyle(item.library_file_type)
@@ -111,6 +121,7 @@ function LibAddedTile({ item, onOpen, onDelete, removing, editing, onTogglePin, 
               <span className="lib-tile-filetype-label">{ft.label}</span>
             </span>
           )}
+          {item.visibility === 'private' && <span className="lib-badge-private">Privado</span>}
         </span>
         <span className="lib-tile-footer">
           <span className="lib-tile-text">
@@ -146,7 +157,7 @@ function LibAddedTile({ item, onOpen, onDelete, removing, editing, onTogglePin, 
         </div>
       )}
 
-      {editing && <ProfileControls item={item} onTogglePin={onTogglePin} onSetLayout={onSetLayout} />}
+      {editing && <ProfileControls item={item} onTogglePin={onTogglePin} onSetLayout={onSetLayout} onToggleVisibility={onToggleVisibility} />}
       <div className="lib-tile-tools">
         <span
           role="button"
@@ -176,7 +187,7 @@ function LibAddedTile({ item, onOpen, onDelete, removing, editing, onTogglePin, 
 
 /* Projeto "criado" (entry_kind='full') — ainda em construção, por isso
    sem o destaque todo: linha compacta, não tile. */
-function LibBuildingRow({ item, onOpen, onDelete, removing, editing, onTogglePin, onSetLayout }) {
+function LibBuildingRow({ item, onOpen, onDelete, removing, editing, onTogglePin, onSetLayout, onToggleVisibility }) {
   return (
     <div className={`lib-row-wrap${editing && item.profile_featured ? ' is-on' : ''}`}>
       <button type="button" className="lib-row is-clickable" onClick={() => onOpen(item)}>
@@ -184,7 +195,10 @@ function LibBuildingRow({ item, onOpen, onDelete, removing, editing, onTogglePin
           {item.cover_url ? <img src={item.cover_url} alt="" loading="lazy" /> : <Folder size={16} />}
         </span>
         <div className="lib-row-body">
-          <span className="lib-row-name">{item.name}</span>
+          <span className="lib-row-name">
+            {item.name}
+            {item.visibility === 'private' && <span className="lib-badge-private lib-badge-private--inline">Privado</span>}
+          </span>
           {item.area && <span className="lib-row-desc">{item.area}</span>}
         </div>
         {item.score > 0 && <span className="lib-row-date">{item.score}</span>}
@@ -201,7 +215,7 @@ function LibBuildingRow({ item, onOpen, onDelete, removing, editing, onTogglePin
           <Trash size={14} />
         </span>
       </button>
-      {editing && <ProfileControls item={item} onTogglePin={onTogglePin} onSetLayout={onSetLayout} />}
+      {editing && <ProfileControls item={item} onTogglePin={onTogglePin} onSetLayout={onSetLayout} onToggleVisibility={onToggleVisibility} />}
     </div>
   )
 }
@@ -215,6 +229,8 @@ export default function Biblioteca() {
   const [confirmingDelete, setConfirmingDelete] = useState(null)
   const [editing, setEditing] = useState(false)
   const [renamingId, setRenamingId] = useState(null)
+  const [toast, setToastRaw] = useState('')
+  const setToast = msg => { setToastRaw(msg); setTimeout(() => setToastRaw(''), 3500) }
 
   useEffect(() => {
     if (!viewing && !confirmingDelete) return
@@ -228,7 +244,7 @@ export default function Biblioteca() {
     let cancelled = false
     supabase
       .from('projects')
-      .select('id, user_id, name, slug, entry_kind, area, score, ai_tagline, cover_url, library_description, library_skills, skills, tech_stack, library_file_url, library_file_name, library_file_type, library_thumb_url, library_pdf_url, profile_featured, profile_featured_order, profile_layout, created_at')
+      .select('id, user_id, name, slug, entry_kind, area, score, ai_tagline, cover_url, library_description, library_skills, skills, tech_stack, library_file_url, library_file_name, library_file_type, library_thumb_url, library_pdf_url, profile_featured, profile_featured_order, profile_layout, visibility, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .then(async ({ data }) => {
@@ -281,6 +297,10 @@ export default function Biblioteca() {
     if (item.profile_featured) {
       patchItem(item.id, { profile_featured: false, profile_featured_order: null })
     } else {
+      if (item.visibility === 'private') {
+        setToast('Um projeto privado não pode aparecer no perfil. Torna-o público primeiro.')
+        return
+      }
       const maxOrder = (items ?? [])
         .filter(i => i.profile_featured)
         .reduce((m, i) => Math.max(m, i.profile_featured_order ?? 0), 0)
@@ -290,6 +310,18 @@ export default function Biblioteca() {
         profile_layout: item.profile_layout || 'tile',
       })
     }
+  }
+
+  function toggleVisibility(item) {
+    const next = item.visibility === 'private' ? 'public' : 'private'
+    const patch = { visibility: next }
+    // Privado sai automaticamente do perfil — não pode ficar lá escondido.
+    if (next === 'private' && item.profile_featured) {
+      patch.profile_featured = false
+      patch.profile_featured_order = null
+      setToast('Ficou privado e saiu do perfil.')
+    }
+    patchItem(item.id, patch)
   }
 
   function setLayout(item, layout) {
@@ -304,6 +336,14 @@ export default function Biblioteca() {
   return (
     <div className="min-h-screen bg-page font-body">
       <Navbar />
+      {toast && (
+        <div style={{
+          position: 'fixed', left: '50%', bottom: 24, transform: 'translateX(-50%)', zIndex: 3000,
+          background: 'var(--color-text)', color: 'var(--color-bg)', padding: '10px 16px',
+          borderRadius: 10, fontSize: 13, fontWeight: 600, maxWidth: 'calc(100vw - 32px)',
+          boxShadow: 'var(--shadow-xl)',
+        }}>{toast}</div>
+      )}
       <div className="page-content">
         <div className="lib-header">
           <h1 className="lib-title">Biblioteca</h1>
@@ -353,7 +393,7 @@ export default function Biblioteca() {
                 <div className="lib-tile-grid">
                   {added.map(item => (
                     <LibAddedTile key={item.id} item={item} removing={removing} onDelete={handleDelete}
-                      editing={editing} onTogglePin={togglePin} onSetLayout={setLayout}
+                      editing={editing} onTogglePin={togglePin} onSetLayout={setLayout} onToggleVisibility={toggleVisibility}
                       renaming={renamingId === item.id}
                       onStartRename={setRenamingId}
                       onCancelRename={() => setRenamingId(null)}
@@ -372,7 +412,7 @@ export default function Biblioteca() {
                 <div className="lib-added-list">
                   {building.map(item => (
                     <LibBuildingRow key={item.id} item={item} removing={removing} onDelete={handleDelete}
-                      editing={editing} onTogglePin={togglePin} onSetLayout={setLayout}
+                      editing={editing} onTogglePin={togglePin} onSetLayout={setLayout} onToggleVisibility={toggleVisibility}
                       onOpen={it => navigate(`/projeto/${it.slug}`)} />
                   ))}
                 </div>

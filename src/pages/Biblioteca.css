@@ -63,6 +63,30 @@
   transition: background 0.14s, border-color 0.14s, color 0.14s;
 }
 .lib-check:hover { border-color: var(--color-border-hover); }
+.lib-check:disabled { opacity: 0.4; cursor: default; }
+
+.lib-vis {
+  padding: 6px 10px; border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface); color: var(--color-text-secondary);
+  font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;
+  transition: background 0.14s, border-color 0.14s, color 0.14s;
+}
+.lib-vis:hover { border-color: var(--color-border-hover); }
+.lib-vis.is-private { color: var(--color-warning); border-color: var(--color-warning-subtle); }
+
+.lib-badge-private {
+  position: absolute; top: 8px; left: 8px;
+  padding: 2px 8px; border-radius: 6px;
+  background: rgba(0, 0, 0, 0.6); color: #fff;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.02em;
+  backdrop-filter: blur(4px);
+}
+.lib-badge-private--inline {
+  position: static; display: inline-block; margin-left: 8px; vertical-align: middle;
+  background: var(--color-warning-subtle); color: var(--color-warning);
+  backdrop-filter: none;
+}
 .lib-check.is-on { background: var(--color-text); color: var(--color-bg); border-color: var(--color-text); }
 
 .lib-seg { display: inline-flex; background: var(--color-bg-alt); border-radius: 8px; padding: 2px; }
@@ -158,6 +182,7 @@
   box-shadow: 0 10px 26px rgba(0,0,0,0.14);
 }
 .lib-tile-cover {
+  position: relative;
   display: flex; align-items: center; justify-content: center;
   width: 100%; aspect-ratio: 4 / 3;
   background: var(--color-bg-alt); color: var(--color-text-tertiary);
