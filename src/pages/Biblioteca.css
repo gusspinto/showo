@@ -164,7 +164,11 @@
 .lib-tile-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
   gap: 16px;
+  min-width: 0;
 }
+/* minmax(0,…): sem isto uma track de grid nunca encolhe abaixo do
+   min-content do tile (nome/descrição compridos) e o cartão sai do ecrã. */
+.lib-tile-grid > * { min-width: 0; }
 .lib-tile { position: relative; }
 .lib-tile--skeleton { height: 178px; background: var(--color-bg-alt); border-radius: 16px; border: none; }
 .lib-tile-main {
@@ -185,6 +189,7 @@
   position: relative;
   display: flex; align-items: center; justify-content: center;
   width: 100%; aspect-ratio: 4 / 3;
+  max-height: 260px; overflow: hidden;
   background: var(--color-bg-alt); color: var(--color-text-tertiary);
 }
 .lib-tile-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -334,7 +339,7 @@
 @media (max-width: 600px) {
   .lib-header { flex-direction: column; align-items: stretch; }
   .lib-add-btn { justify-content: center; }
-  .lib-tile-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .lib-tile-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .lib-row-desc { display: none; }
   .lib-viewer-backdrop { padding: 0; }
   .lib-viewer { height: 100vh; max-width: 100%; border-radius: 0; }
