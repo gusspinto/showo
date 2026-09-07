@@ -195,14 +195,6 @@ const FAQ = [
   },
 ]
 
-function seasonLine() {
-  const month = new Date().getMonth() // 0 = jan
-  if (month >= 8 || month <= 0) return 'O ano letivo começa agora — organiza o projeto desde o primeiro dia, não na véspera da entrega.'
-  if (month >= 1 && month <= 3) return 'Segundo período: é agora que o projeto ganha ou perde forma antes da reta final.'
-  if (month >= 4 && month <= 6) return 'Época de defesas a aproximar-se — prepara a apresentação com tempo, não na noite anterior.'
-  return 'Fecha o ano com o portfólio pronto para mostrar, na escola ou numa entrevista de emprego.'
-}
-
 function ComparisonCell({ value }) {
   if (value === false) return <CloseCircle size={16} className="pricing-cmp-no" />
   if (value === true) return <Check size={16} className="pricing-cmp-yes" />
@@ -266,7 +258,6 @@ export default function Pricing() {
 
         <header className="pricing-header">
           <h1>Constrói agora. Lança quando estiveres pronto.</h1>
-          <p className="pricing-season">{seasonLine()}</p>
         </header>
 
         <div className="pricing-proof">
