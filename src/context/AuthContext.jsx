@@ -233,8 +233,17 @@ export function AuthProvider({ children }) {
     return { allowed, remaining, limit, message: allowed ? null : PLAN_GATE_MESSAGES[feature]?.(planId) }
   }
 
+  // narrative and exportPptx run entirely client-side — no edge function ever
+  // calls check_ai_limit for them, so usage has to be recorded here instead.
+  // Every other feature is already incremented server-side inside its edge
+  // function call; calling consume_ai_usage again for those would double-count.
+  const LOCAL_AI_FEATURES = new Set(['narrative', 'exportPptx'])
+
   // After a successful AI call, refresh usage from server
-  async function consumeAI(_feature) {
+  async function consumeAI(feature) {
+    if (LOCAL_AI_FEATURES.has(feature)) {
+      await supabase.rpc('consume_ai_usage', { p_feature: feature })
+    }
     await fetchAiUsage()
   }
 
