@@ -31,7 +31,8 @@ function durationLabel(from) {
   return `há ${y} ${y === 1 ? 'ano' : 'anos'}${r ? ` e ${r} ${r === 1 ? 'mês' : 'meses'}` : ''}`
 }
 
-export default function ProjectTimeline({ project, isOwner }) {
+// viewOnly = vista pública (preview do dono ou visitante) — sem controlos.
+export default function ProjectTimeline({ project, isOwner, viewOnly = false }) {
   const [tl, setTl] = useState(undefined)          // undefined=loading, null=nada
   const [milestones, setMilestones] = useState([])
   const [isPublic, setIsPublic] = useState(!!project.timeline_public)
@@ -101,8 +102,14 @@ export default function ProjectTimeline({ project, isOwner }) {
   if (tl === undefined) return null
   const hasEntries = !!(tl && tl.entry_count > 0)
   const hasContent = milestones.length > 0 || hasEntries
-  // Visitante: só quando o dono a tornou pública e há algo para mostrar.
-  if (!isOwner && (!isPublic || !hasContent)) return null
+  const canEdit = isOwner && !viewOnly
+
+  // Vista pública (preview do dono ou visitante real): sem controlos, e só
+  // se houver mesmo alguma coisa para mostrar. Visitante real só quando o
+  // dono a tornou pública.
+  if (viewOnly && (!hasContent || (!isOwner && !isPublic))) return null
+  // Fora do preview, um visitante nunca vê isto (o pai já gere, mas por via das dúvidas).
+  if (!isOwner && !viewOnly) return null
 
   const startDate = tl?.first_entry || tl?.created_on
   const weekly = tl?.weekly || []
@@ -115,7 +122,7 @@ export default function ProjectTimeline({ project, isOwner }) {
         <Route size={15} className="ptl-card-icon" />
         <span className="ptl-card-title">Percurso</span>
       </div>
-      {isOwner && (
+      {canEdit && (
         <button className={`ptl-toggle${isPublic ? ' is-on' : ''}`} onClick={togglePublic}>
           <span className="ptl-toggle-dot" />
           {isPublic ? 'Visível no perfil' : 'Só tu vês'}
@@ -124,7 +131,7 @@ export default function ProjectTimeline({ project, isOwner }) {
     </div>
   )
 
-  const ownerActions = isOwner && (
+  const ownerActions = canEdit && (
     <div className="ptl-actions">
       <button className="ptl-btn" onClick={() => setForm({ title: '', happened_on: new Date().toISOString().slice(0, 10), note: '' })}>
         <Plus size={13} /> Adicionar momento
@@ -137,8 +144,8 @@ export default function ProjectTimeline({ project, isOwner }) {
     </div>
   )
 
-  // Dono, sem nada ainda — cartão de apresentação, não um parágrafo solto.
-  if (isOwner && !hasContent) {
+  // Dono, na sua própria vista, sem nada ainda — cartão de apresentação.
+  if (canEdit && !hasContent) {
     return (
       <div className="ptl-card ptl-card--empty">
         {header}
@@ -207,7 +214,7 @@ export default function ProjectTimeline({ project, isOwner }) {
                 <span className="ptl-item-title">{m.title}</span>
                 {m.note && <span className="ptl-item-note">{m.note}</span>}
               </div>
-              {isOwner && (
+              {canEdit && (
                 <div className="ptl-item-acts">
                   <button onClick={() => setForm({ id: m.id, title: m.title, happened_on: m.happened_on, note: m.note || '' })} title="Editar"><Pencil size={12} /></button>
                   <button onClick={() => removeMilestone(m.id)} title="Apagar"><Trash size={12} /></button>
@@ -216,7 +223,7 @@ export default function ProjectTimeline({ project, isOwner }) {
             </li>
           ))}
         </ol>
-      ) : isOwner && (
+      ) : canEdit && (
         <p className="ptl-nomarks">Ainda sem momentos. Adiciona o primeiro ou deixa a IA sugerir a partir do diário.</p>
       )}
     </div>

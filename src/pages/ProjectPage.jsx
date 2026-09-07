@@ -3544,8 +3544,8 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
             </div>
           )}
 
-          {/* Percurso / timeline */}
-          {project.user_id && <ProjectTimeline project={project} isOwner={isOwner} />}
+          {/* Percurso / timeline — vista pública, sem controlos */}
+          {project.user_id && <ProjectTimeline project={project} isOwner={isOwner} viewOnly />}
 
           {/* Comentários */}
           <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '22px 24px', fontFamily: 'var(--font-body, system-ui, sans-serif)' }}>
