@@ -125,13 +125,22 @@ export function ShareStoryModal({ project, onClose }) {
   const projectUrl = `${window.location.origin}/projeto/${project.slug}`
   const weekly = timeline?.weekly || []
 
-  // Últimas 20 semanas com atividade — um heatmap tipo GitHub, não um
-  // gráfico exato: o que importa é a sensação de trabalho constante.
-  const cells = Array.from({ length: 20 }, (_, i) => {
-    const w = weekly[weekly.length - 20 + i]
+  // Últimas 20 semanas, dispostas em grelha 4x5 (preenchida por coluna, como
+  // o gráfico de contribuições do GitHub) em vez de uma faixa fina — é o
+  // elemento visual principal do cartão, tem de ter peso.
+  const GRID_ROWS = 4, GRID_COLS = 5
+  const cells = Array.from({ length: GRID_ROWS * GRID_COLS }, (_, i) => {
+    const w = weekly[weekly.length - GRID_ROWS * GRID_COLS + i]
     return w ? w.count : 0
   })
   const maxCount = Math.max(1, ...cells)
+  function heatColor(intensity) {
+    if (intensity <= 0) return 'rgba(255,255,255,0.07)'
+    const r = Math.round(36 + intensity * (204 - 36))
+    const g = Math.round(120 + intensity * (154 - 120))
+    const b = Math.round(240 + intensity * (30 - 240))
+    return `rgb(${r},${g},${b})`
+  }
 
   const months = timeline?.first_entry && timeline?.last_entry
     ? Math.max(1, Math.round((new Date(timeline.last_entry) - new Date(timeline.first_entry)) / (1000 * 60 * 60 * 24 * 30)))
@@ -162,8 +171,9 @@ export function ShareStoryModal({ project, onClose }) {
           <div ref={canvasRef} style={{ padding: 26 }}>
           <div
             style={{
-              width: 260, background: '#17171b', borderRadius: 42,
-              boxShadow: '0 18px 50px rgba(0,0,0,0.45)',
+              width: 280, borderRadius: 44,
+              background: `radial-gradient(140% 90% at 100% 0%, rgba(36,120,240,0.22), transparent 60%), radial-gradient(120% 80% at 0% 100%, rgba(204,154,30,0.14), transparent 55%), #121215`,
+              boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
               overflow: 'hidden', position: 'relative',
               border: '1px solid rgba(255,255,255,0.08)',
               fontFamily: FONT_BODY,
@@ -173,46 +183,45 @@ export function ShareStoryModal({ project, onClose }) {
                 sem precisar de escrever o nome */}
             <div style={{ height: 6, background: `linear-gradient(90deg, ${BRAND.blue}, ${BRAND.red} 62%, ${BRAND.gold})` }} />
 
-            <div style={{ padding: '22px 20px 18px' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', color: '#7c7c86', textTransform: 'uppercase' }}>
+            <div style={{ padding: '24px 22px 6px' }}>
+              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', color: '#8a8a94', textTransform: 'uppercase' }}>
                 {TYPE_LABEL[project.project_type] || 'Projeto'}
               </div>
-              <div style={{ fontSize: 21, fontWeight: 800, color: '#f7f7f8', lineHeight: 1.18, marginTop: 6, fontFamily: FONT_HEADING, letterSpacing: '-0.3px' }}>
+              <div style={{ fontSize: 22, fontWeight: 800, color: '#fbfbfc', lineHeight: 1.16, marginTop: 6, fontFamily: FONT_HEADING, letterSpacing: '-0.3px' }}>
                 {project.name}
               </div>
               {project.creator_name && (
-                <div style={{ fontSize: 11, color: '#9494a0', marginTop: 5, fontWeight: 500 }}>{project.creator_name}</div>
+                <div style={{ fontSize: 11, color: '#9c9ca6', marginTop: 5, fontWeight: 500 }}>{project.creator_name}</div>
               )}
             </div>
 
-            {/* Heatmap solto no corpo do cartão, sem caixa dentro da caixa */}
-            <div style={{ padding: '0 20px' }}>
+            {/* Heatmap — o elemento visual principal, não um detalhe */}
+            <div style={{ padding: '18px 22px 4px' }}>
               {loading ? (
-                <div style={{ height: 40 }} />
+                <div style={{ height: 92 }} />
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(20,1fr)', gap: 2.5 }}>
-                  {cells.map((c, i) => {
-                    const opacity = c === 0 ? 0.07 : 0.3 + (c / maxCount) * 0.7
-                    return <div key={i} style={{ aspectRatio: '1', borderRadius: 1.5, background: `${BRAND.blue}`, opacity: opacity.toFixed(2) }} />
-                  })}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateRows: `repeat(${GRID_ROWS}, 1fr)`,
+                  gridAutoFlow: 'column',
+                  gridAutoColumns: '1fr',
+                  gap: 5, height: 92,
+                }}>
+                  {cells.map((c, i) => (
+                    <div key={i} style={{ borderRadius: 4, background: heatColor(c / maxCount) }} />
+                  ))}
                 </div>
               )}
+              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', color: '#6d6d78', textTransform: 'uppercase', marginTop: 10 }}>
+                Percurso do projeto
+              </div>
             </div>
 
-            {/* Estatísticas — um número herói, o resto secundário */}
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 16, padding: '18px 20px 20px' }}>
-              <div>
-                <div style={{ fontSize: 34, fontWeight: 800, color: '#f7f7f8', lineHeight: 1, fontFamily: FONT_HEADING, fontVariantNumeric: 'tabular-nums' }}>
-                  {timeline?.entry_count ?? 0}
-                </div>
-                <div style={{ fontSize: 10, color: '#9494a0', marginTop: 3, fontWeight: 600 }}>registos no diário</div>
-              </div>
-              {months && (
-                <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: '#d5d5da' }}>{months} {months === 1 ? 'mês' : 'meses'}</div>
-                  {project.score > 0 && <div style={{ fontSize: 11, fontWeight: 700, color: BRAND.gold, marginTop: 2 }}>score {project.score}</div>}
-                </div>
-              )}
+            {/* Estatísticas — discretas, o heatmap já é o herói visual */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 18, padding: '14px 22px 22px' }}>
+              <Metric value={timeline?.entry_count ?? 0} label={(timeline?.entry_count ?? 0) === 1 ? 'registo' : 'registos'} />
+              {months && <Metric value={months} label={months === 1 ? 'mês' : 'meses'} />}
+              {project.score > 0 && <Metric value={project.score} label="score" accent={BRAND.gold} />}
             </div>
 
             {/* Rodapé: só a marca (3 blocos), sem palavra — reconhece-se
@@ -250,5 +259,14 @@ export function ShareStoryModal({ project, onClose }) {
       </div>
     </div>,
     document.body
+  )
+}
+
+function Metric({ value, label, accent = '#fbfbfc' }) {
+  return (
+    <div>
+      <div style={{ fontSize: 22, fontWeight: 800, color: accent, lineHeight: 1, fontFamily: FONT_HEADING, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+      <div style={{ fontSize: 9.5, color: '#8a8a94', marginTop: 3, fontWeight: 600 }}>{label}</div>
+    </div>
   )
 }
