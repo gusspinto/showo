@@ -51,9 +51,9 @@ export function ShareStoryModal({ project, onClose }) {
     const { default: html2canvas } = await import('html2canvas')
     // Testado em telemóvel real: MAIS pixels fez o Instagram inserir a
     // imagem MAIOR (cobria o ecrã, cortada em cima/baixo), o oposto do que
-    // se esperava. O caminho certo é um ficheiro fisicamente pequeno —
-    // scale baixo compensado por um cartão mais estreito (ver largura do
-    // cartão abaixo) para não ficar granulado.
+    // se esperava — o tamanho final parece seguir sobretudo a resolução em
+    // pixels, não só a proporção. scale baixo aqui de propósito; o padding
+    // à volta do cartão (ver abaixo) é só estética, não compensa isto.
     return html2canvas(canvasRef.current, { scale: 2, backgroundColor: null, useCORS: true, logging: false })
   }
 
@@ -128,15 +128,16 @@ export function ShareStoryModal({ project, onClose }) {
         ><X size={16} /></button>
 
         {/* Fundo cinza-escuro só para se ver o recorte contra algo — a
-            exportação real (backgroundColor: null) é transparente à volta
-            dos cantos redondos. O ref aponta directamente ao cartão: a
-            imagem exportada tem o formato do PRÓPRIO cartão, não um ecrã
-            9:16 inteiro — é isso que faz o Instagram tratá-la como imagem a
-            inserir/redimensionar em vez de esticar como fundo da story. */}
+            exportação real (backgroundColor: null) é transparente. O ref
+            aponta ao CONTENTOR com padding, não ao cartão sozinho: a margem
+            transparente à volta é o que dá o efeito de autocolante "com
+            respiro", mas a proporção final continua bem diferente de um
+            ecrã 9:16 inteiro, para o Instagram continuar a tratar isto como
+            imagem a inserir/redimensionar, não como fundo da story. */}
         <div style={{ overflowY: 'auto', maxHeight: 'calc(92vh - 90px)', background: 'repeating-conic-gradient(#242428 0% 25%, #1a1a1d 0% 50%) 0 0/24px 24px', borderRadius: 8, padding: 18 }}>
 
+          <div ref={canvasRef} style={{ padding: 26 }}>
           <div
-            ref={canvasRef}
             style={{
               width: 260, background: '#17171b', borderRadius: 42,
               boxShadow: '0 18px 50px rgba(0,0,0,0.45)',
@@ -203,6 +204,7 @@ export function ShareStoryModal({ project, onClose }) {
                 <QRCodeSVG value={projectUrl} size={34} level="M" />
               </div>
             </div>
+          </div>
           </div>
         </div>
 
