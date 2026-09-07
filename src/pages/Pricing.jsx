@@ -1,11 +1,17 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
+import { CloseCircleIcon as CloseCircle } from '@solar-icons/react/bold/close-circle'
 import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
 import { CaseIcon as Briefcase } from '@solar-icons/react/bold/case'
 import { LetterIcon as Mail } from '@solar-icons/react/bold/letter'
 import { DocumentTextIcon as FileText } from '@solar-icons/react/bold/document-text'
 import { StarsIcon as Sparkles } from '@solar-icons/react/bold/stars'
+import { AltArrowDownIcon as ChevronDown } from '@solar-icons/react/bold/alt-arrow-down'
+import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/square-academic-cap'
+import { RouteIcon as Route } from '@solar-icons/react/bold/route'
+import { CupStarIcon as Trophy } from '@solar-icons/react/bold/cup-star'
+import { Book2Icon as BookOpen } from '@solar-icons/react/bold/book-2'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -19,10 +25,11 @@ import './Pricing.css'
    razão legível para pagar mais nove euros em vez de cinco.
 
    A distinção passa a ser uma frase, e a página inteira obedece-lhe:
-       Build  → construir e organizar o percurso escolar
-       Launch → preparar e lançar o aluno para a carreira
+       Grátis → vê como funciona
+       Plus   → constrói e organiza o percurso escolar sem ficares bloqueado
+       Pro    → prepara e lança a carreira a seguir à escola
    Por isso cada plano só mostra o que ACRESCENTA ao anterior, e a Carreira
-   tem um bloco próprio no Launch em vez de ser mais um visto numa lista.
+   tem um bloco próprio no Pro em vez de ser mais um visto numa lista.
    ══════════════════════════════════════════════════════════════════════════ */
 
 const PLANS = [
@@ -31,7 +38,7 @@ const PLANS = [
     name: 'Grátis',
     price: '€0',
     tagline: 'Vê como funciona.',
-    positioning: 'Para experimentar com um projeto real.',
+    positioning: 'Para experimentar com um projeto real, sem cartão.',
     cta: 'Começar grátis',
     ctaVariant: 'ghost',
     groups: [
@@ -64,7 +71,7 @@ const PLANS = [
     name: 'Plus',
     price: '€4,99',
     period: '/mês',
-    tagline: 'Tudo o que precisas.',
+    tagline: 'Nunca fiques bloqueado a meio da PAP.',
     positioning: 'Para quem está a fazer a PAP, estágio ou projetos da escola.',
     cta: 'Começar com o Plus',
     ctaVariant: 'primary',
@@ -96,7 +103,7 @@ const PLANS = [
     price: '€9,99',
     period: '/mês',
     tagline: 'Sem limites, sem preocupações.',
-    positioning: 'Para quem quer o máximo da plataforma e da carreira.',
+    positioning: 'Para quem quer o máximo da plataforma e da carreira a seguir.',
     cta: 'Ir para Pro',
     ctaVariant: 'primary',
     inherits: 'Plus',
@@ -117,7 +124,7 @@ const PLANS = [
   },
 ]
 
-/* A Carreira é a razão de existir do Launch, por isso é explicada, não
+/* A Carreira é a razão de existir do Pro, por isso é explicada, não
    listada. Cada linha diz o que a funcionalidade FAZ pelo aluno. */
 const CAREER_FEATURES = [
   {
@@ -136,6 +143,84 @@ const CAREER_FEATURES = [
     desc: 'Uma carta escrita para cada vaga a partir dos teus projetos reais, não de um modelo genérico.',
   },
 ]
+
+/* Tabela comparativa — três cards lado a lado obrigam a decorar o que muda
+   de um para o outro. Uma tabela deixa comparar linha a linha de relance.
+   A conta escola fica fora: não é self-serve, é vendida à instituição. */
+const COMPARE_ROWS = [
+  { label: 'Projetos', free: '3', plus: '15', pro: 'Ilimitados' },
+  { label: 'Coach IA', free: '10 msgs', plus: '100 msgs', pro: '300 msgs' },
+  { label: 'Criar projeto com IA', free: '3x', plus: '15x', pro: '30x' },
+  { label: 'Entrevista guiada', free: '3x', plus: '15x', pro: '30x' },
+  { label: 'Análise de projeto', free: '1x', plus: '10x', pro: '25x' },
+  { label: 'Relatório do projeto', free: '1x', plus: '5x', pro: '10x' },
+  { label: 'Narrativa IA', free: '1x', plus: '10x', pro: '25x' },
+  { label: 'Defesa IA', free: '1x', plus: '10x', pro: '25x' },
+  { label: 'Treino de defesa', free: false, plus: '5x', pro: '25x' },
+  { label: 'Carta de apresentação IA', free: false, plus: '5x', pro: '25x' },
+  { label: 'Exportar PowerPoint', free: '3x', plus: '15x', pro: 'Ilimitado' },
+  { label: 'Recap semanal por email', free: false, plus: true, pro: true },
+  { label: 'Página de estágio', free: false, plus: false, pro: true },
+  { label: 'Todo o mês renova os limites', free: true, plus: true, pro: true },
+]
+
+/* Sempre disponíveis, mesmo no Grátis — não são motivo para pagar, mas
+   mostram que a plataforma não pára nas features de IA. */
+const PLATFORM_FEATURES = [
+  { Icon: Route, title: 'Timeline do projeto', desc: 'Todo o percurso organizado por datas, do primeiro rascunho à defesa.' },
+  { Icon: Trophy, title: 'Recompensas', desc: 'Objetivos e conquistas que mantêm o ritmo entre entregas.' },
+  { Icon: BookOpen, title: 'Biblioteca', desc: 'Recursos e exemplos para consultar sempre que precisares de referência.' },
+]
+
+const FAQ = [
+  {
+    q: 'O que acontece quando esgoto os limites de um mês?',
+    a: 'As gerações com IA dessa funcionalidade ficam bloqueadas até ao início do mês seguinte, altura em que renovam automaticamente. O resto da plataforma — editor, portfólio, diário, agenda — continua disponível sem limite.',
+  },
+  {
+    q: 'Posso cancelar quando quiser?',
+    a: 'Sim, nas definições da conta, a qualquer momento. Mantés acesso ao plano até ao fim do período já pago, sem penalização.',
+  },
+  {
+    q: 'A minha escola paga por mim?',
+    a: 'Se a tua escola tiver conta institucional Showo, és promovido automaticamente ao entrares na turma com o código da escola — não pagas nada.',
+  },
+  {
+    q: 'Podem pagar por mim?',
+    a: 'Sim. O checkout aceita qualquer cartão — não precisa de estar em teu nome.',
+  },
+  {
+    q: 'Os meus projetos ficam visíveis publicamente?',
+    a: 'Cada projeto tem a sua própria página pública com um link que só partilhas se quiseres — recrutadores, professores ou júri de defesa. Nunca aparece em motores de busca sem seres tu a divulgar o link.',
+  },
+]
+
+function seasonLine() {
+  const month = new Date().getMonth() // 0 = jan
+  if (month >= 8 || month <= 0) return 'O ano letivo começa agora — organiza o projeto desde o primeiro dia, não na véspera da entrega.'
+  if (month >= 1 && month <= 3) return 'Segundo período: é agora que o projeto ganha ou perde forma antes da reta final.'
+  if (month >= 4 && month <= 6) return 'Época de defesas a aproximar-se — prepara a apresentação com tempo, não na noite anterior.'
+  return 'Fecha o ano com o portfólio pronto para mostrar, na escola ou numa entrevista de emprego.'
+}
+
+function ComparisonCell({ value }) {
+  if (value === false) return <CloseCircle size={16} className="pricing-cmp-no" />
+  if (value === true) return <Check size={16} className="pricing-cmp-yes" />
+  return <span>{value}</span>
+}
+
+function FaqItem({ q, a }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className={`pricing-faq-item${open ? ' is-open' : ''}`}>
+      <button className="pricing-faq-q" onClick={() => setOpen(o => !o)} aria-expanded={open}>
+        <span>{q}</span>
+        <ChevronDown size={16} className="pricing-faq-chevron" />
+      </button>
+      {open && <p className="pricing-faq-a">{a}</p>}
+    </div>
+  )
+}
 
 export default function Pricing() {
   const navigate = useNavigate()
@@ -181,7 +266,13 @@ export default function Pricing() {
 
         <header className="pricing-header">
           <h1>Constrói agora. Lança quando estiveres pronto.</h1>
+          <p className="pricing-season">{seasonLine()}</p>
         </header>
+
+        <div className="pricing-proof">
+          <GraduationCap size={15} />
+          <span>Já em uso em escolas profissionais portuguesas, com professores de PAP e estágio a acompanhar o processo em tempo real.</span>
+        </div>
 
         <div className="pricing-grid">
           {PLANS.map(plan => {
@@ -262,6 +353,55 @@ export default function Pricing() {
         <p className="pricing-foot">
           Muda ou cancela quando quiseres. Contas de escola têm acesso incluído para todos os alunos.
         </p>
+
+        {/* ══════════════ TABELA COMPARATIVA ══════════════ */}
+        <section className="pricing-section">
+          <h2 className="pricing-section-title">Compara linha a linha</h2>
+          <div className="pricing-cmp-wrap">
+            <table className="pricing-cmp">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Grátis</th>
+                  <th className="pricing-cmp-highlight">Plus</th>
+                  <th>Pro</th>
+                </tr>
+              </thead>
+              <tbody>
+                {COMPARE_ROWS.map(row => (
+                  <tr key={row.label}>
+                    <th scope="row">{row.label}</th>
+                    <td><ComparisonCell value={row.free} /></td>
+                    <td className="pricing-cmp-highlight"><ComparisonCell value={row.plus} /></td>
+                    <td><ComparisonCell value={row.pro} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        {/* ══════════════ SEMPRE INCLUÍDO ══════════════ */}
+        <section className="pricing-section">
+          <h2 className="pricing-section-title">Em todos os planos, mesmo no Grátis</h2>
+          <div className="pricing-platform-grid">
+            {PLATFORM_FEATURES.map(({ Icon, title, desc }) => (
+              <div key={title} className="pricing-platform-card">
+                <span className="pricing-platform-icon"><Icon size={16} /></span>
+                <strong>{title}</strong>
+                <span>{desc}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ══════════════ FAQ ══════════════ */}
+        <section className="pricing-section pricing-section--narrow">
+          <h2 className="pricing-section-title">Perguntas frequentes</h2>
+          <div className="pricing-faq">
+            {FAQ.map(item => <FaqItem key={item.q} {...item} />)}
+          </div>
+        </section>
       </div>
     </div>
   )
