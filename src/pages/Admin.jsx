@@ -351,7 +351,7 @@ const TIME_RANGES = [
   { id: 'all', label: 'Tudo', days: null },
 ]
 
-function generateMeetingSummary(users, projects, activityLog, range) {
+function generateMeetingSummary(users, projects, activityStats, range) {
   const now = Date.now()
   const totalUsers = users.length
   const totalProjects = projects.length
@@ -361,8 +361,8 @@ function generateMeetingSummary(users, projects, activityLog, range) {
   const newUsers = users.filter(u => new Date(u.created_at) > cutoff).length
   const newProjects = projects.filter(p => new Date(p.created_at) > cutoff).length
 
-  const uniqueActive = new Set(activityLog.filter(e => new Date(e.created_at) > cutoff).map(e => e.user_id)).size
-  const totalSessions = activityLog.filter(e => new Date(e.created_at) > cutoff && e.action === 'login').length
+  const uniqueActive = (activityStats?.active_range || []).length
+  const totalSessions = activityStats?.sessions_range || 0
 
   const projectCountMap = {}
   projects.forEach(p => { if (p.user_id) projectCountMap[p.user_id] = (projectCountMap[p.user_id] || 0) + 1 })
@@ -392,15 +392,29 @@ function generateMeetingSummary(users, projects, activityLog, range) {
   return md
 }
 
-function OverviewTab({ users, projects, activityLog, aiUsageSummary, funnelSummary, billingSummary }) {
+function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSummary }) {
   const [userSearch, setUserSearch] = useState('')
   const [sort, setSort] = useState('active')
   const [range, setRange] = useState(TIME_RANGES[1])
+
+  // Contagens de utilizadores ativos vêm agregadas do servidor (nunca linhas
+  // cruas de activity_log) — fica correto para sempre, independente de
+  // quantos eventos a tabela acumular. Ver admin_get_activity_stats.
+  const [activityStats, setActivityStats] = useState(null)
+  const [loadingActivity, setLoadingActivity] = useState(true)
+  useEffect(() => {
+    let cancelled = false
+    setLoadingActivity(true)
+    supabase.rpc('admin_get_activity_stats', { p_days: range.days || 9999 }).then(({ data }) => {
+      if (!cancelled) { setActivityStats(data); setLoadingActivity(false) }
+    })
+    return () => { cancelled = true }
+  }, [range.days])
+
   const now = Date.now()
   const totalUsers = users.length
   const totalProjects = projects.length
   const days = range.days || 9999
-  const cutoff = now - days * 86400000
   const weekAgo = now - 7 * 86400000
   const monthAgo = now - 30 * 86400000
   const newThisWeek = projects.filter(p => new Date(p.created_at) > weekAgo).length
@@ -409,11 +423,10 @@ function OverviewTab({ users, projects, activityLog, aiUsageSummary, funnelSumma
   const scores = projects.filter(p => p.score > 0).map(p => p.score)
   const avgScore = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0
 
-  // Real engagement from activity_log
-  const logInRange = activityLog.filter(e => new Date(e.created_at) > cutoff)
-  const activeUsersInRange = new Set(logInRange.map(e => e.user_id)).size
-  const activeThisWeek = new Set(activityLog.filter(e => new Date(e.created_at) > weekAgo).map(e => e.user_id)).size
-  const activeThisMonth = new Set(activityLog.filter(e => new Date(e.created_at) > monthAgo).map(e => e.user_id)).size
+  const activeWeekIds = new Set(activityStats?.active_week || [])
+  const activeMonthIds = new Set(activityStats?.active_month || [])
+  const activeThisWeek = activeWeekIds.size
+  const activeThisMonth = activeMonthIds.size
   const neverActive = users.filter(u => !u.last_active_at).length
 
   // "Voltou" só faz sentido para quem já cá estava antes destes 30 dias —
@@ -421,9 +434,7 @@ function OverviewTab({ users, projects, activityLog, aiUsageSummary, funnelSumma
   // isso como retenção infla o número com o próprio crescimento recente.
   const priorUserIds = new Set(users.filter(u => new Date(u.created_at).getTime() < monthAgo).map(u => u.id))
   const priorUsersCount = priorUserIds.size
-  const priorUsersReturned = new Set(
-    activityLog.filter(e => new Date(e.created_at).getTime() > monthAgo && priorUserIds.has(e.user_id)).map(e => e.user_id)
-  ).size
+  const priorUsersReturned = [...activeMonthIds].filter(id => priorUserIds.has(id)).length
   const retentionRate = priorUsersCount > 0 ? Math.round((priorUsersReturned / priorUsersCount) * 100) : 0
   const planCounts = { free: 0, school: 0, school_pro: 0, plus: 0, pro: 0 }
   users.forEach(u => { const p = resolvePlanId(u); planCounts[p] = (planCounts[p] || 0) + 1 })
@@ -484,18 +495,18 @@ function OverviewTab({ users, projects, activityLog, aiUsageSummary, funnelSumma
     return { label: `${d.getDate()}/${d.getMonth() + 1}`, value: count, highlight: i === numWeeks - 1 }
   })
 
-  // Daily active users from activity_log (real data)
+  // Daily active users — vem pré-agregado por dia (admin_get_activity_stats
+  // só olha para os últimos 31 dias no servidor, nunca linhas cruas).
   const numDays = Math.min(days, 30)
+  const dailyMap = {}
+  ;(activityStats?.daily || []).forEach(row => { dailyMap[row.day] = row.count })
   const dauLabels = []
   const dauData = Array.from({ length: numDays }, (_, i) => {
     const dayStart = now - (numDays - 1 - i) * 86400000
-    const dayEnd = dayStart + 86400000
     const d = new Date(dayStart)
     dauLabels.push(`${d.getDate()}/${d.getMonth() + 1}`)
-    return new Set(activityLog.filter(e => {
-      const t = new Date(e.created_at).getTime()
-      return t >= dayStart && t < dayEnd
-    }).map(e => e.user_id)).size
+    const key = d.toISOString().slice(0, 10)
+    return dailyMap[key] || 0
   })
 
   // Projects per week
@@ -553,7 +564,7 @@ function OverviewTab({ users, projects, activityLog, aiUsageSummary, funnelSumma
     .slice(0, 8)
 
   const handleExport = () => {
-    const md = generateMeetingSummary(users, projects, activityLog, range)
+    const md = generateMeetingSummary(users, projects, activityStats, range)
     const blob = new Blob([md], { type: 'text/markdown' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -564,7 +575,7 @@ function OverviewTab({ users, projects, activityLog, aiUsageSummary, funnelSumma
   }
 
   const handleCopySummary = () => {
-    const md = generateMeetingSummary(users, projects, activityLog, range)
+    const md = generateMeetingSummary(users, projects, activityStats, range)
     navigator.clipboard.writeText(md)
   }
 
@@ -642,9 +653,9 @@ function OverviewTab({ users, projects, activityLog, aiUsageSummary, funnelSumma
           <p style={{ margin: '0 0 10px', fontSize: 11, color: C.subtle }}>Últimas {numWeeks} semanas</p>
           <BarChart data={regWeeks} color={C.blue} height={110} />
         </div>
-        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
+        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px', opacity: loadingActivity ? 0.5 : 1, transition: 'opacity 0.15s' }}>
           <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Atividade diária</h3>
-          <p style={{ margin: '0 0 10px', fontSize: 11, color: C.subtle }}>Users ativos / dia ({numDays} dias) — activity_log</p>
+          <p style={{ margin: '0 0 10px', fontSize: 11, color: C.subtle }}>Users ativos / dia ({numDays} dias)</p>
           <SparkLine data={dauData} labels={dauLabels} color={C.green} height={100} />
         </div>
         <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
@@ -1552,7 +1563,6 @@ export default function Admin() {
   const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState('')
   const [signups, setSignups] = useState([])
-  const [activityLog, setActivityLog] = useState([])
   const [aiUsageSummary, setAiUsageSummary] = useState([])
   const [funnelSummary, setFunnelSummary] = useState([])
   const [billingSummary, setBillingSummary] = useState([])
@@ -1587,12 +1597,11 @@ export default function Admin() {
   const loadData = useCallback(async () => {
     setLoading(true)
     try {
-      const [profilesRes, projectsRes, emailsRes, signupsRes, activityRes, aiUsageRes, funnelRes] = await Promise.all([
+      const [profilesRes, projectsRes, emailsRes, signupsRes, aiUsageRes, funnelRes] = await Promise.all([
         supabase.from('profiles').select(PROFILE_COLUMNS).order('created_at', { ascending: false }),
         supabase.from('projects').select('*').order('created_at', { ascending: false }),
         supabase.rpc('admin_get_users'),
         supabase.from('waitlist_signups').select('*').order('created_at', { ascending: false }).limit(100),
-        supabase.from('activity_log').select('user_id, action, created_at').order('created_at', { ascending: false }).limit(5000),
         supabase.rpc('admin_get_ai_usage_summary'),
         supabase.rpc('admin_get_funnel_summary'),
       ])
@@ -1651,7 +1660,6 @@ export default function Admin() {
       setUsers([...withOrg, ...orphanUsers])
       setProjects(projectsRes.data || [])
       setSignups(signupsRes.data || [])
-      setActivityLog(activityRes.data || [])
     } catch (err) {
       console.error('Admin load error', err)
     }
@@ -1921,7 +1929,7 @@ export default function Admin() {
           </div>
         ) : (
           <>
-            {tab === 'overview' && <OverviewTab users={users} projects={projects} activityLog={activityLog} aiUsageSummary={aiUsageSummary} funnelSummary={funnelSummary} billingSummary={billingSummary} />}
+            {tab === 'overview' && <OverviewTab users={users} projects={projects} aiUsageSummary={aiUsageSummary} funnelSummary={funnelSummary} billingSummary={billingSummary} />}
             {tab === 'users' && (
               <UsersTab
                 users={users}
