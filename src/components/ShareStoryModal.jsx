@@ -124,99 +124,97 @@ export function ShareStoryModal({ project, onClose }) {
 
         {/* Fundo cinza-escuro só para se ver o recorte contra algo — a
             exportação real (backgroundColor: null) é transparente à volta
-            do cartão, como um autocolante. */}
+            dos cantos redondos. O ref aponta directamente ao cartão: a
+            imagem exportada tem o formato do PRÓPRIO cartão, não um ecrã
+            9:16 inteiro — é isso que faz o Instagram tratá-la como imagem a
+            inserir/redimensionar em vez de esticar como fundo da story. */}
         <div style={{ overflowY: 'auto', maxHeight: 'calc(92vh - 90px)', background: 'repeating-conic-gradient(#242428 0% 25%, #1a1a1d 0% 50%) 0 0/24px 24px', borderRadius: 8, padding: 18 }}>
 
-          {/* Canvas 9:16 exportado — o cartão é uma fração deste espaço,
-              com margem transparente à volta (o que dá o efeito autocolante
-              quando colado numa story por cima de outra foto). */}
           <div
             ref={canvasRef}
             style={{
-              width: 300, height: 533, position: 'relative',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontFamily: FONT_BODY,
-            }}
-          >
-            {/* O cartão em si */}
-            <div style={{
-              width: '84%', background: '#131316', borderRadius: 30,
+              width: 260, background: '#131316', borderRadius: 30,
               boxShadow: '0 18px 50px rgba(0,0,0,0.45)',
               overflow: 'hidden', position: 'relative',
               border: '1px solid rgba(255,255,255,0.06)',
-            }}>
-              {/* fio de marca no topo — a única referência de cor da app,
-                  sem precisar de escrever o nome */}
-              <div style={{ height: 4, background: `linear-gradient(90deg, ${BRAND.blue}, ${BRAND.red} 62%, ${BRAND.gold})` }} />
+              fontFamily: FONT_BODY,
+            }}
+          >
+            {/* fio de marca no topo — a única referência de cor da app,
+                sem precisar de escrever o nome */}
+            <div style={{ height: 4, background: `linear-gradient(90deg, ${BRAND.blue}, ${BRAND.red} 62%, ${BRAND.gold})` }} />
 
-              <div style={{ padding: '22px 20px 18px' }}>
-                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', color: '#7c7c86', textTransform: 'uppercase' }}>
-                  {TYPE_LABEL[project.project_type] || 'Projeto'}
-                </div>
-                <div style={{ fontSize: 21, fontWeight: 800, color: '#f7f7f8', lineHeight: 1.18, marginTop: 6, fontFamily: FONT_HEADING, letterSpacing: '-0.3px' }}>
-                  {project.name}
-                </div>
-                {project.creator_name && (
-                  <div style={{ fontSize: 11, color: '#9494a0', marginTop: 5, fontWeight: 500 }}>{project.creator_name}</div>
-                )}
+            <div style={{ padding: '22px 20px 18px' }}>
+              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', color: '#7c7c86', textTransform: 'uppercase' }}>
+                {TYPE_LABEL[project.project_type] || 'Projeto'}
               </div>
-
-              {/* Heatmap solto no corpo do cartão, sem caixa dentro da caixa */}
-              <div style={{ padding: '0 20px' }}>
-                {loading ? (
-                  <div style={{ height: 40 }} />
-                ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(20,1fr)', gap: 2.5 }}>
-                    {cells.map((c, i) => {
-                      const opacity = c === 0 ? 0.07 : 0.3 + (c / maxCount) * 0.7
-                      return <div key={i} style={{ aspectRatio: '1', borderRadius: 1.5, background: `${BRAND.blue}`, opacity: opacity.toFixed(2) }} />
-                    })}
-                  </div>
-                )}
+              <div style={{ fontSize: 21, fontWeight: 800, color: '#f7f7f8', lineHeight: 1.18, marginTop: 6, fontFamily: FONT_HEADING, letterSpacing: '-0.3px' }}>
+                {project.name}
               </div>
+              {project.creator_name && (
+                <div style={{ fontSize: 11, color: '#9494a0', marginTop: 5, fontWeight: 500 }}>{project.creator_name}</div>
+              )}
+            </div>
 
-              {/* Estatísticas — um número herói, o resto secundário */}
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 16, padding: '18px 20px 20px' }}>
-                <div>
-                  <div style={{ fontSize: 34, fontWeight: 800, color: '#f7f7f8', lineHeight: 1, fontFamily: FONT_HEADING, fontVariantNumeric: 'tabular-nums' }}>
-                    {timeline?.entry_count ?? 0}
-                  </div>
-                  <div style={{ fontSize: 10, color: '#9494a0', marginTop: 3, fontWeight: 600 }}>registos no diário</div>
+            {/* Heatmap solto no corpo do cartão, sem caixa dentro da caixa */}
+            <div style={{ padding: '0 20px' }}>
+              {loading ? (
+                <div style={{ height: 40 }} />
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(20,1fr)', gap: 2.5 }}>
+                  {cells.map((c, i) => {
+                    const opacity = c === 0 ? 0.07 : 0.3 + (c / maxCount) * 0.7
+                    return <div key={i} style={{ aspectRatio: '1', borderRadius: 1.5, background: `${BRAND.blue}`, opacity: opacity.toFixed(2) }} />
+                  })}
                 </div>
-                {months && (
-                  <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: '#d5d5da' }}>{months} {months === 1 ? 'mês' : 'meses'}</div>
-                    {project.score > 0 && <div style={{ fontSize: 11, fontWeight: 700, color: BRAND.gold, marginTop: 2 }}>score {project.score}</div>}
-                  </div>
-                )}
+              )}
+            </div>
+
+            {/* Estatísticas — um número herói, o resto secundário */}
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 16, padding: '18px 20px 20px' }}>
+              <div>
+                <div style={{ fontSize: 34, fontWeight: 800, color: '#f7f7f8', lineHeight: 1, fontFamily: FONT_HEADING, fontVariantNumeric: 'tabular-nums' }}>
+                  {timeline?.entry_count ?? 0}
+                </div>
+                <div style={{ fontSize: 10, color: '#9494a0', marginTop: 3, fontWeight: 600 }}>registos no diário</div>
               </div>
-
-              {/* Rodapé: só a marca (3 blocos), sem palavra — reconhece-se
-                  pela forma, como o swoosh do Strava */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px 18px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <rect x="3" y="3" width="13" height="13" rx="3" fill={BRAND.blue} />
-                  <rect x="14" y="8" width="7" height="13" rx="2.5" fill={BRAND.red} />
-                  <rect x="9" y="14" width="7" height="7" rx="2" fill={BRAND.gold} />
-                </svg>
-                <div style={{ background: '#fff', borderRadius: 6, padding: 4 }}>
-                  <QRCodeSVG value={projectUrl} size={34} level="M" />
+              {months && (
+                <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: '#d5d5da' }}>{months} {months === 1 ? 'mês' : 'meses'}</div>
+                  {project.score > 0 && <div style={{ fontSize: 11, fontWeight: 700, color: BRAND.gold, marginTop: 2 }}>score {project.score}</div>}
                 </div>
+              )}
+            </div>
+
+            {/* Rodapé: só a marca (3 blocos), sem palavra — reconhece-se
+                pela forma, como o swoosh do Strava */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px 18px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="3" width="13" height="13" rx="3" fill={BRAND.blue} />
+                <rect x="14" y="8" width="7" height="13" rx="2.5" fill={BRAND.red} />
+                <rect x="9" y="14" width="7" height="7" rx="2" fill={BRAND.gold} />
+              </svg>
+              <div style={{ background: '#fff', borderRadius: 6, padding: 4 }}>
+                <QRCodeSVG value={projectUrl} size={34} level="M" />
               </div>
             </div>
           </div>
         </div>
 
+        <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.5)', textAlign: 'center', maxWidth: 280, margin: 0, lineHeight: 1.5 }}>
+          Para aparecer como autocolante por cima da tua foto: guarda a imagem, depois na story escolhe "adicionar do rolo" em vez de partilhar direto.
+        </p>
+
         <div style={{ display: 'flex', gap: 10 }}>
           <button
             onClick={handleShare}
             disabled={exporting || loading}
-            style={{ display: 'flex', alignItems: 'center', gap: 7, background: '#fff', color: '#0a0a0c', border: 'none', borderRadius: 10, padding: '12px 22px', fontSize: 14, fontWeight: 700, cursor: exporting ? 'default' : 'pointer', opacity: exporting ? 0.7 : 1, fontFamily: 'inherit' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', borderRadius: 10, padding: '12px 22px', fontSize: 14, fontWeight: 700, cursor: exporting ? 'default' : 'pointer', opacity: exporting ? 0.7 : 1, fontFamily: 'inherit' }}
           ><Share2 size={15} /> Partilhar</button>
           <button
             onClick={handleDownload}
             disabled={exporting || loading}
-            style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', borderRadius: 10, padding: '12px 22px', fontSize: 14, fontWeight: 700, cursor: exporting ? 'default' : 'pointer', opacity: exporting ? 0.7 : 1, fontFamily: 'inherit' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 7, background: '#fff', color: '#0a0a0c', border: 'none', borderRadius: 10, padding: '12px 22px', fontSize: 14, fontWeight: 700, cursor: exporting ? 'default' : 'pointer', opacity: exporting ? 0.7 : 1, fontFamily: 'inherit' }}
           ><Download size={15} /> Descarregar</button>
         </div>
       </div>
