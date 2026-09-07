@@ -13,8 +13,9 @@ const OFFICE_TYPES = new Set([
 ])
 
 /* Abre um ficheiro da Biblioteca DENTRO da app: imagem, PDF e texto
-   renderizam-se aqui; Word/PowerPoint ainda não (fica para a conversão
-   para PDF — fase 2). Usado na Biblioteca e no perfil público. */
+   renderizam-se aqui; Word/PowerPoint abrem no visualizador da Microsoft
+   (ou no PDF já convertido, se existir). Usado na Biblioteca e no perfil
+   público. */
 export default function LibFileViewer({ item, onClose, onRename }) {
   const [renaming, setRenaming] = useState(false)
   const [nameDraft, setNameDraft] = useState(item?.name || '')
@@ -93,7 +94,7 @@ export default function LibFileViewer({ item, onClose, onRename }) {
           ) : isOffice ? (
             item._signedPdfUrl
               ? <PdfViewer url={item._signedPdfUrl} />
-              : <OfficeViewer item={item} />
+              : <OfficeEmbed item={item} />
           ) : (
             <div className="lfv-msg lfv-nopreview">
               <p>Este tipo de ficheiro ainda não abre dentro da app.</p>
@@ -103,6 +104,32 @@ export default function LibFileViewer({ item, onClose, onRename }) {
             </div>
           )}
         </div>
+      </div>
+    </div>
+  )
+}
+
+/* Office sem PDF guardado: o visualizador da Microsoft (view.officeapps.live.com)
+   abre .docx/.pptx a partir do URL assinado, sem conversão nem Gotenberg.
+   Funciona para qualquer visitante e para ficheiros grandes; os PowerPoints
+   com imagens que rebentavam o Gotenberg abrem aqui na mesma. Se falhar
+   (raro), fica o caminho antigo: converter para PDF ou transferir. */
+function OfficeEmbed({ item }) {
+  const [mode, setMode] = useState('embed') // embed | convert
+  const src = item?._signedFileUrl
+    ? `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(item._signedFileUrl)}`
+    : null
+
+  if (mode === 'convert') return <OfficeViewer item={item} />
+  if (!src) return <div className="lfv-msg">Não foi possível carregar o ficheiro.</div>
+
+  return (
+    <div className="lfv-office">
+      <iframe className="lfv-office-frame" src={src} title={item?.name} />
+      <div className="lfv-office-foot">
+        Não aparece?
+        <button type="button" onClick={() => setMode('convert')}>Converter para PDF</button>
+        <a href={item._signedFileUrl} target="_blank" rel="noopener noreferrer">Transferir</a>
       </div>
     </div>
   )

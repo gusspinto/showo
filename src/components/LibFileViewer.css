@@ -115,6 +115,32 @@
   text-decoration: none;
 }
 
+.lfv-office { display: flex; flex-direction: column; width: 100%; min-height: 0; }
+.lfv-office-frame { flex: 1; width: 100%; border: none; background: var(--color-bg-alt); }
+.lfv-office-foot {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 14px;
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+.lfv-office-foot button,
+.lfv-office-foot a {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--color-text-secondary);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.lfv-office-foot button:hover,
+.lfv-office-foot a:hover { color: var(--color-text); }
+
 @media (max-width: 600px) {
   .lfv-backdrop { padding: 0; }
   .lfv { height: 100dvh; max-width: 100%; border-radius: 0; border: none; }
