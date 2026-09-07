@@ -174,8 +174,8 @@ function LibAddedTile({ item, onOpen, onDelete, removing, analyzing, editing, on
         </div>
       )}
 
-      {editing && <ProfileControls item={item} onTogglePin={onTogglePin} onSetLayout={onSetLayout} onToggleVisibility={onToggleVisibility} />}
-      <div className="lib-tile-tools">
+      {editing && !renaming && <ProfileControls item={item} onTogglePin={onTogglePin} onSetLayout={onSetLayout} onToggleVisibility={onToggleVisibility} />}
+      <div className="lib-tile-tools" hidden={renaming}>
         <span
           role="button"
           tabIndex={0}
