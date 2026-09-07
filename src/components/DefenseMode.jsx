@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
-import { AiUsageBadge, ConfirmUseModal } from './PlanGate'
+import { AiUsageBadge, ConfirmUseModal, PlanGateModal } from './PlanGate'
 import { HandShakeIcon as Hand } from '@solar-icons/react/bold/hand-shake'
 import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
 import { LightbulbIcon as Lightbulb } from '@solar-icons/react/bold/lightbulb'
@@ -1703,6 +1703,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
   const [showGuideEditor, setShowGuideEditor] = useState(false)
   const [exporting, setExporting] = useState(false)
   const [confirmUse, setConfirmUse] = useState(null)
+  const [gateModal, setGateModal] = useState(null)
   const effectiveProject = { ...project, guide_config: guideConfig }
 
   async function saveGuideConfig(next) {
@@ -1747,8 +1748,16 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
 
   async function handleExportPptx() {
     if (!aiData) { tryLoadAI(); return }
+    const gate = checkGate('exportPptx')
+    if (!gate.allowed) {
+      setGateModal(gate.message)
+      return
+    }
     setExporting(true)
-    try { exportPptx(effectiveProject, aiData) } finally { setExporting(false) }
+    try {
+      exportPptx(effectiveProject, aiData)
+      await consumeAI('exportPptx')
+    } finally { setExporting(false) }
   }
 
   const tabs = [
@@ -1771,6 +1780,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
           onCancel={onClose}
         />
       )}
+      {gateModal && <PlanGateModal message={gateModal} onClose={() => setGateModal(null)} />}
       <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
 
       <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: 720, maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow-xl)', animation: 'fadeIn 0.2s ease-out' }}>

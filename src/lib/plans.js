@@ -4,15 +4,16 @@ export const PLANS = {
     name: 'Escola',
     maxProjects: 10,
     ai: {
-      createProject: Infinity,
-      interviewProject: Infinity,
-      coach: Infinity,
-      defense: Infinity,
-      defenseTraining: Infinity,
-      diaryReport: Infinity,
-      narrative: Infinity,
-      analyzeProject: Infinity,
+      createProject: 15,
+      interviewProject: 15,
+      coach: 150,
+      defense: 15,
+      defenseTraining: 10,
+      diaryReport: 5,
+      narrative: 15,
+      analyzeProject: 15,
       coverLetter: 0,
+      exportPptx: 20,
     },
     career: {
       internshipPage: false,
@@ -22,17 +23,18 @@ export const PLANS = {
   free: {
     id: 'free',
     name: 'Grátis',
-    maxProjects: 5,
+    maxProjects: 3,
     ai: {
       createProject: 3,
       interviewProject: 3,
-      coach: 15,
+      coach: 10,
       defense: 1,
       defenseTraining: 0,
       diaryReport: 1,
       narrative: 1,
       analyzeProject: 1,
       coverLetter: 0,
+      exportPptx: 3,
     },
     career: {
       internshipPage: false,
@@ -56,6 +58,7 @@ export const PLANS = {
       narrative: 10,
       analyzeProject: 10,
       coverLetter: 5,
+      exportPptx: 15,
     },
     career: {
       internshipPage: false,
@@ -79,6 +82,7 @@ export const PLANS = {
       narrative: 25,
       analyzeProject: 25,
       coverLetter: 25,
+      exportPptx: Infinity,
     },
     career: {
       internshipPage: true,
@@ -121,6 +125,7 @@ export const AI_FEATURE_LABELS = {
   analyzeProject: 'Análise de projeto',
   defenseTraining: 'Treino de defesa',
   coverLetter: 'Carta de apresentação',
+  exportPptx: 'Exportar PowerPoint',
 }
 
 export const PLAN_GATE_MESSAGES = {
@@ -128,7 +133,9 @@ export const PLAN_GATE_MESSAGES = {
     title: 'Limite de projetos atingido',
     body: plan === 'school'
       ? `A conta escolar permite até ${getPlan(plan).maxProjects} projetos. Para projetos ilimitados, cria uma conta pessoal Pro.`
-      : `O plano ${getPlan(plan).name} permite até ${getPlan(plan).maxProjects} projetos. Faz upgrade para teres mais.`,
+      : plan === 'free'
+        ? 'Já tens 3 projetos — o máximo do plano Grátis. Com o Plus tens 15 projetos e muito mais IA.'
+        : `O plano ${getPlan(plan).name} permite até ${getPlan(plan).maxProjects} projetos. Faz upgrade para teres mais.`,
   }),
   createProject: (plan) => ({
     title: 'Limite mensal atingido',
@@ -140,7 +147,9 @@ export const PLAN_GATE_MESSAGES = {
   }),
   coach: (plan) => ({
     title: 'Limite do Coach IA atingido',
-    body: `Chegaste ao limite de mensagens do Coach este mês no plano ${getPlan(plan).name}. Com o Plus tens 100 mensagens por mês.`,
+    body: plan === 'free'
+      ? 'Já usaste as 10 mensagens do Coach este mês. Com o Plus tens 100 por mês — continua exatamente de onde paraste.'
+      : `Chegaste ao limite de mensagens do Coach este mês no plano ${getPlan(plan).name}. Faz upgrade para teres mais.`,
   }),
   defense: (plan) => ({
     title: 'Limite da Defesa IA atingido',
@@ -169,6 +178,12 @@ export const PLAN_GATE_MESSAGES = {
     body: plan === 'free' || plan === 'school'
       ? 'A carta de apresentação com IA está disponível a partir do plano Plus.'
       : `Já usaste as cartas de apresentação deste mês no plano ${getPlan(plan).name}. Faz upgrade para teres mais.`,
+  }),
+  exportPptx: (plan) => ({
+    title: 'Limite de exportações PowerPoint',
+    body: plan === 'free'
+      ? 'Já exportaste os 3 PowerPoints deste mês no plano Grátis. Com o Plus tens 15 por mês.'
+      : `Já usaste as exportações PPT deste mês no plano ${getPlan(plan).name}. Faz upgrade para teres mais.`,
   }),
   weeklyRecap: () => ({
     title: 'Recap semanal',

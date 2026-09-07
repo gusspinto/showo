@@ -38,7 +38,7 @@ const PLANS = [
       {
         label: 'Inclui',
         items: [
-          { label: '5 projetos' },
+          { label: '3 projetos' },
           { label: 'Editor completo e página pública' },
           { label: 'Diário, agenda e lembretes' },
           { label: 'Certificado de projeto' },
@@ -47,12 +47,14 @@ const PLANS = [
       {
         label: 'IA (limitada por mês)',
         items: [
-          { label: 'Coach IA', value: '15 msgs' },
+          { label: 'Coach IA', value: '10 msgs' },
           { label: 'Criar projeto com IA', value: '3x' },
+          { label: 'Entrevista guiada', value: '3x' },
           { label: 'Análise IA', value: '1x' },
           { label: 'Relatório do projeto', value: '1x' },
           { label: 'Narrativa IA', value: '1x' },
           { label: 'Defesa IA', value: '1x' },
+          { label: 'Exportar PowerPoint', value: '3x' },
         ],
       },
     ],
@@ -75,11 +77,14 @@ const PLANS = [
           { label: '15 projetos' },
           { label: 'Coach IA', value: '100 msgs' },
           { label: 'Criar com IA', value: '15x' },
+          { label: 'Entrevista guiada', value: '15x' },
           { label: 'Análise IA', value: '10x' },
           { label: 'Relatório', value: '5x' },
+          { label: 'Narrativa IA', value: '10x' },
           { label: 'Defesa IA', value: '10x' },
           { label: 'Treino de defesa', value: '5x' },
           { label: 'Carta de apresentação', value: '5x' },
+          { label: 'Exportar PowerPoint', value: '15x' },
           { label: 'Recap semanal' },
         ],
       },
@@ -103,6 +108,7 @@ const PLANS = [
           { label: 'Projetos ilimitados' },
           { label: 'Coach IA', value: '300 msgs' },
           { label: 'Todas as features IA', value: '25x' },
+          { label: 'Exportar PowerPoint', value: 'ilimitado' },
           { label: 'Portfólio pro com link limpo' },
           { label: 'Página de estágio' },
         ],
@@ -233,7 +239,7 @@ export default function Pricing() {
                   <div className="pricing-career">
                     <div className="pricing-career-head">
                       <Sparkles size={13} className="pricing-career-head-icon" />
-                      <span className="pricing-career-head-text">Carreira · só no Launch</span>
+                      <span className="pricing-career-head-text">Carreira · só no Pro</span>
                     </div>
                     <ul className="pricing-career-list">
                       {CAREER_FEATURES.map(({ Icon, title, desc }) => (
@@ -254,7 +260,7 @@ export default function Pricing() {
         </div>
 
         <p className="pricing-foot">
-          Muda ou cancela quando quiseres. Contas de escola têm o Build incluído para todos os alunos.
+          Muda ou cancela quando quiseres. Contas de escola têm acesso incluído para todos os alunos.
         </p>
       </div>
     </div>

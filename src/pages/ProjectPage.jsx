@@ -5341,6 +5341,7 @@ export default function ProjectPage() {
         body: { data: project, feature: 'narrative' },
       })
       if (fnErr || !data?.tagline) throw new Error(data?.error || 'Resposta inválida')
+      consumeAI('narrative')
       setNarrativePreview(data)
     } catch {
       setNarrativeError('Não foi possível gerar agora. Tenta novamente.')
