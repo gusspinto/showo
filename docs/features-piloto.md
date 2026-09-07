@@ -156,54 +156,57 @@ Memória interna: a equipa quer gamificação **para lá das missões**, para re
 diária.
 
 ### Conceito
-Ganhas uma **caixa** por ações que queremos incentivar:
-- registo no diário em dias seguidos (streak)
-- publicar um projeto
-- confirmar as competências que a IA sugeriu
-- atingir um marco de score
-- concluir uma missão
-
-Abrir a caixa dá uma recompensa aleatória de um conjunto:
-- **cosmético de perfil** (desbloqueia uma cor de accent, uma tipografia, um
-  padrão de banner) → liga-se diretamente ao ProfileCustomizer, dá razão para
-  voltar a mexer no perfil
-- boost de XP
-- um crédito único de IA (uma "análise de projeto" ou "defesa" grátis)
-- um "congelador de streak" (não perde a sequência se falhar um dia)
-- um badge
+Ganhas uma **caixa** ao concluir o dia (3 passos) ou por ações pontuais
+(publicar, confirmar competências da IA, marco de score, missão). Abrir dá uma
+recompensa aleatória do pool — **só extras**, nada que afete a qualidade do
+portefólio (ver decisões).
 
 ### Schema
 ```sql
 CREATE TABLE public.reward_boxes (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  earned_from text NOT NULL,          -- 'diary_streak' | 'publish' | 'mission' | …
+  earned_from text NOT NULL,          -- 'daily' | 'publish' | 'skill_review' | …
   earned_at timestamptz NOT NULL DEFAULT now(),
   opened_at timestamptz,
-  reward jsonb                         -- {type:'accent', value:'#...'} etc, null até abrir
+  reward jsonb                         -- {type, value}, null até abrir
 );
-CREATE TABLE public.profile_unlocks (
+
+-- Ritual do dia
+CREATE TABLE public.daily_progress (
   user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  kind text NOT NULL,                  -- 'accent' | 'font' | 'banner_pattern' | 'badge'
-  value text NOT NULL,
-  PRIMARY KEY (user_id, kind, value)
+  day date NOT NULL,
+  steps text[] NOT NULL DEFAULT '{}',  -- ['partilhar','mostrar','registar']
+  concluded_at timestamptz,
+  PRIMARY KEY (user_id, day)
 );
+
+-- Inventário do que foi ganho (créditos de IA, congeladores, destaques, badges)
+ALTER TABLE public.profiles
+  ADD COLUMN reward_wallet jsonb NOT NULL DEFAULT '{}';  -- {aiCredits:{}, streakFreeze:0, boosts:0, badges:[]}
 ```
-Sorteio e pool de recompensas em código (`src/lib/rewards.js`), não na BD.
-O ProfileCustomizer passa a filtrar as opções por `profile_unlocks`.
+Pool e sorteio em código ([src/lib/rewards.js](../src/lib/rewards.js)), não na BD.
 
-### Opinião / cuidados
-- **Nunca vender caixas nem sorteios pagos.** Showo é para estudantes, alguns
-  menores. 100% ganho pelo trabalho. Na UI chamar "recompensa", não "loot box".
-- A memória do *vibecoded-audit* diz para tirar gradientes/emojis/sparkles — o
-  instinto numa caixa é exatamente isso. Manter contido e on-brand (uma animação
-  de abrir sóbria, sem confetti).
-- As melhores recompensas são os **cosméticos do perfil** — personalização real,
-  não só números que não significam nada.
-- Os gatilhos de ganho colam-se aos comportamentos que já são o valor do produto
-  (diário consistente, publicar, rever sugestões).
+### Decisões (com o Bruno + Gustavo)
+- **O ritual do dia (Gustavo):** 3 passos pequenos — *Partilhar · Mostrar ·
+  Registar* — fazer os 3 = "concluir o dia" = 1 caixa. É o gancho de retenção
+  diária. Os verbos são um exemplo, afinar depois.
+- **A customização do perfil é de GRAÇA** — cores, tipografias, layout. O perfil
+  é o portefólio; a personalização pesa demasiado nisso para ficar atrás de um
+  sorteio. Fora do pool.
+- **O pool são só extras:** XP, créditos de IA (1 análise/defesa/relatório
+  grátis), congelador de sequência, destaque na Explorar 48h, distintivos (só
+  estatuto, não desbloqueiam nada).
+- **Nunca vender caixas nem sorteios pagos.** 100% ganho a trabalhar. Na UI
+  "recompensa", não "loot box". Animação sóbria, sem confetti (vibecoded-audit).
 
-**Esforço:** médio (schema + sorteio + UI de abrir + integração no ProfileCustomizer).
+### Protótipo
+`/recompensa` ([RecompensaLab.jsx](../src/pages/RecompensaLab.jsx),
+[rewards.js](../src/lib/rewards.js)) — ritual do dia + gatilhos manuais + abrir
+caixas + inventário + pool com probabilidades. Estado só em localStorage.
+
+**Esforço:** médio (schema `reward_boxes` + `daily_progress`, sorteio, UI de abrir,
+os 3 passos ligados a ações reais).
 
 ---
 
