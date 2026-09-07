@@ -12,6 +12,7 @@ import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
 import { LibraryIcon } from '@solar-icons/react/bold/library'
 import { ArrowRightUpIcon as ExternalLink } from '@solar-icons/react/bold/arrow-right-up'
 import { fileTypeStyle, withSignedLibraryUrls } from '../lib/libraryFile'
+import { getTaggingIds, markLibraryTagging } from '../lib/libraryTagging'
 import LibFileViewer from '../components/LibFileViewer'
 import './Biblioteca.css'
 
@@ -36,63 +37,58 @@ function prettyDate(iso) {
   } catch { return '' }
 }
 
-/* Ícones inline — evita mais um import de pacote só para dois glifos. */
-function CheckIcon({ on }) {
-  return (
-    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      {on
-        ? <path d="M13.5 4.5 6.5 11.5 3 8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-        : <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.6" />}
-    </svg>
-  )
-}
-/* Controlo de edição partilhado por tiles e linhas: liga/desliga "no perfil"
-   e, quando ligado, escolhe o layout (Capa | Linha). */
-function ProfileControls({ item, onTogglePin, onSetLayout, onToggleVisibility }) {
-  const on = item.profile_featured
-  const isPrivate = item.visibility === 'private'
+/* Uma só escolha de 3 estados (Privado · Público · No perfil) em vez de
+   dois switches que mandavam um no outro. "No perfil" implica público;
+   só então aparece o formato. */
+function ProfileControls({ item, onSetState, onSetLayout }) {
+  const state = item.visibility === 'private' ? 'private' : item.profile_featured ? 'featured' : 'public'
   return (
     <div className="lib-edit-bar" onClick={e => e.stopPropagation()}>
-      <button
-        type="button"
-        className={`lib-check${on ? ' is-on' : ''}`}
-        onClick={() => onTogglePin(item)}
-        disabled={isPrivate && !on}
-        title={isPrivate && !on ? 'Torna o projeto público para o mostrares no perfil' : undefined}
-      >
-        <CheckIcon on={on} />
-        {on ? 'No perfil' : 'Mostrar no perfil'}
-      </button>
-      <button
-        type="button"
-        className={`lib-vis${isPrivate ? ' is-private' : ''}`}
-        onClick={() => onToggleVisibility(item)}
-      >
-        {isPrivate ? 'Privado' : 'Público'}
-      </button>
-      {on && (
-        <span className="lib-seg" role="group" aria-label="Layout no perfil">
-          <button
-            type="button"
-            className={`lib-seg-btn${(item.profile_layout || 'tile') === 'tile' ? ' is-on' : ''}`}
-            onClick={() => onSetLayout(item, 'tile')}
-          >Capa</button>
-          <button
-            type="button"
-            className={`lib-seg-btn${item.profile_layout === 'row' ? ' is-on' : ''}`}
-            onClick={() => onSetLayout(item, 'row')}
-          >Linha</button>
-        </span>
+      <span className="lib-seg lib-seg--state" role="group" aria-label="Onde este item aparece">
+        <button type="button" className={`lib-seg-btn${state === 'private' ? ' is-on' : ''}`}
+          onClick={() => onSetState(item, 'private')}>
+          <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden="true" style={{ marginRight: 4, verticalAlign: '-1px' }}>
+            <rect x="3.5" y="7" width="9" height="6.5" rx="1.4" stroke="currentColor" strokeWidth="1.6" />
+            <path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" stroke="currentColor" strokeWidth="1.6" />
+          </svg>
+          Privado
+        </button>
+        <button type="button" className={`lib-seg-btn${state === 'public' ? ' is-on' : ''}`}
+          onClick={() => onSetState(item, 'public')}>Público</button>
+        <button type="button" className={`lib-seg-btn${state === 'featured' ? ' is-on' : ''}`}
+          onClick={() => onSetState(item, 'featured')}>No perfil</button>
+      </span>
+
+      {state === 'featured' && (
+        <div className="lib-edit-fmt">
+          <span className="lib-opt-label">Formato</span>
+          <span className="lib-seg" role="group" aria-label="Formato no perfil">
+            <button type="button" className={`lib-seg-btn${(item.profile_layout || 'tile') === 'tile' ? ' is-on' : ''}`}
+              onClick={() => onSetLayout(item, 'tile')}>Capa</button>
+            <button type="button" className={`lib-seg-btn${item.profile_layout === 'row' ? ' is-on' : ''}`}
+              onClick={() => onSetLayout(item, 'row')}>Linha</button>
+          </span>
+        </div>
       )}
     </div>
   )
+}
+
+/* "Em análise": marcado em localStorage ao adicionar (markLibraryTagging),
+   ou — rede de segurança — item de Biblioteca criado há < 3 min e ainda
+   sem competências nenhumas. Some assim que as competências chegam. */
+function isAnalyzing(item, taggingIds) {
+  if (item.entry_kind !== 'library') return false
+  if (item.skills?.length || item.tech_stack?.length || item.library_skills?.length) return false
+  if (taggingIds.has(item.id)) return true
+  return Date.now() - new Date(item.created_at).getTime() < 3 * 60 * 1000
 }
 
 /* Item da Biblioteca (entry_kind='library') — o portefólio, o que mais
    se quer mostrar. Tile com preview de verdade quando é imagem; para o
    resto (PDF/Word/PowerPoint), um cartão colorido por tipo à Drive —
    ainda mais reconhecível que um ícone cinzento genérico. */
-function LibAddedTile({ item, onOpen, onDelete, removing, editing, onTogglePin, onSetLayout, onToggleVisibility, renaming, onStartRename, onRename, onCancelRename }) {
+function LibAddedTile({ item, onOpen, onDelete, removing, analyzing, editing, onSetState, onSetLayout, renaming, onStartRename, onRename, onCancelRename, onChangeCover }) {
   const isImage = item.library_file_type?.startsWith('image/')
   const previewSrc = isImage ? item._signedFileUrl : item._signedThumbUrl
   const ft = fileTypeStyle(item.library_file_type)
@@ -122,6 +118,17 @@ function LibAddedTile({ item, onOpen, onDelete, removing, editing, onTogglePin, 
             </span>
           )}
           {item.visibility === 'private' && <span className="lib-badge-private">Privado</span>}
+          {!isImage && onChangeCover && (
+            <span
+              role="button"
+              tabIndex={0}
+              className="lib-tile-cover-edit"
+              onClick={e => { e.stopPropagation(); onChangeCover(item) }}
+              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); onChangeCover(item) } }}
+            >
+              Mudar capa
+            </span>
+          )}
         </span>
         <span className="lib-tile-footer">
           <span className="lib-tile-text">
@@ -130,11 +137,13 @@ function LibAddedTile({ item, onOpen, onDelete, removing, editing, onTogglePin, 
             {(() => {
               const tags = [...(item.skills || []), ...(item.tech_stack || [])]
               const shown = tags.length ? tags : (item.library_skills || [])
-              return shown.length > 0 && (
+              if (shown.length > 0) return (
                 <span className="lib-tile-skills">
                   {shown.slice(0, 3).map(s => <span key={s} className="lib-tile-skill">{s}</span>)}
                 </span>
               )
+              if (analyzing) return <span className="lib-tile-analyzing">Em análise</span>
+              return null
             })()}
           </span>
         </span>
@@ -157,8 +166,8 @@ function LibAddedTile({ item, onOpen, onDelete, removing, editing, onTogglePin, 
         </div>
       )}
 
-      {editing && <ProfileControls item={item} onTogglePin={onTogglePin} onSetLayout={onSetLayout} onToggleVisibility={onToggleVisibility} />}
-      <div className="lib-tile-tools">
+      {editing && !renaming && <ProfileControls item={item} onSetState={onSetState} onSetLayout={onSetLayout} />}
+      <div className="lib-tile-tools" hidden={renaming}>
         <span
           role="button"
           tabIndex={0}
@@ -187,7 +196,7 @@ function LibAddedTile({ item, onOpen, onDelete, removing, editing, onTogglePin, 
 
 /* Projeto "criado" (entry_kind='full') — ainda em construção, por isso
    sem o destaque todo: linha compacta, não tile. */
-function LibBuildingRow({ item, onOpen, onDelete, removing, editing, onTogglePin, onSetLayout, onToggleVisibility }) {
+function LibBuildingRow({ item, onOpen, onDelete, removing, editing, onSetState, onSetLayout }) {
   return (
     <div className={`lib-row-wrap${editing && item.profile_featured ? ' is-on' : ''}`}>
       <button type="button" className="lib-row is-clickable" onClick={() => onOpen(item)}>
@@ -215,7 +224,7 @@ function LibBuildingRow({ item, onOpen, onDelete, removing, editing, onTogglePin
           <Trash size={14} />
         </span>
       </button>
-      {editing && <ProfileControls item={item} onTogglePin={onTogglePin} onSetLayout={onSetLayout} onToggleVisibility={onToggleVisibility} />}
+      {editing && <ProfileControls item={item} onSetState={onSetState} onSetLayout={onSetLayout} />}
     </div>
   )
 }
@@ -231,6 +240,16 @@ export default function Biblioteca() {
   const [renamingId, setRenamingId] = useState(null)
   const [toast, setToastRaw] = useState('')
   const setToast = msg => { setToastRaw(msg); setTimeout(() => setToastRaw(''), 3500) }
+
+  // Itens que a IA está a analisar (competências) — "Em análise" no cartão.
+  const [taggingIds, setTaggingIds] = useState(() => getTaggingIds())
+  const [, forceTick] = useState(0)
+  const anyAnalyzing = (items ?? []).some(i => isAnalyzing(i, taggingIds))
+  useEffect(() => {
+    if (!anyAnalyzing) return
+    const t = setInterval(() => { setTaggingIds(getTaggingIds()); forceTick(n => n + 1) }, 2000)
+    return () => clearInterval(t)
+  }, [anyAnalyzing])
 
   useEffect(() => {
     if (!viewing && !confirmingDelete) return
@@ -251,6 +270,21 @@ export default function Biblioteca() {
         if (cancelled) return
         const withUrls = await withSignedLibraryUrls(data ?? [])
         if (!cancelled) setItems(withUrls)
+
+        // Word/PowerPoint sem miniatura (upload antigo, ou o conversor
+        // falhou na altura): gera-a agora em segundo plano, um de cada vez.
+        // O realtime em baixo troca o cartão assim que a linha atualiza.
+        const OFFICE = /officedocument\.(wordprocessingml|presentationml)/
+        const pending = withUrls.filter(i =>
+          i.entry_kind === 'library' && !i.library_thumb_url &&
+          OFFICE.test(i.library_file_type || '') && i._signedFileUrl)
+        if (pending.length) {
+          const { backfillOfficeThumbnail } = await import('../lib/officeThumb')
+          for (const it of pending) {
+            if (cancelled) break
+            await backfillOfficeThumbnail(it)
+          }
+        }
       })
     return () => { cancelled = true }
   }, [user])
@@ -266,6 +300,10 @@ export default function Biblioteca() {
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'projects', filter: `user_id=eq.${user.id}` }, async payload => {
         const [signed] = await withSignedLibraryUrls([payload.new])
         setItems(prev => prev?.map(i => (i.id === signed.id ? { ...i, ...signed } : i)) ?? prev)
+        if (signed.library_skills?.length || signed.skills?.length || signed.tech_stack?.length) {
+          markLibraryTagging(signed.id, false)
+          setTaggingIds(getTaggingIds())
+        }
       })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'projects', filter: `user_id=eq.${user.id}` }, async payload => {
         const [signed] = await withSignedLibraryUrls([payload.new])
@@ -293,18 +331,20 @@ export default function Biblioteca() {
     await supabase.from('projects').update(patch).eq('id', id).eq('user_id', user.id)
   }
 
-  function togglePin(item) {
-    if (item.profile_featured) {
-      patchItem(item.id, { profile_featured: false, profile_featured_order: null })
+  /* Estado único: 'private' | 'public' | 'featured'. */
+  function setProfileState(item, state) {
+    const cur = item.visibility === 'private' ? 'private' : item.profile_featured ? 'featured' : 'public'
+    if (cur === state) return
+    if (state === 'private') {
+      patchItem(item.id, { visibility: 'private', profile_featured: false, profile_featured_order: null })
+    } else if (state === 'public') {
+      patchItem(item.id, { visibility: 'public', profile_featured: false, profile_featured_order: null })
     } else {
-      if (item.visibility === 'private') {
-        setToast('Um projeto privado não pode aparecer no perfil. Torna-o público primeiro.')
-        return
-      }
       const maxOrder = (items ?? [])
         .filter(i => i.profile_featured)
         .reduce((m, i) => Math.max(m, i.profile_featured_order ?? 0), 0)
       patchItem(item.id, {
+        visibility: 'public',
         profile_featured: true,
         profile_featured_order: maxOrder + 1,
         profile_layout: item.profile_layout || 'tile',
@@ -312,26 +352,35 @@ export default function Biblioteca() {
     }
   }
 
-  function toggleVisibility(item) {
-    const next = item.visibility === 'private' ? 'public' : 'private'
-    const patch = { visibility: next }
-    // Privado sai automaticamente do perfil — não pode ficar lá escondido.
-    if (next === 'private' && item.profile_featured) {
-      patch.profile_featured = false
-      patch.profile_featured_order = null
-      setToast('Ficou privado e saiu do perfil.')
-    }
-    patchItem(item.id, patch)
-  }
-
   function setLayout(item, layout) {
     if ((item.profile_layout || 'tile') === layout) return
     patchItem(item.id, { profile_layout: layout })
   }
 
+  // "Mudar capa": o dono escolhe a imagem em vez da miniatura automática.
+  function changeCover(item) {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = 'image/png,image/jpeg,image/webp'
+    input.onchange = async () => {
+      const file = input.files?.[0]
+      if (!file) return
+      if (file.size > 8 * 1024 * 1024) { setToast('Imagem demasiado grande (máx. 8 MB).'); return }
+      setToast('A carregar a capa…')
+      const ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg'
+      const path = `${user.id}/thumbs/${Date.now()}-${item.id}.${ext}`
+      const up = await supabase.storage.from('library-files').upload(path, file, { contentType: file.type, upsert: true })
+      if (up.error) { setToast('Não foi possível carregar a imagem.'); return }
+      const { data: signed } = await supabase.storage.from('library-files').createSignedUrl(path, 3600)
+      setItems(prev => prev?.map(i => (i.id === item.id ? { ...i, library_thumb_url: path, _signedThumbUrl: signed?.signedUrl } : i)) ?? prev)
+      await supabase.from('projects').update({ library_thumb_url: path }).eq('id', item.id).eq('user_id', user.id)
+      setToast('Capa atualizada.')
+    }
+    input.click()
+  }
+
   const added = items?.filter(i => i.entry_kind === 'library') ?? []
   const building = items?.filter(i => i.entry_kind === 'full') ?? []
-  const featuredCount = (items ?? []).filter(i => i.profile_featured).length
 
   return (
     <div className="min-h-screen bg-page font-body">
@@ -362,14 +411,6 @@ export default function Biblioteca() {
           </div>
         </div>
 
-        {editing && (
-          <p className="lib-edit-hint">
-            Liga <strong>Mostrar no perfil</strong> nos itens que queres no teu perfil público
-            {featuredCount > 0 && <> — <strong>{featuredCount}</strong> {featuredCount === 1 ? 'ativo' : 'ativos'}</>}.
-            Escolhe <strong>Capa</strong> ou <strong>Linha</strong> para o formato de cada um.
-          </p>
-        )}
-
         {items === null ? (
           <div className="lib-tile-grid">
             {[0, 1, 2].map(i => <div key={i} className="lib-tile-main lib-tile--skeleton" />)}
@@ -393,11 +434,13 @@ export default function Biblioteca() {
                 <div className="lib-tile-grid">
                   {added.map(item => (
                     <LibAddedTile key={item.id} item={item} removing={removing} onDelete={handleDelete}
-                      editing={editing} onTogglePin={togglePin} onSetLayout={setLayout} onToggleVisibility={toggleVisibility}
+                      analyzing={isAnalyzing(item, taggingIds)}
+                      editing={editing} onSetState={setProfileState} onSetLayout={setLayout}
                       renaming={renamingId === item.id}
                       onStartRename={setRenamingId}
                       onCancelRename={() => setRenamingId(null)}
                       onRename={name => patchItem(item.id, { name })}
+                      onChangeCover={changeCover}
                       onOpen={it => it.library_file_url && setViewing(it)} />
                   ))}
                 </div>
@@ -412,7 +455,7 @@ export default function Biblioteca() {
                 <div className="lib-added-list">
                   {building.map(item => (
                     <LibBuildingRow key={item.id} item={item} removing={removing} onDelete={handleDelete}
-                      editing={editing} onTogglePin={togglePin} onSetLayout={setLayout} onToggleVisibility={toggleVisibility}
+                      editing={editing} onSetState={setProfileState} onSetLayout={setLayout}
                       onOpen={it => navigate(`/projeto/${it.slug}`)} />
                   ))}
                 </div>

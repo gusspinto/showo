@@ -5,6 +5,7 @@ import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
 import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
 import PdfViewer from './PdfViewer'
 import { officeToPdfBlob, persistLibraryPdf } from '../lib/officeToPdf'
+import { storagePath } from '../lib/libraryFile'
 import './LibFileViewer.css'
 
 const OFFICE_TYPES = new Set([
@@ -13,8 +14,9 @@ const OFFICE_TYPES = new Set([
 ])
 
 /* Abre um ficheiro da Biblioteca DENTRO da app: imagem, PDF e texto
-   renderizam-se aqui; Word/PowerPoint ainda não (fica para a conversão
-   para PDF — fase 2). Usado na Biblioteca e no perfil público. */
+   renderizam-se aqui; Word/PowerPoint abrem no visualizador da Microsoft
+   (ou no PDF já convertido, se existir). Usado na Biblioteca e no perfil
+   público. */
 export default function LibFileViewer({ item, onClose, onRename }) {
   const [renaming, setRenaming] = useState(false)
   const [nameDraft, setNameDraft] = useState(item?.name || '')
@@ -93,7 +95,7 @@ export default function LibFileViewer({ item, onClose, onRename }) {
           ) : isOffice ? (
             item._signedPdfUrl
               ? <PdfViewer url={item._signedPdfUrl} />
-              : <OfficeViewer item={item} />
+              : <OfficeEmbed item={item} />
           ) : (
             <div className="lfv-msg lfv-nopreview">
               <p>Este tipo de ficheiro ainda não abre dentro da app.</p>
@@ -108,6 +110,42 @@ export default function LibFileViewer({ item, onClose, onRename }) {
   )
 }
 
+/* Office sem PDF guardado: o visualizador da Microsoft (view.officeapps.live.com)
+   abre .docx/.pptx a partir do URL assinado, sem conversão nem Gotenberg.
+   Funciona para qualquer visitante e para ficheiros grandes; os PowerPoints
+   com imagens que rebentavam o Gotenberg abrem aqui na mesma. Se falhar
+   (raro), fica o caminho antigo: converter para PDF ou transferir. */
+function OfficeEmbed({ item }) {
+  const [mode, setMode] = useState('embed') // embed | convert
+
+  // Item antigo sem miniatura (o conversor falhou no upload): gera a
+  // miniatura embutida do ficheiro e grava-a, em segundo plano.
+  useEffect(() => {
+    if (item?.library_thumb_url || !item?._signedFileUrl) return
+    import('../lib/officeThumb')
+      .then(m => m.backfillOfficeThumbnail(item))
+      .catch(() => {})
+  }, [item])
+
+  const src = item?._signedFileUrl
+    ? `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(item._signedFileUrl)}`
+    : null
+
+  if (mode === 'convert') return <OfficeViewer item={item} />
+  if (!src) return <div className="lfv-msg">Não foi possível carregar o ficheiro.</div>
+
+  return (
+    <div className="lfv-office">
+      <iframe className="lfv-office-frame" src={src} title={item?.name} />
+      <div className="lfv-office-foot">
+        Não aparece?
+        <button type="button" onClick={() => setMode('convert')}>Converter para PDF</button>
+        <a href={item._signedFileUrl} target="_blank" rel="noopener noreferrer">Transferir</a>
+      </div>
+    </div>
+  )
+}
+
 /* Office sem PDF guardado ainda: converte na hora (office-thumbnail →
    Gotenberg) e mostra. Se for o dono, guarda o resultado para as próximas
    vezes e para os visitantes do perfil. Visitante anónimo → a função exige
@@ -115,6 +153,8 @@ export default function LibFileViewer({ item, onClose, onRename }) {
 function OfficeViewer({ item }) {
   const [state, setState] = useState('converting')
   const [pdfUrl, setPdfUrl] = useState(null)
+  const [errMsg, setErrMsg] = useState('')
+  const [attempt, setAttempt] = useState(0)
   const objUrlRef = useRef(null)
 
   useEffect(() => {
@@ -126,6 +166,7 @@ function OfficeViewer({ item }) {
           item._signedFileUrl,
           item.library_file_name || item.name,
           item.library_file_type,
+          storagePath(item.library_file_url),
         )
         if (cancelled) return
         objUrlRef.current = URL.createObjectURL(blob)
@@ -134,7 +175,12 @@ function OfficeViewer({ item }) {
         persistLibraryPdf(item, blob).catch(() => {})
       } catch (err) {
         console.error('[OfficeViewer]', err)
-        if (!cancelled) setState('error')
+        if (!cancelled) {
+          setErrMsg(err?.message?.includes('demasiado grande')
+            ? err.message
+            : 'O conversor de PowerPoint/Word está a arrancar ou indisponível. Tenta daqui a um minuto.')
+          setState('error')
+        }
       }
     }
     run()
@@ -142,13 +188,18 @@ function OfficeViewer({ item }) {
       cancelled = true
       if (objUrlRef.current) { URL.revokeObjectURL(objUrlRef.current); objUrlRef.current = null }
     }
-  }, [item])
+  }, [item, attempt])
 
-  if (state === 'converting') return <div className="lfv-msg">A preparar pré-visualização…</div>
+  if (state === 'converting') return <div className="lfv-msg">A preparar pré-visualização… (pode demorar até um minuto na primeira vez)</div>
   if (state === 'error') return (
     <div className="lfv-msg lfv-nopreview">
-      <p>Não foi possível pré-visualizar este ficheiro.</p>
-      <a className="lfv-download" href={item._signedFileUrl} target="_blank" rel="noopener noreferrer">Transferir ficheiro</a>
+      <p>{errMsg}</p>
+      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+        {!errMsg.includes('demasiado grande') && (
+          <button className="lfv-download" onClick={() => setAttempt(a => a + 1)}>Tentar de novo</button>
+        )}
+        <a className="lfv-download" href={item._signedFileUrl} target="_blank" rel="noopener noreferrer" style={{ background: 'transparent', border: '1px solid var(--color-border)' }}>Transferir ficheiro</a>
+      </div>
     </div>
   )
   return <PdfViewer url={pdfUrl} />
