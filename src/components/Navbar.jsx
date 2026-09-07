@@ -835,6 +835,18 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
     location.pathname.toLowerCase() === `/u/${profile.username.toLowerCase()}`
   const showCreateCta = !isTeacher && !isAdmin && !onOwnProfile
 
+  // Ano de escolaridade (11.º/12.º) destrava a secção de Estágios. Carregado
+  // à parte porque a coluna só existe depois da migração 127 — falha em
+  // silêncio se ainda não estiver aplicada.
+  const [gradeLevel, setGradeLevel] = useState(null)
+  useEffect(() => {
+    if (!user) { setGradeLevel(null); return }
+    supabase.from('profiles').select('grade_level').eq('id', user.id).maybeSingle()
+      .then(({ data }) => setGradeLevel(data?.grade_level ?? null))
+      .catch(() => {})
+  }, [user])
+  const showEstagios = isSchoolAccount && (gradeLevel === '11' || gradeLevel === '12')
+
   const [unreadMsgs, setUnreadMsgs] = useState(0)
   useEffect(() => {
     if (!user) return
@@ -1404,6 +1416,11 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               {isSchoolAccount && (
                 <button className={`sb-item${isActive('/turmas') ? ' active' : ''}`} onClick={() => navigate('/turmas')}>
                   <Users2 size={16} />{!collapsed && showLabels && <span>Turmas</span>}
+                </button>
+              )}
+              {showEstagios && (
+                <button className={`sb-item${isActive('/vagas') ? ' active' : ''}`} onClick={() => navigate('/vagas')}>
+                  <Briefcase size={16} />{!collapsed && showLabels && <span>Estágios</span>}
                 </button>
               )}
               <button className={`sb-item${isActive('/explorar') ? ' active' : ''}`} onClick={() => navigate('/explorar')}>

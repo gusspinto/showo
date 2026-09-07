@@ -116,10 +116,18 @@ function TurmaRow({ turma, navigate }) {
   )
 }
 
+const GRADE_OPTIONS = [
+  { value: '', label: 'Sem ano específico' },
+  { value: '10', label: '10.º ano' },
+  { value: '11', label: '11.º ano' },
+  { value: '12', label: '12.º ano' },
+]
+
 function CreateTurmaModal({ onClose, onCreated, user, profile }) {
   const [name, setName] = useState('')
   const [subject, setSubject] = useState('')
   const [academicYear, setAcademicYear] = useState('')
+  const [gradeLevel, setGradeLevel] = useState('')
   const [saving, setSaving] = useState(false)
 
   async function handleCreate(e) {
@@ -131,6 +139,11 @@ function CreateTurmaModal({ onClose, onCreated, user, profile }) {
     const { data, error } = await supabase.from('classes')
       .insert({ name: name.trim(), subject: subject.trim() || null, code, teacher_id: user.id, teacher_name: teacherName, academic_year: academicYear || null })
       .select().single()
+    // grade_level em passo à parte — a coluna só existe depois da migração 127.
+    if (!error && data && gradeLevel) {
+      await supabase.from('classes').update({ grade_level: gradeLevel }).eq('id', data.id)
+      data.grade_level = gradeLevel
+    }
     setSaving(false)
     if (!error && data) onCreated(data)
     onClose()
@@ -152,6 +165,14 @@ function CreateTurmaModal({ onClose, onCreated, user, profile }) {
             <SectionLabel>Ano letivo</SectionLabel>
             <Select value={academicYear} onChange={setAcademicYear} placeholder="Seleciona..."
               options={academicYearOptions().map(y => ({ value: y, label: y }))} />
+          </div>
+          <div>
+            <SectionLabel>Ano de escolaridade</SectionLabel>
+            <Select value={gradeLevel} onChange={setGradeLevel}
+              options={GRADE_OPTIONS} />
+            <p style={{ margin: '6px 0 0', fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)' }}>
+              Alunos de 11.º e 12.º passam a ver a secção de Estágios.
+            </p>
           </div>
         </div>
         <ModalActions>

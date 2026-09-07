@@ -26,6 +26,7 @@ import { PlanBadge } from '../components/PlanGate'
 import { DocumentTextIcon as FileText } from '@solar-icons/react/bold/document-text'
 import { appearanceVars } from '../lib/profileAppearance'
 import { containsProfanity } from '../lib/profanity'
+import { normalizeTech, normalizeTechList } from '../lib/technologies'
 import { fileTypeStyle, withSignedLibraryUrls } from '../lib/libraryFile'
 import './UserProfile.css'
 
@@ -349,7 +350,7 @@ export default function UserProfile() {
     return out
   }
   const projectSkills = dedupe(skillProjects.flatMap(p => Array.isArray(p.skills) ? p.skills : []))
-  const projectTech   = dedupe(skillProjects.flatMap(p => Array.isArray(p.tech_stack) ? p.tech_stack : []))
+  const projectTech   = normalizeTechList(skillProjects.flatMap(p => Array.isArray(p.tech_stack) ? p.tech_stack : []))
   const proofCount = skill => skillProjects.filter(p => (p.skills || []).some(s => norm(s) === norm(skill))).length
   const manualSkills = previewSkills || []
   const suggestedSkills = projectSkills.filter(s => !manualSkills.some(m => norm(m) === norm(s)))
@@ -383,8 +384,9 @@ export default function UserProfile() {
 
   // Confirma uma sugestão da IA: escreve-a em projects.skills/tech_stack de
   // cada projeto onde apareceu, e tira-a da lista de pendentes.
-  async function confirmSuggestion(kind, label, projectIds) {
+  async function confirmSuggestion(kind, rawLabel, projectIds) {
     const col = kind === 'tech' ? 'tech_stack' : 'skills'
+    const label = kind === 'tech' ? normalizeTech(rawLabel) : rawLabel
     await Promise.all(projectIds.map(async pid => {
       const proj = skillProjects.find(p => p.id === pid)
       const current = (proj?.[col] || [])
@@ -393,7 +395,7 @@ export default function UserProfile() {
       await supabase.from('projects').update({ [col]: next }).eq('id', pid)
       setSkillProjects(prev => prev.map(p => p.id === pid ? { ...p, [col]: next } : p))
     }))
-    dismissSuggestion(kind, label, projectIds)
+    dismissSuggestion(kind, rawLabel, projectIds)
     if (kind === 'skill') addSkillToProfile(label)
   }
 
