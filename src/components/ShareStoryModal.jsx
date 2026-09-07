@@ -49,11 +49,12 @@ export function ShareStoryModal({ project, onClose }) {
     // do sistema, que foi exatamente o que pareceu "não é a fonte certa".
     if (document.fonts?.ready) await document.fonts.ready
     const { default: html2canvas } = await import('html2canvas')
-    // scale alto de propósito: um PNG pequeno em pixels reais faz o
-    // Instagram inseri-lo já ampliado (e desfocado) por defeito, obrigando
-    // a afastar/centrar à mão. Com mais pixels reais, entra ao tamanho
-    // natural, já centrado, sem perder nitidez.
-    return html2canvas(canvasRef.current, { scale: 5, backgroundColor: null, useCORS: true, logging: false })
+    // Testado em telemóvel real: MAIS pixels fez o Instagram inserir a
+    // imagem MAIOR (cobria o ecrã, cortada em cima/baixo), o oposto do que
+    // se esperava. O caminho certo é um ficheiro fisicamente pequeno —
+    // scale baixo compensado por um cartão mais estreito (ver largura do
+    // cartão abaixo) para não ficar granulado.
+    return html2canvas(canvasRef.current, { scale: 2, backgroundColor: null, useCORS: true, logging: false })
   }
 
   async function handleDownload() {
