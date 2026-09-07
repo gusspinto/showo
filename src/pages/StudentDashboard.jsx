@@ -805,41 +805,32 @@ export default function StudentDashboard({ user, profile }) {
         {(() => {
           if (planId !== 'free' || nudgeDismissed) return null
           const NUDGE_FEATURES = ['coach', 'createProject', 'defense', 'narrative', 'exportPptx']
-          const warnings = NUDGE_FEATURES
-            .map(f => ({ feature: f, remaining: remainingUses(planId, f, aiUsage), limit: getPlan(planId).ai[f] }))
-            .filter(w => w.limit > 0 && w.remaining <= Math.max(1, Math.ceil(w.limit * 0.3)) && w.remaining > 0)
-          const exhausted = NUDGE_FEATURES
-            .map(f => ({ feature: f, remaining: remainingUses(planId, f, aiUsage), limit: getPlan(planId).ai[f] }))
-            .filter(w => w.limit > 0 && w.remaining === 0)
+          const stats = NUDGE_FEATURES.map(f => ({
+            feature: f,
+            remaining: remainingUses(planId, f, aiUsage),
+            limit: getPlan(planId).ai[f],
+          }))
+          const warnings = stats.filter(w => w.limit > 0 && w.remaining > 0 && w.remaining <= Math.max(1, Math.ceil(w.limit * 0.3)))
+          const exhausted = stats.filter(w => w.limit > 0 && w.remaining === 0)
           if (warnings.length === 0 && exhausted.length === 0) return null
+          const urgent = exhausted.length > 0
+          const nameJoin = arr => {
+            const l = arr.map(w => AI_FEATURE_LABELS[w.feature])
+            return l.length <= 1 ? (l[0] || '') : `${l.slice(0, -1).join(', ')} e ${l[l.length - 1]}`
+          }
+          const minLeft = warnings.length ? Math.min(...warnings.map(w => w.remaining)) : 0
+          const text = urgent
+            ? `${nameJoin(exhausted)} ${exhausted.length === 1 ? 'esgotou' : 'esgotaram'} este mês`
+            : `${nameJoin(warnings)}: ${minLeft} restante${minLeft !== 1 ? 's' : ''} este mês`
           return (
-            <div className="sdb-usage-nudge">
-              <button className="sdb-usage-nudge-close" onClick={() => { try { localStorage.setItem(nudgeKey, '1') } catch { /* ignore */ } setNudgeDismissed(true) }} aria-label="Fechar">✕</button>
-              {exhausted.length > 0 && (
-                <div className="sdb-usage-nudge-row sdb-usage-nudge-row--exhausted">
-                  <span className="sdb-usage-nudge-icon">🚫</span>
-                  <span>
-                    {exhausted.length === 1
-                      ? <><strong>{AI_FEATURE_LABELS[exhausted[0].feature]}</strong> esgotou este mês.</>
-                      : <><strong>{exhausted.map(w => AI_FEATURE_LABELS[w.feature]).join(', ')}</strong> esgotaram este mês.</>
-                    }
-                  </span>
-                </div>
-              )}
-              {warnings.length > 0 && (
-                <div className="sdb-usage-nudge-row">
-                  <span className="sdb-usage-nudge-icon">⚡</span>
-                  <span>
-                    {warnings.map(w => (
-                      <span key={w.feature} className="sdb-usage-nudge-chip">
-                        {AI_FEATURE_LABELS[w.feature]}: <strong>{w.remaining}</strong> restante{w.remaining !== 1 ? 's' : ''}
-                      </span>
-                    ))}
-                  </span>
-                </div>
-              )}
+            <div className={`sdb-usage-nudge${urgent ? ' is-urgent' : ''}`}>
+              <Sparkles size={15} className="sdb-usage-nudge-icon" />
+              <span className="sdb-usage-nudge-text" title={text}>{text}</span>
               <button className="sdb-usage-nudge-cta" onClick={() => { logFunnelEvent('nudge_clicked'); navigate('/pricing') }}>
-                Ver planos <ArrowRight size={13} />
+                Experimenta o Plus <ArrowRight size={12} />
+              </button>
+              <button className="sdb-usage-nudge-close" onClick={() => { try { localStorage.setItem(nudgeKey, '1') } catch { /* ignore */ } setNudgeDismissed(true) }} aria-label="Dispensar">
+                <X size={14} />
               </button>
             </div>
           )
