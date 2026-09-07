@@ -23,6 +23,7 @@ import { CopyIcon as Copy } from '@solar-icons/react/bold/copy'
 import { VolumeLoudIcon as Megaphone } from '@solar-icons/react/bold/volume-loud'
 import { PresentationGraphIcon as School } from '@solar-icons/react/bold/presentation-graph'
 import { TrashBinMinimalisticIcon as Trash2 } from '@solar-icons/react/bold/trash-bin-minimalistic'
+import { ArrowRightIcon as ArrowRight2 } from '@solar-icons/react/bold/arrow-right'
 import { Select } from '../components/ui'
 
 const C = {
@@ -86,11 +87,36 @@ function StatCard({ icon, label, value, color = C.blue, sub }) {
   )
 }
 
-function FunnelStep({ label, value }) {
+// Um funil é uma sequência a perder gente a cada passo — uma grelha de
+// números soltos não mostra isso. Cada barra é proporcional ao primeiro
+// passo, e a seta entre elas leva a taxa de passagem, que é a informação
+// que realmente interessa (não o valor absoluto de cada etapa isolada).
+function FunnelFlow({ steps }) {
+  const max = Math.max(1, ...steps.map(s => s.value))
   return (
-    <div style={{ padding: '12px 14px', background: C.bgAlt, borderRadius: 10, border: `1px solid ${C.border}` }}>
-      <div style={{ fontSize: 22, fontWeight: 400, color: C.text, fontFamily: 'var(--font-heading)' }}>{value}</div>
-      <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{label}</div>
+    <div style={{ display: 'flex', alignItems: 'stretch', gap: 0, flexWrap: 'wrap' }}>
+      {steps.map((s, i) => {
+        const pct = Math.round((s.value / max) * 100)
+        const prev = i > 0 ? steps[i - 1].value : null
+        const dropPct = prev ? (prev === 0 ? 0 : Math.round((s.value / prev) * 100)) : null
+        return (
+          <div key={s.label} style={{ display: 'flex', alignItems: 'center', flex: '1 1 auto', minWidth: 140 }}>
+            {i > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '0 10px', flexShrink: 0 }}>
+                <ArrowRight2 size={13} color={C.subtle} />
+                <span style={{ fontSize: 10, fontWeight: 700, color: dropPct >= 50 ? C.green : dropPct >= 20 ? C.yellow : C.red, whiteSpace: 'nowrap' }}>{dropPct}%</span>
+              </div>
+            )}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 20, fontWeight: 400, color: C.text, fontFamily: 'var(--font-heading)', lineHeight: 1 }}>{s.value}</div>
+              <div style={{ fontSize: 11, color: C.muted, marginTop: 4, marginBottom: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.label}</div>
+              <div style={{ height: 6, borderRadius: 99, background: C.bgAlt, overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${Math.max(pct, s.value > 0 ? 4 : 0)}%`, borderRadius: 99, background: 'var(--brand-gradient)' }} />
+              </div>
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -560,23 +586,24 @@ function OverviewTab({ users, projects, activityLog, aiUsageSummary, funnelSumma
         <StatCard icon={<Star size={20} />} label="Score médio" value={avgScore} color={C.yellow} sub={`${scores.length} com score`} />
         <StatCard icon={<Star size={20} />} label="Planos pagos" value={paidUsers} color={paidUsers > 0 ? C.green : C.muted} sub={`${planCounts.plus} Plus · ${planCounts.pro} Pro · ${planCounts.school} Escola`} />
         <StatCard icon={<Star size={20} />} label="MRR estimado" value={`€${mrrEstimate.toFixed(2)}`} color={mrrEstimate > 0 ? C.green : C.muted} sub="A preço de lista, sem promoções" />
+        <StatCard icon={<Star size={20} />} label="Subscrições novas" value={newSubsThisMonth} color={newSubsThisMonth > 0 ? C.green : C.muted} sub="Este mês" />
+        <StatCard icon={<Star size={20} />} label="Cancelamentos" value={churnedThisMonth} color={churnedThisMonth > 0 ? C.red : C.muted} sub="Este mês" />
+        <StatCard icon={<Star size={20} />} label="Receita cobrada" value={`€${revenueThisMonth.toFixed(2)}`} color={revenueThisMonth > 0 ? C.green : C.muted} sub="Faturas pagas este mês" />
       </div>
 
       {/* Funil de conversão */}
-      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px', marginBottom: 24 }}>
+      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px', marginBottom: 24 }}>
         <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Funil de conversão · mês atual</h3>
-        <p style={{ margin: '0 0 14px', fontSize: 11, color: C.subtle }}>Do limite atingido ao início do checkout — dados reais, não estimativa</p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 12 }}>
-          <FunnelStep label="Bateram num limite" value={usersAtLimit} />
-          <FunnelStep label="Viram o nudge" value={nudgeShown} />
-          <FunnelStep label="Clicaram no nudge" value={nudgeClicked} />
-          <FunnelStep label="Iniciaram checkout" value={checkoutStarted} />
-          <FunnelStep label="Subscrições novas" value={newSubsThisMonth} />
-          <FunnelStep label="Cancelamentos" value={churnedThisMonth} />
-          <FunnelStep label="Receita cobrada" value={`€${revenueThisMonth.toFixed(2)}`} />
-        </div>
+        <p style={{ margin: '0 0 18px', fontSize: 11, color: C.subtle }}>Do limite atingido ao início do checkout — dados reais, não estimativa. A % é a taxa de passagem entre passos.</p>
+        <FunnelFlow steps={[
+          { label: 'Bateram num limite', value: usersAtLimit },
+          { label: 'Viram o nudge', value: nudgeShown },
+          { label: 'Clicaram no nudge', value: nudgeClicked },
+          { label: 'Iniciaram checkout', value: checkoutStarted },
+        ]} />
         {Object.keys(limitHitsByFeature).length > 0 && (
-          <div style={{ marginTop: 14, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${C.border}`, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: C.subtle, textTransform: 'uppercase', letterSpacing: 0.5, marginRight: 4 }}>Por feature</span>
             {Object.entries(limitHitsByFeature).sort((a, b) => b[1] - a[1]).map(([f, n]) => (
               <span key={f} style={{ fontSize: 11, padding: '3px 9px', borderRadius: 99, background: C.bgAlt, color: C.muted }}>
                 {AI_FEATURE_LABELS[f] || f}: {n}
