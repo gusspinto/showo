@@ -139,6 +139,9 @@ export function ShareStoryModal({ project, journal = [], onClose }) {
   const lastEntryText = lastEntry?.content?.trim()
     ? (lastEntry.content.trim().length > 120 ? lastEntry.content.trim().slice(0, 117) + '…' : lastEntry.content.trim())
     : null
+  const updatedRecently = lastEntry
+    ? (Date.now() - new Date(lastEntry.created_at).getTime()) < 7 * 86400000
+    : false
 
   return createPortal(
     <div
@@ -229,6 +232,26 @@ export function ShareStoryModal({ project, journal = [], onClose }) {
                   <div style={{ fontSize: 13, fontWeight: 600, color: '#d8d8de', marginTop: 10, lineHeight: 1.3 }}>
                     {project.name}
                   </div>
+
+                  {/* O score é literalmente uma medida de completude (0-100):
+                      pontos por problema, solução, resultados, aprendizagens,
+                      capa, diário. Por isso "% completo" é honesto — e uma
+                      barra percebe-se sem saber o que é a Showo, ao
+                      contrário de "score 24". */}
+                  {project.score > 0 && (
+                    <div style={{ marginTop: 16 }}>
+                      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 7 }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: '#d8d8de' }}>{project.score}% completo</span>
+                        <span style={{ fontSize: 10, color: '#8a8a94' }}>{updatedRecently ? 'atualizado esta semana' : ''}</span>
+                      </div>
+                      <div style={{ height: 6, borderRadius: 99, background: 'rgba(255,255,255,0.09)', overflow: 'hidden' }}>
+                        <div style={{
+                          height: '100%', width: `${Math.min(100, project.score)}%`, borderRadius: 99,
+                          background: `linear-gradient(90deg, ${BRAND.blue}, ${BRAND.gold})`,
+                        }} />
+                      </div>
+                    </div>
+                  )}
 
                   {lastEntryText && (
                     <div style={{

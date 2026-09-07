@@ -34,6 +34,7 @@ import { Button, Card, SectionLabel, Modal, Select } from '../components/ui'
 import { useAuth } from '../context/AuthContext'
 import { remainingUses, AI_FEATURE_LABELS, getPlan } from '../lib/plans'
 import ExportProjectsModal from '../components/ExportProjectsModal'
+import { ShareStoryModal } from '../components/ShareStoryModal'
 
 // ProjectPulse removed — focus project now shown as auto-pinned card
 import JournalComposer from '../components/dashboard/JournalComposer'
@@ -172,6 +173,7 @@ export default function StudentDashboard({ user, profile }) {
   const [orgName, setOrgName] = useState(null)
   const [schoolClasses, setSchoolClasses] = useState([])
   const [showExportModal, setShowExportModal] = useState(false)
+  const [shareProject, setShareProject] = useState(null)
   const nudgeKey = `showo_nudge_dismissed_${user.id}_${new Date().toISOString().slice(0, 7)}`
   const [nudgeDismissed, setNudgeDismissed] = useState(() => {
     try { return !!localStorage.getItem(nudgeKey) } catch { return false }
@@ -716,6 +718,17 @@ export default function StudentDashboard({ user, profile }) {
         <ExportProjectsModal onClose={() => setShowExportModal(false)} />
       )}
 
+      {/* `entries` são as do projeto em foco — só passa o diário quando o
+          cartão partilhado é mesmo esse projeto, senão citaria a entrada
+          errada num projeto diferente. */}
+      {shareProject && (
+        <ShareStoryModal
+          project={shareProject}
+          journal={shareProject.id === focusFull?.id ? entries : []}
+          onClose={() => setShareProject(null)}
+        />
+      )}
+
       {showRecap && (
         <WeeklyRecap
           userId={user.id}
@@ -1030,6 +1043,7 @@ export default function StudentDashboard({ user, profile }) {
                         onOpen={() => navigate(`/projeto/${focusFull.slug}`)}
                         onOpenDiary={() => navigate(`/projeto/${focusFull.slug}/diario`)}
                         onLog={kind => setComposerKind(kind)}
+                        onShare={() => setShareProject(focusFull)}
                         writtenToday={entries.some(e => e.created_at?.slice(0,10) === new Date().toISOString().slice(0,10))}
                       />
                     )}
@@ -1052,6 +1066,7 @@ export default function StudentDashboard({ user, profile }) {
                           onOpen={() => navigate(`/projeto/${pinned.slug}`)}
                           onOpenDiary={() => navigate(`/projeto/${pinned.slug}/diario`)}
                           onLog={kind => setComposerKind(kind)}
+                          onShare={() => setShareProject(pinned)}
                           writtenToday={entries.some(e => e.created_at?.slice(0,10) === new Date().toISOString().slice(0,10))}
                         />
                       )
@@ -1399,7 +1414,7 @@ function ProjectRow({ project, shared, onOpen, onEdit, onCopy, copied, onDelete,
 /* ── Card de projecto fixado na dashboard ─────────────────────────────────── */
 const TYPE_MAP = { pap: 'PAP', internship: 'Estágio', group: 'Trabalho de grupo', personal: 'Projeto pessoal', competition: 'Competição', presentation: 'Apresentação' }
 
-function PinnedProjectCard({ project, auto, coverage, onOpenReport, onUnpin, onEdit, onDelete, onOpen, onOpenDiary, onLog, writtenToday }) {
+function PinnedProjectCard({ project, auto, coverage, onOpenReport, onUnpin, onEdit, onDelete, onOpen, onOpenDiary, onLog, onShare, writtenToday }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const typeLabel = auto ? 'Em foco' : (project.is_pap ? 'PAP' : (TYPE_MAP[project.project_type] || 'Projeto'))
 
@@ -1515,6 +1530,11 @@ function PinnedProjectCard({ project, auto, coverage, onOpenReport, onUnpin, onE
           <button className="sdb-btn sdb-btn--quiet sdb-btn--sm" onClick={onOpen}>
             <ArrowUpRight size={13} /> Ver
           </button>
+          {onShare && (
+            <button className="sdb-btn sdb-btn--quiet sdb-btn--sm" onClick={onShare}>
+              <Share2 size={13} /> Partilhar
+            </button>
+          )}
         </div>
       </div>
     </section>
