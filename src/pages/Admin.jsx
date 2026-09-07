@@ -61,8 +61,8 @@ const PROFILE_COLUMNS = 'id, username, total_xp, created_at, full_name, bio, is_
 // build/launch are legacy plan names still sitting in old profile rows —
 // resolvePlanId() normalizes those to plus/pro, but these maps stay here as
 // a fallback for any raw value that slips through un-resolved.
-const PLAN_COLORS = { free: '#6b7280', school: '#8B5CF6', plus: '#2B7EF5', pro: '#C49A20', build: '#2B7EF5', launch: '#C49A20' }
-const PLAN_LABELS = { free: 'Free', school: 'Escola', plus: 'Plus', pro: 'Pro', build: 'Plus', launch: 'Pro' }
+const PLAN_COLORS = { free: '#6b7280', school: '#8B5CF6', school_pro: '#6D28D9', plus: '#2B7EF5', pro: '#C49A20', build: '#2B7EF5', launch: '#C49A20' }
+const PLAN_LABELS = { free: 'Free', school: 'Escola Plus', school_pro: 'Escola Pro', plus: 'Plus', pro: 'Pro', build: 'Plus', launch: 'Pro' }
 
 function StatCard({ icon, label, value, color = C.blue, sub }) {
   return (
@@ -425,7 +425,7 @@ function OverviewTab({ users, projects, activityLog, aiUsageSummary, funnelSumma
     activityLog.filter(e => new Date(e.created_at).getTime() > monthAgo && priorUserIds.has(e.user_id)).map(e => e.user_id)
   ).size
   const retentionRate = priorUsersCount > 0 ? Math.round((priorUsersReturned / priorUsersCount) * 100) : 0
-  const planCounts = { free: 0, school: 0, plus: 0, pro: 0 }
+  const planCounts = { free: 0, school: 0, school_pro: 0, plus: 0, pro: 0 }
   users.forEach(u => { const p = resolvePlanId(u); planCounts[p] = (planCounts[p] || 0) + 1 })
 
   // resolvePlanId dá o nível de ACESSO de cada utilizador, não se estão a
@@ -607,6 +607,7 @@ function OverviewTab({ users, projects, activityLog, aiUsageSummary, funnelSumma
         <StatCard icon={<Star size={20} />} label="Assinantes reais" value={paidUsers} color={paidUsers > 0 ? C.green : C.muted} sub={`${realPlusCount} Plus · ${realProCount} Pro · pagam via Stripe`} />
         <StatCard icon={<Star size={20} />} label="MRR real" value={`€${mrrEstimate.toFixed(2)}`} color={mrrEstimate > 0 ? C.green : C.muted} sub="Só assinantes Stripe, preço de lista" />
         <StatCard icon={<Star size={20} />} label="Acesso Plus/Pro oferecido" value={grantedUsers} color={C.purple} sub="Professores e ofertas manuais, sem Stripe" />
+        <StatCard icon={<School size={20} />} label="Alunos de escola" value={planCounts.school + planCounts.school_pro} color={C.purple} sub={`${planCounts.school} Escola Plus · ${planCounts.school_pro} Escola Pro`} />
         <StatCard icon={<Star size={20} />} label="Subscrições novas" value={newSubsThisMonth} color={newSubsThisMonth > 0 ? C.green : C.muted} sub="Este mês" />
         <StatCard icon={<Star size={20} />} label="Cancelamentos" value={churnedThisMonth} color={churnedThisMonth > 0 ? C.red : C.muted} sub="Este mês" />
         <StatCard icon={<Star size={20} />} label="Receita cobrada" value={`€${revenueThisMonth.toFixed(2)}`} color={revenueThisMonth > 0 ? C.green : C.muted} sub="Faturas pagas este mês" />
@@ -1306,7 +1307,7 @@ function OrgsTab() {
       <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '20px 22px' }}>
         <h3 style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 700, color: C.text }}>Registar escola</h3>
         <p style={{ margin: '0 0 16px', fontSize: 13, color: C.muted }}>
-          O domínio é opcional — se preenchido, alunos com esse email entram automaticamente. Sem domínio, os alunos entram pelo código de turma do professor.
+          O domínio é opcional — se preenchido, alunos com esse email entram automaticamente. Sem domínio, os alunos entram pelo código de turma do professor. O plano define os limites de IA de todos os alunos desta escola (Escola Pro tem o dobro ou mais em cada feature).
         </p>
         <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -1323,8 +1324,8 @@ function OrgsTab() {
             <div>
               <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 5 }}>Plano</label>
               <select value={plan} onChange={e => setPlan(e.target.value)} style={{ ...fieldStyle, width: 'auto', paddingRight: 28 }}>
-                <option value="plus">Plus</option>
-                <option value="pro">Pro</option>
+                <option value="plus">Escola Plus</option>
+                <option value="pro">Escola Pro</option>
               </select>
             </div>
             <button type="submit" disabled={creating} style={{
@@ -1364,8 +1365,8 @@ function OrgsTab() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <select value={editPlan} onChange={e => setEditPlan(e.target.value)} style={{ ...fieldStyle, width: 'auto', paddingRight: 28 }}>
-                    <option value="plus">Plus</option>
-                    <option value="pro">Pro</option>
+                    <option value="plus">Escola Plus</option>
+                    <option value="pro">Escola Pro</option>
                   </select>
                   <button onClick={saveEdit} disabled={saving} style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '7px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
                     {saving ? 'A guardar…' : 'Guardar'}
@@ -1635,14 +1636,17 @@ export default function Admin() {
           _orphan: true,
         }))
 
-      // Map org names to users
+      // Map org name + plan to users — organization_plan é o que resolvePlanId
+      // usa para distinguir Escola Plus de Escola Pro, sem isto todas as
+      // contas escolares apareciam como Escola Plus independentemente do que
+      // a escola realmente contratou.
       const orgIds = [...new Set(enrichedProfiles.map(p => p.organization_id).filter(Boolean))]
       let orgMap = {}
       if (orgIds.length) {
-        const { data: orgs } = await supabase.from('organizations').select('id, name').in('id', orgIds)
-        if (orgs) orgs.forEach(o => { orgMap[o.id] = o.name })
+        const { data: orgs } = await supabase.from('organizations').select('id, name, plan').in('id', orgIds)
+        if (orgs) orgs.forEach(o => { orgMap[o.id] = o })
       }
-      const withOrg = enrichedProfiles.map(p => ({ ...p, _orgName: orgMap[p.organization_id] || null }))
+      const withOrg = enrichedProfiles.map(p => ({ ...p, _orgName: orgMap[p.organization_id]?.name || null, organization_plan: orgMap[p.organization_id]?.plan || null }))
 
       setUsers([...withOrg, ...orphanUsers])
       setProjects(projectsRes.data || [])

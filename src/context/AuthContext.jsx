@@ -150,6 +150,13 @@ export function AuthProvider({ children }) {
       })
     }
 
+    // resolvePlanId precisa disto para distinguir Escola Plus de Escola Pro —
+    // organizations.plan não vem no select de profiles (não há FK embutida).
+    if (data?.organization_id) {
+      const { data: org } = await supabase.from('organizations').select('plan').eq('id', data.organization_id).single()
+      if (org) data = { ...data, organization_plan: org.plan }
+    }
+
     setProfile(data ?? null)
     if (data) {
       identifyUser(userRes.data?.user, data)
