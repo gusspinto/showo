@@ -545,7 +545,7 @@
 }
 
 @media (max-width: 600px) {
-  .np-center { padding: 24px 16px 32px; justify-content: flex-start; }
+  .np-center { padding: 24px 16px 32px; }
   .np-center--review { padding-top: 20px; }
   .np-choice { padding: 16px; }
   .np-choice-desc { font-size: 13px; }

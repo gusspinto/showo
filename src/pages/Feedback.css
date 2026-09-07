@@ -179,7 +179,7 @@
 .fbp-done .fbp-submit { width: 100%; max-width: 220px; }
 
 @media (max-width: 600px) {
-  .fbp-wrap { padding: 32px 20px calc(48px + env(safe-area-inset-bottom, 0px)); justify-content: flex-start; }
+  .fbp-wrap { padding: 32px 20px calc(48px + env(safe-area-inset-bottom, 0px)); }
   .fbp-actions { flex-direction: column-reverse; }
   .fbp-cancel, .fbp-submit { width: 100%; }
 }
