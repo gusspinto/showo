@@ -84,6 +84,10 @@
   transition: background 0.14s, color 0.14s;
 }
 .lib-seg-btn.is-on { background: var(--color-text); color: var(--color-bg); }
+/* Os dois switches que mais importam ganham cor no estado ligado. */
+.lib-seg-btn--profile.is-on { background: var(--color-primary); color: #fff; }
+.lib-seg-btn--public.is-on  { background: var(--color-success); color: #fff; }
+.lib-seg-btn--private.is-on { background: var(--color-warning); color: #fff; }
 
 /* Item ligado ao perfil — anel subtil à volta. */
 .lib-tile.is-on .lib-tile-main,
@@ -379,8 +383,10 @@
   /* Ícones de ação: o mínimo global de 44px deformava-os. */
   .lib-tile-tool { min-height: 0; width: 34px; height: 34px; }
   .lib-tile-cover-edit { min-height: 0; }
+  /* Cada switch na sua linha — 2 ou 3 lado a lado não cabem e o texto
+     saltava para fora. */
   .lib-edit-opts { gap: 12px; }
-  .lib-opt { flex: 1; min-width: 130px; }
+  .lib-opt { flex-basis: 100%; }
   .lib-seg { width: 100%; }
-  .lib-seg-btn { flex: 1; min-height: 0; }
+  .lib-seg-btn { flex: 1; min-height: 0; padding: 8px 10px; }
 }

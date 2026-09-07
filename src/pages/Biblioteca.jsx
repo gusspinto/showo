@@ -48,7 +48,7 @@ function ProfileControls({ item, onTogglePin, onSetLayout, onToggleVisibility })
         <span className="lib-opt">
           <span className="lib-opt-label">No perfil</span>
           <span className="lib-seg" role="group" aria-label="Mostrar no perfil">
-            <button type="button" className={`lib-seg-btn${on ? ' is-on' : ''}`}
+            <button type="button" className={`lib-seg-btn lib-seg-btn--profile${on ? ' is-on' : ''}`}
               disabled={isPrivate && !on}
               title={isPrivate && !on ? 'Torna o item público primeiro' : undefined}
               onClick={() => { if (!on) onTogglePin(item) }}>Sim</button>
@@ -60,9 +60,9 @@ function ProfileControls({ item, onTogglePin, onSetLayout, onToggleVisibility })
         <span className="lib-opt">
           <span className="lib-opt-label">Visível</span>
           <span className="lib-seg" role="group" aria-label="Visibilidade">
-            <button type="button" className={`lib-seg-btn${!isPrivate ? ' is-on' : ''}`}
+            <button type="button" className={`lib-seg-btn lib-seg-btn--public${!isPrivate ? ' is-on' : ''}`}
               onClick={() => { if (isPrivate) onToggleVisibility(item) }}>Público</button>
-            <button type="button" className={`lib-seg-btn${isPrivate ? ' is-on' : ''}`}
+            <button type="button" className={`lib-seg-btn lib-seg-btn--private${isPrivate ? ' is-on' : ''}`}
               onClick={() => { if (!isPrivate) onToggleVisibility(item) }}>Privado</button>
           </span>
         </span>
