@@ -17,10 +17,10 @@ import { GraphNewUpIcon as TrendingUp } from '@solar-icons/react/bold/graph-new-
 import { DangerTriangleIcon as AlertTriangle } from '@solar-icons/react/bold/danger-triangle'
 import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/square-academic-cap'
 import { SettingsIcon as Settings } from '@solar-icons/react/bold/settings'
-import { academicYearOptions } from '../lib/academicYear'
+import CreateTurmaModal from '../components/CreateTurmaModal'
 import {
-  Button, Card, SectionLabel, Badge, Modal, ModalActions,
-  EmptyState, ProgressBar, Select,
+  Button, Card, SectionLabel, Badge,
+  EmptyState, ProgressBar,
 } from '../components/ui'
 
 /* ── Helpers ── */
@@ -47,11 +47,6 @@ function timeAgoLabel(ts) {
   if (diff < 86400) return `há ${Math.floor(diff / 3600)}h`
   if (diff < 604800) return `há ${Math.floor(diff / 86400)} dias`
   return new Date(ts).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })
-}
-
-function generateCode() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-  return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
 }
 
 /* ── Sub-components ── */
@@ -113,75 +108,6 @@ function TurmaRow({ turma, navigate }) {
         </div>
       </div>
     </div>
-  )
-}
-
-const GRADE_OPTIONS = [
-  { value: '', label: 'Sem ano específico' },
-  { value: '10', label: '10.º ano' },
-  { value: '11', label: '11.º ano' },
-  { value: '12', label: '12.º ano' },
-]
-
-function CreateTurmaModal({ onClose, onCreated, user, profile }) {
-  const [name, setName] = useState('')
-  const [subject, setSubject] = useState('')
-  const [academicYear, setAcademicYear] = useState('')
-  const [gradeLevel, setGradeLevel] = useState('')
-  const [saving, setSaving] = useState(false)
-
-  async function handleCreate(e) {
-    e.preventDefault()
-    if (!name.trim()) return
-    setSaving(true)
-    const code = generateCode()
-    const teacherName = profile?.full_name || user?.user_metadata?.full_name || ''
-    const { data, error } = await supabase.from('classes')
-      .insert({ name: name.trim(), subject: subject.trim() || null, code, teacher_id: user.id, teacher_name: teacherName, academic_year: academicYear || null })
-      .select().single()
-    // grade_level em passo à parte — a coluna só existe depois da migração 127.
-    if (!error && data && gradeLevel) {
-      await supabase.from('classes').update({ grade_level: gradeLevel }).eq('id', data.id)
-      data.grade_level = gradeLevel
-    }
-    setSaving(false)
-    if (!error && data) onCreated(data)
-    onClose()
-  }
-
-  return (
-    <Modal onClose={onClose} title="Nova turma">
-      <form onSubmit={handleCreate}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div>
-            <SectionLabel>Nome da turma *</SectionLabel>
-            <input value={name} onChange={e => setName(e.target.value)} required placeholder="ex: Turma A — 11º ano" className="dash-input" />
-          </div>
-          <div>
-            <SectionLabel>Disciplina (opcional)</SectionLabel>
-            <input value={subject} onChange={e => setSubject(e.target.value)} placeholder="ex: Programação e Sistemas" className="dash-input" />
-          </div>
-          <div>
-            <SectionLabel>Ano letivo</SectionLabel>
-            <Select value={academicYear} onChange={setAcademicYear} placeholder="Seleciona..."
-              options={academicYearOptions().map(y => ({ value: y, label: y }))} />
-          </div>
-          <div>
-            <SectionLabel>Ano de escolaridade</SectionLabel>
-            <Select value={gradeLevel} onChange={setGradeLevel}
-              options={GRADE_OPTIONS} />
-            <p style={{ margin: '6px 0 0', fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)' }}>
-              Alunos de 11.º e 12.º passam a ver a secção de Estágios.
-            </p>
-          </div>
-        </div>
-        <ModalActions>
-          <Button type="submit" disabled={!name.trim() || saving} loading={saving} fullWidth>
-            {saving ? 'A criar…' : 'Criar turma'}
-          </Button>
-        </ModalActions>
-      </form>
-    </Modal>
   )
 }
 

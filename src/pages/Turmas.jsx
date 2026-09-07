@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import CreateTurmaModal from '../components/CreateTurmaModal'
 import { Navbar } from '../components/Navbar'
 import { UsersGroupTwoRoundedIcon as Users2 } from '@solar-icons/react/bold/users-group-two-rounded'
 import { PlusIcon as Plus } from '../components/icons/PlusIcon'
@@ -248,6 +249,7 @@ export default function Turmas() {
   const [turmas, setTurmas] = useState([])
   const [loading, setLoading] = useState(true)
   const [showJoin, setShowJoin] = useState(false)
+  const [showCreate, setShowCreate] = useState(false)
   const [yearFilter, setYearFilter] = useState('all')
   const isTeacher = profile?.role === 'professor'
 
@@ -308,6 +310,12 @@ export default function Turmas() {
     setShowJoin(false)
   }
 
+  function handleCreated(turma) {
+    setTurmas(prev => [turma, ...prev])
+    setShowCreate(false)
+    navigate(`/turma/${turma.code}`)
+  }
+
   if (!user || (profile && !isTeacher && !profile?.organization_id && !isSchoolStudent)) return null
 
   return (
@@ -333,21 +341,19 @@ export default function Turmas() {
             </p>
           </div>
 
-          {!isTeacher && (
-            <button
-              onClick={() => setShowJoin(true)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                background: C.blue, border: 'none', borderRadius: 8,
-                color: '#fff', fontSize: 13, fontWeight: 700,
-                padding: '10px 16px', cursor: 'pointer', fontFamily: 'inherit',
-                boxShadow: '0 2px 8px var(--color-primary-subtle)',
-              }}
-            >
-              <Plus size={15} />
-              Entrar numa turma
-            </button>
-          )}
+          <button
+            onClick={() => (isTeacher ? setShowCreate(true) : setShowJoin(true))}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              background: C.blue, border: 'none', borderRadius: 8,
+              color: '#fff', fontSize: 13, fontWeight: 700,
+              padding: '10px 16px', cursor: 'pointer', fontFamily: 'inherit',
+              boxShadow: '0 2px 8px var(--color-primary-subtle)',
+            }}
+          >
+            <Plus size={15} />
+            {isTeacher ? 'Nova turma' : 'Entrar numa turma'}
+          </button>
         </div>
 
         {/* Ano letivo filter */}
@@ -399,9 +405,23 @@ export default function Turmas() {
               {isTeacher ? 'Ainda não criaste turmas' : 'Ainda não estás em nenhuma turma'}
             </p>
             {isTeacher ? (
-              <p style={{ margin: '0 0 20px', fontSize: 13, color: C.muted }}>
-                Cria uma turma na tua área de professor.
-              </p>
+              <>
+                <p style={{ margin: '0 0 20px', fontSize: 13, color: C.muted }}>
+                  Cria uma turma e partilha o código de 6 letras com os teus alunos.
+                </p>
+                <button
+                  onClick={() => setShowCreate(true)}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    background: C.blue, border: 'none', borderRadius: 8,
+                    color: '#fff', fontSize: 13, fontWeight: 700,
+                    padding: '11px 22px', cursor: 'pointer', fontFamily: 'inherit',
+                    boxShadow: '0 2px 8px var(--color-primary-subtle)',
+                  }}
+                >
+                  <Plus size={15} /> Nova turma
+                </button>
+              </>
             ) : (
               <>
                 {/* Steps */}
@@ -467,6 +487,7 @@ export default function Turmas() {
       </div>
 
       {showJoin && <JoinModal onClose={() => setShowJoin(false)} onJoin={handleJoined} navigate={navigate} />}
+      {showCreate && <CreateTurmaModal user={user} profile={profile} onClose={() => setShowCreate(false)} onCreated={handleCreated} />}
     </div>
   )
 }
