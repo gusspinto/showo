@@ -1,8 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getPlan } from '../lib/plans'
-import { ShowoMark } from './icons/ShowoMark'
-import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/square-academic-cap'
 
 const C = {
   overlay: {
@@ -109,28 +107,32 @@ export function ConfirmUseModal({ feature, remaining, limit, onConfirm, onCancel
   )
 }
 
-// Marca do plano ao lado do nome — a marca Showo tingida pela cor do plano
-// (grátis não tem badge). Escola tem glyph próprio, não a marca.
-//   showLabel  — mostra também o nome do plano ao lado do glyph
-export function PlanBadge({ style, showLabel = false }) {
+// Marca do plano ao lado do nome — a marca Showo na cor do plano
+// (grátis não tem badge). Imagens em /public: plus.png, pro.png, escola.png.
+//   showLabel  — mostra também o nome do plano ao lado da marca
+const PLAN_BADGES = {
+  plus:   { src: '/plus.png',   label: 'Plus',   color: '#D6453B' },
+  pro:    { src: '/pro.png',    label: 'Pro',    color: '#C49A20' },
+  school: { src: '/escola.png', label: 'Escola', color: 'var(--color-primary)' },
+}
+
+export function PlanBadge({ style, showLabel = false, size = 14 }) {
   const { planId } = useAuth()
   // A BD pode ter os IDs antigos (build/launch) ou os novos (plus/pro).
   const resolved = planId === 'build' ? 'plus' : planId === 'launch' ? 'pro' : planId
-  if (!resolved || resolved === 'free') return null
+  const badge = PLAN_BADGES[resolved]
+  if (!badge) return null
 
-  const wrap = (color, glyph, label) => (
-    <span title={`Plano ${label}`} aria-label={`Plano ${label}`} style={{
-      display: 'inline-flex', alignItems: 'center', gap: 5,
-      color, flexShrink: 0, ...style,
+  return (
+    <span title={`Plano ${badge.label}`} aria-label={`Plano ${badge.label}`} style={{
+      display: 'inline-flex', alignItems: 'center', gap: 5, flexShrink: 0, ...style,
     }}>
-      {glyph}
-      {showLabel && <span style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.02em' }}>{label}</span>}
+      <img src={badge.src} alt="" width={size} height={size} style={{ objectFit: 'contain', display: 'block' }} />
+      {showLabel && (
+        <span style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.02em', color: badge.color }}>
+          {badge.label}
+        </span>
+      )}
     </span>
   )
-
-  if (resolved === 'school') {
-    return wrap('var(--color-success)', <GraduationCap size={14} />, 'Escola')
-  }
-  const isPro = resolved === 'pro'
-  return wrap(isPro ? '#C49A20' : 'var(--color-primary)', <ShowoMark size={13} />, isPro ? 'Pro' : 'Plus')
 }
