@@ -10,6 +10,7 @@ import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
 import { TrashBinMinimalisticIcon as Trash } from '@solar-icons/react/bold/trash-bin-minimalistic'
 import { StarsIcon as Sparkles } from '@solar-icons/react/bold/stars'
+import { ClockCircleIcon as Route } from '@solar-icons/react/bold/clock-circle'
 import { PlusIcon as Plus } from './icons/PlusIcon'
 import './ProjectTimeline.css'
 
@@ -97,100 +98,106 @@ export default function ProjectTimeline({ project, isOwner }) {
   }
 
   if (tl === undefined) return null
-  const hasContent = milestones.length > 0 || (tl && tl.entry_count > 0)
+  const hasEntries = !!(tl && tl.entry_count > 0)
+  const hasContent = milestones.length > 0 || hasEntries
+  // Visitante: só quando o dono a tornou pública e há algo para mostrar.
   if (!isOwner && (!isPublic || !hasContent)) return null
-  if (isOwner && !hasContent && !isPublic) {
-    return (
-      <div className="ptl">
-        <p className="ptl-label">Percurso</p>
-        <p className="ptl-empty">Escreve no diário e marca os momentos importantes — aparecem aqui como a evolução do projeto, para os recrutadores verem consistência.</p>
-      </div>
-    )
-  }
 
   const startDate = tl?.first_entry || tl?.created_on
   const weekly = tl?.weekly || []
   const maxWeek = Math.max(1, ...weekly.map(w => w.count))
+  const durMonths = startDate ? monthsBetween(startDate, new Date()) : 0
+
+  const header = (
+    <div className="ptl-card-head">
+      <div className="ptl-card-head-main">
+        <Route size={15} className="ptl-card-icon" />
+        <span className="ptl-card-title">Percurso</span>
+      </div>
+      {isOwner && (
+        <button className={`ptl-toggle${isPublic ? ' is-on' : ''}`} onClick={togglePublic}>
+          <span className="ptl-toggle-dot" />
+          {isPublic ? 'Visível no perfil' : 'Só tu vês'}
+        </button>
+      )}
+    </div>
+  )
+
+  const ownerActions = isOwner && (
+    <div className="ptl-actions">
+      <button className="ptl-btn" onClick={() => setForm({ title: '', happened_on: new Date().toISOString().slice(0, 10), note: '' })}>
+        <Plus size={13} /> Adicionar marco
+      </button>
+      {hasEntries && (
+        <button className="ptl-btn ptl-btn--ai" onClick={fetchSuggestions} disabled={loadingAI}>
+          <Sparkles size={13} /> {loadingAI ? 'A ler o diário…' : 'Sugerir com IA'}
+        </button>
+      )}
+    </div>
+  )
+
+  // Dono, sem nada ainda — cartão de apresentação, não um parágrafo solto.
+  if (isOwner && !hasContent) {
+    return (
+      <div className="ptl-card ptl-card--empty">
+        {header}
+        <p className="ptl-empty-text">
+          Marca os momentos que contam — a primeira versão a funcionar, uma mudança
+          de rumo, o primeiro utilizador. Com o diário preenchido, a IA sugere-os
+          por ti. Um recrutador vê meses de trabalho consistente, não um sprint.
+        </p>
+        {ownerActions}
+        {form && <MilestoneForm form={form} setForm={setForm} onSave={saveMilestone} busy={busy} />}
+        {suggestions && <Suggestions list={suggestions} onAccept={acceptSuggestion} onDismiss={s => setSuggestions(p => p.filter(x => x !== s))} />}
+      </div>
+    )
+  }
 
   return (
-    <div className="ptl">
-      <div className="ptl-head">
-        <p className="ptl-label">Percurso</p>
-        {isOwner && (
-          <button className={`ptl-toggle${isPublic ? ' is-on' : ''}`} onClick={togglePublic}>
-            <span className="ptl-toggle-dot" />
-            {isPublic ? 'Visível no perfil' : 'Mostrar no perfil'}
-          </button>
-        )}
-      </div>
+    <div className="ptl-card">
+      {header}
 
-      {tl && tl.entry_count > 0 && (
+      {hasEntries && (
         <>
-          <p className="ptl-summary">
-            <strong>{tl.entry_count}</strong> registo{tl.entry_count !== 1 ? 's' : ''} ao longo de <strong>{tl.active_weeks}</strong> semana{tl.active_weeks !== 1 ? 's' : ''}
-            {startDate && <> · começou em {fmtMonthYear(startDate)}, {durationLabel(startDate)}</>}
-          </p>
+          <div className="ptl-stats">
+            <div className="ptl-stat">
+              <span className="ptl-stat-n">{tl.entry_count}</span>
+              <span className="ptl-stat-l">registo{tl.entry_count !== 1 ? 's' : ''} no diário</span>
+            </div>
+            <div className="ptl-stat">
+              <span className="ptl-stat-n">{tl.active_weeks}</span>
+              <span className="ptl-stat-l">semana{tl.active_weeks !== 1 ? 's' : ''} ativas</span>
+            </div>
+            {startDate && (
+              <div className="ptl-stat">
+                <span className="ptl-stat-n">{durMonths < 1 ? '<1' : durMonths}</span>
+                <span className="ptl-stat-l">{durMonths === 1 ? 'mês de trabalho' : 'meses de trabalho'}</span>
+              </div>
+            )}
+          </div>
+
           {weekly.length > 1 && (
-            <div className="ptl-spark" aria-hidden="true">
-              {weekly.map(w => (
-                <span key={w.week} className="ptl-spark-bar" style={{ height: `${Math.max(8, (w.count / maxWeek) * 100)}%` }} />
-              ))}
+            <div className="ptl-chart">
+              <div className="ptl-chart-bars" aria-hidden="true">
+                {weekly.map(w => (
+                  <span key={w.week} className="ptl-chart-bar" style={{ height: `${Math.max(6, (w.count / maxWeek) * 100)}%` }} title={`${w.count} na semana de ${fmtDay(w.week)}`} />
+                ))}
+              </div>
+              <div className="ptl-chart-axis">
+                <span>{startDate && fmtMonthYear(startDate)}</span>
+                <span>agora</span>
+              </div>
             </div>
           )}
         </>
       )}
 
-      {isOwner && (
-        <div className="ptl-actions">
-          <button className="ptl-btn" onClick={() => setForm({ title: '', happened_on: new Date().toISOString().slice(0, 10), note: '' })}>
-            <Plus size={13} /> Adicionar marco
-          </button>
-          <button className="ptl-btn ptl-btn--ai" onClick={fetchSuggestions} disabled={loadingAI}>
-            <Sparkles size={13} /> {loadingAI ? 'A ler o diário…' : 'Sugerir com IA'}
-          </button>
-        </div>
-      )}
+      {ownerActions}
 
-      {suggestions && (
-        <div className="ptl-suggestions">
-          {suggestions.length === 0
-            ? <p className="ptl-empty">Sem sugestões novas.</p>
-            : suggestions.map((s, i) => (
-              <div key={i} className="ptl-sugg">
-                <div>
-                  <span className="ptl-sugg-date">{fmtDay(s.happened_on)}</span>
-                  <span className="ptl-sugg-title">{s.title}</span>
-                  {s.note && <span className="ptl-sugg-note">{s.note}</span>}
-                </div>
-                <div className="ptl-sugg-acts">
-                  <button onClick={() => acceptSuggestion(s)} title="Adicionar"><Check size={14} /></button>
-                  <button onClick={() => setSuggestions(p => p.filter(x => x !== s))} title="Dispensar"><X size={14} /></button>
-                </div>
-              </div>
-            ))}
-        </div>
-      )}
+      {suggestions && <Suggestions list={suggestions} onAccept={acceptSuggestion} onDismiss={s => setSuggestions(p => p.filter(x => x !== s))} />}
+      {form && <MilestoneForm form={form} setForm={setForm} onSave={saveMilestone} busy={busy} />}
 
-      {form && (
-        <div className="ptl-form">
-          <input className="ptl-input" placeholder="O que aconteceu? (ex: primeira demo a funcionar)" maxLength={120}
-            value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} autoFocus />
-          <div className="ptl-form-row">
-            <input className="ptl-input" type="date" value={form.happened_on}
-              onChange={e => setForm(f => ({ ...f, happened_on: e.target.value }))} />
-          </div>
-          <textarea className="ptl-input ptl-textarea" rows={2} placeholder="Uma frase de contexto (opcional)" maxLength={500}
-            value={form.note} onChange={e => setForm(f => ({ ...f, note: e.target.value }))} />
-          <div className="ptl-form-acts">
-            <button className="ptl-btn" onClick={() => setForm(null)}>Cancelar</button>
-            <button className="ptl-btn ptl-btn--primary" onClick={saveMilestone} disabled={busy || !form.title.trim()}>
-              {busy ? 'A guardar…' : form.id ? 'Guardar' : 'Adicionar'}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {milestones.length > 0 && (
+      {milestones.length > 0 ? (
         <ol className="ptl-list">
           {milestones.map(m => (
             <li key={m.id} className="ptl-item">
@@ -209,9 +216,52 @@ export default function ProjectTimeline({ project, isOwner }) {
             </li>
           ))}
         </ol>
+      ) : isOwner && (
+        <p className="ptl-nomarks">Ainda sem marcos. Adiciona o primeiro ou deixa a IA sugerir a partir do teu diário.</p>
       )}
     </div>
   )
 }
 
 const byDate = (a, b) => (a.happened_on < b.happened_on ? -1 : 1)
+
+function MilestoneForm({ form, setForm, onSave, busy }) {
+  return (
+    <div className="ptl-form">
+      <input className="ptl-input" placeholder="O que aconteceu? (ex: primeira demo a funcionar)" maxLength={120}
+        value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} autoFocus />
+      <input className="ptl-input" type="date" value={form.happened_on}
+        onChange={e => setForm(f => ({ ...f, happened_on: e.target.value }))} />
+      <textarea className="ptl-input ptl-textarea" rows={2} placeholder="Uma frase de contexto (opcional)" maxLength={500}
+        value={form.note} onChange={e => setForm(f => ({ ...f, note: e.target.value }))} />
+      <div className="ptl-form-acts">
+        <button className="ptl-btn" onClick={() => setForm(null)}>Cancelar</button>
+        <button className="ptl-btn ptl-btn--primary" onClick={onSave} disabled={busy || !form.title.trim()}>
+          {busy ? 'A guardar…' : form.id ? 'Guardar' : 'Adicionar'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function Suggestions({ list, onAccept, onDismiss }) {
+  if (list.length === 0) return <p className="ptl-nomarks">A IA não encontrou marcos novos no diário.</p>
+  return (
+    <div className="ptl-suggestions">
+      <p className="ptl-suggestions-hint"><Sparkles size={12} /> Encontrei isto no teu diário — aceita o que fizer sentido</p>
+      {list.map((s, i) => (
+        <div key={i} className="ptl-sugg">
+          <div className="ptl-sugg-body">
+            <span className="ptl-sugg-date">{fmtDay(s.happened_on)}</span>
+            <span className="ptl-sugg-title">{s.title}</span>
+            {s.note && <span className="ptl-sugg-note">{s.note}</span>}
+          </div>
+          <div className="ptl-sugg-acts">
+            <button onClick={() => onAccept(s)} title="Adicionar"><Check size={14} /></button>
+            <button onClick={() => onDismiss(s)} title="Dispensar"><X size={14} /></button>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
