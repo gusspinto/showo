@@ -26,13 +26,20 @@ const TYPE_LABEL = {
  * fazem o trabalho parecer pequeno e não significam nada por fora; QR code —
  * inútil numa story, quem vê está a segurar o telemóvel que a mostra.
  *
+ * Dois cartões: "Projeto" (o que construí) e "Progresso" (onde vou).
+ * O de progresso mostra "Semana N" — leitura de capítulo, não total
+ * acumulado: "Semana 1" lê-se como início de algo, "1 semana no total"
+ * lê-se como pouco. O mesmo número, a moldura é que muda.
+ *
  * Props:
- *   project   { slug, name, creator_name, project_type, cover_url, ai_tagline }
+ *   project   { slug, name, creator_name, project_type, cover_url, ai_tagline, created_at }
+ *   journal   [{ created_at, kind, content }]
  *   onClose   Callback para fechar
  */
-export function ShareStoryModal({ project, onClose }) {
+export function ShareStoryModal({ project, journal = [], onClose }) {
   const canvasRef = useRef(null)
   const [exporting, setExporting] = useState(false)
+  const [mode, setMode] = useState('projeto')
 
   useEffect(() => {
     const prevOverflow = document.body.style.overflow
@@ -115,6 +122,24 @@ export function ShareStoryModal({ project, onClose }) {
   const cover = project.cover_url
   const tagline = project.ai_tagline
 
+  // "Semana N" desde que o projeto começou — sempre >= 1, e lê-se bem tanto
+  // na semana 1 como na 14.
+  const startedAt = journal.length
+    ? new Date(Math.min(...journal.map(e => new Date(e.created_at).getTime())))
+    : project.created_at ? new Date(project.created_at) : null
+  const weekNumber = startedAt
+    ? Math.max(1, Math.ceil((Date.now() - startedAt.getTime()) / (7 * 86400000)))
+    : 1
+
+  // A última entrada do diário é a parte humana do cartão de progresso —
+  // o que a pessoa está mesmo a fazer, por palavras dela.
+  const lastEntry = journal.length
+    ? [...journal].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0]
+    : null
+  const lastEntryText = lastEntry?.content?.trim()
+    ? (lastEntry.content.trim().length > 120 ? lastEntry.content.trim().slice(0, 117) + '…' : lastEntry.content.trim())
+    : null
+
   return createPortal(
     <div
       style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.78)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
@@ -126,9 +151,25 @@ export function ShareStoryModal({ project, onClose }) {
           style={{ position: 'absolute', top: 18, right: 18, width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         ><X size={16} /></button>
 
+        {/* Escolha do cartão: o que construí vs onde vou */}
+        <div style={{ display: 'flex', gap: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 10, padding: 4 }}>
+          {[['projeto', 'Projeto'], ['progresso', 'Progresso']].map(([id, label]) => (
+            <button
+              key={id}
+              onClick={() => setMode(id)}
+              style={{
+                background: mode === id ? '#fff' : 'transparent',
+                color: mode === id ? '#0a0a0c' : 'rgba(255,255,255,0.7)',
+                border: 'none', borderRadius: 7, padding: '7px 18px',
+                fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >{label}</button>
+          ))}
+        </div>
+
         {/* Xadrez só na pré-visualização, para se ver que a margem à volta
             do cartão é mesmo transparente no PNG exportado. */}
-        <div style={{ overflowY: 'auto', maxHeight: 'calc(92vh - 100px)', background: 'repeating-conic-gradient(#242428 0% 25%, #1a1a1d 0% 50%) 0 0/24px 24px', borderRadius: 8, padding: 14 }}>
+        <div style={{ overflowY: 'auto', maxHeight: 'calc(92vh - 190px)', background: 'repeating-conic-gradient(#242428 0% 25%, #1a1a1d 0% 50%) 0 0/24px 24px', borderRadius: 8, padding: 14 }}>
 
           <div ref={canvasRef} style={{ padding: 30 }}>
             <div
@@ -142,40 +183,65 @@ export function ShareStoryModal({ project, onClose }) {
               {/* fio com as três cores da marca */}
               <div style={{ height: 5, background: `linear-gradient(90deg, ${BRAND.blue}, ${BRAND.red} 62%, ${BRAND.gold})` }} />
 
-              {/* A capa é o herói: é o que faz um estranho perceber, num
-                  relance, o que a pessoa construiu. */}
-              {cover && (
-                <img
-                  src={cover}
-                  crossOrigin="anonymous"
-                  alt=""
-                  style={{ display: 'block', width: '100%', height: 200, objectFit: 'cover' }}
-                />
-              )}
+              {mode === 'projeto' ? (
+                <>
+                  {/* A capa é o herói: é o que faz um estranho perceber, num
+                      relance, o que a pessoa construiu. */}
+                  {cover && (
+                    <img
+                      src={cover}
+                      crossOrigin="anonymous"
+                      alt=""
+                      style={{ display: 'block', width: '100%', height: 200, objectFit: 'cover' }}
+                    />
+                  )}
 
-              <div style={{ padding: cover ? '18px 20px 18px' : '26px 20px 20px' }}>
-                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: '#8a8a94', textTransform: 'uppercase' }}>
-                  {TYPE_LABEL[project.project_type] || 'Projeto'}
-                </div>
+                  <div style={{ padding: cover ? '18px 20px 18px' : '26px 20px 20px' }}>
+                    <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: '#8a8a94', textTransform: 'uppercase' }}>
+                      {TYPE_LABEL[project.project_type] || 'Projeto'}
+                    </div>
 
-                <div style={{ fontSize: cover ? 24 : 30, fontWeight: 400, color: '#fbfbfc', lineHeight: 1.12, marginTop: 7, fontFamily: FONT_DISPLAY }}>
-                  {project.name}
-                </div>
+                    <div style={{ fontSize: cover ? 24 : 30, fontWeight: 400, color: '#fbfbfc', lineHeight: 1.12, marginTop: 7, fontFamily: FONT_DISPLAY }}>
+                      {project.name}
+                    </div>
 
-                {tagline && (
-                  <div style={{ fontSize: 12, color: '#a0a0aa', lineHeight: 1.45, marginTop: 9 }}>
-                    {tagline}
+                    {tagline && (
+                      <div style={{ fontSize: 12, color: '#a0a0aa', lineHeight: 1.45, marginTop: 9 }}>
+                        {tagline}
+                      </div>
+                    )}
+
+                    <Footer creatorName={project.creator_name} />
                   </div>
-                )}
+                </>
+              ) : (
+                <div style={{ padding: '26px 20px 20px' }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: '#8a8a94', textTransform: 'uppercase' }}>
+                    {TYPE_LABEL[project.project_type] || 'Projeto'} · a decorrer
+                  </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 18, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: '#d8d8de', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {project.creator_name || ''}
-                  </span>
-                  {/* logótipo real da app, não uma recriação */}
-                  <img src="/darkmode_icon_logo.png" alt="Showo" style={{ height: 15, width: 'auto', flexShrink: 0, opacity: 0.95 }} />
+                  {/* "Semana N", não "N semanas no total" — funciona igual bem
+                      na primeira semana e na décima quarta. */}
+                  <div style={{ fontSize: 44, fontWeight: 400, color: '#fbfbfc', lineHeight: 1, marginTop: 10, fontFamily: FONT_DISPLAY }}>
+                    Semana {weekNumber}
+                  </div>
+
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#d8d8de', marginTop: 10, lineHeight: 1.3 }}>
+                    {project.name}
+                  </div>
+
+                  {lastEntryText && (
+                    <div style={{
+                      fontSize: 12, color: '#a0a0aa', lineHeight: 1.5, marginTop: 14,
+                      paddingLeft: 12, borderLeft: `2px solid ${BRAND.blue}`,
+                    }}>
+                      {lastEntryText}
+                    </div>
+                  )}
+
+                  <Footer creatorName={project.creator_name} />
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
@@ -199,5 +265,17 @@ export function ShareStoryModal({ project, onClose }) {
       </div>
     </div>,
     document.body
+  )
+}
+
+function Footer({ creatorName }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 18, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+      <span style={{ fontSize: 12, fontWeight: 600, color: '#d8d8de', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        {creatorName || ''}
+      </span>
+      {/* logótipo real da app, não uma recriação */}
+      <img src="/darkmode_icon_logo.png" alt="Showo" style={{ height: 15, width: 'auto', flexShrink: 0, opacity: 0.95 }} />
+    </div>
   )
 }
