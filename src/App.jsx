@@ -51,33 +51,52 @@ import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
 
-// Lazy loaded — only fetched when the route is actually visited
-const RecuperarPassword = lazy(() => import('./pages/RecuperarPassword'))
-const NewProject   = lazy(() => import('./pages/NewProject'))
-const ProjectPage  = lazy(() => import('./pages/ProjectPage'))
-const EditProject  = lazy(() => import('./pages/EditProject'))
-const Explore      = lazy(() => import('./pages/Explore'))
-const Dashboard    = lazy(() => import('./pages/Dashboard'))
-const Biblioteca   = lazy(() => import('./pages/Biblioteca'))
-const RecompensaLab = lazy(() => import('./pages/RecompensaLab'))
-const Vagas        = lazy(() => import('./pages/Vagas'))
-const Settings     = lazy(() => import('./pages/Settings'))
-const UserProfile  = lazy(() => import('./pages/UserProfile'))
-const Admin        = lazy(() => import('./pages/Admin'))
-const TurmaPage    = lazy(() => import('./pages/TurmaPage'))
-const TurmaAluno   = lazy(() => import('./pages/TurmaAluno'))
-const Turmas       = lazy(() => import('./pages/Turmas'))
-const Certificate  = lazy(() => import('./pages/Certificate'))
-const Mensagens    = lazy(() => import('./pages/Mensagens'))
-const ProjectManage  = lazy(() => import('./pages/ProjectManage'))
-const Privacidade    = lazy(() => import('./pages/Privacidade'))
-const Termos         = lazy(() => import('./pages/Termos'))
-const GoogleCalendarCallback = lazy(() => import('./pages/GoogleCalendarCallback'))
-const DiaryCanvas  = lazy(() => import('./pages/DiaryCanvas'))
-const AprendeAUsar = lazy(() => import('./pages/AprendeAUsar'))
-const Pricing      = lazy(() => import('./pages/Pricing'))
-const Welcome      = lazy(() => import('./pages/Welcome'))
-const Feedback     = lazy(() => import('./pages/Feedback'))
+// Lazy loaded — only fetched when the route is actually visited.
+// Depois de um deploy, os chunks antigos que a aba já tinha deixam de
+// existir com o mesmo hash — o import() falha e cai no ErrorBoundary
+// ("algo correu mal"). Aqui, se um import falhar, recarrega a página uma
+// vez (traz o index.html novo com os hashes certos). O guard evita loop.
+function lazyPage(factory) {
+  return lazy(() =>
+    factory().catch(err => {
+      const KEY = 'showo_chunk_reload_at'
+      const last = Number(sessionStorage.getItem(KEY) || 0)
+      if (Date.now() - last > 10_000) {
+        sessionStorage.setItem(KEY, String(Date.now()))
+        window.location.reload()
+        return new Promise(() => {})   // nunca resolve; a página recarrega
+      }
+      throw err
+    }),
+  )
+}
+
+const RecuperarPassword = lazyPage(() => import('./pages/RecuperarPassword'))
+const NewProject   = lazyPage(() => import('./pages/NewProject'))
+const ProjectPage  = lazyPage(() => import('./pages/ProjectPage'))
+const EditProject  = lazyPage(() => import('./pages/EditProject'))
+const Explore      = lazyPage(() => import('./pages/Explore'))
+const Dashboard    = lazyPage(() => import('./pages/Dashboard'))
+const Biblioteca   = lazyPage(() => import('./pages/Biblioteca'))
+const RecompensaLab = lazyPage(() => import('./pages/RecompensaLab'))
+const Vagas        = lazyPage(() => import('./pages/Vagas'))
+const Settings     = lazyPage(() => import('./pages/Settings'))
+const UserProfile  = lazyPage(() => import('./pages/UserProfile'))
+const Admin        = lazyPage(() => import('./pages/Admin'))
+const TurmaPage    = lazyPage(() => import('./pages/TurmaPage'))
+const TurmaAluno   = lazyPage(() => import('./pages/TurmaAluno'))
+const Turmas       = lazyPage(() => import('./pages/Turmas'))
+const Certificate  = lazyPage(() => import('./pages/Certificate'))
+const Mensagens    = lazyPage(() => import('./pages/Mensagens'))
+const ProjectManage  = lazyPage(() => import('./pages/ProjectManage'))
+const Privacidade    = lazyPage(() => import('./pages/Privacidade'))
+const Termos         = lazyPage(() => import('./pages/Termos'))
+const GoogleCalendarCallback = lazyPage(() => import('./pages/GoogleCalendarCallback'))
+const DiaryCanvas  = lazyPage(() => import('./pages/DiaryCanvas'))
+const AprendeAUsar = lazyPage(() => import('./pages/AprendeAUsar'))
+const Pricing      = lazyPage(() => import('./pages/Pricing'))
+const Welcome      = lazyPage(() => import('./pages/Welcome'))
+const Feedback     = lazyPage(() => import('./pages/Feedback'))
 
 function PageLoader() {
   return (

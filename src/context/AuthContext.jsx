@@ -141,13 +141,31 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     let sawInitial = false
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (_event === 'TOKEN_REFRESHED') return
+    let lastUid = undefined
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       const u = session?.user ?? null
       setUser(u)
-      fetchProfile(u?.id).then(() => {
-        if (!sawInitial) { sawInitial = true; setLoading(false) }
-      })
+
+      // Só um refresh de token — a sessão não mudou de dono. Não relê o perfil.
+      if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') return
+
+      // Mesmo utilizador que já tínhamos (ex: INITIAL_SESSION seguido de
+      // SIGNED_IN no arranque) — não vale a pena reler o perfil outra vez.
+      if (u?.id && u.id === lastUid) return
+      lastUid = u?.id ?? null
+
+      // IMPORTANTE: nunca chamar métodos do supabase-js de forma síncrona
+      // dentro deste callback — ele segura um lock interno e chamadas aqui
+      // dentro entram em deadlock (refresh de token falha → logout sozinho,
+      // queries penduram → "algo correu mal"). Adiar para fora do callback.
+      setTimeout(() => {
+        fetchProfile(u?.id).then(() => {
+          if (!sawInitial) { sawInitial = true; setLoading(false) }
+        }).catch(() => {
+          if (!sawInitial) { sawInitial = true; setLoading(false) }
+        })
+      }, 0)
     })
 
     return () => subscription.unsubscribe()
