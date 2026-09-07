@@ -6,18 +6,26 @@ import { DownloadIcon as Download } from '@solar-icons/react/bold/download'
 import { ShareIcon as Share2 } from '@solar-icons/react/bold/share'
 import { supabase } from '../lib/supabase'
 
+// Cores fixas do logótipo (tokens.css --brand-gradient) — escritas em bruto
+// porque html2canvas nem sempre resolve var() com fallback de fontes/cores
+// de forma fiável, e porque isto é a marca, não deve mudar com o tema.
+const BRAND = { blue: '#2478f0', red: '#db4a3d', gold: '#cc9a1e' }
+const FONT_HEADING = "'Geist', 'Helvetica World', Helvetica, Arial, sans-serif"
+const FONT_BODY = "'Montserrat', 'Inter', system-ui, sans-serif"
+
 /**
- * ShareStoryModal — gera um cartão em formato story (9:16) a partir do
- * percurso real de um projeto (diário → heatmap semanal, via
- * get_project_timeline) para partilha no Instagram/WhatsApp. A prova de
- * trabalho é o próprio percurso do aluno, não uma métrica da plataforma.
+ * ShareStoryModal — um autocolante para stories (fundo transparente à volta
+ * de um cartão redondo), não um ecrã cheio. É assim que o Strava/Duolingo
+ * fazem: o cartão pousa por cima da foto do próprio aluno, não a substitui.
+ * A identidade é só o logótipo (3 blocos de cor), sem escrever "Showo" —
+ * reconhece-se pela forma, como o resto destas apps.
  *
  * Props:
  *   project   { id, slug, name, creator_name, score, project_type }
  *   onClose   Callback para fechar
  */
 export function ShareStoryModal({ project, onClose }) {
-  const cardRef = useRef(null)
+  const canvasRef = useRef(null)
   const [timeline, setTimeline] = useState(null)
   const [loading, setLoading] = useState(true)
   const [exporting, setExporting] = useState(false)
@@ -35,15 +43,19 @@ export function ShareStoryModal({ project, onClose }) {
     return () => { document.body.style.overflow = prevOverflow }
   }, [])
 
-  async function exportCanvas() {
+  async function renderCanvas() {
+    // Espera as fontes reais carregarem — sem isto o html2canvas por vezes
+    // captura antes do Geist/Montserrat estarem prontos e cai para a fonte
+    // do sistema, que foi exatamente o que pareceu "não é a fonte certa".
+    if (document.fonts?.ready) await document.fonts.ready
     const { default: html2canvas } = await import('html2canvas')
-    return html2canvas(cardRef.current, { scale: 2.5, backgroundColor: '#0a0a0c', useCORS: true, logging: false })
+    return html2canvas(canvasRef.current, { scale: 3, backgroundColor: null, useCORS: true, logging: false })
   }
 
   async function handleDownload() {
     setExporting(true)
     try {
-      const canvas = await exportCanvas()
+      const canvas = await renderCanvas()
       const url = canvas.toDataURL('image/png')
       const a = document.createElement('a')
       a.href = url
@@ -58,7 +70,7 @@ export function ShareStoryModal({ project, onClose }) {
   async function handleShare() {
     setExporting(true)
     try {
-      const canvas = await exportCanvas()
+      const canvas = await renderCanvas()
       canvas.toBlob(async blob => {
         if (!blob) { setExporting(false); return }
         const file = new File([blob], `showo-${project.slug}.png`, { type: 'image/png' })
@@ -85,11 +97,10 @@ export function ShareStoryModal({ project, onClose }) {
   const projectUrl = `${window.location.origin}/projeto/${project.slug}`
   const weekly = timeline?.weekly || []
 
-  // Últimas 22 semanas com atividade, mais recentes primeiro invertidas —
-  // um heatmap tipo GitHub, não um gráfico exato: o que importa é a
-  // sensação de "trabalho constante", não o número preciso.
-  const cells = Array.from({ length: 22 }, (_, i) => {
-    const w = weekly[weekly.length - 22 + i]
+  // Últimas 20 semanas com atividade — um heatmap tipo GitHub, não um
+  // gráfico exato: o que importa é a sensação de trabalho constante.
+  const cells = Array.from({ length: 20 }, (_, i) => {
+    const w = weekly[weekly.length - 20 + i]
     return w ? w.count : 0
   })
   const maxCount = Math.max(1, ...cells)
@@ -111,73 +122,86 @@ export function ShareStoryModal({ project, onClose }) {
           style={{ position: 'absolute', top: 18, right: 18, width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         ><X size={16} /></button>
 
-        <div style={{ overflowY: 'auto', maxHeight: 'calc(92vh - 90px)', borderRadius: 24, boxShadow: '0 30px 80px rgba(0,0,0,0.5)' }}>
+        {/* Fundo cinza-escuro só para se ver o recorte contra algo — a
+            exportação real (backgroundColor: null) é transparente à volta
+            do cartão, como um autocolante. */}
+        <div style={{ overflowY: 'auto', maxHeight: 'calc(92vh - 90px)', background: 'repeating-conic-gradient(#242428 0% 25%, #1a1a1d 0% 50%) 0 0/24px 24px', borderRadius: 8, padding: 18 }}>
+
+          {/* Canvas 9:16 exportado — o cartão é uma fração deste espaço,
+              com margem transparente à volta (o que dá o efeito autocolante
+              quando colado numa story por cima de outra foto). */}
           <div
-            ref={cardRef}
+            ref={canvasRef}
             style={{
-              width: 340, minHeight: 604, background: '#111114', position: 'relative',
-              display: 'flex', flexDirection: 'column', fontFamily: 'var(--font-body, sans-serif)',
+              width: 300, height: 533, position: 'relative',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontFamily: FONT_BODY,
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '24px 0 0' }}>
-              <img src="/darkmode_icon_logo.png" alt="" style={{ height: 15, opacity: 0.9 }} />
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#6b6b74' }}>Showo</span>
-            </div>
+            {/* O cartão em si */}
+            <div style={{
+              width: '84%', background: '#131316', borderRadius: 30,
+              boxShadow: '0 18px 50px rgba(0,0,0,0.45)',
+              overflow: 'hidden', position: 'relative',
+              border: '1px solid rgba(255,255,255,0.06)',
+            }}>
+              {/* fio de marca no topo — a única referência de cor da app,
+                  sem precisar de escrever o nome */}
+              <div style={{ height: 4, background: `linear-gradient(90deg, ${BRAND.blue}, ${BRAND.red} 62%, ${BRAND.gold})` }} />
 
-            <div style={{ textAlign: 'center', marginTop: 24 }}>
-              <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', color: '#4a8fff', textTransform: 'uppercase' }}>
-                {project.score >= 75 ? 'Projeto certificado' : 'Percurso em curso'}
-              </span>
-            </div>
-
-            <div style={{ textAlign: 'center', padding: '10px 26px 0' }}>
-              <div style={{ fontSize: 24, fontWeight: 800, color: '#f5f5f7', lineHeight: 1.15, letterSpacing: '-0.4px' }}>{project.name}</div>
-              <div style={{ fontSize: 12.5, color: '#8b8b93', marginTop: 8, fontWeight: 500 }}>
-                {TYPE_LABEL[project.project_type] || 'Projeto'}{project.creator_name ? ` · ${project.creator_name}` : ''}
-              </div>
-            </div>
-
-            <div style={{ margin: '26px 22px 0', padding: '16px 14px', background: '#161619', borderRadius: 16, border: '1px solid #232328' }}>
-              <div style={{ fontSize: 9.5, fontWeight: 700, color: '#6b6b74', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 11 }}>Percurso do projeto</div>
-              {loading ? (
-                <div style={{ height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontSize: 11, color: '#5a5a62' }}>a carregar…</span>
+              <div style={{ padding: '22px 20px 18px' }}>
+                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', color: '#7c7c86', textTransform: 'uppercase' }}>
+                  {TYPE_LABEL[project.project_type] || 'Projeto'}
                 </div>
-              ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(22,1fr)', gap: 3 }}>
-                  {cells.map((c, i) => {
-                    const opacity = c === 0 ? 0.08 : 0.28 + (c / maxCount) * 0.72
-                    return <div key={i} style={{ aspectRatio: '1', borderRadius: 2, background: `rgba(74,143,255,${opacity.toFixed(2)})` }} />
-                  })}
+                <div style={{ fontSize: 21, fontWeight: 800, color: '#f7f7f8', lineHeight: 1.18, marginTop: 6, fontFamily: FONT_HEADING, letterSpacing: '-0.3px' }}>
+                  {project.name}
                 </div>
-              )}
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginTop: 20 }}>
-              {months && (
-                <>
-                  <Stat value={months} label={months === 1 ? 'mês' : 'meses'} />
-                  <Divider />
-                </>
-              )}
-              <Stat value={timeline?.entry_count ?? 0} label={timeline?.entry_count === 1 ? 'registo' : 'registos'} />
-              {project.score > 0 && (
-                <>
-                  <Divider />
-                  <Stat value={project.score} label="score" color="#4ade80" />
-                </>
-              )}
-            </div>
-
-            <div style={{ flex: 1 }} />
-
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 22px 22px', borderTop: '1px solid #1c1c20', marginTop: 12 }}>
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 9, color: '#5a5a62', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>Ver o projeto</div>
-                <div style={{ fontSize: 11, color: '#c9c9cf', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{projectUrl.replace(/^https?:\/\//, '')}</div>
+                {project.creator_name && (
+                  <div style={{ fontSize: 11, color: '#9494a0', marginTop: 5, fontWeight: 500 }}>{project.creator_name}</div>
+                )}
               </div>
-              <div style={{ background: '#fff', borderRadius: 7, padding: 5, flexShrink: 0 }}>
-                <QRCodeSVG value={projectUrl} size={40} level="M" />
+
+              {/* Heatmap solto no corpo do cartão, sem caixa dentro da caixa */}
+              <div style={{ padding: '0 20px' }}>
+                {loading ? (
+                  <div style={{ height: 40 }} />
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(20,1fr)', gap: 2.5 }}>
+                    {cells.map((c, i) => {
+                      const opacity = c === 0 ? 0.07 : 0.3 + (c / maxCount) * 0.7
+                      return <div key={i} style={{ aspectRatio: '1', borderRadius: 1.5, background: `${BRAND.blue}`, opacity: opacity.toFixed(2) }} />
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Estatísticas — um número herói, o resto secundário */}
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 16, padding: '18px 20px 20px' }}>
+                <div>
+                  <div style={{ fontSize: 34, fontWeight: 800, color: '#f7f7f8', lineHeight: 1, fontFamily: FONT_HEADING, fontVariantNumeric: 'tabular-nums' }}>
+                    {timeline?.entry_count ?? 0}
+                  </div>
+                  <div style={{ fontSize: 10, color: '#9494a0', marginTop: 3, fontWeight: 600 }}>registos no diário</div>
+                </div>
+                {months && (
+                  <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: '#d5d5da' }}>{months} {months === 1 ? 'mês' : 'meses'}</div>
+                    {project.score > 0 && <div style={{ fontSize: 11, fontWeight: 700, color: BRAND.gold, marginTop: 2 }}>score {project.score}</div>}
+                  </div>
+                )}
+              </div>
+
+              {/* Rodapé: só a marca (3 blocos), sem palavra — reconhece-se
+                  pela forma, como o swoosh do Strava */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px 18px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <rect x="3" y="3" width="13" height="13" rx="3" fill={BRAND.blue} />
+                  <rect x="14" y="8" width="7" height="13" rx="2.5" fill={BRAND.red} />
+                  <rect x="9" y="14" width="7" height="7" rx="2" fill={BRAND.gold} />
+                </svg>
+                <div style={{ background: '#fff', borderRadius: 6, padding: 4 }}>
+                  <QRCodeSVG value={projectUrl} size={34} level="M" />
+                </div>
               </div>
             </div>
           </div>
@@ -199,17 +223,4 @@ export function ShareStoryModal({ project, onClose }) {
     </div>,
     document.body
   )
-}
-
-function Stat({ value, label, color = '#f5f5f7' }) {
-  return (
-    <div style={{ textAlign: 'center' }}>
-      <div style={{ fontSize: 19, fontWeight: 800, color, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
-      <div style={{ fontSize: 9.5, color: '#8b8b93', marginTop: 2 }}>{label}</div>
-    </div>
-  )
-}
-
-function Divider() {
-  return <div style={{ width: 1, background: '#232328' }} />
 }
