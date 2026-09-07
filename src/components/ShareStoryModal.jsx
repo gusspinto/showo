@@ -59,15 +59,38 @@ export function ShareStoryModal({ project, onClose }) {
 
   async function handleDownload() {
     setExporting(true)
+    const isIOS = /iP(hone|od|ad)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+    // No iOS o window.open() tem de acontecer já, dentro do mesmo gesto de
+    // toque — se esperar pelo html2canvas primeiro, o Safari bloqueia como
+    // pop-up. Abre já uma aba com uma mensagem de espera e preenche-a
+    // depois de a imagem estar pronta.
+    const preOpened = isIOS ? window.open() : null
+    if (preOpened) {
+      preOpened.document.write('<body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;color:#fff;font-family:sans-serif;font-size:14px">A preparar a imagem…</body>')
+    }
     try {
       const canvas = await renderCanvas()
       const url = canvas.toDataURL('image/png')
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `showo-${project.slug}.png`
-      a.click()
+      if (isIOS) {
+        // Safari no iOS ignora o atributo `download` em links — não faz
+        // nada visível, parece que "não dá para descarregar". Abrir a
+        // imagem numa aba deixa guardar com toque longo → Guardar Imagem.
+        if (preOpened) {
+          preOpened.document.open()
+          preOpened.document.write(`<title>showo-${project.slug}</title><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="${url}" style="max-width:100%;height:auto" /><p style="position:fixed;bottom:16px;left:0;right:0;text-align:center;color:#fff;font-family:sans-serif;font-size:14px">Mantém o dedo na imagem e escolhe "Guardar Imagem"</p></body>`)
+          preOpened.document.close()
+        } else {
+          window.location.href = url
+        }
+      } else {
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `showo-${project.slug}.png`
+        a.click()
+      }
     } catch (e) {
       console.error('Export falhou', e)
+      if (preOpened) preOpened.close()
     }
     setExporting(false)
   }
