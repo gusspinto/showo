@@ -553,6 +553,19 @@
   font-weight: 600;
 }
 
+.up-card-meta {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: 6px 10px; margin-top: 2px;
+}
+.up-card-consist, .up-pf-row-consist {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  font-weight: 500;
+}
+.up-pf-row-consist { display: block; margin-top: 2px; }
+.up-card-meta .up-card-consist::before { content: '· '; }
+.up-card-meta .up-card-consist:first-child::before { content: ''; }
+
 /* ── Empty state ── */
 .up-empty {
   background: var(--color-surface);

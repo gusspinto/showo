@@ -42,8 +42,21 @@ function scoreColor(score) {
    que o dono escolheu: 'tile' (capa grande) ou 'row' (linha compacta).
    Os ficheiros da Biblioteca mostram-se como na própria Biblioteca:
    thumbnail real quando existe, senão cartão colorido por tipo. */
-function ProfileItem({ project, onOpen }) {
+function consistencyLabel(tl) {
+  if (!tl || (tl.entry_count || 0) < 3) return null
+  const first = tl.first_entry || tl.created_on
+  if (!first) return null
+  const d1 = new Date(first), d2 = new Date()
+  const m = Math.max(0, (d2.getFullYear() - d1.getFullYear()) * 12 + d2.getMonth() - d1.getMonth())
+  const parts = []
+  if (m >= 1) parts.push(`${m} ${m === 1 ? 'mês' : 'meses'}`)
+  if (tl.active_weeks >= 2) parts.push(`${tl.active_weeks} semanas ativas`)
+  return parts.length ? parts.join(' · ') : null
+}
+
+function ProfileItem({ project, onOpen, timeline }) {
   const isLibrary = project.entry_kind === 'library'
+  const consist = consistencyLabel(timeline)
   const cover =
     project.cover_url ||
     project._signedThumbUrl ||
@@ -73,6 +86,7 @@ function ProfileItem({ project, onOpen }) {
           {(subtitle || project.area) && (
             <span className="up-pf-row-sub">{subtitle || project.area}</span>
           )}
+          {consist && <span className="up-pf-row-consist">{consist}</span>}
         </span>
         {!isLibrary && project.score != null && (
           <span className="up-pf-row-score" style={{ color: scoreColor(project.score) }}>
@@ -106,7 +120,10 @@ function ProfileItem({ project, onOpen }) {
           )}
         </div>
         {subtitle && <p className="up-card-tagline">{subtitle}</p>}
-        {!isLibrary && project.area && <span className="up-card-area">{project.area}</span>}
+        <div className="up-card-meta">
+          {!isLibrary && project.area && <span className="up-card-area">{project.area}</span>}
+          {consist && <span className="up-card-consist">{consist}</span>}
+        </div>
       </div>
     </div>
   )
@@ -207,6 +224,7 @@ export default function UserProfile() {
   const [projects, setProjects] = useState([])
   const [skillProjects, setSkillProjects] = useState([])   // {id,name,slug,skills,tech_stack} de todos os projetos
   const [skillSuggestions, setSkillSuggestions] = useState([]) // {project_id,skills,technologies} por rever (dono)
+  const [timelineByProject, setTimelineByProject] = useState({}) // project_id -> resumo da timeline
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [showQR, setShowQR] = useState(false)
@@ -286,6 +304,15 @@ export default function UserProfile() {
       // (aceita tanto path novo como URL público antigo).
       setProjects(await withSignedLibraryUrls(normalized))
       if (isRecruiterVisitor) setSaved(!!sc)
+
+      // Resumo de consistência por projeto em destaque (o RPC só devolve
+      // dados quando a timeline é pública, ou ao próprio dono).
+      const tlIds = normalized.filter(p => p.entry_kind !== 'library').map(p => p.id)
+      if (tlIds.length) {
+        Promise.all(tlIds.map(id =>
+          supabase.rpc('get_project_timeline', { p_project_id: id }).then(r => [id, r.data]).catch(() => [id, null]),
+        )).then(pairs => setTimelineByProject(Object.fromEntries(pairs.filter(([, v]) => v))))
+      }
 
       setLoading(false)
 
@@ -627,6 +654,7 @@ export default function UserProfile() {
                 <ProfileItem
                   key={project.id}
                   project={project}
+                  timeline={timelineByProject[project.id]}
                   onOpen={() => {
                     if (project.entry_kind === 'library') {
                       setViewingFile(project)
