@@ -43,17 +43,16 @@
 /* ── Modo "Organizar" — escolher o que aparece no perfil público.
    Sem painel à parte: o controlo vive no próprio item. ── */
 
-/* Barra de edição colada a baixo de cada item (tile ou linha):
-   uma linha para o "no perfil", outra para as opções. */
+/* Barra de edição colada a baixo de cada item: uma escolha de 3 estados
+   (Privado · Público · No perfil) e, só quando "No perfil", o formato. */
 .lib-edit-bar {
   margin-top: 10px; padding: 12px;
   background: var(--color-bg-alt);
   border-radius: 12px;
+  display: flex; flex-direction: column; gap: 10px;
 }
-.lib-edit-opts {
-  display: flex; align-items: flex-start; gap: 14px 20px; flex-wrap: wrap;
-}
-.lib-opt { display: flex; flex-direction: column; gap: 6px; }
+.lib-edit-fmt { display: flex; align-items: center; gap: 10px; }
+.lib-edit-fmt .lib-seg-btn { flex: 1; }
 .lib-opt-label {
   font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em;
   text-transform: uppercase; color: var(--color-text-tertiary);
@@ -84,10 +83,11 @@
   transition: background 0.14s, color 0.14s;
 }
 .lib-seg-btn.is-on { background: var(--color-text); color: var(--color-bg); }
-/* Os dois switches que mais importam ganham cor no estado ligado. */
-.lib-seg-btn--profile.is-on { background: var(--color-primary); color: #fff; }
-.lib-seg-btn--public.is-on  { background: var(--color-success); color: #fff; }
-.lib-seg-btn--private.is-on { background: var(--color-warning); color: #fff; }
+
+/* Escolha principal de estado: ocupa a largura toda, um só acento. */
+.lib-seg--state { display: flex; width: 100%; }
+.lib-seg--state .lib-seg-btn { flex: 1; text-align: center; }
+.lib-seg--state .lib-seg-btn.is-on { background: var(--color-primary); color: #fff; }
 
 /* Item ligado ao perfil — anel subtil à volta. */
 .lib-tile.is-on .lib-tile-main,
@@ -383,10 +383,6 @@
   /* Ícones de ação: o mínimo global de 44px deformava-os. */
   .lib-tile-tool { min-height: 0; width: 34px; height: 34px; }
   .lib-tile-cover-edit { min-height: 0; }
-  /* Cada switch na sua linha — 2 ou 3 lado a lado não cabem e o texto
-     saltava para fora. */
-  .lib-edit-opts { gap: 12px; }
-  .lib-opt { flex-basis: 100%; }
-  .lib-seg { width: 100%; }
-  .lib-seg-btn { flex: 1; min-height: 0; padding: 8px 10px; }
+  .lib-edit-fmt .lib-seg { flex: 1; }
+  .lib-seg-btn { min-height: 0; padding: 9px 10px; }
 }

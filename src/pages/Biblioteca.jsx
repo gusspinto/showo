@@ -37,48 +37,39 @@ function prettyDate(iso) {
   } catch { return '' }
 }
 
-/* Controlo de edição partilhado por tiles e linhas: liga/desliga "no
-   perfil", define visibilidade e, quando no perfil, o formato. */
-function ProfileControls({ item, onTogglePin, onSetLayout, onToggleVisibility }) {
-  const on = item.profile_featured
-  const isPrivate = item.visibility === 'private'
+/* Uma só escolha de 3 estados (Privado · Público · No perfil) em vez de
+   dois switches que mandavam um no outro. "No perfil" implica público;
+   só então aparece o formato. */
+function ProfileControls({ item, onSetState, onSetLayout }) {
+  const state = item.visibility === 'private' ? 'private' : item.profile_featured ? 'featured' : 'public'
   return (
     <div className="lib-edit-bar" onClick={e => e.stopPropagation()}>
-      <div className="lib-edit-opts">
-        <span className="lib-opt">
-          <span className="lib-opt-label">No perfil</span>
-          <span className="lib-seg" role="group" aria-label="Mostrar no perfil">
-            <button type="button" className={`lib-seg-btn lib-seg-btn--profile${on ? ' is-on' : ''}`}
-              disabled={isPrivate && !on}
-              title={isPrivate && !on ? 'Torna o item público primeiro' : undefined}
-              onClick={() => { if (!on) onTogglePin(item) }}>Sim</button>
-            <button type="button" className={`lib-seg-btn${!on ? ' is-on' : ''}`}
-              onClick={() => { if (on) onTogglePin(item) }}>Não</button>
-          </span>
-        </span>
+      <span className="lib-seg lib-seg--state" role="group" aria-label="Onde este item aparece">
+        <button type="button" className={`lib-seg-btn${state === 'private' ? ' is-on' : ''}`}
+          onClick={() => onSetState(item, 'private')}>
+          <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden="true" style={{ marginRight: 4, verticalAlign: '-1px' }}>
+            <rect x="3.5" y="7" width="9" height="6.5" rx="1.4" stroke="currentColor" strokeWidth="1.6" />
+            <path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" stroke="currentColor" strokeWidth="1.6" />
+          </svg>
+          Privado
+        </button>
+        <button type="button" className={`lib-seg-btn${state === 'public' ? ' is-on' : ''}`}
+          onClick={() => onSetState(item, 'public')}>Público</button>
+        <button type="button" className={`lib-seg-btn${state === 'featured' ? ' is-on' : ''}`}
+          onClick={() => onSetState(item, 'featured')}>No perfil</button>
+      </span>
 
-        <span className="lib-opt">
-          <span className="lib-opt-label">Visível</span>
-          <span className="lib-seg" role="group" aria-label="Visibilidade">
-            <button type="button" className={`lib-seg-btn lib-seg-btn--public${!isPrivate ? ' is-on' : ''}`}
-              onClick={() => { if (isPrivate) onToggleVisibility(item) }}>Público</button>
-            <button type="button" className={`lib-seg-btn lib-seg-btn--private${isPrivate ? ' is-on' : ''}`}
-              onClick={() => { if (!isPrivate) onToggleVisibility(item) }}>Privado</button>
+      {state === 'featured' && (
+        <div className="lib-edit-fmt">
+          <span className="lib-opt-label">Formato</span>
+          <span className="lib-seg" role="group" aria-label="Formato no perfil">
+            <button type="button" className={`lib-seg-btn${(item.profile_layout || 'tile') === 'tile' ? ' is-on' : ''}`}
+              onClick={() => onSetLayout(item, 'tile')}>Capa</button>
+            <button type="button" className={`lib-seg-btn${item.profile_layout === 'row' ? ' is-on' : ''}`}
+              onClick={() => onSetLayout(item, 'row')}>Linha</button>
           </span>
-        </span>
-
-        {on && (
-          <span className="lib-opt">
-            <span className="lib-opt-label">Formato</span>
-            <span className="lib-seg" role="group" aria-label="Formato no perfil">
-              <button type="button" className={`lib-seg-btn${(item.profile_layout || 'tile') === 'tile' ? ' is-on' : ''}`}
-                onClick={() => onSetLayout(item, 'tile')}>Capa</button>
-              <button type="button" className={`lib-seg-btn${item.profile_layout === 'row' ? ' is-on' : ''}`}
-                onClick={() => onSetLayout(item, 'row')}>Linha</button>
-            </span>
-          </span>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -97,7 +88,7 @@ function isAnalyzing(item, taggingIds) {
    se quer mostrar. Tile com preview de verdade quando é imagem; para o
    resto (PDF/Word/PowerPoint), um cartão colorido por tipo à Drive —
    ainda mais reconhecível que um ícone cinzento genérico. */
-function LibAddedTile({ item, onOpen, onDelete, removing, analyzing, editing, onTogglePin, onSetLayout, onToggleVisibility, renaming, onStartRename, onRename, onCancelRename, onChangeCover }) {
+function LibAddedTile({ item, onOpen, onDelete, removing, analyzing, editing, onSetState, onSetLayout, renaming, onStartRename, onRename, onCancelRename, onChangeCover }) {
   const isImage = item.library_file_type?.startsWith('image/')
   const previewSrc = isImage ? item._signedFileUrl : item._signedThumbUrl
   const ft = fileTypeStyle(item.library_file_type)
@@ -175,7 +166,7 @@ function LibAddedTile({ item, onOpen, onDelete, removing, analyzing, editing, on
         </div>
       )}
 
-      {editing && !renaming && <ProfileControls item={item} onTogglePin={onTogglePin} onSetLayout={onSetLayout} onToggleVisibility={onToggleVisibility} />}
+      {editing && !renaming && <ProfileControls item={item} onSetState={onSetState} onSetLayout={onSetLayout} />}
       <div className="lib-tile-tools" hidden={renaming}>
         <span
           role="button"
@@ -205,7 +196,7 @@ function LibAddedTile({ item, onOpen, onDelete, removing, analyzing, editing, on
 
 /* Projeto "criado" (entry_kind='full') — ainda em construção, por isso
    sem o destaque todo: linha compacta, não tile. */
-function LibBuildingRow({ item, onOpen, onDelete, removing, editing, onTogglePin, onSetLayout, onToggleVisibility }) {
+function LibBuildingRow({ item, onOpen, onDelete, removing, editing, onSetState, onSetLayout }) {
   return (
     <div className={`lib-row-wrap${editing && item.profile_featured ? ' is-on' : ''}`}>
       <button type="button" className="lib-row is-clickable" onClick={() => onOpen(item)}>
@@ -233,7 +224,7 @@ function LibBuildingRow({ item, onOpen, onDelete, removing, editing, onTogglePin
           <Trash size={14} />
         </span>
       </button>
-      {editing && <ProfileControls item={item} onTogglePin={onTogglePin} onSetLayout={onSetLayout} onToggleVisibility={onToggleVisibility} />}
+      {editing && <ProfileControls item={item} onSetState={onSetState} onSetLayout={onSetLayout} />}
     </div>
   )
 }
@@ -340,35 +331,25 @@ export default function Biblioteca() {
     await supabase.from('projects').update(patch).eq('id', id).eq('user_id', user.id)
   }
 
-  function togglePin(item) {
-    if (item.profile_featured) {
-      patchItem(item.id, { profile_featured: false, profile_featured_order: null })
+  /* Estado único: 'private' | 'public' | 'featured'. */
+  function setProfileState(item, state) {
+    const cur = item.visibility === 'private' ? 'private' : item.profile_featured ? 'featured' : 'public'
+    if (cur === state) return
+    if (state === 'private') {
+      patchItem(item.id, { visibility: 'private', profile_featured: false, profile_featured_order: null })
+    } else if (state === 'public') {
+      patchItem(item.id, { visibility: 'public', profile_featured: false, profile_featured_order: null })
     } else {
-      if (item.visibility === 'private') {
-        setToast('Um projeto privado não pode aparecer no perfil. Torna-o público primeiro.')
-        return
-      }
       const maxOrder = (items ?? [])
         .filter(i => i.profile_featured)
         .reduce((m, i) => Math.max(m, i.profile_featured_order ?? 0), 0)
       patchItem(item.id, {
+        visibility: 'public',
         profile_featured: true,
         profile_featured_order: maxOrder + 1,
         profile_layout: item.profile_layout || 'tile',
       })
     }
-  }
-
-  function toggleVisibility(item) {
-    const next = item.visibility === 'private' ? 'public' : 'private'
-    const patch = { visibility: next }
-    // Privado sai automaticamente do perfil — não pode ficar lá escondido.
-    if (next === 'private' && item.profile_featured) {
-      patch.profile_featured = false
-      patch.profile_featured_order = null
-      setToast('Ficou privado e saiu do perfil.')
-    }
-    patchItem(item.id, patch)
   }
 
   function setLayout(item, layout) {
@@ -454,7 +435,7 @@ export default function Biblioteca() {
                   {added.map(item => (
                     <LibAddedTile key={item.id} item={item} removing={removing} onDelete={handleDelete}
                       analyzing={isAnalyzing(item, taggingIds)}
-                      editing={editing} onTogglePin={togglePin} onSetLayout={setLayout} onToggleVisibility={toggleVisibility}
+                      editing={editing} onSetState={setProfileState} onSetLayout={setLayout}
                       renaming={renamingId === item.id}
                       onStartRename={setRenamingId}
                       onCancelRename={() => setRenamingId(null)}
@@ -474,7 +455,7 @@ export default function Biblioteca() {
                 <div className="lib-added-list">
                   {building.map(item => (
                     <LibBuildingRow key={item.id} item={item} removing={removing} onDelete={handleDelete}
-                      editing={editing} onTogglePin={togglePin} onSetLayout={setLayout} onToggleVisibility={toggleVisibility}
+                      editing={editing} onSetState={setProfileState} onSetLayout={setLayout}
                       onOpen={it => navigate(`/projeto/${it.slug}`)} />
                   ))}
                 </div>
