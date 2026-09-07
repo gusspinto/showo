@@ -366,7 +366,7 @@ function generateMeetingSummary(users, projects, activityLog, range) {
   return md
 }
 
-function OverviewTab({ users, projects, activityLog, aiUsageSummary, funnelSummary }) {
+function OverviewTab({ users, projects, activityLog, aiUsageSummary, funnelSummary, billingSummary }) {
   const [userSearch, setUserSearch] = useState('')
   const [sort, setSort] = useState('active')
   const [range, setRange] = useState(TIME_RANGES[1])
@@ -393,6 +393,17 @@ function OverviewTab({ users, projects, activityLog, aiUsageSummary, funnelSumma
   const planCounts = { free: 0, school: 0, plus: 0, pro: 0 }
   users.forEach(u => { const p = resolvePlanId(u); planCounts[p] = (planCounts[p] || 0) + 1 })
   const paidUsers = planCounts.plus + planCounts.pro
+
+  // MRR estimado a partir dos planos ativos agora (preços fixos, sem promoções
+  // aplicadas) — não é o valor exato faturado, mas dá o pulso do negócio sem
+  // depender do Stripe estar acessível aqui.
+  const mrrEstimate = planCounts.plus * 4.99 + planCounts.pro * 9.99
+
+  const billingMap = {}
+  ;(billingSummary || []).forEach(row => { billingMap[row.event] = row })
+  const newSubsThisMonth = billingMap.subscription_started?.count || 0
+  const churnedThisMonth = billingMap.subscription_churned?.count || 0
+  const revenueThisMonth = (billingMap.payment_succeeded?.total_amount_cents || 0) / 100
 
   // Quem bateu mesmo num limite de IA este mês (dados reais de ai_usage, não
   // estimativa) — e o funil desde aí até ao início do checkout.
@@ -548,6 +559,7 @@ function OverviewTab({ users, projects, activityLog, aiUsageSummary, funnelSumma
         <StatCard icon={<Star size={20} />} label="Retenção mensal" value={`${retentionRate}%`} color={retentionRate > 30 ? C.green : retentionRate > 10 ? C.yellow : C.red} sub={`${activeThisMonth}/${totalUsers} voltaram`} />
         <StatCard icon={<Star size={20} />} label="Score médio" value={avgScore} color={C.yellow} sub={`${scores.length} com score`} />
         <StatCard icon={<Star size={20} />} label="Planos pagos" value={paidUsers} color={paidUsers > 0 ? C.green : C.muted} sub={`${planCounts.plus} Plus · ${planCounts.pro} Pro · ${planCounts.school} Escola`} />
+        <StatCard icon={<Star size={20} />} label="MRR estimado" value={`€${mrrEstimate.toFixed(2)}`} color={mrrEstimate > 0 ? C.green : C.muted} sub="A preço de lista, sem promoções" />
       </div>
 
       {/* Funil de conversão */}
@@ -559,6 +571,9 @@ function OverviewTab({ users, projects, activityLog, aiUsageSummary, funnelSumma
           <FunnelStep label="Viram o nudge" value={nudgeShown} />
           <FunnelStep label="Clicaram no nudge" value={nudgeClicked} />
           <FunnelStep label="Iniciaram checkout" value={checkoutStarted} />
+          <FunnelStep label="Subscrições novas" value={newSubsThisMonth} />
+          <FunnelStep label="Cancelamentos" value={churnedThisMonth} />
+          <FunnelStep label="Receita cobrada" value={`€${revenueThisMonth.toFixed(2)}`} />
         </div>
         {Object.keys(limitHitsByFeature).length > 0 && (
           <div style={{ marginTop: 14, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -1414,6 +1429,7 @@ export default function Admin() {
   const [activityLog, setActivityLog] = useState([])
   const [aiUsageSummary, setAiUsageSummary] = useState([])
   const [funnelSummary, setFunnelSummary] = useState([])
+  const [billingSummary, setBillingSummary] = useState([])
   const [codes, setCodes] = useState([])
   const [codesLoading, setCodesLoading] = useState(false)
   const [codesLoaded, setCodesLoaded] = useState(false)
@@ -1456,6 +1472,7 @@ export default function Admin() {
       ])
       setAiUsageSummary(aiUsageRes.data || [])
       setFunnelSummary(funnelRes.data || [])
+      supabase.rpc('admin_get_billing_summary').then(({ data }) => setBillingSummary(data || []))
       if (profilesRes.error) showToast('Erro ao carregar utilizadores: ' + profilesRes.error.message)
       if (projectsRes.error) showToast('Erro ao carregar projetos: ' + projectsRes.error.message)
 
@@ -1775,7 +1792,7 @@ export default function Admin() {
           </div>
         ) : (
           <>
-            {tab === 'overview' && <OverviewTab users={users} projects={projects} activityLog={activityLog} aiUsageSummary={aiUsageSummary} funnelSummary={funnelSummary} />}
+            {tab === 'overview' && <OverviewTab users={users} projects={projects} activityLog={activityLog} aiUsageSummary={aiUsageSummary} funnelSummary={funnelSummary} billingSummary={billingSummary} />}
             {tab === 'users' && (
               <UsersTab
                 users={users}
