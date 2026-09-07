@@ -10,6 +10,8 @@ import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
 import { StarsIcon as Sparkles } from '@solar-icons/react/bold/stars'
 import { DownloadIcon as Download } from '@solar-icons/react/bold/download'
 import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
+import { ShareIcon as Share2 } from '@solar-icons/react/bold/share'
+import { ShareStoryModal } from '../components/ShareStoryModal'
 
 const C = {
   bg: 'var(--color-bg)',
@@ -29,12 +31,13 @@ export default function Certificate() {
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
   const [downloading, setDownloading] = useState(false)
+  const [showStoryModal, setShowStoryModal] = useState(false)
 
   useEffect(() => {
     async function load() {
       const { data } = await supabase
         .from('projects')
-        .select('name, creator_name, score, created_at, slug, ai_tagline')
+        .select('id, name, creator_name, score, created_at, slug, ai_tagline, project_type')
         .eq('slug', slug)
         .single()
       setProject(data)
@@ -223,6 +226,18 @@ export default function Certificate() {
       <div className="cert-actions" style={{ display: 'flex', gap: 12, marginTop: 28 }}>
         <button
           className="cert-action-btn"
+          onClick={() => setShowStoryModal(true)}
+          style={{
+            background: 'var(--color-primary)',
+            color: '#fff', border: 'none', borderRadius: 10,
+            padding: '14px 28px', fontSize: 15, fontWeight: 700,
+            cursor: 'pointer', fontFamily: 'inherit',
+          }}
+        >
+          <Share2 size={15} style={{ verticalAlign: 'middle', marginRight: 6 }} />Partilhar nas stories
+        </button>
+        <button
+          className="cert-action-btn"
           onClick={handleDownload}
           disabled={downloading}
           style={{
@@ -255,6 +270,8 @@ export default function Certificate() {
           }
         </button>
       </div>
+
+      {showStoryModal && <ShareStoryModal project={project} onClose={() => setShowStoryModal(false)} />}
     </div>
   )
 }
