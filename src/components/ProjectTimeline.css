@@ -1,5 +1,5 @@
 .ptl-card {
-  margin: 8px 0 0;
+  margin: 8px 0 14px;
   border: 1px solid var(--color-border);
   border-radius: 16px;
   padding: 20px 22px;
@@ -10,8 +10,11 @@
 /* Header */
 .ptl-card-head {
   display: flex; align-items: center; justify-content: space-between;
-  gap: 12px; margin-bottom: 16px;
+  gap: 12px; margin-bottom: 12px;
 }
+/* Só o header + a lista (sem stats/chart/ações no meio) — não deixa o
+   espaço a mais entre eles. */
+.ptl-card-head + .ptl-list { margin-top: 2px; }
 .ptl-card-head-main { display: flex; align-items: center; gap: 8px; }
 .ptl-card-icon { color: var(--color-text-tertiary); }
 .ptl-card-title {

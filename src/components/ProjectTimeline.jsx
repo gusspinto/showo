@@ -100,14 +100,18 @@ export default function ProjectTimeline({ project, isOwner, viewOnly = false }) 
   }
 
   if (tl === undefined) return null
-  const hasEntries = !!(tl && tl.entry_count > 0)
+  const entryCount = tl?.entry_count || 0
+  const hasEntries = entryCount > 0
+  const showStats = entryCount >= 3          // stats/gráfico só com dados que digam algo
   const hasContent = milestones.length > 0 || hasEntries
   const canEdit = isOwner && !viewOnly
 
-  // Vista pública (preview do dono ou visitante real): sem controlos, e só
-  // se houver mesmo alguma coisa para mostrar. Visitante real só quando o
-  // dono a tornou pública.
-  if (viewOnly && (!hasContent || (!isOwner && !isPublic))) return null
+  // Vista pública (preview do dono ou visitante real): sem controlos. Só
+  // aparece se houver mesmo um percurso (2+ momentos ou uso real do diário);
+  // um "timeline" de 1 linha fica pior do que nada. Visitante real só
+  // quando o dono a tornou pública.
+  const worthShowing = milestones.length >= 2 || showStats
+  if (viewOnly && (!worthShowing || (!isOwner && !isPublic))) return null
   // Fora do preview, um visitante nunca vê isto (o pai já gere, mas por via das dúvidas).
   if (!isOwner && !viewOnly) return null
 
@@ -164,7 +168,7 @@ export default function ProjectTimeline({ project, isOwner, viewOnly = false }) 
     <div className="ptl-card">
       {header}
 
-      {hasEntries && (
+      {showStats && (
         <>
           <div className="ptl-stats">
             <div className="ptl-stat">
