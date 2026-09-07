@@ -515,6 +515,18 @@
   border-radius: 5px;
   padding: 2px 7px;
 }
+/* Chip de tecnologia demonstrada — clicável, filtra o Explorar. */
+button.explore-tag--tech {
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.14s, color 0.14s, background 0.14s;
+}
+button.explore-tag--tech:hover { border-color: var(--color-text-tertiary); color: var(--color-text); }
+button.explore-tag--tech.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
 
 /* ── Load more ── */
 .explore-load-more {
@@ -643,6 +655,12 @@
   color: var(--color-text);
   background: var(--color-surface-hover);
   border-color: var(--color-border-hover);
+}
+/* Demonstrado nos projetos (sinal mais forte que "declarado"). */
+.explore-skill-tag--proven {
+  color: var(--color-primary);
+  border-color: color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
+  background: var(--color-primary-subtle);
 }
 
 /* ── People empty ── */

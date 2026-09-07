@@ -199,7 +199,28 @@ export default function Explore() {
       .is('banned_at', null)
       .order('created_at', { ascending: false })
       .limit(200)
-    setPeople(data || [])
+
+    // Tecnologias/competências DEMONSTRADAS: união do que a IA extraiu dos
+    // projetos públicos de cada pessoa (pedido do Hugo — o recrutador filtra
+    // por quem provou, não só por quem escreveu no perfil).
+    let enriched = data || []
+    const ids = enriched.map(p => p.id)
+    if (ids.length) {
+      const { data: projs } = await supabase
+        .from('projects')
+        .select('user_id, skills, tech_stack, library_skills')
+        .in('user_id', ids)
+        .or('visibility.eq.public,visibility.is.null')
+      const byUser = {}
+      for (const pr of projs || []) {
+        const set = byUser[pr.user_id] || (byUser[pr.user_id] = new Set())
+        for (const s of [...(pr.skills || []), ...(pr.tech_stack || []), ...(pr.library_skills || [])]) {
+          if (s) set.add(String(s))
+        }
+      }
+      enriched = enriched.map(p => ({ ...p, demonstrated: [...(byUser[p.id] || [])].sort() }))
+    }
+    setPeople(enriched)
     setPeopleLoaded(true)
     setPeopleLoading(false)
   }
@@ -276,7 +297,11 @@ export default function Explore() {
       p.company?.toLowerCase().includes(peopleQuery) ||
       p.looking_for?.toLowerCase().includes(peopleQuery)
     )) return false
-    if (filterSkill && !(p.skills || []).includes(filterSkill)) return false
+    if (filterSkill) {
+      const fl = filterSkill.toLowerCase()
+      const has = [...(p.skills || []), ...(p.demonstrated || [])].some(s => String(s).toLowerCase() === fl)
+      if (!has) return false
+    }
     if (filterPeopleArea && p.area !== filterPeopleArea) return false
     return true
   }), [people, peopleQuery, filterSkill, filterPeopleArea])
@@ -492,23 +517,30 @@ export default function Explore() {
                       </svg>
                     </div>
 
-                    {/* Tags */}
-                    {project.tags && project.tags.length > 0 && (
+                    {/* Tecnologias demonstradas (feature 2) — clicáveis para filtrar */}
+                    {project.tech_stack?.length > 0 ? (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {project.tech_stack.slice(0, 4).map(t => (
+                          <button
+                            key={t}
+                            className={`explore-tag explore-tag--tech${filterTech.toLowerCase() === String(t).toLowerCase() ? ' active' : ''}`}
+                            onClick={e => { e.stopPropagation(); setFilterTech(filterTech.toLowerCase() === String(t).toLowerCase() ? '' : t); setShowFilters(true) }}
+                          >{t}</button>
+                        ))}
+                      </div>
+                    ) : project.tags?.length > 0 ? (
                       <div className="flex flex-wrap gap-1 mt-1">
                         {project.tags.slice(0, 4).map(tag => (
                           <span key={tag} className="explore-tag">{tag}</span>
                         ))}
                       </div>
-                    )}
-
-                    {/* Technologies (recruiter mode) */}
-                    {recruiterMode && !project.tags?.length && project.technologies && (
+                    ) : recruiterMode && project.technologies ? (
                       <div className="flex flex-wrap gap-1 mt-1">
                         {project.technologies.split(/[,\s·]+/).filter(Boolean).slice(0, 4).map((t, i) => (
                           <span key={i} className="explore-tag">{t.trim()}</span>
                         ))}
                       </div>
-                    )}
+                    ) : null}
                   </div>
                 ))}
               </div>
@@ -547,11 +579,11 @@ export default function Explore() {
                 })()}
 
                 {(() => {
-                  const allSkills = [...new Set(people.flatMap(p => p.skills || []))].sort()
+                  const allSkills = [...new Set(people.flatMap(p => [...(p.skills || []), ...(p.demonstrated || [])]))].sort((a, b) => a.localeCompare(b))
                   if (allSkills.length === 0) return null
                   return (
                     <div>
-                      <div className="filter-chip-label">Competências</div>
+                      <div className="filter-chip-label">Competências e tecnologias</div>
                       <div className="filter-chip-group">
                         {[{ id: '', label: 'Todas' }, ...allSkills.map(s => ({ id: s, label: s }))].map(s => (
                           <button key={s.id} onClick={() => setFilterSkill(s.id)}
@@ -668,18 +700,29 @@ export default function Explore() {
                               </span>
                             )}
                           </div>
-                          {p.skills && p.skills.length > 0 && (
-                            <div className="explore-person-skills">
-                              {p.skills.slice(0, 2).map(skill => (
-                                <span key={skill} className={`explore-skill-tag${filterSkill === skill ? ' active' : ''}`}>
-                                  {skill}
-                                </span>
-                              ))}
-                              {p.skills.length > 2 && (
-                                <span className="text-2xs text-subtle flex-shrink-0">+{p.skills.length - 2}</span>
-                              )}
-                            </div>
-                          )}
+                          {(() => {
+                            const declared = p.skills || []
+                            const dl = declared.map(s => s.toLowerCase())
+                            const provenOnly = (p.demonstrated || []).filter(s => !dl.includes(s.toLowerCase()))
+                            const shown = [
+                              ...declared.map(s => ({ s, proven: false })),
+                              ...provenOnly.map(s => ({ s, proven: true })),
+                            ].slice(0, 3)
+                            const extra = declared.length + provenOnly.length - shown.length
+                            if (shown.length === 0) return null
+                            return (
+                              <div className="explore-person-skills">
+                                {shown.map(({ s, proven }) => (
+                                  <span key={s}
+                                    title={proven ? 'Demonstrado em projetos' : undefined}
+                                    className={`explore-skill-tag${proven ? ' explore-skill-tag--proven' : ''}${filterSkill === s ? ' active' : ''}`}>
+                                    {s}
+                                  </span>
+                                ))}
+                                {extra > 0 && <span className="text-2xs text-subtle flex-shrink-0">+{extra}</span>}
+                              </div>
+                            )
+                          })()}
                         </div>
 
                         {profileUrl && (
