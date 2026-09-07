@@ -37,16 +37,6 @@ function prettyDate(iso) {
   } catch { return '' }
 }
 
-/* Ícones inline — evita mais um import de pacote só para dois glifos. */
-function CheckIcon({ on }) {
-  return (
-    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      {on
-        ? <path d="M13.5 4.5 6.5 11.5 3 8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-        : <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.6" />}
-    </svg>
-  )
-}
 /* Controlo de edição partilhado por tiles e linhas: liga/desliga "no
    perfil", define visibilidade e, quando no perfil, o formato. */
 function ProfileControls({ item, onTogglePin, onSetLayout, onToggleVisibility }) {
@@ -54,18 +44,19 @@ function ProfileControls({ item, onTogglePin, onSetLayout, onToggleVisibility })
   const isPrivate = item.visibility === 'private'
   return (
     <div className="lib-edit-bar" onClick={e => e.stopPropagation()}>
-      <button
-        type="button"
-        className={`lib-toggle${on ? ' is-on' : ''}`}
-        onClick={() => onTogglePin(item)}
-        disabled={isPrivate && !on}
-        title={isPrivate && !on ? 'Torna o item público para o mostrares no perfil' : undefined}
-      >
-        <CheckIcon on={on} />
-        {on ? 'No perfil' : 'Mostrar no perfil'}
-      </button>
-
       <div className="lib-edit-opts">
+        <span className="lib-opt">
+          <span className="lib-opt-label">No perfil</span>
+          <span className="lib-seg" role="group" aria-label="Mostrar no perfil">
+            <button type="button" className={`lib-seg-btn${on ? ' is-on' : ''}`}
+              disabled={isPrivate && !on}
+              title={isPrivate && !on ? 'Torna o item público primeiro' : undefined}
+              onClick={() => { if (!on) onTogglePin(item) }}>Sim</button>
+            <button type="button" className={`lib-seg-btn${!on ? ' is-on' : ''}`}
+              onClick={() => { if (on) onTogglePin(item) }}>Não</button>
+          </span>
+        </span>
+
         <span className="lib-opt">
           <span className="lib-opt-label">Visível</span>
           <span className="lib-seg" role="group" aria-label="Visibilidade">
