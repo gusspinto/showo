@@ -92,53 +92,44 @@ export async function extractOfficeThumbnail(file) {
   // 2. a maior imagem lá dentro — num deck de campanha é quase sempre a
   //    foto principal, dá uma capa decente sem conversor nenhum.
   let best = null
-  const media = Object.entries(entries).filter(([n]) => /\/media\//i.test(n))
-  for (const [, bytes] of media) {
-    if (bytes && (!best || bytes.length > best.length)) best = bytes
+  for (const [n, bytes] of Object.entries(entries)) {
+    if (!/\/media\//i.test(n) || !bytes) continue
+    if (!best || bytes.length > best.length) best = bytes
   }
-  console.info('[thumb] imagens no ficheiro:', media.length, 'maior:', best?.length ?? 0, 'bytes')
   return imageBlob(best)
 }
 
 /* Itens já na Biblioteca sem miniatura: ao abrir o ficheiro, o dono gera-a
    e grava-a (para ele e para os visitantes do perfil). */
 export async function backfillOfficeThumbnail(item) {
-  const L = (...a) => console.info('[thumb]', ...a)
   if (!item || item.library_thumb_url || !item._signedFileUrl) return null
   try {
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user || (item.user_id && user.id !== item.user_id)) { L('não é o dono'); return null }
+    if (!user || (item.user_id && user.id !== item.user_id)) return null
     const res = await fetch(item._signedFileUrl)
-    if (!res.ok) { L('fetch ficheiro falhou', res.status); return null }
+    if (!res.ok) return null
     let blob = await extractOfficeThumbnail(await res.blob())
-    L(blob ? 'miniatura tirada do ficheiro' : 'ficheiro sem imagem usável, tenta conversor')
 
     if (!blob) {
       const { storagePath } = await import('./libraryFile')
       const p = storagePath(item.library_file_url)
-      if (!p) { L('sem storage path'); return null }
+      if (!p) return null
       const { data, error } = await supabase.functions.invoke('office-thumbnail', {
         body: { name: item.library_file_name || item.name, type: item.library_file_type, path: p },
       })
-      if (error || !data?.pdf) {
-        let detail = data?.error || error?.message
-        try { if (error?.context?.text) detail = await error.context.text() } catch { /* ignore */ }
-        L('conversor falhou:', detail)
-        return null
-      }
+      if (error || !data?.pdf) return null
       const bin = atob(data.pdf)
       const pdfBytes = new Uint8Array(bin.length)
       for (let i = 0; i < bin.length; i++) pdfBytes[i] = bin.charCodeAt(i)
       const { renderPdfThumbnail } = await import('./pdfThumbnail')
       blob = await renderPdfThumbnail(new Blob([pdfBytes], { type: 'application/pdf' }))
     }
-    if (!blob) { L('sem blob final'); return null }
+    if (!blob) return null
     const ext = blob.type === 'image/png' ? 'png' : 'jpg'
     const path = `${user.id}/thumbs/${Date.now()}-${item.id}.${ext}`
     const up = await supabase.storage.from('library-files').upload(path, blob, { contentType: blob.type, upsert: true })
-    if (up.error) { L('upload miniatura falhou:', up.error.message); return null }
+    if (up.error) return null
     await supabase.from('projects').update({ library_thumb_url: path }).eq('id', item.id)
-    L('miniatura gravada', path)
     return path
-  } catch (e) { L('erro:', e?.message); return null }
+  } catch { return null }
 }
