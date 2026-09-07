@@ -59,25 +59,40 @@ export function AuthProvider({ children }) {
     }
 
     if (!data) {
-      // A linha de perfil é criada no servidor por um trigger (migração 115).
-      // Este INSERT é só uma rede de segurança para contas antigas anteriores
-      // ao trigger. Tem de ser INSERT e não upsert: o upsert vira
-      // INSERT ... ON CONFLICT DO UPDATE, e o Postgres exige UPDATE em `role`
-      // e `id` — que `authenticated` não tem (migração 100) → 403.
+      // A linha de perfil é criada no servidor por um trigger (migração 115/120).
+      // Este INSERT é uma rede de segurança para quando o trigger ainda não
+      // correu (a query dispara no SIGNED_IN antes de a linha estar visível,
+      // p.ex. logo a seguir à confirmação de email) ou falhou. Tem de ser
+      // INSERT e não upsert: o upsert vira INSERT ... ON CONFLICT DO UPDATE, e
+      // o Postgres exige UPDATE em `role` e `id` — que `authenticated` não tem
+      // (migração 100) → 403. As colunas têm de espelhar exatamente as do
+      // trigger (id, full_name, role, avatar_url); `company`/`school` não
+      // existem em profiles e faziam este INSERT rebentar sempre.
       const PROFILE_COLS = 'id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan'
       const { data: created, error: createErr } = await supabase
         .from('profiles')
-        .insert({ id: uid, full_name: meta.full_name ?? meta.name ?? null, role: 'aluno', company: meta.company ?? null, school: meta.school ?? null, avatar_url: (meta.avatar_url ?? meta.picture ?? '').replace(/=s\d+-c$/, '=s400-c') || null })
+        .insert({ id: uid, full_name: meta.full_name ?? meta.name ?? null, role: 'aluno', avatar_url: (meta.avatar_url ?? meta.picture ?? '').replace(/=s\d+-c$/, '=s400-c') || null })
         .select(PROFILE_COLS)
         .single()
       if (createErr?.code === '23505') {
         // Corrida com o trigger (ou outra aba) — a linha já existe, relê.
         const { data: reread } = await supabase.from('profiles').select(PROFILE_COLS).eq('id', uid).single()
         data = reread
-      } else {
+      } else if (!createErr) {
         data = created
         if (data) localStorage.setItem(`showo_needs_role_${uid}`, '1')
       }
+    }
+
+    if (!data) {
+      // Ainda sem linha de perfil: o trigger está em atraso/a falhar e o
+      // INSERT de segurança não pegou. NÃO seguir com profile=null — as
+      // páginas fazem profile.role e rebentam (ecrã branco logo a seguir à
+      // confirmação de email). Lança para o loadProfile tentar de novo com
+      // recuo; normalmente a linha aparece na 2.ª/3.ª tentativa.
+      const notReady = new Error('perfil ainda não disponível')
+      notReady.code = 'PROFILE_NOT_READY'
+      throw notReady
     }
 
     // Ações pendentes do registo, guardadas nos metadados. Uma falha aqui

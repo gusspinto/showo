@@ -44,7 +44,9 @@ export function PlanGateModal({ message, onClose }) {
 
 // Shows remaining AI uses: "2/10 restantes" or "Ilimitado"
 export function AiUsageBadge({ feature, style, compact }) {
-  const { planId, aiUsage } = useAuth()
+  const { user, planId, aiUsage } = useAuth()
+  // Sem sessão não há limites de plano para mostrar — o utilizador ainda nem tem conta.
+  if (!user) return null
   const plan = getPlan(planId)
   const limit = plan.ai[feature]
   if (limit === undefined) return null
