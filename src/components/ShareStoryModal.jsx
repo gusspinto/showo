@@ -173,7 +173,7 @@ export function ShareStoryModal({ project, onClose }) {
           <button
             onClick={onClose}
             aria-label="Fechar"
-            style={{ position: 'absolute', top: '50%', right: 0, transform: 'translateY(-50%)', width: 34, height: 34, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+            style={{ position: 'absolute', top: '50%', right: 0, transform: 'translateY(-50%)', width: 36, height: 36, minWidth: 36, minHeight: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: 0 }}
           ><X size={16} /></button>
         </div>
 
