@@ -3510,3 +3510,17 @@
 @media (max-width: 600px) {
   .sdb-usage-nudge { order: 2; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Regra da semana — o streak conta por semanas, e isso tem de estar escrito.
+   Sem esta linha o número aparece sem ninguém saber o que o mantém vivo.
+   ══════════════════════════════════════════════════════════════════════════ */
+.sdb-week-rule {
+  margin-top: 6px;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+}
+.sdb-week-rule.is-done {
+  color: var(--color-success);
+}

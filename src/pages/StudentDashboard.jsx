@@ -486,10 +486,16 @@ export default function StudentDashboard({ user, profile }) {
   // O streak conta trabalho no projeto (entradas automáticas incluídas), mas
   // o aviso "ainda não escreveste hoje" tem de continuar a pedir escrita
   // real — uma marca gerada pela app não é a pessoa a escrever.
-  const writtenToday = useMemo(() => {
-    const today = new Date().toISOString().slice(0, 10)
-    return activityEntries.some(e => e.kind !== 'auto' && e.created_at?.slice(0, 10) === today)
+  // Semana começa à segunda, igual ao computeWeekStreak.
+  const activeThisWeek = useMemo(() => {
+    const monday = new Date(); monday.setHours(0, 0, 0, 0)
+    monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7))
+    return activityEntries.some(e => new Date(e.created_at) >= monday)
   }, [activityEntries])
+  const daysLeftInWeek = useMemo(() => {
+    const today = new Date()
+    return 7 - ((today.getDay() + 6) % 7)
+  }, [])
 
   const activityBuckets = useMemo(
     () => buildWeeklyActivity({ entries: activityEntries, completions, weeks: 12 }),
@@ -791,7 +797,7 @@ export default function StudentDashboard({ user, profile }) {
             <h1 className="sdb-hero-greeting">{greeting}</h1>
           </div>
 
-          <aside className={`sdb-hero-side${entries.length > 0 && !loadingProjects && !loadingEntries ? ' sdb-hero-side--activity' : ''}`}>
+          <aside className={`sdb-hero-side${activityEntries.length > 0 && !loadingProjects && !loadingEntries ? ' sdb-hero-side--activity' : ''}`}>
             {loadingProjects || loadingEntries ? (
               <>
                 <div className="skel skel-line" style={{ height: 26, width: '55%' }} />
@@ -803,6 +809,16 @@ export default function StudentDashboard({ user, profile }) {
                 <div className="sdb-streak-row">
                   <Flame size={14} strokeWidth={2.5} />
                   <span>{streak} {streak === 1 ? 'semana seguida' : 'semanas seguidas'}</span>
+                </div>
+                {/* A regra tem de ser dita, não adivinhada: quem abre isto
+                    fica a saber que a sequência se mantém por SEMANA e o
+                    que falta fazer para não a perder. */}
+                <div className={`sdb-week-rule${activeThisWeek ? ' is-done' : ''}`}>
+                  {activeThisWeek
+                    ? 'Esta semana já conta. Volta para a semana seguinte.'
+                    : streak > 0
+                      ? `Regista algo até domingo (${daysLeftInWeek === 1 ? 'falta 1 dia' : `faltam ${daysLeftInWeek} dias`}) para não perderes a sequência.`
+                      : 'Regista algo esta semana para começares uma sequência.'}
                 </div>
                 <div className="sdb-daydots" aria-label="Atividade dos últimos 7 dias">
                   {last7.map(d => (
@@ -1049,7 +1065,7 @@ export default function StudentDashboard({ user, profile }) {
                         onOpenDiary={() => navigate(`/projeto/${focusFull.slug}/diario`)}
                         onLog={kind => setComposerKind(kind)}
                         onShare={() => setShareProject(focusFull)}
-                        writtenToday={writtenToday}
+                        activeThisWeek={activeThisWeek} streak={streak} daysLeftInWeek={daysLeftInWeek}
                       />
                     )}
                     {manuallyPinned.map(pinned => {
@@ -1072,7 +1088,7 @@ export default function StudentDashboard({ user, profile }) {
                           onOpenDiary={() => navigate(`/projeto/${pinned.slug}/diario`)}
                           onLog={kind => setComposerKind(kind)}
                           onShare={() => setShareProject(pinned)}
-                          writtenToday={writtenToday}
+                          activeThisWeek={activeThisWeek} streak={streak} daysLeftInWeek={daysLeftInWeek}
                         />
                       )
                     })}
@@ -1087,7 +1103,10 @@ export default function StudentDashboard({ user, profile }) {
                   <div className="sdb-stat-tile">
                     <span className="sdb-eyebrow" style={{ color: 'var(--color-warning)' }}>Atividade</span>
                     <div className="sdb-stat-tile-num" style={{ color: 'var(--color-warning)' }}>{streak}</div>
-                    <span className="sdb-stat-tile-label">{streak === 1 ? 'semana' : 'semanas'} seguidas</span>
+                    <span className="sdb-stat-tile-label">
+                      {streak === 1 ? 'semana' : 'semanas'} seguidas
+                      {' · '}{activeThisWeek ? 'esta semana feita' : 'falta esta semana'}
+                    </span>
                     <div className="sdb-daydots" style={{ marginTop: 'auto', paddingTop: 10 }}>
                       {last7.map(d => (
                         <span key={d.iso} className={`sdb-daydot${d.active ? ' is-active' : ''}`} />
@@ -1419,7 +1438,7 @@ function ProjectRow({ project, shared, onOpen, onEdit, onCopy, copied, onDelete,
 /* ── Card de projecto fixado na dashboard ─────────────────────────────────── */
 const TYPE_MAP = { pap: 'PAP', internship: 'Estágio', group: 'Trabalho de grupo', personal: 'Projeto pessoal', competition: 'Competição', presentation: 'Apresentação' }
 
-function PinnedProjectCard({ project, auto, coverage, onOpenReport, onUnpin, onEdit, onDelete, onOpen, onOpenDiary, onLog, onShare, writtenToday }) {
+function PinnedProjectCard({ project, auto, coverage, onOpenReport, onUnpin, onEdit, onDelete, onOpen, onOpenDiary, onLog, onShare, activeThisWeek, streak, daysLeftInWeek }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const typeLabel = auto ? 'Em foco' : (project.is_pap ? 'PAP' : (TYPE_MAP[project.project_type] || 'Projeto'))
 
@@ -1517,12 +1536,12 @@ function PinnedProjectCard({ project, auto, coverage, onOpenReport, onUnpin, onE
           </div>
         )}
 
-        {!writtenToday && (
+        {!activeThisWeek && (
           <button className="sdb-diary-nudge" onClick={() => onLog?.('update')}>
             <Sparkles size={11} />
-            {project.is_pap || project.project_type === 'pap'
-              ? 'Alimenta a IA — escreve no diário hoje'
-              : 'Ainda não escreveste hoje — regista o teu progresso'}
+            {streak > 0
+              ? `Ainda não registaste nada esta semana — ${daysLeftInWeek === 1 ? 'falta 1 dia' : `faltam ${daysLeftInWeek} dias`} para manteres a sequência`
+              : 'Regista o teu progresso esta semana para começares uma sequência'}
           </button>
         )}
         <div className="sdb-pinned-foot">
