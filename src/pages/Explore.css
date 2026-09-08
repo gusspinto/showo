@@ -353,7 +353,7 @@
 /* ── Card grid ── */
 .explore-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(288px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(288px, 100%), 1fr));
   gap: 16px;
 }
 
@@ -575,12 +575,18 @@ button.explore-tag--tech.active {
   display: flex;
   align-items: center;
   gap: 14px;
+  min-width: 0;
+  overflow: hidden;
   transition: border-color 0.15s, background 0.15s;
 }
 .explore-person-card:hover {
   border-color: var(--color-border-hover);
   background: var(--color-surface-hover);
 }
+/* Sem isto, um nome/detalhe/skill sem espaços empurra o cartão para lá do
+   ecrã no mobile (grelha de 1 coluna) — a linha flex interna tem de poder
+   encolher para o overflow:hidden do texto funcionar. */
+.explore-person-card > .flex-1 > div { min-width: 0; }
 
 .explore-avatar {
   width: 46px;

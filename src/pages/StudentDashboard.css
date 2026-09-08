@@ -3351,26 +3351,26 @@
     color: var(--color-primary);
   }
 
-  /* foot: 3 botões iguais, altura decente */
+  /* foot: no telemóvel não cabem 4 botões numa linha sem ficarem apertados —
+     Registar sozinho em cima quando há 4, o resto reparte a linha seguinte. */
   .sdb-pinned-foot {
     gap: 8px;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     padding: 0;
     border-top: none;
     margin-top: 2px;
   }
   .sdb-pinned-card[data-has-cover='true'] .sdb-pinned-foot { border-top-color: rgba(255,255,255,0.12); }
   .sdb-pinned-foot .sdb-btn {
-    flex: 1;
+    flex: 1 1 0;
     min-width: 0;
     justify-content: center;
-    padding-top: 10px;
-    padding-bottom: 10px;
+    padding-top: 11px;
+    padding-bottom: 11px;
     font-size: 13px;
   }
-  /* destaque no botão principal */
-  .sdb-pinned-foot .sdb-btn--solid {
-    flex: 1.4;
+  .sdb-pinned-foot:has(> :nth-child(4)) .sdb-btn--solid {
+    flex: 1 1 100%;
   }
 
   /* ── Stat tiles: mais espaço, hierarquia clara ── */

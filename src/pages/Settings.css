@@ -149,7 +149,27 @@
   box-shadow: none;
 }
 @media (max-width: 600px) {
-  .settings-header-save { display: none; }
+  .settings-header-actions .settings-header-save { display: none; }
+  /* Header limpo no telemóvel: título numa linha, só o "voltar" ao lado,
+     compacto (o rótulo longo tipo "Voltar a Aprende a usar" não cabe). */
+  .settings-header {
+    margin-bottom: 20px;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+  }
+  .settings-header-actions { margin-top: 0; }
+  .settings-back-btn { padding: 9px 12px; }
+  .settings-back-label {
+    max-width: 92px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+@media (max-width: 380px) {
+  .settings-back-label { display: none; }
+  .settings-back-btn { padding: 9px; }
 }
 
 /* ── Section card ── */
@@ -406,6 +426,9 @@
   padding: 13px 16px;
   cursor: pointer;
   font-family: inherit;
+  /* <button> não herda a cor do tema — sem isto o título fica preto (UA) e
+     desaparece no modo escuro. */
+  color: var(--color-text);
   transition: all 0.2s;
   text-align: left;
 }
@@ -681,31 +704,40 @@
   /* add bottom padding so content doesn't hide behind the bar */
   .settings-main { padding-bottom: 80px; }
 
+  /* Só o botão a flutuar, sem barra por baixo. O contentor não apanha toques
+     (deixa passar para o conteúdo), só o botão e a mensagem de erro. */
   .settings-mobile-save-bar {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 12px;
+    gap: 10px;
     position: fixed;
-    left: 0; right: 0; bottom: 0;
+    left: 0; right: 0;
+    bottom: calc(14px + env(safe-area-inset-bottom, 0px));
     z-index: 300;
-    padding: 11px 16px calc(11px + env(safe-area-inset-bottom, 0px));
-    background: var(--color-bg-overlay);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    border-top: 1px solid var(--color-border);
+    padding: 0 16px;
+    background: none;
+    pointer-events: none;
   }
   .settings-mobile-save-msg {
     flex: 1;
     font-size: 13px;
     font-weight: 600;
+    pointer-events: auto;
+    background: var(--color-bg-overlay);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 8px 12px;
+    border-radius: 10px;
   }
   .settings-mobile-save-msg.ok { color: var(--color-success); }
   .settings-mobile-save-msg.error { color: var(--color-error); }
   .settings-mobile-save-btn {
     flex-shrink: 0;
-    padding: 12px 28px;
+    pointer-events: auto;
+    padding: 13px 30px;
     font-size: 15px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   }
 }
 @media (max-width: 500px) {
@@ -733,6 +765,7 @@
   border-radius: 12px;
   border: 1.5px solid var(--color-border);
   background: var(--color-surface);
+  color: var(--color-text);
   cursor: pointer;
   text-align: left;
   transition: border-color 0.2s, background 0.2s;

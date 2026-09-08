@@ -598,8 +598,8 @@ export default function Settings() {
                 {saveButtonLabel}
               </button>
             )}
-            <button onClick={() => navigate(back.path)} className="settings-back-btn">
-              <ArrowLeft size={14} /> {back.label}
+            <button onClick={() => navigate(back.path)} className="settings-back-btn" aria-label={back.label}>
+              <ArrowLeft size={14} /> <span className="settings-back-label">{back.label}</span>
             </button>
           </div>
         </div>
