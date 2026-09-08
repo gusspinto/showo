@@ -18,6 +18,7 @@ import DefenseMode from '../components/DefenseMode'
 import ProjectComments from '../components/ProjectComments'
 import ProjectTimeline from '../components/ProjectTimeline'
 import { ShareStoryModal } from '../components/ShareStoryModal'
+import { logFieldFilled } from '../lib/autoJournal'
 import { analyzeProject } from '../lib/analyzeProject'
 import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
@@ -5273,9 +5274,31 @@ export default function ProjectPage() {
     setProject(updatedProject)
     setScore(newScore)
 
+    // Regista sozinho no diário que esta secção passou a estar preenchida —
+    // sem isto o diário fica vazio e a timeline/progresso não têm dados.
+    // Esperamos pelo resultado para o aviso só falar do diário quando algo
+    // foi mesmo lá parar (o mesmo campo duas vezes no dia não repete).
+    let loggedToDiary = false
+    if (user?.id) {
+      loggedToDiary = await logFieldFilled({
+        projectId: project.id,
+        userId: user.id,
+        field: challenge.field,
+        before: project[challenge.field],
+        after: fieldValue,
+      })
+      if (loggedToDiary) {
+        supabase.from('project_journal_entries')
+          .select('created_at, kind, content')
+          .eq('project_id', project.id)
+          .then(({ data }) => { if (data) setProjectJournalEntries(data) })
+      }
+    }
+    const diaryNote = loggedToDiary ? ' · registado no diário' : ''
+
     const isNowCompleted = getChallengeStatus(challenge, updatedProject) === 'completed'
     if (!wasCompleted && isNowCompleted) {
-      triggerToast(`+${challenge.scoreGain} XP! Score: ${oldScore} → ${newScore}`)
+      triggerToast(`+${challenge.scoreGain} XP! Score: ${oldScore} → ${newScore}${diaryNote}`)
       if (newScore === 100) {
         setShowConfetti(true)
         setTimeout(() => setShowConfetti(false), 5000)
@@ -5290,7 +5313,7 @@ export default function ProjectPage() {
         })
       }
     } else {
-      triggerToast(`Guardado! Score atual: ${newScore}`)
+      triggerToast(`Guardado! Score atual: ${newScore}${diaryNote}`)
     }
 
     // SCORE_MILESTONE notification

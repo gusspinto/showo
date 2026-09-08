@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
       const lines = sorted.map((e: { kind: string; content: string; created_at: string }) =>
         `[${e.created_at?.slice(0, 10)}] (${e.kind}) ${(e.content || '').slice(0, 500)}`
       ).join('\n')
-      diaryBlock = `\n\nDIÁRIO DO PROJETO (entradas recentes, por ordem cronológica):\n━━━━━━━━━━━━━━━━━━━━\n${lines}\n━━━━━━━━━━━━━━━━━━━━\nUsa o diário para entender a evolução real do projeto: decisões tomadas, dificuldades encontradas, progresso feito. Isto dá-te contexto que os campos acima não captam.`
+      diaryBlock = `\n\nDIÁRIO DO PROJETO (entradas recentes, por ordem cronológica):\n━━━━━━━━━━━━━━━━━━━━\n${lines}\n━━━━━━━━━━━━━━━━━━━━\nUsa o diário para entender a evolução real do projeto: decisões tomadas, dificuldades encontradas, progresso feito. Isto dá-te contexto que os campos acima não captam.\n\nAs entradas com (auto) foram geradas pela plataforma quando o aluno preencheu uma secção — servem só para saberes quando as coisas aconteceram. Não são palavras dele: não as cites nem as trates como reflexão do aluno.`
     }
 
     // Use teacher feedback sent from frontend
