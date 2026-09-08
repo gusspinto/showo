@@ -209,3 +209,52 @@ export function repairJson(raw: string): Record<string, unknown> {
     }
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   CUSTO REAL DE IA
+   ──────────────────────────────────────────────────────────────────────────
+   O painel financeiro precisa de custos verdadeiros, não de estimativas.
+   A API devolve os tokens gastos em cada resposta (`usage`), por isso o
+   custo é calculado a partir deles e do preço do modelo, e guardado.
+
+   Preços por milhão de tokens (Anthropic, entrada/saída). Um modelo que não
+   esteja aqui grava cost_usd = NULL em vez de 0 — assim um preço em falta
+   aparece no painel como "sem preço" em vez de desaparecer da conta.
+   ══════════════════════════════════════════════════════════════════════════ */
+const MODEL_PRICES: Record<string, { in: number; out: number }> = {
+  'claude-sonnet-4-6': { in: 3, out: 15 },
+  'claude-haiku-4-5': { in: 1, out: 5 },
+  'claude-haiku-4-5-20251001': { in: 1, out: 5 },
+  'claude-opus-5': { in: 5, out: 25 },
+  'claude-sonnet-5': { in: 2, out: 10 },
+}
+
+// deno-lint-ignore no-explicit-any
+export async function logAiCost(feature: string, model: string, usage: any, userId?: string | null) {
+  try {
+    const inputTokens = Number(usage?.input_tokens ?? 0)
+    const outputTokens = Number(usage?.output_tokens ?? 0)
+    if (!inputTokens && !outputTokens) return
+
+    const price = MODEL_PRICES[model]
+    const costUsd = price
+      ? (inputTokens / 1_000_000) * price.in + (outputTokens / 1_000_000) * price.out
+      : null
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    )
+    await supabase.from('ai_costs').insert({
+      user_id: userId ?? null,
+      feature,
+      model,
+      input_tokens: inputTokens,
+      output_tokens: outputTokens,
+      cost_usd: costUsd,
+    })
+  } catch (e) {
+    // Nunca estragar uma resposta ao utilizador por causa de contabilidade.
+    console.error('[logAiCost]', e)
+  }
+}

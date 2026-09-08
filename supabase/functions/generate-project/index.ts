@@ -1,5 +1,5 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
-import { checkRateLimit, getAuthUser, clip, getCorsHeaders, checkPlanLimit, PTPT_RULES, repairJson } from '../_shared/rateLimit.ts'
+import { checkRateLimit, getAuthUser, clip, getCorsHeaders, checkPlanLimit, PTPT_RULES, repairJson, logAiCost } from '../_shared/rateLimit.ts'
 
 Deno.serve(async (req) => {
   const cors = getCorsHeaders(req)
@@ -84,6 +84,7 @@ ${PTPT_RULES}`
       max_tokens: 1500,
       messages: [{ role: 'user', content: prompt }],
     })
+    logAiCost('createProject', 'claude-sonnet-4-6', message.usage, user?.id)
 
     const raw = (message.content[0] as { type: string; text: string }).text.trim()
     const result = repairJson(raw) as Record<string, unknown>

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
@@ -1060,6 +1060,168 @@ function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, 
   )
 }
 
+
+/* ══════════════════════════════════════════════════════════════════════════
+   FINANÇAS
+   ──────────────────────────────────────────────────────────────────────────
+   Regra desta página: nada aqui é estimado. A receita vem de faturas
+   realmente pagas (billing_events), o custo de IA vem dos tokens que a API
+   devolveu em cada chamada (ai_costs), e os custos fixos são introduzidos à
+   mão porque são faturas de terceiros que a base de dados não pode saber.
+
+   Consequência honesta: o painel começa vazio. O registo de custos e de
+   pagamentos só existe desde 8 de setembro de 2026 — não há forma de
+   recuperar o que foi gasto antes disso.
+   ══════════════════════════════════════════════════════════════════════════ */
+function FinanceTab() {
+  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [costs, setCosts] = useState([])
+  const [novoNome, setNovoNome] = useState('')
+  const [novoValor, setNovoValor] = useState('')
+  const [range, setRange] = useState('mes')
+
+  const since = useMemo(() => {
+    const d = new Date()
+    if (range === 'mes') return new Date(d.getFullYear(), d.getMonth(), 1).toISOString()
+    if (range === '90') return new Date(Date.now() - 90 * 86400000).toISOString()
+    return new Date(2020, 0, 1).toISOString()
+  }, [range])
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    const [{ data: sum }, { data: fx }] = await Promise.all([
+      supabase.rpc('admin_get_finance_summary', { p_since: since }),
+      supabase.from('fixed_costs').select('*').eq('active', true).order('amount_eur', { ascending: false }),
+    ])
+    setData(sum || null)
+    setCosts(fx || [])
+    setLoading(false)
+  }, [since])
+
+  useEffect(() => { load() }, [load])
+
+  async function addCost() {
+    const valor = parseFloat(String(novoValor).replace(',', '.'))
+    if (!novoNome.trim() || !Number.isFinite(valor)) return
+    await supabase.from('fixed_costs').insert({ name: novoNome.trim(), amount_eur: valor })
+    setNovoNome(''); setNovoValor('')
+    load()
+  }
+
+  async function removeCost(id) {
+    await supabase.from('fixed_costs').update({ active: false }).eq('id', id)
+    load()
+  }
+
+  if (loading) return <p style={{ fontSize: 13, color: C.muted }}>A carregar…</p>
+  if (!data) return <p style={{ fontSize: 13, color: C.red }}>Sem acesso aos dados financeiros.</p>
+
+  // Conversão só para pôr receita (EUR) e custo de IA (USD) na mesma conta.
+  const USD_EUR = 0.92
+  const receita = Number(data.revenue_eur || 0)
+  const custoIA = Number(data.ai_cost_usd || 0) * USD_EUR
+  const custoFixo = Number(data.fixed_cost_eur || 0)
+  const resultado = receita - custoIA - custoFixo
+  const mrr = Number(data.paying_plus || 0) * 4.99 + Number(data.paying_pro || 0) * 9.99
+  const porFeature = Array.isArray(data.ai_by_feature) ? data.ai_by_feature : []
+
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 16 }}>
+        {[['mes', 'Este mês'], ['90', '90 dias'], ['tudo', 'Tudo']].map(([id, label]) => (
+          <button key={id} onClick={() => setRange(id)} style={{
+            padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600, fontFamily: 'inherit',
+            cursor: 'pointer', border: 'none',
+            background: range === id ? C.blue : C.bgAlt, color: range === id ? '#fff' : C.muted,
+          }}>{label}</button>
+        ))}
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))', gap: 14, marginBottom: 24 }}>
+        <StatCard icon={<Star size={20} />} label="Receita recebida" value={`€${receita.toFixed(2)}`} color={receita > 0 ? C.green : C.muted} sub={`${data.payments || 0} faturas pagas`} />
+        <StatCard icon={<Star size={20} />} label="Custo de IA" value={`€${custoIA.toFixed(2)}`} color={C.yellow} sub={`${data.ai_calls || 0} chamadas reais`} />
+        <StatCard icon={<Star size={20} />} label="Custos fixos" value={`€${custoFixo.toFixed(2)}`} color={C.purple} sub="Por mês, introduzidos à mão" />
+        <StatCard icon={<Star size={20} />} label="Resultado" value={`€${resultado.toFixed(2)}`} color={resultado >= 0 ? C.green : C.red} sub="Receita − IA − fixos" />
+        <StatCard icon={<Star size={20} />} label="MRR" value={`€${mrr.toFixed(2)}`} color={mrr > 0 ? C.green : C.muted} sub={`${data.paying_plus || 0} Plus · ${data.paying_pro || 0} Pro`} />
+        <StatCard icon={<Star size={20} />} label="Movimento" value={`+${data.new_subs || 0} / −${data.churned || 0}`} color={C.blue} sub="Novas / cancelamentos" />
+      </div>
+
+      {Number(data.ai_calls || 0) === 0 && (
+        <div style={{ background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 16px', marginBottom: 24, fontSize: 12.5, color: C.muted, lineHeight: 1.5 }}>
+          Ainda não há custos de IA registados. O registo dos tokens reais começou a 8 de setembro de 2026 —
+          o que foi gasto antes disso não é recuperável, e aparece aqui à medida que houver chamadas novas.
+        </div>
+      )}
+
+      {Number(data.ai_calls_sem_preco || 0) > 0 && (
+        <div style={{ background: 'rgba(251,191,36,0.08)', border: `1px solid ${C.yellow}44`, borderRadius: 10, padding: '12px 16px', marginBottom: 24, fontSize: 12.5, color: C.yellow, lineHeight: 1.5 }}>
+          {data.ai_calls_sem_preco} chamadas usaram um modelo sem preço na tabela — os tokens estão guardados,
+          mas o custo delas não entra no total acima. Adiciona o preço em <code>MODEL_PRICES</code> (rateLimit.ts).
+        </div>
+      )}
+
+      {porFeature.length > 0 && (
+        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px', marginBottom: 24 }}>
+          <h3 style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Custo por funcionalidade</h3>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
+              <thead>
+                <tr style={{ color: C.subtle, fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  <th style={{ textAlign: 'left', padding: '6px 8px' }}>Funcionalidade</th>
+                  <th style={{ textAlign: 'right', padding: '6px 8px' }}>Chamadas</th>
+                  <th style={{ textAlign: 'right', padding: '6px 8px' }}>Tokens entrada</th>
+                  <th style={{ textAlign: 'right', padding: '6px 8px' }}>Tokens saída</th>
+                  <th style={{ textAlign: 'right', padding: '6px 8px' }}>Custo</th>
+                </tr>
+              </thead>
+              <tbody>
+                {porFeature.map(f => (
+                  <tr key={f.feature} style={{ borderTop: `1px solid ${C.border}` }}>
+                    <td style={{ padding: '8px', color: C.text, fontWeight: 600 }}>{AI_FEATURE_LABELS[f.feature] || f.feature}</td>
+                    <td style={{ padding: '8px', textAlign: 'right', color: C.muted, fontVariantNumeric: 'tabular-nums' }}>{f.calls}</td>
+                    <td style={{ padding: '8px', textAlign: 'right', color: C.muted, fontVariantNumeric: 'tabular-nums' }}>{Number(f.input_tokens).toLocaleString('pt-PT')}</td>
+                    <td style={{ padding: '8px', textAlign: 'right', color: C.muted, fontVariantNumeric: 'tabular-nums' }}>{Number(f.output_tokens).toLocaleString('pt-PT')}</td>
+                    <td style={{ padding: '8px', textAlign: 'right', color: C.text, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>${Number(f.cost_usd).toFixed(4)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
+        <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Custos fixos mensais</h3>
+        <p style={{ margin: '0 0 14px', fontSize: 11, color: C.subtle }}>Supabase, Vercel, Resend, domínio… São faturas de terceiros, por isso têm de ser introduzidas à mão.</p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
+          {costs.length === 0 && <span style={{ fontSize: 12.5, color: C.subtle }}>Nenhum custo fixo registado.</span>}
+          {costs.map(c => (
+            <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 8, padding: '9px 12px' }}>
+              <span style={{ flex: 1, fontSize: 13, color: C.text, fontWeight: 600 }}>{c.name}</span>
+              <span style={{ fontSize: 13, color: C.text, fontVariantNumeric: 'tabular-nums' }}>€{Number(c.amount_eur).toFixed(2)}</span>
+              <button onClick={() => removeCost(c.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.red, padding: 2, display: 'flex' }}>
+                <Trash2 size={14} />
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <input value={novoNome} onChange={e => setNovoNome(e.target.value)} placeholder="Ex: Supabase Pro"
+            style={{ flex: '1 1 160px', padding: '8px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: C.bg, color: C.text, fontSize: 13, fontFamily: 'inherit' }} />
+          <input value={novoValor} onChange={e => setNovoValor(e.target.value)} placeholder="25.00" inputMode="decimal"
+            style={{ width: 100, padding: '8px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: C.bg, color: C.text, fontSize: 13, fontFamily: 'inherit' }} />
+          <button onClick={addCost} style={{ padding: '8px 18px', borderRadius: 8, background: C.blue, color: '#fff', border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+            Adicionar
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── PROJECTS TAB ───────────────────────────────────────────
 function ProjectsTab({ projects, users, onDeleteProject }) {
   const [search, setSearch] = useState('')
@@ -1886,6 +2048,7 @@ export default function Admin() {
     { id: 'orgs',     label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Shield size={14} /> Organizações</span> },
     { id: 'schools',  label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><School size={14} /> Domínios de Escola</span> },
     { id: 'ambassadors', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Megaphone size={14} /> Embaixadores</span> },
+    { id: 'financas', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Star size={14} /> Finanças</span> },
   ]
 
   return (
@@ -2046,6 +2209,7 @@ export default function Admin() {
                 )}
               </div>
             )}
+            {tab === 'financas' && <FinanceTab />}
             {tab === 'ambassadors' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                 <div style={{ background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 12, padding: 20 }}>

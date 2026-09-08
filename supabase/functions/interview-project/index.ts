@@ -1,5 +1,5 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
-import { checkRateLimit, getAuthUser, getCorsHeaders, checkPlanLimit, PTPT_RULES, repairJson } from '../_shared/rateLimit.ts'
+import { checkRateLimit, getAuthUser, getCorsHeaders, checkPlanLimit, PTPT_RULES, repairJson, logAiCost } from '../_shared/rateLimit.ts'
 
 const TYPE_CONTEXT: Record<string, string> = {
   school:       'Projeto de escola — trabalho desenvolvido no contexto académico, individual ou de grupo, para uma disciplina ou unidade curricular.',
@@ -106,6 +106,7 @@ ${PTPT_RULES}`
       max_tokens: 1500,
       messages: [{ role: 'user', content: prompt }],
     })
+    logAiCost('interviewProject', 'claude-sonnet-4-6', msg.usage, user?.id)
 
     const raw = (msg.content[0] as { type: string; text: string }).text.trim()
     const result = repairJson(raw)

@@ -1,5 +1,5 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
-import { checkRateLimit, getAuthUser, getCorsHeaders, checkPlanLimit, repairJson } from '../_shared/rateLimit.ts'
+import { checkRateLimit, getAuthUser, getCorsHeaders, checkPlanLimit, repairJson, logAiCost } from '../_shared/rateLimit.ts'
 
 const TYPE_LABELS: Record<string, string> = {
   school:   'Projeto de Escola',
@@ -89,6 +89,7 @@ Devolve APENAS este JSON (sem markdown, sem explicações):
       max_tokens: 700,
       messages: [{ role: 'user', content: prompt }],
     })
+    logAiCost('prefillProject', 'claude-haiku-4-5-20251001', message.usage, user?.id)
 
     const raw = (message.content[0] as { type: string; text: string }).text.trim()
     const prefill = repairJson(raw)

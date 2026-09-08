@@ -1,6 +1,6 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
 import JSZip from 'npm:jszip@3.10.1'
-import { checkRateLimit, getAuthUser, getCorsHeaders, checkPlanLimit } from '../_shared/rateLimit.ts'
+import { checkRateLimit, getAuthUser, getCorsHeaders, checkPlanLimit, logAiCost } from '../_shared/rateLimit.ts'
 
 /* ══════════════════════════════════════════════════════════════════════════
    IMPORTAR PROJETO A PARTIR DE UM TRABALHO QUE JÁ EXISTE
@@ -267,6 +267,7 @@ Devolve APENAS este JSON: {"skills": [], "area": "", "summary": ""}`,
         max_tokens: 500,
         messages: [{ role: 'user', content: content as never }],
       })
+      logAiCost('importProject', 'claude-haiku-4-5-20251001', message.usage, user?.id)
       const raw = modelText(message)
       const m = raw.match(/\{[\s\S]*\}/)
       const p = m ? JSON.parse(m[0]) : {}
@@ -311,6 +312,7 @@ Devolve APENAS este JSON, sem markdown à volta:
       max_tokens: 2000,
       messages: [{ role: 'user', content: content as never }],
     })
+    logAiCost('importProject', 'claude-haiku-4-5-20251001', message.usage, user?.id)
 
     const rawText = modelText(message)
     const match = rawText.match(/\{[\s\S]*\}/)

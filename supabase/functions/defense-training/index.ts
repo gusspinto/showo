@@ -1,5 +1,5 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
-import { checkRateLimit, getAuthUser, getCorsHeaders, checkPlanLimit, PTPT_RULES, clip } from '../_shared/rateLimit.ts'
+import { checkRateLimit, getAuthUser, getCorsHeaders, checkPlanLimit, PTPT_RULES, clip, logAiCost } from '../_shared/rateLimit.ts'
 
 Deno.serve(async (req) => {
   const corsHeaders = getCorsHeaders(req)
@@ -106,6 +106,7 @@ Dá feedback estruturado em JSON com EXATAMENTE estes campos:
 Responde APENAS com o JSON, sem texto antes ou depois.`,
       }],
     })
+    logAiCost('defenseTraining', 'claude-sonnet-4-20250514', msg.usage, user?.id)
 
     const raw = msg.content[0].type === 'text' ? msg.content[0].text : ''
     const jsonMatch = raw.match(/\{[\s\S]*\}/)

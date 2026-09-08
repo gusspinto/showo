@@ -6,7 +6,7 @@
 
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { checkRateLimit, getAuthUser, getCorsHeaders } from '../_shared/rateLimit.ts'
+import { checkRateLimit, getAuthUser, getCorsHeaders, logAiCost } from '../_shared/rateLimit.ts'
 
 Deno.serve(async (req) => {
   const corsHeaders = getCorsHeaders(req)
@@ -81,6 +81,7 @@ Português de Portugal. Sem duplicar entre as duas listas. Sem inventar.`
       max_tokens: 600,
       messages: [{ role: 'user', content: prompt }],
     })
+    logAiCost('extractSkills', 'claude-haiku-4-5-20251001', message.usage, user?.id)
     const raw = (message.content[0] as { type: string; text: string }).text
     const m = raw.match(/\{[\s\S]*\}/)
     const parsed = m ? JSON.parse(m[0]) : {}

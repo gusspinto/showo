@@ -1,5 +1,5 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
-import { checkRateLimit, getAuthUser, clip, getCorsHeaders, checkPlanLimit, PTPT_RULES } from '../_shared/rateLimit.ts'
+import { checkRateLimit, getAuthUser, clip, getCorsHeaders, checkPlanLimit, PTPT_RULES, logAiCost } from '../_shared/rateLimit.ts'
 
 const SYSTEM = (p: Record<string, string>) => `És um assistente pessoal para estudantes portugueses que estão a documentar e melhorar os seus projetos académicos — PAPs, estágios, projetos universitários e pessoais — na plataforma Showo.
 
@@ -115,6 +115,7 @@ Deno.serve(async (req) => {
       system: SYSTEM(project ?? {}) + diaryBlock + feedbackBlock + defenseBlock,
       messages: [...history, { role: 'user', content: message.trim() }],
     })
+    logAiCost('coach', 'claude-sonnet-4-6', response.usage, user?.id)
 
     const reply = response.content[0]?.type === 'text' ? response.content[0].text : ''
 

@@ -1,5 +1,5 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
-import { checkRateLimit, getAuthUser, getCorsHeaders, checkPlanLimit } from '../_shared/rateLimit.ts'
+import { checkRateLimit, getAuthUser, getCorsHeaders, checkPlanLimit, logAiCost } from '../_shared/rateLimit.ts'
 
 Deno.serve(async (req) => {
   const corsHeaders = getCorsHeaders(req)
@@ -128,6 +128,7 @@ Devolve APENAS este JSON (sem markdown, sem \`\`\`, só o objeto):
       max_tokens: 4000,
       messages: [{ role: 'user', content: prompt }],
     })
+    logAiCost('diaryReport', 'claude-sonnet-4-6', message.usage, user?.id)
 
     const text = message.content[0].type === 'text' ? message.content[0].text.trim() : ''
     let report

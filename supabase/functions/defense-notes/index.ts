@@ -1,6 +1,6 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { checkRateLimit, getAuthUser, getCorsHeaders, checkPlanLimit, PTPT_RULES, repairJson } from '../_shared/rateLimit.ts'
+import { checkRateLimit, getAuthUser, getCorsHeaders, checkPlanLimit, PTPT_RULES, repairJson, logAiCost } from '../_shared/rateLimit.ts'
 
 Deno.serve(async (req) => {
   const corsHeaders = getCorsHeaders(req)
@@ -158,6 +158,7 @@ ${PTPT_RULES}`
           max_tokens: 4000,
           messages: [{ role: 'user', content: prompt }],
         })
+        logAiCost('defense', 'claude-sonnet-4-6', message.usage, user?.id)
 
         const raw = (message.content[0] as { type: string; text: string }).text.trim()
         notes = repairJson(raw) as Record<string, unknown>
