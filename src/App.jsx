@@ -119,8 +119,23 @@ function AuthGate({ children }) {
   return children
 }
 
-const PUBLIC_PATHS = new Set(['/', '/home', '/login', '/register', '/recuperar-password', '/explorar', '/explore', '/privacidade', '/termos', '/pricing', '/welcome'])
-const PUBLIC_PREFIXES = ['/u/', '/projeto/', '/certificado/', '/empresa/', '/oauth/']
+/* ── Onde as comportas (telemóvel, ocupação) NÃO aparecem ──
+   Não é a mesma lista das rotas públicas. Uma rota ser pública diz quem a
+   pode ver sem sessão; isto diz onde é aceitável interromper quem JÁ tem
+   sessão. Usar a lista pública para ambos abria uma fuga: um aluno que
+   entrasse pelo link do próprio projeto (/projeto/…) nunca via a comporta e
+   ficava para sempre sem número — 10 alunos ficaram assim.
+
+   Ficam de fora, e cada um por uma razão:
+   - fluxos de autenticação: interromper a meio parte o próprio login
+   - páginas legais: não se pode pedir dados pessoais e ao mesmo tempo
+     bloquear o documento que explica o que se faz com eles
+   - preços: nunca bloquear quem está a tentar pagar
+   Visitantes anónimos nunca veem comporta nenhuma — ela exige `user`. */
+const GATE_EXEMPT_PATHS = new Set(['/login', '/register', '/recuperar-password', '/privacidade', '/termos', '/pricing', '/welcome'])
+const GATE_EXEMPT_PREFIXES = ['/oauth/']
+const isGateExempt = (pathname) =>
+  GATE_EXEMPT_PATHS.has(pathname) || GATE_EXEMPT_PREFIXES.some(p => pathname.startsWith(p))
 
 function PhoneGate({ children }) {
   const { user, profile, refreshProfile } = useAuth()
@@ -129,8 +144,7 @@ function PhoneGate({ children }) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
-  const isPublic = PUBLIC_PATHS.has(location.pathname) || PUBLIC_PREFIXES.some(p => location.pathname.startsWith(p))
-  const needsPhone = !isPublic && user && profile && profile.role !== 'professor' && !profile.phone
+  const needsPhone = !isGateExempt(location.pathname) && user && profile && profile.role !== 'professor' && !profile.phone
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -225,8 +239,7 @@ function OccupationGate({ children }) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
-  const isPublic = PUBLIC_PATHS.has(location.pathname) || PUBLIC_PREFIXES.some(p => location.pathname.startsWith(p))
-  const needsOccupation = !isPublic && user && profile
+  const needsOccupation = !isGateExempt(location.pathname) && user && profile
     && profile.role === 'aluno' && !profile.organization_id && !profile.occupation
 
   async function handleSubmit(e) {
