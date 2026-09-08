@@ -16,6 +16,7 @@ import { LinkIcon as Link2 } from '@solar-icons/react/bold/link'
 import { looksLikeSpam } from '../lib/score'
 import { Select } from '../components/ui'
 import { containsProfanity } from '../lib/profanity'
+import { logFieldsFilled } from '../lib/autoJournal'
 
 const colors = {
   bg: 'var(--color-bg)',
@@ -250,6 +251,16 @@ export default function EditProject() {
         github_url: gh.empty ? null : gh.normalized,
         is_pap: form.project_type === 'pap',
       }, editToken)
+      // Regista no diário as secções que passaram a estar preenchidas nesta
+      // edição — `originalRef` tem os valores de quando a página abriu.
+      if (user?.id) {
+        await logFieldsFilled({
+          projectId: project.id,
+          userId: user.id,
+          before: originalRef.current,
+          after: form,
+        })
+      }
       navigate(`/projeto/${saved.slug}`)
     } catch (err) {
       setError('Erro ao guardar. Tenta novamente.')

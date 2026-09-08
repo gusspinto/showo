@@ -27,6 +27,7 @@ const KIND_LABELS = {
   progresso: 'Progresso', dificuldade: 'Dificuldade', decisao: 'Decisão',
   pesquisa: 'Pesquisa', ideia: 'Ideia', resultado: 'Resultado',
   nota: 'Nota', aprendizagem: 'Aprendizagem', conquista: 'Conquista',
+  auto: 'Automático',
 }
 
 /* Map the key stored in previewStyle to the actual CSS font-family string */

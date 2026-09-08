@@ -41,6 +41,7 @@ Deno.serve(async (req) => {
     const KIND_LABEL: Record<string, string> = {
       progresso: 'Progresso', dificuldade: 'Dificuldade', decisao: 'Decisão',
       pesquisa: 'Pesquisa', ideia: 'Ideia', resultado: 'Resultado', nota: 'Nota',
+      auto: 'REGISTO AUTOMÁTICO DO SISTEMA',
     }
     const entries = Array.isArray(journal) ? journal.slice(0, 120) : []
     const journalBlock = entries.length === 0
@@ -97,6 +98,8 @@ O diário é ouro: tem decisões reais, dificuldades reais e a voz do aluno. Usa
 - Referir dificuldades reais e como foram superadas.
 - Dar vida ao relatório com detalhe que o formulário não captura.
 Se o diário estiver vazio, baseia-te apenas nos campos do formulário e escreve de forma mais geral.
+
+ATENÇÃO às entradas marcadas como "REGISTO AUTOMÁTICO DO SISTEMA": não foram escritas pelo aluno, são marcas geradas pela plataforma quando ele preencheu uma secção. Usa-as apenas para perceber QUANDO as coisas aconteceram (cronologia). Nunca as cites, nunca as trates como reflexão, opinião ou voz do aluno, e nunca as transformes em frases na primeira pessoa.
 ${(() => {
   const fb = Array.isArray(teacher_feedback) ? teacher_feedback.filter((f: { comment?: string }) => f.comment) : []
   if (!fb.length) return ''
