@@ -426,6 +426,9 @@
   padding: 13px 16px;
   cursor: pointer;
   font-family: inherit;
+  /* <button> não herda a cor do tema — sem isto o título fica preto (UA) e
+     desaparece no modo escuro. */
+  color: var(--color-text);
   transition: all 0.2s;
   text-align: left;
 }
@@ -762,6 +765,7 @@
   border-radius: 12px;
   border: 1.5px solid var(--color-border);
   background: var(--color-surface);
+  color: var(--color-text);
   cursor: pointer;
   text-align: left;
   transition: border-color 0.2s, background 0.2s;

@@ -153,14 +153,10 @@ export function ShareStoryModal({ project, onClose }) {
           .ssm-actions > button { flex: 1; justify-content: center; padding-left: 12px !important; padding-right: 12px !important; }
         }
       `}</style>
-      <div className="ssm-inner" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18, maxHeight: '92vh' }}>
-        <button
-          onClick={onClose}
-          style={{ position: 'absolute', top: 18, right: 18, width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-        ><X size={16} /></button>
-
-        {/* Escolha do cartão: o que construí vs onde vou */}
-        <div style={{ display: 'flex', gap: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 10, padding: 4 }}>
+      <div className="ssm-inner" style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18, maxHeight: '92vh' }}>
+        {/* Topo: toggle centrado, fechar encostado à direita do cartão */}
+        <div style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 10, padding: 4 }}>
           {[['projeto', 'Projeto'], ['destaque', 'Destaque']].map(([id, label]) => (
             <button
               key={id}
@@ -173,6 +169,12 @@ export function ShareStoryModal({ project, onClose }) {
               }}
             >{label}</button>
           ))}
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Fechar"
+            style={{ position: 'absolute', top: '50%', right: 0, transform: 'translateY(-50%)', width: 34, height: 34, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+          ><X size={16} /></button>
         </div>
 
         {/* Xadrez só na pré-visualização, para se ver que a margem à volta
