@@ -161,6 +161,10 @@ export default function StudentDashboard({ user, profile }) {
   const [projectOfMonth, setProjectOfMonth] = useState(null)
   const [focusFull, setFocusFull] = useState(null)      // linha completa do projeto em foco
   const [entries, setEntries] = useState([])
+  // Atividade da PESSOA, em todos os projetos dela. O `entries` acima é só
+  // do projeto em foco e serve o diário/cobertura; usá-lo para o streak
+  // fazia o streak morrer sempre que se trabalhava noutro projeto.
+  const [activityEntries, setActivityEntries] = useState([])
   const [loadingEntries, setLoadingEntries] = useState(true)
   const [collabProjects, setCollabProjects] = useState([])
   const [profNotifs, setProfNotifs] = useState([])
@@ -286,6 +290,16 @@ export default function StudentDashboard({ user, profile }) {
   /* ── Projeto em foco: linha completa + diário ──
      Os campos longos só são precisos para este projeto, por isso não vale a
      pena arrastá-los na listagem toda. */
+  useEffect(() => {
+    if (!user?.id) return
+    let cancelled = false
+    supabase.from('project_journal_entries')
+      .select('created_at, kind')
+      .eq('user_id', user.id)
+      .then(({ data }) => { if (!cancelled && data) setActivityEntries(data) })
+    return () => { cancelled = true }
+  }, [user?.id, entries.length])
+
   useEffect(() => {
     if (!focusProject) { setFocusFull(null); setEntries([]); setLoadingEntries(false); return }
     let cancelled = false
@@ -468,18 +482,18 @@ export default function StudentDashboard({ user, profile }) {
     [focusFull, focusProject, entries],
   )
 
-  const streak = useMemo(() => computeWeekStreak(entries), [entries])
+  const streak = useMemo(() => computeWeekStreak(activityEntries), [activityEntries])
   // O streak conta trabalho no projeto (entradas automáticas incluídas), mas
   // o aviso "ainda não escreveste hoje" tem de continuar a pedir escrita
   // real — uma marca gerada pela app não é a pessoa a escrever.
   const writtenToday = useMemo(() => {
     const today = new Date().toISOString().slice(0, 10)
-    return entries.some(e => e.kind !== 'auto' && e.created_at?.slice(0, 10) === today)
-  }, [entries])
+    return activityEntries.some(e => e.kind !== 'auto' && e.created_at?.slice(0, 10) === today)
+  }, [activityEntries])
 
   const activityBuckets = useMemo(
-    () => buildWeeklyActivity({ entries, completions, weeks: 12 }),
-    [entries, completions],
+    () => buildWeeklyActivity({ entries: activityEntries, completions, weeks: 12 }),
+    [activityEntries, completions],
   )
 
   const calendarEvents = useMemo(() => {
@@ -504,11 +518,11 @@ export default function StudentDashboard({ user, profile }) {
       const d = new Date(today); d.setDate(d.getDate() - (6 - i))
       const iso = toISO(d)
       const active =
-        entries.some(e => toISO(new Date(e.created_at)) === iso) ||
+        activityEntries.some(e => toISO(new Date(e.created_at)) === iso) ||
         completions.some(c => c.completed_at && toISO(new Date(c.completed_at)) === iso)
       return { iso, active, label: d.toLocaleDateString('pt-PT', { weekday: 'short' }).charAt(0).toUpperCase() }
     })
-  }, [entries, completions])
+  }, [activityEntries, completions])
 
   const firstName = getDisplayName(user)
   const greeting = (() => {
@@ -783,7 +797,7 @@ export default function StudentDashboard({ user, profile }) {
                 <div className="skel skel-line" style={{ height: 26, width: '55%' }} />
                 <div className="skel skel-line" style={{ height: 10, width: '85%' }} />
               </>
-            ) : entries.length > 0 ? (
+            ) : activityEntries.length > 0 ? (
               <>
                 <span className="sdb-eyebrow" style={{ color: 'var(--color-warning)' }}>Atividade</span>
                 <div className="sdb-streak-row">
