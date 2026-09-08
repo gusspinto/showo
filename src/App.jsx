@@ -173,10 +173,14 @@ function PhoneGate({ children }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <img src="/darkmode_icon_logo.png" alt="Showo" style={{ height: 24, width: 'auto', objectFit: 'contain', alignSelf: 'flex-start', marginBottom: 4 }} />
           <p style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
-            Uma última coisa
+            Deixa-nos o teu contacto
           </p>
+          {/* Texto sem marca temporal: esta comporta aparece a quem acabou de
+              criar conta E a quem se registou há meses e só agora voltou. O
+              "Uma última coisa" anterior soava a fim de registo e não fazia
+              sentido para o segundo caso, que é a maioria de quem falta. */}
           <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
-            Deixa o teu telemóvel para activarmos o teu acesso gratuito. Nunca partilhado, só usado pela nossa equipa.
+            Usamos o teu número só para falar contigo sobre o teu percurso na Showo. Nunca é partilhado nem aparece no teu perfil.
           </p>
         </div>
 
