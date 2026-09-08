@@ -49,9 +49,10 @@ export function isMeaningfulField(field) {
  * @param {string} opts.field      chave do campo (ex: 'results')
  * @param {string} opts.before     valor anterior
  * @param {string} opts.after      valor novo
+ * @returns {Promise<boolean>} true se criou mesmo uma entrada
  */
 export async function logFieldFilled({ projectId, userId, field, before, after }) {
-  if (!projectId || !userId || !isMeaningfulField(field)) return
+  if (!projectId || !userId || !isMeaningfulField(field)) return false
 
   const prev = String(before ?? '').trim()
   const next = String(after ?? '').trim()
@@ -59,7 +60,7 @@ export async function logFieldFilled({ projectId, userId, field, before, after }
   // Capa é um link: basta passar a existir. Os restantes exigem texto real.
   const wasEmpty = field === 'cover_url' ? !prev : prev.length < MIN_LEN
   const isFilled = field === 'cover_url' ? !!next : next.length >= MIN_LEN
-  if (!wasEmpty || !isFilled) return
+  if (!wasEmpty || !isFilled) return false
 
   const content = field === 'cover_url'
     ? 'Capa do projeto adicionada.'
@@ -78,16 +79,18 @@ export async function logFieldFilled({ projectId, userId, field, before, after }
       .gte('created_at', since.toISOString())
       .limit(1)
 
-    if (existing?.length) return
+    if (existing?.length) return false
 
-    await supabase.from('project_journal_entries').insert({
+    const { error } = await supabase.from('project_journal_entries').insert({
       project_id: projectId,
       user_id: userId,
       kind: 'auto',
       content,
     })
+    return !error
   } catch {
     /* registo automático nunca deve estragar um save do utilizador */
+    return false
   }
 }
 

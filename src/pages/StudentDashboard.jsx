@@ -469,6 +469,13 @@ export default function StudentDashboard({ user, profile }) {
   )
 
   const streak = useMemo(() => computeWeekStreak(entries), [entries])
+  // O streak conta trabalho no projeto (entradas automáticas incluídas), mas
+  // o aviso "ainda não escreveste hoje" tem de continuar a pedir escrita
+  // real — uma marca gerada pela app não é a pessoa a escrever.
+  const writtenToday = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10)
+    return entries.some(e => e.kind !== 'auto' && e.created_at?.slice(0, 10) === today)
+  }, [entries])
 
   const activityBuckets = useMemo(
     () => buildWeeklyActivity({ entries, completions, weeks: 12 }),
@@ -1028,7 +1035,7 @@ export default function StudentDashboard({ user, profile }) {
                         onOpenDiary={() => navigate(`/projeto/${focusFull.slug}/diario`)}
                         onLog={kind => setComposerKind(kind)}
                         onShare={() => setShareProject(focusFull)}
-                        writtenToday={entries.some(e => e.created_at?.slice(0,10) === new Date().toISOString().slice(0,10))}
+                        writtenToday={writtenToday}
                       />
                     )}
                     {manuallyPinned.map(pinned => {
@@ -1051,7 +1058,7 @@ export default function StudentDashboard({ user, profile }) {
                           onOpenDiary={() => navigate(`/projeto/${pinned.slug}/diario`)}
                           onLog={kind => setComposerKind(kind)}
                           onShare={() => setShareProject(pinned)}
-                          writtenToday={entries.some(e => e.created_at?.slice(0,10) === new Date().toISOString().slice(0,10))}
+                          writtenToday={writtenToday}
                         />
                       )
                     })}
