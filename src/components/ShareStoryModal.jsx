@@ -135,10 +135,25 @@ export function ShareStoryModal({ project, onClose }) {
 
   return createPortal(
     <div
+      className="ssm-overlay"
       style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.78)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
       onClick={e => e.target === e.currentTarget && onClose()}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18, maxHeight: '92vh' }}>
+      <style>{`
+        .ssm-inner { width: 100%; max-width: 392px; }
+        .ssm-checker { padding: 14px; }
+        .ssm-canvas { padding: 30px; }
+        .ssm-actions { display: flex; gap: 10px; }
+        @media (max-width: 460px) {
+          .ssm-overlay { padding: 12px; }
+          .ssm-inner { gap: 12px !important; }
+          .ssm-checker { padding: 7px; }
+          .ssm-canvas { padding: 18px; }
+          .ssm-actions { width: 100%; }
+          .ssm-actions > button { flex: 1; justify-content: center; padding-left: 12px !important; padding-right: 12px !important; }
+        }
+      `}</style>
+      <div className="ssm-inner" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18, maxHeight: '92vh' }}>
         <button
           onClick={onClose}
           style={{ position: 'absolute', top: 18, right: 18, width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
@@ -162,9 +177,9 @@ export function ShareStoryModal({ project, onClose }) {
 
         {/* Xadrez só na pré-visualização, para se ver que a margem à volta
             do cartão é mesmo transparente no PNG exportado. */}
-        <div style={{ overflowY: 'auto', maxHeight: 'calc(92vh - 190px)', background: 'repeating-conic-gradient(#242428 0% 25%, #1a1a1d 0% 50%) 0 0/24px 24px', borderRadius: 8, padding: 14 }}>
+        <div className="ssm-checker" style={{ overflowY: 'auto', maxHeight: 'calc(92vh - 190px)', background: 'repeating-conic-gradient(#242428 0% 25%, #1a1a1d 0% 50%) 0 0/24px 24px', borderRadius: 8 }}>
 
-          <div ref={canvasRef} style={{ padding: 30 }}>
+          <div ref={canvasRef} className="ssm-canvas">
             <div
               style={{
                 width: 300, borderRadius: 24, background: '#141416',
@@ -253,11 +268,11 @@ export function ShareStoryModal({ project, onClose }) {
           Guarda a imagem e adiciona-a à story por cima de uma foto tua. Para o link, usa o autocolante de link do Instagram.
         </p>
 
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div className="ssm-actions">
           <button
             onClick={handleShare}
             disabled={exporting}
-            style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', borderRadius: 10, padding: '12px 22px', fontSize: 14, fontWeight: 700, cursor: exporting ? 'default' : 'pointer', opacity: exporting ? 0.7 : 1, fontFamily: 'inherit' }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', borderRadius: 10, padding: '12px 22px', fontSize: 14, fontWeight: 700, cursor: exporting ? 'default' : 'pointer', opacity: exporting ? 0.7 : 1, fontFamily: 'inherit' }}
           ><Share2 size={15} /> Partilhar</button>
           <button
             onClick={handleDownload}

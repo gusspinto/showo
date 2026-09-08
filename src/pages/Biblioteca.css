@@ -89,15 +89,7 @@
 .lib-seg--state .lib-seg-btn { flex: 1; text-align: center; }
 .lib-seg--state .lib-seg-btn.is-on { background: var(--color-primary); color: #fff; }
 
-/* Item ligado ao perfil — anel subtil à volta. */
-.lib-tile.is-on .lib-tile-main,
-.lib-row-wrap.is-on {
-  border-color: var(--color-text);
-  box-shadow: 0 0 0 1px var(--color-text);
-}
 .lib-row-wrap { border: 1px solid transparent; border-radius: 10px; }
-.lib-row-wrap.is-on { padding: 2px; }
-.lib-row-wrap.is-on .lib-row { border-bottom-color: transparent; }
 .lib-row-wrap .lib-edit-bar { margin: 4px 8px 8px; }
 
 .lib-section { margin-bottom: 32px; }
