@@ -9,6 +9,7 @@ import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
 import { Folder2Icon as FolderOpen } from '@solar-icons/react/bold/folder-2'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { DownloadIcon as Download } from '@solar-icons/react/bold/download'
+import { EyeIcon as Eye } from '@solar-icons/react/bold/eye'
 import { QrCodeIcon as QrCode } from '@solar-icons/react/bold/qr-code'
 import { SquareArrowRightUpIcon as ExternalLink } from '@solar-icons/react/bold/square-arrow-right-up'
 import { PaletteIcon as Palette } from '@solar-icons/react/bold/palette'
@@ -626,11 +627,6 @@ export default function UserProfile() {
                   )
                 })()}
 
-                {isOwnProfile && profileViews > 0 && (
-                  <p className="up-views" title="Só tu vês isto">
-                    {profileViews} {profileViews === 1 ? 'visualização' : 'visualizações'} do portfólio
-                  </p>
-                )}
               </div>
 
               <div className="up-head-actions">
@@ -659,6 +655,12 @@ export default function UserProfile() {
                       <Send size={13} /> Convidar
                     </button>
                   </>
+                )}
+                {isOwnProfile && profileViews > 0 && (
+                  <span className="up-views" title={`${profileViews} ${profileViews === 1 ? 'pessoa viu' : 'pessoas viram'} o teu portfólio — só tu vês isto`}>
+                    <Eye size={13} />
+                    {profileViews}
+                  </span>
                 )}
               </div>
             </div>
