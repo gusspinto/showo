@@ -224,6 +224,7 @@ export default function UserProfile() {
   const [projects, setProjects] = useState([])
   const [skillProjects, setSkillProjects] = useState([])   // {id,name,slug,skills,tech_stack} de todos os projetos
   const [skillSuggestions, setSkillSuggestions] = useState([]) // {project_id,skills,technologies} por rever (dono)
+  const [profileViews, setProfileViews] = useState(null) // total de visualizações do perfil (só o dono)
   const [timelineByProject, setTimelineByProject] = useState({}) // project_id -> resumo da timeline
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
@@ -329,6 +330,14 @@ export default function UserProfile() {
         supabase.from('project_skill_suggestions')
           .select('project_id, skills, technologies')
           .then(({ data }) => setSkillSuggestions(data || []))
+
+        // Contador de visualizações — só o dono o vê, e a coluna só tem
+        // GRANT SELECT para authenticated (138), por isso vai à parte.
+        supabase.from('profiles')
+          .select('views')
+          .eq('id', profileData.id)
+          .single()
+          .then(({ data }) => { if (data) setProfileViews(data.views ?? 0) })
       }
     }
     load()
@@ -617,9 +626,9 @@ export default function UserProfile() {
                   )
                 })()}
 
-                {isOwnProfile && (profile.views ?? 0) > 0 && (
+                {isOwnProfile && profileViews > 0 && (
                   <p className="up-views" title="Só tu vês isto">
-                    {profile.views} {profile.views === 1 ? 'visualização' : 'visualizações'} do portfólio
+                    {profileViews} {profileViews === 1 ? 'visualização' : 'visualizações'} do portfólio
                   </p>
                 )}
               </div>
