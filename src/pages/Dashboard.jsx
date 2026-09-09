@@ -1361,7 +1361,7 @@ export default function Dashboard() {
                 {[
                   { label: 'Alunos', value: totalMembers },
                   { label: 'Projetos', value: turmas.reduce((s, t) => s + (t.project_count || 0), 0) },
-                  { label: 'Por rever', value: needsReview.length, accent: needsReview.length > 0 },
+                  { label: 'Sem feedback', value: needsReview.length, accent: needsReview.length > 0 },
                 ].map(stat => (
                   <Card key={stat.label} padding="md" style={stat.accent ? { borderColor: 'var(--color-error)' } : undefined}>
                     <div style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, fontFamily: 'var(--font-heading)', color: stat.accent ? 'var(--color-error)' : 'var(--color-text)', lineHeight: 1 }}>{stat.value}</div>

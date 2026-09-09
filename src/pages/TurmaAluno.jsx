@@ -94,12 +94,19 @@ function InlineFeedback({ project, teacherId }) {
   async function handleSave() {
     if (!comment.trim()) return
     setSaving(true)
-    const { data } = await supabase.from('teacher_feedback')
+    const wasEditing = (items || []).some(f => f.field_key === fieldKey)
+    const { data, error } = await supabase.from('teacher_feedback')
       .upsert({ project_id: project.id, teacher_id: teacherId, field_key: fieldKey, comment: comment.trim() }, { onConflict: 'project_id,teacher_id,field_key' })
       .select().single()
+    if (error) {
+      setSaving(false)
+      return
+    }
     if (data) {
       setItems(prev => { const idx = (prev || []).findIndex(f => f.field_key === fieldKey); return idx >= 0 ? prev.map((f, i) => i === idx ? data : f) : [...(prev || []), data] })
-      if (project.user_id) {
+      // Only ping the student on a genuinely new comment — not every time the
+      // teacher tweaks wording on one that's already there.
+      if (project.user_id && !wasEditing) {
         supabase.rpc('create_notification', { p_user_id: project.user_id, p_type: 'TEACHER_FEEDBACK', p_message: `O teu professor deixou feedback no projeto "${project.name}".`, p_project_slug: project.slug })
       }
     }

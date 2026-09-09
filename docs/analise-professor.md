@@ -10,7 +10,7 @@ com o Hugo, prontos para implementar. Datas convertidas para absolutas (reunião
 
 | Área | Ficheiro | Estado |
 |---|---|---|
-| Dashboard do professor | [TeacherDashboard.jsx](../src/pages/TeacherDashboard.jsx) | Turmas, stats (alunos/projetos/score médio/por rever), "precisa de atenção", próximas defesas, correções enviadas, gráfico de submissões por semana, onboarding em 2 passos |
+| Dashboard do professor | [Dashboard.jsx](../src/pages/Dashboard.jsx) (ramo `isTeacher`, ~L1355) | Turmas, stats (alunos/projetos/por rever), roster de alunos, "a rever" (sem feedback / reenviadas / em correção / defesas), gráfico de submissões por semana, onboarding. (`TeacherDashboard.jsx` foi removido — era código morto.) |
 | Lista de turmas | [Turmas.jsx](../src/pages/Turmas.jsx) | — |
 | Página da turma | [TurmaPage.jsx](../src/pages/TurmaPage.jsx) (1898 linhas) | Membros, projetos ordenáveis, código + link de convite, feedback por secção, tarefas com conclusão por aluno, critérios de avaliação personalizados, ranking opcional, check-ins semanais com resposta do prof, export CSV, estados de revisão em lote |
 | Detalhe por aluno | [TurmaAluno.jsx](../src/pages/TurmaAluno.jsx) | Projetos, notas, diário (registos/dias ativos/tipos), tecnologias, tarefas, link para mensagens |
@@ -81,7 +81,7 @@ select pg_get_functiondef(oid) from pg_proc where proname='join_class';
 - **Onde:** [ProjectPage.jsx:5041](../src/pages/ProjectPage.jsx#L5041) — só regrava
   o score ao **abrir a página do projeto** (`if (s > 0 && data.score !== s)`).
   Projetos antigos que ninguém abriu ficam com o score obsoleto; a dashboard do
-  professor ([TeacherDashboard.jsx:287](../src/pages/TeacherDashboard.jsx#L287)) e
+  professor ([Dashboard.jsx](../src/pages/Dashboard.jsx), ramo `isTeacher`) e
   a da turma leem `projects.score` diretamente da BD.
 - Além disso `calculateScore` mudou de fórmula ao longo do tempo (diário vale 30pts,
   spam detection, preview blocks) — scores gravados há meses usam regras antigas.

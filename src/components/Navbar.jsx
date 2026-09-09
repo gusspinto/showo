@@ -110,6 +110,7 @@ function getNotifIcon(type) {
     case 'CHECKIN_REPLY':    return <MessageSquare {...s} />
     case 'CHECKIN_SUBMITTED':return <MessageSquare {...s} />
     case 'STUDENT_JOINED':   return <UserPlus {...s} />
+    case 'PROJECT_SUBMITTED': return <FolderOpen {...s} />
     case 'TASK_ASSIGNED':    return <ListChecks {...s} />
     case 'TASK_COMPLETED':   return <CheckCircle2 {...s} />
     case 'PROJECT_RESUBMITTED': return <CheckCircle2 {...s} />
@@ -142,6 +143,7 @@ function getNotifFamily(type) {
     case 'TASK_ASSIGNED':
     case 'TASK_COMPLETED':
     case 'STUDENT_JOINED':
+    case 'PROJECT_SUBMITTED':
     case 'PROJECT_RESUBMITTED':
     case 'CHECKIN_REPLY':
     case 'CHECKIN_SUBMITTED':

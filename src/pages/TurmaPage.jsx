@@ -173,8 +173,9 @@ function FeedbackModal({ project, teacherId, onClose }) {
         setSaving(false)
         return
       }
+      const replacedExisting = existing.some(f => f.field_key === fieldKey)
       setExisting(prev => { const idx = prev.findIndex(f => f.field_key === fieldKey); return idx >= 0 ? prev.map((f, i) => i === idx ? data : f) : [...prev, data] })
-      if (project.user_id) {
+      if (project.user_id && !replacedExisting) {
         supabase.rpc('create_notification', {
           p_user_id: project.user_id,
           p_type: 'TEACHER_FEEDBACK',
@@ -355,10 +356,23 @@ function Avatar({ avatarUrl, name, size = 40 }) {
   )
 }
 
+// Maps raw Postgres/PostgREST errors to something a teacher can read. Falls
+// back to the caller's plain-language message for anything unrecognised.
+function friendlyError(error, fallback) {
+  const m = (error?.message || '').toLowerCase()
+  if (m.includes('row-level security') || m.includes('permission denied') || m.includes('not authorized') || m.includes('not authenticated'))
+    return 'Não tens permissão para fazer isto.'
+  if (m.includes('duplicate key') || error?.code === '23505')
+    return 'Isto já existe.'
+  if (m.includes('operator does not exist') || m.includes('violates') || m.includes('column') || m.includes('function'))
+    return 'Algo correu mal do lado do servidor. Se continuar, avisa o suporte.'
+  return fallback
+}
+
 export default function TurmaPage() {
   const { code } = useParams()
   const navigate = useNavigate()
-  const { user, profile } = useAuth()
+  const { user, profile, refreshProfile } = useAuth()
 
   const [turma, setTurma] = useState(null)
   const [projects, setProjects] = useState([])
@@ -378,6 +392,7 @@ export default function TurmaPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [members, setMembers] = useState([]) // { user_id, full_name, avatar_url, role, projectCount }
   const [leavingClass, setLeavingClass] = useState(false)
+  const [joining, setJoining] = useState(false)
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
   const [showEditTurma, setShowEditTurma] = useState(false)
   const [removingMember, setRemovingMember] = useState(null) // { user_id, full_name }
@@ -406,10 +421,6 @@ export default function TurmaPage() {
     setToast(msg)
     setTimeout(() => setToast(''), 3500)
   }
-
-  useEffect(() => {
-    if (profile && profile.role !== 'professor' && profile.account_type !== 'school') navigate('/dashboard')
-  }, [profile, navigate])
 
   useEffect(() => {
     async function load() {
@@ -452,7 +463,7 @@ export default function TurmaPage() {
           .in('id', ids)
         if (projectsError) {
           console.error('projects fetch failed:', projectsError)
-          showToast('Erro ao carregar projetos: ' + projectsError.message)
+          showToast(friendlyError(projectsError, 'Não foi possível carregar os projetos.'))
         }
         projs = data || []
         setProjects(projs)
@@ -482,7 +493,7 @@ export default function TurmaPage() {
 
       if (classMembersError) {
         console.error('class_members fetch failed:', classMembersError)
-        showToast('Erro ao carregar alunos: ' + classMembersError.message)
+        showToast(friendlyError(classMembersError, 'Não foi possível carregar os alunos.'))
       }
 
       const memberUserIds = (classMembers || []).map(m => m.user_id)
@@ -581,13 +592,40 @@ export default function TurmaPage() {
       .then(({ data }) => { if (data) setWeeklyCheckins(data) })
   }, [turma?.id, isTeacher, members])
 
+  async function sendCheckinReply(checkin) {
+    const text = (checkinReply[checkin.user_id] || '').trim()
+    if (!text || checkinReplySaving) return
+    setCheckinReplySaving(checkin.user_id)
+    const replyAt = new Date().toISOString()
+    const { error } = await supabase.from('weekly_checkins')
+      .update({ prof_reply: text, prof_reply_at: replyAt })
+      .eq('user_id', checkin.user_id).eq('week_start', checkin.week_start)
+    if (error) {
+      console.error('checkin reply failed:', error)
+      showToast('Não foi possível enviar a resposta.')
+      setCheckinReplySaving(null)
+      return
+    }
+    supabase.rpc('create_notification', {
+      p_user_id: checkin.user_id,
+      p_type: 'CHECKIN_REPLY',
+      p_message: 'O professor respondeu à tua pergunta no check-in semanal.',
+    }).then(({ error: nErr }) => { if (nErr) console.error('checkin reply notification failed:', nErr) })
+    setWeeklyCheckins(prev => prev.map(ch =>
+      ch.user_id === checkin.user_id ? { ...ch, prof_reply: text, prof_reply_at: replyAt } : ch
+    ))
+    setCheckinReply(prev => { const n = { ...prev }; delete n[checkin.user_id]; return n })
+    setCheckinReplySaving(null)
+    showToast('Resposta enviada.')
+  }
+
   async function handleCreateTask(title, description, dueDate) {
     const { data, error } = await supabase
       .from('class_tasks')
       .insert({ class_id: turma.id, teacher_id: user.id, title, description: description || null, due_date: dueDate || null })
       .select()
       .single()
-    if (error) { showToast('Erro ao criar tarefa: ' + error.message); return }
+    if (error) { showToast(friendlyError(error, 'Não foi possível criar a tarefa.')); return }
     setTasks(prev => [data, ...prev])
     setShowTaskModal(false)
 
@@ -604,7 +642,7 @@ export default function TurmaPage() {
       .from('class_tasks')
       .update({ title, description: description || null, due_date: dueDate || null })
       .eq('id', editingTask.id)
-    if (error) { showToast('Erro ao guardar tarefa: ' + error.message); return }
+    if (error) { showToast(friendlyError(error, 'Não foi possível guardar a tarefa.')); return }
     setTasks(prev => prev.map(t => t.id === editingTask.id ? { ...t, title, description: description || null, due_date: dueDate || null } : t))
     setEditingTask(null)
   }
@@ -612,7 +650,7 @@ export default function TurmaPage() {
   async function handleDeleteTask() {
     if (!deletingTask) return
     const { error } = await supabase.from('class_tasks').delete().eq('id', deletingTask.id)
-    if (error) { showToast('Erro ao remover tarefa: ' + error.message); setDeletingTask(null); return }
+    if (error) { showToast(friendlyError(error, 'Não foi possível remover a tarefa.')); setDeletingTask(null); return }
     setTasks(prev => prev.filter(t => t.id !== deletingTask.id))
     setDeletingTask(null)
   }
@@ -654,21 +692,26 @@ export default function TurmaPage() {
   async function addProject(projectId) {
     if (!turma) return
     setAdding(projectId)
+
+    // Register membership FIRST, through join_class — a direct client upsert
+    // into class_members is unreliable (its INSERT policy was never captured in
+    // a tracked migration), and join_class is the SECURITY DEFINER path that
+    // actually works and also promotes the account to 'school'. Idempotent for
+    // someone who is already a member.
+    if (user?.id && turma.code) {
+      const { error: joinErr } = await supabase.rpc('join_class', { p_code: turma.code })
+      if (joinErr && joinErr.message !== 'class_not_found') {
+        console.error('join_class before addProject failed:', joinErr)
+      }
+    }
+
     const { error } = await supabase
       .from('class_projects')
       .insert({ class_id: turma.id, project_id: projectId })
 
-    // Ensure student is registered as a member
-    if (!error && user?.id) {
-      supabase.from('class_members').upsert(
-        { class_id: turma.id, user_id: user.id },
-        { onConflict: 'class_id,user_id' }
-      )
-    }
-
     if (error) {
       if (error.code === '23505') showToast('Este projeto já está na turma.')
-      else showToast('Erro ao adicionar: ' + error.message)
+      else showToast(friendlyError(error, 'Não foi possível adicionar o projeto.'))
     } else {
       const { data: projs } = await supabase
         .from('projects')
@@ -680,12 +723,13 @@ export default function TurmaPage() {
       // Notify the teacher
       if (turma.teacher_id) {
         const added = myProjects.find(p => p.id === projectId)
+        const studentName = profile?.full_name || profile?.username || 'Um aluno'
         supabase.rpc('create_notification', {
           p_user_id: turma.teacher_id,
-          p_type: 'STUDENT_JOINED',
-          p_message: `Um aluno adicionou o projeto "${added?.name ?? 'novo projeto'}" à turma "${turma.name}".`,
+          p_type: 'PROJECT_SUBMITTED',
+          p_message: `${studentName} adicionou o projeto "${added?.name ?? 'novo projeto'}" à turma "${turma.name}".`,
           p_project_slug: added?.slug ?? null,
-        })
+        }).then(({ error }) => { if (error) console.error('PROJECT_SUBMITTED notification failed:', error) })
       }
     }
     setAdding(null)
@@ -720,12 +764,32 @@ export default function TurmaPage() {
     const results = await Promise.all(
       ids.map(id => supabase.rpc('set_project_review_status', { p_project_id: id, p_status: status }))
     )
-    const failed = results.filter(r => r.error).length
-    setProjects(prev => prev.map(p => ids.includes(p.id) ? { ...p, review_status: status } : p))
+    const okIds = ids.filter((id, i) => !results[i].error)
+    const failed = ids.length - okIds.length
+
+    // Notify each student — the single-project flip on ProjectPage already does
+    // this, the bulk one silently didn't, so students never knew their project
+    // was flagged.
+    if (status === 'ready_for_defense' || status === 'needs_revision') {
+      const label = status === 'ready_for_defense' ? 'pronto para defesa' : 'precisa de revisão'
+      okIds.forEach(id => {
+        const p = projects.find(x => x.id === id)
+        if (p?.user_id) {
+          supabase.rpc('create_notification', {
+            p_user_id: p.user_id,
+            p_type: 'TEACHER_FEEDBACK',
+            p_message: `O professor marcou "${p.name}" como ${label}.`,
+            p_project_slug: p.slug,
+          }).then(({ error }) => { if (error) console.error('bulk review notification failed:', error) })
+        }
+      })
+    }
+
+    setProjects(prev => prev.map(p => okIds.includes(p.id) ? { ...p, review_status: status } : p))
     setSelectedIds(new Set())
     setBulkSaving(false)
     showToast(failed > 0
-      ? `Estado atualizado em ${ids.length - failed} de ${ids.length} projetos.`
+      ? `Estado atualizado em ${okIds.length} de ${ids.length} projetos.`
       : `Estado atualizado em ${ids.length} projeto${ids.length !== 1 ? 's' : ''}.`)
   }
 
@@ -782,7 +846,7 @@ export default function TurmaPage() {
       setNewCritWeight('25')
       setCriteriaAdding(false)
     } else if (error) {
-      showToast('Erro ao adicionar critério: ' + error.message)
+      showToast(friendlyError(error, 'Não foi possível adicionar o critério.'))
     }
     setCritSaving(false)
   }
@@ -806,7 +870,7 @@ export default function TurmaPage() {
       setCriteria(c => c.map(x => x.id === editingCrit.id ? { ...x, name, weight } : x))
       setEditingCrit(null)
     } else {
-      showToast('Erro ao guardar critério: ' + error.message)
+      showToast(friendlyError(error, 'Não foi possível guardar o critério.'))
     }
     setCritSaving(false)
   }
@@ -814,7 +878,7 @@ export default function TurmaPage() {
   async function deleteCriterion(id) {
     const { error } = await supabase.from('class_evaluation_criteria').delete().eq('id', id)
     if (!error) setCriteria(c => c.filter(x => x.id !== id))
-    else showToast('Erro ao remover critério: ' + error.message)
+    else showToast(friendlyError(error, 'Não foi possível remover o critério.'))
   }
 
   async function useDefaultCriteria() {
@@ -823,7 +887,7 @@ export default function TurmaPage() {
     const rows = DEFAULT_CRITERIA.map((d, i) => ({ class_id: turma.id, name: d.name, weight: d.weight, sort_order: i }))
     const { data, error } = await supabase.from('class_evaluation_criteria').insert(rows).select()
     if (!error && data) setCriteria(data)
-    else if (error) showToast('Erro ao criar critérios: ' + error.message)
+    else if (error) showToast(friendlyError(error, 'Não foi possível criar os critérios.'))
     setCritSaving(false)
   }
 
@@ -872,8 +936,6 @@ export default function TurmaPage() {
     return 0
   })
 
-  if (profile && profile.role !== 'professor' && profile.account_type !== 'school') return null
-
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', background: C.bg }}>
@@ -904,6 +966,30 @@ export default function TurmaPage() {
     )
   }
 
+  async function handleJoin() {
+    if (!turma || !user || joining) return
+    setJoining(true)
+    const { data: rows, error } = await supabase.rpc('join_class', { p_code: turma.code })
+    setJoining(false)
+    if (error || !rows?.[0]) {
+      showToast(friendlyError(error, 'Não foi possível entrar na turma.'))
+      return
+    }
+    await refreshProfile?.()
+    // Reflect membership immediately without a full reload.
+    setMembers(prev => prev.some(m => m.user_id === user.id)
+      ? prev
+      : [...prev, {
+          user_id: user.id,
+          full_name: profile?.full_name || profile?.username || 'Aluno',
+          avatar_url: profile?.avatar_url || null,
+          role: 'aluno',
+          projectCount: 0,
+          joinedAt: new Date().toISOString(),
+        }])
+    showToast(`Entraste na turma ${turma.name}.`)
+  }
+
   async function leaveClass() {
     if (!turma || !user) return
     setLeavingClass(true)
@@ -932,7 +1018,7 @@ export default function TurmaPage() {
 
   async function handleUpdateTurma(name, subject, academicYear) {
     const { error } = await supabase.rpc('update_class', { p_class_id: turma.id, p_name: name, p_subject: subject || null, p_academic_year: academicYear || null })
-    if (error) { showToast('Erro ao atualizar turma: ' + error.message); return }
+    if (error) { showToast(friendlyError(error, 'Não foi possível atualizar a turma.')); return }
     setTurma(prev => ({ ...prev, name, subject: subject || null, academic_year: academicYear || prev.academic_year }))
     setShowEditTurma(false)
     showToast('Turma atualizada')
@@ -940,7 +1026,7 @@ export default function TurmaPage() {
 
   async function handleRemoveMember(memberUserId) {
     const { error } = await supabase.rpc('remove_class_member', { p_class_id: turma.id, p_user_id: memberUserId })
-    if (error) { showToast('Erro ao remover aluno: ' + error.message); return }
+    if (error) { showToast(friendlyError(error, 'Não foi possível remover o aluno.')); return }
     setMembers(prev => prev.filter(m => m.user_id !== memberUserId))
     setRemovingMember(null)
     showToast('Aluno removido da turma')
@@ -948,6 +1034,7 @@ export default function TurmaPage() {
 
   const alreadyAdded = new Set(projects.map(p => p.id))
   const addableProjects = myProjects.filter(p => !alreadyAdded.has(p.id))
+  const isMember = !!user && members.some(m => m.user_id === user.id)
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'inherit' }}>
@@ -1140,16 +1227,23 @@ export default function TurmaPage() {
               {isTeacher && projects.length > 0 && (
                 <Button variant="secondary" size="sm" icon={<Download size={12} />} onClick={exportCSV}>CSV</Button>
               )}
-              {/* Leave class (students only) */}
-              {!isTeacher && user && (
-                <Button variant="danger" size="sm" icon={<X size={12} />} onClick={() => setShowLeaveConfirm(true)}>Sair</Button>
+              {/* Not a member yet — the invite link lands here; give a way in. */}
+              {!isTeacher && user && !isMember && (
+                <Button size="sm" icon={<Plus size={13} />} onClick={handleJoin} loading={joining}>
+                  Juntar-me a esta turma
+                </Button>
               )}
-              {/* Add project (students only) */}
-              {!isTeacher && (user ? (
-                <Button size="sm" icon={<Plus size={13} />} onClick={() => setShowAdd(true)}>Adicionar projeto</Button>
-              ) : (
-                <Button variant="secondary" size="sm" onClick={() => navigate('/login')}>Entrar para adicionar</Button>
-              ))}
+              {/* Member: leave + add project */}
+              {!isTeacher && user && isMember && (
+                <>
+                  <Button variant="danger" size="sm" icon={<X size={12} />} onClick={() => setShowLeaveConfirm(true)}>Sair</Button>
+                  <Button size="sm" icon={<Plus size={13} />} onClick={() => setShowAdd(true)}>Adicionar projeto</Button>
+                </>
+              )}
+              {/* Logged out */}
+              {!isTeacher && !user && (
+                <Button variant="secondary" size="sm" onClick={() => navigate('/login')}>Entrar para participar</Button>
+              )}
             </div>
           </div>
         </div>
@@ -1228,7 +1322,7 @@ export default function TurmaPage() {
                           const replyText = checkinReply[c.user_id] ?? ''
                           const isSaving = checkinReplySaving === c.user_id
                           return (
-                            <div key={c.user_id + '-q'} style={{ padding: '9px 14px', borderRadius: 8, background: 'var(--color-primary-subtle)', border: '1px solid rgba(74,147,249,0.2)' }}>
+                            <div key={c.user_id + '-q'} style={{ padding: '9px 14px', borderRadius: 8, background: 'var(--color-primary-subtle)', border: '1px solid color-mix(in srgb, var(--color-primary) 25%, transparent)' }}>
                               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                                 <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--color-primary)', flexShrink: 0, marginTop: 5 }} />
                                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -1242,39 +1336,25 @@ export default function TurmaPage() {
                                   <p style={{ margin: '2px 0 0', fontSize: 13, color: C.text }}>{c.prof_reply}</p>
                                 </div>
                               ) : (
-                                <div style={{ display: 'flex', gap: 6, marginTop: 8, marginLeft: 16 }}>
+                                <form
+                                  onSubmit={e => { e.preventDefault(); sendCheckinReply(c) }}
+                                  style={{ display: 'flex', gap: 6, marginTop: 8, marginLeft: 16 }}
+                                >
                                   <input
                                     type="text"
                                     placeholder="Responder..."
                                     value={replyText}
                                     onChange={e => setCheckinReply(prev => ({ ...prev, [c.user_id]: e.target.value }))}
-                                    style={{ flex: 1, fontSize: 13, padding: '6px 10px', borderRadius: 6, border: '1px solid var(--color-border)', background: 'var(--color-bg-secondary)', color: C.text, fontFamily: 'inherit' }}
+                                    style={{ flex: 1, fontSize: 13, padding: '6px 10px', borderRadius: 6, border: '1px solid var(--color-border)', background: 'var(--color-bg-alt)', color: C.text, fontFamily: 'inherit' }}
                                   />
                                   <button
+                                    type="submit"
                                     disabled={!replyText.trim() || isSaving}
-                                    onClick={async () => {
-                                      if (!replyText.trim()) return
-                                      setCheckinReplySaving(c.user_id)
-                                      await supabase.from('weekly_checkins')
-                                        .update({ prof_reply: replyText.trim(), prof_reply_at: new Date().toISOString() })
-                                        .eq('user_id', c.user_id).eq('week_start', c.week_start)
-                                      await supabase.rpc('create_notification', {
-                                        p_user_id: c.user_id,
-                                        p_type: 'CHECKIN_REPLY',
-                                        p_message: `O professor respondeu à tua pergunta no check-in semanal.`,
-                                      })
-                                      setWeeklyCheckins(prev => prev.map(ch =>
-                                        ch.user_id === c.user_id ? { ...ch, prof_reply: replyText.trim(), prof_reply_at: new Date().toISOString() } : ch
-                                      ))
-                                      setCheckinReply(prev => { const n = { ...prev }; delete n[c.user_id]; return n })
-                                      setCheckinReplySaving(null)
-                                      showToast('Resposta enviada.')
-                                    }}
                                     style={{ padding: '6px 12px', borderRadius: 6, border: 'none', background: 'var(--color-primary)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: replyText.trim() ? 'pointer' : 'not-allowed', opacity: replyText.trim() ? 1 : 0.4, fontFamily: 'inherit' }}
                                   >
                                     {isSaving ? '...' : 'Enviar'}
                                   </button>
-                                </div>
+                                </form>
                               )}
                             </div>
                           )
@@ -1287,7 +1367,7 @@ export default function TurmaPage() {
                         {withBlockers.map(c => {
                           const s = studentMap[c.user_id]
                           return (
-                            <div key={c.user_id + '-b'} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '9px 14px', borderRadius: 8, background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.18)' }}>
+                            <div key={c.user_id + '-b'} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '9px 14px', borderRadius: 8, background: 'var(--color-warning-subtle)', border: '1px solid color-mix(in srgb, var(--color-warning) 22%, transparent)' }}>
                               <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--color-warning)', flexShrink: 0, marginTop: 5 }} />
                               <div style={{ flex: 1, minWidth: 0 }}>
                                 <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-warning)' }}>{s?.full_name || 'Aluno'} bloqueado:</span>
