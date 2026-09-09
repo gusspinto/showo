@@ -7,6 +7,7 @@ import { supabase, supabaseUrl, supabaseAnonKey } from '../lib/supabase'
 import { useIsMobile } from '../lib/useIsMobile'
 import { calculateScore, looksLikeSpam } from '../lib/score'
 import { containsProfanity } from '../lib/profanity'
+import { topLanguages, commitSpanMonths } from '../lib/social'
 import { CHALLENGES, getChallengeStatus } from '../lib/challenges'
 import { Navbar } from '../components/Navbar'
 import { PlanGateModal, AiUsageBadge, ConfirmUseModal } from '../components/PlanGate'
@@ -95,9 +96,72 @@ const ANON_PROJECT_COLUMNS = [
   'likes_count', 'interest_count', 'review_status', 'review_status_updated_at',
   'visibility', 'edit_token', 'notified_milestones',
   'library_file_url', 'library_file_name', 'library_file_type', 'parent_project_id',
+  'github_stats', 'github_synced_at',
 ].join(', ')
 // nota: timeline_public (migração 128) vem via select('*') do dono; o
 // visitante não precisa dele — o RPC get_project_timeline faz o gate.
+
+/* ── Prova de trabalho do GitHub ───────────────────────────────────────────
+   Um link para o repositório obriga quem lê a sair da página e a saber ler
+   um repositório. Os números do trabalho — quantos dias, durante quanto
+   tempo, em que linguagens — dizem a mesma coisa a alguém que nunca abriu o
+   GitHub na vida, e ficam aqui.
+
+   Só aparece depois de o dono sincronizar; não inventa nada quando não há
+   dados. `commits_truncated` marca o limite técnico da leitura com um "+"
+   em vez de apresentar 300 como se fosse o total real. */
+function GithubProof({ project }) {
+  const stats = project?.github_stats
+  if (!stats?.commits) return null
+
+  const langs = topLanguages(stats.languages, 3)
+  const months = commitSpanMonths(stats)
+
+  const facts = [
+    { label: stats.commits === 1 ? 'commit' : 'commits', value: stats.commits_truncated ? `${stats.commits}+` : stats.commits },
+    { label: stats.active_days === 1 ? 'dia de trabalho' : 'dias de trabalho', value: stats.active_days },
+    months ? { label: months === 1 ? 'mês de projeto' : 'meses de projeto', value: months } : null,
+  ].filter(Boolean)
+
+  return (
+    // Estilo explícito, não a classe .proj-card: este painel aparece nas
+    // duas vistas (a do dono e a pública), e só uma delas carrega essa folha.
+    <div style={{
+      background: 'var(--color-surface)', border: '1px solid var(--color-border)',
+      borderRadius: 12, padding: '20px 24px', marginBottom: 16,
+      fontFamily: 'var(--font-body, system-ui, sans-serif)',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+          Código no GitHub
+        </div>
+        <a href={stats.url} target="_blank" rel="noopener noreferrer"
+          style={{ fontSize: 12.5, color: 'var(--color-text-secondary)', fontWeight: 600, textDecoration: 'none' }}>
+          {stats.owner}/{stats.repo} ↗
+        </a>
+      </div>
+
+      <div style={{ display: 'flex', gap: 26, flexWrap: 'wrap' }}>
+        {facts.map(f => (
+          <div key={f.label}>
+            <div style={{ fontSize: 26, fontWeight: 700, color: 'var(--color-text)', lineHeight: 1 }}>{f.value}</div>
+            <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 4 }}>{f.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {langs.length > 0 && (
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 16 }}>
+          {langs.map(l => (
+            <span key={l.name} style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-secondary)', background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 7, padding: '5px 10px' }}>
+              {l.name} <span style={{ opacity: 0.6 }}>{l.pct}%</span>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 const colors = {
   bg: 'var(--color-bg)',
@@ -3545,6 +3609,11 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
               </div>
             </div>
           )}
+
+          {/* Prova de trabalho do GitHub — antes da timeline, porque é a
+              mesma história (quanto tempo, quantos dias) mas em números que
+              qualquer pessoa lê sem abrir o repositório. */}
+          <GithubProof project={project} />
 
           {/* Percurso / timeline — vista pública, sem controlos */}
           {project.user_id && <ProjectTimeline project={project} isOwner={isOwner} viewOnly />}
@@ -7805,6 +7874,8 @@ export default function ProjectPage() {
             </div>
           </div>
         )}
+
+        <GithubProof project={project} />
 
         {/* Author — bottom of page */}
         {(project.creator_name || project.course || project.school_year || project.school) && (

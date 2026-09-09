@@ -5,6 +5,7 @@ import { updateProject } from '../lib/updateProject'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { calculateScore, looksLikeSpam } from '../lib/score'
+import { parseGithubRepo, syncGithub, topLanguages, commitSpanMonths, shareOnLinkedIn } from '../lib/social'
 import { containsProfanity } from '../lib/profanity'
 import SkillsPicker from '../components/SkillsPicker'
 import { Select } from '../components/ui'
@@ -34,6 +35,8 @@ import { LightningIcon as Zap } from '@solar-icons/react/bold/lightning'
 import { Chart2Icon as BarChart2 } from '@solar-icons/react/bold/chart-2'
 import { RefreshCircleIcon as RefreshCw } from '@solar-icons/react/bold/refresh-circle'
 import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/square-academic-cap'
+import { Code2Icon as Code } from '@solar-icons/react/bold/code-2'
+import { CalendarIcon as Calendar } from '@solar-icons/react/bold/calendar'
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const C = {
@@ -390,6 +393,114 @@ function ContentSection({ project, onSaved }) {
       </button>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </form>
+  )
+}
+
+/* ── GitHub ────────────────────────────────────────────────────────────────
+   O link do repositório já existia há muito e não fazia nada. Isto lê o
+   repositório público e traz o histórico para dentro do projeto: cada dia
+   com commits vira uma entrada de diário, e as linguagens e datas ficam
+   guardadas para a página pública mostrar prova de trabalho a sério.
+
+   Só repositórios públicos, sem OAuth: a app nunca vê mais do que qualquer
+   pessoa vê ao abrir o repositório no browser. É por isso que não há
+   "ligar conta" nenhum aqui — não é preciso. */
+function GithubCard({ project }) {
+  const [syncing, setSyncing] = useState(false)
+  const [error, setError] = useState(null)
+  const [result, setResult] = useState(null)
+  const [stats, setStats] = useState(project?.github_stats || null)
+
+  useEffect(() => {
+    setStats(project?.github_stats || null)
+    setResult(null)
+    setError(null)
+  }, [project?.id])
+
+  const repo = parseGithubRepo(project?.github_url)
+
+  async function handleSync() {
+    setSyncing(true); setError(null); setResult(null)
+    try {
+      const data = await syncGithub(project.id)
+      setStats(data.stats)
+      setResult(data.entries_added)
+    } catch (e) {
+      setError(e.message)
+    }
+    setSyncing(false)
+  }
+
+  const langs = topLanguages(stats?.languages)
+  const months = commitSpanMonths(stats)
+
+  return (
+    <Card>
+      <CardTitle><Code size={13} /> GitHub</CardTitle>
+
+      {!repo ? (
+        <p style={{ margin: 0, fontSize: 13.5, color: C.muted, lineHeight: 1.6 }}>
+          Adiciona acima o link do repositório (<code style={{ fontSize: 12.5 }}>github.com/utilizador/repositorio</code>) e
+          guarda. Depois a Showo consegue ler os commits e escrever no diário por ti.
+        </p>
+      ) : (
+        <>
+          <p style={{ margin: '0 0 16px', fontSize: 13.5, color: C.muted, lineHeight: 1.6 }}>
+            Vamos ler <strong style={{ color: C.text }}>{repo.owner}/{repo.repo}</strong>. Cada dia
+            com commits fica registado no diário, com a data em que trabalhaste.
+            Só funciona com repositórios públicos.
+          </p>
+
+          {stats && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 10, marginBottom: 16 }}>
+              <Stat label="Commits" value={stats.commits_truncated ? `${stats.commits}+` : stats.commits} />
+              <Stat label={stats.active_days === 1 ? 'Dia de trabalho' : 'Dias de trabalho'} value={stats.active_days} />
+              {months && <Stat label={months === 1 ? 'Mês' : 'Meses'} value={months} />}
+              {langs[0] && <Stat label="Principal" value={langs[0].name} />}
+            </div>
+          )}
+
+          {error && (
+            <div style={{ background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 10, padding: '11px 14px', color: C.red, fontSize: 13, marginBottom: 12, fontWeight: 500 }}>
+              {error}
+            </div>
+          )}
+
+          {result != null && !error && (
+            <div style={{ background: 'var(--color-success-subtle, rgba(16,185,129,0.1))', border: '1px solid rgba(16,185,129,0.25)', borderRadius: 10, padding: '11px 14px', color: C.green, fontSize: 13, marginBottom: 12, fontWeight: 600 }}>
+              {result === 0
+                ? 'Já estava tudo sincronizado — nada de novo desde a última vez.'
+                : `${result} ${result === 1 ? 'dia adicionado' : 'dias adicionados'} ao diário.`}
+            </div>
+          )}
+
+          <button type="button" onClick={handleSync} disabled={syncing} style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            background: syncing ? C.border : C.blue, color: '#fff', border: 'none',
+            borderRadius: 10, padding: '11px 20px', fontSize: 14, fontWeight: 700,
+            cursor: syncing ? 'default' : 'pointer', fontFamily: 'inherit',
+          }}>
+            <RefreshCw size={15} style={syncing ? { animation: 'spin 1s linear infinite' } : undefined} />
+            {syncing ? 'A ler o repositório…' : stats ? 'Sincronizar outra vez' : 'Sincronizar commits'}
+          </button>
+
+          {stats && project.github_synced_at && (
+            <p style={{ margin: '10px 0 0', fontSize: 11.5, color: C.subtle }}>
+              Última sincronização: {new Date(project.github_synced_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'long' })}
+            </p>
+          )}
+        </>
+      )}
+    </Card>
+  )
+}
+
+function Stat({ label, value }) {
+  return (
+    <div style={{ background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 10, padding: '11px 13px' }}>
+      <div style={{ fontSize: 19, fontWeight: 700, color: C.text, lineHeight: 1.1 }}>{value}</div>
+      <div style={{ fontSize: 10.5, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 3 }}>{label}</div>
+    </div>
   )
 }
 
@@ -860,6 +971,16 @@ function SettingsSection({ project, isOwner, navigate }) {
             </a>
           </div>
 
+          {/* O LinkedIn não deixa uma app publicar por ti sem aprovação
+              deles, por isso isto abre o compositor com o link já lá. A
+              pré-visualização (capa, nome, tagline) vem das meta tags que o
+              /api/og gera para cada projeto. */}
+          <button onClick={() => shareOnLinkedIn(publicUrl)} style={{ alignSelf: 'flex-start', padding: '10px 16px', background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 8, color: C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 7, transition: 'all 0.15s' }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = C.borderBright; e.currentTarget.style.color = C.text }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}>
+            <Send size={13} /> Publicar no LinkedIn
+          </button>
+
           {editUrl && (
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: C.yellow, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -875,6 +996,8 @@ function SettingsSection({ project, isOwner, navigate }) {
           )}
         </div>
       </Card>
+
+      <GithubCard project={project} />
 
       {/* Zona de perigo */}
       {isOwner && (
