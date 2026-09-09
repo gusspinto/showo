@@ -52,6 +52,8 @@ import { CheckCircleIcon as CheckCircle2 } from '@solar-icons/react/bold/check-c
 import { BookBookmarkIcon as BookMarked } from '@solar-icons/react/bold/book-bookmark'
 import { Book2Icon as BookOpen } from '@solar-icons/react/bold/book-2'
 import { BugIcon as Bug } from '@solar-icons/react/bold/bug'
+import { CheckReadIcon as CheckRead } from '@solar-icons/react/bold/check-read'
+import { TrashBinMinimalisticIcon as TrashBin } from '@solar-icons/react/bold/trash-bin-minimalistic'
 
 // Strip emoji characters from notification messages coming from the DB
 function stripEmoji(str) {
@@ -104,6 +106,8 @@ function getNotifIcon(type) {
     case 'RANKING_CHANGE':   return <TrendingUp {...s} />
     case 'MISSION_COMPLETE': return <Trophy {...s} />
     case 'TEACHER_FEEDBACK': return <GraduationCap {...s} />
+    case 'CHECKIN_REPLY':    return <MessageSquare {...s} />
+    case 'CHECKIN_SUBMITTED':return <MessageSquare {...s} />
     case 'STUDENT_JOINED':   return <UserPlus {...s} />
     case 'TASK_ASSIGNED':    return <ListChecks {...s} />
     case 'TASK_COMPLETED':   return <CheckCircle2 {...s} />
@@ -119,31 +123,50 @@ function getNotifIcon(type) {
   }
 }
 
-// Role colors mirror Home.jsx's role picker (aluno/professor/recrutador-empresa) —
-// only applied where the acting role is actually knowable from the notification
-// type; view/like/comment notifications stay neutral since the actor is anonymous.
-function getNotifColor(type) {
+// Notification families — colour by KIND of event, not by who acted (the actor
+// stays anonymous for view/like/comment). Two mental contexts are kept apart:
+// "escola" (percurso na turma, acionável) vs "portfólio" (audiência pública).
+// `order` drives section order in the dropdown; lower = higher up.
+const NOTIF_FAMILIES = {
+  escola:     { key: 'escola',     label: 'Turma',            color: 'var(--color-success)', order: 0 },
+  oportunidades: { key: 'oportunidades', label: 'Oportunidades', color: 'var(--color-accent)',  order: 1 },
+  portfolio:  { key: 'portfolio',  label: 'O teu portfólio',  color: 'var(--color-primary)', order: 2 },
+  progresso:  { key: 'progresso',  label: 'Progresso',        color: 'var(--color-warning)', order: 3 },
+  outros:     { key: 'outros',     label: 'Outras',           color: null,                   order: 4 },
+}
+
+function getNotifFamily(type) {
   switch (type) {
+    case 'TEACHER_FEEDBACK':
+    case 'TASK_ASSIGNED':
+    case 'TASK_COMPLETED':
+    case 'STUDENT_JOINED':
+    case 'PROJECT_RESUBMITTED':
+    case 'CHECKIN_REPLY':
+    case 'CHECKIN_SUBMITTED':
+      return NOTIF_FAMILIES.escola
+    case 'RECRUITER_INTEREST':
+    case 'VAGA_INVITE':
+    case 'NEW_CANDIDATURA':
+    case 'CANDIDATURA_ACEITE':
+    case 'CANDIDATURA_RECUSADA':
+      return NOTIF_FAMILIES.oportunidades
+    case 'PROJECT_VIEW':
+    case 'COMPANY_VIEW':
+    case 'PROJECT_LIKE':
+    case 'PROJECT_COMMENT':
+      return NOTIF_FAMILIES.portfolio
     case 'SCORE_MILESTONE':
     case 'RANKING_CHANGE':
     case 'MISSION_COMPLETE':
-    case 'STUDENT_JOINED':
-    case 'NEW_CANDIDATURA':
-    case 'TASK_COMPLETED':
-    case 'PROJECT_RESUBMITTED':
-      return 'var(--color-primary)'
-    case 'TEACHER_FEEDBACK':
-    case 'TASK_ASSIGNED':
-      return 'var(--color-success)'
-    case 'RECRUITER_INTEREST':
-    case 'VAGA_INVITE':
-    case 'CANDIDATURA_ACEITE':
-    case 'CANDIDATURA_RECUSADA':
-      return 'var(--color-accent)'
+      return NOTIF_FAMILIES.progresso
     default:
-      return null
+      return NOTIF_FAMILIES.outros
   }
 }
+
+// Acionável = vale um destaque maior (título + duas linhas); o resto é ambiente.
+const ACTIONABLE_TYPES = ['TEACHER_FEEDBACK', 'TASK_ASSIGNED', 'VAGA_INVITE', 'NEW_CANDIDATURA', 'RECRUITER_INTEREST', 'PROJECT_COMMENT']
 
 function timeAgo(ts) {
   const diff = (Date.now() - new Date(ts).getTime()) / 1000
@@ -167,6 +190,8 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
   const [invites, setInvites] = useState([])
   const [acting, setActing] = useState({})
   const [dbNotifs, setDbNotifs] = useState([])
+  const [notifFilter, setNotifFilter] = useState('all')  // all | unread | escola | portfolio | oportunidades
+  const [hasTurma, setHasTurma] = useState(false)        // student in a class OR teacher of one — gates the "Turma" tab
 
   // Owner response notifications — persisted in sessionStorage
   const [responses, setResponses] = useState(() => {
@@ -199,6 +224,14 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
       .order('created_at', { ascending: false })
       .limit(20)
     if (data) setDbNotifs(data)
+  }
+
+  async function loadTurmaContext() {
+    const [member, teacher] = await Promise.all([
+      supabase.from('class_members').select('class_id').eq('user_id', userId).limit(1),
+      supabase.from('classes').select('id').eq('teacher_id', userId).limit(1),
+    ])
+    if ((member.data && member.data.length) || (teacher.data && teacher.data.length)) setHasTurma(true)
   }
 
   async function markAllRead() {
@@ -287,6 +320,7 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
     if (!userId) return
     loadInvites()
     loadDbNotifs()
+    loadTurmaContext()
 
     // Channel 1 — invites TO me (pending)
     const inviteChannel = supabase
@@ -386,6 +420,49 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
 
   const grouped = groupedNotifs(dbNotifs)
   const unreadDbCount = grouped.filter(n => n.anyUnread).length
+
+  // Split into family sections, ordered by family.order, and within each section
+  // acionável-não-lido first, then unread ambiente, then read.
+  const notifSections = (() => {
+    const byFam = {}
+    for (const n of grouped) {
+      const fam = getNotifFamily(n.type)
+      ;(byFam[fam.key] ||= { fam, items: [] }).items.push(n)
+    }
+    const rank = (n) => (n.anyUnread ? (ACTIONABLE_TYPES.includes(n.type) ? 0 : 1) : 2)
+    return Object.values(byFam)
+      .sort((a, b) => a.fam.order - b.fam.order)
+      .map(s => ({
+        ...s,
+        items: s.items.sort((a, b) => rank(a) - rank(b) || b.latestTs - a.latestTs),
+      }))
+  })()
+  // "Portfólio" (portfolio + progresso) é fixa — tem sempre conteúdo real.
+  // "Turma" (escola) junta-se a quem está numa turma (aluno ou professor) ou
+  // quando já chegou uma notificação escolar. "Oportunidades" só aparece quando
+  // existir mesmo uma notificação de recrutador/candidatura (feature ainda não
+  // construída, não vale prometer uma tab vazia).
+  const famKeys = new Set(notifSections.map(s => s.fam.key))
+  const notifTabs = [{ key: 'all', label: 'Tudo' }]
+  if (hasTurma || famKeys.has('escola')) notifTabs.push({ key: 'escola', label: 'Turma' })
+  notifTabs.push({ key: 'portfolio', label: 'Portfólio' })
+  if (famKeys.has('oportunidades')) notifTabs.push({ key: 'oportunidades', label: 'Oportunidades' })
+  if (unreadDbCount > 0) notifTabs.push({ key: 'unread', label: 'Não lidas' })
+  // Drop a stale selection (e.g. last unread got read) back to "Tudo".
+  const activeFilter = notifTabs.some(t => t.key === notifFilter) ? notifFilter : 'all'
+  const filterMatchesFam = (key) =>
+    activeFilter === 'all' || activeFilter === 'unread' ||
+    key === activeFilter ||
+    (activeFilter === 'portfolio' && (key === 'portfolio' || key === 'progresso'))
+  const visibleSections = notifSections
+    .filter(s => filterMatchesFam(s.fam.key))
+    .map(s => activeFilter === 'unread' ? { ...s, items: s.items.filter(n => n.anyUnread) } : s)
+    .filter(s => s.items.length > 0)
+  const showSectionHeaders = visibleSections.length > 1
+  // Show the tab bar only when there's a real split to make (Turma and/or
+  // Oportunidades present). Based on context tabs, not unread count, so marking
+  // things read never collapses the top row.
+  const showFilterTabs = notifTabs.some(t => t.key === 'escola' || t.key === 'oportunidades')
   const count = invites.length + responses.length + unreadDbCount
 
   return (
@@ -433,7 +510,7 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
               borderRadius: 14, padding: '8px',
               boxShadow: '0 8px 40px rgba(0,0,0,0.45)',
               backdropFilter: 'blur(16px)',
-              zIndex: 199, width: 310,
+              zIndex: 199, width: 340,
               maxHeight: 'calc(100dvh - 80px)', overflowY: 'auto',
             }}>
 
@@ -513,31 +590,65 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
             {/* DB notifications */}
             {dbNotifs.length > 0 && (
               <>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: `${(invites.length + responses.length) > 0 ? '12px' : '6px'} 10px 8px` }}>
-                  <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>
-                    Notificações
-                  </p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {unreadDbCount > 0 && (
-                      <button
-                        onClick={markAllRead}
-                        style={{ background: 'none', border: 'none', color: C.blue, fontSize: 11, fontWeight: 600, cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}
-                      >
-                        Marcar todas como lidas
-                      </button>
-                    )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, margin: `${(invites.length + responses.length) > 0 ? '10px' : '2px'} 6px 6px 10px` }}>
+                  <div style={{ display: 'flex', gap: 3, flex: 1, minWidth: 0, overflowX: 'auto' }}>
+                    {showFilterTabs && notifTabs.map(tab => {
+                      const on = tab.key === activeFilter
+                      return (
+                        <button
+                          key={tab.key}
+                          onClick={() => setNotifFilter(tab.key)}
+                          style={{
+                            background: on ? 'var(--color-text)' : 'transparent',
+                            color: on ? 'var(--color-bg)' : C.muted,
+                            border: `1px solid ${on ? 'var(--color-text)' : 'var(--color-border)'}`,
+                            borderRadius: 999, padding: '3px 9px', fontSize: 11, fontWeight: 600,
+                            cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'inherit', flexShrink: 0,
+                            transition: 'background 0.12s, color 0.12s, border-color 0.12s',
+                          }}
+                        >
+                          {tab.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+                    <button
+                      onClick={unreadDbCount > 0 ? markAllRead : undefined}
+                      disabled={unreadDbCount === 0}
+                      title="Marcar todas como lidas"
+                      style={{ background: 'none', border: 'none', color: C.muted, cursor: unreadDbCount > 0 ? 'pointer' : 'default', opacity: unreadDbCount > 0 ? 1 : 0.35, padding: 5, borderRadius: 6, display: 'flex', alignItems: 'center', transition: 'color 0.12s, background 0.12s, opacity 0.12s' }}
+                      onMouseEnter={e => { if (unreadDbCount > 0) { e.currentTarget.style.color = 'var(--color-text)'; e.currentTarget.style.background = 'var(--color-surface-hover)' } }}
+                      onMouseLeave={e => { e.currentTarget.style.color = C.muted; e.currentTarget.style.background = 'none' }}
+                    >
+                      <CheckRead size={15} />
+                    </button>
                     <button
                       onClick={clearAll}
-                      style={{ background: 'none', border: 'none', color: C.muted, fontSize: 11, fontWeight: 600, cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}
-                      onMouseEnter={e => e.currentTarget.style.color = 'var(--color-error)'}
-                      onMouseLeave={e => e.currentTarget.style.color = C.muted}
+                      title="Limpar todas"
+                      style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', padding: 5, borderRadius: 6, display: 'flex', alignItems: 'center', transition: 'color 0.12s, background 0.12s' }}
+                      onMouseEnter={e => { e.currentTarget.style.color = 'var(--color-error)'; e.currentTarget.style.background = 'color-mix(in srgb, var(--color-error) 12%, transparent)' }}
+                      onMouseLeave={e => { e.currentTarget.style.color = C.muted; e.currentTarget.style.background = 'none' }}
                     >
-                      Limpar todas
+                      <TrashBin size={15} />
                     </button>
                   </div>
                 </div>
-                {grouped.map(n => {
-                  const roleColor = getNotifColor(n.type)
+                {visibleSections.length === 0 && (
+                  <p style={{ margin: '10px', fontSize: 12, color: C.muted, textAlign: 'center' }}>
+                    Nada nesta vista.
+                  </p>
+                )}
+                {visibleSections.map(section => (
+                  <div key={section.fam.key} style={{ marginBottom: 2 }}>
+                    {showSectionHeaders && (
+                      <p style={{ margin: '10px 10px 5px', fontSize: 10, fontWeight: 700, color: section.fam.color || C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>
+                        {section.fam.label}
+                      </p>
+                    )}
+                    {section.items.map(n => {
+                  const roleColor = section.fam.color
+                  const actionable = ACTIONABLE_TYPES.includes(n.type)
                   return (
                   <div
                     key={n.id}
@@ -547,10 +658,8 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
                       if (n.project_slug) { navigate(`/projeto/${n.project_slug}`); setOpen(false) }
                     }}
                     style={{
-                      borderRadius: 10, padding: '10px 12px', marginBottom: 4,
-                      background: n.anyUnread ? `color-mix(in srgb, ${roleColor || 'var(--color-text)'} 5%, transparent)` : 'transparent',
-                      border: `1px solid ${n.anyUnread ? `color-mix(in srgb, ${roleColor || 'var(--color-text)'} 12%, transparent)` : 'transparent'}`,
-                      borderLeft: n.anyUnread ? `3px solid ${roleColor || 'color-mix(in srgb, var(--color-text) 50%, transparent)'}` : '3px solid transparent',
+                      borderRadius: 10, padding: '10px 12px', marginBottom: 2,
+                      background: n.anyUnread ? `color-mix(in srgb, ${roleColor || 'var(--color-text)'} 8%, transparent)` : 'transparent',
                       cursor: n.project_slug ? 'pointer' : 'default',
                       display: 'flex', alignItems: 'flex-start', gap: 10,
                       transition: 'background 0.12s',
@@ -558,7 +667,7 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
                   >
                     <span style={{ display: 'flex', flexShrink: 0, marginTop: 1, color: roleColor || C.muted }}>{getNotifIcon(n.type)}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ margin: '0 0 2px', fontSize: 13, color: n.anyUnread ? C.text : C.muted, lineHeight: 1.45, fontWeight: n.anyUnread ? 500 : 400 }}>
+                      <p style={{ margin: '0 0 2px', fontSize: 13, color: n.anyUnread ? C.text : C.muted, lineHeight: 1.45, fontWeight: n.anyUnread ? (actionable ? 600 : 500) : 400, whiteSpace: actionable ? 'normal' : undefined }}>
                         {VIEW_TYPES.includes(n.type) ? viewMessage(n) : stripEmoji(n.message)}
                       </p>
                       {n.project_slug && VIEW_TYPES.includes(n.type) && (
@@ -583,7 +692,9 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
                     </div>
                   </div>
                   )
-                })}
+                    })}
+                  </div>
+                ))}
               </>
             )}
 
