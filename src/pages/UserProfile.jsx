@@ -249,7 +249,7 @@ export default function UserProfile() {
       // Sem is_admin (o 065 tirou-o do grant anon de propósito e não é usado
       // aqui) — bastava estar na lista para o SELECT inteiro falhar para
       // visitantes sem conta, e o perfil dava "não encontrado".
-      const PROFILE_COLS = 'id, username, full_name, bio, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, total_xp, views, created_at, area, occupation, profile_appearance, profile_headline'
+      const PROFILE_COLS = 'id, username, full_name, bio, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, total_xp, created_at, area, occupation, profile_appearance, profile_headline'
       const { data: profileData, error: profileErr } = isUUID
         ? await supabase.from('profiles').select(PROFILE_COLS).eq('id', username).single()
         : await supabase.from('profiles').select(PROFILE_COLS).eq('username', username).single()
