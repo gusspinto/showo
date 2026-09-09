@@ -102,6 +102,7 @@ function getNotifIcon(type) {
   switch (type) {
     case 'PROJECT_VIEW':     return <Eye {...s} />
     case 'COMPANY_VIEW':     return <Eye {...s} />
+    case 'PROFILE_VIEW':     return <Eye {...s} />
     case 'SCORE_MILESTONE':  return <Target {...s} />
     case 'RANKING_CHANGE':   return <TrendingUp {...s} />
     case 'MISSION_COMPLETE': return <Trophy {...s} />
@@ -153,6 +154,7 @@ function getNotifFamily(type) {
       return NOTIF_FAMILIES.oportunidades
     case 'PROJECT_VIEW':
     case 'COMPANY_VIEW':
+    case 'PROFILE_VIEW':
     case 'PROJECT_LIKE':
     case 'PROJECT_COMMENT':
       return NOTIF_FAMILIES.portfolio
@@ -266,15 +268,16 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
     }
   }
 
-  // Group VIEW notifications by project_slug, track time-window counts
-  const VIEW_TYPES = ['PROJECT_VIEW', 'COMPANY_VIEW']
+  // Group VIEW notifications (project views keyed by slug, portfolio views just
+  // by type since there's no slug), tracking time-window counts.
+  const VIEW_TYPES = ['PROJECT_VIEW', 'COMPANY_VIEW', 'PROFILE_VIEW']
   function groupedNotifs(notifs) {
     const now = Date.now()
     const result = []
     const seen = {}
     for (const n of notifs) {
-      if (VIEW_TYPES.includes(n.type) && n.project_slug) {
-        const key = `${n.type}__${n.project_slug}`
+      if (VIEW_TYPES.includes(n.type) && (n.project_slug || n.type === 'PROFILE_VIEW')) {
+        const key = n.project_slug ? `${n.type}__${n.project_slug}` : n.type
         const ts = new Date(n.created_at).getTime()
         const age = (now - ts) / 1000
         if (seen[key] != null) {
@@ -308,11 +311,12 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
 
   function viewMessage(n) {
     const isCompany = n.type === 'COMPANY_VIEW'
+    const what = n.type === 'PROFILE_VIEW' ? 'o teu portfólio' : 'o teu projeto'
     const who = isCompany ? 'empresas/recrutadores' : 'pessoas'
     if (n.count30m >= 2) return `${n.count30m} ${who} nas últimas 30 min`
     if (n.count1h >= 2)  return `${n.count1h} ${who} na última hora`
     if (n.count24h >= 2) return `${n.count24h} ${who} hoje`
-    if (n.count > 1)     return `${n.count} ${who} viram o teu projeto`
+    if (n.count > 1)     return `${n.count} ${who} viram ${what}`
     return stripEmoji(n.message)
   }
 
@@ -656,11 +660,12 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
                       if (e.target.closest('[data-delete]')) return
                       markRead(n.groupIds)
                       if (n.project_slug) { navigate(`/projeto/${n.project_slug}`); setOpen(false) }
+                      else if (n.type === 'PROFILE_VIEW') { navigate(`/u/${userId}`); setOpen(false) }
                     }}
                     style={{
                       borderRadius: 10, padding: '10px 12px', marginBottom: 2,
                       background: n.anyUnread ? `color-mix(in srgb, ${roleColor || 'var(--color-text)'} 8%, transparent)` : 'transparent',
-                      cursor: n.project_slug ? 'pointer' : 'default',
+                      cursor: (n.project_slug || n.type === 'PROFILE_VIEW') ? 'pointer' : 'default',
                       display: 'flex', alignItems: 'flex-start', gap: 10,
                       transition: 'background 0.12s',
                     }}

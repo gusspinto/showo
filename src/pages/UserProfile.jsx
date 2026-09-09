@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { QRCodeSVG } from 'qrcode.react'
-import { supabase } from '../lib/supabase'
+import { supabase, supabaseUrl, supabaseAnonKey } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
 import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
@@ -249,7 +249,7 @@ export default function UserProfile() {
       // Sem is_admin (o 065 tirou-o do grant anon de propósito e não é usado
       // aqui) — bastava estar na lista para o SELECT inteiro falhar para
       // visitantes sem conta, e o perfil dava "não encontrado".
-      const PROFILE_COLS = 'id, username, full_name, bio, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, total_xp, created_at, area, occupation, profile_appearance, profile_headline'
+      const PROFILE_COLS = 'id, username, full_name, bio, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, total_xp, views, created_at, area, occupation, profile_appearance, profile_headline'
       const { data: profileData, error: profileErr } = isUUID
         ? await supabase.from('profiles').select(PROFILE_COLS).eq('id', username).single()
         : await supabase.from('profiles').select(PROFILE_COLS).eq('username', username).single()
@@ -344,6 +344,44 @@ export default function UserProfile() {
       .order('created_at', { ascending: false })
       .then(({ data }) => setRecruiterVagas(data || []))
   }, [user, isRecruiter])
+
+  // Portfolio view tracking — mirrors the project view counter on ProjectPage.
+  // Bump profiles.views once per browser session per profile, and (after a short
+  // dwell, so a quick bounce doesn't count) fire the "someone viewed your
+  // portfolio" notification. Never counts the owner looking at their own page.
+  useEffect(() => {
+    const pid = profile?.id
+    if (!pid || !user || user.id === pid) return
+
+    const viewKey = `viewed_profile_${pid}`
+    if (sessionStorage.getItem(viewKey)) return
+    sessionStorage.setItem(viewKey, '1')
+
+    fetch(`${supabaseUrl}/rest/v1/rpc/increment_profile_views`, {
+      method: 'POST',
+      keepalive: true,
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: supabaseAnonKey,
+        Authorization: `Bearer ${supabaseAnonKey}`,
+      },
+      body: JSON.stringify({ profile_id: pid }),
+    }).catch(() => {})
+
+    const visitor_role = myProfile?.role ?? null
+    const t = setTimeout(() => {
+      fetch('https://ip-api.com/json/?fields=city,status')
+        .then(r => r.json())
+        .then(geo => {
+          const city = geo?.status === 'success' ? (geo.city || 'Portugal') : 'Portugal'
+          supabase.functions.invoke('notify-profile-view', { body: { profile_id: pid, city, visitor_role } })
+        })
+        .catch(() => {
+          supabase.functions.invoke('notify-profile-view', { body: { profile_id: pid, city: 'Portugal', visitor_role } })
+        })
+    }, 15000)
+    return () => clearTimeout(t)
+  }, [profile?.id, user, myProfile?.role])
 
   async function toggleSave() {
     if (!user || !profile || savingCandidate) return
@@ -577,6 +615,12 @@ export default function UserProfile() {
                     </div>
                   )
                 })()}
+
+                {isOwnProfile && (profile.views ?? 0) > 0 && (
+                  <p className="up-views" title="Só tu vês isto">
+                    {profile.views} {profile.views === 1 ? 'visualização' : 'visualizações'} do portfólio
+                  </p>
+                )}
               </div>
 
               <div className="up-head-actions">

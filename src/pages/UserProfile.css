@@ -127,6 +127,12 @@
 
 .up-meta-sep { color: var(--color-text-tertiary); }
 
+.up-views {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+}
+
 /* ── Bio ── */
 .up-bio {
   color: var(--color-text);
