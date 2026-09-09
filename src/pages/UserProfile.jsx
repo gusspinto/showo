@@ -348,10 +348,11 @@ export default function UserProfile() {
   // Portfolio view tracking — mirrors the project view counter on ProjectPage.
   // Bump profiles.views once per browser session per profile, and (after a short
   // dwell, so a quick bounce doesn't count) fire the "someone viewed your
-  // portfolio" notification. Never counts the owner looking at their own page.
+  // portfolio" notification. Counts logged-out visitors too; never the owner
+  // looking at their own page.
   useEffect(() => {
     const pid = profile?.id
-    if (!pid || !user || user.id === pid) return
+    if (!pid || user?.id === pid) return
 
     const viewKey = `viewed_profile_${pid}`
     if (sessionStorage.getItem(viewKey)) return
