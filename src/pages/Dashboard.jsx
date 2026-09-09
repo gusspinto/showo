@@ -6,6 +6,8 @@ import { Navbar } from '../components/Navbar'
 
 import ConvidarVagaModal from '../components/ConvidarVagaModal'
 import { getCurrentAcademicYear, academicYearOptions } from '../lib/academicYear'
+import { joinClassByCode } from '../lib/joinClass'
+import { projectCompletude } from '../lib/projectCompletude'
 import { calculatePotential } from '../lib/score'
 import SkillsPicker from '../components/SkillsPicker'
 import { FolderIcon as Folder } from '@solar-icons/react/bold/folder'
@@ -81,20 +83,6 @@ function getScoreColor(score) {
 
 /* % dos campos-chave de um projeto que estão preenchidos (mesma fórmula
    da TurmaPage). */
-function projectCompletude(p) {
-  if (!p) return 0
-  const checks = [
-    !!(p.goal || p.problem),
-    !!p.solution,
-    !!p.technologies,
-    !!p.features,
-    !!p.results,
-    !!(p.linkedin_url || p.github_url || p.portfolio_url),
-    !!p.cover_url,
-  ]
-  return Math.round((checks.filter(Boolean).length / checks.length) * 100)
-}
-
 function getDisplayName(user) {
   const name = user?.user_metadata?.full_name
   if (name) return name.split(' ')[0]
@@ -226,19 +214,14 @@ function JoinTurmaModal({ onClose, navigate, onJoined }) {
 
   async function handleJoin(e) {
     e.preventDefault()
-    const trimmed = code.trim().toUpperCase()
-    if (!trimmed) return
+    if (!code.trim()) return
     setChecking(true); setError('')
     try {
-      const { data: rows, error: sbErr } = await supabase.rpc('join_class', { p_code: trimmed })
-      const data = rows?.[0]
-      if (sbErr || !data) {
-        setError(sbErr && sbErr.message !== 'class_not_found' ? sbErr.message : 'Código inválido. Verifica com o professor.')
-        return
-      }
-      setVerified(!!data.verified)
-      setJoined(data)
-      onJoined?.(data)
+      const res = await joinClassByCode(code)
+      if (!res.ok) { setError(res.error); return }
+      setVerified(!!res.turma.verified)
+      setJoined(res.turma)
+      onJoined?.(res.turma)
     } catch {
       setError('Erro de ligação. Tenta novamente.')
     } finally {

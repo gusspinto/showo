@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { joinClassByCode } from '../lib/joinClass'
+import { projectCompletude } from '../lib/projectCompletude'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
 import { FolderIcon as Folder } from '@solar-icons/react/bold/folder'
@@ -699,10 +701,8 @@ export default function TurmaPage() {
     // actually works and also promotes the account to 'school'. Idempotent for
     // someone who is already a member.
     if (user?.id && turma.code) {
-      const { error: joinErr } = await supabase.rpc('join_class', { p_code: turma.code })
-      if (joinErr && joinErr.message !== 'class_not_found') {
-        console.error('join_class before addProject failed:', joinErr)
-      }
+      const res = await joinClassByCode(turma.code)
+      if (!res.ok) console.error('join_class before addProject failed:', res.error)
     }
 
     const { error } = await supabase
@@ -805,18 +805,7 @@ export default function TurmaPage() {
     setTimeout(() => setCopiedLink(false), 2000)
   }
 
-  function computeCompletude(p) {
-    const checks = [
-      !!(p.goal || p.problem),
-      !!p.solution,
-      !!p.technologies,
-      !!p.features,
-      !!p.results,
-      !!(p.linkedin_url || p.github_url || p.portfolio_url),
-      !!p.cover_url,
-    ]
-    return Math.round((checks.filter(Boolean).length / checks.length) * 100)
-  }
+  const computeCompletude = projectCompletude
 
   const DEFAULT_CRITERIA = [
     { name: 'Conteúdo & Problema', weight: 25 },
@@ -969,10 +958,10 @@ export default function TurmaPage() {
   async function handleJoin() {
     if (!turma || !user || joining) return
     setJoining(true)
-    const { data: rows, error } = await supabase.rpc('join_class', { p_code: turma.code })
+    const res = await joinClassByCode(turma.code)
     setJoining(false)
-    if (error || !rows?.[0]) {
-      showToast(friendlyError(error, 'Não foi possível entrar na turma.'))
+    if (!res.ok) {
+      showToast(res.error)
       return
     }
     await refreshProfile?.()

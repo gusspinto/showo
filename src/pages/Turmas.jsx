@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { joinClassByCode } from '../lib/joinClass'
 import { useAuth } from '../context/AuthContext'
 import CreateTurmaModal from '../components/CreateTurmaModal'
 import { Navbar } from '../components/Navbar'
@@ -113,25 +114,10 @@ function JoinModal({ onClose, onJoin, navigate }) {
     if (!code.trim()) return
     setLoading(true)
     setError('')
-    // join_class both validates the code and registers membership
-    // server-side — a direct client upsert into class_members isn't
-    // reliable here since that table's INSERT policy was never captured in
-    // a tracked migration.
-    const { data: rows, error: err } = await supabase.rpc('join_class', { p_code: code.trim().toUpperCase() })
-    const data = rows?.[0]
-
-    if (err || !data) {
-      // Surface the real error instead of always blaming the code — a
-      // silent RPC/permission failure once looked identical to a typo.
-      setError(err && err.message !== 'class_not_found' ? err.message : 'Turma não encontrada. Verifica o código.')
-      setLoading(false)
-      return
-    }
-
-    // join_class verifies the row itself (inside the same transaction) and
-    // returns that result directly — a separate follow-up SELECT from a
-    // fresh connection isn't reliable (read-after-write timing between two
-    // independent requests, confirmed while debugging this).
+    const res = await joinClassByCode(code)
+    setLoading(false)
+    if (!res.ok) { setError(res.error); return }
+    const data = res.turma
 
     // Save to localStorage
     const lsKey = `showo_turmas_${user.id}`
@@ -142,7 +128,6 @@ function JoinModal({ onClose, onJoin, navigate }) {
       localStorage.setItem(lsKey, JSON.stringify(cached))
     }
 
-    setLoading(false)
     setJoined({ turma: data, verified: !!data.verified })
     onJoin(data)
   }

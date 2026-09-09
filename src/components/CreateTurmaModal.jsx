@@ -41,14 +41,22 @@ export default function CreateTurmaModal({ onClose, onCreated, user, profile }) 
     if (!name.trim()) return
     setSaving(true)
     setErr('')
-    const code = generateCode()
     const teacherName = profile?.full_name || user?.user_metadata?.full_name || ''
-    const { data, error } = await supabase.from('classes')
-      .insert({ name: name.trim(), subject: subject.trim() || null, code, teacher_id: user.id, teacher_name: teacherName, academic_year: academicYear || null })
-      .select().single()
+    const base = { name: name.trim(), subject: subject.trim() || null, teacher_id: user.id, teacher_name: teacherName, academic_year: academicYear || null }
+
+    // Retry on the (rare) generated-code collision instead of bubbling it up as
+    // a generic "tenta de novo" the teacher has to trigger by hand.
+    let data, error
+    for (let attempt = 0; attempt < 4; attempt++) {
+      ;({ data, error } = await supabase.from('classes')
+        .insert({ ...base, code: generateCode() })
+        .select().single())
+      if (!error || error.code !== '23505') break
+    }
+
     if (error) {
       setSaving(false)
-      setErr(error.message?.includes('row-level security')
+      setErr(error.message?.includes('row-level security') || error.message?.includes('permission denied')
         ? 'Só contas de professor podem criar turmas.'
         : 'Não foi possível criar a turma. Tenta de novo.')
       return

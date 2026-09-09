@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
 import SkillsPicker from '../components/SkillsPicker'
 import { calculatePotential, calculateScore } from '../lib/score'
+import { joinClassByCode } from '../lib/joinClass'
 import { RocketIcon as Rocket } from '@solar-icons/react/bold/rocket'
 import { PlusIcon as Plus } from '../components/icons/PlusIcon'
 import { UserIcon as User } from '@solar-icons/react/bold/user'
@@ -108,26 +109,13 @@ function JoinTurmaStudentModal({ onClose, onJoined }) {
   const [loading, setLoading] = useState(false)
 
   async function handleJoin() {
-    const trimmed = code.trim().toUpperCase()
-    if (!trimmed) return
+    if (!code.trim()) return
     setLoading(true)
     setError('')
-    // join_class é RETURNS TABLE → o RPC devolve um array, não um objeto.
-    const { data: rows, error: sbErr } = await supabase.rpc('join_class', { p_code: trimmed })
-    const data = rows?.[0]
+    const res = await joinClassByCode(code)
     setLoading(false)
-    if (sbErr || !data) {
-      const msg = sbErr?.message || ''
-      if (msg.includes('school_mismatch')) {
-        setError('Esta turma pertence a outra escola. Só podes entrar em turmas da tua escola.')
-      } else if (msg.includes('institutional_account_required')) {
-        setError('Precisas de uma conta institucional para entrar numa turma.')
-      } else {
-        setError('Código inválido. Verifica com o teu professor.')
-      }
-      return
-    }
-    onJoined(data)
+    if (!res.ok) { setError(res.error); return }
+    onJoined(res.turma)
   }
 
   return (
