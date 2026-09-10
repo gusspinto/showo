@@ -110,7 +110,14 @@ export default function ProjectTimeline({ project, isOwner, viewOnly = false }) 
   // aparece se houver mesmo um percurso (2+ momentos ou uso real do diário);
   // um "timeline" de 1 linha fica pior do que nada. Visitante real só
   // quando o dono a tornou pública.
-  const worthShowing = milestones.length >= 2 || showStats
+  //
+  // Quando o diário é só o GitHub sync (kind='auto' em tudo, confirmado
+  // acontecer: 11/11 entradas num projeto real), este painel repete o que o
+  // "Código no GitHub" já disse — mesma janela, mesma duração — sem trazer
+  // nada de novo. Os marcos (milestones) continuam a valer sempre: são
+  // escritos à mão, nunca automáticos.
+  const onlyAutoDiary = tl?.all_auto === true && milestones.length === 0
+  const worthShowing = milestones.length >= 2 || (showStats && !onlyAutoDiary)
   if (viewOnly && (!worthShowing || (!isOwner && !isPublic))) return null
   // Fora do preview, um visitante nunca vê isto (o pai já gere, mas por via das dúvidas).
   if (!isOwner && !viewOnly) return null
