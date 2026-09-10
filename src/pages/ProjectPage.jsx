@@ -5034,7 +5034,12 @@ export default function ProjectPage() {
         aiScore: project.ai_score,
         analyzingAI,
         viewAsPublic,
-        showCertificate: score >= 100,
+        // O certificado (Certificate.jsx) exige score >= 75 — "Nível
+        // Profissional" no próprio design do certificado. O botão tinha
+        // 100, um limiar diferente do da página: entre 75 e 99 o
+        // certificado existia e funcionava, mas ninguém via o botão para
+        // lá chegar pela interface (só por URL direto).
+        showCertificate: score >= 75,
         showDiary: true,
         onShareStory: () => setShowStoryModal(true),
         onDefense: project.project_type === 'pap' ? () => setDefenseMode(true) : null,
