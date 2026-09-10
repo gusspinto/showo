@@ -5124,7 +5124,13 @@ export default function ProjectPage() {
       setLoading(false)
 
       if (s > 0 && (!data.score || data.score !== s)) {
+        // Sem tratar o erro, uma falha aqui era invisível: o ecrã já mostra
+        // `s` (via setScore acima), e a base ficava presa no valor antigo —
+        // confirmado a acontecer em produção, com o certificado e outras
+        // vistas a lerem `projects.score` diretamente da base e a mostrar
+        // um número diferente do que o dono via na própria página.
         supabase.from('projects').update({ score: s }).eq('id', data.id)
+          .then(({ error }) => { if (error) console.error('[score sync]', error.message) })
       }
 
       // Fetch grades via RPC (only returns data for owner/teacher/admin)

@@ -673,7 +673,12 @@ export default function StudentDashboard({ user, profile }) {
               const { score: s } = calculateScore(focusFull, newEntries)
               if (s !== focusFull.score) {
                 setProjects(prev => prev.map(p => p.id === focusFull.id ? { ...p, score: s } : p))
+                // Sem tratar o erro aqui, uma falha na escrita nunca aparecia
+                // em lado nenhum — o ecrã já mostrava o score novo (via
+                // setProjects acima) e a base ficava presa no valor antigo
+                // para sempre, até alguém voltar a abrir o projeto.
                 supabase.from('projects').update({ score: s }).eq('id', focusFull.id)
+                  .then(({ error }) => { if (error) console.error('[score sync]', error.message) })
               }
             }
           }}
