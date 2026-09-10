@@ -255,7 +255,10 @@ Deno.serve(async (req) => {
         .from('project_journal_entries')
         .upsert(rows, { onConflict: 'project_id,external_id', ignoreDuplicates: true })
         .select('id')
-      if (insErr) console.error('[github-sync] insert', insErr.message)
+      if (insErr) {
+        console.error('[github-sync] insert', insErr.message)
+        return json({ error: 'Não foi possível escrever no diário. Tenta outra vez.' }, 500)
+      }
       inserted = ins?.length ?? 0
     }
 
@@ -306,10 +309,19 @@ Deno.serve(async (req) => {
       default_branch: repoData.default_branch ?? null,
     }
 
-    await supabase
+    // Sem verificar o erro aqui, uma falha silenciosa nesta escrita fazia a
+    // função responder "sucesso" com o painel completo, sem nada gravado —
+    // exatamente o que se viu em produção: 200, sem erro nos logs, e
+    // github_stats a ficar null. Agora um erro aqui devolve erro a sério.
+    const { error: updErr } = await supabase
       .from('projects')
       .update({ github_stats: stats, github_synced_at: new Date().toISOString() })
       .eq('id', project.id)
+
+    if (updErr) {
+      console.error('[github-sync] update projects', updErr.message)
+      return json({ error: 'Os commits foram lidos, mas não foi possível guardar o resultado. Tenta outra vez.' }, 500)
+    }
 
     return json({ ok: true, stats, entries_added: inserted })
   } catch (e) {
