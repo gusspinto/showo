@@ -4908,10 +4908,14 @@ export default function ProjectPage() {
       }
       setCoachAllMessages(prev => [...prev, { role: 'user', content: msg, created_at: now, session_id: sid }, { role: 'assistant', content: reply, created_at: now, session_id: sid }])
       if (user?.id && project?.id) {
+        // A conversa já apareceu no ecrã e já consumiu quota de IA
+        // (consumeAI acima) — se isto falhar em silêncio, a próxima vez que
+        // o histórico é recarregado tem menos mensagens do que a pessoa
+        // realmente teve, como se o coach se tivesse "esquecido".
         supabase.from('coach_messages').insert([
           { project_id: project.id, user_id: user.id, role: 'user', content: msg, session_id: sid },
           { project_id: project.id, user_id: user.id, role: 'assistant', content: reply, session_id: sid },
-        ])
+        ]).then(({ error }) => { if (error) console.error('[coach_messages]', error.message) })
       }
     } catch (err) {
       setCoachMessages(prev => [...prev, { role: 'assistant', content: 'Ocorreu um erro. Tenta novamente.' }])
@@ -5410,7 +5414,13 @@ export default function ProjectPage() {
         p_project_slug: project.slug,
       })
       const updatedMilestones = [...current, ...newMilestones]
+      // Sem tratar o erro, uma falha aqui era invisível — e o milestone já
+      // notificado (create_notification, acima) voltava a disparar na
+      // próxima visita, porque a base nunca ficava a saber que já foi
+      // avisado. O ecrã já assume sucesso (setProject abaixo); isto só
+      // torna uma falha real visível em vez de silenciosa.
       supabase.from('projects').update({ notified_milestones: updatedMilestones }).eq('id', project.id)
+        .then(({ error }) => { if (error) console.error('[milestones]', error.message) })
       setProject(p => ({ ...p, notified_milestones: updatedMilestones }))
       // Show shareable milestone card
       const tier = m >= 90 ? 'Excelente' : m >= 70 ? 'Profissional' : 'Em progresso'

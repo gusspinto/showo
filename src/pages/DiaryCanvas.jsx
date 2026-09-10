@@ -67,7 +67,7 @@ export default function DiaryCanvas() {
   const historyRef   = useRef([])   // [{id,x,y,w,h}[]]
   const histIdxRef   = useRef(-1)
   const [histIdx, setHistIdx] = useState(-1) // mirror for button enable/disable
-  const [saveState, setSaveState] = useState('idle') // 'idle'|'saving'|'saved'
+  const [saveState, setSaveState] = useState('idle') // 'idle'|'saving'|'saved'|'error'
 
   // font size state: { [itemId]: 'sm'|'md'|'lg' }
   const [fontSizes, setFontSizes] = useState({})
@@ -176,7 +176,7 @@ export default function DiaryCanvas() {
         if (!item) return
         supabase.from('diary_canvas_items').update({
           x: item.x, y: item.y, w: item.w, h: item.h, content: item.content,
-        }).eq('id', id)
+        }).eq('id', id).then(({ error }) => { if (error) console.error('[diary-canvas] flush', error.message) })
       })
     }
     window.addEventListener('beforeunload', flushAll)
@@ -222,13 +222,23 @@ export default function DiaryCanvas() {
   async function saveAll() {
     setSaveState('saving')
     Object.keys(saveTimers.current).forEach(id => clearTimeout(saveTimers.current[id]))
-    await Promise.all(
+    const results = await Promise.all(
       itemsRef.current.map(item =>
         supabase.from('diary_canvas_items').update({
           x: item.x, y: item.y, w: item.w, h: item.h, content: item.content,
         }).eq('id', item.id)
       )
     )
+    // Antes assumia sempre sucesso — "Guardado" aparecia mesmo quando uma
+    // escrita tinha falhado, e o item continuava "dirty" só que já ninguém
+    // ia tentar guardá-lo outra vez.
+    const failed = results.filter(r => r.error)
+    if (failed.length) {
+      console.error('[diary-canvas] saveAll', failed.length, 'falhas', failed[0].error?.message)
+      setSaveState('error')
+      setTimeout(() => setSaveState('idle'), 3000)
+      return
+    }
     dirtyRef.current.clear()
     setSaveState('saved')
     setTimeout(() => setSaveState('idle'), 2000)
@@ -466,7 +476,15 @@ export default function DiaryCanvas() {
       if (!item) return
       supabase.from('diary_canvas_items').update({
         x: item.x, y: item.y, w: item.w, h: item.h, content: item.content,
-      }).eq('id', id).then(() => dirtyRef.current.delete(id))
+      }).eq('id', id).then(({ error }) => {
+        // Antes limpava o "dirty" mesmo quando a escrita falhava — o
+        // supabase-js resolve a promise com { error }, nunca rejeita, por
+        // isso o .then() disparava na mesma. O item ficava marcado como
+        // guardado sem estar, e a alteração perdia-se para sempre: nem o
+        // flushAll (que só olha para o que ainda está "dirty") a apanhava.
+        if (error) { console.error('[diary-canvas] autosave', error.message); return }
+        dirtyRef.current.delete(id)
+      })
     }, 800)
   }
 
@@ -519,10 +537,11 @@ export default function DiaryCanvas() {
             className={`dc-tb-save-btn${saveState === 'saved' ? ' is-saved' : ''}`}
             onClick={saveAll}
             disabled={saveState === 'saving'}
-            title="Guardar"
+            title={saveState === 'error' ? 'Falhou a guardar — tenta outra vez' : 'Guardar'}
+            style={saveState === 'error' ? { color: 'var(--color-error)', borderColor: 'var(--color-error)' } : undefined}
           >
             {saveState === 'saved' ? <Check size={14} /> : <Save size={14} />}
-            <span>{saveState === 'saving' ? 'A guardar…' : saveState === 'saved' ? 'Guardado' : 'Guardar'}</span>
+            <span>{saveState === 'saving' ? 'A guardar…' : saveState === 'saved' ? 'Guardado' : saveState === 'error' ? 'Erro — tenta outra vez' : 'Guardar'}</span>
           </button>
         </div>
       </div>

@@ -504,7 +504,13 @@ export default function NewProject() {
             if (upErr || !up?.path) return
             supabase.from('projects').update({
               library_file_url: up.path, library_file_name: f.name, library_file_type: f.type,
-            }).eq('id', project.id).then(() => generateLibraryThumbnail(project.id, f, up.path))
+            }).eq('id', project.id).then(({ error }) => {
+              // Gerar a miniatura de um ficheiro que a base nem sabe que
+              // existe deixava o projeto com uma miniatura órfã — sem
+              // library_file_url, não há nada para ela ilustrar.
+              if (error) { console.error('[library-file]', error.message); return }
+              generateLibraryThumbnail(project.id, f, up.path)
+            })
           })
       }
 

@@ -1051,6 +1051,7 @@ export default function StudentDashboard({ user, profile }) {
                           setProjects(prev => prev.map(p => p.id === focusFull.id ? { ...p, dashboard_pinned: false } : p))
                           setFocusFull(p => ({ ...p, dashboard_pinned: false }))
                           supabase.from('projects').update({ dashboard_pinned: false }).eq('id', focusFull.id)
+                            .then(({ error }) => { if (error) console.error('[unpin]', error.message) })
                         }}
                         onEdit={() => navigate(`/editar/${focusFull.slug}`)}
                         onDelete={() => deleteProject(focusFull.id)}
