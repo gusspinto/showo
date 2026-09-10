@@ -303,7 +303,14 @@ Deno.serve(async (req) => {
       commits_scanned: commits.length,
       partial,
       active_days: byDay.size,
+      // `first_commit` é o início REAL do repositório (útil como facto à
+      // parte, ex: "o repositório existe há X"). Mas "dias de trabalho" e
+      // as entradas do diário só cobrem os commits lidos — por isso a
+      // duração mostrada ao lado deles tem de vir de `scanned_first_commit`
+      // (o mais antigo DOS lidos), nunca de `first_commit`, senão o painel
+      // afirma uma duração maior do que aquilo que o diário documenta.
       first_commit: firstCommit,
+      scanned_first_commit: dates[0] ?? null,
       last_commit: dates[dates.length - 1] ?? null,
       languages,
       default_branch: repoData.default_branch ?? null,

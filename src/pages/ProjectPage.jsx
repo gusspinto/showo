@@ -7,7 +7,7 @@ import { supabase, supabaseUrl, supabaseAnonKey } from '../lib/supabase'
 import { useIsMobile } from '../lib/useIsMobile'
 import { calculateScore, looksLikeSpam } from '../lib/score'
 import { containsProfanity } from '../lib/profanity'
-import { topLanguages, commitSpanMonths } from '../lib/social'
+import { topLanguages, commitSpanMonths, repoAgeMonths } from '../lib/social'
 import { CHALLENGES, getChallengeStatus } from '../lib/challenges'
 import { Navbar } from '../components/Navbar'
 import { PlanGateModal, AiUsageBadge, ConfirmUseModal } from '../components/PlanGate'
@@ -114,15 +114,41 @@ const ANON_PROJECT_COLUMNS = [
 function GithubProof({ project }) {
   const stats = project?.github_stats
   if (!stats?.commits) return null
+  const compact = !!project?.preview_style?.githubCompact
 
   const langs = topLanguages(stats.languages, 3)
+  // months vem sempre da mesma janela que "dias de trabalho" (ver
+  // commitSpanMonths em lib/social.js) — os dois números ao lado um do
+  // outro descrevem sempre o mesmo período, nunca períodos diferentes.
   const months = commitSpanMonths(stats)
+  const trueAge = repoAgeMonths(stats)
+  // Só vale a pena a frase extra quando a diferença é visível — um ou dois
+  // meses de arredondamento não são "o repositório é mais antigo".
+  const showAgeNote = stats.partial && trueAge && months && trueAge > months + 1
 
   const facts = [
     { label: stats.commits === 1 ? 'commit' : 'commits', value: stats.commits },
     { label: stats.active_days === 1 && !stats.partial ? 'dia de trabalho' : 'dias de trabalho', value: stats.partial ? `${stats.active_days}+` : stats.active_days },
-    months ? { label: months === 1 ? 'mês de projeto' : 'meses de projeto', value: months } : null,
+    months ? { label: months === 1 ? 'mês de atividade' : 'meses de atividade', value: stats.partial ? `${months}+` : months } : null,
   ].filter(Boolean)
+
+  if (compact) {
+    // Uma linha só: mesmos números, sem linguagens nem nota de rodapé —
+    // para quem prefere a página mais limpa.
+    const summary = facts.map(f => `${f.value} ${f.label}`).join(' · ')
+    return (
+      <a href={stats.url} target="_blank" rel="noopener noreferrer" style={{
+        display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none',
+        background: 'var(--color-surface)', border: '1px solid var(--color-border)',
+        borderRadius: 10, padding: '10px 16px', marginBottom: 16,
+        fontFamily: 'var(--font-body, system-ui, sans-serif)',
+      }}>
+        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: 0.6, flexShrink: 0 }}>GitHub</span>
+        <span style={{ fontSize: 13, color: 'var(--color-text-secondary)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{summary}</span>
+        <span style={{ marginLeft: 'auto', fontSize: 12.5, color: 'var(--color-text-tertiary)', flexShrink: 0 }}>{stats.owner}/{stats.repo} ↗</span>
+      </a>
+    )
+  }
 
   return (
     // Estilo explícito, não a classe .proj-card: este painel aparece nas
@@ -159,6 +185,12 @@ function GithubProof({ project }) {
             </span>
           ))}
         </div>
+      )}
+
+      {showAgeNote && (
+        <p style={{ margin: '14px 0 0', fontSize: 11.5, color: 'var(--color-text-tertiary)', lineHeight: 1.5 }}>
+          O repositório tem {stats.commits} commits ao todo; os números acima cobrem só os mais recentes.
+        </p>
       )}
     </div>
   )
@@ -3081,6 +3113,11 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
       {/* ── Story sections ── */}
       <div className="pv-story" style={{ maxWidth: deviceMaxWidth ? Math.min(860, deviceMaxWidth) : 860, margin: `${isDesktop ? 40 : bannerH + 16}px auto 0`, padding: `0 ${previewDevice === 'mobile' ? '16px' : '28px'} 80px`, display: 'flex', flexDirection: 'column', gap: 32, fontFamily: selectedFont.css }}>
 
+        {/* Prova de trabalho do GitHub — logo no topo do conteúdo, antes de
+            qualquer bloco ou secção reordenável: é a primeira coisa que
+            quem visita a página vê a seguir ao cabeçalho. */}
+        <GithubProof project={project} />
+
         {/* Custom blocks — workspace blocks shown first */}
         {(() => {
         function renderOneBlock(block) {
@@ -3610,11 +3647,6 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
               </div>
             </div>
           )}
-
-          {/* Prova de trabalho do GitHub — antes da timeline, porque é a
-              mesma história (quanto tempo, quantos dias) mas em números que
-              qualquer pessoa lê sem abrir o repositório. */}
-          <GithubProof project={project} />
 
           {/* Percurso / timeline — vista pública, sem controlos */}
           {project.user_id && <ProjectTimeline project={project} isOwner={isOwner} viewOnly />}
@@ -7229,6 +7261,13 @@ export default function ProjectPage() {
         </div>
         )}
 
+        {/* Prova de trabalho do GitHub — logo no topo, antes de qualquer
+            separador: fora de todos os wrappers "proj-mobile-section", por
+            isso aparece sempre, seja qual for o separador ativo no
+            telemóvel, e é a primeira coisa a seguir ao cabeçalho no
+            desktop. */}
+        <GithubProof project={project} />
+
         {/* ── TAB: melhorar — mini-dashboard + completude + tips ── */}
         <div className={`proj-mobile-section${tabActive('melhorar') ? ' proj-mobile-active' : ''}`}>
 
@@ -7896,8 +7935,6 @@ export default function ProjectPage() {
             </div>
           </div>
         )}
-
-        <GithubProof project={project} />
 
         {/* Author — bottom of page */}
         {(project.creator_name || project.course || project.school_year || project.school) && (

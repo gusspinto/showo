@@ -68,8 +68,29 @@ export function topLanguages(languages, limit = 3) {
     .map(([name, bytes]) => ({ name, pct: Math.round((bytes / total) * 100) }))
 }
 
-/** Quantos meses separam o primeiro do último commit (mínimo 1). */
+/**
+ * Quantos meses separam o primeiro do último commit LIDO (mínimo 1).
+ * Usa sempre `scanned_first_commit`, nunca `first_commit` — este último é o
+ * início real do repositório, que pode ser muito mais antigo do que os
+ * commits que o diário realmente recebeu. Misturar os dois fazia o painel
+ * dizer "4 meses de projeto" ao lado de "10 dias de trabalho" — os números
+ * descreviam janelas diferentes e liam-se como uma contradição.
+ */
 export function commitSpanMonths(stats) {
+  const first = stats?.scanned_first_commit ?? stats?.first_commit
+  if (!first || !stats?.last_commit) return null
+  const a = new Date(first)
+  const b = new Date(stats.last_commit)
+  if (Number.isNaN(+a) || Number.isNaN(+b)) return null
+  return Math.max(1, Math.round((b - a) / (1000 * 60 * 60 * 24 * 30.4)))
+}
+
+/**
+ * Meses desde o commit mais antigo REAL do repositório (não só o lido).
+ * Serve só para uma frase informativa à parte — nunca ao lado de "dias de
+ * trabalho", porque não é o que o diário documenta.
+ */
+export function repoAgeMonths(stats) {
   if (!stats?.first_commit || !stats?.last_commit) return null
   const a = new Date(stats.first_commit)
   const b = new Date(stats.last_commit)

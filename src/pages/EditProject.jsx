@@ -25,7 +25,7 @@ import { looksLikeSpam } from '../lib/score'
 import { Select } from '../components/ui'
 import { containsProfanity } from '../lib/profanity'
 import { logFieldsFilled } from '../lib/autoJournal'
-import { parseGithubRepo, syncGithub, removeGithubEntries, topLanguages, commitSpanMonths, shareOnLinkedIn } from '../lib/social'
+import { parseGithubRepo, syncGithub, removeGithubEntries, topLanguages, commitSpanMonths, repoAgeMonths, shareOnLinkedIn } from '../lib/social'
 
 const colors = {
   bg: 'var(--color-bg)',
@@ -732,12 +732,26 @@ function GithubAdvancedCard({ project }) {
   const [confirmRemove, setConfirmRemove] = useState(false)
   const [removing, setRemoving] = useState(false)
   const [removed, setRemoved] = useState(null)
+  // Formato do painel na página pública — guardado em preview_style ao
+  // lado das outras personalizações da página (cor, fonte...), não numa
+  // coluna própria.
+  const [compact, setCompact] = useState(!!project?.preview_style?.githubCompact)
 
   useEffect(() => {
     setStats(project?.github_stats || null)
     setSyncedAt(project?.github_synced_at || null)
+    setCompact(!!project?.preview_style?.githubCompact)
     setResult(null); setError(null); setConfirmRemove(false); setRemoved(null)
   }, [project?.id])
+
+  async function setFormat(nextCompact) {
+    setCompact(nextCompact) // otimista — o painel na página pública reage já
+    const { error } = await supabase
+      .from('projects')
+      .update({ preview_style: { ...(project?.preview_style || {}), githubCompact: nextCompact } })
+      .eq('id', project.id)
+    if (error) console.error('[github-format]', error.message)
+  }
 
   const repo = parseGithubRepo(project?.github_url)
 
@@ -784,12 +798,28 @@ function GithubAdvancedCard({ project }) {
           </p>
 
           {stats && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 10, marginBottom: 16 }}>
-              <AdvStat label="Commits" value={stats.commits} />
-              <AdvStat label={stats.active_days === 1 && !stats.partial ? 'Dia de trabalho' : 'Dias de trabalho'} value={stats.partial ? `${stats.active_days}+` : stats.active_days} />
-              {months && <AdvStat label={months === 1 ? 'Mês' : 'Meses'} value={months} />}
-              {langs[0] && <AdvStat label="Principal" value={langs[0].name} />}
-            </div>
+            <>
+              {/* Formato do painel na página pública — o painel fica sempre
+                  no topo (não é arrastável); isto controla só se mostra
+                  tudo ou só o essencial. */}
+              <div style={{ display: 'flex', gap: 4, marginBottom: 14 }}>
+                {[[false, 'Completo'], [true, 'Compacto']].map(([val, label]) => (
+                  <button key={label} type="button" onClick={() => setFormat(val)} style={{
+                    fontSize: 12, fontWeight: 600, padding: '5px 12px', borderRadius: 7,
+                    border: `1px solid ${compact === val ? colors.blue : colors.border}`,
+                    background: compact === val ? 'var(--color-primary-subtle)' : 'transparent',
+                    color: compact === val ? colors.blue : colors.muted,
+                    cursor: 'pointer', fontFamily: 'inherit',
+                  }}>{label}</button>
+                ))}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 10, marginBottom: 16 }}>
+                <AdvStat label="Commits" value={stats.commits} />
+                <AdvStat label={stats.active_days === 1 && !stats.partial ? 'Dia de trabalho' : 'Dias de trabalho'} value={stats.partial ? `${stats.active_days}+` : stats.active_days} />
+                {months && <AdvStat label={months === 1 ? 'Mês de atividade' : 'Meses de atividade'} value={stats.partial ? `${months}+` : months} />}
+                {langs[0] && <AdvStat label="Principal" value={langs[0].name} />}
+              </div>
+            </>
           )}
 
           {stats?.partial && (
