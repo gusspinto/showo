@@ -108,8 +108,9 @@ const ANON_PROJECT_COLUMNS = [
    GitHub na vida, e ficam aqui.
 
    Só aparece depois de o dono sincronizar; não inventa nada quando não há
-   dados. `commits_truncated` marca o limite técnico da leitura com um "+"
-   em vez de apresentar 300 como se fosse o total real. */
+   dados. Os commits e os meses são sempre os reais do repositório; os dias
+   de trabalho só se contam nos commits lidos, por isso quando `partial`
+   levam "+" — são um mínimo, não um número exato. */
 function GithubProof({ project }) {
   const stats = project?.github_stats
   if (!stats?.commits) return null
@@ -118,8 +119,8 @@ function GithubProof({ project }) {
   const months = commitSpanMonths(stats)
 
   const facts = [
-    { label: stats.commits === 1 ? 'commit' : 'commits', value: stats.commits_truncated ? `${stats.commits}+` : stats.commits },
-    { label: stats.active_days === 1 ? 'dia de trabalho' : 'dias de trabalho', value: stats.active_days },
+    { label: stats.commits === 1 ? 'commit' : 'commits', value: stats.commits },
+    { label: stats.active_days === 1 && !stats.partial ? 'dia de trabalho' : 'dias de trabalho', value: stats.partial ? `${stats.active_days}+` : stats.active_days },
     months ? { label: months === 1 ? 'mês de projeto' : 'meses de projeto', value: months } : null,
   ].filter(Boolean)
 

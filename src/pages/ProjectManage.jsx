@@ -5,7 +5,7 @@ import { updateProject } from '../lib/updateProject'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { calculateScore, looksLikeSpam } from '../lib/score'
-import { parseGithubRepo, syncGithub, topLanguages, commitSpanMonths, shareOnLinkedIn } from '../lib/social'
+import { parseGithubRepo, syncGithub, removeGithubEntries, topLanguages, commitSpanMonths, shareOnLinkedIn } from '../lib/social'
 import { containsProfanity } from '../lib/profanity'
 import SkillsPicker from '../components/SkillsPicker'
 import { Select } from '../components/ui'
@@ -410,11 +410,18 @@ function GithubCard({ project }) {
   const [error, setError] = useState(null)
   const [result, setResult] = useState(null)
   const [stats, setStats] = useState(project?.github_stats || null)
+  const [syncedAt, setSyncedAt] = useState(project?.github_synced_at || null)
+  const [confirmRemove, setConfirmRemove] = useState(false)
+  const [removing, setRemoving] = useState(false)
+  const [removed, setRemoved] = useState(null)
 
   useEffect(() => {
     setStats(project?.github_stats || null)
+    setSyncedAt(project?.github_synced_at || null)
     setResult(null)
     setError(null)
+    setConfirmRemove(false)
+    setRemoved(null)
   }, [project?.id])
 
   const repo = parseGithubRepo(project?.github_url)
@@ -424,11 +431,27 @@ function GithubCard({ project }) {
     try {
       const data = await syncGithub(project.id)
       setStats(data.stats)
+      setSyncedAt(new Date().toISOString())
       setResult(data.entries_added)
+      setRemoved(null)
     } catch (e) {
       setError(e.message)
     }
     setSyncing(false)
+  }
+
+  async function handleRemove() {
+    setRemoving(true); setError(null); setResult(null)
+    try {
+      const data = await removeGithubEntries(project.id)
+      setStats(null)
+      setSyncedAt(null)
+      setRemoved(data.entries_removed)
+    } catch (e) {
+      setError(e.message)
+    }
+    setRemoving(false)
+    setConfirmRemove(false)
   }
 
   const langs = topLanguages(stats?.languages)
@@ -453,10 +476,25 @@ function GithubCard({ project }) {
 
           {stats && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 10, marginBottom: 16 }}>
-              <Stat label="Commits" value={stats.commits_truncated ? `${stats.commits}+` : stats.commits} />
-              <Stat label={stats.active_days === 1 ? 'Dia de trabalho' : 'Dias de trabalho'} value={stats.active_days} />
+              <Stat label="Commits" value={stats.commits} />
+              <Stat label={stats.active_days === 1 && !stats.partial ? 'Dia de trabalho' : 'Dias de trabalho'} value={stats.partial ? `${stats.active_days}+` : stats.active_days} />
               {months && <Stat label={months === 1 ? 'Mês' : 'Meses'} value={months} />}
               {langs[0] && <Stat label="Principal" value={langs[0].name} />}
+            </div>
+          )}
+
+          {stats?.partial && (
+            <p style={{ margin: '-6px 0 16px', fontSize: 12, color: C.subtle, lineHeight: 1.55 }}>
+              O repositório tem {stats.commits} commits; o diário recebe os {stats.commits_scanned} mais
+              recentes. Os dias de trabalho contam só esses, por isso aparecem com "+".
+            </p>
+          )}
+
+          {removed != null && !error && (
+            <div style={{ background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 10, padding: '11px 14px', color: C.muted, fontSize: 13, marginBottom: 12, fontWeight: 600 }}>
+              {removed === 0
+                ? 'Não havia entradas do GitHub no diário.'
+                : `${removed} ${removed === 1 ? 'entrada removida' : 'entradas removidas'} do diário. As que escreveste à mão ficaram.`}
             </div>
           )}
 
@@ -484,10 +522,48 @@ function GithubCard({ project }) {
             {syncing ? 'A ler o repositório…' : stats ? 'Sincronizar outra vez' : 'Sincronizar commits'}
           </button>
 
-          {stats && project.github_synced_at && (
+          {stats && syncedAt && (
             <p style={{ margin: '10px 0 0', fontSize: 11.5, color: C.subtle }}>
-              Última sincronização: {new Date(project.github_synced_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'long' })}
+              Última sincronização: {new Date(syncedAt).toLocaleDateString('pt-PT', { day: 'numeric', month: 'long' })}
             </p>
+          )}
+
+          {/* Desfazer — para quem sincronizou o repositório errado. Pede
+              confirmação porque apaga entradas de uma vez. */}
+          {stats && (
+            <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
+              {!confirmRemove ? (
+                <button type="button" onClick={() => setConfirmRemove(true)} style={{
+                  background: 'none', border: 'none', padding: 0, color: C.subtle,
+                  fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                  textDecoration: 'underline', textUnderlineOffset: 3,
+                }}>
+                  Remover as entradas do GitHub do diário
+                </button>
+              ) : (
+                <div>
+                  <p style={{ margin: '0 0 10px', fontSize: 13, color: C.text, lineHeight: 1.55 }}>
+                    Tira do diário todas as entradas que vieram do GitHub e os números da página pública.
+                    O que escreveste à mão fica. Podes sincronizar outra vez a qualquer momento.
+                  </p>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button type="button" onClick={handleRemove} disabled={removing} style={{
+                      background: C.red, color: '#fff', border: 'none', borderRadius: 8,
+                      padding: '9px 16px', fontSize: 13, fontWeight: 700,
+                      cursor: removing ? 'default' : 'pointer', fontFamily: 'inherit', opacity: removing ? 0.7 : 1,
+                    }}>
+                      {removing ? 'A remover…' : 'Remover entradas'}
+                    </button>
+                    <button type="button" onClick={() => setConfirmRemove(false)} disabled={removing} style={{
+                      background: 'none', color: C.muted, border: `1px solid ${C.border}`, borderRadius: 8,
+                      padding: '9px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                    }}>
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </>
       )}

@@ -30,17 +30,28 @@ export function parseGithubRepo(url) {
  * @returns {Promise<{ stats: object, entries_added: number }>}
  * @throws  {Error} com a mensagem já pronta a mostrar ao utilizador
  */
-export async function syncGithub(projectId) {
-  const { data, error } = await supabase.functions.invoke('github-sync', {
-    body: { projectId },
-  })
+export function syncGithub(projectId) {
+  return invokeGithub({ projectId, action: 'sync' }, 'Não foi possível sincronizar com o GitHub.')
+}
+
+/**
+ * Tira do diário todas as entradas que vieram do GitHub e limpa os números
+ * da página pública. As entradas escritas à mão ficam.
+ * @returns {Promise<{ entries_removed: number }>}
+ */
+export function removeGithubEntries(projectId) {
+  return invokeGithub({ projectId, action: 'remove' }, 'Não foi possível remover as entradas do GitHub.')
+}
+
+async function invokeGithub(body, fallback) {
+  const { data, error } = await supabase.functions.invoke('github-sync', { body })
   // Uma resposta de erro da função traz o corpo em error.context — a
   // mensagem escrita para o aluno está lá, e é melhor do que "Edge Function
   // returned a non-2xx status code".
   if (error) {
     let msg = ''
     try { msg = (await error.context?.json?.())?.error } catch { /* corpo não era JSON */ }
-    throw new Error(msg || data?.error || 'Não foi possível sincronizar com o GitHub.')
+    throw new Error(msg || data?.error || fallback)
   }
   if (data?.error) throw new Error(data.error)
   return data

@@ -55,6 +55,16 @@ function ghHeaders(): Record<string, string> {
   return h
 }
 
+/**
+ * Número da última página no cabeçalho `Link` do GitHub. Com per_page=1, a
+ * última página É o número total de commits, e o commit dessa página é o
+ * mais antigo do repositório — dois pedidos em vez de paginar tudo.
+ */
+function lastPage(link: string | null): number | null {
+  const m = link?.match(/[?&]page=(\d+)[^>]*>;\s*rel="last"/)
+  return m ? Number(m[1]) : null
+}
+
 /** Mensagem de commit em uma linha, sem o corpo nem o rodapé. */
 function commitTitle(message: string): string {
   return String(message || '').split('\n')[0].trim().slice(0, 120)
@@ -94,7 +104,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { projectId } = await req.json()
+    const { projectId, action = 'sync' } = await req.json()
     if (typeof projectId !== 'string' || !projectId) {
       return json({ error: 'Projeto em falta.' }, 400)
     }
@@ -116,6 +126,33 @@ Deno.serve(async (req) => {
       return json({ error: 'Só o dono do projeto pode sincronizar.' }, 403)
     }
 
+    // ── Desfazer ──
+    // Sincronizar o repositório errado deixava até 300 entradas para apagar
+    // uma a uma. Isto tira todas as que vieram do GitHub (external_id
+    // 'gh:…') — de qualquer repositório, porque o caso típico é ter trocado
+    // o link — e limpa os números da página pública. As entradas escritas à
+    // mão não têm external_id e nunca são tocadas.
+    // Vem antes da validação do link de propósito: quem apagou o link do
+    // repositório tem de continuar a conseguir limpar o que ele trouxe.
+    if (action === 'remove') {
+      const { data: gone, error: delErr } = await supabase
+        .from('project_journal_entries')
+        .delete()
+        .eq('project_id', project.id)
+        .like('external_id', 'gh:%')
+        .select('id')
+      if (delErr) {
+        console.error('[github-sync] remove', delErr.message)
+        return json({ error: 'Não foi possível remover as entradas.' }, 500)
+      }
+      await supabase
+        .from('projects')
+        .update({ github_stats: null, github_synced_at: null })
+        .eq('id', project.id)
+      return json({ ok: true, entries_removed: gone?.length ?? 0 })
+    }
+    if (action !== 'sync') return json({ error: 'Ação desconhecida.' }, 400)
+
     const parsed = parseRepo(project.github_url ?? '')
     if (!parsed) {
       return json({ error: 'Adiciona primeiro o link do repositório (github.com/utilizador/repositorio).' }, 400)
@@ -136,6 +173,20 @@ Deno.serve(async (req) => {
 
     if (repoData.private) {
       return json({ error: 'O repositório é privado. Só conseguimos ler repositórios públicos.' }, 400)
+    }
+
+    // Um fork devolve o histórico INTEIRO do original, com os commits de
+    // toda a gente que trabalhou nele (confirmado: gaearon/react traz os
+    // commits de sebmarkbage e companhia). Aceitá-lo punha milhares de
+    // commits de estranhos no diário, apresentados como trabalho do aluno —
+    // o contrário de prova de trabalho. Não há forma fiável de separar o que
+    // é dele sem saber o username, por isso recusa-se, e explica-se porquê.
+    if (repoData.fork) {
+      const parent = repoData.parent?.full_name
+      return json({
+        error: `Este repositório é uma cópia (fork)${parent ? ` de ${parent}` : ''}, e traz o histórico de quem fez o original. ` +
+          'Para mostrar só o teu trabalho, usa um repositório criado por ti.',
+      }, 400)
     }
 
     // ── Linguagens (bytes por linguagem) ──
@@ -209,6 +260,35 @@ Deno.serve(async (req) => {
     }
 
     const dates = commits.map(c => c.date).sort()
+
+    // ── Totais verdadeiros quando a leitura foi cortada ──
+    // Só se leem 300 commits. Antes disso, o "primeiro commit" gravado era o
+    // mais antigo DOS 300 — no gusspinto/showo, com 542, dizia 31 de agosto
+    // em vez do início real, e a página pública mostrava menos meses de
+    // projeto do que os que houve. Com per_page=1 o cabeçalho Link dá o
+    // total, e a última página é o commit mais antigo: dois pedidos, e só
+    // quando a leitura chegou mesmo ao limite.
+    let totalCommits = commits.length
+    let firstCommit = dates[0] ?? null
+    if (commits.length >= MAX_COMMIT_PAGES * PER_PAGE) {
+      try {
+        const head = await fetch(`${base}/commits?per_page=1`, { headers: ghHeaders() })
+        const n = lastPage(head.headers.get('link'))
+        if (n && n > commits.length) {
+          totalCommits = n
+          const oldest = await fetch(`${base}/commits?per_page=1&page=${n}`, { headers: ghHeaders() })
+          if (oldest.ok) {
+            const [c] = await oldest.json()
+            const d = c?.commit?.author?.date || c?.commit?.committer?.date
+            if (d) firstCommit = d
+          }
+        }
+      } catch { /* fica com os números da leitura, marcados como parciais */ }
+    }
+    // `partial`: os dias de trabalho só se contam nos commits lidos, por
+    // isso são um mínimo — o painel mostra-os com "+" em vez de os afirmar.
+    const partial = totalCommits > commits.length
+
     const stats = {
       owner,
       repo,
@@ -216,13 +296,11 @@ Deno.serve(async (req) => {
       description: repoData.description ?? null,
       stars: repoData.stargazers_count ?? 0,
       forks: repoData.forks_count ?? 0,
-      // `commits` está limitado a MAX_COMMIT_PAGES × PER_PAGE. O sinal
-      // impede que o painel apresente um limite técnico como se fosse o
-      // número real de commits do repositório.
-      commits: commits.length,
-      commits_truncated: commits.length >= MAX_COMMIT_PAGES * PER_PAGE,
+      commits: totalCommits,
+      commits_scanned: commits.length,
+      partial,
       active_days: byDay.size,
-      first_commit: dates[0] ?? null,
+      first_commit: firstCommit,
       last_commit: dates[dates.length - 1] ?? null,
       languages,
       default_branch: repoData.default_branch ?? null,
