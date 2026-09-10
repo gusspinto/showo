@@ -6659,7 +6659,7 @@ export default function ProjectPage() {
               </button>
               <button
                 data-tour="edit"
-                onClick={() => navigate(`/projeto/${project.slug}/gerir`)}
+                onClick={() => navigate(`/editar/${project.slug}`)}
                 style={{
                   background: 'var(--color-primary-subtle)',
                   border: '1px solid var(--color-primary-subtle)',
@@ -6670,9 +6670,9 @@ export default function ProjectPage() {
                   display: 'flex', alignItems: 'center', gap: 6,
                   transition: 'background 0.15s',
                 }}
-                title="Gerir projeto"
+                title="Editar projeto"
               >
-                <Settings size={15} /> Gerir
+                <Settings size={15} /> Editar
               </button>
             </>
           )}

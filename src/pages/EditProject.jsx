@@ -13,10 +13,19 @@ import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
 import { UserIcon as User } from '@solar-icons/react/bold/user'
 import { LayersIcon as Layers } from '@solar-icons/react/bold/layers'
 import { LinkIcon as Link2 } from '@solar-icons/react/bold/link'
+import { SettingsIcon as Settings } from '@solar-icons/react/bold/settings'
+import { CopyIcon as Copy } from '@solar-icons/react/bold/copy'
+import { SquareArrowRightUpIcon as ExternalLink } from '@solar-icons/react/bold/square-arrow-right-up'
+import { DangerTriangleIcon as AlertTriangle } from '@solar-icons/react/bold/danger-triangle'
+import { TrashBinMinimalisticIcon as Trash2 } from '@solar-icons/react/bold/trash-bin-minimalistic'
+import { RefreshCircleIcon as RefreshCw } from '@solar-icons/react/bold/refresh-circle'
+import { Code2Icon as Code } from '@solar-icons/react/bold/code-2'
+import { PlaneIcon as Send } from '@solar-icons/react/bold/plane'
 import { looksLikeSpam } from '../lib/score'
 import { Select } from '../components/ui'
 import { containsProfanity } from '../lib/profanity'
 import { logFieldsFilled } from '../lib/autoJournal'
+import { parseGithubRepo, syncGithub, removeGithubEntries, topLanguages, commitSpanMonths, shareOnLinkedIn } from '../lib/social'
 
 const colors = {
   bg: 'var(--color-bg)',
@@ -111,6 +120,7 @@ export default function EditProject() {
   const [error, setError] = useState(null)
   const [accessDenied, setAccessDenied] = useState(false)
   const [dirty, setDirty] = useState(false)
+  const [isOwner, setIsOwner] = useState(false)
   const [activeSection, setActiveSection] = useState('criador')
   const coverInputRef = useRef(null)
   const originalRef = useRef({})
@@ -153,6 +163,7 @@ export default function EditProject() {
 
       if (tokenFromUrl) localStorage.setItem(`edit_token_${slug}`, tokenFromUrl)
 
+      setIsOwner(isOwner)
       setProject(data)
       setForm({
         name: data.name || '',
@@ -331,9 +342,10 @@ export default function EditProject() {
   const canSave  = !saving && !!form.name?.trim() && !!form.area?.trim() && linkedin.valid && github.valid
 
   const sections = [
-    { id: 'criador',  label: 'Criador',  Icon: User,   filled: creatorFilled, total: creatorTotal },
-    { id: 'tipo',     label: 'Tipo',     Icon: Layers, filled: typeFilled,    total: typeTotal },
-    { id: 'imagem',   label: 'Imagem',   Icon: Image,  filled: coverFilled,   total: 1 },
+    { id: 'criador',  label: 'Criador',  Icon: User,     filled: creatorFilled, total: creatorTotal },
+    { id: 'tipo',     label: 'Tipo',     Icon: Layers,   filled: typeFilled,    total: typeTotal },
+    { id: 'imagem',   label: 'Imagem',   Icon: Image,    filled: coverFilled,   total: 1 },
+    { id: 'avancado', label: 'Avançado', Icon: Settings, filled: 0,             total: 0 },
   ]
 
   return (
@@ -598,6 +610,11 @@ export default function EditProject() {
                   <input ref={coverInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleCoverImage} style={{ display: 'none' }} />
                 </div>
               )}
+
+              {/* Avançado */}
+              {activeSection === 'avancado' && (
+                <AdvancedSection project={project} isOwner={isOwner} navigate={navigate} />
+              )}
             </div>
           </div>
 
@@ -642,6 +659,250 @@ export default function EditProject() {
           {saving ? 'A guardar…' : 'Guardar'}
         </button>
       </div>
+    </div>
+  )
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   AVANÇADO — link da página, GitHub, LinkedIn, zona de perigo.
+   Vivia numa página própria (/gerir), que na sidebar (o layout normal de
+   quem tem sessão) não tinha nenhum botão a apontar para lá — ficou
+   inacessível na prática. Em vez de arranjar essa entrada, o conteúdo que
+   valia a pena veio para aqui, onde já se sabe chegar.
+   ══════════════════════════════════════════════════════════════════════════ */
+function AdvancedSection({ project, isOwner, navigate }) {
+  const [copied, setCopied] = useState(false)
+  const publicUrl = `${window.location.origin}/projeto/${project?.slug}`
+
+  function copyLink() {
+    navigator.clipboard.writeText(publicUrl).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
+
+  return (
+    <div className="ep-sec-card">
+      <h2 className="ep-sec-heading">Avançado</h2>
+
+      <div style={{ marginBottom: 28 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, color: colors.subtle, marginBottom: 14, textTransform: 'uppercase', letterSpacing: 0.6 }}>
+          <ExternalLink size={12} /> Página pública
+        </div>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+          <div style={{ flex: 1, background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 8, padding: '10px 12px', fontSize: 13, color: colors.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{publicUrl}</div>
+          <button type="button" onClick={copyLink} style={{ padding: '10px 16px', background: copied ? colors.green : colors.blue, border: 'none', borderRadius: 8, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, whiteSpace: 'nowrap' }}>
+            {copied ? <><Check size={13} /> Copiado</> : <><Copy size={13} /> Copiar</>}
+          </button>
+          <a href={publicUrl} target="_blank" rel="noopener noreferrer" style={{ padding: '10px 12px', background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.muted, display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+            <ExternalLink size={14} />
+          </a>
+        </div>
+        <button type="button" onClick={() => shareOnLinkedIn(publicUrl)} style={{ padding: '10px 16px', background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 7 }}>
+          <Send size={13} /> Publicar no LinkedIn
+        </button>
+      </div>
+
+      <GithubAdvancedCard project={project} />
+
+      {isOwner && <DangerZone project={project} navigate={navigate} />}
+    </div>
+  )
+}
+
+/* ── GitHub ────────────────────────────────────────────────────────────────
+   O link do repositório já existia há muito e não fazia nada. Isto lê o
+   repositório público e traz o histórico para dentro do projeto: cada dia
+   com commits vira uma entrada de diário, e as linguagens e datas ficam
+   guardadas para a página pública mostrar prova de trabalho a sério.
+   Só repositórios públicos, sem OAuth. */
+function GithubAdvancedCard({ project }) {
+  const [syncing, setSyncing] = useState(false)
+  const [error, setError] = useState(null)
+  const [result, setResult] = useState(null)
+  const [stats, setStats] = useState(project?.github_stats || null)
+  const [syncedAt, setSyncedAt] = useState(project?.github_synced_at || null)
+  const [confirmRemove, setConfirmRemove] = useState(false)
+  const [removing, setRemoving] = useState(false)
+  const [removed, setRemoved] = useState(null)
+
+  useEffect(() => {
+    setStats(project?.github_stats || null)
+    setSyncedAt(project?.github_synced_at || null)
+    setResult(null); setError(null); setConfirmRemove(false); setRemoved(null)
+  }, [project?.id])
+
+  const repo = parseGithubRepo(project?.github_url)
+
+  async function handleSync() {
+    setSyncing(true); setError(null); setResult(null)
+    try {
+      const data = await syncGithub(project.id)
+      setStats(data.stats)
+      setSyncedAt(new Date().toISOString())
+      setResult(data.entries_added)
+      setRemoved(null)
+    } catch (e) { setError(e.message) }
+    setSyncing(false)
+  }
+
+  async function handleRemove() {
+    setRemoving(true); setError(null); setResult(null)
+    try {
+      const data = await removeGithubEntries(project.id)
+      setStats(null); setSyncedAt(null); setRemoved(data.entries_removed)
+    } catch (e) { setError(e.message) }
+    setRemoving(false); setConfirmRemove(false)
+  }
+
+  const langs = topLanguages(stats?.languages)
+  const months = commitSpanMonths(stats)
+
+  return (
+    <div style={{ marginBottom: 28, paddingTop: 24, borderTop: `1px solid ${colors.border}` }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, color: colors.subtle, marginBottom: 14, textTransform: 'uppercase', letterSpacing: 0.6 }}>
+        <Code size={12} /> GitHub
+      </div>
+
+      {!repo ? (
+        <p style={{ margin: 0, fontSize: 13.5, color: colors.muted, lineHeight: 1.6 }}>
+          Adiciona o link do repositório em cima, em "Criador" (<code style={{ fontSize: 12.5 }}>github.com/utilizador/repositorio</code>).
+          Depois a Showo consegue ler os commits e escrever no diário por ti.
+        </p>
+      ) : (
+        <>
+          <p style={{ margin: '0 0 16px', fontSize: 13.5, color: colors.muted, lineHeight: 1.6 }}>
+            Vamos ler <strong style={{ color: colors.text }}>{repo.owner}/{repo.repo}</strong>. Cada dia
+            com commits fica registado no diário, com a data em que trabalhaste. Só funciona com repositórios públicos.
+          </p>
+
+          {stats && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 10, marginBottom: 16 }}>
+              <AdvStat label="Commits" value={stats.commits} />
+              <AdvStat label={stats.active_days === 1 && !stats.partial ? 'Dia de trabalho' : 'Dias de trabalho'} value={stats.partial ? `${stats.active_days}+` : stats.active_days} />
+              {months && <AdvStat label={months === 1 ? 'Mês' : 'Meses'} value={months} />}
+              {langs[0] && <AdvStat label="Principal" value={langs[0].name} />}
+            </div>
+          )}
+
+          {stats?.partial && (
+            <p style={{ margin: '-6px 0 16px', fontSize: 12, color: colors.subtle, lineHeight: 1.55 }}>
+              O repositório tem {stats.commits} commits; o diário recebe os {stats.commits_scanned} mais recentes.
+              Os dias de trabalho contam só esses, por isso aparecem com "+".
+            </p>
+          )}
+
+          {error && (
+            <div style={{ background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.25)', borderRadius: 10, padding: '11px 14px', color: colors.red, fontSize: 13, marginBottom: 12, fontWeight: 500 }}>
+              {error}
+            </div>
+          )}
+
+          {result != null && !error && (
+            <div style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', borderRadius: 10, padding: '11px 14px', color: colors.green, fontSize: 13, marginBottom: 12, fontWeight: 600 }}>
+              {result === 0 ? 'Já estava tudo sincronizado — nada de novo desde a última vez.' : `${result} ${result === 1 ? 'dia adicionado' : 'dias adicionados'} ao diário.`}
+            </div>
+          )}
+
+          {removed != null && !error && (
+            <div style={{ background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 10, padding: '11px 14px', color: colors.muted, fontSize: 13, marginBottom: 12, fontWeight: 600 }}>
+              {removed === 0 ? 'Não havia entradas do GitHub no diário.' : `${removed} ${removed === 1 ? 'entrada removida' : 'entradas removidas'} do diário. As que escreveste à mão ficaram.`}
+            </div>
+          )}
+
+          <button type="button" onClick={handleSync} disabled={syncing} style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            background: syncing ? colors.border : colors.blue, color: '#fff', border: 'none',
+            borderRadius: 10, padding: '11px 20px', fontSize: 14, fontWeight: 700,
+            cursor: syncing ? 'default' : 'pointer', fontFamily: 'inherit',
+          }}>
+            <RefreshCw size={15} style={syncing ? { animation: 'spin 1s linear infinite' } : undefined} />
+            {syncing ? 'A ler o repositório…' : stats ? 'Sincronizar outra vez' : 'Sincronizar commits'}
+          </button>
+
+          {stats && syncedAt && (
+            <p style={{ margin: '10px 0 0', fontSize: 11.5, color: colors.subtle }}>
+              Última sincronização: {new Date(syncedAt).toLocaleDateString('pt-PT', { day: 'numeric', month: 'long' })}
+            </p>
+          )}
+
+          {stats && (
+            <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${colors.border}` }}>
+              {!confirmRemove ? (
+                <button type="button" onClick={() => setConfirmRemove(true)} style={{ background: 'none', border: 'none', padding: 0, color: colors.subtle, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline', textUnderlineOffset: 3 }}>
+                  Remover as entradas do GitHub do diário
+                </button>
+              ) : (
+                <div>
+                  <p style={{ margin: '0 0 10px', fontSize: 13, color: colors.text, lineHeight: 1.55 }}>
+                    Tira do diário todas as entradas que vieram do GitHub e os números da página pública.
+                    O que escreveste à mão fica. Podes sincronizar outra vez a qualquer momento.
+                  </p>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button type="button" onClick={handleRemove} disabled={removing} style={{ background: colors.red, color: '#fff', border: 'none', borderRadius: 8, padding: '9px 16px', fontSize: 13, fontWeight: 700, cursor: removing ? 'default' : 'pointer', fontFamily: 'inherit', opacity: removing ? 0.7 : 1 }}>
+                      {removing ? 'A remover…' : 'Remover entradas'}
+                    </button>
+                    <button type="button" onClick={() => setConfirmRemove(false)} disabled={removing} style={{ background: 'none', color: colors.muted, border: `1px solid ${colors.border}`, borderRadius: 8, padding: '9px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  )
+}
+
+function AdvStat({ label, value }) {
+  return (
+    <div style={{ background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 10, padding: '11px 13px' }}>
+      <div style={{ fontSize: 19, fontWeight: 700, color: colors.text, lineHeight: 1.1 }}>{value}</div>
+      <div style={{ fontSize: 10.5, color: colors.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 3 }}>{label}</div>
+    </div>
+  )
+}
+
+function DangerZone({ project, navigate }) {
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  async function handleDelete() {
+    if (!project?.id) return
+    setDeleting(true)
+    await supabase.from('projects').delete().eq('id', project.id)
+    localStorage.removeItem(`edit_token_${project.slug}`)
+    navigate('/dashboard')
+  }
+
+  return (
+    <div style={{ paddingTop: 24, borderTop: `1px solid ${colors.border}` }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, color: colors.red, marginBottom: 14, textTransform: 'uppercase', letterSpacing: 0.6 }}>
+        <AlertTriangle size={12} /> Zona de perigo
+      </div>
+      <p style={{ margin: '0 0 16px', fontSize: 14, color: colors.muted, lineHeight: 1.65 }}>
+        Eliminar o projeto é uma ação irreversível. Todos os dados, score e página pública serão apagados permanentemente.
+      </p>
+      {!confirmDelete ? (
+        <button type="button" onClick={() => setConfirmDelete(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.25)', borderRadius: 10, color: colors.red, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+          <Trash2 size={15} /> Eliminar projeto
+        </button>
+      ) : (
+        <div style={{ background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.25)', borderRadius: 12, padding: '16px 18px' }}>
+          <p style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 700, color: colors.red }}>Tens a certeza? Esta ação não pode ser desfeita.</p>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button type="button" onClick={handleDelete} disabled={deleting} style={{ flex: 1, padding: '10px', background: colors.red, border: 'none', borderRadius: 10, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+              {deleting ? 'A eliminar…' : <><Trash2 size={14} /> Confirmar eliminação</>}
+            </button>
+            <button type="button" onClick={() => setConfirmDelete(false)} disabled={deleting} style={{ flex: 1, padding: '10px', background: 'none', border: `1px solid ${colors.border}`, borderRadius: 10, color: colors.muted, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -40,7 +40,7 @@
    so the guard actually applies on the iPhones that need it most. Modern
    browsers then upgrade to `overflow-x: clip`, which traps the same overflow
    WITHOUT creating a scroll container — so the app's position:sticky sub-navs
-   (ProjectPage, ProjectManage, Navbar) keep sticking to the viewport instead
+   (ProjectPage, EditProject, Navbar) keep sticking to the viewport instead
    of to a clipped body box. Media elements are capped so a wide image/video/svg
    can never push the layout past the screen edge. */
 html, body {

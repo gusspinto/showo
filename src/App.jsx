@@ -88,7 +88,6 @@ const TurmaAluno   = lazyPage(() => import('./pages/TurmaAluno'))
 const Turmas       = lazyPage(() => import('./pages/Turmas'))
 const Certificate  = lazyPage(() => import('./pages/Certificate'))
 const Mensagens    = lazyPage(() => import('./pages/Mensagens'))
-const ProjectManage  = lazyPage(() => import('./pages/ProjectManage'))
 const Privacidade    = lazyPage(() => import('./pages/Privacidade'))
 const Termos         = lazyPage(() => import('./pages/Termos'))
 const GoogleCalendarCallback = lazyPage(() => import('./pages/GoogleCalendarCallback'))
@@ -599,7 +598,6 @@ export default function App() {
               <Route path="/turmas"        element={<Turmas />}      />
               <Route path="/certificado/:slug"  element={<Certificate />}  />
               <Route path="/mensagens"          element={<Mensagens />}    />
-              <Route path="/projeto/:slug/gerir"  element={<ProjectManage />} />
               <Route path="/projeto/:slug/diario" element={<DiaryCanvas />}  />
               <Route path="/privacidade"        element={<Privacidade />}   />
               <Route path="/termos"             element={<Termos />}        />

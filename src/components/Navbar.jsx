@@ -1399,9 +1399,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 <BookOpen size={18} /> Diário
               </button>
             )}
-            <button className="mob-nav-btn" onClick={() => { navigate(`/projeto/${extras.slug}/gerir`); setProjMenuOpen(false) }}>
-              <SettingsIcon size={18} /> Definições
-            </button>
+
             {extras.onDefense && (
               <button className="mob-nav-btn" onClick={() => { extras.onDefense(); setProjMenuOpen(false) }}>
                 <GraduationCap size={18} /> Modo defesa
@@ -1757,15 +1755,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               <span className="pmf-tooltip">Diário</span>
             </button>
           )}
-          {/* Gerir (colaboradores, análise IA, GitHub, links, zona de
-              perigo). Faltava aqui: com sidebar ativa a barra de topo onde
-              este botão também existia fica escondida por CSS
-              (body.has-sidebar .top-nav), e sem isto a página /gerir ficava
-              sem nenhuma forma de lá chegar a clicar. */}
-          <button className="pmf-btn" aria-label="Gerir projeto" onClick={() => navigate(`/projeto/${extras.slug}/gerir`)}>
-            <SettingsIcon size={16} />
-            <span className="pmf-tooltip">Gerir</span>
-          </button>
+
           {extras.onDefense && (
             <button className="pmf-btn" data-tour="defense" aria-label="Modo defesa" onClick={extras.onDefense}>
               <GraduationCap size={16} />
