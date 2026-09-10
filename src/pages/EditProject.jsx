@@ -475,7 +475,14 @@ export default function EditProject() {
                   className={`ep-tab-btn${activeSection === s.id ? ' active' : ''}`}>
                   <span className="ep-tab-icon"><s.Icon size={16} /></span>
                   <span className="ep-tab-label">{s.label}</span>
-                  <span className={`ep-tab-badge${s.filled === s.total ? ' done' : ''}`}>{s.filled}/{s.total}</span>
+                  {/* "Avançado" não é um passo de preenchimento — não tem
+                      campos obrigatórios, por isso s.total é 0. Mostrar
+                      "0/0" fazia parecer um contador partido, e como
+                      0 === 0 ainda ganhava o estilo "done" (verde), o que
+                      lia mal ao lado de contadores reais como 1/4. */}
+                  {s.total > 0 && (
+                    <span className={`ep-tab-badge${s.filled === s.total ? ' done' : ''}`}>{s.filled}/{s.total}</span>
+                  )}
                 </button>
               ))}
             </nav>
