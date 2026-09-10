@@ -32,8 +32,16 @@ export function looksLikeSpam(text: string | null | undefined): boolean {
   const avgWordLen = words.reduce((s, w) => s + w.length, 0) / words.length
   if (avgWordLen > 20) return true
 
-  const stripped = str.toLowerCase().replace(/\s/g, '')
-  if (stripped.length > 20 && new Set(stripped).size / stripped.length < 0.12) return true
+  // 2: repetição — ver src/lib/score.js para a explicação completa. Razão
+  // de palavras únicas em vez de caracteres únicos: a de caracteres cai
+  // sozinha com o comprimento em qualquer texto real, não só em lixo.
+  if (words.length <= 3) {
+    const stripped = str.toLowerCase().replace(/\s/g, '')
+    if (stripped.length > 20 && new Set(stripped).size / stripped.length < 0.12) return true
+  } else {
+    const uniqueWordRatio = new Set(words.map(w => w.toLowerCase())).size / words.length
+    if (uniqueWordRatio < 0.3) return true
+  }
 
   const longLetterWords = words.map(w => w.replace(/[^a-zA-ZÀ-ɏ]/g, '')).filter(w => w.length >= 6)
   if (longLetterWords.length > 0) {

@@ -55,9 +55,22 @@ export function looksLikeSpam(text) {
   const avgWordLen = words.reduce((s, w) => s + w.length, 0) / words.length
   if (avgWordLen > 20) return true
 
-  // 2: very low unique character ratio — repetitive/cyclic mashing
-  const stripped = str.toLowerCase().replace(/\s/g, '')
-  if (stripped.length > 20 && new Set(stripped).size / stripped.length < 0.12) return true
+  // 2: repetição — um texto verdadeiramente amassado no teclado é quase
+  // sempre POUCAS palavras (muitas vezes uma só, sem espaços) OU a mesma
+  // palavra curta repetida centenas de vezes. Um parágrafo real, por mais
+  // longo que seja, tem dezenas de palavras diferentes — mas reutiliza o
+  // mesmo alfabeto de ~25 letras, por isso a razão de CARACTERES únicos cai
+  // sozinha com o comprimento e não distingue as duas coisas. Confirmado em
+  // produção: uma resposta real de 569 caracteres tinha 6.7% e foi zerada.
+  // A razão de PALAVRAS únicas não sofre desse efeito — mede repetição a
+  // sério, não comprimento.
+  if (words.length <= 3) {
+    const stripped = str.toLowerCase().replace(/\s/g, '')
+    if (stripped.length > 20 && new Set(stripped).size / stripped.length < 0.12) return true
+  } else {
+    const uniqueWordRatio = new Set(words.map(w => w.toLowerCase())).size / words.length
+    if (uniqueWordRatio < 0.3) return true
+  }
 
   // 3: words ≥6 chars with no vowels (>60% of such words)
   const longLetterWords = words.map(w => w.replace(/[^a-zA-ZÀ-ɏ]/g, '')).filter(w => w.length >= 6)
