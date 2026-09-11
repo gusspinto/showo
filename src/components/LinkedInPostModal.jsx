@@ -86,7 +86,15 @@ export default function LinkedInPostModal({ mode, payload, onClose }) {
       title="Post para o LinkedIn"
       subtitle={mode === 'weekly' ? 'A partir do que registaste esta semana' : 'A partir do teu projeto'}
     >
-      <style>{`@keyframes lip-spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`
+        @keyframes lip-spin { to { transform: rotate(360deg); } }
+        .lip-textarea { transition: border-color 0.15s, box-shadow 0.15s; }
+        .lip-textarea:focus {
+          outline: none;
+          border-color: var(--color-primary);
+          box-shadow: 0 0 0 3px var(--color-primary-subtle);
+        }
+      `}</style>
 
       {loading ? (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, padding: '36px 0', color: 'var(--color-text-secondary)' }}>
@@ -114,6 +122,7 @@ export default function LinkedInPostModal({ mode, payload, onClose }) {
             onChange={e => setText(e.target.value)}
             rows={11}
             aria-label="Texto do post"
+            className="lip-textarea"
             style={{
               width: '100%', resize: 'vertical', minHeight: 200,
               padding: '12px 14px',

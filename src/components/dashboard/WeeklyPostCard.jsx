@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { weekStartISO } from '../../lib/journal'
 import LinkedInPostModal from '../LinkedInPostModal'
+import Button from '../ui/Button'
 
 const LinkedInMark = ({ size = 17 }) => (
   <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" aria-hidden="true">
@@ -56,18 +57,9 @@ export default function WeeklyPostCard({ project, entries = [], streak = 0 }) {
           <p style={{ margin: '3px 0 0', fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', lineHeight: 1.55 }}>
             {weekEntries.length} registos em {project.name} esta semana. Transforma isso num post de progresso para o LinkedIn.
           </p>
-          <button
-            onClick={() => setOpen(true)}
-            style={{
-              marginTop: 10, padding: '7px 14px',
-              background: 'var(--color-text)', color: 'var(--color-bg)',
-              border: 'none', borderRadius: 'var(--radius-md)',
-              fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', fontWeight: 600,
-              cursor: 'pointer',
-            }}
-          >
+          <Button size="sm" onClick={() => setOpen(true)} style={{ marginTop: 10 }}>
             Gerar post
-          </button>
+          </Button>
         </div>
       </div>
 
