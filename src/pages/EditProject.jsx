@@ -26,6 +26,12 @@ import { Select } from '../components/ui'
 import { containsProfanity } from '../lib/profanity'
 import { logFieldsFilled } from '../lib/autoJournal'
 import { parseGithubRepo, syncGithub, removeGithubEntries, topLanguages, commitSpanMonths, repoAgeMonths, shareOnLinkedIn } from '../lib/social'
+import { DatabaseIcon as Database } from '@solar-icons/react/bold/database'
+import { AddCircleIcon as PlusCircle } from '@solar-icons/react/bold/add-circle'
+import { GlobeIcon as Globe } from '@solar-icons/react/bold/globe'
+import { EyeClosedIcon as EyeOff } from '@solar-icons/react/bold/eye-closed'
+import { CloseIcon as X } from '@solar-icons/react/bold/close'
+import * as ProjectDb from '../lib/projectDb'
 
 const colors = {
   bg: 'var(--color-bg)',
@@ -345,6 +351,7 @@ export default function EditProject() {
     { id: 'criador',  label: 'Criador',  Icon: User,     filled: creatorFilled, total: creatorTotal },
     { id: 'tipo',     label: 'Tipo',     Icon: Layers,   filled: typeFilled,    total: typeTotal },
     { id: 'imagem',   label: 'Imagem',   Icon: Image,    filled: coverFilled,   total: 1 },
+    { id: 'database', label: 'Base de dados', Icon: Database, filled: 0,        total: 0 },
     { id: 'avancado', label: 'Avançado', Icon: Settings, filled: 0,             total: 0 },
   ]
 
@@ -616,6 +623,11 @@ export default function EditProject() {
                   )}
                   <input ref={coverInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleCoverImage} style={{ display: 'none' }} />
                 </div>
+              )}
+
+              {/* Base de dados */}
+              {activeSection === 'database' && (
+                <DatabaseSection project={project} />
               )}
 
               {/* Avançado */}
@@ -939,6 +951,409 @@ function DangerZone({ project, navigate }) {
             </button>
           </div>
         </div>
+      )}
+    </div>
+  )
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   BASE DE DADOS + API — o hosting real: o aluno desenha tabelas, e o
+   projeto passa a ter uma API que funciona de fora da Showo (curl, Postman,
+   o próprio frontend dele), sem nunca correr código do aluno — só dados,
+   validados contra o schema que ele desenhou. Ver project-db/index.ts para
+   as decisões de segurança por trás disto.
+   ══════════════════════════════════════════════════════════════════════════ */
+function DatabaseSection({ project }) {
+  const [loading, setLoading] = useState(true)
+  const [tables, setTables] = useState([])
+  const [apiKey, setApiKey] = useState(null)
+  const [limits, setLimits] = useState(null)
+  const [loadError, setLoadError] = useState(null)
+  const [showNewTable, setShowNewTable] = useState(false)
+  const [expandedId, setExpandedId] = useState(null)
+
+  async function load() {
+    setLoadError(null)
+    try {
+      const data = await ProjectDb.listTables(project.id)
+      setTables(data.tables || [])
+      setApiKey(data.api_key)
+      setLimits(data.limits)
+    } catch (e) {
+      setLoadError(e.message)
+    }
+    setLoading(false)
+  }
+
+  useEffect(() => { load() }, [project?.id])
+
+  if (loading) {
+    return <div className="ep-sec-card"><h2 className="ep-sec-heading">Base de dados</h2><p style={{ color: colors.subtle, fontSize: 14 }}>A carregar…</p></div>
+  }
+
+  if (loadError) {
+    return <div className="ep-sec-card"><h2 className="ep-sec-heading">Base de dados</h2><p style={{ color: colors.red, fontSize: 14 }}>{loadError}</p></div>
+  }
+
+  const noAccess = !limits || !limits.max_tables
+
+  return (
+    <div className="ep-sec-card">
+      <h2 className="ep-sec-heading">Base de dados</h2>
+      <p style={{ margin: '0 0 20px', fontSize: 13.5, color: colors.muted, lineHeight: 1.6 }}>
+        Desenha tabelas de dados a sério para o teu projeto. Cada tabela ganha uma API própria —
+        dá para chamar de fora da Showo, tal como uma aplicação real.
+      </p>
+
+      {noAccess ? (
+        <div style={{ background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-muted)', borderRadius: 12, padding: '18px 20px' }}>
+          <p style={{ margin: '0 0 12px', fontSize: 14, color: colors.text, fontWeight: 600 }}>Funcionalidade Plus/Pro</p>
+          <p style={{ margin: '0 0 14px', fontSize: 13.5, color: colors.muted, lineHeight: 1.6 }}>
+            Com um plano pago, o teu projeto ganha uma base de dados própria com API — o que o transforma
+            de um projeto teórico num produto que funciona a sério.
+          </p>
+          <a href="/pricing" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: colors.blue, color: '#fff', borderRadius: 8, padding: '9px 16px', fontSize: 13.5, fontWeight: 700, textDecoration: 'none' }}>
+            Ver planos
+          </a>
+        </div>
+      ) : (
+        <>
+          <div style={{ display: 'flex', gap: 10, marginBottom: 18 }}>
+            <DbStat label="Tabelas" value={`${tables.length}/${limits.max_tables}`} />
+            <DbStat label="Linhas por tabela" value={`até ${limits.max_rows_per_table}`} />
+            <DbStat label="Linhas no total" value={`até ${limits.max_rows_total}`} />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
+            {tables.map(t => (
+              <DataTableCard
+                key={t.id}
+                project={project}
+                table={t}
+                expanded={expandedId === t.id}
+                onToggleExpand={() => setExpandedId(id => id === t.id ? null : t.id)}
+                onChanged={load}
+              />
+            ))}
+          </div>
+
+          {tables.length < limits.max_tables && (
+            showNewTable ? (
+              <NewTableForm project={project} onCreated={() => { setShowNewTable(false); load() }} onCancel={() => setShowNewTable(false)} />
+            ) : (
+              <button type="button" onClick={() => setShowNewTable(true)} style={{
+                display: 'flex', alignItems: 'center', gap: 8, background: 'none',
+                border: `1.5px dashed ${colors.border}`, borderRadius: 10, padding: '12px 16px',
+                color: colors.muted, fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', width: '100%', justifyContent: 'center',
+              }}>
+                <PlusCircle size={16} /> Nova tabela
+              </button>
+            )
+          )}
+
+          {tables.length > 0 && (
+            <ApiKeyCard project={project} apiKey={apiKey} firstTable={tables[0]} onKeyChanged={setApiKey} />
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
+function DbStat({ label, value }) {
+  return (
+    <div style={{ flex: 1, background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 10, padding: '10px 12px' }}>
+      <div style={{ fontSize: 15, fontWeight: 700, color: colors.text, lineHeight: 1.2 }}>{value}</div>
+      <div style={{ fontSize: 10.5, color: colors.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 3 }}>{label}</div>
+    </div>
+  )
+}
+
+function NewTableForm({ project, onCreated, onCancel }) {
+  const [label, setLabel] = useState('')
+  const [columns, setColumns] = useState([{ name: '', type: 'text', required: false }])
+  const [saving, setSaving] = useState(false)
+  const [err, setErr] = useState(null)
+
+  const name = ProjectDb.slugifyTableName(label)
+
+  function setCol(idx, patch) {
+    setColumns(cols => cols.map((c, i) => i === idx ? { ...c, ...patch } : c))
+  }
+  function addCol() { setColumns(cols => [...cols, { name: '', type: 'text', required: false }]) }
+  function removeCol(idx) { setColumns(cols => cols.filter((_, i) => i !== idx)) }
+
+  async function handleCreate() {
+    setErr(null)
+    if (!label.trim()) { setErr('Dá um nome à tabela.'); return }
+    const cleanCols = columns
+      .map(c => ({ ...c, name: ProjectDb.slugifyTableName(c.name) }))
+      .filter(c => c.name)
+    if (!cleanCols.length) { setErr('Adiciona pelo menos uma coluna.'); return }
+    setSaving(true)
+    try {
+      await ProjectDb.createTable(project.id, name, label.trim(), cleanCols)
+      onCreated()
+    } catch (e) {
+      setErr(e.message)
+    }
+    setSaving(false)
+  }
+
+  return (
+    <div style={{ border: `1.5px solid ${colors.border}`, borderRadius: 12, padding: '16px 18px', marginBottom: 16 }}>
+      <Field label="Nome da tabela">
+        <input type="text" value={label} onChange={e => setLabel(e.target.value)} style={inputStyle} placeholder="Ex: Reservas" {...inputHandlers} />
+        {label.trim() && <p style={{ margin: '6px 0 0', fontSize: 11.5, color: colors.subtle }}>Na API: <code>{name}</code></p>}
+      </Field>
+
+      <div style={{ marginTop: 14 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: colors.subtle, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 }}>Colunas</div>
+        {columns.map((col, idx) => (
+          <div key={idx} style={{ display: 'flex', gap: 6, marginBottom: 8, alignItems: 'center' }}>
+            <input type="text" value={col.name} onChange={e => setCol(idx, { name: e.target.value })} placeholder="nome_da_coluna" style={{ ...inputStyle, flex: 2, padding: '8px 10px', fontSize: 13.5 }} {...inputHandlers} />
+            <select value={col.type} onChange={e => setCol(idx, { type: e.target.value })} style={{ ...inputStyle, flex: 1, padding: '8px 10px', fontSize: 13.5 }}>
+              {ProjectDb.COLUMN_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </select>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: colors.muted, flexShrink: 0, whiteSpace: 'nowrap' }}>
+              <input type="checkbox" checked={!!col.required} onChange={e => setCol(idx, { required: e.target.checked })} /> obrigatório
+            </label>
+            {columns.length > 1 && (
+              <button type="button" onClick={() => removeCol(idx)} style={{ background: 'none', border: 'none', color: colors.subtle, cursor: 'pointer', padding: 4, flexShrink: 0 }}><X size={15} /></button>
+            )}
+          </div>
+        ))}
+        <button type="button" onClick={addCol} style={{ background: 'none', border: 'none', color: colors.blue, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}>
+          + Adicionar coluna
+        </button>
+      </div>
+
+      {err && <p style={{ margin: '12px 0 0', fontSize: 12.5, color: colors.red }}>{err}</p>}
+
+      <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+        <button type="button" onClick={handleCreate} disabled={saving} style={{ background: colors.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 13.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: saving ? 0.7 : 1 }}>
+          {saving ? 'A criar…' : 'Criar tabela'}
+        </button>
+        <button type="button" onClick={onCancel} style={{ background: 'none', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 8, padding: '9px 18px', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+          Cancelar
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function DataTableCard({ project, table, expanded, onToggleExpand, onChanged }) {
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [busy, setBusy] = useState(false)
+
+  async function handleTogglePublic() {
+    setBusy(true)
+    try { await ProjectDb.toggleTablePublic(project.id, table.id, !table.is_public); onChanged() } catch {}
+    setBusy(false)
+  }
+  async function handleDelete() {
+    setBusy(true)
+    try { await ProjectDb.deleteTable(project.id, table.id); onChanged() } catch {}
+    setBusy(false)
+  }
+
+  return (
+    <div style={{ border: `1px solid ${colors.border}`, borderRadius: 10, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', cursor: 'pointer' }} onClick={onToggleExpand}>
+        <Database size={15} color={colors.subtle} style={{ flexShrink: 0 }} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: colors.text }}>{table.label}</div>
+          <div style={{ fontSize: 11.5, color: colors.subtle }}>{table.row_count} {table.row_count === 1 ? 'linha' : 'linhas'} · {table.columns.length} {table.columns.length === 1 ? 'coluna' : 'colunas'}</div>
+        </div>
+        <span style={{
+          display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700,
+          color: table.is_public ? colors.green : colors.subtle,
+          background: table.is_public ? 'rgba(16,185,129,0.1)' : colors.bgAlt,
+          border: `1px solid ${table.is_public ? 'rgba(16,185,129,0.25)' : colors.border}`,
+          borderRadius: 99, padding: '3px 9px', flexShrink: 0,
+        }}>
+          {table.is_public ? <><Globe size={11} /> Pública</> : <><EyeOff size={11} /> Privada</>}
+        </span>
+      </div>
+
+      {expanded && (
+        <div style={{ borderTop: `1px solid ${colors.border}`, padding: '14px', background: colors.bgAlt }}>
+          <button type="button" onClick={handleTogglePublic} disabled={busy} style={{
+            display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: `1px solid ${colors.border}`,
+            borderRadius: 7, padding: '6px 12px', fontSize: 12.5, fontWeight: 600, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 14,
+          }}>
+            {table.is_public ? <><EyeOff size={13} /> Tornar privada</> : <><Globe size={13} /> Tornar pública</>}
+          </button>
+
+          <RowsPanel project={project} table={table} onChanged={onChanged} />
+
+          <div style={{ marginTop: 16, paddingTop: 14, borderTop: `1px solid ${colors.border}` }}>
+            {!confirmDelete ? (
+              <button type="button" onClick={() => setConfirmDelete(true)} style={{ background: 'none', border: 'none', color: colors.red, fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}>
+                Eliminar tabela
+              </button>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 12.5, color: colors.text }}>Apaga a tabela e todas as linhas. Tens a certeza?</span>
+                <button type="button" onClick={handleDelete} disabled={busy} style={{ background: colors.red, color: '#fff', border: 'none', borderRadius: 6, padding: '5px 10px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Eliminar</button>
+                <button type="button" onClick={() => setConfirmDelete(false)} style={{ background: 'none', border: `1px solid ${colors.border}`, borderRadius: 6, padding: '5px 10px', fontSize: 12, fontWeight: 600, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function RowsPanel({ project, table, onChanged }) {
+  const [rows, setRows] = useState(null)
+  const [showForm, setShowForm] = useState(false)
+  const [form, setForm] = useState({})
+  const [saving, setSaving] = useState(false)
+  const [err, setErr] = useState(null)
+
+  async function load() {
+    try {
+      const data = await ProjectDb.listRows(project.id, table.id, 20)
+      setRows(data.rows || [])
+    } catch { setRows([]) }
+  }
+  useEffect(() => { load() }, [table.id])
+
+  async function handleAdd() {
+    setErr(null); setSaving(true)
+    try {
+      await ProjectDb.insertRow(project.id, table.id, form)
+      setForm({}); setShowForm(false)
+      await load(); onChanged()
+    } catch (e) { setErr(e.message) }
+    setSaving(false)
+  }
+
+  async function handleDeleteRow(rowId) {
+    try { await ProjectDb.deleteRow(project.id, table.id, rowId); await load(); onChanged() } catch {}
+  }
+
+  if (rows === null) return <p style={{ fontSize: 12.5, color: colors.subtle, margin: 0 }}>A carregar linhas…</p>
+
+  return (
+    <div>
+      {rows.length === 0 ? (
+        <p style={{ fontSize: 12.5, color: colors.subtle, margin: '0 0 12px' }}>Ainda sem dados nesta tabela.</p>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
+          {rows.map(r => (
+            <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 8, padding: '8px 10px' }}>
+              <div style={{ flex: 1, fontSize: 12.5, color: colors.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {table.columns.map(c => r.data[c.name]).filter(v => v !== undefined && v !== '').join(' · ') || <span style={{ color: colors.subtle }}>(vazio)</span>}
+              </div>
+              <button type="button" onClick={() => handleDeleteRow(r.id)} style={{ background: 'none', border: 'none', color: colors.subtle, cursor: 'pointer', padding: 2, flexShrink: 0 }}><Trash2 size={13} /></button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {showForm ? (
+        <div style={{ background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 8, padding: 12 }}>
+          {table.columns.map(c => (
+            <div key={c.name} style={{ marginBottom: 8 }}>
+              <label style={{ fontSize: 10.5, fontWeight: 600, color: colors.subtle, textTransform: 'uppercase', letterSpacing: 0.4, display: 'block', marginBottom: 4 }}>
+                {c.name}{c.required && ' *'}
+              </label>
+              {c.type === 'boolean' ? (
+                <input type="checkbox" checked={!!form[c.name]} onChange={e => setForm(f => ({ ...f, [c.name]: e.target.checked }))} />
+              ) : (
+                <input
+                  type={c.type === 'number' ? 'number' : c.type === 'date' ? 'date' : 'text'}
+                  value={form[c.name] ?? ''}
+                  onChange={e => setForm(f => ({ ...f, [c.name]: e.target.value }))}
+                  style={{ ...inputStyle, padding: '7px 10px', fontSize: 13 }}
+                  {...inputHandlers}
+                />
+              )}
+            </div>
+          ))}
+          {err && <p style={{ margin: '0 0 8px', fontSize: 12, color: colors.red }}>{err}</p>}
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button type="button" onClick={handleAdd} disabled={saving} style={{ background: colors.blue, color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+              {saving ? 'A guardar…' : 'Guardar linha'}
+            </button>
+            <button type="button" onClick={() => { setShowForm(false); setErr(null) }} style={{ background: 'none', border: `1px solid ${colors.border}`, borderRadius: 6, padding: '6px 14px', fontSize: 12.5, fontWeight: 600, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit' }}>
+              Cancelar
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button type="button" onClick={() => setShowForm(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: `1px dashed ${colors.border}`, borderRadius: 7, padding: '7px 12px', fontSize: 12.5, fontWeight: 600, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit' }}>
+          <PlusCircle size={13} /> Adicionar linha
+        </button>
+      )}
+    </div>
+  )
+}
+
+function ApiKeyCard({ project, apiKey, firstTable, onKeyChanged }) {
+  const [copied, setCopied] = useState('')
+  const [regenerating, setRegenerating] = useState(false)
+  const [confirmRegen, setConfirmRegen] = useState(false)
+
+  function copy(text, id) {
+    navigator.clipboard.writeText(text).then(() => { setCopied(id); setTimeout(() => setCopied(''), 2000) })
+  }
+
+  async function handleRegen() {
+    setRegenerating(true)
+    try {
+      const data = await ProjectDb.regenApiKey(project.id)
+      onKeyChanged(data.api_key)
+    } catch {}
+    setRegenerating(false)
+    setConfirmRegen(false)
+  }
+
+  const example = apiKey ? ProjectDb.curlExample(apiKey, firstTable.name, 'GET') : ''
+
+  return (
+    <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${colors.border}` }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: colors.subtle, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10 }}>
+        Chave de API
+      </div>
+      <p style={{ margin: '0 0 12px', fontSize: 12.5, color: colors.muted, lineHeight: 1.6 }}>
+        Usa esta chave para chamar a API do teu projeto de fora da Showo — de outro código, do Postman, ou de um site que construas.
+      </p>
+      {apiKey && (
+        <>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+            <div style={{ flex: 1, background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 8, padding: '9px 12px', fontSize: 12.5, color: colors.muted, fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{apiKey}</div>
+            <button type="button" onClick={() => copy(apiKey, 'key')} style={{ padding: '9px 14px', background: copied === 'key' ? colors.green : colors.blue, border: 'none', borderRadius: 8, color: '#fff', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>
+              {copied === 'key' ? 'Copiada' : 'Copiar'}
+            </button>
+          </div>
+
+          <div style={{ position: 'relative', marginBottom: 10 }}>
+            <pre style={{ margin: 0, background: '#0d0d10', color: '#d8d8de', borderRadius: 8, padding: '12px 14px', fontSize: 11.5, lineHeight: 1.6, overflowX: 'auto', fontFamily: 'monospace' }}>{example}</pre>
+            <button type="button" onClick={() => copy(example, 'curl')} style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 6, color: '#fff', padding: '4px 8px', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+              {copied === 'curl' ? 'Copiado' : <Copy size={12} />}
+            </button>
+          </div>
+
+          {!confirmRegen ? (
+            <button type="button" onClick={() => setConfirmRegen(true)} style={{ background: 'none', border: 'none', color: colors.subtle, fontSize: 11.5, fontWeight: 600, cursor: 'pointer', padding: 0, fontFamily: 'inherit', textDecoration: 'underline', textUnderlineOffset: 3 }}>
+              Gerar nova chave
+            </button>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 12, color: colors.text }}>A chave antiga deixa de funcionar. Confirmas?</span>
+              <button type="button" onClick={handleRegen} disabled={regenerating} style={{ background: colors.red, color: '#fff', border: 'none', borderRadius: 6, padding: '5px 10px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                {regenerating ? 'A gerar…' : 'Confirmar'}
+              </button>
+              <button type="button" onClick={() => setConfirmRegen(false)} style={{ background: 'none', border: `1px solid ${colors.border}`, borderRadius: 6, padding: '5px 10px', fontSize: 12, fontWeight: 600, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit' }}>
+                Cancelar
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   )

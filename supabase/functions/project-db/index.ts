@@ -30,7 +30,7 @@ import { checkRateLimit, getCorsHeaders, getAuthUser } from '../_shared/rateLimi
 
 const COLUMN_TYPES = new Set(['text', 'number', 'boolean', 'date'])
 const MAX_COLUMNS = 12
-const MANAGEMENT_ACTIONS = new Set(['list_tables', 'create_table', 'delete_table', 'get_api_key', 'regen_api_key'])
+const MANAGEMENT_ACTIONS = new Set(['list_tables', 'create_table', 'delete_table', 'toggle_public', 'get_api_key', 'regen_api_key'])
 const DATA_ACTIONS = new Set(['list_rows', 'insert_row', 'update_row', 'delete_row'])
 
 function randomApiKey(): string {
@@ -162,6 +162,15 @@ Deno.serve(async (req) => {
         return json({ error: 'Não foi possível criar a tabela.' }, 500)
       }
       return json({ table: created })
+    }
+
+    if (action === 'toggle_public') {
+      const tableId = String(body.tableId ?? '')
+      const { data: table } = await sb.from('project_data_tables').select('id, project_id').eq('id', tableId).single()
+      if (!table || table.project_id !== projectId) return json({ error: 'Tabela não encontrada.' }, 404)
+      const { data: updated, error } = await sb.from('project_data_tables').update({ is_public: !!body.isPublic }).eq('id', tableId).select().single()
+      if (error) return json({ error: 'Não foi possível atualizar a tabela.' }, 500)
+      return json({ table: updated })
     }
 
     if (action === 'delete_table') {
