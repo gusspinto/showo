@@ -2,6 +2,12 @@ const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
 const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY
 const BASE = 'https://showo.pt'
 
+// Sobe este número sempre que api/og-image.js mudar visualmente — o
+// LinkedIn e outras redes guardam a IMAGEM em cache pelo próprio URL,
+// à parte da página, por isso sem isto continuam a mostrar a versão
+// antiga mesmo depois de forçar um novo scrape da página.
+const OG_IMAGE_VERSION = 2
+
 const MIN_DESCRIPTION_LENGTH = 100
 
 /** O LinkedIn (e outras redes) recomenda descrições com pelo menos 100
@@ -59,7 +65,7 @@ export default async function handler(req, res) {
             const n = publicTables.length
             title = `${p.name} · API ativa — Showo`
             description += ` · API ativa (${n} ${n === 1 ? 'tabela pública' : 'tabelas públicas'})`
-            image = `${BASE}/api/og-image?slug=${encodeURIComponent(slug)}`
+            image = `${BASE}/api/og-image?slug=${encodeURIComponent(slug)}&v=${OG_IMAGE_VERSION}`
           }
         } catch {}
 
