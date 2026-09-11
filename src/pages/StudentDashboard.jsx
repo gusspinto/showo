@@ -20,7 +20,6 @@ import { CopyIcon as Copy } from '@solar-icons/react/bold/copy'
 import { ShareIcon as Share2 } from '@solar-icons/react/bold/share'
 import { LinkIcon as Link } from '@solar-icons/react/bold/link'
 import { TrashBinMinimalisticIcon as Trash2 } from '@solar-icons/react/bold/trash-bin-minimalistic'
-import { FlameIcon as Flame } from '@solar-icons/react/bold/flame'
 import { ArrowRightUpIcon as ArrowUpRight } from '@solar-icons/react/bold/arrow-right-up'
 import { CupStarIcon as Trophy } from '@solar-icons/react/bold/cup-star'
 import { PinIcon as Pin } from '@solar-icons/react/bold/pin'
@@ -44,6 +43,7 @@ import ReportPanel from '../components/dashboard/ReportPanel'
 import AgendaPanel from '../components/dashboard/AgendaPanel'
 import { ActivityPanel } from '../components/dashboard/RhythmPanel'
 import WeeklyRecap, { shouldShowRecap, RecapsPanel } from '../components/dashboard/WeeklyRecap'
+import WeeklyPostCard from '../components/dashboard/WeeklyPostCard'
 import WeeklyCheckin, { shouldShowCheckin } from '../components/dashboard/WeeklyCheckin'
 import AddReminderModal from '../components/dashboard/AddReminderModal'
 import CalendarSyncModal from '../components/dashboard/CalendarSyncModal'
@@ -195,6 +195,11 @@ export default function StudentDashboard({ user, profile }) {
   /* ── UI ── */
   const [tutorialPotentialSeen, setTutorialPotentialSeen] = useState(() => !!localStorage.getItem(`showo_tut_potential_${user.id}`))
   const [composerKind, setComposerKind] = useState(null)
+  // A que projeto pertence o "Registar" que está aberto. Sem isto, o
+  // composer ficava sempre agarrado a focusFull (o projeto em foco
+  // automático) mesmo quando o clique vinha do cartão de outro projeto
+  // fixado — escrevia sempre no sítio errado sem ninguém dar por isso.
+  const [composerProject, setComposerProject] = useState(null)
   const [showJournal, setShowJournal] = useState(false)
   const [showJoinTurma, setShowJoinTurma] = useState(false)
   const [diaryReminderDismissed, setDiaryReminderDismissed] = useState(
@@ -295,7 +300,7 @@ export default function StudentDashboard({ user, profile }) {
     async function load() {
       const [{ data: full }, { data: rows }] = await Promise.all([
         supabase.from('projects')
-          .select('id, name, slug, area, project_type, is_pap, defense_date, score, creator_name, school, course, goal, problem, solution, target_audience, features, technologies, challenges, results, learnings, report_draft, report_updated_at')
+          .select('id, name, slug, area, project_type, is_pap, defense_date, score, creator_name, school, course, goal, problem, solution, target_audience, features, technologies, challenges, results, learnings, report_draft, report_updated_at, visibility')
           .eq('id', focusProject.id).maybeSingle(),
         supabase.from('project_journal_entries')
           .select('id, kind, content, created_at')
@@ -572,8 +577,8 @@ export default function StudentDashboard({ user, profile }) {
     }
     if (hasDraft) return { label: 'Continuar rascunho', onClick: () => navigate('/novo') }
     if (!focusProject) return { label: 'Criar o meu projeto', onClick: () => navigate('/novo') }
-    return { label: 'Registar progresso', onClick: () => setComposerKind('progresso') }
-  }, [myInterests, profNotifs, hasDraft, focusProject, navigate])
+    return { label: 'Registar progresso', onClick: () => { setComposerProject(focusFull); setComposerKind('progresso') } }
+  }, [myInterests, profNotifs, hasDraft, focusProject, focusFull, navigate])
 
   const otherProjects = projects
   const engagement = useMemo(() => computeEngagementSignal(entries), [entries])
@@ -584,7 +589,7 @@ export default function StudentDashboard({ user, profile }) {
   const setupSteps = [
     { done: !!(profile?.username && profile?.bio), label: 'Perfil preenchido', action: () => navigate('/settings') },
     { done: projects.length > 0, label: 'Primeiro projeto', action: () => navigate('/novo') },
-    { done: entries.length > 0, label: 'Primeiro registo', action: () => focusProject && setComposerKind('progresso') },
+    { done: entries.length > 0, label: 'Primeiro registo', action: () => { if (focusProject) { setComposerProject(focusFull); setComposerKind('progresso') } } },
   ]
 
   function handleEventClick(e) {
@@ -597,19 +602,22 @@ export default function StudentDashboard({ user, profile }) {
     const circ = 2 * Math.PI * r
     const filled = (potential / 100) * circ
     const scoreColor = getScoreColor(potential)
-    const scoreLabel = potential >= 80 ? 'Perfil forte' : potential >= 60 ? 'Bom caminho' : potential >= 40 ? 'A crescer' : 'Em início'
+    // "Regista no diário" já não é o único caminho para subir isto — dá para
+    // simplesmente adicionar um projeto já feito ao portfólio. As frases não
+    // podem assumir que o aluno está a desenvolver um projeto do zero.
+    const scoreLabel = potential >= 80 ? 'Portfólio forte' : potential >= 60 ? 'Bom caminho' : potential >= 40 ? 'A crescer' : 'Em início'
     const scoreHint = potential >= 80
-      ? 'O teu perfil está sólido. Continua a atualizar os projetos.'
+      ? 'O teu portfólio está sólido. Continua a mantê-lo atualizado.'
       : potential >= 60
-      ? 'Falta pouco. Adiciona mais projetos e registos no diário.'
+      ? 'Falta pouco. Mais um projeto completo ou o perfil mais preenchido chega.'
       : potential >= 40
-      ? 'Completa o perfil e publica mais projetos para subir.'
-      : 'Começa por completar o teu perfil e criar o primeiro projeto.'
+      ? 'Completa o perfil e acrescenta mais projetos ao portfólio.'
+      : 'Começa por completar o perfil e adicionar o teu primeiro projeto.'
     const slug = profile?.username
     return (
-      <section className="sdb-panel sdb-panel--tint sdb-o-potential">
+      <section className="sdb-panel sdb-o-potential">
         <header className="sdb-panel-head">
-          <span className="sdb-eyebrow sdb-eyebrow--brand">Potencial do perfil</span>
+          <span className="sdb-eyebrow sdb-eyebrow--brand">Potencial do portfólio</span>
           <span style={{ fontSize: 11, fontWeight: 700, color: scoreColor }}>{potential}/100</span>
         </header>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -658,23 +666,27 @@ export default function StudentDashboard({ user, profile }) {
 
 <div className={`dash-toast${toast ? ' visible' : ''}`}>{toast}</div>
 
-      {composerKind && focusFull && (
+      {composerKind && composerProject && (
         <JournalComposer
           userId={user.id}
-          project={focusFull}
+          project={composerProject}
           initialKind={composerKind}
-          onClose={() => setComposerKind(null)}
+          onClose={() => { setComposerKind(null); setComposerProject(null) }}
           onCreated={entry => {
+            showToast('Registo guardado no diário.')
+            // O composer só mantém o diário em memória (`entries`) e faz
+            // sync otimista do score para o projeto em FOCO — é o único de
+            // que a dashboard já tem as entradas todas carregadas. Registar
+            // noutro projeto fixado grava na mesma (o project_id vem do
+            // `composerProject` acima, não daqui), só o score dele fica por
+            // atualizar até a página recarregar ou ele passar a foco.
+            if (composerProject.id !== focusFull?.id) return
             const newEntries = [entry, ...entries]
             setEntries(newEntries)
-            showToast('Registo guardado no diário.')
-            // Recalculate and sync score
-            if (focusFull) {
-              const { score: s } = calculateScore(focusFull, newEntries)
-              if (s !== focusFull.score) {
-                setProjects(prev => prev.map(p => p.id === focusFull.id ? { ...p, score: s } : p))
-                supabase.from('projects').update({ score: s }).eq('id', focusFull.id)
-              }
+            const { score: s } = calculateScore(focusFull, newEntries)
+            if (s !== focusFull.score) {
+              setProjects(prev => prev.map(p => p.id === focusFull.id ? { ...p, score: s } : p))
+              supabase.from('projects').update({ score: s }).eq('id', focusFull.id)
             }
           }}
         />
@@ -684,7 +696,7 @@ export default function StudentDashboard({ user, profile }) {
           project={focusFull}
           entries={entries}
           onClose={() => setShowJournal(false)}
-          onLog={kind => { setShowJournal(false); setComposerKind(kind) }}
+          onLog={kind => { setShowJournal(false); setComposerProject(focusFull); setComposerKind(kind) }}
           onDeleted={id => setEntries(prev => prev.filter(e => e.id !== id))}
         />
       )}
@@ -785,39 +797,15 @@ export default function StudentDashboard({ user, profile }) {
             <h1 className="sdb-hero-greeting">{greeting}</h1>
           </div>
 
-          <aside className={`sdb-hero-side${activityEntries.length > 0 && !loadingProjects && !loadingEntries ? ' sdb-hero-side--activity' : ''}`}>
-            {loadingProjects || loadingEntries ? (
-              <>
-                <div className="skel skel-line" style={{ height: 26, width: '55%' }} />
-                <div className="skel skel-line" style={{ height: 10, width: '85%' }} />
-              </>
-            ) : activityEntries.length > 0 ? (
-              <>
-                <span className="sdb-eyebrow" style={{ color: 'var(--color-warning)' }}>Atividade</span>
-                <div className="sdb-streak-row">
-                  <Flame size={14} strokeWidth={2.5} />
-                  <span>{streak} {streak === 1 ? 'semana seguida' : 'semanas seguidas'}</span>
-                </div>
-                {/* A regra tem de ser dita, não adivinhada: quem abre isto
-                    fica a saber que a sequência se mantém por SEMANA e o
-                    que falta fazer para não a perder. */}
-                <div className={`sdb-week-rule${activeThisWeek ? ' is-done' : ''}`}>
-                  {activeThisWeek
-                    ? 'Esta semana já conta. Volta para a semana seguinte.'
-                    : streak > 0
-                      ? `Regista algo até domingo (${daysLeftInWeek === 1 ? 'falta 1 dia' : `faltam ${daysLeftInWeek} dias`}) para não perderes a sequência.`
-                      : 'Regista algo esta semana para começares uma sequência.'}
-                </div>
-                <div className="sdb-daydots" aria-label="Atividade dos últimos 7 dias">
-                  {last7.map(d => (
-                    <span key={d.iso} className={`sdb-daydot${d.active ? ' is-active' : ''}`} title={d.iso} />
-                  ))}
-                </div>
-              </>
-            ) : (
+          {/* O streak/atividade já vive no cartão "Atividade" logo abaixo do
+              projeto em foco — repeti-lo aqui era o mesmo número duas vezes
+              na mesma tela. Este espaço fica só para o próximo passo de
+              quem ainda não tem nada registado. */}
+          {!loadingProjects && !loadingEntries && activityEntries.length === 0 && (
+            <aside className="sdb-hero-side">
               <NextMissionCard steps={setupSteps} userId={user.id} />
-            )}
-          </aside>
+            </aside>
+          )}
         </header>
 
         {/* ══════════════ BANNER ESCOLA ══════════════ */}
@@ -1051,7 +1039,7 @@ export default function StudentDashboard({ user, profile }) {
                         onDelete={() => deleteProject(focusFull.id)}
                         onOpen={() => navigate(`/projeto/${focusFull.slug}`)}
                         onOpenDiary={() => navigate(`/projeto/${focusFull.slug}/diario`)}
-                        onLog={kind => setComposerKind(kind)}
+                        onLog={kind => { setComposerProject(focusFull); setComposerKind(kind) }}
                         onShare={() => setShareProject(focusFull)}
                         activeThisWeek={activeThisWeek} streak={streak} daysLeftInWeek={daysLeftInWeek}
                       />
@@ -1074,7 +1062,7 @@ export default function StudentDashboard({ user, profile }) {
                           onDelete={() => deleteProject(pinned.id)}
                           onOpen={() => navigate(`/projeto/${pinned.slug}`)}
                           onOpenDiary={() => navigate(`/projeto/${pinned.slug}/diario`)}
-                          onLog={kind => setComposerKind(kind)}
+                          onLog={kind => { setComposerProject(pinned); setComposerKind(kind) }}
                           onShare={() => setShareProject(pinned)}
                           activeThisWeek={activeThisWeek} streak={streak} daysLeftInWeek={daysLeftInWeek}
                         />
@@ -1131,7 +1119,9 @@ export default function StudentDashboard({ user, profile }) {
 
             {isEmptyState && (
               <section className="sdb-first-project" onClick={() => navigate('/novo')}>
-                <h2 className="sdb-first-project-title">Cria o teu primeiro projeto</h2>
+                <span className="sdb-eyebrow">Primeiro projeto</span>
+                <h2 className="sdb-first-project-title">Cria ou adiciona o teu primeiro projeto</h2>
+                <p className="sdb-first-project-sub">Já tens algo feito? Sobe o ficheiro. Só tens uma ideia? Descreve-a e a IA ajuda-te a desenvolvê-la.</p>
                 <Button
                   iconRight={<ArrowRight size={15} />}
                   onClick={e => { e.stopPropagation(); navigate('/novo') }}
@@ -1172,9 +1162,13 @@ export default function StudentDashboard({ user, profile }) {
 
             {focusProject && (
               <div className="sdb-duo sdb-o-rhythm">
-                <ActivityPanel buckets={activityBuckets} />
+                <ActivityPanel buckets={activityBuckets} streak={streak} />
                 {isSchoolAccount && checkGate('weeklyRecap').allowed && <RecapsPanel recaps={recaps} />}
               </div>
+            )}
+
+            {isSchoolAccount && checkGate('weeklyRecap').allowed && (
+              <WeeklyPostCard project={focusFull} entries={entries} streak={streak} />
             )}
 
             {(otherProjects.length > 0 || collabProjects.length > 0) && (() => {
@@ -1318,9 +1312,9 @@ function PotentialTutorial({ potential, onDismiss }) {
               <span className="ptut-bar-fill" style={{ width: `${potential}%`, background: color }} />
             </div>
             <p className="ptut-body">
-              O Potencial sobe à medida que completas projetos, usas o diário e recebes validação
-              de professores e recrutadores. É o teu indicador de crescimento na plataforma e
-              só tu o consegues ver.
+              O Potencial sobe à medida que o teu portfólio cresce: mais projetos completos
+              (criados ou adicionados), o perfil preenchido, e validação de professores e
+              recrutadores. É o teu indicador de crescimento na plataforma e só tu o consegues ver.
             </p>
             <div className="ptut-actions">
               <button className="sdb-btn sdb-btn--solid" onClick={() => setStep(1)}>Continuar</button>
