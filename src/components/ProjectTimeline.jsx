@@ -14,6 +14,14 @@ import { ClockCircleIcon as Route } from '@solar-icons/react/bold/clock-circle'
 import { PlusIcon as Plus } from './icons/PlusIcon'
 import './ProjectTimeline.css'
 
+// Decisão de produto, não regra técnica — muda aqui, num sítio só, quando
+// quisermos mudar de ideias. true: um diário só com sync automático do
+// GitHub (zero marcos escritos à mão) esconde o Percurso na vista pública,
+// porque repete o que o cartão "Código no GitHub" já mostra. false: mostra
+// sempre que houver dados a sério, mesmo só automáticos (ex. para não
+// esconder o heatmap de quem só usa o GitHub e não escreve marcos).
+const HIDE_TIMELINE_WHEN_ONLY_AUTO_DIARY = false
+
 const MONTHS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
 const fmtMonthYear = d => { const x = new Date(d); return `${MONTHS[x.getMonth()]} ${x.getFullYear()}` }
 const fmtDay = d => { const x = new Date(d + 'T00:00:00'); return `${x.getDate()} ${MONTHS[x.getMonth()]} ${x.getFullYear()}` }
@@ -146,7 +154,7 @@ export default function ProjectTimeline({ project, isOwner, viewOnly = false }) 
   // "Código no GitHub" já disse — mesma janela, mesma duração — sem trazer
   // nada de novo. Os marcos (milestones) continuam a valer sempre: são
   // escritos à mão, nunca automáticos.
-  const onlyAutoDiary = tl?.all_auto === true && milestones.length === 0
+  const onlyAutoDiary = HIDE_TIMELINE_WHEN_ONLY_AUTO_DIARY && tl?.all_auto === true && milestones.length === 0
   const worthShowing = milestones.length >= 2 || (showStats && !onlyAutoDiary)
   if (viewOnly && (!worthShowing || (!isOwner && !isPublic))) return null
   // Fora do preview, um visitante nunca vê isto (o pai já gere, mas por via das dúvidas).
