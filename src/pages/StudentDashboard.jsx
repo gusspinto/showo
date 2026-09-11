@@ -43,6 +43,7 @@ import ReportPanel from '../components/dashboard/ReportPanel'
 import AgendaPanel from '../components/dashboard/AgendaPanel'
 import { ActivityPanel } from '../components/dashboard/RhythmPanel'
 import WeeklyRecap, { shouldShowRecap, RecapsPanel } from '../components/dashboard/WeeklyRecap'
+import WeeklyPostCard from '../components/dashboard/WeeklyPostCard'
 import WeeklyCheckin, { shouldShowCheckin } from '../components/dashboard/WeeklyCheckin'
 import AddReminderModal from '../components/dashboard/AddReminderModal'
 import CalendarSyncModal from '../components/dashboard/CalendarSyncModal'
@@ -1170,6 +1171,10 @@ export default function StudentDashboard({ user, profile }) {
                 <ActivityPanel buckets={activityBuckets} streak={streak} />
                 {isSchoolAccount && checkGate('weeklyRecap').allowed && <RecapsPanel recaps={recaps} />}
               </div>
+            )}
+
+            {isSchoolAccount && checkGate('weeklyRecap').allowed && (
+              <WeeklyPostCard project={focusFull} entries={entries} streak={streak} />
             )}
 
             {(otherProjects.length > 0 || collabProjects.length > 0) && (() => {
