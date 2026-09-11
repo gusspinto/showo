@@ -196,9 +196,14 @@ export default function ProjectTimeline({ project, isOwner, viewOnly = false }) 
 
           {weekly.length > 1 && (
             <div className="ptl-chart">
-              <div className="ptl-chart-bars" aria-hidden="true">
+              <div className="ptl-chart-bars">
                 {weekly.map(w => (
-                  <span key={w.week} className="ptl-chart-bar" style={{ height: `${Math.max(6, (w.count / maxWeek) * 100)}%` }} title={`${w.count} na semana de ${fmtDay(w.week)}`} />
+                  <span
+                    key={w.week}
+                    className="ptl-chart-bar"
+                    data-level={w.count === 0 ? 0 : Math.min(4, Math.ceil((w.count / maxWeek) * 4))}
+                    title={`${w.count} ${w.count === 1 ? 'registo' : 'registos'} na semana de ${fmtDay(w.week)}`}
+                  />
                 ))}
               </div>
               <div className="ptl-chart-axis">

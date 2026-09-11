@@ -98,10 +98,13 @@ const ANON_PROJECT_COLUMNS = [
   'likes_count', 'interest_count', 'review_status', 'review_status_updated_at',
   'visibility', 'edit_token', 'notified_milestones',
   'library_file_url', 'library_file_name', 'library_file_type', 'parent_project_id',
-  'github_stats', 'github_synced_at',
+  'github_stats', 'github_synced_at', 'timeline_public',
 ].join(', ')
-// nota: timeline_public (migração 128) vem via select('*') do dono; o
-// visitante não precisa dele — o RPC get_project_timeline faz o gate.
+// timeline_public entrou aqui porque o RPC get_project_timeline só protege
+// os DADOS da timeline — o componente ProjectTimeline também lê este campo
+// do lado do cliente para decidir se mostra a secção, e sem ele nunca
+// aparecia a nenhum visitante anónimo, mesmo em projetos com a timeline
+// tornada pública (a nota antiga assumia que o RPC bastava; não bastava).
 
 /* ── Prova de trabalho do GitHub ───────────────────────────────────────────
    Um link para o repositório obriga quem lê a sair da página e a saber ler
