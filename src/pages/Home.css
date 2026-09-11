@@ -489,160 +489,76 @@
   .home-cta-btn { width: 100%; margin-top: 20px; }
 }
 
-/* ══ O PROJETO CONTA-SE ENQUANTO ACONTECE ══ */
-.home-hw {
-  padding: 16px 24px 64px;
+/* ══ HOW IT WORKS ══ */
+.home-how-section {
+  padding: 64px 24px 8px;
 }
-.home-hw-inner {
-  max-width: 1060px;
+.home-how-inner {
+  max-width: 960px;
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 56px;
-  align-items: center;
 }
-.home-hw-title {
-  font-size: clamp(24px, 3vw, 34px);
+.home-how-title {
+  font-size: clamp(22px, 2.6vw, 30px);
   font-weight: 900;
   letter-spacing: -1px;
-  line-height: 1.12;
-  margin: 0 0 18px;
+  margin: 0 0 12px;
   font-family: var(--font-heading);
   color: var(--color-text);
+  text-align: center;
 }
-.home-hw-lead {
+.home-how-subtitle {
   font-size: 15px;
-  line-height: 1.65;
   color: var(--color-text-secondary);
-  margin: 0 0 24px;
-  max-width: 42ch;
-}
-.home-hw-tags {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.home-hw-tag {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-full);
-  padding: 6px 12px;
+  text-align: center;
+  margin: 0 0 40px;
+  line-height: 1.6;
 }
 
-/* ── diário ilustrativo ── */
-.home-hw-visual {
-  display: flex;
-  justify-content: center;
+.how-it-works-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
 }
-.home-hw-diary {
-  width: 100%;
-  max-width: 420px;
+
+.home-how-card {
   background: var(--color-surface);
-  border: 1px solid var(--color-border-hover);
-  border-radius: var(--radius-xl);
-  padding: 18px 20px;
-  box-shadow: 0 30px 60px -32px rgba(0, 0, 0, 0.75);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 24px 22px;
+  position: relative;
 }
-.home-hw-diary-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--color-border);
-}
-.home-hw-diary-name {
-  font-family: var(--font-heading);
-  font-weight: 800;
-  font-size: 13px;
-  color: var(--color-text);
-}
-.home-hw-diary-score {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--color-primary);
+.home-how-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
   background: var(--color-primary-subtle);
-  border-radius: var(--radius-full);
-  padding: 4px 10px;
-}
-.home-hw-diary-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.home-hw-entry {
-  display: flex;
-  gap: 12px;
-  padding: 13px 0;
-}
-.home-hw-entry + .home-hw-entry {
-  border-top: 1px solid var(--color-border-subtle);
-}
-.home-hw-entry-mark {
-  flex-shrink: 0;
-  width: 26px;
-  height: 26px;
-  border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-bottom: 16px;
 }
-.home-hw-entry-mark svg {
-  width: 14px;
-  height: 14px;
-  display: block;
-}
-.home-hw-entry-mark--gh {
-  background: var(--color-surface-hover);
-  color: var(--color-text);
-}
-.home-hw-entry-mark--note {
-  background: var(--color-primary-subtle);
-  color: var(--color-primary);
-}
-.home-hw-entry-body {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  min-width: 0;
-}
-.home-hw-entry-text {
-  font-size: 12.5px;
-  line-height: 1.45;
-  color: var(--color-text);
-}
-.home-hw-entry-text.is-code {
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  color: var(--color-text-secondary);
-}
-.home-hw-entry-meta {
-  font-size: 10.5px;
+.home-how-step {
+  position: absolute;
+  top: 20px;
+  right: 22px;
+  font-size: 12px;
+  font-weight: 800;
   color: var(--color-text-tertiary);
+  font-family: var(--font-heading);
 }
-
-@media (max-width: 820px) {
-  .home-hw {
-    padding: 0 20px 44px;
-  }
-  .home-hw-inner {
-    grid-template-columns: 1fr;
-    gap: 28px;
-  }
-  .home-hw-title {
-    font-size: 23px;
-    letter-spacing: -0.6px;
-  }
-  .home-hw-visual {
-    order: 2;
-  }
-  .home-hw-diary {
-    max-width: 100%;
-  }
+.home-how-card h3 {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+  margin: 0 0 8px;
+  font-family: var(--font-heading);
+  color: var(--color-text);
+}
+.home-how-card p {
+  font-size: 13.5px;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin: 0;
 }
 
 /* ══ FOOTER ══ */
@@ -694,6 +610,7 @@
 
 @media (max-width: 860px) and (min-width: 601px) {
   .home-projects-grid { grid-template-columns: repeat(2, 1fr); }
+  .how-it-works-grid  { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 600px) {
@@ -709,6 +626,7 @@
      arranque) ficar centrado como uma unidade no ecrã, em vez de empurrado
      para o topo com o espaço sobrante a acumular-se no fundo. */
   .home-hero-grid { width: 100%; justify-content: center; }
+  .how-it-works-grid { grid-template-columns: 1fr; }
 
   /* O herói vira uma peça de anúncio, não um parágrafo: título e texto
      centrados, a lê-los como se estivesse a apresentar-se, não a explicar-se
@@ -754,15 +672,20 @@
     flex-shrink: 0;
   }
 
+  /* "Como funciona" volta a ficar fora do telemóvel. Fez sentido tentar —
+     era o que faltava para o scroll não parecer cortado a meio — mas na
+     prática ficava a ocupar uma tela inteira de conteúdo que a maioria já
+     percebe só pelo herói, entre dois blocos (herói e projetos) que são o
+     que interessa mesmo ver primeiro. Volta a ser desktop-only. */
+  .home-how-section { display: none !important; }
+
   /* Projeto do mês → Projetos em destaque, direto a seguir ao herói: prova
-     em vez de explicação. "Como funciona" (com as ligações) vem a seguir,
-     agora numa versão compacta que cabe no telemóvel. O "Começa a criar" já
-     vive dentro da secção de projetos (home-section). */
+     em vez de explicação. O "Começa a criar" já vive dentro da secção de
+     projetos (home-section), por isso não precisa de ordem própria. */
   .home-hero    { order: 1; }
   .home-pom-wrap { order: 2; }
   .home-section  { order: 3; }
-  .home-how-reveal { order: 4; }
-  .home-footer   { order: 5; }
+  .home-footer   { order: 4; }
 }
 
 /* ══ PROJETO DO MÊS ══ */

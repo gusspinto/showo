@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
+import { DocumentTextIcon as FileText } from '@solar-icons/react/bold/document-text'
 import { CupStarIcon as Trophy } from '@solar-icons/react/bold/cup-star'
+import { ShareIcon as Share2 } from '@solar-icons/react/bold/share'
 import { EyeIcon as Eye } from '@solar-icons/react/bold/eye'
 import { EyeClosedIcon as EyeOff } from '@solar-icons/react/bold/eye-closed'
 import { RefreshCircleIcon as RefreshCw } from '@solar-icons/react/bold/refresh-circle'
@@ -9,7 +11,6 @@ import { Navbar } from '../components/Navbar'
 import { supabase } from '../lib/supabase'
 import { claimAnonymousProjects } from '../lib/claimAnonymousProjects'
 import GoogleButton from '../components/GoogleButton'
-import HomeHow from '../components/HomeHow'
 import { useAuth } from '../context/AuthContext'
 import './Home.css'
 
@@ -21,6 +22,12 @@ const TITLE_FONT_CSS = {
   fredoka:  '"Fredoka One", cursive',
   inter:    'Inter, sans-serif',
 }
+
+const HOW_IT_WORKS = [
+  { Icon: FileText, step: '1', title: 'Descreve o teu projeto', desc: 'Em poucas frases: o que fizeste, que problema resolve, que tecnologias usaste.' },
+  { Icon: Trophy,    step: '2', title: 'Ganha o teu score', desc: 'Score automático, sugestões de melhoria e uma página pronta a partilhar.' },
+  { Icon: Share2,    step: '3', title: 'Partilha com o mundo', desc: 'Um link para o CV ou LinkedIn — mostra o que fizeste a professores e recrutadores.' },
+]
 
 const AREA_COLORS = {
   'Tecnologias de Informação': 'var(--color-primary)',
@@ -511,9 +518,26 @@ export default function Home() {
         </div>
       </Reveal>
 
-      {/* ══ Como funciona (+ ligações) ══ */}
-      <Reveal className="home-how-reveal">
-        <HomeHow />
+      {/* ══ Como funciona ══ */}
+      <Reveal className="home-how-section" id="como-funciona">
+        <div className="home-how-inner">
+          <h2 className="home-how-title">Como funciona a Showo</h2>
+          <p className="home-how-subtitle">
+            Descreves o teu projeto. Nós criamos a página. Em menos de dois minutos.
+          </p>
+          <div className="how-it-works-grid">
+            {HOW_IT_WORKS.map(s => (
+              <div key={s.step} className="home-how-card">
+                <div className="home-how-icon">
+                  <s.Icon size={19} color="var(--color-primary)" />
+                </div>
+                <span className="home-how-step">{s.step}</span>
+                <h3>{s.title}</h3>
+                <p>{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       </Reveal>
 
       {/* ══ Footer ══ */}

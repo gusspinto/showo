@@ -1,32 +1,64 @@
 import { useMemo } from 'react'
 import { ArrowRightUpIcon as ArrowUpRight } from '@solar-icons/react/bold/arrow-right-up'
-import { FlameIcon as Flame } from '@solar-icons/react/bold/flame'
 
 /* ── Atividade ─────────────────────────────────────────────────────────────
-   Era um gráfico de 12 semanas a ocupar o cartão inteiro, a maior parte
-   vazia, com uma frase estranha ("mais registos que as anteriores" quando as
-   anteriores eram zero). Simplificado para a mesma linguagem que já usamos
-   nos popups (WeeklyCheckin, WeeklyRecap): o foguinho do streak + o que
-   aconteceu esta semana, numa linha só — sem gráfico, sem comparação. */
+   Responde a "tenho estado a trabalhar nisto?". Duas séries reais: entradas
+   do diário e tarefas concluídas. Nada de métricas decorativas. */
 
-export function ActivityPanel({ buckets, streak }) {
-  const thisWeek = buckets[buckets.length - 1] || { entries: 0, tasks: 0 }
-  const total = thisWeek.entries + thisWeek.tasks
+export function ActivityPanel({ buckets }) {
+  const totals = useMemo(() => {
+    const half = Math.floor(buckets.length / 2)
+    const sum = arr => arr.reduce((s, b) => s + b.entries + b.tasks, 0)
+    const recent = sum(buckets.slice(half))
+    const before = sum(buckets.slice(0, half))
+    return { all: recent + before, recent, before, delta: recent - before }
+  }, [buckets])
+
+  const max = Math.max(1, ...buckets.map(b => b.entries + b.tasks))
+
+  const summary = totals.all === 0
+    ? 'Ainda nenhum registo. Usa o diário para começar a ver o teu ritmo aqui.'
+    : totals.delta > 0
+      ? `Mais ${totals.delta} ${totals.delta === 1 ? 'registo' : 'registos'} do que nas semanas anteriores.`
+      : totals.delta < 0
+        ? `Menos ${Math.abs(totals.delta)} ${Math.abs(totals.delta) === 1 ? 'registo' : 'registos'} do que nas semanas anteriores.`
+        : 'Ritmo igual ao período anterior.'
 
   return (
-    <section className="sdb-panel sdb-activity-mini">
-      <span className="sdb-eyebrow">Atividade</span>
-      <div className="sdb-activity-mini-row">
-        <span className="sdb-activity-mini-count">
-          {total > 0
-            ? `${total} ${total === 1 ? 'registo' : 'registos'} esta semana`
-            : 'Ainda nenhum registo esta semana'}
-        </span>
-        {streak > 0 && (
-          <span className="sdb-activity-mini-streak">
-            <Flame size={13} /> {streak} {streak === 1 ? 'semana seguida' : 'semanas seguidas'}
-          </span>
-        )}
+    <section className="sdb-panel sdb-chart">
+      <header className="sdb-panel-head">
+        <span className="sdb-eyebrow">Atividade</span>
+        <span className="sdb-chart-total">{totals.all}</span>
+      </header>
+      <p className="sdb-chart-summary">{summary}</p>
+
+      <div className="sdb-bars" role="img" aria-label="Atividade das últimas 12 semanas">
+        {buckets.map((b, i) => {
+          const total = b.entries + b.tasks
+          const h = total === 0 ? 0 : Math.max(6, (total / max) * 100)
+          const entriesShare = total === 0 ? 0 : (b.entries / total) * 100
+          return (
+            <div key={i} className="sdb-bar-slot"
+              title={`Semana de ${b.label} — ${b.entries} registo${b.entries !== 1 ? 's' : ''}, ${b.tasks} tarefa${b.tasks !== 1 ? 's' : ''}`}>
+              <div className="sdb-bar-track">
+                {total === 0
+                  ? <span className="sdb-bar-nil" />
+                  : (
+                    <span className="sdb-bar-fill" style={{ height: `${h}%` }}>
+                      <span className="sdb-bar-seg sdb-bar-seg--entries" style={{ height: `${entriesShare}%` }} />
+                      <span className="sdb-bar-seg sdb-bar-seg--tasks" style={{ height: `${100 - entriesShare}%` }} />
+                    </span>
+                  )}
+              </div>
+              <span className="sdb-bar-label">{i % 2 === 0 ? b.label : ''}</span>
+            </div>
+          )
+        })}
+      </div>
+
+      <div className="sdb-legend">
+        <span><i className="sdb-swatch sdb-swatch--entries" /> Diário</span>
+        <span><i className="sdb-swatch sdb-swatch--tasks" /> Tarefas concluídas</span>
       </div>
     </section>
   )

@@ -110,34 +110,3 @@ export function linkedInShareUrl(pageUrl) {
 export function shareOnLinkedIn(pageUrl) {
   window.open(linkedInShareUrl(pageUrl), '_blank', 'noopener,noreferrer,width=680,height=640')
 }
-
-/* ── Gerador de post ──────────────────────────────────────────────────────
-   Pede à edge function o texto de um post em 1ª pessoa. `mode` decide a
-   origem: 'weekly' (registos do diário da semana) ou 'project' (campos de um
-   projeto acabado de publicar). Devolve a string do post, ou atira um Error
-   com a mensagem já pronta a mostrar. */
-export async function generateLinkedInPost(payload) {
-  const { data, error } = await supabase.functions.invoke('linkedin-post', { body: payload })
-  if (error) {
-    let msg = ''
-    try { msg = (await error.context?.json?.())?.error } catch { /* corpo não era JSON */ }
-    throw new Error(msg || data?.error || 'Não foi possível gerar o post.')
-  }
-  if (data?.error) throw new Error(data.error)
-  if (!data?.text) throw new Error('A resposta veio vazia. Tenta outra vez.')
-  return data.text
-}
-
-/* O compositor do LinkedIn não aceita texto pré-preenchido a partir de um
-   link — a app deles ignora-o. O melhor que se consegue sem OAuth: copiar o
-   texto para a área de transferência e abrir o compositor, para a pessoa
-   colar. Chamar dentro do gesto de clique (o open e o clipboard exigem-no). */
-export async function copyAndOpenLinkedIn(text) {
-  let copied = false
-  try {
-    await navigator.clipboard.writeText(text)
-    copied = true
-  } catch { /* browsers antigos / sem permissão — a pessoa copia à mão */ }
-  window.open('https://www.linkedin.com/feed/?shareActive=true', '_blank', 'noopener,noreferrer')
-  return copied
-}

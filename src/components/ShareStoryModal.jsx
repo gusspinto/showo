@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { DownloadIcon as Download } from '@solar-icons/react/bold/download'
 import { ShareIcon as Share2 } from '@solar-icons/react/bold/share'
-import LinkedInPostModal from './LinkedInPostModal'
+import { shareOnLinkedIn } from '../lib/social'
 
 const BRAND = { blue: '#2478f0', red: '#db4a3d', gold: '#cc9a1e' }
 const FONT_BODY = "'Montserrat', 'Inter', system-ui, sans-serif"
@@ -46,7 +46,6 @@ export function ShareStoryModal({ project, onClose }) {
   const [exporting, setExporting] = useState(false)
   const [mode, setMode] = useState('projeto')
   const [highlightIdx, setHighlightIdx] = useState(0)
-  const [showLinkedInPost, setShowLinkedInPost] = useState(false)
 
   useEffect(() => {
     const prevOverflow = document.body.style.overflow
@@ -285,22 +284,14 @@ export function ShareStoryModal({ project, onClose }) {
           ><Download size={15} /> Descarregar</button>
         </div>
 
-        {/* O cartão é para stories (Instagram, WhatsApp). Para o LinkedIn o
-            que funciona é texto: um post de progresso em 1ª pessoa, com o
-            link do projeto no fim. */}
+        {/* O cartão é para stories. No LinkedIn o que funciona é o link do
+            projeto — a pré-visualização vem das meta tags do /api/og, e é
+            aí que quem contrata realmente olha. */}
         <button
-          onClick={() => setShowLinkedInPost(true)}
+          onClick={() => shareOnLinkedIn(`${window.location.origin}/projeto/${project.slug}`)}
           style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.55)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textUnderlineOffset: 3 }}
-        >Ou gera um post para o LinkedIn</button>
+        >Ou publica o link no LinkedIn</button>
       </div>
-
-      {showLinkedInPost && (
-        <LinkedInPostModal
-          mode="project"
-          payload={{ projectId: project.id }}
-          onClose={() => setShowLinkedInPost(false)}
-        />
-      )}
     </div>,
     document.body
   )
