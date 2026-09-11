@@ -121,11 +121,42 @@ const ANON_PROJECT_COLUMNS = [
    "pública" significa aqui: qualquer pessoa lê, ninguém escreve sem
    credenciais. Um recrutador pode copiar e colar isto num terminal e ver
    dados a sério, sem precisar de conta nenhuma. */
-/* Dados reais da tabela, já em forma de tabela HTML — o "Testar API" só
- * com curl provava a existência da API a outro programador; quem contrata
- * normalmente não abre um terminal. Isto mostra o mesmo pedido (list_rows,
- * sem chave nenhuma) já renderizado, para qualquer visitante ver de
- * imediato que os dados são reais. */
+/* Formata um valor de célula consoante o tipo declarado da coluna — é o
+ * que separa "aqui está o JSON" de "isto parece um mini-app a sério". */
+function formatCellValue(value, type) {
+  if (value === null || value === undefined || value === '') return null
+  if (type === 'boolean') {
+    const on = value === true || value === 'true'
+    return (
+      <span style={{
+        display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700,
+        color: on ? 'var(--color-success)' : 'var(--color-text-tertiary)',
+        background: on ? 'rgba(16,185,129,0.12)' : 'var(--color-bg-alt)',
+        border: `1px solid ${on ? 'rgba(16,185,129,0.3)' : 'var(--color-border)'}`,
+        borderRadius: 99, padding: '2px 9px',
+      }}>
+        <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor' }} />
+        {on ? 'Sim' : 'Não'}
+      </span>
+    )
+  }
+  if (type === 'date') {
+    const d = new Date(value)
+    return isNaN(d) ? String(value) : d.toLocaleDateString('pt-PT', { day: '2-digit', month: 'short', year: 'numeric' })
+  }
+  if (type === 'number') {
+    return <span style={{ fontWeight: 700, color: 'var(--color-text)' }}>{String(value)}</span>
+  }
+  return String(value)
+}
+
+/* Dados reais da tabela, mostrados como um mini-app (cartões), não uma
+ * folha de cálculo — o "Testar API" só com curl provava a existência da
+ * API a outro programador; quem contrata normalmente não abre um
+ * terminal, e uma tabela em bruto também não impressiona ninguém. Isto
+ * usa o mesmo pedido (list_rows, sem chave nenhuma) mas apresenta cada
+ * linha como um cartão, com o primeiro campo como título e o resto como
+ * etiquetas — para parecer o ecrã de um produto real, não dados crus. */
 function LiveDataTable({ projectId, table }) {
   const [state, setState] = useState({ loading: true, rows: null, error: null })
 
@@ -147,31 +178,42 @@ function LiveDataTable({ projectId, table }) {
     return <p style={{ margin: '12px 0 0', fontSize: 11.5, color: 'var(--color-text-tertiary)' }}>Esta tabela ainda não tem linhas.</p>
   }
 
-  const cols = table.columns.map(c => c.name)
+  const [titleCol, ...restCols] = table.columns
+
   return (
-    <div style={{ overflowX: 'auto', marginTop: 4 }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-        <thead>
-          <tr>
-            {cols.map(c => (
-              <th key={c} style={{ textAlign: 'left', padding: '6px 10px', color: 'var(--color-text-tertiary)', fontWeight: 700, borderBottom: '1px solid var(--color-border)', whiteSpace: 'nowrap' }}>{c}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {state.rows.map(r => (
-            <tr key={r.id}>
-              {cols.map(c => (
-                <td key={c} style={{ padding: '6px 10px', color: 'var(--color-text)', borderBottom: '1px solid var(--color-border)', whiteSpace: 'nowrap' }}>
-                  {String(r.data?.[c] ?? '—')}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div style={{ marginTop: 4 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 8 }}>
+        {state.rows.map(r => {
+          const titleValue = titleCol ? r.data?.[titleCol.name] : null
+          return (
+            <div key={r.id} style={{
+              border: '1px solid var(--color-border)', borderRadius: 10, padding: '10px 12px',
+              background: 'var(--color-bg-alt)', display: 'flex', flexDirection: 'column', gap: 6,
+            }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text)' }}>
+                {titleValue !== null && titleValue !== undefined && titleValue !== ''
+                  ? String(titleValue)
+                  : <span style={{ color: 'var(--color-text-tertiary)', fontWeight: 500 }}>Sem {titleCol?.name || 'título'}</span>}
+              </div>
+              {restCols.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                  {restCols.map(c => {
+                    const formatted = formatCellValue(r.data?.[c.name], c.type)
+                    if (formatted === null) return null
+                    return (
+                      <span key={c.name} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--color-text-secondary)' }}>
+                        <span style={{ color: 'var(--color-text-tertiary)' }}>{c.name}:</span> {formatted}
+                      </span>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
       {state.rows.length === 10 && (
-        <p style={{ margin: '6px 0 0', fontSize: 10.5, color: 'var(--color-text-tertiary)' }}>A mostrar as 10 mais recentes.</p>
+        <p style={{ margin: '8px 0 0', fontSize: 10.5, color: 'var(--color-text-tertiary)' }}>A mostrar as 10 mais recentes.</p>
       )}
     </div>
   )
