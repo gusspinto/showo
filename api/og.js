@@ -40,6 +40,7 @@ export default async function handler(req, res) {
             const n = publicTables.length
             title = `${p.name} · 🔌 API ativa — Showo`
             description += ` · API ativa (${n} ${n === 1 ? 'tabela pública' : 'tabelas públicas'})`
+            image = `${BASE}/api/og-image?slug=${encodeURIComponent(slug)}`
           }
         } catch {}
 
