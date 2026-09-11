@@ -1297,9 +1297,19 @@ function ApiKeyCard({ project, apiKey, firstTable, onKeyChanged }) {
   const [copied, setCopied] = useState('')
   const [regenerating, setRegenerating] = useState(false)
   const [confirmRegen, setConfirmRegen] = useState(false)
+  const [generating, setGenerating] = useState(false)
 
   function copy(text, id) {
     navigator.clipboard.writeText(text).then(() => { setCopied(id); setTimeout(() => setCopied(''), 2000) })
+  }
+
+  async function handleGenerate() {
+    setGenerating(true)
+    try {
+      const data = await ProjectDb.getApiKey(project.id)
+      onKeyChanged(data.api_key)
+    } catch {}
+    setGenerating(false)
   }
 
   async function handleRegen() {
@@ -1322,6 +1332,11 @@ function ApiKeyCard({ project, apiKey, firstTable, onKeyChanged }) {
       <p style={{ margin: '0 0 12px', fontSize: 12.5, color: colors.muted, lineHeight: 1.6 }}>
         Usa esta chave para chamar a API do teu projeto de fora da Showo — de outro código, do Postman, ou de um site que construas.
       </p>
+      {!apiKey && (
+        <button type="button" onClick={handleGenerate} disabled={generating} style={{ background: colors.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: generating ? 0.7 : 1 }}>
+          {generating ? 'A gerar…' : 'Gerar chave de API'}
+        </button>
+      )}
       {apiKey && (
         <>
           <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
