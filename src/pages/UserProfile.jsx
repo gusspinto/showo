@@ -17,6 +17,7 @@ import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-righ
 import { StarIcon as Star } from '@solar-icons/react/bold/star'
 import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
 import { PlusIcon as Plus } from '../components/icons/PlusIcon'
+import { DatabaseIcon as Database } from '@solar-icons/react/bold/database'
 import { ChatRoundLineIcon as MessageSquare } from '@solar-icons/react/bold/chat-round-line'
 import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/square-academic-cap'
 import { PlaneIcon as Send } from '@solar-icons/react/bold/plane'
@@ -55,7 +56,7 @@ function consistencyLabel(tl) {
   return parts.length ? parts.join(' · ') : null
 }
 
-function ProfileItem({ project, onOpen, timeline }) {
+function ProfileItem({ project, onOpen, timeline, publicApiCount }) {
   const isLibrary = project.entry_kind === 'library'
   const consist = consistencyLabel(timeline)
   const cover =
@@ -88,6 +89,9 @@ function ProfileItem({ project, onOpen, timeline }) {
             <span className="up-pf-row-sub">{subtitle || project.area}</span>
           )}
           {consist && <span className="up-pf-row-consist">{consist}</span>}
+          {!isLibrary && publicApiCount > 0 && (
+            <span className="up-pf-row-api"><Database size={11} /> API ativa</span>
+          )}
         </span>
         {!isLibrary && project.score != null && (
           <span className="up-pf-row-score" style={{ color: scoreColor(project.score) }}>
@@ -124,6 +128,9 @@ function ProfileItem({ project, onOpen, timeline }) {
         <div className="up-card-meta">
           {!isLibrary && project.area && <span className="up-card-area">{project.area}</span>}
           {consist && <span className="up-card-consist">{consist}</span>}
+          {!isLibrary && publicApiCount > 0 && (
+            <span className="up-card-api"><Database size={11} /> API ativa</span>
+          )}
         </div>
       </div>
     </div>
@@ -227,6 +234,7 @@ export default function UserProfile() {
   const [skillSuggestions, setSkillSuggestions] = useState([]) // {project_id,skills,technologies} por rever (dono)
   const [profileViews, setProfileViews] = useState(null) // total de visualizações do perfil (só o dono)
   const [timelineByProject, setTimelineByProject] = useState({}) // project_id -> resumo da timeline
+  const [publicApiCountByProject, setPublicApiCountByProject] = useState({}) // project_id -> nº de tabelas públicas
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [showQR, setShowQR] = useState(false)
@@ -314,6 +322,19 @@ export default function UserProfile() {
         Promise.all(tlIds.map(id =>
           supabase.rpc('get_project_timeline', { p_project_id: id }).then(r => [id, r.data]).catch(() => [id, null]),
         )).then(pairs => setTimelineByProject(Object.fromEntries(pairs.filter(([, v]) => v))))
+
+        // Selo "API ativa" — uma query só para todos os projetos em destaque,
+        // em vez de uma por cartão. Só conta tabelas públicas (a policy do
+        // 141 já garante que é só isso que a RLS deixa ler sem sessão).
+        supabase.from('project_data_tables')
+          .select('project_id')
+          .in('project_id', tlIds)
+          .eq('is_public', true)
+          .then(({ data }) => {
+            const counts = {}
+            for (const row of data ?? []) counts[row.project_id] = (counts[row.project_id] ?? 0) + 1
+            setPublicApiCountByProject(counts)
+          })
       }
 
       setLoading(false)
@@ -714,6 +735,7 @@ export default function UserProfile() {
                   key={project.id}
                   project={project}
                   timeline={timelineByProject[project.id]}
+                  publicApiCount={publicApiCountByProject[project.id]}
                   onOpen={() => {
                     if (project.entry_kind === 'library') {
                       setViewingFile(project)

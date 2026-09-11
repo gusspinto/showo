@@ -578,6 +578,13 @@
 .up-card-meta .up-card-consist::before { content: '· '; }
 .up-card-meta .up-card-consist:first-child::before { content: ''; }
 
+.up-card-api, .up-pf-row-api {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 700;
+  color: var(--color-success);
+}
+.up-pf-row-api { display: flex; margin-top: 2px; }
+
 /* ── Empty state ── */
 .up-empty {
   background: var(--color-surface);

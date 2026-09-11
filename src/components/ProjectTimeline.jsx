@@ -23,6 +23,36 @@ function monthsBetween(a, b) {
   return Math.max(0, (d2.getFullYear() - d1.getFullYear()) * 12 + d2.getMonth() - d1.getMonth())
 }
 
+// Segunda-feira (em UTC) da semana que contém `ms` — mesma convenção do
+// date_trunc('week', ...) do Postgres, que é quem agrupa os dados no RPC
+// (get_project_timeline). Tudo em UTC de propósito: misturar aritmética de
+// datas local com toISOString() (que converte para UTC) desalinhava a
+// semana em ±1 dia consoante o fuso do browser, e as contagens nunca
+// batiam certo com as chaves que o servidor devolve.
+function mondayOfUTC(ms) {
+  const d = new Date(ms)
+  const day = (d.getUTCDay() + 6) % 7 // 0=segunda … 6=domingo
+  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - day)
+}
+const toISODate = ms => new Date(ms).toISOString().slice(0, 10)
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000
+
+// Últimos ~90 dias, semana a semana — como o heatmap do GitHub, as semanas
+// sem nenhum registo aparecem na mesma (a olho, um espaço vazio no meio diz
+// tanto como um quadrado escuro). `weekly` só tem as semanas com atividade;
+// isto preenche as que faltam com contagem 0 até cobrir a janela toda.
+function last90DaysWeekly(weekly) {
+  const byWeek = new Map(weekly.map(w => [w.week, w.count]))
+  const endMs = mondayOfUTC(Date.now())
+  const startMs = mondayOfUTC(Date.now() - 90 * 24 * 60 * 60 * 1000)
+  const out = []
+  for (let t = startMs; t <= endMs; t += WEEK_MS) {
+    const key = toISODate(t)
+    out.push({ week: key, count: byWeek.get(key) || 0 })
+  }
+  return out
+}
+
 function durationLabel(from) {
   const m = monthsBetween(from, new Date())
   if (m < 1) return 'há menos de um mês'
@@ -123,7 +153,7 @@ export default function ProjectTimeline({ project, isOwner, viewOnly = false }) 
   if (!isOwner && !viewOnly) return null
 
   const startDate = tl?.first_entry || tl?.created_on
-  const weekly = tl?.weekly || []
+  const weekly = last90DaysWeekly(tl?.weekly || [])
   const maxWeek = Math.max(1, ...weekly.map(w => w.count))
   const durMonths = startDate ? monthsBetween(startDate, new Date()) : 0
 
@@ -196,13 +226,18 @@ export default function ProjectTimeline({ project, isOwner, viewOnly = false }) 
 
           {weekly.length > 1 && (
             <div className="ptl-chart">
-              <div className="ptl-chart-bars" aria-hidden="true">
+              <div className="ptl-chart-bars">
                 {weekly.map(w => (
-                  <span key={w.week} className="ptl-chart-bar" style={{ height: `${Math.max(6, (w.count / maxWeek) * 100)}%` }} title={`${w.count} na semana de ${fmtDay(w.week)}`} />
+                  <span
+                    key={w.week}
+                    className="ptl-chart-bar"
+                    data-level={w.count === 0 ? 0 : Math.min(4, Math.ceil((w.count / maxWeek) * 4))}
+                    title={`${w.count} ${w.count === 1 ? 'registo' : 'registos'} na semana de ${fmtDay(w.week)}`}
+                  />
                 ))}
               </div>
               <div className="ptl-chart-axis">
-                <span>{startDate && fmtMonthYear(startDate)}</span>
+                <span>{fmtMonthYear(weekly[0].week)}</span>
                 <span>agora</span>
               </div>
             </div>

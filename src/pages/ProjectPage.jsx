@@ -8,7 +8,7 @@ import { useIsMobile } from '../lib/useIsMobile'
 import { calculateScore, looksLikeSpam } from '../lib/score'
 import { containsProfanity } from '../lib/profanity'
 import { topLanguages, commitSpanMonths, repoAgeMonths } from '../lib/social'
-import { listPublicTables, publicCurlExample } from '../lib/projectDb'
+import { listPublicTables, publicCurlExample, listRows, listTables } from '../lib/projectDb'
 import { DatabaseIcon as Database } from '@solar-icons/react/bold/database'
 import { CHALLENGES, getChallengeStatus } from '../lib/challenges'
 import { Navbar } from '../components/Navbar'
@@ -98,10 +98,13 @@ const ANON_PROJECT_COLUMNS = [
   'likes_count', 'interest_count', 'review_status', 'review_status_updated_at',
   'visibility', 'edit_token', 'notified_milestones',
   'library_file_url', 'library_file_name', 'library_file_type', 'parent_project_id',
-  'github_stats', 'github_synced_at',
+  'github_stats', 'github_synced_at', 'timeline_public',
 ].join(', ')
-// nota: timeline_public (migração 128) vem via select('*') do dono; o
-// visitante não precisa dele — o RPC get_project_timeline faz o gate.
+// timeline_public entrou aqui porque o RPC get_project_timeline só protege
+// os DADOS da timeline — o componente ProjectTimeline também lê este campo
+// do lado do cliente para decidir se mostra a secção, e sem ele nunca
+// aparecia a nenhum visitante anónimo, mesmo em projetos com a timeline
+// tornada pública (a nota antiga assumia que o RPC bastava; não bastava).
 
 /* ── Prova de trabalho do GitHub ───────────────────────────────────────────
    Um link para o repositório obriga quem lê a sair da página e a saber ler
@@ -121,6 +124,104 @@ const ANON_PROJECT_COLUMNS = [
    "pública" significa aqui: qualquer pessoa lê, ninguém escreve sem
    credenciais. Um recrutador pode copiar e colar isto num terminal e ver
    dados a sério, sem precisar de conta nenhuma. */
+/* Formata um valor de célula consoante o tipo declarado da coluna — é o
+ * que separa "aqui está o JSON" de "isto parece um mini-app a sério". */
+function formatCellValue(value, type) {
+  if (value === null || value === undefined || value === '') return null
+  if (type === 'boolean') {
+    const on = value === true || value === 'true'
+    return (
+      <span style={{
+        display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700,
+        color: on ? 'var(--color-success)' : 'var(--color-text-tertiary)',
+        background: on ? 'rgba(16,185,129,0.12)' : 'var(--color-bg-alt)',
+        border: `1px solid ${on ? 'rgba(16,185,129,0.3)' : 'var(--color-border)'}`,
+        borderRadius: 99, padding: '2px 9px',
+      }}>
+        <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor' }} />
+        {on ? 'Sim' : 'Não'}
+      </span>
+    )
+  }
+  if (type === 'date') {
+    const d = new Date(value)
+    return isNaN(d) ? String(value) : d.toLocaleDateString('pt-PT', { day: '2-digit', month: 'short', year: 'numeric' })
+  }
+  if (type === 'number') {
+    return <span style={{ fontWeight: 700, color: 'var(--color-text)' }}>{String(value)}</span>
+  }
+  return String(value)
+}
+
+/* Dados reais da tabela, mostrados como um mini-app (cartões), não uma
+ * folha de cálculo — o "Testar API" só com curl provava a existência da
+ * API a outro programador; quem contrata normalmente não abre um
+ * terminal, e uma tabela em bruto também não impressiona ninguém. Isto
+ * usa o mesmo pedido (list_rows, sem chave nenhuma) mas apresenta cada
+ * linha como um cartão, com o primeiro campo como título e o resto como
+ * etiquetas — para parecer o ecrã de um produto real, não dados crus. */
+function LiveDataTable({ projectId, table }) {
+  const [state, setState] = useState({ loading: true, rows: null, error: null })
+
+  useEffect(() => {
+    let cancelled = false
+    listRows(projectId, table.id, 10)
+      .then(data => { if (!cancelled) setState({ loading: false, rows: data.rows || [], error: null }) })
+      .catch(err => { if (!cancelled) setState({ loading: false, rows: null, error: err.message }) })
+    return () => { cancelled = true }
+  }, [projectId, table.id])
+
+  if (state.loading) {
+    return <p style={{ margin: '12px 0 0', fontSize: 11.5, color: 'var(--color-text-tertiary)' }}>A carregar dados…</p>
+  }
+  if (state.error) {
+    return <p style={{ margin: '12px 0 0', fontSize: 11.5, color: 'var(--color-error)' }}>Não foi possível carregar os dados: {state.error}</p>
+  }
+  if (!state.rows.length) {
+    return <p style={{ margin: '12px 0 0', fontSize: 11.5, color: 'var(--color-text-tertiary)' }}>Esta tabela ainda não tem linhas.</p>
+  }
+
+  const [titleCol, ...restCols] = table.columns
+
+  return (
+    <div style={{ marginTop: 4 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 8 }}>
+        {state.rows.map(r => {
+          const titleValue = titleCol ? r.data?.[titleCol.name] : null
+          return (
+            <div key={r.id} style={{
+              border: '1px solid var(--color-border)', borderRadius: 10, padding: '10px 12px',
+              background: 'var(--color-bg-alt)', display: 'flex', flexDirection: 'column', gap: 6,
+            }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text)' }}>
+                {titleValue !== null && titleValue !== undefined && titleValue !== ''
+                  ? String(titleValue)
+                  : <span style={{ color: 'var(--color-text-tertiary)', fontWeight: 500 }}>Sem {titleCol?.name || 'título'}</span>}
+              </div>
+              {restCols.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                  {restCols.map(c => {
+                    const formatted = formatCellValue(r.data?.[c.name], c.type)
+                    if (formatted === null) return null
+                    return (
+                      <span key={c.name} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--color-text-secondary)' }}>
+                        <span style={{ color: 'var(--color-text-tertiary)' }}>{c.name}:</span> {formatted}
+                      </span>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+      {state.rows.length === 10 && (
+        <p style={{ margin: '8px 0 0', fontSize: 10.5, color: 'var(--color-text-tertiary)' }}>A mostrar as 10 mais recentes.</p>
+      )}
+    </div>
+  )
+}
+
 function ApiProof({ project }) {
   const [tables, setTables] = useState(null) // null = a carregar
   const [openId, setOpenId] = useState(null)
@@ -168,7 +269,11 @@ function ApiProof({ project }) {
             </button>
             {openId === t.id && (
               <div style={{ padding: '0 12px 12px', borderTop: '1px solid var(--color-border)' }}>
-                <p style={{ margin: '12px 0 8px', fontSize: 11.5, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+                <p style={{ margin: '12px 0 0', fontSize: 11.5, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+                  Dados reais desta tabela, em direto:
+                </p>
+                <LiveDataTable projectId={project.id} table={t} />
+                <p style={{ margin: '14px 0 8px', fontSize: 11.5, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
                   Sem chave nenhuma — copia e cola isto num terminal:
                 </p>
                 <pre style={{ margin: 0, background: '#0d0d10', color: '#d8d8de', borderRadius: 8, padding: '11px 13px', fontSize: 11, lineHeight: 1.6, overflowX: 'auto', fontFamily: 'monospace' }}>
@@ -179,6 +284,64 @@ function ApiProof({ project }) {
           </div>
         ))}
       </div>
+    </div>
+  )
+}
+
+/* Empurrão para quem já tem tecnologia a sério mas ainda não descobriu a
+ * base de dados — só o dono vê, só quando o campo "Tecnologias" tem
+ * conteúdo (sinal de que há código a funcionar, não só teoria) e o
+ * projeto ainda não tem nenhuma tabela criada. Sem IA nenhuma a decidir,
+ * é só uma condição sobre um campo que já existe. Dispensável por sessão
+ * (localStorage), para não martelar quem já viu e decidiu não usar. */
+function DbSetupNudge({ project, isOwner }) {
+  const navigate = useNavigate()
+  const [tableCount, setTableCount] = useState(null) // null = a verificar
+  const dismissKey = `showo_db_nudge_dismissed_${project?.id}`
+  const [dismissed, setDismissed] = useState(() => {
+    try { return localStorage.getItem(dismissKey) === '1' } catch { return false }
+  })
+
+  useEffect(() => {
+    if (!isOwner || !project?.id || !project?.technologies?.trim()) return
+    let cancelled = false
+    listTables(project.id).then(data => {
+      if (!cancelled) setTableCount((data.tables || []).length)
+    }).catch(() => { if (!cancelled) setTableCount(0) })
+    return () => { cancelled = true }
+  }, [isOwner, project?.id, project?.technologies])
+
+  if (!isOwner || dismissed || !project?.technologies?.trim() || tableCount === null || tableCount > 0) return null
+
+  function dismiss() {
+    setDismissed(true)
+    try { localStorage.setItem(dismissKey, '1') } catch { /* localStorage indisponível, não é crítico */ }
+  }
+
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 12,
+      background: 'color-mix(in srgb, var(--color-primary) 8%, var(--color-surface))',
+      border: '1px solid color-mix(in srgb, var(--color-primary) 25%, var(--color-border))',
+      borderRadius: 12, padding: '14px 16px', marginBottom: 16,
+      fontFamily: 'var(--font-body, system-ui, sans-serif)',
+    }}>
+      <Database size={18} color="var(--color-primary)" style={{ flexShrink: 0 }} />
+      <p style={{ margin: 0, flex: 1, fontSize: 12.5, color: 'var(--color-text)', lineHeight: 1.5 }}>
+        Tens tecnologia a sério neste projeto — liga uma base de dados própria em 2 minutos e mostra uma API a funcionar.
+      </p>
+      <button
+        onClick={() => navigate(`/editar/${project.slug}?tab=database`)}
+        style={{
+          flexShrink: 0, fontSize: 12, fontWeight: 700, color: 'var(--color-primary)',
+          background: 'none', border: 'none', cursor: 'pointer', padding: '4px 6px',
+        }}
+      >Ligar agora →</button>
+      <button
+        onClick={dismiss}
+        aria-label="Dispensar"
+        style={{ flexShrink: 0, color: 'var(--color-text-tertiary)', background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex' }}
+      ><X size={14} /></button>
     </div>
   )
 }
@@ -7339,6 +7502,7 @@ export default function ProjectPage() {
             isso aparece sempre, seja qual for o separador ativo no
             telemóvel, e é a primeira coisa a seguir ao cabeçalho no
             desktop. */}
+        <DbSetupNudge project={project} isOwner={isOwner} />
         <GithubProof project={project} />
         <ApiProof project={project} />
 

@@ -60,16 +60,23 @@
   color: var(--color-text-tertiary);
 }
 
-/* Weekly activity chart */
+/* Weekly activity heatmap — mesma ideia do gráfico de contribuições do
+ * GitHub (uma célula por período, mais escura quanto mais atividade),
+ * só que uma célula por semana em vez de por dia, porque é a granularidade
+ * que já temos calculada no servidor. */
 .ptl-chart { margin-bottom: 20px; }
 .ptl-chart-bars {
-  display: flex; align-items: flex-end; gap: 2px;
-  height: 44px; padding: 0 1px;
+  display: flex; align-items: center; justify-content: center; gap: 3px;
+  padding: 0 1px; flex-wrap: nowrap; overflow-x: auto;
 }
 .ptl-chart-bar {
-  flex: 1; min-width: 2px; border-radius: 2px 2px 0 0;
-  background: var(--color-primary); opacity: 0.6;
+  flex-shrink: 0; width: 12px; height: 12px; border-radius: 3px;
+  background: var(--color-bg-alt); border: 1px solid var(--color-border);
 }
+.ptl-chart-bar[data-level="1"] { background: color-mix(in srgb, var(--color-success) 25%, var(--color-bg-alt)); border-color: transparent; }
+.ptl-chart-bar[data-level="2"] { background: color-mix(in srgb, var(--color-success) 50%, var(--color-bg-alt)); border-color: transparent; }
+.ptl-chart-bar[data-level="3"] { background: color-mix(in srgb, var(--color-success) 75%, var(--color-bg-alt)); border-color: transparent; }
+.ptl-chart-bar[data-level="4"] { background: var(--color-success); border-color: transparent; }
 .ptl-chart-axis {
   display: flex; justify-content: space-between;
   margin-top: 6px; padding-top: 6px;
