@@ -66,7 +66,7 @@
  * que já temos calculada no servidor. */
 .ptl-chart { margin-bottom: 20px; }
 .ptl-chart-bars {
-  display: flex; align-items: center; gap: 3px;
+  display: flex; align-items: center; justify-content: center; gap: 3px;
   padding: 0 1px; flex-wrap: nowrap; overflow-x: auto;
 }
 .ptl-chart-bar {
