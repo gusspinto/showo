@@ -142,16 +142,28 @@ const HEATMAP_MONTHS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 
 
 const HEATMAP_DAY_ROWS = [null, 'seg', null, 'qua', null, 'sex', null] // igual ao GitHub: só 3 rótulos
 
+const HEATMAP_RANGES = [
+  { weeks: 13, label: '3 meses' },
+  { weeks: 26, label: '6 meses' },
+  { weeks: 52, label: '1 ano' },
+]
+
 /* Heatmap agregado — soma o diário de todos os projetos não-privados,
  * grelha dia x semana igual ao gráfico de contribuições do GitHub, não
- * a versão simplificada de uma célula por semana. `columns` vem já como
- * as últimas ~52 semanas (dailyGrid), cada uma com 7 dias (ou null para
- * dias no futuro, dentro da semana corrente). */
-function ActivityHeatmap({ columns }) {
+ * a versão simplificada de uma célula por semana. `allColumns` vem já
+ * como as últimas 52 semanas (dailyGrid) — a janela mostrada (3/6/12
+ * meses) é só um corte do fim dessa lista, escolhido aqui, sem precisar
+ * de voltar a perguntar ao servidor. Predefinido a 6 meses: um ano
+ * inteiro é muita célula vazia para quem só começou agora. */
+function ActivityHeatmap({ allColumns }) {
+  const [rangeWeeks, setRangeWeeks] = useState(26)
+  const columns = allColumns.slice(-rangeWeeks)
   const allDays = columns.flat().filter(Boolean)
   const total = allDays.reduce((s, d) => s + d.count, 0)
-  if (total === 0) return null
+  const everHadActivity = allColumns.some(col => col.some(d => d && d.count > 0))
+  if (!everHadActivity) return null
   const maxDay = Math.max(1, ...allDays.map(d => d.count))
+  const rangeLabel = HEATMAP_RANGES.find(r => r.weeks === rangeWeeks)?.label
 
   // Mês aparece só na primeira coluna em que muda, alinhado por cima da
   // coluna certa — igual ao GitHub.
@@ -167,7 +179,20 @@ function ActivityHeatmap({ columns }) {
 
   return (
     <div className="up-heatmap">
-      <p className="up-heatmap-title">{total} {total === 1 ? 'registo' : 'registos'} no último ano</p>
+      <div className="up-heatmap-head">
+        <p className="up-heatmap-title">{total} {total === 1 ? 'registo' : 'registos'} nos últimos {rangeLabel}</p>
+        <div className="up-heatmap-range">
+          {HEATMAP_RANGES.map(r => (
+            <button
+              key={r.weeks}
+              type="button"
+              className={`up-heatmap-range-btn${r.weeks === rangeWeeks ? ' is-active' : ''}`}
+              onClick={() => setRangeWeeks(r.weeks)}
+            >{r.label}</button>
+          ))}
+        </div>
+      </div>
+      <div className="up-heatmap-scrollwrap">
       <div className="up-heatmap-scroll">
         <div className="up-heatmap-body">
           <div className="up-heatmap-daylabels">
@@ -193,6 +218,7 @@ function ActivityHeatmap({ columns }) {
             </div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   )
@@ -760,7 +786,7 @@ export default function UserProfile() {
         </header>
 
         {activityDaily && activityDaily.length > 0 && (
-          <ActivityHeatmap columns={dailyGrid(activityDaily, 52)} />
+          <ActivityHeatmap allColumns={dailyGrid(activityDaily, 52)} />
         )}
 
         {/* ── Trabalho ── */}

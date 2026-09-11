@@ -586,19 +586,34 @@
 .up-pf-row-api { display: flex; margin-top: 2px; }
 
 /* ── Heatmap de atividade agregado (todos os projetos) ── */
-.up-heatmap { position: relative; margin: 4px 0 28px; }
+.up-heatmap { margin: 4px 0 28px; }
+.up-heatmap-head {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 8px; margin-bottom: 8px;
+}
 .up-heatmap-title {
-  margin: 0 0 8px; font-size: 12px; font-weight: 600;
+  margin: 0; font-size: 12px; font-weight: 600;
   color: var(--color-text-secondary);
 }
+.up-heatmap-range { display: flex; gap: 4px; }
+.up-heatmap-range-btn {
+  font-size: 11px; font-weight: 600; color: var(--color-text-tertiary);
+  background: none; border: 1px solid var(--color-border); border-radius: 6px;
+  padding: 3px 9px; cursor: pointer;
+}
+.up-heatmap-range-btn.is-active {
+  color: var(--color-text); border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+.up-heatmap-scrollwrap { position: relative; }
 .up-heatmap-scroll { overflow-x: auto; }
 /* Pista de que a grelha desliza — sem isto, num ecrã estreito parece só
  * cortada a meio em vez de "arrasta para o lado". Fica fora do próprio
  * elemento com scroll (senão o desvanecido arrastava-se com o conteúdo
  * em vez de ficar fixo na borda visível), sobreposto ao seu canto
  * direito; pointer-events: none não bloqueia o scroll nem o hover. */
-.up-heatmap::after {
-  content: ''; position: absolute; top: 20px; right: 0; bottom: 0; width: 28px;
+.up-heatmap-scrollwrap::after {
+  content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 28px;
   background: linear-gradient(to right, transparent, var(--color-bg));
   pointer-events: none;
 }
