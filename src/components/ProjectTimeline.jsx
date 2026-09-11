@@ -12,6 +12,7 @@ import { TrashBinMinimalisticIcon as Trash } from '@solar-icons/react/bold/trash
 import { StarsIcon as Sparkles } from '@solar-icons/react/bold/stars'
 import { ClockCircleIcon as Route } from '@solar-icons/react/bold/clock-circle'
 import { PlusIcon as Plus } from './icons/PlusIcon'
+import { weeksWindow } from '../lib/activityHeatmap'
 import './ProjectTimeline.css'
 
 // Decisão de produto, não regra técnica — muda aqui, num sítio só, quando
@@ -29,36 +30,6 @@ const fmtDay = d => { const x = new Date(d + 'T00:00:00'); return `${x.getDate()
 function monthsBetween(a, b) {
   const d1 = new Date(a), d2 = new Date(b)
   return Math.max(0, (d2.getFullYear() - d1.getFullYear()) * 12 + d2.getMonth() - d1.getMonth())
-}
-
-// Segunda-feira (em UTC) da semana que contém `ms` — mesma convenção do
-// date_trunc('week', ...) do Postgres, que é quem agrupa os dados no RPC
-// (get_project_timeline). Tudo em UTC de propósito: misturar aritmética de
-// datas local com toISOString() (que converte para UTC) desalinhava a
-// semana em ±1 dia consoante o fuso do browser, e as contagens nunca
-// batiam certo com as chaves que o servidor devolve.
-function mondayOfUTC(ms) {
-  const d = new Date(ms)
-  const day = (d.getUTCDay() + 6) % 7 // 0=segunda … 6=domingo
-  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - day)
-}
-const toISODate = ms => new Date(ms).toISOString().slice(0, 10)
-const WEEK_MS = 7 * 24 * 60 * 60 * 1000
-
-// Últimos ~90 dias, semana a semana — como o heatmap do GitHub, as semanas
-// sem nenhum registo aparecem na mesma (a olho, um espaço vazio no meio diz
-// tanto como um quadrado escuro). `weekly` só tem as semanas com atividade;
-// isto preenche as que faltam com contagem 0 até cobrir a janela toda.
-function last90DaysWeekly(weekly) {
-  const byWeek = new Map(weekly.map(w => [w.week, w.count]))
-  const endMs = mondayOfUTC(Date.now())
-  const startMs = mondayOfUTC(Date.now() - 90 * 24 * 60 * 60 * 1000)
-  const out = []
-  for (let t = startMs; t <= endMs; t += WEEK_MS) {
-    const key = toISODate(t)
-    out.push({ week: key, count: byWeek.get(key) || 0 })
-  }
-  return out
 }
 
 function durationLabel(from) {
@@ -161,7 +132,7 @@ export default function ProjectTimeline({ project, isOwner, viewOnly = false }) 
   if (!isOwner && !viewOnly) return null
 
   const startDate = tl?.first_entry || tl?.created_on
-  const weekly = last90DaysWeekly(tl?.weekly || [])
+  const weekly = weeksWindow(tl?.weekly, 13) // ~90 dias
   const maxWeek = Math.max(1, ...weekly.map(w => w.count))
   const durMonths = startDate ? monthsBetween(startDate, new Date()) : 0
 

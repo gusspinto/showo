@@ -18,6 +18,7 @@ import { StarIcon as Star } from '@solar-icons/react/bold/star'
 import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
 import { PlusIcon as Plus } from '../components/icons/PlusIcon'
 import { DatabaseIcon as Database } from '@solar-icons/react/bold/database'
+import { weeksWindow } from '../lib/activityHeatmap'
 import { ChatRoundLineIcon as MessageSquare } from '@solar-icons/react/bold/chat-round-line'
 import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/square-academic-cap'
 import { PlaneIcon as Send } from '@solar-icons/react/bold/plane'
@@ -137,6 +138,49 @@ function ProfileItem({ project, onOpen, timeline, publicApiCount }) {
   )
 }
 
+const HEATMAP_MONTHS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
+
+/* Heatmap agregado — soma o diário de todos os projetos não-privados,
+ * mesmo padrão visual do gráfico de contribuições do GitHub (semanas em
+ * colunas, intensidade de verde por nível de atividade). `weekly` vem já
+ * como as últimas 52 semanas, com as vazias preenchidas a 0. */
+function ActivityHeatmap({ weekly }) {
+  const total = weekly.reduce((s, w) => s + w.count, 0)
+  if (total === 0) return null
+  const maxWeek = Math.max(1, ...weekly.map(w => w.count))
+
+  // Mês aparece só na primeira semana em que muda, alinhado por cima da
+  // coluna certa — igual ao GitHub.
+  let lastMonth = null
+  const monthLabels = weekly.map(w => {
+    const m = new Date(w.week + 'T00:00:00Z').getUTCMonth()
+    const show = m !== lastMonth
+    lastMonth = m
+    return show ? HEATMAP_MONTHS[m] : ''
+  })
+
+  return (
+    <div className="up-heatmap">
+      <p className="up-heatmap-title">{total} {total === 1 ? 'registo' : 'registos'} no último ano</p>
+      <div className="up-heatmap-scroll">
+        <div className="up-heatmap-months">
+          {monthLabels.map((label, i) => <span key={i}>{label}</span>)}
+        </div>
+        <div className="up-heatmap-grid">
+          {weekly.map(w => (
+            <span
+              key={w.week}
+              className="up-heatmap-cell"
+              data-level={w.count === 0 ? 0 : Math.min(4, Math.ceil((w.count / maxWeek) * 4))}
+              title={`${w.count} ${w.count === 1 ? 'registo' : 'registos'} na semana de ${w.week}`}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function QRModal({ profileUrl, username, onClose }) {
   const qrRef = useRef(null)
 
@@ -235,6 +279,7 @@ export default function UserProfile() {
   const [profileViews, setProfileViews] = useState(null) // total de visualizações do perfil (só o dono)
   const [timelineByProject, setTimelineByProject] = useState({}) // project_id -> resumo da timeline
   const [publicApiCountByProject, setPublicApiCountByProject] = useState({}) // project_id -> nº de tabelas públicas
+  const [activityWeekly, setActivityWeekly] = useState(null) // heatmap agregado — null = a carregar
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [showQR, setShowQR] = useState(false)
@@ -266,6 +311,13 @@ export default function UserProfile() {
 
       if (profileErr || !profileData) { setNotFound(true); setLoading(false); return }
       setProfile(profileData)
+
+      // Heatmap agregado — soma o diário de todos os projetos não-privados
+      // do utilizador, não só o em destaque. Falha em silêncio: sem isto o
+      // perfil continua a funcionar, só sem o gráfico.
+      supabase.rpc('get_profile_activity', { p_user_id: profileData.id, p_weeks: 52 })
+        .then(({ data }) => setActivityWeekly(Array.isArray(data) ? data : []))
+        .catch(() => setActivityWeekly([]))
 
       // A secção "Projetos" mostra só o que o dono escolheu na Biblioteca
       // (profile_featured), pela ordem que definiu — projetos criados e
@@ -689,6 +741,10 @@ export default function UserProfile() {
             {previewBio && <p className="up-bio">{previewBio}</p>}
           </div>
         </header>
+
+        {activityWeekly && activityWeekly.length > 0 && (
+          <ActivityHeatmap weekly={weeksWindow(activityWeekly, 52)} />
+        )}
 
         {/* ── Trabalho ── */}
         <div className="up-work">
