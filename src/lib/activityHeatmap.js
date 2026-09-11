@@ -33,3 +33,31 @@ export function weeksWindow(weekly, numWeeks) {
   }
   return out
 }
+
+const DAY_MS = 24 * 60 * 60 * 1000
+
+/** Grelha dia x semana das últimas `numWeeks` semanas — o heatmap "a
+ * sério" do GitHub, não a versão simplificada de uma célula por semana.
+ * `daily` é [{day: 'YYYY-MM-DD', count}] (só os dias com atividade, é o
+ * que o servidor devolve). Devolve um array de colunas (semanas), cada
+ * uma um array de 7 {date, count} de segunda a domingo. */
+export function dailyGrid(daily, numWeeks) {
+  const byDay = new Map((daily || []).map(d => [d.day, d.count]))
+  const endWeekMs = mondayOfUTC(Date.now())
+  const startWeekMs = mondayOfUTC(Date.now() - numWeeks * WEEK_MS)
+  const todayKey = toISODate(Date.now())
+  const columns = []
+  for (let w = startWeekMs; w <= endWeekMs; w += WEEK_MS) {
+    const days = []
+    for (let i = 0; i < 7; i++) {
+      const t = w + i * DAY_MS
+      const key = toISODate(t)
+      // Dias no futuro (resto da semana atual) ficam de fora — em branco,
+      // não a zero, para não parecerem "sem atividade" quando ainda nem
+      // aconteceram.
+      days.push(key > todayKey ? null : { date: key, count: byDay.get(key) || 0 })
+    }
+    columns.push(days)
+  }
+  return columns
+}

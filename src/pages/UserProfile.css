@@ -602,6 +602,13 @@
   background: linear-gradient(to right, transparent, var(--color-bg));
   pointer-events: none;
 }
+.up-heatmap-body { display: flex; gap: 6px; width: fit-content; }
+.up-heatmap-daylabels {
+  display: flex; flex-direction: column; gap: 3px;
+  padding-top: 18px; /* alinha com a 1ª linha da grelha, por baixo dos meses */
+  font-size: 9px; color: var(--color-text-tertiary);
+}
+.up-heatmap-daylabels span { height: 12px; line-height: 12px; }
 .up-heatmap-months {
   display: flex; gap: 3px; padding: 0 1px 4px;
   font-size: 10px; color: var(--color-text-tertiary);
@@ -610,10 +617,12 @@
 .up-heatmap-grid {
   display: flex; gap: 3px; padding: 0 1px; width: fit-content;
 }
+.up-heatmap-col { display: flex; flex-direction: column; gap: 3px; flex-shrink: 0; }
 .up-heatmap-cell {
   flex-shrink: 0; width: 12px; height: 12px; border-radius: 3px;
   background: var(--color-bg-alt); border: 1px solid var(--color-border);
 }
+.up-heatmap-cell--blank { background: transparent; border-color: transparent; }
 .up-heatmap-cell[data-level="1"] { background: color-mix(in srgb, var(--color-success) 25%, var(--color-bg-alt)); border-color: transparent; }
 .up-heatmap-cell[data-level="2"] { background: color-mix(in srgb, var(--color-success) 50%, var(--color-bg-alt)); border-color: transparent; }
 .up-heatmap-cell[data-level="3"] { background: color-mix(in srgb, var(--color-success) 75%, var(--color-bg-alt)); border-color: transparent; }
