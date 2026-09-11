@@ -185,7 +185,7 @@ CREATE TABLE public.daily_progress (
 ALTER TABLE public.profiles
   ADD COLUMN reward_wallet jsonb NOT NULL DEFAULT '{}';  -- {aiCredits:{}, streakFreeze:0, boosts:0, badges:[]}
 ```
-Pool e sorteio em código ([src/lib/rewards.js](../src/lib/rewards.js)), não na BD.
+Pool e sorteio em código, não na BD.
 
 ### Decisões (com o Bruno + Gustavo)
 - **O ritual do dia (Gustavo):** 3 passos pequenos — *Partilhar · Mostrar ·
@@ -201,9 +201,9 @@ Pool e sorteio em código ([src/lib/rewards.js](../src/lib/rewards.js)), não na
   "recompensa", não "loot box". Animação sóbria, sem confetti (vibecoded-audit).
 
 ### Protótipo
-`/recompensa` ([RecompensaLab.jsx](../src/pages/RecompensaLab.jsx),
-[rewards.js](../src/lib/rewards.js)) — ritual do dia + gatilhos manuais + abrir
-caixas + inventário + pool com probabilidades. Estado só em localStorage.
+Houve um protótipo isolado em `/recompensa` (`RecompensaLab.jsx` + `rewards.js`,
+estado só em localStorage). Foi removido — a mecânica arranca do zero quando a
+feature for construída a sério.
 
 **Esforço:** médio (schema `reward_boxes` + `daily_progress`, sorteio, UI de abrir,
 os 3 passos ligados a ações reais).
