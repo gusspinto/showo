@@ -57,7 +57,7 @@ export default async function handler(req, res) {
           const publicTables = await tr.json()
           if (Array.isArray(publicTables) && publicTables.length) {
             const n = publicTables.length
-            title = `${p.name} · 🔌 API ativa — Showo`
+            title = `${p.name} · API ativa — Showo`
             description += ` · API ativa (${n} ${n === 1 ? 'tabela pública' : 'tabelas públicas'})`
             image = `${BASE}/api/og-image?slug=${encodeURIComponent(slug)}`
           }

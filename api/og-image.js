@@ -57,8 +57,8 @@ export default async function handler(req) {
             type: 'div',
             props: {
               style: {
-                position: 'absolute', inset: 0, display: 'flex',
-                background: 'linear-gradient(180deg, rgba(10,10,14,0.25) 0%, rgba(10,10,14,0.92) 100%)',
+                position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex',
+                background: 'linear-gradient(180deg, rgba(10,10,14,0.35) 0%, rgba(10,10,14,0.94) 100%)',
               },
             },
           },
@@ -104,7 +104,20 @@ export default async function handler(req) {
                       borderRadius: 999, padding: '14px 30px',
                     },
                     children: [
-                      { type: 'div', props: { style: { fontSize: 28, display: 'flex' }, children: '🔌' } },
+                      {
+                        type: 'svg',
+                        props: {
+                          width: 32, height: 32, viewBox: '0 0 24 24', fill: 'none',
+                          stroke: '#34d399', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round',
+                          style: { display: 'flex' },
+                          children: [
+                            { type: 'path', props: { d: 'M12 22v-5' } },
+                            { type: 'path', props: { d: 'M9 8V2' } },
+                            { type: 'path', props: { d: 'M15 8V2' } },
+                            { type: 'path', props: { d: 'M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z' } },
+                          ],
+                        },
+                      },
                       {
                         type: 'div',
                         props: {
