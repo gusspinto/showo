@@ -78,7 +78,6 @@ const EditProject  = lazyPage(() => import('./pages/EditProject'))
 const Explore      = lazyPage(() => import('./pages/Explore'))
 const Dashboard    = lazyPage(() => import('./pages/Dashboard'))
 const Biblioteca   = lazyPage(() => import('./pages/Biblioteca'))
-const RecompensaLab = lazyPage(() => import('./pages/RecompensaLab'))
 const Vagas        = lazyPage(() => import('./pages/Vagas'))
 const Settings     = lazyPage(() => import('./pages/Settings'))
 const UserProfile  = lazyPage(() => import('./pages/UserProfile'))
@@ -588,7 +587,6 @@ export default function App() {
               <Route path="/register"      element={<Register />}    />
               <Route path="/dashboard"     element={<Dashboard />}   />
               <Route path="/biblioteca"    element={<Biblioteca />}  />
-              <Route path="/recompensa"    element={<RecompensaLab />} />
               <Route path="/vagas"         element={<Vagas />}       />
               <Route path="/settings"      element={<Settings />}    />
               <Route path="/u/:username"   element={<UserProfile />} />
