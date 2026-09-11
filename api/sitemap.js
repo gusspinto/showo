@@ -1,12 +1,14 @@
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
 const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY
-const BASE = 'https://showo.app'
+const BASE = 'https://showo.pt'
 
 export default async function handler(req, res) {
   const staticUrls = [
     { loc: BASE, priority: '1.0', changefreq: 'daily' },
     { loc: `${BASE}/explorar`, priority: '0.8', changefreq: 'daily' },
     { loc: `${BASE}/ranking`, priority: '0.8', changefreq: 'daily' },
+    { loc: `${BASE}/empresa`, priority: '0.7', changefreq: 'monthly' },
+    { loc: `${BASE}/aprende-a-usar`, priority: '0.6', changefreq: 'monthly' },
   ]
 
   let projectUrls = []

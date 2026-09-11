@@ -159,7 +159,7 @@ function DoneBeat({ active }) {
           <Check size={12} color="var(--color-success)" strokeWidth={3} />
         </div>
         <span className="onb-done-url">
-          showo.app/projeto/<span className="text-primary font-semibold">gestao-horarios</span>
+          showo.pt/projeto/<span className="text-primary font-semibold">gestao-horarios</span>
         </span>
       </div>
     </div>
