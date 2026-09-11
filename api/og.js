@@ -21,7 +21,7 @@ export default async function handler(req, res) {
   if (slug && SUPABASE_URL && SUPABASE_KEY) {
     try {
       const r = await fetch(
-        `${SUPABASE_URL}/rest/v1/projects?slug=eq.${encodeURIComponent(slug)}&select=name,ai_tagline,ai_description,goal,area,cover_url,score,creator_name,created_at&limit=1`,
+        `${SUPABASE_URL}/rest/v1/projects?slug=eq.${encodeURIComponent(slug)}&select=id,name,ai_tagline,ai_description,goal,area,cover_url,score,creator_name,created_at&limit=1`,
         { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
       )
       const [p] = await r.json()
@@ -29,6 +29,18 @@ export default async function handler(req, res) {
         title = `${p.name} — Showo`
         description = p.ai_tagline || p.ai_description?.slice(0, 160) || p.goal || `Projeto de ${p.creator_name || 'estudante'} no Showo`
         if (p.cover_url) image = p.cover_url
+
+        try {
+          const tr = await fetch(
+            `${SUPABASE_URL}/rest/v1/project_data_tables?project_id=eq.${p.id}&is_public=eq.true&select=id`,
+            { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+          )
+          const publicTables = await tr.json()
+          if (Array.isArray(publicTables) && publicTables.length) {
+            const n = publicTables.length
+            description += ` · 🔌 API ativa (${n} ${n === 1 ? 'tabela pública' : 'tabelas públicas'})`
+          }
+        } catch {}
 
         jsonLd = {
           '@context': 'https://schema.org',
