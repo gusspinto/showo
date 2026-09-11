@@ -1322,7 +1322,22 @@ function ApiKeyCard({ project, apiKey, firstTable, onKeyChanged }) {
     setConfirmRegen(false)
   }
 
-  const example = apiKey ? ProjectDb.curlExample(apiKey, firstTable.name, 'GET') : ''
+  const [docAction, setDocAction] = useState('list_rows')
+
+  // Dados de exemplo a partir das colunas reais da tabela — a documentação
+  // mostra exatamente a forma que a API deste projeto espera, não um
+  // genérico "foo": "bar".
+  const sampleData = {}
+  for (const c of firstTable?.columns ?? []) {
+    sampleData[c.name] = c.type === 'number' ? 0 : c.type === 'boolean' ? true : c.type === 'date' ? '2026-01-01' : 'exemplo'
+  }
+  const DOC_TABS = [
+    ['list_rows', 'Ler'],
+    ['insert_row', 'Criar'],
+    ['update_row', 'Atualizar'],
+    ['delete_row', 'Apagar'],
+  ]
+  const example = apiKey ? ProjectDb.curlExample(apiKey, firstTable.name, docAction, sampleData) : ''
 
   return (
     <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${colors.border}` }}>
@@ -1331,6 +1346,7 @@ function ApiKeyCard({ project, apiKey, firstTable, onKeyChanged }) {
       </div>
       <p style={{ margin: '0 0 12px', fontSize: 12.5, color: colors.muted, lineHeight: 1.6 }}>
         Usa esta chave para chamar a API do teu projeto de fora da Showo — de outro código, do Postman, ou de um site que construas.
+        Todos os pedidos são <code>POST</code> para o mesmo endereço; é o campo <code>action</code> no corpo que diz o que fazer.
       </p>
       {!apiKey && (
         <button type="button" onClick={handleGenerate} disabled={generating} style={{ background: colors.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: generating ? 0.7 : 1 }}>
@@ -1346,12 +1362,30 @@ function ApiKeyCard({ project, apiKey, firstTable, onKeyChanged }) {
             </button>
           </div>
 
+          <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
+            {DOC_TABS.map(([val, label]) => (
+              <button key={val} type="button" onClick={() => setDocAction(val)} style={{
+                fontSize: 11.5, fontWeight: 600, padding: '4px 10px', borderRadius: 6,
+                border: `1px solid ${docAction === val ? colors.blue : colors.border}`,
+                background: docAction === val ? 'var(--color-primary-subtle)' : 'transparent',
+                color: docAction === val ? colors.blue : colors.muted,
+                cursor: 'pointer', fontFamily: 'inherit',
+              }}>{label}</button>
+            ))}
+          </div>
+
           <div style={{ position: 'relative', marginBottom: 10 }}>
             <pre style={{ margin: 0, background: '#0d0d10', color: '#d8d8de', borderRadius: 8, padding: '12px 14px', fontSize: 11.5, lineHeight: 1.6, overflowX: 'auto', fontFamily: 'monospace' }}>{example}</pre>
             <button type="button" onClick={() => copy(example, 'curl')} style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 6, color: '#fff', padding: '4px 8px', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
               {copied === 'curl' ? 'Copiado' : <Copy size={12} />}
             </button>
           </div>
+
+          {(docAction === 'update_row' || docAction === 'delete_row') && (
+            <p style={{ margin: '0 0 10px', fontSize: 11.5, color: colors.subtle, lineHeight: 1.5 }}>
+              Substitui <code>ID_DA_LINHA</code> pelo <code>id</code> que "Ler" devolve para cada linha.
+            </p>
+          )}
 
           {!confirmRegen ? (
             <button type="button" onClick={() => setConfirmRegen(true)} style={{ background: 'none', border: 'none', color: colors.subtle, fontSize: 11.5, fontWeight: 600, cursor: 'pointer', padding: 0, fontFamily: 'inherit', textDecoration: 'underline', textUnderlineOffset: 3 }}>

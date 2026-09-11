@@ -12,6 +12,9 @@ import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/
 import { RouteIcon as Route } from '@solar-icons/react/bold/route'
 import { CupStarIcon as Trophy } from '@solar-icons/react/bold/cup-star'
 import { Book2Icon as BookOpen } from '@solar-icons/react/bold/book-2'
+import { DatabaseIcon as Database } from '@solar-icons/react/bold/database'
+import { CodeIcon as Code } from '@solar-icons/react/bold/code'
+import { GlobeIcon as Globe } from '@solar-icons/react/bold/globe'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -77,10 +80,12 @@ const PLANS = [
     ctaVariant: 'primary',
     popular: true,
     inherits: 'Grátis',
+    database: 'plus',
     groups: [
       {
         label: 'Mais',
         items: [
+          { label: 'Base de dados + API do projeto', value: '2 tabelas' },
           { label: '15 projetos' },
           { label: 'Coach IA', value: '100 msgs' },
           { label: 'Criar com IA', value: '15x' },
@@ -112,6 +117,7 @@ const PLANS = [
       {
         label: 'Mais',
         items: [
+          { label: 'Base de dados + API do projeto', value: '8 tabelas' },
           { label: 'Projetos ilimitados' },
           { label: 'Coach IA', value: '300 msgs' },
           { label: 'Todas as features IA', value: '25x' },
@@ -121,6 +127,28 @@ const PLANS = [
         ],
       },
     ],
+  },
+]
+
+/* A base de dados é a razão principal para pagar — não "mais IA" (quase
+   ninguém bate nos limites de IA, confirmado no uso real), mas "o projeto
+   passa a ser um produto a sério". Por isso é explicada como a Carreira,
+   não só mais uma linha na lista. */
+const DATABASE_FEATURES = [
+  {
+    Icon: Database,
+    title: 'Base de dados a sério',
+    desc: 'Desenha tabelas no editor — sem código nenhum — e o projeto ganha uma base de dados própria, isolada, com os teus dados.',
+  },
+  {
+    Icon: Code,
+    title: 'API automática',
+    desc: 'Cada tabela ganha um endereço e uma chave próprios. Funciona de fora da Showo — curl, Postman, o teu próprio site — como uma aplicação real.',
+  },
+  {
+    Icon: Globe,
+    title: 'Mostra a quem quiseres',
+    desc: 'Cada tabela escolhes se é pública ou privada. Um recrutador pode testar a tua API sem precisar de conta nenhuma.',
   },
 ]
 
@@ -148,6 +176,7 @@ const CAREER_FEATURES = [
    de um para o outro. Uma tabela deixa comparar linha a linha de relance.
    A conta escola fica fora: não é self-serve, é vendida à instituição. */
 const COMPARE_ROWS = [
+  { label: 'Base de dados + API do projeto', free: false, plus: '2 tabelas', pro: '8 tabelas' },
   { label: 'Projetos', free: '3', plus: '15', pro: 'Ilimitados' },
   { label: 'Coach IA', free: '10 msgs', plus: '100 msgs', pro: '300 msgs' },
   { label: 'Criar projeto com IA', free: '3x', plus: '15x', pro: '30x' },
@@ -316,6 +345,28 @@ export default function Pricing() {
                     </ul>
                   </div>
                 ))}
+
+                {/* A razão principal para pagar: o projeto deixa de ser só
+                    teórico e passa a ter dados e uma API a sério. */}
+                {plan.database && (
+                  <div className="pricing-career">
+                    <div className="pricing-career-head">
+                      <Database size={13} className="pricing-career-head-icon" />
+                      <span className="pricing-career-head-text">Produto real · desde o Plus</span>
+                    </div>
+                    <ul className="pricing-career-list">
+                      {DATABASE_FEATURES.map(({ Icon, title, desc }) => (
+                        <li key={title}>
+                          <span className="pricing-career-icon"><Icon size={15} /></span>
+                          <span>
+                            <strong>{title}</strong>
+                            <span className="pricing-career-desc">{desc}</span>
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
                 {/* O bloco que justifica o salto de preço. */}
                 {plan.career && (

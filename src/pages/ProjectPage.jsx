@@ -8,6 +8,8 @@ import { useIsMobile } from '../lib/useIsMobile'
 import { calculateScore, looksLikeSpam } from '../lib/score'
 import { containsProfanity } from '../lib/profanity'
 import { topLanguages, commitSpanMonths, repoAgeMonths } from '../lib/social'
+import { listPublicTables, publicCurlExample } from '../lib/projectDb'
+import { DatabaseIcon as Database } from '@solar-icons/react/bold/database'
 import { CHALLENGES, getChallengeStatus } from '../lib/challenges'
 import { Navbar } from '../components/Navbar'
 import { PlanGateModal, AiUsageBadge, ConfirmUseModal } from '../components/PlanGate'
@@ -111,6 +113,76 @@ const ANON_PROJECT_COLUMNS = [
    dados. Os commits e os meses são sempre os reais do repositório; os dias
    de trabalho só se contam nos commits lidos, por isso quando `partial`
    levam "+" — são um mínimo, não um número exato. */
+
+/* ── Prova de API ─────────────────────────────────────────────────────────
+   Só mostra tabelas marcadas como PÚBLICAS pelo dono — nunca a existência
+   de tabelas privadas, e nunca a chave de API real. O exemplo de curl que
+   mostra funciona mesmo sem chave nenhuma, porque é exatamente isso que
+   "pública" significa aqui: qualquer pessoa lê, ninguém escreve sem
+   credenciais. Um recrutador pode copiar e colar isto num terminal e ver
+   dados a sério, sem precisar de conta nenhuma. */
+function ApiProof({ project }) {
+  const [tables, setTables] = useState(null) // null = a carregar
+  const [openId, setOpenId] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    if (!project?.id) return
+    listPublicTables(project.id).then(data => {
+      if (!cancelled) setTables(data.tables || [])
+    }).catch(() => { if (!cancelled) setTables([]) })
+    return () => { cancelled = true }
+  }, [project?.id])
+
+  if (!tables || !tables.length) return null
+
+  return (
+    <div style={{
+      background: 'var(--color-surface)', border: '1px solid var(--color-border)',
+      borderRadius: 12, padding: '20px 24px', marginBottom: 16,
+      fontFamily: 'var(--font-body, system-ui, sans-serif)',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+        <Database size={14} color="var(--color-primary)" />
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+          API ativa
+        </div>
+        <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--color-success)', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', borderRadius: 99, padding: '2px 8px' }}>
+          {tables.length === 1 ? '1 tabela pública' : `${tables.length} tabelas públicas`}
+        </span>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {tables.map(t => (
+          <div key={t.id} style={{ border: '1px solid var(--color-border)', borderRadius: 8, overflow: 'hidden' }}>
+            <button
+              onClick={() => setOpenId(id => id === t.id ? null : t.id)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left',
+                background: 'none', border: 'none', cursor: 'pointer', padding: '10px 12px', fontFamily: 'inherit',
+              }}
+            >
+              <span style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--color-text)', flex: 1 }}>{t.label}</span>
+              <span style={{ fontSize: 11.5, color: 'var(--color-text-tertiary)' }}>{t.columns.length} {t.columns.length === 1 ? 'campo' : 'campos'}</span>
+              <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--color-primary)' }}>{openId === t.id ? 'Fechar' : 'Testar API ↓'}</span>
+            </button>
+            {openId === t.id && (
+              <div style={{ padding: '0 12px 12px', borderTop: '1px solid var(--color-border)' }}>
+                <p style={{ margin: '12px 0 8px', fontSize: 11.5, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+                  Sem chave nenhuma — copia e cola isto num terminal:
+                </p>
+                <pre style={{ margin: 0, background: '#0d0d10', color: '#d8d8de', borderRadius: 8, padding: '11px 13px', fontSize: 11, lineHeight: 1.6, overflowX: 'auto', fontFamily: 'monospace' }}>
+                  {publicCurlExample(t.id)}
+                </pre>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function GithubProof({ project }) {
   const stats = project?.github_stats
   if (!stats?.commits) return null
@@ -3117,6 +3189,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
             qualquer bloco ou secção reordenável: é a primeira coisa que
             quem visita a página vê a seguir ao cabeçalho. */}
         <GithubProof project={project} />
+        <ApiProof project={project} />
 
         {/* Custom blocks — workspace blocks shown first */}
         {(() => {
@@ -7267,6 +7340,7 @@ export default function ProjectPage() {
             telemóvel, e é a primeira coisa a seguir ao cabeçalho no
             desktop. */}
         <GithubProof project={project} />
+        <ApiProof project={project} />
 
         {/* ── TAB: melhorar — mini-dashboard + completude + tips ── */}
         <div className={`proj-mobile-section${tabActive('melhorar') ? ' proj-mobile-active' : ''}`}>

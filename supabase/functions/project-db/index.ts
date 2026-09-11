@@ -32,6 +32,10 @@ const COLUMN_TYPES = new Set(['text', 'number', 'boolean', 'date'])
 const MAX_COLUMNS = 12
 const MANAGEMENT_ACTIONS = new Set(['list_tables', 'create_table', 'delete_table', 'toggle_public', 'get_api_key', 'regen_api_key'])
 const DATA_ACTIONS = new Set(['list_rows', 'insert_row', 'update_row', 'delete_row'])
+// Sem sessão nem chave nenhuma — é o que a página pública do projeto chama
+// para saber que tabelas existem e mostrar um "API ativa" a qualquer
+// visitante, sem nunca expor a chave real nem tabelas privadas.
+const PUBLIC_ACTIONS = new Set(['list_public_tables'])
 
 function randomApiKey(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(24))
@@ -88,8 +92,16 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}))
     const action = String(body.action ?? '')
 
-    if (!MANAGEMENT_ACTIONS.has(action) && !DATA_ACTIONS.has(action)) {
+    if (!MANAGEMENT_ACTIONS.has(action) && !DATA_ACTIONS.has(action) && !PUBLIC_ACTIONS.has(action)) {
       return json({ error: 'Ação desconhecida.' }, 400)
+    }
+
+    if (action === 'list_public_tables') {
+      const pid = typeof body.projectId === 'string' ? body.projectId : ''
+      if (!pid) return json({ error: 'Projeto em falta.' }, 400)
+      if (!(await checkRateLimit(req, 'project-db', 200))) return json({ error: 'Demasiados pedidos seguidos.' }, 429)
+      const { data: tables } = await sb.from('project_data_tables').select('id, name, label, columns').eq('project_id', pid).eq('is_public', true).order('created_at')
+      return json({ tables: tables ?? [] })
     }
 
     // Chamadas externas (chave de API) só podem tocar em dados, nunca gerir
