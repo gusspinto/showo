@@ -332,7 +332,13 @@ export default function Register() {
 
     setLoading(false)
     const primaryClaimed = claimSlug || claimedSlugs[0]
-    navigate(nextPath ?? '/dashboard', primaryClaimed ? { state: { claimedSlug: primaryClaimed } } : undefined)
+    // Alunos (individual ou institucional) sem projeto nenhum vão direto para
+    // /novo em vez da dashboard vazia — é o mesmo problema de ativação que
+    // levava a muitas contas nunca criarem um projeto. Quem já reclamou um
+    // projeto anónimo, ou veio de um ?next explícito, segue esse caminho.
+    const isStudentSignup = effectiveRole === 'aluno'
+    const destination = nextPath ?? (isStudentSignup && !primaryClaimed ? '/novo' : '/dashboard')
+    navigate(destination, primaryClaimed ? { state: { claimedSlug: primaryClaimed } } : undefined)
   }
 
   async function handleSubmit(e) {
@@ -371,7 +377,7 @@ export default function Register() {
         }
         await refreshProfile()
         setLoading(false)
-        navigate('/dashboard')
+        navigate(nextPath ?? '/novo')
         return
       }
       if (!inviteCode.trim()) { setError('Introduz o código de acesso.'); return }
