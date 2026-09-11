@@ -68,7 +68,7 @@ type Stats = {
 /* ── Email ──
    Uma coluna, 480px, sem imagens além do logo: é lido no telemóvel, muitas
    vezes com imagens desligadas. Os números fazem o trabalho visual. */
-function buildHtml(firstName: string, weekLabel: string, stats: Stats, quiet: boolean) {
+function buildHtml(firstName: string, weekLabel: string, stats: Stats, quiet: boolean, showPost: boolean) {
   const stat = (value: string, label: string, color = '#eef2f8') => `
     <td style="width:33.33%;padding:14px 8px;background:#0e1729;border:1px solid #1e3050;text-align:center;">
       <div style="font-size:24px;font-weight:700;color:${color};line-height:1;">${esc(value)}</div>
@@ -119,6 +119,18 @@ function buildHtml(firstName: string, weekLabel: string, stats: Stats, quiet: bo
       <p style="margin:0;color:#d5deee;font-size:13px;line-height:1.6;">
         Tens <strong style="color:#eef2f8;">${stats.tasksDue}</strong> ${stats.tasksDue === 1 ? 'tarefa de turma por entregar' : 'tarefas de turma por entregar'}.
       </p>
+    </div>` : ''}
+
+    ${showPost ? `
+    <div style="background:#0e1729;border:1px solid #1e3050;border-radius:10px;padding:16px 18px;margin-bottom:22px;">
+      <p style="margin:0 0 4px;color:#eef2f8;font-size:14px;font-weight:700;">Transforma a semana num post</p>
+      <p style="margin:0 0 12px;color:#98a9c0;font-size:13px;line-height:1.6;">
+        Uma semana com ${stats.entries} registos dá um bom post de progresso para o LinkedIn. A Showo escreve o rascunho, tu ajustas e publicas.
+      </p>
+      <a href="${APP}/post-semana" style="display:inline-block;background:rgba(255,255,255,0.08);color:#eef2f8;
+        text-decoration:none;font-weight:700;font-size:13px;padding:9px 18px;border-radius:8px;border:1px solid #2a4275;">
+        Gerar o post
+      </a>
     </div>` : ''}
 
     <div style="text-align:center;margin-bottom:26px;">
@@ -277,6 +289,8 @@ Deno.serve(async (req) => {
 
         const firstName = (p.full_name ?? '').trim().split(' ')[0] || 'Olá'
         const quiet = weekEntries.length === 0
+        // Semana com substância: vale a pena oferecer o post do LinkedIn.
+        const showPost = weekEntries.length >= 3
         const subject = quiet
           ? 'A tua semana no Showo — vamos recomeçar?'
           : `${weekEntries.length} ${weekEntries.length === 1 ? 'registo' : 'registos'} na semana passada${streak > 1 ? ` · ${streak} semanas seguidas` : ''}`
@@ -288,7 +302,7 @@ Deno.serve(async (req) => {
             from: FROM,
             to: email,
             subject,
-            html: buildHtml(firstName, weekLabel, stats, quiet),
+            html: buildHtml(firstName, weekLabel, stats, quiet, showPost),
           }),
         })
         if (!res.ok) { errors.push(await res.text()); continue }
