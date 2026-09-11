@@ -98,10 +98,10 @@ export default async function handler(req) {
                   type: 'div',
                   props: {
                     style: {
-                      display: 'flex', alignItems: 'center', gap: 14,
+                      display: 'flex', alignItems: 'center', gap: 14, alignSelf: 'flex-start',
                       background: 'rgba(16,185,129,0.16)',
                       border: '2px solid rgba(52,211,153,0.55)',
-                      borderRadius: 999, padding: '14px 30px', width: 'fit-content',
+                      borderRadius: 999, padding: '14px 30px',
                     },
                     children: [
                       { type: 'div', props: { style: { fontSize: 28, display: 'flex' }, children: '🔌' } },
