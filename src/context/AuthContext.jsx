@@ -98,6 +98,16 @@ export function AuthProvider({ children }) {
     // Ações pendentes do registo, guardadas nos metadados. Uma falha aqui
     // (RPC/rede) não pode impedir o perfil de ser aplicado — senão as
     // páginas ficam com profile=null e rebentam. Correm noutra tentativa.
+    //
+    // Confirmado em produção: 25 de 35 registos por email ficaram sem
+    // telefone gravado, apesar de o formulário o pedir e exigir. A causa era
+    // aqui — `updateUser({ pending_phone: null })` corria sempre, mesmo
+    // quando o UPDATE em profiles não afetava nenhuma linha (perfil ainda
+    // não criado pelo trigger nesse instante) ou falhava por outro motivo.
+    // A bandeira desaparecia e o valor perdia-se para sempre, sem próxima
+    // tentativa possível — e a pessoa ficava depois barrada pelo PhoneGate a
+    // pedir de novo o que já tinha escrito no registo. Corrige-se só
+    // limpando a bandeira quando a escrita confirma mesmo uma linha afetada.
     try {
     if (data && meta) {
       if (meta.pending_class_code) {
@@ -108,47 +118,69 @@ export function AuthProvider({ children }) {
         if (regResult?.ok) {
           const { data: refreshed } = await supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan, phone, account_type, organization_id').eq('id', uid).single()
           if (refreshed) data = refreshed
+          await supabase.auth.updateUser({ data: { pending_class_code: null } })
+        } else {
+          console.warn('[auth] pending_class_code falhou, mantém-se para a próxima tentativa:', regResult?.reason)
         }
-        await supabase.auth.updateUser({ data: { pending_class_code: null } })
       }
       if (meta.pending_invite_code) {
-        await supabase.rpc('redeem_professor_invite_code', {
+        const { error: inviteErr } = await supabase.rpc('redeem_professor_invite_code', {
           p_code: meta.pending_invite_code,
           p_full_name: meta.full_name ?? '',
           p_school: meta.pending_school ?? '',
         })
-        const { data: refreshed } = await supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan, phone, account_type, organization_id').eq('id', uid).single()
-        if (refreshed) data = refreshed
-        await supabase.auth.updateUser({ data: { pending_invite_code: null, pending_school: null } })
+        if (!inviteErr) {
+          const { data: refreshed } = await supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan, phone, account_type, organization_id').eq('id', uid).single()
+          if (refreshed) data = refreshed
+          await supabase.auth.updateUser({ data: { pending_invite_code: null, pending_school: null } })
+        } else {
+          console.warn('[auth] pending_invite_code falhou, mantém-se para a próxima tentativa:', inviteErr.message)
+        }
       }
       if (meta.pending_partner_token) {
-        await supabase.rpc('claim_partner_company_invite', { p_token: meta.pending_partner_token })
-        const { data: refreshed } = await supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan, phone, account_type, organization_id').eq('id', uid).single()
-        if (refreshed) data = refreshed
-        await supabase.auth.updateUser({ data: { pending_partner_token: null } })
+        const { error: partnerErr } = await supabase.rpc('claim_partner_company_invite', { p_token: meta.pending_partner_token })
+        if (!partnerErr) {
+          const { data: refreshed } = await supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan, phone, account_type, organization_id').eq('id', uid).single()
+          if (refreshed) data = refreshed
+          await supabase.auth.updateUser({ data: { pending_partner_token: null } })
+        } else {
+          console.warn('[auth] pending_partner_token falhou, mantém-se para a próxima tentativa:', partnerErr.message)
+        }
       }
       if (meta.pending_phone) {
-        await supabase.from('profiles').update({ phone: meta.pending_phone }).eq('id', uid)
-        await supabase.auth.updateUser({ data: { pending_phone: null } })
-        // `data` foi lido antes desta escrita — reflete-a já em memória, senão
-        // o perfil no estado fica com o valor antigo até um refresh futuro.
-        if (data) data = { ...data, phone: meta.pending_phone }
+        const { data: upd, error: phoneErr } = await supabase.from('profiles').update({ phone: meta.pending_phone }).eq('id', uid).select('id')
+        if (!phoneErr && upd?.length) {
+          await supabase.auth.updateUser({ data: { pending_phone: null } })
+          // `data` foi lido antes desta escrita — reflete-a já em memória, senão
+          // o perfil no estado fica com o valor antigo até um refresh futuro.
+          if (data) data = { ...data, phone: meta.pending_phone }
+        } else {
+          console.warn('[auth] pending_phone falhou, mantém-se para a próxima tentativa:', phoneErr?.message)
+        }
       }
       if (meta.pending_occupation) {
-        await supabase.from('profiles').update({ occupation: meta.pending_occupation }).eq('id', uid)
-        await supabase.auth.updateUser({ data: { pending_occupation: null } })
-        // Sem isto o OccupationGate volta a pedir a ocupação que o registo já
-        // gravou — o `data` local ainda a tinha a null.
-        if (data) data = { ...data, occupation: meta.pending_occupation }
+        const { data: upd, error: occErr } = await supabase.from('profiles').update({ occupation: meta.pending_occupation }).eq('id', uid).select('id')
+        if (!occErr && upd?.length) {
+          await supabase.auth.updateUser({ data: { pending_occupation: null } })
+          // Sem isto o OccupationGate volta a pedir a ocupação que o registo já
+          // gravou — o `data` local ainda a tinha a null.
+          if (data) data = { ...data, occupation: meta.pending_occupation }
+        } else {
+          console.warn('[auth] pending_occupation falhou, mantém-se para a próxima tentativa:', occErr?.message)
+        }
       }
       // Gravados aqui (não no Register) porque isto corre sempre que há
       // sessão, incluindo depois de confirmação de email por outro
       // caminho — o update direto no Register só corria num dos fluxos.
       if (meta.pending_signup_referrer || meta.pending_signup_utm_source) {
         const patch = { signup_referrer: meta.pending_signup_referrer || null, signup_utm_source: meta.pending_signup_utm_source || null }
-        await supabase.from('profiles').update(patch).eq('id', uid)
-        await supabase.auth.updateUser({ data: { pending_signup_referrer: null, pending_signup_utm_source: null } })
-        if (data) data = { ...data, ...patch }
+        const { data: upd, error: refErr } = await supabase.from('profiles').update(patch).eq('id', uid).select('id')
+        if (!refErr && upd?.length) {
+          await supabase.auth.updateUser({ data: { pending_signup_referrer: null, pending_signup_utm_source: null } })
+          if (data) data = { ...data, ...patch }
+        } else {
+          console.warn('[auth] pending_signup_referrer falhou, mantém-se para a próxima tentativa:', refErr?.message)
+        }
       }
     }
     } catch (e) {
