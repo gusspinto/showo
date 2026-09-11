@@ -7,6 +7,7 @@ export default async function handler(req, res) {
     { loc: BASE, priority: '1.0', changefreq: 'daily' },
     { loc: `${BASE}/explorar`, priority: '0.8', changefreq: 'daily' },
     { loc: `${BASE}/ranking`, priority: '0.8', changefreq: 'daily' },
+    { loc: `${BASE}/login`, priority: '0.7', changefreq: 'monthly' },
     { loc: `${BASE}/empresa`, priority: '0.7', changefreq: 'monthly' },
     { loc: `${BASE}/aprende-a-usar`, priority: '0.6', changefreq: 'monthly' },
   ]
