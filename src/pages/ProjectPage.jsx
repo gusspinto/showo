@@ -8,7 +8,7 @@ import { useIsMobile } from '../lib/useIsMobile'
 import { calculateScore, looksLikeSpam } from '../lib/score'
 import { containsProfanity } from '../lib/profanity'
 import { topLanguages, commitSpanMonths, repoAgeMonths } from '../lib/social'
-import { listPublicTables, publicCurlExample } from '../lib/projectDb'
+import { listPublicTables, publicCurlExample, listRows } from '../lib/projectDb'
 import { DatabaseIcon as Database } from '@solar-icons/react/bold/database'
 import { CHALLENGES, getChallengeStatus } from '../lib/challenges'
 import { Navbar } from '../components/Navbar'
@@ -121,6 +121,62 @@ const ANON_PROJECT_COLUMNS = [
    "pública" significa aqui: qualquer pessoa lê, ninguém escreve sem
    credenciais. Um recrutador pode copiar e colar isto num terminal e ver
    dados a sério, sem precisar de conta nenhuma. */
+/* Dados reais da tabela, já em forma de tabela HTML — o "Testar API" só
+ * com curl provava a existência da API a outro programador; quem contrata
+ * normalmente não abre um terminal. Isto mostra o mesmo pedido (list_rows,
+ * sem chave nenhuma) já renderizado, para qualquer visitante ver de
+ * imediato que os dados são reais. */
+function LiveDataTable({ projectId, table }) {
+  const [state, setState] = useState({ loading: true, rows: null, error: null })
+
+  useEffect(() => {
+    let cancelled = false
+    listRows(projectId, table.id, 10)
+      .then(data => { if (!cancelled) setState({ loading: false, rows: data.rows || [], error: null }) })
+      .catch(err => { if (!cancelled) setState({ loading: false, rows: null, error: err.message }) })
+    return () => { cancelled = true }
+  }, [projectId, table.id])
+
+  if (state.loading) {
+    return <p style={{ margin: '12px 0 0', fontSize: 11.5, color: 'var(--color-text-tertiary)' }}>A carregar dados…</p>
+  }
+  if (state.error) {
+    return <p style={{ margin: '12px 0 0', fontSize: 11.5, color: 'var(--color-error)' }}>Não foi possível carregar os dados: {state.error}</p>
+  }
+  if (!state.rows.length) {
+    return <p style={{ margin: '12px 0 0', fontSize: 11.5, color: 'var(--color-text-tertiary)' }}>Esta tabela ainda não tem linhas.</p>
+  }
+
+  const cols = table.columns.map(c => c.name)
+  return (
+    <div style={{ overflowX: 'auto', marginTop: 4 }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+        <thead>
+          <tr>
+            {cols.map(c => (
+              <th key={c} style={{ textAlign: 'left', padding: '6px 10px', color: 'var(--color-text-tertiary)', fontWeight: 700, borderBottom: '1px solid var(--color-border)', whiteSpace: 'nowrap' }}>{c}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {state.rows.map(r => (
+            <tr key={r.id}>
+              {cols.map(c => (
+                <td key={c} style={{ padding: '6px 10px', color: 'var(--color-text)', borderBottom: '1px solid var(--color-border)', whiteSpace: 'nowrap' }}>
+                  {String(r.data?.[c] ?? '—')}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {state.rows.length === 10 && (
+        <p style={{ margin: '6px 0 0', fontSize: 10.5, color: 'var(--color-text-tertiary)' }}>A mostrar as 10 mais recentes.</p>
+      )}
+    </div>
+  )
+}
+
 function ApiProof({ project }) {
   const [tables, setTables] = useState(null) // null = a carregar
   const [openId, setOpenId] = useState(null)
@@ -168,7 +224,11 @@ function ApiProof({ project }) {
             </button>
             {openId === t.id && (
               <div style={{ padding: '0 12px 12px', borderTop: '1px solid var(--color-border)' }}>
-                <p style={{ margin: '12px 0 8px', fontSize: 11.5, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+                <p style={{ margin: '12px 0 0', fontSize: 11.5, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+                  Dados reais desta tabela, em direto:
+                </p>
+                <LiveDataTable projectId={project.id} table={t} />
+                <p style={{ margin: '14px 0 8px', fontSize: 11.5, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
                   Sem chave nenhuma — copia e cola isto num terminal:
                 </p>
                 <pre style={{ margin: 0, background: '#0d0d10', color: '#d8d8de', borderRadius: 8, padding: '11px 13px', fontSize: 11, lineHeight: 1.6, overflowX: 'auto', fontFamily: 'monospace' }}>
