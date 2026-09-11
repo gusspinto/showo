@@ -1,6 +1,6 @@
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
 const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY
-const BASE = 'https://showo.app'
+const BASE = 'https://showo.pt'
 
 function esc(str) {
   return String(str ?? '')
@@ -12,8 +12,8 @@ function esc(str) {
 
 export default async function handler(req, res) {
   const slug = req.query.slug || ''
-  let title = 'Showo — Portfolios profissionais para estudantes'
-  let description = 'Transforma qualquer projeto escolar numa página profissional com IA.'
+  let title = 'Showo — Do projeto à oportunidade'
+  let description = 'Portfolio e gestão de projetos com IA — assistente pessoal, diário de bordo, treino de defesa, relatórios, score automático e página profissional para partilhar.'
   let image = `${BASE}/icon_social.png`
   let canonical = `${BASE}/projeto/${slug}`
   let jsonLd = null
@@ -27,7 +27,7 @@ export default async function handler(req, res) {
       const [p] = await r.json()
       if (p) {
         title = `${p.name} — Showo`
-        description = p.ai_tagline || p.ai_description?.slice(0, 160) || p.goal || `Projeto de ${p.creator_name || 'estudante'} no Showo`
+        description = p.ai_tagline || p.ai_description?.slice(0, 160) || p.goal || `Projeto de ${p.creator_name || 'alguém'} no Showo`
         if (p.cover_url) image = p.cover_url
 
         try {
@@ -38,7 +38,8 @@ export default async function handler(req, res) {
           const publicTables = await tr.json()
           if (Array.isArray(publicTables) && publicTables.length) {
             const n = publicTables.length
-            description += ` · 🔌 API ativa (${n} ${n === 1 ? 'tabela pública' : 'tabelas públicas'})`
+            title = `${p.name} · 🔌 API ativa — Showo`
+            description += ` · API ativa (${n} ${n === 1 ? 'tabela pública' : 'tabelas públicas'})`
           }
         } catch {}
 
@@ -51,7 +52,7 @@ export default async function handler(req, res) {
           image: image,
           author: p.creator_name ? { '@type': 'Person', name: p.creator_name } : undefined,
           dateCreated: p.created_at,
-          keywords: [p.area, 'projeto escolar', 'ensino profissional', 'PAP', 'Showo'].filter(Boolean).join(', '),
+          keywords: [p.area, 'portfolio profissional', 'projeto', 'Showo'].filter(Boolean).join(', '),
           aggregateRating: p.score ? {
             '@type': 'AggregateRating',
             ratingValue: p.score,
