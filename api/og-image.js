@@ -14,20 +14,18 @@ export default async function handler(req) {
 
   let name = 'Showo'
   let area = ''
-  let coverUrl = null
   let tableCount = 0
 
   if (slug && SUPABASE_URL && SUPABASE_KEY) {
     try {
       const r = await fetch(
-        `${SUPABASE_URL}/rest/v1/projects?slug=eq.${encodeURIComponent(slug)}&select=id,name,area,cover_url&limit=1`,
+        `${SUPABASE_URL}/rest/v1/projects?slug=eq.${encodeURIComponent(slug)}&select=id,name,area&limit=1`,
         { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
       )
       const [p] = await r.json()
       if (p) {
         name = p.name
         area = p.area || ''
-        coverUrl = p.cover_url
 
         const tr = await fetch(
           `${SUPABASE_URL}/rest/v1/project_data_tables?project_id=eq.${p.id}&is_public=eq.true&select=id`,
@@ -48,20 +46,10 @@ export default async function handler(req) {
         style: {
           height: '100%', width: '100%', display: 'flex', flexDirection: 'column',
           backgroundColor: '#0b0b0f',
-          backgroundImage: coverUrl ? `url(${coverUrl})` : 'linear-gradient(135deg,#12121a,#1c1c28)',
-          backgroundSize: 'cover', backgroundPosition: 'center',
+          backgroundImage: 'radial-gradient(circle at 78% 15%, rgba(139,139,240,0.30) 0%, rgba(11,11,15,0) 45%), linear-gradient(155deg, #14141c 0%, #0b0b0f 65%)',
           position: 'relative', fontFamily: 'Inter',
         },
         children: [
-          {
-            type: 'div',
-            props: {
-              style: {
-                position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex',
-                background: 'linear-gradient(180deg, rgba(10,10,14,0.35) 0%, rgba(10,10,14,0.94) 100%)',
-              },
-            },
-          },
           {
             type: 'div',
             props: {
