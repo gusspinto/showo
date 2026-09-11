@@ -2,6 +2,25 @@ const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
 const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY
 const BASE = 'https://showo.pt'
 
+const MIN_DESCRIPTION_LENGTH = 100
+
+/** O LinkedIn (e outras redes) recomenda descrições com pelo menos 100
+ * caracteres. Projetos sem tagline/descrição da IA ficam curtos demais —
+ * aqui completamos com uma frase genérica da marca, só o suficiente para
+ * passar o mínimo, sem repetir se já for longa que chegue. */
+function ensureMinDescription(text, area) {
+  const filler = [
+    `Portfolio criado na Showo, com progresso documentado ao longo do tempo${area ? ` na área de ${area}` : ''}.`,
+    'Página pública para partilhar com professores, colegas e recrutadores.',
+  ]
+  let out = text
+  for (const sentence of filler) {
+    if (out.length >= MIN_DESCRIPTION_LENGTH) break
+    out += (out.endsWith('.') ? ' ' : '. ') + sentence
+  }
+  return out
+}
+
 function esc(str) {
   return String(str ?? '')
     .replace(/&/g, '&amp;')
@@ -43,6 +62,8 @@ export default async function handler(req, res) {
             image = `${BASE}/api/og-image?slug=${encodeURIComponent(slug)}`
           }
         } catch {}
+
+        description = ensureMinDescription(description, p.area)
 
         jsonLd = {
           '@context': 'https://schema.org',
