@@ -127,7 +127,7 @@ export default function EditProject() {
   const [accessDenied, setAccessDenied] = useState(false)
   const [dirty, setDirty] = useState(false)
   const [isOwner, setIsOwner] = useState(false)
-  const [activeSection, setActiveSection] = useState('criador')
+  const [activeSection, setActiveSection] = useState(() => searchParams.get('tab') || 'criador')
   const coverInputRef = useRef(null)
   const originalRef = useRef({})
 

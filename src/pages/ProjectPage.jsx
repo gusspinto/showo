@@ -8,7 +8,7 @@ import { useIsMobile } from '../lib/useIsMobile'
 import { calculateScore, looksLikeSpam } from '../lib/score'
 import { containsProfanity } from '../lib/profanity'
 import { topLanguages, commitSpanMonths, repoAgeMonths } from '../lib/social'
-import { listPublicTables, publicCurlExample, listRows } from '../lib/projectDb'
+import { listPublicTables, publicCurlExample, listRows, listTables } from '../lib/projectDb'
 import { DatabaseIcon as Database } from '@solar-icons/react/bold/database'
 import { CHALLENGES, getChallengeStatus } from '../lib/challenges'
 import { Navbar } from '../components/Navbar'
@@ -281,6 +281,64 @@ function ApiProof({ project }) {
           </div>
         ))}
       </div>
+    </div>
+  )
+}
+
+/* Empurrão para quem já tem tecnologia a sério mas ainda não descobriu a
+ * base de dados — só o dono vê, só quando o campo "Tecnologias" tem
+ * conteúdo (sinal de que há código a funcionar, não só teoria) e o
+ * projeto ainda não tem nenhuma tabela criada. Sem IA nenhuma a decidir,
+ * é só uma condição sobre um campo que já existe. Dispensável por sessão
+ * (localStorage), para não martelar quem já viu e decidiu não usar. */
+function DbSetupNudge({ project, isOwner }) {
+  const navigate = useNavigate()
+  const [tableCount, setTableCount] = useState(null) // null = a verificar
+  const dismissKey = `showo_db_nudge_dismissed_${project?.id}`
+  const [dismissed, setDismissed] = useState(() => {
+    try { return localStorage.getItem(dismissKey) === '1' } catch { return false }
+  })
+
+  useEffect(() => {
+    if (!isOwner || !project?.id || !project?.technologies?.trim()) return
+    let cancelled = false
+    listTables(project.id).then(data => {
+      if (!cancelled) setTableCount((data.tables || []).length)
+    }).catch(() => { if (!cancelled) setTableCount(0) })
+    return () => { cancelled = true }
+  }, [isOwner, project?.id, project?.technologies])
+
+  if (!isOwner || dismissed || !project?.technologies?.trim() || tableCount === null || tableCount > 0) return null
+
+  function dismiss() {
+    setDismissed(true)
+    try { localStorage.setItem(dismissKey, '1') } catch { /* localStorage indisponível, não é crítico */ }
+  }
+
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 12,
+      background: 'color-mix(in srgb, var(--color-primary) 8%, var(--color-surface))',
+      border: '1px solid color-mix(in srgb, var(--color-primary) 25%, var(--color-border))',
+      borderRadius: 12, padding: '14px 16px', marginBottom: 16,
+      fontFamily: 'var(--font-body, system-ui, sans-serif)',
+    }}>
+      <Database size={18} color="var(--color-primary)" style={{ flexShrink: 0 }} />
+      <p style={{ margin: 0, flex: 1, fontSize: 12.5, color: 'var(--color-text)', lineHeight: 1.5 }}>
+        Tens tecnologia a sério neste projeto — liga uma base de dados própria em 2 minutos e mostra uma API a funcionar.
+      </p>
+      <button
+        onClick={() => navigate(`/editar/${project.slug}?tab=database`)}
+        style={{
+          flexShrink: 0, fontSize: 12, fontWeight: 700, color: 'var(--color-primary)',
+          background: 'none', border: 'none', cursor: 'pointer', padding: '4px 6px',
+        }}
+      >Ligar agora →</button>
+      <button
+        onClick={dismiss}
+        aria-label="Dispensar"
+        style={{ flexShrink: 0, color: 'var(--color-text-tertiary)', background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex' }}
+      ><X size={14} /></button>
     </div>
   )
 }
@@ -7441,6 +7499,7 @@ export default function ProjectPage() {
             isso aparece sempre, seja qual for o separador ativo no
             telemóvel, e é a primeira coisa a seguir ao cabeçalho no
             desktop. */}
+        <DbSetupNudge project={project} isOwner={isOwner} />
         <GithubProof project={project} />
         <ApiProof project={project} />
 
