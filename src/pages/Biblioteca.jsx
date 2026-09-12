@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
-import { Navbar } from '../components/Navbar'
 import { PlusIcon as Plus } from '../components/icons/PlusIcon'
 import { DocumentTextIcon as FileText } from '@solar-icons/react/bold/document-text'
 import { GalleryIcon as ImageIcon } from '@solar-icons/react/bold/gallery'
@@ -384,7 +383,6 @@ export default function Biblioteca() {
 
   return (
     <div className="min-h-screen bg-page font-body">
-      <Navbar />
       {toast && (
         <div style={{
           position: 'fixed', left: '50%', bottom: 24, transform: 'translateX(-50%)', zIndex: 3000,

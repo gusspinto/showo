@@ -2,7 +2,6 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
-import { Navbar } from '../components/Navbar'
 
 import ConvidarVagaModal from '../components/ConvidarVagaModal'
 import { getCurrentAcademicYear, academicYearOptions } from '../lib/academicYear'
@@ -1231,7 +1230,6 @@ export default function Dashboard() {
   if (authLoading || (user && !profile)) {
     return (
       <div style={{ minHeight: '100vh', background: 'var(--color-bg)' }}>
-        <Navbar />
         <div style={{ height: 2, background: 'linear-gradient(90deg, transparent 0%, var(--color-primary) 35%, var(--color-accent) 65%, transparent 100%)', opacity: 0.4 }} />
         <div className="page-content" style={{ maxWidth: 800, margin: '0 auto', padding: '48px 24px' }}>
           <div className="dash-skeleton" style={{ height: 48, width: '60%', marginBottom: 24 }} />
@@ -1277,7 +1275,6 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-root" style={{ minHeight: '100vh', background: 'var(--color-bg)', fontFamily: 'var(--font-body)' }}>
-      <Navbar />
 
       {showOnboardingAluno && (
         <OnboardingAlunoModal user={user} profile={profile} onDismiss={dismissOnboardingAluno} firstProject={projects[0] ?? null} claimedSlug={claimedSlug} />

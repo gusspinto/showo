@@ -1,7 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
 import { Buildings2Icon as Building2 } from '@solar-icons/react/bold/buildings-2'
@@ -320,7 +319,6 @@ export default function Explore() {
 
   return (
     <div className="min-h-screen bg-page font-body">
-      <Navbar />
 
       <div className="page-content">
         {/* Header */}

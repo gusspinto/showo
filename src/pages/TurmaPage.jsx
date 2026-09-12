@@ -4,7 +4,6 @@ import { supabase } from '../lib/supabase'
 import { joinClassByCode } from '../lib/joinClass'
 import { projectCompletude } from '../lib/projectCompletude'
 import { useAuth } from '../context/AuthContext'
-import { Navbar } from '../components/Navbar'
 import { FolderIcon as Folder } from '@solar-icons/react/bold/folder'
 import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
 import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
@@ -928,7 +927,6 @@ export default function TurmaPage() {
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', background: C.bg }}>
-        <Navbar />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 'calc(100dvh - 62px)' }}>
           <style>{`@keyframes tp-sh{0%{background-position:-300px 0}100%{background-position:300px 0}}`}</style>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
@@ -944,7 +942,6 @@ export default function TurmaPage() {
   if (!turma) {
     return (
       <div style={{ minHeight: '100vh', background: C.bg }}>
-        <Navbar />
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24, height: 'calc(100dvh - 62px)' }}>
           <Search size={52} color="var(--color-primary)" />
           <h2 style={{ margin: 0, fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.4px', color: C.text }}>Turma não encontrada</h2>
@@ -1032,7 +1029,6 @@ export default function TurmaPage() {
         @media (max-width: 600px) { .turmapage-hd { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; } }
         @media (max-width: 520px) { .turmapage-modal { padding: 20px 16px !important; } }
       `}</style>
-      <Navbar />
 
       {/* Feedback modal */}
       {feedbackProject && (

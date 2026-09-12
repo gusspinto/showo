@@ -10,6 +10,8 @@ import { HelmetProvider } from 'react-helmet-async'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { SidebarProvider } from './context/SidebarContext'
+import { NavbarConfigProvider } from './context/NavbarConfigContext'
+import AppLayout from './components/AppLayout'
 import RestReminder from './components/RestReminder'
 import CookieConsent from './components/CookieConsent'
 import SplashScreen from './components/SplashScreen'
@@ -558,6 +560,7 @@ export default function App() {
     <HelmetProvider>
       <ThemeProvider>
         <SidebarProvider>
+        <NavbarConfigProvider>
         <AuthProvider>
           <AuthErrorBanner />
           {splashMounted && <SplashScreen visible={splashVisible} />}
@@ -575,35 +578,41 @@ export default function App() {
             <OccupationGate>
             <Suspense fallback={<PageLoader />}>
             <Routes>
-              <Route path="/"              element={<HomeRoute />}   />
-              <Route path="/home"          element={<Home />}        />
-              <Route path="/novo"          element={<NewProject />}  />
-              <Route path="/projeto/:slug" element={<ProjectPage />} />
-              <Route path="/editar/:slug"  element={<EditProject />} />
-              <Route path="/explorar"      element={<Explore />}     />
+              {/* Rotas com chrome de app (sidebar + topbar) — a Navbar vive só
+                  no AppLayout, montada uma vez, não em cada página. */}
+              <Route element={<AppLayout />}>
+                <Route path="/"              element={<HomeRoute />}   />
+                <Route path="/home"          element={<Home />}        />
+                <Route path="/novo"          element={<NewProject />}  />
+                <Route path="/projeto/:slug" element={<ProjectPage />} />
+                <Route path="/editar/:slug"  element={<EditProject />} />
+                <Route path="/explorar"      element={<Explore />}     />
+                <Route path="/dashboard"     element={<Dashboard />}   />
+                <Route path="/biblioteca"    element={<Biblioteca />}  />
+                <Route path="/vagas"         element={<Vagas />}       />
+                <Route path="/settings"      element={<Settings />}    />
+                <Route path="/u/:username"   element={<UserProfile />} />
+                <Route path="/admin"         element={<Admin />}       />
+                <Route path="/turma/:code"   element={<TurmaPage />}   />
+                <Route path="/turma/:code/aluno/:userId" element={<TurmaAluno />} />
+                <Route path="/turmas"        element={<Turmas />}      />
+                <Route path="/mensagens"          element={<Mensagens />}    />
+                <Route path="/aprende"            element={<AprendeAUsar />}  />
+                <Route path="/pricing"            element={<Pricing />}       />
+                <Route path="/feedback"           element={<Feedback />}      />
+              </Route>
+
+              {/* Rotas sem chrome — autenticação, legal, páginas isoladas. */}
               <Route path="/explore"       element={<Navigate to="/explorar" replace />} />
               <Route path="/login"         element={<Login />}       />
               <Route path="/recuperar-password" element={<RecuperarPassword onDone={() => setPwRecovery(false)} />} />
               <Route path="/register"      element={<Register />}    />
-              <Route path="/dashboard"     element={<Dashboard />}   />
-              <Route path="/biblioteca"    element={<Biblioteca />}  />
-              <Route path="/vagas"         element={<Vagas />}       />
-              <Route path="/settings"      element={<Settings />}    />
-              <Route path="/u/:username"   element={<UserProfile />} />
-              <Route path="/admin"         element={<Admin />}       />
-              <Route path="/turma/:code"   element={<TurmaPage />}   />
-              <Route path="/turma/:code/aluno/:userId" element={<TurmaAluno />} />
-              <Route path="/turmas"        element={<Turmas />}      />
               <Route path="/certificado/:slug"  element={<Certificate />}  />
-              <Route path="/mensagens"          element={<Mensagens />}    />
               <Route path="/projeto/:slug/diario" element={<DiaryCanvas />}  />
               <Route path="/privacidade"        element={<Privacidade />}   />
               <Route path="/termos"             element={<Termos />}        />
               <Route path="/oauth/google-calendar" element={<GoogleCalendarCallback />} />
-              <Route path="/aprende"            element={<AprendeAUsar />}  />
-              <Route path="/pricing"            element={<Pricing />}       />
               <Route path="/welcome"            element={<Welcome />}       />
-              <Route path="/feedback"           element={<Feedback />}      />
               <Route path="*"                   element={<NotFound />}      />
             </Routes>
             </Suspense>
@@ -614,6 +623,7 @@ export default function App() {
             </ErrorBoundary>
           </BrowserRouter>
         </AuthProvider>
+        </NavbarConfigProvider>
         </SidebarProvider>
       </ThemeProvider>
     </HelmetProvider>

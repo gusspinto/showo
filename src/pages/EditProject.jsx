@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { updateProject } from '../lib/updateProject'
-import { Navbar } from '../components/Navbar'
+import { useNavbarConfig } from '../context/NavbarConfigContext'
 import { useAuth } from '../context/AuthContext'
 import { useSidebar } from '../context/SidebarContext'
 import { LockKeyholeIcon as Lock } from '@solar-icons/react/bold/lock-keyhole'
@@ -116,6 +116,42 @@ function Field({ label, children, required, filled, error }) {
 export default function EditProject() {
   const { slug } = useParams()
   const navigate = useNavigate()
+  useNavbarConfig(
+    {
+      showLinks: false,
+      mobileLeft: (
+        <button
+          onClick={() => navigate(`/projeto/${slug}`)}
+          aria-label="Voltar ao projeto"
+          style={{
+            background: 'transparent', border: 'none',
+            color: 'var(--color-text-secondary)', cursor: 'pointer', fontFamily: 'inherit',
+            width: 38, height: 38, borderRadius: 9, padding: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+        >
+          <ArrowLeft size={20} />
+        </button>
+      ),
+      extra: (
+        <button
+          onClick={() => navigate(`/projeto/${slug}`)}
+          style={{
+            background: 'transparent',
+            border: `1px solid ${colors.border}`,
+            color: colors.muted, borderRadius: 8,
+            padding: '8px 16px', fontSize: 13, fontWeight: 600,
+            cursor: 'pointer', fontFamily: 'inherit',
+            transition: 'border-color 0.2s',
+          }}
+        >
+          <ArrowLeft size={14} style={{ marginRight: 5, verticalAlign: 'middle' }} />Cancelar
+        </button>
+      ),
+    },
+    [slug],
+  )
   const [searchParams] = useSearchParams()
   const { user } = useAuth()
   const { setExtras } = useSidebar()
@@ -288,7 +324,6 @@ export default function EditProject() {
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: colors.bg }}>
-        <Navbar />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 'calc(100dvh - 62px)' }}>
           <style>{`@keyframes ep2-sh{0%{background-position:-300px 0}100%{background-position:300px 0}}`}</style>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
@@ -304,7 +339,6 @@ export default function EditProject() {
   if (accessDenied) {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: colors.bg }}>
-        <Navbar />
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24, textAlign: 'center', height: 'calc(100dvh - 62px)', color: colors.text }}>
           <Lock size={48} color="var(--color-warning)" />
           <h2 style={{ margin: 0, fontSize: 24, fontWeight: 400, fontFamily: 'var(--font-heading)' }}>Acesso restrito</h2>
@@ -318,7 +352,6 @@ export default function EditProject() {
   if (!project) {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: colors.bg }}>
-        <Navbar />
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, height: 'calc(100dvh - 62px)', color: colors.text }}>
           <Search size={48} color={colors.blue} />
           <h2 style={{ margin: 0, fontWeight: 400, fontFamily: 'var(--font-heading)' }}>Projeto não encontrado</h2>
@@ -357,39 +390,6 @@ export default function EditProject() {
 
   return (
     <div style={{ minHeight: '100dvh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'var(--font-body)' }}>
-      <Navbar
-        showLinks={false}
-        mobileLeft={
-          <button
-            onClick={() => navigate(`/projeto/${slug}`)}
-            aria-label="Voltar ao projeto"
-            style={{
-              background: 'transparent', border: 'none',
-              color: 'var(--color-text-secondary)', cursor: 'pointer', fontFamily: 'inherit',
-              width: 38, height: 38, borderRadius: 9, padding: 0,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            <ArrowLeft size={20} />
-          </button>
-        }
-      >
-        <button
-          onClick={() => navigate(`/projeto/${slug}`)}
-          style={{
-            background: 'transparent',
-            border: `1px solid ${colors.border}`,
-            color: colors.muted, borderRadius: 8,
-            padding: '8px 16px', fontSize: 13, fontWeight: 600,
-            cursor: 'pointer', fontFamily: 'inherit',
-            transition: 'border-color 0.2s',
-          }}
-        >
-          <ArrowLeft size={14} style={{ marginRight: 5, verticalAlign: 'middle' }} />Cancelar
-        </button>
-      </Navbar>
-
       <style>{`
         @keyframes spin{to{transform:rotate(360deg)}}
         @media(max-width:600px){.ep-2col{grid-template-columns:1fr!important;}}
