@@ -7,7 +7,6 @@ import { RefreshCircleIcon as Loader2 } from '@solar-icons/react/bold/refresh-ci
 import { BugIcon as Bug } from '@solar-icons/react/bold/bug'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
-import { Navbar } from '../components/Navbar'
 import './Feedback.css'
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -99,7 +98,6 @@ export default function Feedback() {
 
   return (
     <div className="fbp-page">
-      <Navbar />
       <div className="fbp-wrap">
         {status === 'done' ? (
           <div className="fbp-done">

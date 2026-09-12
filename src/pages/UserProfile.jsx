@@ -4,7 +4,6 @@ import { Helmet } from 'react-helmet-async'
 import { QRCodeSVG } from 'qrcode.react'
 import { supabase, supabaseUrl, supabaseAnonKey } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
-import { Navbar } from '../components/Navbar'
 import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
 import { Folder2Icon as FolderOpen } from '@solar-icons/react/bold/folder-2'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
@@ -663,14 +662,12 @@ export default function UserProfile() {
 
   if (loading) return (
     <div className="min-h-screen bg-page">
-      <Navbar />
       <div className="page-content"><ProfileSkeleton /></div>
     </div>
   )
 
   if (notFound) return (
     <div className="min-h-screen bg-page flex-col">
-      <Navbar />
       <div className="up-not-found">
         <Search size={44} color="var(--color-text-secondary)" />
         <h2>Perfil não encontrado</h2>
@@ -693,7 +690,6 @@ export default function UserProfile() {
         <meta property="og:url" content={profileUrl} />
       </Helmet>
 
-      <Navbar />
 
       {appearance.bannerUrl && (
         <div className="up-banner">
