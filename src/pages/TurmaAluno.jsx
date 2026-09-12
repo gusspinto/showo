@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import { Navbar } from '../components/Navbar'
 import { FolderIcon as Folder } from '@solar-icons/react/bold/folder'
 import { AltArrowLeftIcon as ChevronLeft } from '@solar-icons/react/bold/alt-arrow-left'
 import { AltArrowRightIcon as ChevronRight } from '@solar-icons/react/bold/alt-arrow-right'
@@ -260,6 +261,7 @@ export default function TurmaAluno() {
   if (loading || authLoading) {
     return (
       <div style={{ minHeight: '100vh', background: C.bg }}>
+        <Navbar />
         <div className="page-content" style={{ display: 'flex', justifyContent: 'center', paddingTop: 120 }}>
           <style>{`@keyframes ta-sh{0%{background-position:-300px 0}100%{background-position:300px 0}}`}</style>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
@@ -275,6 +277,7 @@ export default function TurmaAluno() {
   if (denied || !turma) {
     return (
       <div style={{ minHeight: '100vh', background: C.bg }}>
+        <Navbar />
         <div className="page-content" style={{ textAlign: 'center', paddingTop: 100 }}>
           <p style={{ color: C.muted, fontSize: 15 }}>Esta página é só para o professor da turma.</p>
           <button onClick={() => navigate(`/turma/${code}`)} style={{ marginTop: 12, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 8, padding: '9px 18px', color: C.blue, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -329,6 +332,7 @@ export default function TurmaAluno() {
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg }}>
+      <Navbar />
       <div className="page-content" style={{ maxWidth: 900, margin: '0 auto' }}>
 
         {/* Back */}

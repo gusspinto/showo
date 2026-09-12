@@ -15,6 +15,7 @@ import { Book2Icon as BookOpen } from '@solar-icons/react/bold/book-2'
 import { DatabaseIcon as Database } from '@solar-icons/react/bold/database'
 import { CodeIcon as Code } from '@solar-icons/react/bold/code'
 import { GlobeIcon as Globe } from '@solar-icons/react/bold/globe'
+import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import './Pricing.css'
@@ -281,6 +282,7 @@ export default function Pricing() {
 
   return (
     <div className="pricing-page">
+      <Navbar />
       <div className="pricing-container">
         {error && <div className="pricing-toast">{error}</div>}
 

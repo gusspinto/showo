@@ -5,7 +5,7 @@ import { CupStarIcon as Trophy } from '@solar-icons/react/bold/cup-star'
 import { EyeIcon as Eye } from '@solar-icons/react/bold/eye'
 import { EyeClosedIcon as EyeOff } from '@solar-icons/react/bold/eye-closed'
 import { RefreshCircleIcon as RefreshCw } from '@solar-icons/react/bold/refresh-circle'
-import { useNavbarConfig } from '../context/NavbarConfigContext'
+import { Navbar } from '../components/Navbar'
 import { supabase } from '../lib/supabase'
 import { claimAnonymousProjects } from '../lib/claimAnonymousProjects'
 import GoogleButton from '../components/GoogleButton'
@@ -70,7 +70,6 @@ function ProjectSkeleton() {
 }
 
 export default function Home() {
-  useNavbarConfig({ hideSidebar: true }, [])
   const navigate = useNavigate()
   const location = useLocation()
   const { user } = useAuth()
@@ -229,6 +228,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-page font-body">
+      <Navbar hideSidebar />
 
       {/* ── home-content: envolve tudo o que não é a barra de navegação.
           No telemóvel vira flex-column com order, e a ordem visual deixa de

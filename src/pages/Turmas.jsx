@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { joinClassByCode } from '../lib/joinClass'
 import { useAuth } from '../context/AuthContext'
 import CreateTurmaModal from '../components/CreateTurmaModal'
+import { Navbar } from '../components/Navbar'
 import { UsersGroupTwoRoundedIcon as Users2 } from '@solar-icons/react/bold/users-group-two-rounded'
 import { PlusIcon as Plus } from '../components/icons/PlusIcon'
 import { AltArrowRightIcon as ChevronRight } from '@solar-icons/react/bold/alt-arrow-right'
@@ -304,6 +305,7 @@ export default function Turmas() {
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg }}>
+      <Navbar />
       <div className="page-content">
         <style>{`
           @media (max-width: 600px) {

@@ -11,7 +11,7 @@ import { topLanguages, commitSpanMonths, repoAgeMonths } from '../lib/social'
 import { listPublicTables, publicCurlExample, listRows, listTables } from '../lib/projectDb'
 import { DatabaseIcon as Database } from '@solar-icons/react/bold/database'
 import { CHALLENGES, getChallengeStatus } from '../lib/challenges'
-import { useNavbarConfig } from '../context/NavbarConfigContext'
+import { Navbar } from '../components/Navbar'
 import { PlanGateModal, AiUsageBadge, ConfirmUseModal } from '../components/PlanGate'
 import { chatProjectCoach } from '../lib/chatProjectCoach'
 import { useAuth } from '../context/AuthContext'
@@ -5849,91 +5849,10 @@ export default function ProjectPage() {
     setInviting(false)
   }
 
-  // Configuração da Navbar partilhada — tem de correr incondicionalmente,
-  // antes de qualquer "return" antecipado (loading / projeto inexistente),
-  // senão a ordem dos hooks muda entre renderizações e o React parte-se.
-  // Por isso esta versão de isOwner usa optional chaining em vez da de
-  // baixo (que já assume project não-nulo) — durante o loading fica
-  // simplesmente false, o que é exatamente o comportamento de antes (a
-  // Navbar aparecia sem props especiais enquanto a página carregava).
-  const isOwnerForNav = user?.id
-    ? project?.user_id === user.id
-    : !!(project?.slug && localStorage.getItem(`edit_token_${project.slug}`))
-  const navExtra = project && (
-    <div className="proj-nav-btns" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      {isOwnerForNav && (
-        <>
-          <button
-            data-tour="diary"
-            onClick={() => navigate(`/projeto/${project.slug}/diario`)}
-            style={{
-              background: 'rgba(245,158,11,0.08)',
-              border: '1px solid rgba(245,158,11,0.18)',
-              color: '#f59e0b',
-              borderRadius: 8, padding: '8px 14px',
-              fontSize: 13, fontWeight: 600,
-              cursor: 'pointer', fontFamily: 'inherit',
-              display: 'flex', alignItems: 'center', gap: 6,
-              transition: 'background 0.15s',
-            }}
-            title="Abrir diário do projeto"
-          >
-            <BookOpen size={15} /> Diário
-          </button>
-          <button
-            data-tour="edit"
-            onClick={() => navigate(`/editar/${project.slug}`)}
-            style={{
-              background: 'var(--color-primary-subtle)',
-              border: '1px solid var(--color-primary-subtle)',
-              color: 'var(--color-primary)',
-              borderRadius: 8, padding: '8px 14px',
-              fontSize: 13, fontWeight: 600,
-              cursor: 'pointer', fontFamily: 'inherit',
-              display: 'flex', alignItems: 'center', gap: 6,
-              transition: 'background 0.15s',
-            }}
-            title="Editar projeto"
-          >
-            <Settings size={15} /> Editar
-          </button>
-        </>
-      )}
-      {!isOwnerForNav && collaboratorSections !== null && (
-        <button
-          onClick={() => navigate(`/editar/${project.slug}`)}
-          style={{
-            background: 'var(--color-primary-subtle)',
-            border: '1px solid var(--color-primary-subtle)',
-            color: 'var(--color-primary)',
-            borderRadius: 8, padding: '8px 14px',
-            fontSize: 13, fontWeight: 600,
-            cursor: 'pointer', fontFamily: 'inherit',
-            display: 'flex', alignItems: 'center', gap: 6,
-            transition: 'background 0.15s',
-          }}
-          onMouseEnter={e => e.currentTarget.style.background = 'var(--color-primary-subtle)'}
-          onMouseLeave={e => e.currentTarget.style.background = 'var(--color-primary-subtle)'}
-          title="Editar projeto"
-        >
-          <Pencil size={15} /> Editar
-        </button>
-      )}
-    </div>
-  )
-  useNavbarConfig(
-    {
-      showCreateProject: true,
-      previewEditingMobile: isOwnerForNav && viewAsPublic,
-      onWorkspaceToggle: () => { setPreviewEditing(true); setWsExpanded(e => !e) },
-      extra: navExtra,
-    },
-    [isOwnerForNav, viewAsPublic, collaboratorSections, project?.slug],
-  )
-
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'var(--font-body)', overflowX: 'clip' }}>
+        <Navbar />
         <style>{`
           @keyframes shimmer {
             0%, 100% { opacity: 0.4; }
@@ -5966,6 +5885,7 @@ export default function ProjectPage() {
   if (!project) {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: colors.bg }}>
+        <Navbar />
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, textAlign: 'center', padding: 24, height: 'calc(100dvh - 62px)', color: colors.text, fontFamily: 'var(--font-body)' }}>
           <h2 style={{ margin: 0, fontSize: 24, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.01em' }}>Este projeto não existe ou foi removido</h2>
           <p style={{ color: colors.muted, margin: 0 }}>O link pode estar incorrecto ou o projeto foi eliminado.</p>
@@ -7001,6 +6921,72 @@ export default function ProjectPage() {
         )}
       </div>
 
+      <Navbar
+        showCreateProject={true}
+        previewEditingMobile={isOwner && viewAsPublic}
+        onWorkspaceToggle={() => { setPreviewEditing(true); setWsExpanded(e => !e) }}
+      >
+        <div className="proj-nav-btns" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {isOwner && (
+            <>
+              <button
+                data-tour="diary"
+                onClick={() => navigate(`/projeto/${project.slug}/diario`)}
+                style={{
+                  background: 'rgba(245,158,11,0.08)',
+                  border: '1px solid rgba(245,158,11,0.18)',
+                  color: '#f59e0b',
+                  borderRadius: 8, padding: '8px 14px',
+                  fontSize: 13, fontWeight: 600,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  transition: 'background 0.15s',
+                }}
+                title="Abrir diário do projeto"
+              >
+                <BookOpen size={15} /> Diário
+              </button>
+              <button
+                data-tour="edit"
+                onClick={() => navigate(`/editar/${project.slug}`)}
+                style={{
+                  background: 'var(--color-primary-subtle)',
+                  border: '1px solid var(--color-primary-subtle)',
+                  color: 'var(--color-primary)',
+                  borderRadius: 8, padding: '8px 14px',
+                  fontSize: 13, fontWeight: 600,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  transition: 'background 0.15s',
+                }}
+                title="Editar projeto"
+              >
+                <Settings size={15} /> Editar
+              </button>
+            </>
+          )}
+          {!isOwner && collaboratorSections !== null && (
+            <button
+              onClick={() => navigate(`/editar/${project.slug}`)}
+              style={{
+                background: 'var(--color-primary-subtle)',
+                border: '1px solid var(--color-primary-subtle)',
+                color: 'var(--color-primary)',
+                borderRadius: 8, padding: '8px 14px',
+                fontSize: 13, fontWeight: 600,
+                cursor: 'pointer', fontFamily: 'inherit',
+                display: 'flex', alignItems: 'center', gap: 6,
+                transition: 'background 0.15s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--color-primary-subtle)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'var(--color-primary-subtle)'}
+              title="Editar projeto"
+            >
+              <Pencil size={15} /> Editar
+            </button>
+          )}
+        </div>
+      </Navbar>
 
       {isOwner && !user && !claimBannerDismissed && (
         <div style={{

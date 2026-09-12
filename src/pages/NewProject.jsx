@@ -13,7 +13,7 @@ import { DocumentTextIcon as FileText } from '@solar-icons/react/bold/document-t
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { DangerTriangleIcon as AlertTriangle } from '@solar-icons/react/bold/danger-triangle'
 import { PlusIcon } from '../components/icons/PlusIcon'
-import { useNavbarConfig } from '../context/NavbarConfigContext'
+import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { Toast, useToast } from '../components/Toast'
 import { PlanGateModal, AiUsageBadge } from '../components/PlanGate'
@@ -201,22 +201,6 @@ export default function NewProject() {
   const [importSummary, setImportSummary] = useState(null)
   const [importMissing, setImportMissing] = useState([])
   const [beat, setBeat] = useState(0)
-
-  // Cada passo tinha o seu próprio <Navbar .../> — agora é uma configuração
-  // só, que muda com o passo. "loading"/"submitting" não mostravam Navbar
-  // nenhuma (ecrã a solo, sem chrome), daí o visible:false.
-  useNavbarConfig(
-    step === 'loading' || step === 'submitting'
-      ? { visible: false }
-      : step === 'choose'
-      ? { showLinks: false }
-      : step === 'describe'
-      ? { showLinks: false, mobileLeft: <BackButton onClick={() => setStep('choose')} /> }
-      : step === 'interview'
-      ? { showLinks: false, mobileLeft: <BackButton onClick={() => setStep('describe')} /> }
-      : { showLinks: false, mobileLeft: <BackButton onClick={() => setStep(importSummary ? 'choose' : 'describe')} /> },
-    [step, importSummary],
-  )
 
   /* Fase 2 — como aparece: página própria ou anexo de outro projeto */
   const [presentation, setPresentation] = useState('page')
@@ -567,6 +551,7 @@ export default function NewProject() {
       <NpShell>
         {gateMsg && <PlanGateModal message={gateMsg} onClose={() => setGateMsg(null)} />}
         <Toast {...toast} />
+        <Navbar showLinks={false} />
         <div className="np-center np-center--choose">
           <div className="np-wrap np-wrap--choose">
             <NpAnimatedTitle />
@@ -626,6 +611,7 @@ export default function NewProject() {
       <NpShell>
         {gateMsg && <PlanGateModal message={gateMsg} onClose={() => setGateMsg(null)} />}
         <Toast {...toast} />
+        <Navbar showLinks={false} mobileLeft={<BackButton onClick={() => setStep('choose')} />} />
         <div className="np-center">
           <div className="np-wrap">
             <StepBar current={2} total={3} label="O teu projeto" />
@@ -679,6 +665,7 @@ export default function NewProject() {
     return (
       <NpShell>
         <Toast {...toast} />
+        <Navbar showLinks={false} mobileLeft={<BackButton onClick={() => setStep('describe')} />} />
         <div className="np-center">
           <div className="np-wrap">
             <StepBar current={2} total={3} label="Perguntas" />
@@ -702,6 +689,7 @@ export default function NewProject() {
     <NpShell>
       {gateMsg && <PlanGateModal message={gateMsg} onClose={() => setGateMsg(null)} />}
       <Toast {...toast} />
+      <Navbar showLinks={false} mobileLeft={<BackButton onClick={() => setStep(importSummary ? 'choose' : 'describe')} />} />
       <div className="np-center np-center--review">
         <div className="np-wrap np-wrap--review">
           <StepBar current={3} total={3} label="Rever" />

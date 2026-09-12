@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
-import { useNavbarConfig } from '../context/NavbarConfigContext'
+import { Navbar } from '../components/Navbar'
 import { PlaneIcon as Send } from '@solar-icons/react/bold/plane'
 import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
 import { ChatRoundLineIcon as MessageSquare } from '@solar-icons/react/bold/chat-round-line'
@@ -331,15 +331,6 @@ export default function Mensagens() {
   const totalUnread = conversations.reduce((s, c) => s + (c.unread || 0), 0)
   const lastSentMsg = [...messages].reverse().find(m => m.from_id === user?.id)
 
-  useNavbarConfig({
-    mobileLeft: mobileView === 'thread' ? (
-      <button onClick={() => { setMobileView('list'); setActiveId(null) }}
-        className="flex items-center gap-1" style={{ background: 'none', border: 'none', color: 'var(--color-primary)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 600, padding: '6px 4px' }}>
-        <ArrowLeft size={18} />
-      </button>
-    ) : null,
-  }, [mobileView])
-
   if (!user) return null
 
   const isMobileThread = isMobile && mobileView === 'thread' && activeId
@@ -445,6 +436,14 @@ export default function Mensagens() {
   return (
     <>
     <div className="min-h-screen bg-page">
+      <Navbar
+        mobileLeft={mobileView === 'thread' ? (
+          <button onClick={() => { setMobileView('list'); setActiveId(null) }}
+            className="flex items-center gap-1" style={{ background: 'none', border: 'none', color: 'var(--color-primary)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 600, padding: '6px 4px' }}>
+            <ArrowLeft size={18} />
+          </button>
+        ) : null}
+      />
       <div className="page-content" style={{ padding: 0, maxWidth: '100%' }}>
         <div className="msg-inner">
 

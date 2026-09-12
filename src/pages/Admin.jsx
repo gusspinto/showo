@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { resolvePlanId, getPlan, AI_FEATURE_LABELS } from '../lib/plans'
-import { useNavbarConfig } from '../context/NavbarConfigContext'
+import { Navbar } from '../components/Navbar'
 import { DangerTriangleIcon as AlertTriangle } from '@solar-icons/react/bold/danger-triangle'
 import { QuestionCircleIcon as HelpCircle } from '@solar-icons/react/bold/question-circle'
 import { UserIcon as User } from '@solar-icons/react/bold/user'
@@ -1747,13 +1747,6 @@ function InvitesTab({ codes, loading, onGenerate, generating, onToggleActive }) 
 // ─── MAIN COMPONENT ─────────────────────────────────────────
 export default function Admin() {
   const navigate = useNavigate()
-  useNavbarConfig({
-    extra: (
-      <div style={{ fontSize: 12, color: C.purple, fontWeight: 700 }}>
-        <Shield size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} />Admin
-      </div>
-    ),
-  }, [])
   const { user, isAdmin, loading: authLoading } = useAuth()
   const [tab, setTab] = useState('overview')
   const [users, setUsers] = useState([])
@@ -2060,6 +2053,12 @@ export default function Admin() {
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'inherit' }}>
+      <Navbar>
+        <div style={{ fontSize: 12, color: C.purple, fontWeight: 700 }}>
+          <Shield size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} />Admin
+        </div>
+      </Navbar>
+
       {/* Toast */}
       <div style={{
         position: 'fixed', bottom: 28, left: '50%', transform: `translateX(-50%) translateY(${toast ? 0 : 80}px)`,

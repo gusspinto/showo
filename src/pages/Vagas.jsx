@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import { Navbar } from '../components/Navbar'
 import { CaseIcon as Briefcase } from '@solar-icons/react/bold/case'
 import { MapPointIcon as MapPin } from '@solar-icons/react/bold/map-point'
 import { GlobeIcon as Globe } from '@solar-icons/react/bold/globe'
@@ -548,6 +549,7 @@ export default function Vagas() {
         @media (max-width: 400px) { .vagas-grid { grid-template-columns: 1fr !important; } }
         @media (max-width: 420px) { .vagas-filter-grid { grid-template-columns: 1fr !important; } }
       `}</style>
+      <Navbar />
       <div className="page-content">
 
         {/* Header */}

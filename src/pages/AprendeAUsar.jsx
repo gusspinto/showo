@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { Navbar } from '../components/Navbar'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { PinIcon as Pin } from '@solar-icons/react/bold/pin'
@@ -520,6 +521,7 @@ export default function AprendeAUsar() {
 
   return (
     <div className="atu-root">
+      <Navbar />
 
       <div className="atu-mobile-tabs">
         {SECTIONS.map(({ id, label }) => (

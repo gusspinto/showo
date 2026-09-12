@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { previousRoute, resolveBack } from '../lib/routeHistory'
+import { Navbar } from '../components/Navbar'
 import { RefreshCircleIcon as Loader } from '@solar-icons/react/bold/refresh-circle'
 import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
@@ -437,6 +438,7 @@ export default function Settings() {
 
   if (authLoading) return (
     <div className="min-h-screen bg-page">
+      <Navbar />
       <div className="page-content"><SettingsSkeleton /></div>
     </div>
   )
@@ -582,6 +584,7 @@ export default function Settings() {
 
   return (
     <div className="min-h-screen bg-page">
+      <Navbar />
       <div className="page-content">
         <div className="settings-header">
           <h1 className="settings-title">Definições</h1>
