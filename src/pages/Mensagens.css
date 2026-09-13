@@ -14,7 +14,10 @@
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
+  outline: 1px solid oklch(1 0 0 / 0.1);
+  outline-offset: -1px;
 }
+body.light .msg-avatar-img { outline-color: oklch(0 0 0 / 0.1); }
 
 .msg-avatar-fallback {
   border-radius: 50%;
@@ -122,7 +125,9 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 2px 8px rgba(27, 120, 247, 0.2);
+  transition: transform 0.1s;
 }
+.msg-compose-btn:active { transform: scale(0.9); }
 
 .msg-list-body {
   flex: 1;
@@ -147,8 +152,9 @@
   cursor: pointer;
   font-family: inherit;
   text-align: left;
-  transition: background 0.12s;
+  transition: background 0.12s, transform 0.1s;
 }
+.msg-conv-item:active { transform: scale(0.99); }
 
 .msg-conv-item:hover {
   background: var(--color-bg-alt);
@@ -275,7 +281,9 @@
   font-family: inherit;
   font-size: 13px;
   font-weight: 600;
+  transition: transform 0.1s;
 }
+.msg-back-btn:active { transform: scale(0.96); }
 
 .msg-hd-name {
   font-size: 14px;
@@ -308,7 +316,9 @@
   cursor: pointer;
   font-family: inherit;
   white-space: nowrap;
+  transition: transform 0.1s;
 }
+.msg-hd-return-btn:active { transform: scale(0.96); }
 
 .msg-hd-profile-btn {
   background: transparent;
@@ -321,7 +331,9 @@
   cursor: pointer;
   font-family: inherit;
   white-space: nowrap;
+  transition: transform 0.1s;
 }
+.msg-hd-profile-btn:active { transform: scale(0.96); }
 
 /* ── Messages area ── */
 .msg-messages {
@@ -409,8 +421,9 @@
   display: flex;
   align-items: center;
   color: var(--color-text-secondary);
-  transition: color 0.1s;
+  transition: color 0.1s, transform 0.1s;
 }
+.msg-action-inline-btn:active { transform: scale(0.9); }
 
 .msg-action-inline-btn:hover {
   color: var(--color-text);
@@ -442,7 +455,9 @@
   padding: 2px 7px;
   cursor: pointer;
   font-family: inherit;
+  transition: transform 0.1s;
 }
+.msg-delete-yes:active { transform: scale(0.94); }
 
 .msg-delete-no {
   background: transparent;
@@ -452,7 +467,9 @@
   cursor: pointer;
   font-family: inherit;
   padding: 2px 4px;
+  transition: transform 0.1s;
 }
+.msg-delete-no:active { transform: scale(0.94); }
 
 /* ── Edit mode ── */
 .msg-edit-textarea {
@@ -480,7 +497,9 @@
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
+  transition: transform 0.1s;
 }
+.msg-edit-cancel:active { transform: scale(0.96); }
 
 .msg-edit-save {
   border: none;
@@ -495,7 +514,9 @@
 .msg-edit-save.enabled {
   background: var(--color-primary);
   cursor: pointer;
+  transition: transform 0.1s;
 }
+.msg-edit-save.enabled:active { transform: scale(0.94); }
 
 .msg-edit-save.disabled {
   background: var(--color-border);
@@ -555,9 +576,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s;
+  transition: background 0.15s, transform 0.1s;
   flex-shrink: 0;
 }
+.msg-send-btn.enabled:active { transform: scale(0.9); }
 
 .msg-send-btn.enabled {
   background: var(--color-primary);
@@ -623,7 +645,9 @@
   color: var(--color-text-secondary);
   display: flex;
   padding: 2px;
+  transition: transform 0.1s;
 }
+.msg-nova-close:active { transform: scale(0.9); }
 
 .msg-nova-results {
   max-height: 320px;
@@ -649,8 +673,9 @@
   cursor: pointer;
   font-family: inherit;
   text-align: left;
-  transition: background 0.12s;
+  transition: background 0.12s, transform 0.1s;
 }
+.msg-nova-result-btn:active { transform: scale(0.99); }
 
 .msg-nova-result-btn:hover {
   background: var(--color-bg-alt);
@@ -723,8 +748,9 @@
   cursor: pointer;
   font-family: inherit;
   width: 100%;
-  transition: background 0.12s;
+  transition: background 0.12s, transform 0.1s;
 }
+.msg-action-btn:active { transform: scale(0.98); }
 
 .msg-action-btn + .msg-action-btn {
   border-top: 1px solid var(--color-border);
@@ -782,7 +808,9 @@
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
+  transition: transform 0.1s;
 }
+.msg-popup-cancel:active { transform: scale(0.96); }
 
 .msg-popup-confirm {
   flex: 1;
@@ -794,7 +822,9 @@
   font-weight: 700;
   cursor: pointer;
   font-family: inherit;
+  transition: transform 0.1s;
 }
+.msg-popup-confirm:not(.disabled):active { transform: scale(0.96); }
 
 .msg-popup-confirm.delete {
   background: var(--color-error);

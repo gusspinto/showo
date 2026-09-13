@@ -132,9 +132,10 @@
   border: none; border-radius: var(--radius-lg);
   font-size: 15px; font-weight: 700; cursor: pointer;
   font-family: inherit; -webkit-tap-highlight-color: transparent;
-  transition: opacity 0.15s;
+  transition: opacity 0.15s, transform 0.1s;
 }
 .np-alt-path:hover:not(:disabled) { opacity: 0.88; }
+.np-alt-path:active:not(:disabled) { transform: scale(0.96); }
 .np-alt-path:disabled {
   background: var(--color-border); color: var(--color-text-tertiary);
   cursor: not-allowed;
@@ -147,6 +148,7 @@
   font-size: 13.5px; font-weight: 600; margin-top: 8px;
 }
 .np-alt-path--quiet:hover:not(:disabled) { opacity: 1; border-color: var(--color-border-hover); color: var(--color-text); }
+.np-alt-path--quiet:active:not(:disabled) { transform: scale(0.96); }
 .np-alt-path--quiet:disabled { background: transparent; }
 
 /* Resumo do que a IA leu do ficheiro, no topo do passo "rever". */
@@ -185,9 +187,10 @@
   padding: 12px 14px; border-radius: 12px;
   border: 1px solid var(--color-border); background: var(--color-surface);
   cursor: pointer; font-family: inherit;
-  transition: border-color 0.14s, background 0.14s;
+  transition: border-color 0.14s, background 0.14s, transform 0.1s;
 }
 .np-present-opt:hover { border-color: var(--color-border-hover); }
+.np-present-opt:active { transform: scale(0.98); }
 .np-present-opt.is-on { border-color: var(--color-text); background: var(--color-bg-alt); }
 .np-present-opt strong { font-size: 13px; font-weight: 700; color: var(--color-text); }
 .np-present-opt span { font-size: 11.5px; color: var(--color-text-secondary); line-height: 1.4; }
@@ -213,12 +216,13 @@
   border-radius: var(--radius-lg);
   cursor: pointer; text-align: center;
   -webkit-tap-highlight-color: transparent;
-  transition: border-color 0.16s, background 0.16s;
+  transition: border-color 0.16s, background 0.16s, transform 0.1s;
 }
 .np-drop:hover, .np-drop.is-dragging {
   border-color: var(--color-text);
   background: var(--color-bg-alt);
 }
+.np-drop:active { transform: scale(0.99); }
 .np-drop-icon {
   display: flex; align-items: center; justify-content: center;
   width: 44px; height: 44px; margin-bottom: 4px;
@@ -249,6 +253,7 @@
   display: flex; border-radius: var(--radius-sm); flex-shrink: 0;
 }
 .np-file-remove:hover { color: var(--color-error); background: var(--color-error-subtle); }
+.np-file-remove:active { transform: scale(0.9); }
 
 /* Fila extra para adicionar mais um ficheiro depois do primeiro — em
    vez de deixar a caixa grande de drop sempre visível e ambígua sobre
@@ -261,9 +266,10 @@
   color: var(--color-text-secondary);
   font-size: 13px; font-weight: 600; cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: border-color 0.15s, color 0.15s;
+  transition: border-color 0.15s, color 0.15s, transform 0.1s;
 }
 .np-file-add:hover { border-color: var(--color-text); color: var(--color-text); }
+.np-file-add:active { transform: scale(0.98); }
 
 /* Agrupa meta+label+textarea como um bloco só — dentro do bloco a
    espaçar pouco (são a mesma ideia), o gap do .np-add-card já trata do
@@ -309,8 +315,9 @@
   color: var(--color-text-secondary);
   font-size: 13px; font-weight: 500;
   cursor: pointer; font-family: inherit;
-  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  transition: border-color 0.15s, color 0.15s, background 0.15s, transform 0.1s;
 }
+.np-type:active { transform: scale(0.95); }
 .np-type.is-active {
   border-color: var(--color-text);
   background: var(--color-bg-alt);
@@ -349,7 +356,7 @@
   transition: opacity 0.2s, transform 0.14s var(--ease-out);
 }
 .np-btn-primary:hover:not(:disabled) { opacity: 0.88; }
-.np-btn-primary:active:not(:disabled) { transform: scale(0.985); }
+.np-btn-primary:active:not(:disabled) { transform: scale(0.96); }
 .np-btn-primary:disabled {
   background: var(--color-border);
   color: var(--color-text-tertiary);

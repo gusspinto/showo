@@ -138,12 +138,12 @@ const DATABASE_FEATURES = [
   {
     Icon: Database,
     title: 'Base de dados a sério',
-    desc: 'Desenha tabelas no editor — sem código nenhum — e o projeto ganha uma base de dados própria, isolada, com os teus dados.',
+    desc: 'Desenha tabelas no editor, sem escrever código nenhum, e o projeto ganha uma base de dados própria, isolada, com os teus dados.',
   },
   {
     Icon: Code,
     title: 'API automática',
-    desc: 'Cada tabela ganha um endereço e uma chave próprios. Funciona de fora da Showo — curl, Postman, o teu próprio site — como uma aplicação real.',
+    desc: 'Cada tabela ganha um endereço e uma chave próprios. Funciona de fora da Showo, em curl, Postman ou no teu próprio site, como uma aplicação real.',
   },
   {
     Icon: Globe,
@@ -204,23 +204,23 @@ const PLATFORM_FEATURES = [
 const FAQ = [
   {
     q: 'O que acontece quando esgoto os limites de um mês?',
-    a: 'As gerações com IA dessa funcionalidade ficam bloqueadas até ao início do mês seguinte, altura em que renovam automaticamente. O resto da plataforma — editor, portfólio, diário, agenda — continua disponível sem limite.',
+    a: 'As gerações com IA dessa funcionalidade ficam bloqueadas até ao início do mês seguinte, quando renovam sozinhas. O resto da plataforma continua disponível sem limite: editor, portfólio, diário e agenda.',
   },
   {
     q: 'Posso cancelar quando quiser?',
-    a: 'Sim, nas definições da conta, a qualquer momento. Mantés acesso ao plano até ao fim do período já pago, sem penalização.',
+    a: 'Sim, nas definições da conta, a qualquer momento. Continuas com acesso ao plano até ao fim do período já pago, sem penalização nenhuma.',
   },
   {
     q: 'A minha escola paga por mim?',
-    a: 'Se a tua escola tiver conta institucional Showo, és promovido automaticamente ao entrares na turma com o código da escola — não pagas nada.',
+    a: 'Se a tua escola tiver conta institucional na Showo, és promovido automaticamente assim que entras na turma com o código dela. Não pagas nada.',
   },
   {
     q: 'Podem pagar por mim?',
-    a: 'Sim. O checkout aceita qualquer cartão — não precisa de estar em teu nome.',
+    a: 'Sim. O checkout aceita qualquer cartão, não precisa de estar em teu nome.',
   },
   {
     q: 'Os meus projetos ficam visíveis publicamente?',
-    a: 'Cada projeto tem a sua própria página pública com um link que só partilhas se quiseres — recrutadores, professores ou júri de defesa. Nunca aparece em motores de busca sem seres tu a divulgar o link.',
+    a: 'Cada projeto tem a sua própria página pública, com um link que só partilhas se quiseres, seja a recrutadores, professores ou ao júri de defesa. Nunca aparece em motores de busca a não ser que sejas tu a partilhar o link.',
   },
 ]
 
@@ -238,7 +238,11 @@ function FaqItem({ q, a }) {
         <span>{q}</span>
         <ChevronDown size={16} className="pricing-faq-chevron" />
       </button>
-      {open && <p className="pricing-faq-a">{a}</p>}
+      <div className="pricing-faq-a-wrap">
+        <div className="pricing-faq-a-clip">
+          <p className="pricing-faq-a">{a}</p>
+        </div>
+      </div>
     </div>
   )
 }

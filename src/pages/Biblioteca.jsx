@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
+import { Modal, ModalActions, Button } from '../components/ui'
 import { PlusIcon as Plus } from '../components/icons/PlusIcon'
 import { DocumentTextIcon as FileText } from '@solar-icons/react/bold/document-text'
 import { GalleryIcon as ImageIcon } from '@solar-icons/react/bold/gallery'
@@ -477,15 +478,15 @@ export default function Biblioteca() {
       )}
 
       {confirmingDelete && (
-        <div className="lib-confirm-backdrop" onClick={() => setConfirmingDelete(null)}>
-          <div className="lib-confirm" onClick={e => e.stopPropagation()}>
-            <p className="lib-confirm-text">Remover este item da biblioteca? Não é possível desfazer.</p>
-            <div className="lib-confirm-actions">
-              <button className="lib-confirm-btn" onClick={() => setConfirmingDelete(null)}>Cancelar</button>
-              <button className="lib-confirm-btn danger" onClick={confirmDelete}>Remover</button>
-            </div>
-          </div>
-        </div>
+        <Modal onClose={() => setConfirmingDelete(null)} title="Remover item" width={340}>
+          <p style={{ margin: "0 0 var(--sp-5)", fontSize: 14, lineHeight: 1.5, color: "var(--color-text)" }}>
+            Remover este item da biblioteca? Não é possível desfazer.
+          </p>
+          <ModalActions>
+            <Button variant="secondary" onClick={() => setConfirmingDelete(null)}>Cancelar</Button>
+            <Button variant="danger" onClick={confirmDelete}>Remover</Button>
+          </ModalActions>
+        </Modal>
       )}
     </div>
   )

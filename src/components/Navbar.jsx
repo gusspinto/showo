@@ -1158,10 +1158,12 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           ) : (
             <div style={{ display: 'flex', gap: 8, padding: '16px 0 4px', borderTop: '1px solid var(--color-border)', marginTop: 4 }}>
               <button
+                className="nav-drawer-auth-btn"
                 onClick={() => { navigate('/login'); setOpen(false) }}
                 style={{ flex: 1, padding: '12px 0', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: 10, color: 'var(--color-text)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
               >Entrar</button>
               <button
+                className="nav-drawer-auth-btn"
                 onClick={() => { navigate('/register'); setOpen(false) }}
                 style={{ flex: 1, padding: '12px 0', background: 'var(--color-text)', border: 'none', borderRadius: 10, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px color-mix(in srgb, var(--color-text) 30%, transparent)' }}
               >Criar conta</button>
@@ -1254,8 +1256,14 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
             <div className="nav-auth" style={{ width: 1, height: 20, background: C.border, margin: '0 4px', flexShrink: 0 }} />
           )}
 
-          {/* Notification bell — always visible when logged in (including mobile) */}
-          {user && <InviteInbox userId={user.id} />}
+          {/* Notification bell — só monta aqui quando não há sidebar (Home,
+              páginas com hideSidebar). Com sidebar, body.has-sidebar esconde
+              esta .top-nav inteira por CSS (Navbar.css:360) e a barra lateral
+              já tem a sua própria <InviteInbox sidebar>; montar as duas ao
+              mesmo tempo duplicava 3 subscrições realtime e ~5 queries
+              (convites, notificações, turma) em CADA navegação, sem nenhum
+              ganho visual — esta ficava sempre invisível atrás do CSS. */}
+          {user && !showSidebar && <InviteInbox userId={user.id} />}
 
           {/* Mobile action cluster (≤600px), right side. Logged in → quick-create
               or the preview workspace toggle. Logged out → nada aqui: com a

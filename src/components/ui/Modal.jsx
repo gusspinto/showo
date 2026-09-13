@@ -21,9 +21,11 @@ export default function Modal({ children, onClose, title, subtitle, width = 440 
         backdropFilter: 'blur(4px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: 'var(--sp-4)',
+        animation: 'ui-modal-backdrop-in 0.15s ease-out both',
       }}
     >
-      <div style={{
+      <style>{'@keyframes ui-modal-backdrop-in { from { opacity: 0; } to { opacity: 1; } } @keyframes ui-modal-panel-in { from { opacity: 0; transform: scale(0.96) translateY(4px); } to { opacity: 1; transform: scale(1) translateY(0); } } .ui-modal-close:active { transform: scale(0.9); } @media (prefers-reduced-motion: reduce) { .ui-modal-panel { animation: none !important; } }'}</style>
+      <div className="ui-modal-panel" style={{
         background: 'var(--color-surface)',
         border: '1px solid var(--color-border)',
         borderRadius: 'var(--radius-xl)',
@@ -33,6 +35,7 @@ export default function Modal({ children, onClose, title, subtitle, width = 440 
         maxHeight: 'calc(100dvh - 48px)',
         overflowY: 'auto',
         boxShadow: 'var(--shadow-xl)',
+        animation: 'ui-modal-panel-in 0.2s ease-out both',
       }}>
         {(title || onClose) && (
           <div style={{
@@ -62,6 +65,7 @@ export default function Modal({ children, onClose, title, subtitle, width = 440 
             </div>
             {onClose && (
               <button
+                className="ui-modal-close"
                 onClick={onClose}
                 style={{
                   background: 'transparent', border: 'none',
@@ -70,7 +74,7 @@ export default function Modal({ children, onClose, title, subtitle, width = 440 
                   alignItems: 'center', justifyContent: 'center',
                   width: 44, height: 44, flexShrink: 0,
                   borderRadius: 'var(--radius-sm)',
-                  transition: 'color var(--duration-fast)',
+                  transition: 'color var(--duration-fast), transform 0.1s',
                 }}
                 onMouseEnter={e => e.currentTarget.style.color = 'var(--color-text)'}
                 onMouseLeave={e => e.currentTarget.style.color = 'var(--color-text-tertiary)'}

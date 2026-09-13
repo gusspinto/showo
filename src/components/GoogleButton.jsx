@@ -58,6 +58,7 @@ export default function GoogleButton({ label = 'Continuar com Google', redirectT
 
   return (
     <>
+      <style>{`.google-btn:active:not(:disabled) { transform: scale(0.96); }`}</style>
       <button
         type="button"
         onClick={go}
@@ -71,7 +72,7 @@ export default function GoogleButton({ label = 'Continuar com Google', redirectT
           padding: '12px', fontSize: 14, fontWeight: 600,
           cursor: loading ? 'default' : 'pointer', fontFamily: 'inherit',
           opacity: loading ? 0.7 : 1,
-          transition: 'opacity 0.15s, box-shadow 0.15s',
+          transition: 'opacity 0.15s, box-shadow 0.15s, transform 0.1s ease-out',
           WebkitTapHighlightColor: 'transparent',
         }}
       >

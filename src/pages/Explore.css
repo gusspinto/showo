@@ -145,6 +145,9 @@
   border-color: var(--color-border-hover);
   color: var(--color-text);
 }
+.explore-filter-btn:active {
+  transform: scale(0.96);
+}
 .explore-filter-btn.active {
   border-color: var(--color-text);
   color: var(--color-text);
@@ -235,8 +238,9 @@
   font-weight: 700;
   cursor: pointer;
   font-family: inherit;
-  transition: all 0.15s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
 }
+.filter-toggle-btn:active { transform: scale(0.96); }
 .filter-toggle-btn.active {
   background: var(--color-surface-hover);
   border-color: color-mix(in srgb, var(--color-text) 40%, transparent);
@@ -281,8 +285,9 @@
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
-  transition: all 0.15s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
 }
+.filter-chip:active { transform: scale(0.96); }
 .filter-chip.active {
   border-color: var(--color-text);
   background: var(--color-surface-hover);
@@ -375,9 +380,12 @@
   border-color: var(--color-border-hover);
   background: var(--color-surface-hover);
 }
+.explore-card:active {
+  transform: scale(0.98);
+}
 
 .explore-card-cover {
-  border-radius: 10px 10px 0 0;
+  border-radius: 12px 12px 0 0;
   margin: -22px -22px 16px;
   position: relative;
   overflow: hidden;
@@ -390,6 +398,11 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  outline: 1px solid oklch(1 0 0 / 0.1);
+  outline-offset: -1px;
+}
+body.light .explore-card-cover img {
+  outline-color: oklch(0 0 0 / 0.1);
 }
 .explore-card-cover-gradient {
   position: absolute;
@@ -522,6 +535,7 @@ button.explore-tag--tech {
   transition: border-color 0.14s, color 0.14s, background 0.14s;
 }
 button.explore-tag--tech:hover { border-color: var(--color-text-tertiary); color: var(--color-text); }
+button.explore-tag--tech:active { transform: scale(0.94); }
 button.explore-tag--tech.active {
   background: var(--color-primary);
   border-color: var(--color-primary);
@@ -545,6 +559,9 @@ button.explore-tag--tech.active {
   border-color: var(--color-text);
   color: var(--color-text);
 }
+.explore-load-more:active {
+  transform: scale(0.96);
+}
 
 /* ── Empty state ── */
 .explore-empty {
@@ -562,6 +579,10 @@ button.explore-tag--tech.active {
   font-size: 14px;
   cursor: pointer;
   font-family: inherit;
+  transition: transform 0.1s;
+}
+.explore-empty-clear:active {
+  transform: scale(0.96);
 }
 
 /* ── People card ── */
@@ -583,6 +604,9 @@ button.explore-tag--tech.active {
   border-color: var(--color-border-hover);
   background: var(--color-surface-hover);
 }
+.explore-person-card:active {
+  transform: scale(0.98);
+}
 /* Sem isto, um nome/detalhe/skill sem espaços empurra o cartão para lá do
    ecrã no mobile (grelha de 1 coluna) — a linha flex interna tem de poder
    encolher para o overflow:hidden do texto funcionar. */
@@ -595,6 +619,11 @@ button.explore-tag--tech.active {
   object-fit: cover;
   flex-shrink: 0;
   overflow: hidden;
+  outline: 1px solid oklch(1 0 0 / 0.1);
+  outline-offset: -1px;
+}
+body.light .explore-avatar {
+  outline-color: oklch(0 0 0 / 0.1);
 }
 .explore-avatar-fallback {
   width: 46px;
@@ -744,6 +773,7 @@ button.explore-tag--tech.active {
   transition: opacity 0.15s;
 }
 .explore-people-cta-btn-primary:hover { opacity: 0.88; }
+.explore-people-cta-btn-primary:active { transform: scale(0.96); }
 .explore-people-cta-btn-ghost {
   background: none;
   border: 1.5px solid var(--color-border);
@@ -759,6 +789,9 @@ button.explore-tag--tech.active {
 .explore-people-cta-btn-ghost:hover {
   border-color: var(--color-border-hover);
   color: var(--color-text);
+}
+.explore-people-cta-btn-ghost:active {
+  transform: scale(0.96);
 }
 
 /* ══ RESPONSIVE ══ */

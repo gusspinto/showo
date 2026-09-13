@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
+import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
 import { Buildings2Icon as Building2 } from '@solar-icons/react/bold/buildings-2'
 import { EyeIcon as Eye } from '@solar-icons/react/bold/eye'
 import { CaseIcon as Briefcase } from '@solar-icons/react/bold/case'
@@ -35,7 +36,7 @@ const PROJECT_TYPES = [
 ]
 
 const ZONES = [
-  { id: '', label: 'Toda Portugal' },
+  { id: '', label: 'Todo Portugal' },
   { id: 'Porto', label: 'Porto' },
   { id: 'Lisboa', label: 'Lisboa' },
   { id: 'Braga', label: 'Braga' },
@@ -342,9 +343,7 @@ export default function Explore() {
 
           {/* Search input */}
           <div className="explore-search-wrap">
-            <svg className="explore-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-tertiary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-            </svg>
+            <Search size={16} className="explore-search-icon" style={{ color: "var(--color-text-tertiary)" }} />
             <input
               type="text"
               className="explore-search"
@@ -512,9 +511,7 @@ export default function Explore() {
                           {[project.creator_name, project.school_year].filter(Boolean).join(' · ')}
                         </div>
                       ) : <div />}
-                      <svg className="explore-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-text)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M5 12h14M12 5l7 7-7 7"/>
-                      </svg>
+                      <ArrowRight size={16} className="explore-card-arrow" style={{ color: "var(--color-text)" }} />
                     </div>
 
                     {/* Tecnologias demonstradas (feature 2) — clicáveis para filtrar */}
@@ -726,9 +723,7 @@ export default function Explore() {
                         </div>
 
                         {profileUrl && (
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-tertiary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
-                            <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-                          </svg>
+                          <ArrowRight size={14} className="flex-shrink-0" style={{ color: "var(--color-text-tertiary)" }} />
                         )}
                       </div>
                     )
