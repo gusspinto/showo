@@ -1251,15 +1251,12 @@ export default function TurmaPage() {
               </div>
             </div>
             <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-              {/* Code badge */}
-              <button
-                onClick={copyCode}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 8, padding: '6px 10px', cursor: 'pointer', fontFamily: 'inherit' }}
-              >
+              {/* Code badge — same Button component as "Copiar link" so the two sit at identical height/padding/radius */}
+              <Button variant="secondary" size="sm" onClick={copyCode}>
                 <span style={{ fontSize: 10, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Código</span>
                 <span style={{ fontSize: 14, fontWeight: 800, color: C.text, letterSpacing: 1.5 }}>{turma.code}</span>
                 <span style={{ color: copied ? C.green : C.subtle, display: 'flex' }}>{copied ? <Check size={11} /> : <Copy size={11} />}</span>
-              </button>
+              </Button>
               {/* Copy link */}
               <Button variant="secondary" size="sm" icon={copiedLink ? <Check size={12} /> : <Copy size={12} />} onClick={copyLink}>
                 {copiedLink ? 'Copiado!' : 'Copiar link'}
