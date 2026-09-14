@@ -365,12 +365,11 @@
 .pricing-testimonial-author strong { display: block; color: var(--color-text); font-weight: 600; }
 .pricing-testimonial-role { display: block; color: var(--color-text-secondary); }
 .pricing-testimonial-avatar {
-  display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
   width: 34px; height: 34px;
   border-radius: 50%;
-  font-size: 12px; font-weight: 700;
-  color: #fff;
+  object-fit: cover;
+  background: var(--color-bg-alt);
 }
 
 /* ── FAQ ── */
