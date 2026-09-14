@@ -54,6 +54,49 @@ export function slugifyTableName(label) {
     .slice(0, 40) || 'tabela'
 }
 
+/* ── CSV: importar/exportar linhas ──
+   Tudo no browser, sem IA nem chamada nenhuma — zero custo além dos
+   inserts normais que já existiam (um por linha, mesma API que o
+   formulário "Adicionar linha" já usa). */
+
+/** Um parser de CSV simples mas correto: aspas para campos com vírgula,
+ * quebra de linha ou aspas a sério (`""` dentro de um campo citado). */
+export function parseCsv(text) {
+  const rows = []
+  let row = [], field = '', inQuotes = false
+  const pushField = () => { row.push(field); field = '' }
+  const pushRow = () => { pushField(); rows.push(row); row = [] }
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i]
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++ } else { inQuotes = false }
+      } else field += c
+    } else if (c === '"') inQuotes = true
+    else if (c === ',') pushField()
+    else if (c === '\r') { /* ignora, o \n a seguir fecha a linha */ }
+    else if (c === '\n') pushRow()
+    else field += c
+  }
+  if (field.length || row.length) pushRow()
+  const clean = rows.filter(r => r.length > 1 || (r.length === 1 && r[0] !== ''))
+  if (!clean.length) return { headers: [], rows: [] }
+  const [headers, ...body] = clean
+  return { headers: headers.map(h => h.trim()), rows: body }
+}
+
+function csvEscape(v) {
+  const s = v === undefined || v === null ? '' : String(v)
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+}
+
+/** Linhas (formato {id, data}) para texto CSV, colunas na ordem da tabela. */
+export function rowsToCsv(columns, rows) {
+  const header = columns.map(c => c.name).map(csvEscape).join(',')
+  const body = rows.map(r => columns.map(c => csvEscape(r.data[c.name])).join(','))
+  return [header, ...body].join('\n')
+}
+
 const FN_BASE = 'https://kctdlnqiomxypvesdify.supabase.co/functions/v1/project-db'
 
 /** Exemplos de curl para a documentação mostrada ao dono do projeto (aba

@@ -29,6 +29,8 @@ import { parseGithubRepo, syncGithub, removeGithubEntries, topLanguages, commitS
 import { DatabaseIcon as Database } from '@solar-icons/react/bold/database'
 import { PaintRollerIcon as Paintbrush } from '@solar-icons/react/bold/paint-roller'
 import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
+import { UploadMinimalisticIcon as Upload } from '@solar-icons/react/bold/upload-minimalistic'
+import { DownloadMinimalisticIcon as Download } from '@solar-icons/react/bold/download-minimalistic'
 import { AddCircleIcon as PlusCircle } from '@solar-icons/react/bold/add-circle'
 import { GlobeIcon as Globe } from '@solar-icons/react/bold/globe'
 import { EyeClosedIcon as EyeOff } from '@solar-icons/react/bold/eye-closed'
@@ -1008,6 +1010,7 @@ function DatabaseSection({ project }) {
   const [limits, setLimits] = useState(null)
   const [loadError, setLoadError] = useState(null)
   const [showNewTable, setShowNewTable] = useState(false)
+  const [templatePick, setTemplatePick] = useState(null)
   const [expandedId, setExpandedId] = useState(null)
 
   async function load() {
@@ -1077,15 +1080,23 @@ function DatabaseSection({ project }) {
 
           {tables.length < limits.max_tables && (
             showNewTable ? (
-              <NewTableForm project={project} onCreated={() => { setShowNewTable(false); load() }} onCancel={() => setShowNewTable(false)} />
+              <NewTableForm
+                project={project}
+                initial={templatePick}
+                onCreated={() => { setShowNewTable(false); setTemplatePick(null); load() }}
+                onCancel={() => { setShowNewTable(false); setTemplatePick(null) }}
+              />
             ) : (
-              <button type="button" onClick={() => setShowNewTable(true)} style={{
-                display: 'flex', alignItems: 'center', gap: 8, background: 'none',
-                border: `1.5px dashed ${colors.border}`, borderRadius: 10, padding: '12px 16px',
-                color: colors.muted, fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', width: '100%', justifyContent: 'center',
-              }}>
-                <PlusCircle size={16} /> Nova tabela
-              </button>
+              <>
+                <TableTemplates onPick={t => { setTemplatePick(t); setShowNewTable(true) }} />
+                <button type="button" onClick={() => setShowNewTable(true)} style={{
+                  display: 'flex', alignItems: 'center', gap: 8, background: 'none',
+                  border: `1.5px dashed ${colors.border}`, borderRadius: 10, padding: '12px 16px',
+                  color: colors.muted, fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', width: '100%', justifyContent: 'center',
+                }}>
+                  <PlusCircle size={16} /> Começar do zero
+                </button>
+              </>
             )
           )}
 
@@ -1107,9 +1118,73 @@ function DbStat({ label, value }) {
   )
 }
 
-function NewTableForm({ project, onCreated, onCancel }) {
-  const [label, setLabel] = useState('')
-  const [columns, setColumns] = useState([{ name: '', type: 'text', required: false }])
+// Ponto de partida com sentido, não um formulário em branco — o mesmo
+// "e agora invento o quê" que faz a Base de dados parecer uma API perdida
+// em vez de uma funcionalidade do projeto. Colunas já pensadas para o caso
+// de uso, não "coluna_1, coluna_2".
+const TABLE_TEMPLATES = [
+  {
+    label: 'Reservas',
+    desc: 'Alguém marca uma vaga ou um horário.',
+    columns: [
+      { name: 'nome', type: 'text', required: true },
+      { name: 'data', type: 'date', required: true },
+      { name: 'confirmado', type: 'boolean', required: false },
+    ],
+  },
+  {
+    label: 'Inscrições',
+    desc: 'Registo de participantes numa turma ou evento.',
+    columns: [
+      { name: 'nome', type: 'text', required: true },
+      { name: 'email', type: 'text', required: true },
+      { name: 'turma', type: 'text', required: false },
+    ],
+  },
+  {
+    label: 'Feedback',
+    desc: 'Avaliações ou comentários de quem usa o projeto.',
+    columns: [
+      { name: 'nome', type: 'text', required: false },
+      { name: 'nota', type: 'number', required: true },
+      { name: 'comentario', type: 'text', required: false },
+    ],
+  },
+]
+
+function TableTemplates({ onPick }) {
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: colors.subtle, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 }}>
+        Ou parte de um exemplo
+      </div>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        {TABLE_TEMPLATES.map(t => (
+          <button
+            key={t.label}
+            type="button"
+            onClick={() => onPick(t)}
+            title={t.desc}
+            style={{
+              display: 'flex', flexDirection: 'column', gap: 2, textAlign: 'left',
+              background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 10,
+              padding: '10px 14px', cursor: 'pointer', fontFamily: 'inherit', flex: '1 1 160px', minWidth: 150,
+            }}
+            onMouseEnter={e => e.currentTarget.style.borderColor = colors.borderBright}
+            onMouseLeave={e => e.currentTarget.style.borderColor = colors.border}
+          >
+            <span style={{ fontSize: 13.5, fontWeight: 700, color: colors.text }}>{t.label}</span>
+            <span style={{ fontSize: 11.5, color: colors.subtle, lineHeight: 1.4 }}>{t.desc}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function NewTableForm({ project, onCreated, onCancel, initial }) {
+  const [label, setLabel] = useState(initial?.label || '')
+  const [columns, setColumns] = useState(initial?.columns?.map(c => ({ ...c })) || [{ name: '', type: 'text', required: false }])
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState(null)
 
@@ -1287,6 +1362,57 @@ function RowsPanel({ project, table, onChanged }) {
     } catch {}
   }
 
+  // Importar/exportar CSV — tudo no browser, um insert por linha na mesma
+  // API do botão "Adicionar linha". Sem IA, sem custo extra nenhum.
+  const [importing, setImporting] = useState(false)
+  const [importMsg, setImportMsg] = useState(null)
+  const fileInputRef = useRef(null)
+
+  function handleExportCsv() {
+    const csv = ProjectDb.rowsToCsv(table.columns, rows)
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${table.name || 'tabela'}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  async function handleImportCsv(e) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setImportMsg(null); setImporting(true)
+    try {
+      const text = await file.text()
+      const { headers, rows: csvRows } = ProjectDb.parseCsv(text)
+      const known = new Set(table.columns.map(c => c.name))
+      const usable = headers.filter(h => known.has(h))
+      if (!usable.length) {
+        setImportMsg(`Nenhuma coluna do ficheiro corresponde às colunas da tabela (${table.columns.map(c => c.name).join(', ')}).`)
+        setImporting(false)
+        return
+      }
+      let ok = 0, failed = 0
+      for (const csvRow of csvRows) {
+        const data = {}
+        usable.forEach(h => {
+          const col = table.columns.find(c => c.name === h)
+          const raw = csvRow[headers.indexOf(h)]
+          data[h] = col?.type === 'boolean' ? /^(true|1|sim|yes)$/i.test((raw || '').trim()) : raw
+        })
+        try { await ProjectDb.insertRow(project.id, table.id, data); ok++ }
+        catch { failed++; break } // provavelmente atingiu o limite de linhas — parar aqui
+      }
+      setImportMsg(failed > 0 ? `${ok} linhas importadas, ${failed} falhou (limite de linhas atingido?).` : `${ok} linhas importadas.`)
+      await load(); onChanged()
+    } catch (e) {
+      setImportMsg(e.message || 'Não foi possível ler o ficheiro.')
+    }
+    setImporting(false)
+  }
+
   if (rows === null) return <p style={{ fontSize: 12.5, color: colors.subtle, margin: 0 }}>A carregar linhas…</p>
 
   // Nomes de coluna como cabeçalho, não só os valores em fila — para
@@ -1358,10 +1484,22 @@ function RowsPanel({ project, table, onChanged }) {
           </div>
         </div>
       ) : (
-        <button type="button" onClick={openNewForm} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: `1px dashed ${colors.border}`, borderRadius: 7, padding: '7px 12px', fontSize: 12.5, fontWeight: 600, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit' }}>
-          <PlusCircle size={13} /> Adicionar linha
-        </button>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+          <button type="button" onClick={openNewForm} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: `1px dashed ${colors.border}`, borderRadius: 7, padding: '7px 12px', fontSize: 12.5, fontWeight: 600, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit' }}>
+            <PlusCircle size={13} /> Adicionar linha
+          </button>
+          <button type="button" onClick={() => fileInputRef.current?.click()} disabled={importing} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: `1px solid ${colors.border}`, borderRadius: 7, padding: '7px 12px', fontSize: 12.5, fontWeight: 600, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit' }}>
+            <Upload size={13} /> {importing ? 'A importar…' : 'Importar CSV'}
+          </button>
+          <input ref={fileInputRef} type="file" accept=".csv,text/csv" onChange={handleImportCsv} style={{ display: 'none' }} />
+          {rows.length > 0 && (
+            <button type="button" onClick={handleExportCsv} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: `1px solid ${colors.border}`, borderRadius: 7, padding: '7px 12px', fontSize: 12.5, fontWeight: 600, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit' }}>
+              <Download size={13} /> Exportar CSV
+            </button>
+          )}
+        </div>
       )}
+      {importMsg && <p style={{ margin: '8px 0 0', fontSize: 12, color: colors.subtle }}>{importMsg}</p>}
     </div>
   )
 }
