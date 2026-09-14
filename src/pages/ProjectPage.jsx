@@ -24,6 +24,7 @@ import { useTheme } from '../context/ThemeContext'
 const DefenseMode = lazy(() => import('../components/DefenseMode'))
 import ProjectComments from '../components/ProjectComments'
 import ProjectTimeline from '../components/ProjectTimeline'
+import ProjectTimelineBadge from '../components/ProjectTimelineBadge'
 import { ShareStoryModal } from '../components/ShareStoryModal'
 import { logFieldFilled } from '../lib/autoJournal'
 import { analyzeProject } from '../lib/analyzeProject'
@@ -2140,6 +2141,8 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
               {customTagline || project.ai_tagline}
             </p>
           )}
+
+          {!isOwner && <ProjectTimelineBadge project={project} />}
 
           {/* Creator pill */}
           {displayName && (

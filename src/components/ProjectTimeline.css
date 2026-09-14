@@ -65,11 +65,12 @@
 }
 .ptl-stat {
   border: 1px solid var(--color-border); border-radius: 10px;
-  padding: 12px 14px;
+  padding: 14px;
 }
 .ptl-stat-n {
-  display: block; font-size: 22px; font-weight: 400;
+  display: block; font-size: 26px; font-weight: 400;
   font-family: var(--font-heading); letter-spacing: -1px;
+  font-variant-numeric: tabular-nums;
   color: var(--color-text); line-height: 1;
 }
 .ptl-stat-l {
@@ -80,20 +81,28 @@
 /* Weekly activity heatmap — mesma ideia do gráfico de contribuições do
  * GitHub (uma célula por período, mais escura quanto mais atividade),
  * só que uma célula por semana em vez de por dia, porque é a granularidade
- * que já temos calculada no servidor. */
+ * que já temos calculada no servidor. Cor da marca em vez de um verde
+ * plano — a semana mais ativa fica no tom mais quente do gradiente,
+ * a mais fraca no mais frio, em vez de todas passarem por um único matiz. */
 .ptl-chart { margin-bottom: 20px; }
 .ptl-chart-bars {
-  display: flex; align-items: center; justify-content: center; gap: 3px;
+  display: flex; align-items: flex-end; justify-content: center; gap: 4px;
   padding: 0 1px; flex-wrap: nowrap; overflow-x: auto;
 }
 .ptl-chart-bar {
-  flex-shrink: 0; width: 12px; height: 12px; border-radius: 3px;
+  flex-shrink: 0; width: 14px; height: 16px; border-radius: 4px;
   background: var(--color-bg-alt); border: 1px solid var(--color-border);
+  transition: transform 0.14s ease;
 }
-.ptl-chart-bar[data-level="1"] { background: color-mix(in srgb, var(--color-success) 25%, var(--color-bg-alt)); border-color: transparent; }
-.ptl-chart-bar[data-level="2"] { background: color-mix(in srgb, var(--color-success) 50%, var(--color-bg-alt)); border-color: transparent; }
-.ptl-chart-bar[data-level="3"] { background: color-mix(in srgb, var(--color-success) 75%, var(--color-bg-alt)); border-color: transparent; }
-.ptl-chart-bar[data-level="4"] { background: var(--color-success); border-color: transparent; }
+.ptl-chart-bar:hover { transform: scaleY(1.12); }
+.ptl-chart-bar[data-level="1"] { height: 16px; background: color-mix(in srgb, var(--color-primary) 30%, var(--color-bg-alt)); border-color: transparent; }
+.ptl-chart-bar[data-level="2"] { height: 22px; background: color-mix(in srgb, var(--color-primary) 55%, var(--color-warning) 10%); border-color: transparent; }
+.ptl-chart-bar[data-level="3"] { height: 28px; background: color-mix(in srgb, var(--color-primary) 40%, var(--color-warning) 45%); border-color: transparent; }
+.ptl-chart-bar[data-level="4"] {
+  height: 34px; border-color: transparent;
+  background: var(--brand-gradient);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--color-warning) 35%, transparent);
+}
 .ptl-chart-axis {
   display: flex; justify-content: space-between;
   margin-top: 6px; padding-top: 6px;
@@ -176,9 +185,9 @@
 .ptl-item:last-child { padding-bottom: 0; }
 .ptl-item:last-child::before { display: none; }
 .ptl-dot {
-  flex-shrink: 0; width: 10px; height: 10px; margin-top: 4px;
-  border-radius: 50%; background: var(--color-primary);
-  box-shadow: 0 0 0 4px var(--color-surface);
+  flex-shrink: 0; width: 11px; height: 11px; margin-top: 4px;
+  border-radius: 50%; background: var(--brand-gradient);
+  box-shadow: 0 0 0 4px var(--color-surface), 0 0 6px color-mix(in srgb, var(--color-warning) 30%, transparent);
 }
 .ptl-card--empty .ptl-dot { box-shadow: 0 0 0 4px var(--color-bg-alt); }
 .ptl-item-body { flex: 1; min-width: 0; }
