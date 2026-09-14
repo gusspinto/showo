@@ -1442,7 +1442,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
 
       {/* ── Sidebar — desktop only (>601px). Hidden for non-auth users and pages with hideSidebar. ── */}
       {user && !hideSidebar && (
-      <div className={`sidebar${collapsed ? ' collapsed' : ''}`}>
+      <div className={`sidebar${collapsed ? ' collapsed' : ''}${isTeacher ? ' theme-teacher' : ''}`}>
         <button
           className="sb-collapse-toggle"
           onClick={toggleSidebar}

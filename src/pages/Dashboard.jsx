@@ -1276,7 +1276,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="dashboard-root" style={{ minHeight: '100vh', background: 'var(--color-bg)', fontFamily: 'var(--font-body)' }}>
+    <div className={`dashboard-root${isTeacher ? ' theme-teacher' : ''}`} style={{ minHeight: '100vh', background: 'var(--color-bg)', fontFamily: 'var(--font-body)' }}>
       <Navbar />
 
       {showOnboardingAluno && (

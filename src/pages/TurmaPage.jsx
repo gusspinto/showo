@@ -1026,7 +1026,7 @@ export default function TurmaPage() {
   const isMember = !!user && members.some(m => m.user_id === user.id)
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'inherit' }}>
+    <div className={isTeacher ? 'theme-teacher' : undefined} style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'inherit' }}>
       <style>{`
 @media (max-width: 480px) { .turmapage-grid { grid-template-columns: 1fr !important; } }
         @media (max-width: 600px) { .turmapage-hd { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; } }

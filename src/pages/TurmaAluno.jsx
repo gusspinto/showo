@@ -331,7 +331,7 @@ export default function TurmaAluno() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg }}>
+    <div className="theme-teacher" style={{ minHeight: '100vh', background: C.bg }}>
       <Navbar />
       <div className="page-content" style={{ maxWidth: 900, margin: '0 auto' }}>
 
