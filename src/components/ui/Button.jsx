@@ -44,6 +44,7 @@ export default function Button({
   disabled, loading, icon, iconRight, fullWidth, style, ...props
 }) {
   const [hovered, setHovered] = useState(false)
+  const [pressed, setPressed] = useState(false)
   const s = sizes[size]
   const v = variants[variant](hovered && !disabled)
 
@@ -52,7 +53,11 @@ export default function Button({
       onClick={onClick}
       disabled={disabled || loading}
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseLeave={() => { setHovered(false); setPressed(false) }}
+      onMouseDown={() => setPressed(true)}
+      onMouseUp={() => setPressed(false)}
+      onTouchStart={() => setPressed(true)}
+      onTouchEnd={() => setPressed(false)}
       style={{
         ...v,
         ...s,
@@ -65,10 +70,12 @@ export default function Button({
         fontWeight: 600,
         cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled ? 0.5 : loading ? 0.7 : 1,
-        transition: `background var(--duration-fast), color var(--duration-fast), border-color var(--duration-fast), box-shadow var(--duration-fast), opacity var(--duration-fast)`,
+        transform: pressed && !disabled && !loading ? 'scale(0.96)' : 'scale(1)',
+        transition: `background var(--duration-fast), color var(--duration-fast), border-color var(--duration-fast), box-shadow var(--duration-fast), opacity var(--duration-fast), transform 0.1s var(--ease-out, ease-out)`,
         width: fullWidth ? '100%' : undefined,
         whiteSpace: 'nowrap',
         lineHeight: 1,
+        WebkitTapHighlightColor: 'transparent',
         ...style,
       }}
       {...props}

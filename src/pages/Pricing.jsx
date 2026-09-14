@@ -1,17 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
-import { CloseCircleIcon as CloseCircle } from '@solar-icons/react/bold/close-circle'
-import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
-import { CaseIcon as Briefcase } from '@solar-icons/react/bold/case'
-import { LetterIcon as Mail } from '@solar-icons/react/bold/letter'
-import { DocumentTextIcon as FileText } from '@solar-icons/react/bold/document-text'
-import { StarsIcon as Sparkles } from '@solar-icons/react/bold/stars'
-import { AltArrowDownIcon as ChevronDown } from '@solar-icons/react/bold/alt-arrow-down'
-import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/square-academic-cap'
-import { DatabaseIcon as Database } from '@solar-icons/react/bold/database'
-import { CodeIcon as Code } from '@solar-icons/react/bold/code'
-import { GlobeIcon as Globe } from '@solar-icons/react/bold/globe'
+import { CheckCircleIcon as Check } from '@solar-icons/react/linear/check-circle'
+import { CloseCircleIcon as CloseCircle } from '@solar-icons/react/linear/close-circle'
+import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/linear/arrow-right'
+import { AltArrowDownIcon as ChevronDown } from '@solar-icons/react/linear/alt-arrow-down'
+import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/linear/square-academic-cap'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -38,7 +31,7 @@ const PLANS = [
     name: 'Grátis',
     price: '€0',
     tagline: 'Vê como funciona.',
-    positioning: 'Para experimentar com um projeto real, sem cartão.',
+    positioning: 'Para começar um projeto a sério e ver se a plataforma é para ti.',
     cta: 'Começar grátis',
     ctaVariant: 'ghost',
     groups: [
@@ -72,7 +65,7 @@ const PLANS = [
     price: '€4,99',
     period: '/mês',
     tagline: 'Nunca fiques bloqueado a meio da PAP.',
-    positioning: 'Para quem está a fazer a PAP, estágio ou projetos da escola.',
+    positioning: 'Para levares um projeto a sério até ao fim, seja PAP, estágio ou algo teu.',
     cta: 'Começar com o Plus',
     ctaVariant: 'primary',
     popular: true,
@@ -124,48 +117,6 @@ const PLANS = [
         ],
       },
     ],
-  },
-]
-
-/* A base de dados é a razão principal para pagar — não "mais IA" (quase
-   ninguém bate nos limites de IA, confirmado no uso real), mas "o projeto
-   passa a ser um produto a sério". Por isso é explicada como a Carreira,
-   não só mais uma linha na lista. */
-const DATABASE_FEATURES = [
-  {
-    Icon: Database,
-    title: 'Base de dados a sério',
-    desc: 'Desenha tabelas no editor — sem código nenhum — e o projeto ganha uma base de dados própria, isolada, com os teus dados.',
-  },
-  {
-    Icon: Code,
-    title: 'API automática',
-    desc: 'Cada tabela ganha um endereço e uma chave próprios. Funciona de fora da Showo — curl, Postman, o teu próprio site — como uma aplicação real.',
-  },
-  {
-    Icon: Globe,
-    title: 'Mostra a quem quiseres',
-    desc: 'Cada tabela escolhes se é pública ou privada. Um recrutador pode testar a tua API sem precisar de conta nenhuma.',
-  },
-]
-
-/* A Carreira é a razão de existir do Pro, por isso é explicada, não
-   listada. Cada linha diz o que a funcionalidade FAZ pelo aluno. */
-const CAREER_FEATURES = [
-  {
-    Icon: Briefcase,
-    title: 'Página de estágio',
-    desc: 'O teu portfólio reorganizado para quem contrata: projetos em destaque, competências e contacto num link só.',
-  },
-  {
-    Icon: Mail,
-    title: 'Recap semanal',
-    desc: 'Todas as segundas, um resumo do que avançou e do que ficou parado, na app e por email, para não perderes o ritmo entre entregas.',
-  },
-  {
-    Icon: FileText,
-    title: 'Carta de apresentação IA',
-    desc: 'Uma carta escrita para cada vaga a partir dos teus projetos reais, não de um modelo genérico.',
   },
 ]
 
@@ -256,29 +207,29 @@ function TestimonialCard({ quote, name, role, photo }) {
 const FAQ = [
   {
     q: 'O que acontece quando esgoto os limites de um mês?',
-    a: 'As gerações com IA dessa funcionalidade ficam bloqueadas até ao início do mês seguinte, altura em que renovam automaticamente. O resto da plataforma — editor, portfólio, diário, agenda — continua disponível sem limite.',
+    a: 'As gerações com IA dessa funcionalidade ficam bloqueadas até ao início do mês seguinte, quando renovam sozinhas. O resto da plataforma continua disponível sem limite: editor, portfólio, diário e agenda.',
   },
   {
     q: 'Posso cancelar quando quiser?',
-    a: 'Sim, nas definições da conta, a qualquer momento. Mantés acesso ao plano até ao fim do período já pago, sem penalização.',
+    a: 'Sim, nas definições da conta, a qualquer momento. Continuas com acesso ao plano até ao fim do período já pago, sem penalização nenhuma.',
   },
   {
     q: 'A minha escola paga por mim?',
-    a: 'Se a tua escola tiver conta institucional Showo, és promovido automaticamente ao entrares na turma com o código da escola — não pagas nada.',
+    a: 'Se a tua escola tiver conta institucional na Showo, és promovido automaticamente assim que entras na turma com o código dela. Não pagas nada.',
   },
   {
     q: 'Podem pagar por mim?',
-    a: 'Sim. O checkout aceita qualquer cartão — não precisa de estar em teu nome.',
+    a: 'Sim. O checkout aceita qualquer cartão, não precisa de estar em teu nome.',
   },
   {
     q: 'Os meus projetos ficam visíveis publicamente?',
-    a: 'Cada projeto tem a sua própria página pública com um link que só partilhas se quiseres — recrutadores, professores ou júri de defesa. Nunca aparece em motores de busca sem seres tu a divulgar o link.',
+    a: 'Cada projeto tem a sua própria página pública, com um link que só partilhas se quiseres, seja a recrutadores, professores ou ao júri de defesa. Nunca aparece em motores de busca a não ser que sejas tu a partilhar o link.',
   },
 ]
 
 function ComparisonCell({ value }) {
   if (value === false) return <CloseCircle size={16} className="pricing-cmp-no" />
-  if (value === true) return <Check size={16} className="pricing-cmp-yes" />
+  if (value === true) return <Check size={14} className="pricing-cmp-yes" />
   return <span>{value}</span>
 }
 
@@ -290,10 +241,16 @@ function FaqItem({ q, a }) {
         <span>{q}</span>
         <ChevronDown size={16} className="pricing-faq-chevron" />
       </button>
-      {open && <p className="pricing-faq-a">{a}</p>}
+      <div className="pricing-faq-a-wrap">
+        <div className="pricing-faq-a-clip">
+          <p className="pricing-faq-a">{a}</p>
+        </div>
+      </div>
     </div>
   )
 }
+
+const PLAN_ORDER = { free: 0, plus: 1, pro: 2 }
 
 export default function Pricing() {
   const navigate = useNavigate()
@@ -344,12 +301,13 @@ export default function Pricing() {
 
         <div className="pricing-proof">
           <GraduationCap size={15} />
-          <span>Já em uso em escolas profissionais portuguesas, com professores de PAP e estágio a acompanhar o processo em tempo real.</span>
+          <span>Já usado por alunos e professores em escolas profissionais portuguesas.</span>
         </div>
 
         <div className="pricing-grid">
           {PLANS.map(plan => {
             const isCurrent = user && plan.id === planId
+            const isDowngrade = user && !isCurrent && PLAN_ORDER[plan.id] < PLAN_ORDER[planId || 'free']
             return (
               <div key={plan.id} className={`pricing-card${plan.popular ? ' is-popular' : ''}${plan.career ? ' is-career' : ''}`}>
                 {plan.popular && <span className="pricing-flag"><span className="pricing-flag-text">Mais escolhido</span></span>}
@@ -357,23 +315,26 @@ export default function Pricing() {
 
                 <div className="pricing-card-head">
                   <h2 className="pricing-name">{plan.name}</h2>
-                  <div className="pricing-price">
-                    <span className="pricing-amount">{plan.price}</span>
-                    {plan.period && <span className="pricing-period">{plan.period}</span>}
-                  </div>
-                  <p className="pricing-tagline">{plan.tagline}</p>
-                  <p className="pricing-positioning">{plan.positioning}</p>
+                  <p className="pricing-tagline">{plan.positioning}</p>
                 </div>
 
+                <div className="pricing-price">
+                  <span className="pricing-amount">{plan.price}</span>
+                  {plan.period && <span className="pricing-period">{plan.period}</span>}
+                </div>
                 {isCurrent ? (
-                  <div className="pricing-current"><Check size={15} /> Plano atual</div>
+                  <div className="pricing-current"><Check size={14} /> Plano atual</div>
+                ) : isDowngrade ? (
+                  <button className="pricing-cta pricing-cta--ghost" onClick={() => navigate('/settings')}>
+                    Gerir subscrição
+                  </button>
                 ) : (
                   <button
                     className={`pricing-cta pricing-cta--${plan.ctaVariant}`}
                     onClick={() => handleCta(plan)}
                     disabled={loading === plan.id}
                   >
-                    {loading === plan.id ? 'A redirecionar…' : <>{plan.cta} <ArrowRight size={15} /></>}
+                    {loading === plan.id ? 'A redirecionar…' : <>{plan.cta} <ArrowRight size={14} /></>}
                   </button>
                 )}
 
@@ -397,49 +358,6 @@ export default function Pricing() {
                     </ul>
                   </div>
                 ))}
-
-                {/* A razão principal para pagar: o projeto deixa de ser só
-                    teórico e passa a ter dados e uma API a sério. */}
-                {plan.database && (
-                  <div className="pricing-career">
-                    <div className="pricing-career-head">
-                      <Database size={13} className="pricing-career-head-icon" />
-                      <span className="pricing-career-head-text">Produto real · desde o Plus</span>
-                    </div>
-                    <ul className="pricing-career-list">
-                      {DATABASE_FEATURES.map(({ Icon, title, desc }) => (
-                        <li key={title}>
-                          <span className="pricing-career-icon"><Icon size={15} /></span>
-                          <span>
-                            <strong>{title}</strong>
-                            <span className="pricing-career-desc">{desc}</span>
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* O bloco que justifica o salto de preço. */}
-                {plan.career && (
-                  <div className="pricing-career">
-                    <div className="pricing-career-head">
-                      <Sparkles size={13} className="pricing-career-head-icon" />
-                      <span className="pricing-career-head-text">Carreira · só no Pro</span>
-                    </div>
-                    <ul className="pricing-career-list">
-                      {CAREER_FEATURES.map(({ Icon, title, desc }) => (
-                        <li key={title}>
-                          <span className="pricing-career-icon"><Icon size={15} /></span>
-                          <span>
-                            <strong>{title}</strong>
-                            <span className="pricing-career-desc">{desc}</span>
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
               </div>
             )
           })}

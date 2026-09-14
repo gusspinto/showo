@@ -328,13 +328,16 @@ export default function Home() {
                   />
                   <button
                     type="button"
-                    className="home-start-pw-toggle"
+                    className={`home-start-pw-toggle${showPassword ? " is-active" : ""}`}
                     onClick={() => setShowPassword(v => !v)}
                     aria-label={showPassword ? 'Esconder palavra-passe' : 'Mostrar palavra-passe'}
                     aria-pressed={showPassword}
                     tabIndex={-1}
                   >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    <span className="home-start-pw-icon-stack">
+                      <Eye size={18} className={showPassword ? "home-start-pw-icon" : "home-start-pw-icon is-visible"} />
+                      <EyeOff size={18} className={showPassword ? "home-start-pw-icon is-visible" : "home-start-pw-icon"} />
+                    </span>
                   </button>
                 </div>
                 {authError && <p className="home-start-error">{authError}</p>}

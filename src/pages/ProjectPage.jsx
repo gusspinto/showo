@@ -1,9 +1,10 @@
-import { useEffect, useState, useRef, useMemo, memo } from 'react'
+import { useEffect, useState, useRef, useMemo, memo, lazy, Suspense } from 'react'
 import { createPortal } from 'react-dom'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { QRCodeSVG } from 'qrcode.react'
 import { supabase, supabaseUrl, supabaseAnonKey } from '../lib/supabase'
+import { getVisitorCity } from '../lib/geolocation'
 import { useIsMobile } from '../lib/useIsMobile'
 import { calculateScore, looksLikeSpam } from '../lib/score'
 import { containsProfanity } from '../lib/profanity'
@@ -17,7 +18,10 @@ import { chatProjectCoach } from '../lib/chatProjectCoach'
 import { useAuth } from '../context/AuthContext'
 import { useSidebar } from '../context/SidebarContext'
 import { useTheme } from '../context/ThemeContext'
-import DefenseMode from '../components/DefenseMode'
+// pptxgenjs (usado só pelo Modo de Defesa) é uma biblioteca pesada — carregada
+// à parte para não entrar no bundle de todas as visitas a um projeto, quando
+// a esmagadora maioria nunca abre este modo.
+const DefenseMode = lazy(() => import('../components/DefenseMode'))
 import ProjectComments from '../components/ProjectComments'
 import ProjectTimeline from '../components/ProjectTimeline'
 import { ShareStoryModal } from '../components/ShareStoryModal'
@@ -5336,13 +5340,20 @@ export default function ProjectPage() {
 
   // Effect 1: fetch project + public data — runs only when slug changes (never re-runs due to auth)
   useEffect(() => {
+    if (authLoading) return
     async function fetchProject() {
       // `select('*')` exige grant em TODAS as colunas da tabela — quem não
       // tem sessão só tem grant numa lista explícita (065_security_hardening,
       // esconde notas do professor), por isso `*` falha por inteiro para
       // anon. Usa a lista explícita só quando não há sessão; autenticado
       // mantém `*` como sempre, sem mudar nada do que já funcionava.
-      const { data: { user: currentUser } } = await supabase.auth.getUser()
+      // currentUser vem do AuthContext (já resolvido antes desta página montar
+      // na navegação normal) em vez de um supabase.auth.getUser() próprio —
+      // essa chamada faz sempre um pedido de rede para validar o JWT contra o
+      // servidor, e duplicava exatamente o que o AuthContext já tinha acabado
+      // de fazer. Era um dos saltos na fila de pedidos sequenciais que fazia
+      // abrir um projeto demorar segundos a mais.
+      const currentUser = user
       const { data, error } = await supabase
         .from('projects')
         .select(currentUser ? '*' : ANON_PROJECT_COLUMNS)
@@ -5457,7 +5468,7 @@ export default function ProjectPage() {
         membersChannelRef.current = null
       }
     }
-  }, [slug])
+  }, [slug, authLoading])
 
   // Effect 2: user-specific data — runs when auth resolves, never re-fetches the project
   useEffect(() => {
@@ -5526,17 +5537,10 @@ export default function ProjectPage() {
       t1 = setTimeout(() => {
         sessionStorage.setItem(notifKey, '1')
         // Get city first, then notify
-        fetch('https://ip-api.com/json/?fields=city,status')
-          .then(r => r.json())
-          .then(geo => {
-            const city = geo?.status === 'success' ? (geo.city || 'Portugal') : 'Portugal'
-            const visitor_role = profile?.role ?? null
-            supabase.functions.invoke('notify-view', { body: { project_slug: project.slug, type: 'PROJECT_VIEW', city, visitor_role } })
-          })
-          .catch(() => {
-            const visitor_role = profile?.role ?? null
-            supabase.functions.invoke('notify-view', { body: { project_slug: project.slug, type: 'PROJECT_VIEW', city: 'Portugal', visitor_role } })
-          })
+        getVisitorCity().then(city => {
+          const visitor_role = profile?.role ?? null
+          supabase.functions.invoke('notify-view', { body: { project_slug: project.slug, type: 'PROJECT_VIEW', city, visitor_role } })
+        })
       }, 15000)
     }
 
@@ -6313,12 +6317,14 @@ export default function ProjectPage() {
       `}</style>
 
       {defenseMode && (
-        <DefenseMode
-          project={{ ...project, journal: projectJournalEntries, teacher_feedback: teacherFeedback }}
-          isOwner={isOwner}
-          collaboratorSections={collaboratorSections}
-          onClose={() => setDefenseMode(false)}
-        />
+        <Suspense fallback={null}>
+          <DefenseMode
+            project={{ ...project, journal: projectJournalEntries, teacher_feedback: teacherFeedback }}
+            isOwner={isOwner}
+            collaboratorSections={collaboratorSections}
+            onClose={() => setDefenseMode(false)}
+          />
+        </Suspense>
       )}
 
       {showStoryModal && <ShareStoryModal project={project} onClose={() => setShowStoryModal(false)} />}

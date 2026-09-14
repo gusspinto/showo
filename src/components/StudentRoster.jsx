@@ -73,6 +73,11 @@ export default function StudentRoster({ students, showClass, onOpenProject }) {
               <span className="sr-dot" style={{ background: st.color }} />
               <span className="sr-status">{st.label}</span>
               <span className="sr-when">{activityLabel(s.status, s.daysSince)}</span>
+              {s.project && (
+                <span className="sr-evaluated" style={{ fontWeight: 600, color: s.evaluated ? 'var(--color-success)' : 'var(--color-text-tertiary)' }}>
+                  {s.evaluated ? 'Avaliado' : 'Por avaliar'}
+                </span>
+              )}
             </div>
           </div>
         )

@@ -22,9 +22,10 @@
   background: var(--color-text); color: var(--color-bg);
   border: none; border-radius: 10px;
   font-size: 13.5px; font-weight: 700; cursor: pointer; font-family: inherit;
-  transition: opacity 0.15s;
+  transition: opacity 0.15s, transform 0.1s;
 }
 .lib-add-btn:hover { opacity: 0.88; }
+.lib-add-btn:active { transform: scale(0.96); }
 
 .lib-header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 
@@ -35,9 +36,10 @@
   border-radius: 10px;
   font-size: 13px; font-weight: 700; cursor: pointer;
   font-family: inherit; color: var(--color-text);
-  transition: background 0.15s, border-color 0.15s;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
 }
 .lib-edit-btn:hover { background: var(--color-surface-hover); }
+.lib-edit-btn:active { transform: scale(0.96); }
 .lib-edit-btn.is-on { background: var(--color-text); color: var(--color-bg); border-color: var(--color-text); }
 
 /* ── Modo "Organizar" — escolher o que aparece no perfil público.
@@ -80,9 +82,10 @@
   padding: 6px 12px; border: none; background: transparent;
   font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;
   color: var(--color-text-tertiary); border-radius: 6px; white-space: nowrap;
-  transition: background 0.14s, color 0.14s;
+  transition: background 0.14s, color 0.14s, transform 0.1s;
 }
 .lib-seg-btn.is-on { background: var(--color-text); color: var(--color-bg); }
+.lib-seg-btn:active { transform: scale(0.95); }
 
 /* Escolha principal de estado: ocupa a largura toda, um só acento. */
 .lib-seg--state { display: flex; width: 100%; }
@@ -117,6 +120,7 @@
 .lib-added-list .lib-row:last-child { border-bottom: none; }
 .lib-row.is-clickable { cursor: pointer; }
 .lib-row.is-clickable:hover { background: var(--color-surface-hover); border-radius: 8px; border-color: transparent; }
+.lib-row.is-clickable:active { transform: scale(0.99); }
 .lib-row--skeleton { height: 44px; background: var(--color-bg-alt); border-radius: 8px; border: none; }
 
 .lib-row-icon {
@@ -125,7 +129,11 @@
   border-radius: 8px; overflow: hidden;
   background: var(--color-bg-alt); color: var(--color-text-secondary);
 }
-.lib-row-icon.has-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.lib-row-icon.has-thumb img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  outline: 1px solid oklch(1 0 0 / 0.1); outline-offset: -1px;
+}
+body.light .lib-row-icon.has-thumb img { outline-color: oklch(0 0 0 / 0.1); }
 .lib-row-body { display: flex; align-items: baseline; gap: 8px; flex: 1; min-width: 0; }
 .lib-row-name { font-size: 13.5px; font-weight: 600; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 45%; }
 .lib-row-desc {
@@ -141,6 +149,7 @@
   transition: background 0.14s, color 0.14s;
 }
 .lib-row-delete:hover { background: var(--color-error-subtle); color: var(--color-error); }
+.lib-row-delete:active { transform: scale(0.9); }
 
 /* ── Adicionados — tiles com preview de verdade (à Drive), é o
    portefólio, o que merece destaque. ── */
@@ -168,6 +177,7 @@
   border-color: var(--color-border-hover);
   box-shadow: 0 10px 26px rgba(0,0,0,0.14);
 }
+.lib-tile-main:active { transform: scale(0.98); }
 .lib-tile-cover {
   position: relative;
   display: flex; align-items: center; justify-content: center;
@@ -175,7 +185,11 @@
   max-height: 260px; overflow: hidden;
   background: var(--color-bg-alt); color: var(--color-text-tertiary);
 }
-.lib-tile-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.lib-tile-cover img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  outline: 1px solid oklch(1 0 0 / 0.1); outline-offset: -1px;
+}
+body.light .lib-tile-cover img { outline-color: oklch(0 0 0 / 0.1); }
 .lib-tile-filetype {
   display: flex; flex-direction: column; align-items: center; gap: 6px;
 }
@@ -226,7 +240,7 @@
    visível para não ser inacessível. */
 .lib-tile-tools {
   position: absolute; top: 8px; right: 8px; z-index: 1;
-  display: flex; gap: 4px;
+  display: flex; gap: 8px;
   opacity: 0.55; transition: opacity 0.14s;
 }
 .lib-tile:hover .lib-tile-tools,
@@ -239,9 +253,10 @@
   width: 30px; height: 30px; border-radius: 8px;
   background: rgba(0,0,0,0.62); color: #fff; cursor: pointer;
   backdrop-filter: blur(4px);
-  transition: background 0.14s;
+  transition: background 0.14s, transform 0.1s;
 }
 .lib-tile-tool:hover { background: rgba(0,0,0,0.85); }
+.lib-tile-tool:active { transform: scale(0.9); }
 .lib-tile-tool--danger:hover { background: var(--color-error); }
 
 /* "Mudar capa" — canto inferior da miniatura. */

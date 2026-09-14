@@ -211,3 +211,15 @@ body.light {
   --shadow-lg:  0 4px 16px rgba(0,0,0,0.08);
   --shadow-xl:  0 8px 32px rgba(0,0,0,0.10);
 }
+
+/* ── Professor: reaproveita as cores de sucesso como acento em vez do azul do
+   aluno. Aplicada no wrapper de cada página/modal só de professor — como
+   --color-primary é referenciado por quase tudo (botões, focus rings,
+   Badge/Button de ui.jsx), isto pinta a experiência inteira de verde num
+   único ponto, sem tocar cada componente. Não mexe em --color-success em si,
+   só reaponta --color-primary* para lá dentro deste escopo. */
+.theme-teacher {
+  --color-primary: var(--color-success);
+  --color-primary-subtle: var(--color-success-subtle);
+  --color-input-focus: var(--color-success);
+}

@@ -250,17 +250,27 @@ function FeedbackModal({ project, teacherId, onClose }) {
   )
 }
 
-function EditTurmaModal({ turma, onClose, onSave }) {
+function EditTurmaModal({ turma, onClose, onSave, onDelete }) {
   const [name, setName] = useState(turma.name || '')
   const [subject, setSubject] = useState(turma.subject || '')
   const [academicYear, setAcademicYear] = useState(turma.academic_year || getCurrentAcademicYear())
   const [saving, setSaving] = useState(false)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [deleteText, setDeleteText] = useState('')
+  const [deleting, setDeleting] = useState(false)
 
   async function handleSave() {
     if (!name.trim()) return
     setSaving(true)
     await onSave(name.trim(), subject.trim(), academicYear)
     setSaving(false)
+  }
+
+  async function handleDelete() {
+    if (deleteText.trim().toUpperCase() !== 'APAGAR') return
+    setDeleting(true)
+    await onDelete()
+    setDeleting(false)
   }
 
   return (
@@ -291,6 +301,33 @@ function EditTurmaModal({ turma, onClose, onSave }) {
           <button onClick={handleSave} disabled={saving || !name.trim()} style={{ background: 'var(--color-primary)', border: 'none', borderRadius: 8, padding: '11px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: saving || !name.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
             {saving ? 'A guardar…' : 'Guardar alterações'}
           </button>
+
+          {/* Zona perigosa — apagar a turma */}
+          <div style={{ marginTop: 8, paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
+            {!confirmingDelete ? (
+              <button onClick={() => setConfirmingDelete(true)} style={{ background: 'none', border: 'none', color: 'var(--color-error)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>
+                Apagar turma
+              </button>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <p style={{ margin: 0, fontSize: 12.5, color: C.muted, lineHeight: 1.5 }}>
+                  Isto apaga a turma, remove todos os alunos dela, as tarefas, os critérios de avaliação e as notas dadas dentro desta turma. Os projetos dos alunos não são apagados. <strong style={{ color: C.text }}>Não pode ser desfeito.</strong>
+                </p>
+                <p style={{ margin: 0, fontSize: 12, color: C.muted }}>Escreve <strong style={{ color: C.text }}>APAGAR</strong> para confirmar.</p>
+                <input value={deleteText} onChange={e => setDeleteText(e.target.value)} placeholder="APAGAR"
+                  style={{ width: '100%', background: 'var(--color-bg)', border: `1px solid var(--color-error-subtle)`, borderRadius: 8, padding: '9px 12px', color: C.text, fontSize: 13, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                  <button onClick={() => { setConfirmingDelete(false); setDeleteText('') }} style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '7px 14px', color: C.muted, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    Cancelar
+                  </button>
+                  <button onClick={handleDelete} disabled={deleting || deleteText.trim().toUpperCase() !== 'APAGAR'}
+                    style={{ background: 'var(--color-error)', border: 'none', borderRadius: 8, padding: '7px 14px', color: '#fff', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: deleting || deleteText.trim().toUpperCase() !== 'APAGAR' ? 0.5 : 1 }}>
+                    {deleting ? 'A apagar…' : 'Apagar'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -440,62 +477,25 @@ export default function TurmaPage() {
       const teacherNow = user && cls.teacher_id === user.id
       if (teacherNow) setIsTeacher(true)
 
-      let crit = []
-      if (teacherNow) {
-        const { data: critData } = await supabase
-          .from('class_evaluation_criteria')
-          .select('*')
-          .eq('class_id', cls.id)
-          .order('sort_order')
-        crit = critData || []
-        setCriteria(crit)
-      }
+      // These three don't depend on each other — fire together instead of
+      // waiting on each round trip in turn (was the main cause of the slow
+      // open: 7 sequential awaits before anything rendered).
+      const [critRes, cpRes, membersRes] = await Promise.all([
+        teacherNow
+          ? supabase.from('class_evaluation_criteria').select('*').eq('class_id', cls.id).order('sort_order')
+          : Promise.resolve({ data: [] }),
+        supabase.from('class_projects').select('project_id').eq('class_id', cls.id),
+        supabase.from('class_members').select('user_id, joined_at').eq('class_id', cls.id),
+      ])
 
-      const { data: cp } = await supabase
-        .from('class_projects')
-        .select('project_id')
-        .eq('class_id', cls.id)
+      const crit = critRes.data || []
+      if (teacherNow) setCriteria(crit)
 
-      let projs = []
-      if (cp?.length) {
-        const ids = cp.map(r => r.project_id)
-        const { data, error: projectsError } = await supabase
-          .from('projects')
-          .select('id, name, slug, score, area, creator_name, cover_url, ai_tagline, created_at, user_id, goal, problem, solution, features, technologies, results, linkedin_url, github_url, portfolio_url, review_status, teacher_score')
-          .in('id', ids)
-        if (projectsError) {
-          console.error('projects fetch failed:', projectsError)
-          showToast(friendlyError(projectsError, 'Não foi possível carregar os projetos.'))
-        }
-        projs = data || []
-        setProjects(projs)
-
-        // Fetch per-criterion scores if this class has criteria
-        if (teacherNow && crit.length > 0 && projs.length > 0) {
-          const { data: scores } = await supabase
-            .from('project_criterion_scores')
-            .select('project_id, criterion_id, score')
-            .in('project_id', projs.map(p => p.id))
-          if (scores?.length) {
-            const map = {}
-            scores.forEach(s => {
-              if (!map[s.project_id]) map[s.project_id] = {}
-              map[s.project_id][s.criterion_id] = s.score
-            })
-            setCriterionScoresMap(map)
-          }
-        }
-      }
-
-      // Fetch all members from class_members table (source of truth)
-      const { data: classMembers, error: classMembersError } = await supabase
-        .from('class_members')
-        .select('user_id, joined_at')
-        .eq('class_id', cls.id)
-
-      if (classMembersError) {
-        console.error('class_members fetch failed:', classMembersError)
-        showToast(friendlyError(classMembersError, 'Não foi possível carregar os alunos.'))
+      const cp = cpRes.data
+      const classMembers = membersRes.data
+      if (membersRes.error) {
+        console.error('class_members fetch failed:', membersRes.error)
+        showToast(friendlyError(membersRes.error, 'Não foi possível carregar os alunos.'))
       }
 
       const memberUserIds = (classMembers || []).map(m => m.user_id)
@@ -504,12 +504,44 @@ export default function TurmaPage() {
         ? [...new Set([cls.teacher_id, ...memberUserIds])]
         : [...new Set(memberUserIds)]
 
+      // Projects and profiles are independent of each other too — run together.
+      const [projectsRes, profilesRes] = await Promise.all([
+        cp?.length
+          ? supabase.from('projects')
+              .select('id, name, slug, score, area, creator_name, cover_url, ai_tagline, created_at, user_id, goal, problem, solution, features, technologies, results, linkedin_url, github_url, portfolio_url, review_status, teacher_score')
+              .in('id', cp.map(r => r.project_id))
+          : Promise.resolve({ data: [] }),
+        allIds.length > 0
+          ? supabase.from('profiles').select('id, full_name, username, avatar_url, role').in('id', allIds)
+          : Promise.resolve({ data: [] }),
+      ])
+
+      if (projectsRes.error) {
+        console.error('projects fetch failed:', projectsRes.error)
+        showToast(friendlyError(projectsRes.error, 'Não foi possível carregar os projetos.'))
+      }
+      const projs = projectsRes.data || []
+      setProjects(projs)
+
+      // Fetch per-criterion scores if this class has criteria
+      if (teacherNow && crit.length > 0 && projs.length > 0) {
+        const { data: scores } = await supabase
+          .from('project_criterion_scores')
+          .select('project_id, criterion_id, score')
+          .in('project_id', projs.map(p => p.id))
+        if (scores?.length) {
+          const map = {}
+          scores.forEach(s => {
+            if (!map[s.project_id]) map[s.project_id] = {}
+            map[s.project_id][s.criterion_id] = s.score
+          })
+          setCriterionScoresMap(map)
+        }
+      }
+
       if (allIds.length > 0) {
-        const { data: profiles, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, full_name, username, avatar_url, role')
-          .in('id', allIds)
-        if (profilesError) console.error('profiles fetch failed:', profilesError)
+        if (profilesRes.error) console.error('profiles fetch failed:', profilesRes.error)
+        const profiles = profilesRes.data
         const profileMap = {}
         ;(profiles || []).forEach(p => { profileMap[p.id] = p })
         const memberList = allIds.map(uid => {
@@ -909,6 +941,19 @@ export default function TurmaPage() {
     a.click(); URL.revokeObjectURL(url)
   }
 
+  // Pauta simples: só nome + nota, uma linha por aluno, ordenado alfabeticamente —
+  // o formato mínimo que a generalidade dos sistemas da escola aceita para importar.
+  function exportPauta() {
+    const rows = [['Aluno', 'Nota (0-20)']]
+    const byName = [...sortedProjects].sort((a, b) => (a.creator_name || '').localeCompare(b.creator_name || ''))
+    byName.forEach(p => { rows.push([p.creator_name || '—', p.teacher_score ?? '']) })
+    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n')
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a'); a.href = url; a.download = `pauta-${turma.name}-${turma.code}.csv`
+    a.click(); URL.revokeObjectURL(url)
+  }
+
   function toggleSort(field) {
     if (sortBy === field) setSortAsc(a => !a)
     else { setSortBy(field); setSortAsc(field === 'name') }
@@ -1013,6 +1058,13 @@ export default function TurmaPage() {
     showToast('Turma atualizada')
   }
 
+  async function handleDeleteTurma() {
+    const { error } = await supabase.rpc('delete_class', { p_class_id: turma.id })
+    if (error) { showToast(friendlyError(error, 'Não foi possível apagar a turma.')); return }
+    setShowEditTurma(false)
+    navigate('/turmas')
+  }
+
   async function handleRemoveMember(memberUserId) {
     const { error } = await supabase.rpc('remove_class_member', { p_class_id: turma.id, p_user_id: memberUserId })
     if (error) { showToast(friendlyError(error, 'Não foi possível remover o aluno.')); return }
@@ -1026,7 +1078,7 @@ export default function TurmaPage() {
   const isMember = !!user && members.some(m => m.user_id === user.id)
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'inherit' }}>
+    <div className={isTeacher ? 'theme-teacher' : undefined} style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'inherit' }}>
       <style>{`
 @media (max-width: 480px) { .turmapage-grid { grid-template-columns: 1fr !important; } }
         @media (max-width: 600px) { .turmapage-hd { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; } }
@@ -1056,7 +1108,7 @@ export default function TurmaPage() {
 
       {/* Edit turma */}
       {showEditTurma && (
-        <EditTurmaModal turma={turma} onClose={() => setShowEditTurma(false)} onSave={handleUpdateTurma} />
+        <EditTurmaModal turma={turma} onClose={() => setShowEditTurma(false)} onSave={handleUpdateTurma} onDelete={handleDeleteTurma} />
       )}
 
       {/* New task */}
@@ -1199,22 +1251,22 @@ export default function TurmaPage() {
               </div>
             </div>
             <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-              {/* Code badge */}
-              <button
-                onClick={copyCode}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 8, padding: '6px 10px', cursor: 'pointer', fontFamily: 'inherit' }}
-              >
+              {/* Code badge — same Button component as "Copiar link" so the two sit at identical height/padding/radius */}
+              <Button variant="secondary" size="sm" onClick={copyCode}>
                 <span style={{ fontSize: 10, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Código</span>
                 <span style={{ fontSize: 14, fontWeight: 800, color: C.text, letterSpacing: 1.5 }}>{turma.code}</span>
                 <span style={{ color: copied ? C.green : C.subtle, display: 'flex' }}>{copied ? <Check size={11} /> : <Copy size={11} />}</span>
-              </button>
+              </Button>
               {/* Copy link */}
               <Button variant="secondary" size="sm" icon={copiedLink ? <Check size={12} /> : <Copy size={12} />} onClick={copyLink}>
                 {copiedLink ? 'Copiado!' : 'Copiar link'}
               </Button>
               {/* Professor: export CSV */}
               {isTeacher && projects.length > 0 && (
-                <Button variant="secondary" size="sm" icon={<Download size={12} />} onClick={exportCSV}>CSV</Button>
+                <>
+                  <Button variant="secondary" size="sm" icon={<Download size={12} />} onClick={exportCSV}>CSV</Button>
+                  <Button variant="secondary" size="sm" icon={<Download size={12} />} onClick={exportPauta}>Pauta</Button>
+                </>
               )}
               {/* Not a member yet — the invite link lands here; give a way in. */}
               {!isTeacher && user && !isMember && (
@@ -1505,7 +1557,7 @@ export default function TurmaPage() {
 
             {criteria.length === 0 && !criteriaAdding ? (
               <div style={{ ...C.glassStyle, background: C.glass, border: `1px dashed ${C.glassBorder}`, borderRadius: 10, padding: '18px 20px', textAlign: 'center' }}>
-                <p style={{ margin: '0 0 8px', fontSize: 13, color: C.muted }}>Sem critérios definidos. A avaliação usa uma nota única de 0-20.</p>
+                <p style={{ margin: '0 0 8px', fontSize: 13, color: C.muted }}>Sem critérios definidos. Até definires, a avaliação usa a grelha de júri genérica (5 perguntas, 0-4 cada).</p>
                 <button onClick={useDefaultCriteria} style={{ background: 'none', border: 'none', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline' }}>
                   Usar critérios padrão (4 × 25%)
                 </button>

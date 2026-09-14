@@ -7,8 +7,10 @@
   color: var(--color-text) !important;
   background: var(--color-surface-hover) !important;
 }
-.nav-logo { transition: opacity 0.15s; }
+.nav-btn:active { transform: scale(0.96); }
+.nav-logo { transition: opacity 0.15s, transform 0.1s; }
 .nav-logo:hover { opacity: 0.85; }
+.nav-logo:active { transform: scale(0.96); }
 
 .nav-left   { display: flex; align-items: center; gap: 2px; flex: 1; }
 .nav-mob-left { display: none; }
@@ -67,11 +69,12 @@
 .mob-nav-icon-btn.primary:active { transform: scale(0.92); }
 .nav-mob-theme {
   display: none; align-items: center; justify-content: center;
-  width: 32px; height: 32px; background: transparent; border: none;
+  width: 38px; height: 38px; background: transparent; border: none;
   border-radius: 8px; color: var(--color-text-tertiary); cursor: pointer;
-  transition: background 0.13s, color 0.13s; -webkit-tap-highlight-color: transparent;
+  transition: background 0.13s, color 0.13s, transform 0.1s; -webkit-tap-highlight-color: transparent;
 }
 .nav-mob-theme:hover { background: var(--color-surface); color: var(--color-text-secondary); }
+.nav-mob-theme:active { transform: scale(0.9); }
 @media (min-width: 601px) {
   body:not(.has-sidebar) .nav-mob-theme { display: flex; }
 }
@@ -122,9 +125,10 @@
 .sb-logo {
   display: flex; align-items: center;
   padding: 0; cursor: pointer; border: none; background: transparent;
-  font-family: inherit; text-align: left; transition: opacity 0.15s;
+  font-family: inherit; text-align: left; transition: opacity 0.15s, transform 0.1s;
 }
 .sb-logo:hover { opacity: 0.75; }
+.sb-logo:active { transform: scale(0.95); }
 .sb-collapse-toggle {
   position: absolute; top: 68px; right: -11px;
   width: 22px; height: 22px; border-radius: 50%;
@@ -132,9 +136,10 @@
   color: var(--color-text-secondary); display: flex; align-items: center; justify-content: center;
   cursor: pointer; z-index: 5; padding: 0;
   box-shadow: 0 2px 8px rgba(0,0,0,0.35);
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.1s;
 }
 .sb-collapse-toggle:hover { background: var(--color-surface-hover); color: var(--color-text); border-color: rgba(255,255,255,0.85); }
+.sb-collapse-toggle:active { transform: scale(0.88); }
 body.light .sb-collapse-toggle { border-color: rgba(0,0,0,0.45); }
 body.light .sb-collapse-toggle:hover { border-color: rgba(0,0,0,0.75); }
 .sb-logo-divider {
@@ -182,7 +187,7 @@ body.light .sb-collapse-toggle:hover { border-color: rgba(0,0,0,0.75); }
   background: transparent; color: var(--color-text-secondary);
   font-size: 13px; font-weight: 500;
   cursor: pointer; font-family: inherit;
-  transition: color 0.15s, background 0.15s;
+  transition: color 0.15s, background 0.15s, transform 0.1s;
   text-align: left; white-space: nowrap;
   position: relative;
 }
@@ -209,6 +214,7 @@ body.light .sb-collapse-toggle:hover { border-color: rgba(0,0,0,0.75); }
   .sb-section > * { animation: none; }
 }
 .sb-item:hover { background: var(--color-surface-hover); color: var(--color-text); }
+.sb-item:active { transform: scale(0.97); }
 .sb-item.active { color: var(--color-text); font-weight: 600; }
 .sb-item.active::before {
   content: '';
@@ -227,10 +233,11 @@ body.light .sb-collapse-toggle:hover { border-color: rgba(0,0,0,0.75); }
   border: 1px solid var(--color-text); border-radius: 9px;
   color: var(--color-bg); font-size: 13px; font-weight: 700;
   cursor: pointer; font-family: inherit;
-  transition: opacity 0.15s;
+  transition: opacity 0.15s, transform 0.1s;
   width: 100%;
 }
 .sb-create:hover { opacity: 0.88; }
+.sb-create:active { transform: scale(0.97); }
 
 /* ── Botão de criar — gradiente de marca ─────────────────────────────
    Único ponto de cor "quente" fora da dashboard: destaca a ação mais
@@ -260,7 +267,7 @@ body.light .sb-collapse-toggle:hover { border-color: rgba(0,0,0,0.75); }
    ao sair do hover é suave em vez de cortar de repente. */
 .sb-create.gradient-cta {
   --mx: 50%; --my: 50%;
-  transition: filter 0.2s ease, background-size 0.5s ease, background-position 0.5s ease;
+  transition: filter 0.2s ease, background-size 0.5s ease, background-position 0.5s ease, transform 0.1s;
 }
 @media (min-width: 901px) {
   .sb-create.gradient-cta:hover {
@@ -291,9 +298,10 @@ body.light .sb-collapse-toggle:hover { border-color: rgba(0,0,0,0.75); }
   height: 32px; border-radius: 8px;
   background: transparent; border: none;
   color: var(--color-text-tertiary); cursor: pointer;
-  transition: background 0.13s, color 0.13s;
+  transition: background 0.13s, color 0.13s, transform 0.1s;
 }
 .sb-action-btn:hover { background: var(--color-surface-hover); color: var(--color-text); }
+.sb-action-btn:active { transform: scale(0.9); }
 .sb-action-btn.danger:hover { background: var(--color-error-subtle); color: var(--color-error); }
 
 /* ── Floating "Gerir projeto" panel ── */
@@ -388,6 +396,9 @@ body.sidebar-collapsed .proj-manage-float { left: 84px; }
   }
 }
 
+.nav-drawer-auth-btn { transition: opacity 0.15s, transform 0.1s; }
+.nav-drawer-auth-btn:active { transform: scale(0.96); }
+
 /* ── Mobile drawer (tablet only) ── */
 .mobile-drawer {
   position: fixed;
@@ -418,6 +429,7 @@ body.sidebar-collapsed .proj-manage-float { left: 84px; }
 }
 .mobile-drawer-btn:last-child { border-bottom: none; }
 .mobile-drawer-btn:hover { color: var(--color-text); }
+.mobile-drawer-btn:active { color: var(--color-text); background: var(--color-surface-hover); }
 .mobile-drawer-btn.danger { color: var(--color-error) !important; }
 .mobile-drawer-pair { display: flex; gap: 8px; padding: 16px 0 4px; }
 .mobile-drawer-pair-btn {
@@ -425,9 +437,10 @@ body.sidebar-collapsed .proj-manage-float { left: 84px; }
   background: var(--color-bg); border: 1px solid var(--color-border);
   border-radius: 10px; padding: 11px 8px;
   color: var(--color-text); font-size: 13px; font-weight: 600;
-  cursor: pointer; font-family: inherit; transition: background 0.15s, border-color 0.15s;
+  cursor: pointer; font-family: inherit; transition: background 0.15s, border-color 0.15s, transform 0.1s;
 }
 .mobile-drawer-pair-btn:hover { background: var(--color-surface-hover); border-color: var(--color-border-hover); }
+.mobile-drawer-pair-btn:active { transform: scale(0.97); }
 .mobile-drawer-pair-btn.danger { color: var(--color-error) !important; border-color: rgba(239,68,68,0.2) !important; }
 .mobile-drawer-pair-btn.danger:hover { background: var(--color-error-subtle) !important; }
 @media (min-width: 601px) {

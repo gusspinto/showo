@@ -5,6 +5,8 @@ import { claimAnonymousProjects } from '../lib/claimAnonymousProjects'
 import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
 import { LetterIcon as Mail } from '@solar-icons/react/bold/letter'
 import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
+import { EyeIcon as EyeOpen } from '@solar-icons/react/bold/eye'
+import { EyeClosedIcon as EyeClosed } from '@solar-icons/react/bold/eye-closed'
 // Ícones dos cartões de papel do registo — escolhidos um a um, ao contrário
 // do mapeamento automático aplicado ao resto da app.
 import { DiplomaIcon } from '@solar-icons/react/bold/diploma'
@@ -67,15 +69,11 @@ const CATEGORIES = [
 ]
 
 function EyeIcon({ visible }) {
-  return visible ? (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-    </svg>
-  ) : (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-      <line x1="1" y1="1" x2="23" y2="23"/>
-    </svg>
+  return (
+    <span className="auth-eye-stack">
+      <EyeOpen size={18} className={`auth-eye-icon${visible ? "" : " is-visible"}`} />
+      <EyeClosed size={18} className={`auth-eye-icon${visible ? " is-visible" : ""}`} />
+    </span>
   )
 }
 
@@ -104,11 +102,8 @@ function Input({ type = 'text', value, onChange, placeholder, required }) {
       {isPassword && (
         <button
           type="button" onClick={() => setShow(s => !s)} tabIndex={-1}
-          style={{
-            background: 'none', border: 'none', cursor: 'pointer',
-            color: show ? C.blue : C.muted, padding: 0, display: 'flex',
-            transition: 'color 0.15s', flexShrink: 0,
-          }}
+          className="auth-icon-btn"
+          style={{ color: show ? C.blue : C.muted }}
         >
           <EyeIcon visible={show} />
         </button>
@@ -233,6 +228,7 @@ export default function Register() {
   const needsSchool = role === 'professor'
   const needsInviteCode = role === 'professor'
   const needsClassCode = role === 'aluno_institucional'
+  const needsPhone = role !== 'professor'
   // Só a conta Individual pergunta "o que fazes" — institucional/professor/
   // empresa já dizem isso pelo próprio papel escolhido.
   const needsOccupation = role === 'aluno' && category === 'individual'
@@ -405,7 +401,7 @@ export default function Register() {
     if (needsInviteCode && !inviteCode.trim()) { setError('Introduz o código de acesso enviado pela Showo.'); return }
     if (needsClassCode && !classCode.trim()) { setError('Introduz o código da turma fornecido pelo professor.'); return }
     if (password.length < 6) { setError('A palavra-passe tem de ter pelo menos 6 caracteres.'); return }
-    if (!phone.trim()) { setError('Introduz o teu número de telemóvel.'); return }
+    if (needsPhone && !phone.trim()) { setError('Introduz o teu número de telemóvel.'); return }
 
     // Validate email domain against class's school before creating account
     if (needsClassCode) {
@@ -606,8 +602,25 @@ export default function Register() {
           display: flex; align-items: center; gap: 10px;
           border-bottom: 1.5px solid var(--color-border); transition: border-color 0.15s;
         }
-        .auth-submit { transition: opacity 0.15s; }
+        .auth-submit { transition: opacity 0.15s, transform 0.1s var(--ease-out, ease-out); }
         .auth-submit:hover:not(:disabled) { opacity: 0.88; }
+        .auth-submit:active:not(:disabled) { transform: scale(0.96); }
+        .role-card:active { transform: scale(0.98); }
+        .auth-icon-btn {
+          background: none; border: none; cursor: pointer;
+          padding: 13px; margin: -13px -13px -13px 0;
+          display: flex; align-items: center; justify-content: center;
+          flex-shrink: 0;
+          transition: color 0.15s, transform 0.1s var(--ease-out, ease-out);
+        }
+        .auth-icon-btn:active { transform: scale(0.96); }
+        .auth-eye-stack { position: relative; width: 18px; height: 18px; display: inline-block; }
+        .auth-eye-icon {
+          position: absolute; inset: 0;
+          opacity: 0; transform: scale(0.25); filter: blur(4px);
+          transition: opacity 0.2s cubic-bezier(0.2,0,0,1), transform 0.2s cubic-bezier(0.2,0,0,1), filter 0.2s cubic-bezier(0.2,0,0,1);
+        }
+        .auth-eye-icon.is-visible { opacity: 1; transform: scale(1); filter: blur(0px); }
         .auth-input:-webkit-autofill,
         .auth-input:-webkit-autofill:hover,
         .auth-input:-webkit-autofill:focus {
@@ -966,9 +979,11 @@ export default function Register() {
                     <Field label="Palavra-passe">
                       <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" required />
                     </Field>
-                    <Field label="Telemóvel">
-                      <Input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="912 345 678" required />
-                    </Field>
+                    {needsPhone && (
+                      <Field label="Telemóvel">
+                        <Input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="912 345 678" required />
+                      </Field>
+                    )}
                   </>
                 )}
 

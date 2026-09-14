@@ -2,7 +2,6 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 import { supabase } from '../lib/supabase'
 import { identifyUser, resetAnalytics } from '../lib/analytics'
 import { getPlan, remainingUses, resolvePlanId, PLAN_GATE_MESSAGES } from '../lib/plans'
-import { getGeoInfo } from '../lib/geolocation'
 
 const AuthContext = createContext({})
 
@@ -185,16 +184,6 @@ export function AuthProvider({ children }) {
     }
     } catch (e) {
       console.warn('[auth] ação pendente falhou, tenta na próxima:', e?.message)
-    }
-
-    // Geo é preenchido aqui (não no Register) porque só precisa de acontecer
-    // uma vez, na primeira vez que virmos signup_country vazio — cobre tanto
-    // quem confirma o email mais tarde como contas antigas nunca preenchidas.
-    if (data && !data.signup_country) {
-      getGeoInfo().then(geo => {
-        if (!geo) return
-        supabase.from('profiles').update({ signup_country: geo.country, signup_city: geo.city }).eq('id', uid).then(() => {})
-      })
     }
 
     // resolvePlanId precisa disto para distinguir Escola Plus de Escola Pro —

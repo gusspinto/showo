@@ -141,6 +141,20 @@ function RecruiterCard({ vaga, cands, onEdit, onToggle, onDelete, expanded, onTo
                     <MatchBadge score={matchScore(p?.skills, vaga.skills)} />
                   </div>
                   {c.message && <p style={{ margin: '0 0 8px', fontSize: 13, color: C.muted, lineHeight: 1.5 }}>{c.message}</p>}
+                  {(c.screening_answers || []).length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 8 }}>
+                      {c.screening_answers.map(a => {
+                        const question = (vaga.screening_questions || []).find(q => q.id === a.id)
+                        if (!question) return null
+                        return (
+                          <div key={a.id} style={{ fontSize: 12, background: C.bg, border: `1px solid ${C.border}`, borderRadius: 7, padding: '7px 10px' }}>
+                            <div style={{ color: C.subtle, fontWeight: 600, marginBottom: 2 }}>{question.q}</div>
+                            <div style={{ color: C.text }}>{a.answer || '—'}</div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                     <button onClick={() => navigate(p?.username ? `/u/${p.username}` : `/u/${p?.id}`)}
                       style={{ fontSize: 12, fontWeight: 600, color: C.blue, background: 'var(--color-surface-hover)', border: '1px solid var(--color-surface-hover)', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>Ver perfil</button>
@@ -231,7 +245,52 @@ function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, isAluno, u
   )
 }
 
-const EMPTY_FORM = { titulo: '', tipo: 'estagio', area: '', descricao: '', requisitos: '', localizacao: '', is_remote: false, deadline: '', skills: [] }
+const EMPTY_FORM = { titulo: '', tipo: 'estagio', area: '', descricao: '', requisitos: '', localizacao: '', is_remote: false, deadline: '', skills: [], screening_questions: [] }
+
+function ScreeningEditor({ questions, onChange }) {
+  function addQuestion() {
+    onChange([...questions, { id: crypto.randomUUID(), q: '', type: 'text', options: [], required: true }])
+  }
+  function updateQuestion(id, patch) {
+    onChange(questions.map(q => q.id === id ? { ...q, ...patch } : q))
+  }
+  function removeQuestion(id) {
+    onChange(questions.filter(q => q.id !== id))
+  }
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 8 }}>Perguntas de triagem (opcional)</label>
+      {questions.map(q => (
+        <div key={q.id} style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 10, padding: 12, background: 'var(--color-bg)', border: `1px solid ${C.border}`, borderRadius: 10 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input value={q.q} onChange={e => updateQuestion(q.id, { q: e.target.value })} placeholder="Ex: Que experiência tens com React?"
+              style={{ flex: 1, background: C.card, border: `1.5px solid ${C.border}`, borderRadius: 8, color: C.text, fontSize: 13, padding: '8px 10px', outline: 'none', fontFamily: 'inherit' }} />
+            <button type="button" onClick={() => removeQuestion(q.id)} style={{ background: 'transparent', border: `1px solid var(--color-error-subtle)`, borderRadius: 7, padding: '5px 8px', cursor: 'pointer', color: C.red, display: 'flex', alignItems: 'center' }}><Trash2 size={13} /></button>
+          </div>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <select value={q.type} onChange={e => updateQuestion(q.id, { type: e.target.value })}
+              style={{ background: C.card, border: `1.5px solid ${C.border}`, borderRadius: 8, color: C.text, fontSize: 12, padding: '6px 8px', fontFamily: 'inherit' }}>
+              <option value="text">Resposta livre</option>
+              <option value="choice">Escolha múltipla</option>
+            </select>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: C.muted, cursor: 'pointer' }}>
+              <input type="checkbox" checked={q.required} onChange={e => updateQuestion(q.id, { required: e.target.checked })} /> Obrigatória
+            </label>
+          </div>
+          {q.type === 'choice' && (
+            <input value={(q.options || []).join(', ')} onChange={e => updateQuestion(q.id, { options: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+              placeholder="Opções separadas por vírgula"
+              style={{ background: C.card, border: `1.5px solid ${C.border}`, borderRadius: 8, color: C.text, fontSize: 12, padding: '7px 10px', outline: 'none', fontFamily: 'inherit' }} />
+          )}
+        </div>
+      ))}
+      <button type="button" onClick={addQuestion}
+        style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: `1px dashed ${C.border}`, borderRadius: 8, padding: '8px 12px', cursor: 'pointer', color: C.muted, fontSize: 12, fontWeight: 600, fontFamily: 'inherit', width: '100%', justifyContent: 'center' }}>
+        <Plus size={12} /> Adicionar pergunta
+      </button>
+    </div>
+  )
+}
 
 function VagaModal({ initial, onSave, onClose, saving }) {
   const [form, setForm] = useState(initial ?? EMPTY_FORM)
@@ -303,6 +362,8 @@ function VagaModal({ initial, onSave, onClose, saving }) {
           />
         </div>
 
+        <ScreeningEditor questions={form.screening_questions ?? []} onChange={v => set('screening_questions', v)} />
+
         <button onClick={() => onSave(form)} disabled={saving || !form.titulo.trim()}
           style={{ width: '100%', background: saving || !form.titulo.trim() ? C.border : C.blue, border: 'none', borderRadius: 10, padding: '13px 0', color: 'var(--color-bg)', fontSize: 15, fontWeight: 700, cursor: saving || !form.titulo.trim() ? 'default' : 'pointer', fontFamily: 'inherit', boxShadow: saving ? 'none' : '0 2px 8px var(--color-surface-hover)' }}>
           {saving ? 'A guardar...' : initial ? 'Guardar alterações' : 'Publicar vaga'}
@@ -321,20 +382,42 @@ const STATUS_INFO = {
 
 function CandidatarModal({ vaga, recruiterProfile, onClose, onSubmit, sending }) {
   const [msg, setMsg] = useState('')
+  const questions = vaga.screening_questions || []
+  const [answers, setAnswers] = useState(() => Object.fromEntries(questions.map(q => [q.id, ''])))
+  const missingRequired = questions.some(q => q.required && !answers[q.id]?.trim())
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }} onClick={onClose} />
-      <div style={{ position: 'relative', background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 28, width: '100%', maxWidth: 460, zIndex: 1 }}>
+      <div style={{ position: 'relative', background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 28, width: '100%', maxWidth: 460, maxHeight: '90vh', overflowY: 'auto', zIndex: 1 }}>
         <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px', color: C.text }}>Candidatar a esta vaga</h2>
         <p style={{ margin: '0 0 20px', fontSize: 13, color: C.muted }}>{vaga.titulo} · {recruiterProfile?.company || recruiterProfile?.full_name}</p>
+
+        {questions.map(q => (
+          <div key={q.id} style={{ marginBottom: 16 }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 7 }}>
+              {q.q}{q.required && <span style={{ color: C.red }}> *</span>}
+            </label>
+            {q.type === 'choice' ? (
+              <select value={answers[q.id] || ''} onChange={e => setAnswers(a => ({ ...a, [q.id]: e.target.value }))}
+                style={{ width: '100%', background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}>
+                <option value="">Escolhe uma opção</option>
+                {(q.options || []).map(o => <option key={o} value={o}>{o}</option>)}
+              </select>
+            ) : (
+              <textarea value={answers[q.id] || ''} onChange={e => setAnswers(a => ({ ...a, [q.id]: e.target.value }))} rows={2}
+                style={{ width: '100%', background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' }} />
+            )}
+          </div>
+        ))}
+
         <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 7 }}>Mensagem de apresentação</label>
         <textarea value={msg} onChange={e => setMsg(e.target.value)} rows={5}
           placeholder="Apresenta-te brevemente e explica porque és uma boa escolha para esta vaga..."
           style={{ width: '100%', background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '11px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical', minHeight: 110 }} />
         <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
           <button onClick={onClose} style={{ flex: 1, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 10, padding: '11px 0', color: C.text, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>
-          <button onClick={() => onSubmit(msg)} disabled={sending}
-            style={{ flex: 1, background: sending ? C.border : C.blue, border: 'none', borderRadius: 10, padding: '11px 0', color: 'var(--color-bg)', fontSize: 14, fontWeight: 700, cursor: sending ? 'default' : 'pointer', fontFamily: 'inherit' }}>
+          <button onClick={() => onSubmit(msg, questions.map(q => ({ id: q.id, answer: answers[q.id] || '' })))} disabled={sending || missingRequired}
+            style={{ flex: 1, background: sending || missingRequired ? C.border : C.blue, border: 'none', borderRadius: 10, padding: '11px 0', color: 'var(--color-bg)', fontSize: 14, fontWeight: 700, cursor: sending || missingRequired ? 'default' : 'pointer', fontFamily: 'inherit' }}>
             {sending ? 'A enviar...' : <><Send size={13} style={{ verticalAlign: 'middle', marginRight: 5 }} />Candidatar</>}
           </button>
         </div>
@@ -345,9 +428,21 @@ function CandidatarModal({ vaga, recruiterProfile, onClose, onSubmit, sending })
 
 export default function Vagas() {
   const navigate = useNavigate()
-  const { user, profile } = useAuth()
+  const { user, profile, isSchoolAccount } = useAuth()
   const isRecruiter = profile?.role === 'recrutador' || profile?.role === 'empresa'
   const isAluno = profile?.role === 'aluno'
+
+  // Estágios é só para alunos de escola do 11.º/12.º (decisão do Hugo) — o Navbar
+  // já esconde o link, isto é a segunda barreira para quem for direto ao URL.
+  // Coluna separada da migração 127 — falha em silêncio se ainda não aplicada.
+  const [gradeLevel, setGradeLevel] = useState(null)
+  useEffect(() => {
+    if (!user || !isAluno) return
+    supabase.from('profiles').select('grade_level').eq('id', user.id).maybeSingle()
+      .then(({ data }) => setGradeLevel(data?.grade_level ?? null))
+      .catch(() => {})
+  }, [user, isAluno])
+  const alunoBlocked = isAluno && !(isSchoolAccount && (gradeLevel === '11' || gradeLevel === '12'))
 
   const [vagas, setVagas] = useState([])
   const [myVagas, setMyVagas] = useState([])
@@ -489,7 +584,7 @@ export default function Vagas() {
     setRespondingInvite(null)
   }
 
-  async function submitCandidatura(msg) {
+  async function submitCandidatura(msg, screeningAnswers) {
     if (!user || !candidatarVaga) return
     setSendingCandidatura(true)
     await supabase.from('candidaturas').upsert({
@@ -497,6 +592,7 @@ export default function Vagas() {
       student_id: user.id,
       message: msg.trim() || null,
       status: 'pendente',
+      screening_answers: screeningAnswers || [],
     }, { onConflict: 'vaga_id,student_id' })
     setMyCandidaturas(prev => ({ ...prev, [candidatarVaga.id]: { status: 'pendente' } }))
     setSendingCandidatura(false)
@@ -542,6 +638,21 @@ export default function Vagas() {
   }
 
   const accentColor = profile?.role === 'empresa' ? 'var(--color-warning)' : C.blue
+
+  if (alunoBlocked) {
+    return (
+      <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'inherit' }}>
+        <Navbar />
+        <div className="page-content" style={{ textAlign: 'center', padding: '96px 20px' }}>
+          <Briefcase size={40} color={C.muted} style={{ marginBottom: 14, opacity: 0.5 }} />
+          <p style={{ color: C.text, fontSize: 17, fontWeight: 700, margin: '0 0 6px' }}>Estágios é para alunos do 11.º e 12.º ano</p>
+          <p style={{ color: C.muted, fontSize: 13, margin: 0, maxWidth: 380, marginLeft: 'auto', marginRight: 'auto' }}>
+            Esta secção fica disponível quando entrares numa turma com o ano definido como 11.º ou 12.º.
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'inherit' }}>
@@ -762,7 +873,7 @@ export default function Vagas() {
 
       {showModal && (
         <VagaModal
-          initial={editVaga ? { titulo: editVaga.titulo, tipo: editVaga.tipo, area: editVaga.area ?? '', descricao: editVaga.descricao ?? '', requisitos: editVaga.requisitos ?? '', localizacao: editVaga.localizacao ?? '', is_remote: editVaga.is_remote ?? false, deadline: editVaga.deadline ?? '', skills: editVaga.skills ?? [] } : undefined}
+          initial={editVaga ? { titulo: editVaga.titulo, tipo: editVaga.tipo, area: editVaga.area ?? '', descricao: editVaga.descricao ?? '', requisitos: editVaga.requisitos ?? '', localizacao: editVaga.localizacao ?? '', is_remote: editVaga.is_remote ?? false, deadline: editVaga.deadline ?? '', skills: editVaga.skills ?? [], screening_questions: editVaga.screening_questions ?? [] } : undefined}
           onSave={saveVaga}
           onClose={() => { setShowModal(false); setEditVaga(null) }}
           saving={saving}
