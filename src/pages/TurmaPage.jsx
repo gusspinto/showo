@@ -267,7 +267,7 @@ function EditTurmaModal({ turma, onClose, onSave, onDelete }) {
   }
 
   async function handleDelete() {
-    if (deleteText.trim().toUpperCase() !== turma.name.trim().toUpperCase()) return
+    if (deleteText.trim().toUpperCase() !== 'APAGAR') return
     setDeleting(true)
     await onDelete()
     setDeleting(false)
@@ -313,16 +313,16 @@ function EditTurmaModal({ turma, onClose, onSave, onDelete }) {
                 <p style={{ margin: 0, fontSize: 12.5, color: C.muted, lineHeight: 1.5 }}>
                   Isto apaga a turma, remove todos os alunos dela, as tarefas, os critérios de avaliação e as notas dadas dentro desta turma. Os projetos dos alunos não são apagados. <strong style={{ color: C.text }}>Não pode ser desfeito.</strong>
                 </p>
-                <p style={{ margin: 0, fontSize: 12, color: C.muted }}>Escreve <strong style={{ color: C.text }}>{turma.name}</strong> para confirmar.</p>
-                <input value={deleteText} onChange={e => setDeleteText(e.target.value)} placeholder={turma.name}
+                <p style={{ margin: 0, fontSize: 12, color: C.muted }}>Escreve <strong style={{ color: C.text }}>APAGAR</strong> para confirmar.</p>
+                <input value={deleteText} onChange={e => setDeleteText(e.target.value)} placeholder="APAGAR"
                   style={{ width: '100%', background: 'var(--color-bg)', border: `1px solid var(--color-error-subtle)`, borderRadius: 8, padding: '9px 12px', color: C.text, fontSize: 13, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => { setConfirmingDelete(false); setDeleteText('') }} style={{ flex: 1, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '9px 0', color: C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                  <button onClick={() => { setConfirmingDelete(false); setDeleteText('') }} style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '7px 14px', color: C.muted, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                     Cancelar
                   </button>
-                  <button onClick={handleDelete} disabled={deleting || deleteText.trim().toUpperCase() !== turma.name.trim().toUpperCase()}
-                    style={{ flex: 1, background: 'var(--color-error)', border: 'none', borderRadius: 8, padding: '9px 0', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: deleting || deleteText.trim().toUpperCase() !== turma.name.trim().toUpperCase() ? 0.5 : 1 }}>
-                    {deleting ? 'A apagar…' : 'Apagar definitivamente'}
+                  <button onClick={handleDelete} disabled={deleting || deleteText.trim().toUpperCase() !== 'APAGAR'}
+                    style={{ background: 'var(--color-error)', border: 'none', borderRadius: 8, padding: '7px 14px', color: '#fff', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: deleting || deleteText.trim().toUpperCase() !== 'APAGAR' ? 0.5 : 1 }}>
+                    {deleting ? 'A apagar…' : 'Apagar'}
                   </button>
                 </div>
               </div>
