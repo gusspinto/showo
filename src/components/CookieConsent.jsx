@@ -1,10 +1,18 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { getConsent, setConsent } from '../lib/consent'
 import { initAnalytics } from '../lib/analytics'
 import { initErrorTracking } from '../lib/errorTracking'
 
 export default function CookieConsent() {
   const [visible, setVisible] = useState(() => getConsent() === null)
+
+  // Quem já tinha aceitado numa sessão anterior nunca vê este banner outra
+  // vez — mas initAnalytics()/initErrorTracking() só corriam dentro do
+  // clique em "Aceitar", por isso essas pessoas (a maioria, depois do
+  // primeiro dia) nunca ativavam nada. Isto cobre o regresso.
+  useEffect(() => {
+    if (getConsent() === 'accepted') { initAnalytics(); initErrorTracking() }
+  }, [])
 
   if (!visible) return null
 
