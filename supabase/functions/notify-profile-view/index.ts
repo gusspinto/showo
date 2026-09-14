@@ -1,5 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { checkRateLimit, getCorsHeaders } from '../_shared/rateLimit.ts'
+import { checkRateLimit, getCorsHeaders, getAuthUser } from '../_shared/rateLimit.ts'
 
 // "Someone viewed your portfolio" — the profile-page counterpart of notify-view.
 // The running total lives on profiles.views (bumped client-side via the
@@ -41,6 +41,12 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     )
 
+    // Se quem visita tem sessão (não é anónimo), guarda quem foi — usado só
+    // para mostrar avatares desfocados no check-in semanal, nunca o nome.
+    // Visitantes anónimos continuam totalmente sem identidade, como sempre.
+    const viewerUser = await getAuthUser(req)
+    let viewer_id: string | null = viewerUser?.id ?? null
+
     // The owner must exist and have a public username (no point notifying about
     // a profile that can't be visited).
     const { data: owner } = await supabase
@@ -52,6 +58,7 @@ Deno.serve(async (req) => {
     if (!owner?.id || !owner.username) {
       return new Response(JSON.stringify({ ok: false }), { headers: corsHeaders })
     }
+    if (viewer_id === owner.id) viewer_id = null // não te mostres a ti próprio como visita
 
     const since = new Date(Date.now() - 60 * 60 * 1000).toISOString()
     const { data: existing } = await supabase
@@ -82,6 +89,7 @@ Deno.serve(async (req) => {
       message,
       project_slug: null,
       read: false,
+      viewer_id,
     })
 
     return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders })

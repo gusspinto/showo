@@ -315,8 +315,9 @@ export default function Register() {
       }
     }
 
-    // Send welcome email (fire-and-forget)
-    if (newUser) {
+    // Send welcome email (fire-and-forget) — só para quem cria projeto,
+    // o texto ("organiza o teu projeto") não faz sentido para professores
+    if (newUser && effectiveRole !== 'professor') {
       supabase.functions.invoke('send-welcome-email').catch(() => {})
     }
 
@@ -328,12 +329,15 @@ export default function Register() {
 
     setLoading(false)
     const primaryClaimed = claimSlug || claimedSlugs[0]
-    // Alunos (individual ou institucional) sem projeto nenhum vão direto para
+    // Quem não é professor e ainda não tem projeto nenhum vai direto para
     // /novo em vez da dashboard vazia — é o mesmo problema de ativação que
-    // levava a muitas contas nunca criarem um projeto. Quem já reclamou um
-    // projeto anónimo, ou veio de um ?next explícito, segue esse caminho.
-    const isStudentSignup = effectiveRole === 'aluno'
-    const destination = nextPath ?? (isStudentSignup && !primaryClaimed ? '/novo' : '/dashboard')
+    // levava a muitas contas nunca criarem um projeto, e que continuava a
+    // acontecer aos novos públicos (freelancers, profissionais) depois da
+    // expansão para lá de estudantes. Professor fica de fora: gere turmas,
+    // não cria projeto próprio. Quem já reclamou um projeto anónimo, ou veio
+    // de um ?next explícito, segue esse caminho.
+    const createsOwnProject = effectiveRole !== 'professor'
+    const destination = nextPath ?? (createsOwnProject && !primaryClaimed ? '/novo' : '/dashboard')
     navigate(destination, primaryClaimed ? { state: { claimedSlug: primaryClaimed } } : undefined)
   }
 
@@ -432,10 +436,12 @@ export default function Register() {
         pending_partner_token: isPartnerFlow ? partnerToken : null,
         pending_phone: phone.trim() || null,
         // Capturados já aqui (não depois) porque sobrevivem em user_metadata
-        // mesmo que a confirmação de email demore — document.referrer só é
-        // válido agora, nesta carga de página, não quando a pessoa voltar.
-        pending_signup_referrer: document.referrer || null,
-        pending_signup_utm_source: new URLSearchParams(window.location.search).get('utm_source') || null,
+        // mesmo que a confirmação de email demore. Lidos do localStorage
+        // (gravado na primeira página vista, em App.jsx) e não de
+        // document.referrer/da URL atual — quem navegou dentro da Showo antes
+        // de chegar aqui já perdeu os dois.
+        pending_signup_referrer: localStorage.getItem('showo_referrer') || document.referrer || 'direct',
+        pending_signup_utm_source: localStorage.getItem('showo_utm_source') || new URLSearchParams(window.location.search).get('utm_source') || null,
       } },
     })
     if (err) {

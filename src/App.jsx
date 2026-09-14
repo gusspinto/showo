@@ -29,6 +29,18 @@ import ComingSoon from './pages/ComingSoon'
 const refParam = new URLSearchParams(window.location.search).get('ref')
 if (refParam) localStorage.setItem('showo_ref', refParam)
 
+// Capture first-touch attribution (utm_source + referrer) na primeira página
+// vista, não em Register.jsx — quem chega à homepage, navega, e só depois
+// clica em "Registar" perde o ?utm_source= (não sobrevive à navegação
+// interna) e o document.referrer original (passa a ser a própria Showo).
+// Só grava na primeira visita da sessão: não deixar uma navegação interna
+// pisar a origem real de quem entrou.
+if (!localStorage.getItem('showo_utm_source') && !localStorage.getItem('showo_referrer')) {
+  const utmSource = new URLSearchParams(window.location.search).get('utm_source')
+  localStorage.setItem('showo_utm_source', utmSource || '')
+  localStorage.setItem('showo_referrer', document.referrer || 'direct')
+}
+
 const COMING_SOON_HOSTS = ['showo.pt', 'www.showo.pt']
 const LAUNCH_AT = new Date('2026-07-01T08:00:00Z') // já passou — countdown desativado
 

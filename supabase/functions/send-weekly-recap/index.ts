@@ -95,7 +95,7 @@ function buildHtml(firstName: string, weekLabel: string, stats: Stats, quiet: bo
   return `
 <div style="background:#03060d;padding:44px 20px;font-family:-apple-system,Helvetica,Arial,sans-serif;">
   <div style="max-width:480px;margin:0 auto;">
-    <img src="${APP}/icon_light.png" alt="Showo" width="30" height="30" style="display:block;margin:0 auto 22px;border:0;" />
+    <img src="${APP}/icon.png" alt="Showo" width="30" height="30" style="display:block;margin:0 auto 22px;border:0;" />
 
     <p style="margin:0 0 6px;color:#7d93b0;font-size:12px;text-align:center;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;">
       Recap · ${esc(weekLabel)}
