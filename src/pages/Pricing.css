@@ -351,7 +351,7 @@
 .pricing-testimonials-track {
   display: flex;
   width: max-content;
-  animation: pricing-marquee 48s linear infinite;
+  animation: pricing-marquee 90s linear infinite;
 }
 .pricing-testimonials-marquee:hover .pricing-testimonials-track,
 .pricing-testimonials-marquee:focus-within .pricing-testimonials-track {
