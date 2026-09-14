@@ -463,8 +463,16 @@ export default function Pricing() {
         {/* ══════════════ TESTEMUNHOS ══════════════ */}
         <section className="pricing-section">
           <h2 className="pricing-section-title">Quem já usa</h2>
-          <div className="pricing-testimonials-grid">
-            {TESTIMONIALS.map(t => <TestimonialCard key={t.name} {...t} />)}
+          {/* Lista duplicada para o loop ficar contínuo: ao deslizar -50%,
+              a "cauda" que sai por um lado é idêntica à que entra pelo
+              outro, sem salto visível. Pausa ao passar o rato, para dar
+              para ler sem perseguir o texto. */}
+          <div className="pricing-testimonials-marquee">
+            <div className="pricing-testimonials-track">
+              {[...TESTIMONIALS, ...TESTIMONIALS].map((t, i) => (
+                <TestimonialCard key={`${t.name}-${i}`} {...t} />
+              ))}
+            </div>
           </div>
         </section>
 

@@ -337,15 +337,39 @@
   color: var(--color-text);
 }
 
-/* ── Testemunhos ── */
-.pricing-testimonials-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
+/* ── Testemunhos ──
+   Sangra para fora do container (largura do ecrã) para o desvanecimento
+   nas pontas não cortar a meio de um card, e para haver espaço de sobra
+   para a faixa deslizar sem se ver o limite. */
+.pricing-testimonials-marquee {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+.pricing-testimonials-track {
+  display: flex;
+  width: max-content;
+  animation: pricing-marquee 48s linear infinite;
+}
+.pricing-testimonials-marquee:hover .pricing-testimonials-track,
+.pricing-testimonials-marquee:focus-within .pricing-testimonials-track {
+  animation-play-state: paused;
+}
+@keyframes pricing-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pricing-testimonials-track { animation: none; }
+  .pricing-testimonials-marquee { overflow-x: auto; }
 }
 .pricing-testimonial-card {
   display: flex; flex-direction: column; gap: 16px;
-  margin: 0;
+  flex: 0 0 300px;
+  width: 300px;
+  margin: 0 7px;
   padding: 20px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -398,6 +422,6 @@
 
 @media (max-width: 700px) {
   .pricing-platform-grid { grid-template-columns: 1fr; }
-  .pricing-testimonials-grid { grid-template-columns: 1fr; }
+  .pricing-testimonial-card { flex-basis: 260px; width: 260px; }
   .pricing-section { margin-top: 52px; }
 }
