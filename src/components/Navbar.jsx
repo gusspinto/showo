@@ -1756,7 +1756,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
             // fecha de volta para lá. Ícone de X, não lápis, para não
             // parecer que ainda estamos à procura de onde editar.
             <button className="pmf-btn" aria-label="Fechar" onClick={() => navigate(`/editar/${extras.slug}`)}>
-              <X size={16} />
+              <X size={16} color="var(--color-error)" />
               <span className="pmf-tooltip">Fechar</span>
             </button>
           ) : (

@@ -350,9 +350,9 @@ export default function EditProject() {
 
   const sections = [
     { id: 'criador',  label: 'Criador',  Icon: User,     filled: creatorFilled, total: creatorTotal },
+    { id: 'aparencia', label: 'Aparência', Icon: Paintbrush, filled: 0,         total: 0 },
     { id: 'tipo',     label: 'Tipo',     Icon: Layers,   filled: typeFilled,    total: typeTotal },
     { id: 'imagem',   label: 'Imagem',   Icon: Image,    filled: coverFilled,   total: 1 },
-    { id: 'aparencia', label: 'Aparência', Icon: Paintbrush, filled: 0,         total: 0 },
     { id: 'database', label: 'Base de dados', Icon: Database, filled: 0,        total: 0 },
     { id: 'avancado', label: 'Avançado', Icon: Settings, filled: 0,             total: 0 },
   ]
