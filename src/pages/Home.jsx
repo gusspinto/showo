@@ -500,8 +500,8 @@ export default function Home() {
                     {p.views != null && (
                       <div className="home-card-views"><Eye size={12} /> {p.views}</div>
                     )}
-                    {p.active_weeks >= 3 && (
-                      <div className="home-card-streak"><Fire size={12} /> {p.active_weeks} semanas seguidas</div>
+                    {p.manual_weeks >= 3 && (
+                      <div className="home-card-streak"><Fire size={12} /> {p.manual_weeks} semanas seguidas</div>
                     )}
                   </div>
                 </div>
