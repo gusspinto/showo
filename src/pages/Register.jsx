@@ -228,6 +228,7 @@ export default function Register() {
   const needsSchool = role === 'professor'
   const needsInviteCode = role === 'professor'
   const needsClassCode = role === 'aluno_institucional'
+  const needsPhone = role !== 'professor'
   // Só a conta Individual pergunta "o que fazes" — institucional/professor/
   // empresa já dizem isso pelo próprio papel escolhido.
   const needsOccupation = role === 'aluno' && category === 'individual'
@@ -396,7 +397,7 @@ export default function Register() {
     if (needsInviteCode && !inviteCode.trim()) { setError('Introduz o código de acesso enviado pela Showo.'); return }
     if (needsClassCode && !classCode.trim()) { setError('Introduz o código da turma fornecido pelo professor.'); return }
     if (password.length < 6) { setError('A palavra-passe tem de ter pelo menos 6 caracteres.'); return }
-    if (!phone.trim()) { setError('Introduz o teu número de telemóvel.'); return }
+    if (needsPhone && !phone.trim()) { setError('Introduz o teu número de telemóvel.'); return }
 
     // Validate email domain against class's school before creating account
     if (needsClassCode) {
@@ -972,9 +973,11 @@ export default function Register() {
                     <Field label="Palavra-passe">
                       <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" required />
                     </Field>
-                    <Field label="Telemóvel">
-                      <Input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="912 345 678" required />
-                    </Field>
+                    {needsPhone && (
+                      <Field label="Telemóvel">
+                        <Input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="912 345 678" required />
+                      </Field>
+                    )}
                   </>
                 )}
 

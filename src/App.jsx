@@ -95,6 +95,7 @@ const AprendeAUsar = lazyPage(() => import('./pages/AprendeAUsar'))
 const Pricing      = lazyPage(() => import('./pages/Pricing'))
 const Welcome      = lazyPage(() => import('./pages/Welcome'))
 const Feedback     = lazyPage(() => import('./pages/Feedback'))
+const PostSemana   = lazyPage(() => import('./pages/PostSemana'))
 
 function PageLoader() {
   return (
@@ -586,6 +587,7 @@ export default function App() {
               <Route path="/recuperar-password" element={<RecuperarPassword onDone={() => setPwRecovery(false)} />} />
               <Route path="/register"      element={<Register />}    />
               <Route path="/dashboard"     element={<Dashboard />}   />
+              <Route path="/post-semana"   element={<PostSemana />}  />
               <Route path="/biblioteca"    element={<Biblioteca />}  />
               <Route path="/vagas"         element={<Vagas />}       />
               <Route path="/settings"      element={<Settings />}    />

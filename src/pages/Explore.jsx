@@ -120,7 +120,7 @@ function PeopleSkeleton() {
 
 export default function Explore() {
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { profile, user } = useAuth()
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
@@ -229,6 +229,15 @@ export default function Explore() {
   function handleTabChange(t) {
     setTab(t)
     if (t === 'pessoas') loadPeople()
+    // Reflect the tab in the URL so navigating to a profile and hitting back
+    // restores where the person was browsing, instead of always resetting to
+    // "projetos".
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev)
+      if (t === 'pessoas') next.set('tab', 'pessoas')
+      else next.delete('tab')
+      return next
+    }, { replace: true })
   }
 
   function handleProjectClick(project) {

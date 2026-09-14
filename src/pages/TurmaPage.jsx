@@ -909,6 +909,19 @@ export default function TurmaPage() {
     a.click(); URL.revokeObjectURL(url)
   }
 
+  // Pauta simples: só nome + nota, uma linha por aluno, ordenado alfabeticamente —
+  // o formato mínimo que a generalidade dos sistemas da escola aceita para importar.
+  function exportPauta() {
+    const rows = [['Aluno', 'Nota (0-20)']]
+    const byName = [...sortedProjects].sort((a, b) => (a.creator_name || '').localeCompare(b.creator_name || ''))
+    byName.forEach(p => { rows.push([p.creator_name || '—', p.teacher_score ?? '']) })
+    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n')
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a'); a.href = url; a.download = `pauta-${turma.name}-${turma.code}.csv`
+    a.click(); URL.revokeObjectURL(url)
+  }
+
   function toggleSort(field) {
     if (sortBy === field) setSortAsc(a => !a)
     else { setSortBy(field); setSortAsc(field === 'name') }
@@ -1026,7 +1039,7 @@ export default function TurmaPage() {
   const isMember = !!user && members.some(m => m.user_id === user.id)
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'inherit' }}>
+    <div className={isTeacher ? 'theme-teacher' : undefined} style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'inherit' }}>
       <style>{`
 @media (max-width: 480px) { .turmapage-grid { grid-template-columns: 1fr !important; } }
         @media (max-width: 600px) { .turmapage-hd { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; } }
@@ -1214,7 +1227,10 @@ export default function TurmaPage() {
               </Button>
               {/* Professor: export CSV */}
               {isTeacher && projects.length > 0 && (
-                <Button variant="secondary" size="sm" icon={<Download size={12} />} onClick={exportCSV}>CSV</Button>
+                <>
+                  <Button variant="secondary" size="sm" icon={<Download size={12} />} onClick={exportCSV}>CSV</Button>
+                  <Button variant="secondary" size="sm" icon={<Download size={12} />} onClick={exportPauta}>Pauta</Button>
+                </>
               )}
               {/* Not a member yet — the invite link lands here; give a way in. */}
               {!isTeacher && user && !isMember && (
@@ -1505,7 +1521,7 @@ export default function TurmaPage() {
 
             {criteria.length === 0 && !criteriaAdding ? (
               <div style={{ ...C.glassStyle, background: C.glass, border: `1px dashed ${C.glassBorder}`, borderRadius: 10, padding: '18px 20px', textAlign: 'center' }}>
-                <p style={{ margin: '0 0 8px', fontSize: 13, color: C.muted }}>Sem critérios definidos. A avaliação usa uma nota única de 0-20.</p>
+                <p style={{ margin: '0 0 8px', fontSize: 13, color: C.muted }}>Sem critérios definidos. Até definires, a avaliação usa a grelha de júri genérica (5 perguntas, 0-4 cada).</p>
                 <button onClick={useDefaultCriteria} style={{ background: 'none', border: 'none', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline' }}>
                   Usar critérios padrão (4 × 25%)
                 </button>

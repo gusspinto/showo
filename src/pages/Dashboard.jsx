@@ -840,7 +840,8 @@ export default function Dashboard() {
   const [resubmitted, setResubmitted] = useState([])
   const [totalMembers, setTotalMembers] = useState(0)
   const [weeklyActivity, setWeeklyActivity] = useState([])
-  const [roster, setRoster] = useState([]) // [{ user_id, name, avatar_url, className, project, completude, lastActivity, status }]
+  const [roster, setRoster] = useState([]) // [{ user_id, name, avatar_url, className, classId, project, completude, lastActivity, status, evaluated }]
+  const [rosterClassFilter, setRosterClassFilter] = useState('all')
   const [studentTurmas, setStudentTurmas] = useState([])
   const [loadingStudentTurmas, setLoadingStudentTurmas] = useState(true)
   const [profNotifs, setProfNotifs] = useState([])
@@ -1057,11 +1058,17 @@ export default function Dashboard() {
 
       let projsForRoster = []
       let reviewedIdsForRoster = new Set()
+      let lastDiaryByProject = {}
+      let lastCheckinByMember = {}
       if (allProjectIds.length) {
-        const [{ data: projDetails }, { data: myFeedback }] = await Promise.all([
-          supabase.from('projects').select('id, name, slug, creator_name, score, created_at, defense_date, review_status, review_status_updated_at, user_id, goal, problem, solution, technologies, features, results, linkedin_url, github_url, portfolio_url, cover_url').in('id', allProjectIds),
+        const [{ data: projDetails }, { data: myFeedback }, { data: journalRows }, { data: checkinRows }] = await Promise.all([
+          supabase.from('projects').select('id, name, slug, creator_name, score, created_at, defense_date, review_status, review_status_updated_at, teacher_score, user_id, goal, problem, solution, technologies, features, results, linkedin_url, github_url, portfolio_url, cover_url').in('id', allProjectIds),
           supabase.from('teacher_feedback').select('project_id').eq('teacher_id', user.id).in('project_id', allProjectIds),
+          supabase.from('project_journal_entries').select('project_id, created_at').in('project_id', allProjectIds),
+          supabase.from('weekly_checkins').select('user_id, created_at').in('user_id', memberIds),
         ])
+        journalRows?.forEach(j => { const t = new Date(j.created_at).getTime(); if (!lastDiaryByProject[j.project_id] || t > lastDiaryByProject[j.project_id]) lastDiaryByProject[j.project_id] = t })
+        checkinRows?.forEach(c => { const t = new Date(c.created_at).getTime(); if (!lastCheckinByMember[c.user_id] || t > lastCheckinByMember[c.user_id]) lastCheckinByMember[c.user_id] = t })
         const projs = projDetails || []
         projsForRoster = projs
         projs.forEach(p => { scoreMap[p.id] = p.score })
@@ -1105,6 +1112,8 @@ export default function Dashboard() {
           ? Math.max(
               new Date(project.created_at || 0).getTime(),
               project.review_status_updated_at ? new Date(project.review_status_updated_at).getTime() : 0,
+              lastDiaryByProject[project.id] || 0,
+              lastCheckinByMember[mp.id] || 0,
             )
           : null
         const daysSince = lastActivity ? Math.floor((nowMs - lastActivity) / 86400000) : null
@@ -1119,10 +1128,12 @@ export default function Dashboard() {
           name: mp.full_name || mp.username || 'Aluno',
           avatar_url: mp.avatar_url,
           className: classNameByMember[mp.id],
+          classId: (members || []).find(m => m.user_id === mp.id)?.class_id,
           project,
           completude,
           daysSince,
           status,
+          evaluated: project ? project.teacher_score != null : false,
         }
       })
       const statusRank = { needs_review: 0, stalled: 1, slowing: 2, no_project: 3, on_track: 4 }
@@ -1276,7 +1287,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="dashboard-root" style={{ minHeight: '100vh', background: 'var(--color-bg)', fontFamily: 'var(--font-body)' }}>
+    <div className={`dashboard-root${isTeacher ? ' theme-teacher' : ''}`} style={{ minHeight: '100vh', background: 'var(--color-bg)', fontFamily: 'var(--font-body)' }}>
       <Navbar />
 
       {showOnboardingAluno && (
@@ -1390,18 +1401,32 @@ export default function Dashboard() {
                   </Card>
                 )}
 
-                {roster.length > 0 && (
-                  <div className="dash-section" style={{ marginBottom: 'var(--sp-5)' }}>
-                    <div className="dash-sec-header">
-                      <div className="dash-sec-label"><Users size={13} /> Alunos <span className="dash-sec-count">{roster.length}</span></div>
+                {roster.length > 0 && (() => {
+                  const filteredRoster = rosterClassFilter === 'all' ? roster : roster.filter(s => s.classId === rosterClassFilter)
+                  return (
+                    <div className="dash-section" style={{ marginBottom: 'var(--sp-5)' }}>
+                      <div className="dash-sec-header">
+                        <div className="dash-sec-label"><Users size={13} /> Alunos <span className="dash-sec-count">{filteredRoster.length}</span></div>
+                        {turmas.length > 1 && (
+                          <select
+                            value={rosterClassFilter}
+                            onChange={e => setRosterClassFilter(e.target.value)}
+                            className="dash-input"
+                            style={{ width: 'auto', padding: '6px 10px', fontSize: 'var(--text-sm)' }}
+                          >
+                            <option value="all">Todas as turmas</option>
+                            {turmas.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                          </select>
+                        )}
+                      </div>
+                      <StudentRoster
+                        students={filteredRoster}
+                        showClass={turmas.length > 1 && rosterClassFilter === 'all'}
+                        onOpenProject={slug => navigate(`/projeto/${slug}`)}
+                      />
                     </div>
-                    <StudentRoster
-                      students={roster}
-                      showClass={turmas.length > 1}
-                      onOpenProject={slug => navigate(`/projeto/${slug}`)}
-                    />
-                  </div>
-                )}
+                  )
+                })()}
 
                 <div className="dash-section">
                   <div className="dash-sec-header">
