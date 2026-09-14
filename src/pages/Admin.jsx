@@ -91,39 +91,88 @@ function StatCard({ icon, label, value, color = C.blue, sub }) {
 // números soltos não mostra isso. Cada barra é proporcional ao primeiro
 // passo, e a seta entre elas leva a taxa de passagem, que é a informação
 // que realmente interessa (não o valor absoluto de cada etapa isolada).
+//
+// Os passos NÃO são um subconjunto estrito uns dos outros — "viram o nudge"
+// conta eventos (avisos repetidos, antes de esgotar), "bateram num limite"
+// conta utilizadores únicos que esgotaram mesmo. Por isso um passo pode ter
+// mais eventos que o anterior (ex: 32 vs 1), o que dava percentagens tipo
+// "3200%" sem sentido nenhum. Quando isso acontece, mostra-se a variação
+// como contagem neutra ("+31"), não como uma falsa taxa de conversão.
+function FunnelStep({ step, isFirst, isLast, max }) {
+  const pct = Math.round((step.value / max) * 100)
+  return (
+    <div
+      onClick={step.onClick}
+      style={{
+        flex: 1, minWidth: 0, borderRadius: 10, padding: '14px 16px',
+        cursor: step.onClick ? 'pointer' : 'default',
+        background: isLast ? C.blueSoft : C.bgAlt,
+        border: `1px solid ${isLast ? C.blue + '40' : C.border}`,
+        transition: 'background 0.15s, border-color 0.15s',
+      }}
+      onMouseEnter={e => { if (step.onClick) e.currentTarget.style.borderColor = C.blue }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = isLast ? C.blue + '40' : C.border }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+        <div style={{
+          width: 26, height: 26, borderRadius: 7, flexShrink: 0,
+          background: step.color + '18', border: `1px solid ${step.color}35`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', color: step.color,
+        }}>{step.icon}</div>
+        <span style={{ fontSize: 11, fontWeight: 600, color: step.onClick ? C.blue : C.muted, lineHeight: 1.3 }}>
+          {step.label}{step.onClick && step.value > 0 ? ' →' : ''}
+        </span>
+      </div>
+      <div style={{ fontSize: 26, fontWeight: 400, color: C.text, fontFamily: 'var(--font-heading)', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+        {step.value}
+      </div>
+      <div style={{ height: 5, borderRadius: 99, background: C.bg, overflow: 'hidden', marginTop: 10 }}>
+        <div style={{ height: '100%', width: `${Math.max(pct, step.value > 0 ? 4 : 0)}%`, borderRadius: 99, background: isFirst ? step.color : 'var(--brand-gradient)', transition: 'width 0.4s' }} />
+      </div>
+    </div>
+  )
+}
+
+function StepConnector({ value, prev }) {
+  // prev === null: primeiro passo, sem conector.
+  // Sem histórico anterior (0) não há taxa nenhuma para calcular.
+  const grew = prev != null && value > prev
+  const pct = prev ? Math.round((value / prev) * 100) : null
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '0 4px', flexShrink: 0, width: 46 }}>
+      <ArrowRight2 size={13} color={C.subtle} />
+      {prev === 0 || prev == null ? (
+        <span style={{ fontSize: 9, fontWeight: 700, color: C.subtle }}>—</span>
+      ) : grew ? (
+        <span style={{ fontSize: 9, fontWeight: 700, color: C.muted, whiteSpace: 'nowrap' }} title="Não é um subconjunto estrito do passo anterior">+{value - prev}</span>
+      ) : (
+        <span style={{ fontSize: 10, fontWeight: 700, color: pct >= 50 ? C.green : pct >= 20 ? C.yellow : C.red, whiteSpace: 'nowrap' }}>{pct}%</span>
+      )}
+    </div>
+  )
+}
+
 function FunnelFlow({ steps }) {
   const max = Math.max(1, ...steps.map(s => s.value))
+  const first = steps[0]
+  const last = steps[steps.length - 1]
+  const overallPct = first.value > 0 ? Math.round((last.value / first.value) * 1000) / 10 : null
   return (
-    <div style={{ display: 'flex', alignItems: 'stretch', gap: 0, flexWrap: 'wrap' }}>
-      {steps.map((s, i) => {
-        const pct = Math.round((s.value / max) * 100)
-        const prev = i > 0 ? steps[i - 1].value : null
-        const dropPct = prev ? (prev === 0 ? 0 : Math.round((s.value / prev) * 100)) : null
-        return (
-          <div key={s.label} style={{ display: 'flex', alignItems: 'center', flex: '1 1 auto', minWidth: 140 }}>
-            {i > 0 && (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '0 10px', flexShrink: 0 }}>
-                <ArrowRight2 size={13} color={C.subtle} />
-                <span style={{ fontSize: 10, fontWeight: 700, color: dropPct >= 50 ? C.green : dropPct >= 20 ? C.yellow : C.red, whiteSpace: 'nowrap' }}>{dropPct}%</span>
-              </div>
-            )}
-            <div
-              onClick={s.onClick}
-              style={{ flex: 1, minWidth: 0, cursor: s.onClick ? 'pointer' : 'default', borderRadius: 8, padding: 4, margin: -4 }}
-              onMouseEnter={e => { if (s.onClick) e.currentTarget.style.background = C.bgAlt }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
-            >
-              <div style={{ fontSize: 20, fontWeight: 400, color: C.text, fontFamily: 'var(--font-heading)', lineHeight: 1 }}>{s.value}</div>
-              <div style={{ fontSize: 11, color: s.onClick ? C.blue : C.muted, marginTop: 4, marginBottom: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {s.label}{s.onClick && s.value > 0 ? ' →' : ''}
-              </div>
-              <div style={{ height: 6, borderRadius: 99, background: C.bgAlt, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${Math.max(pct, s.value > 0 ? 4 : 0)}%`, borderRadius: 99, background: 'var(--brand-gradient)' }} />
-              </div>
-            </div>
+    <div>
+      {overallPct != null && (
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 14 }}>
+          <span style={{ fontSize: 20, fontWeight: 400, fontFamily: 'var(--font-heading)', color: overallPct >= 10 ? C.green : overallPct >= 2 ? C.yellow : C.red }}>{overallPct}%</span>
+          <span style={{ fontSize: 11, color: C.subtle }}>conversão total · "{first.label}" → "{last.label}"</span>
+        </div>
+      )}
+      <div style={{ display: 'flex', alignItems: 'stretch', gap: 0, flexWrap: 'wrap' }}>
+        {steps.map((s, i) => (
+          <div key={s.label} style={{ display: 'flex', alignItems: 'center', flex: '1 1 auto', minWidth: 150 }}>
+            {i > 0 && <StepConnector value={s.value} prev={steps[i - 1].value} />}
+            <FunnelStep step={s} isFirst={i === 0} isLast={i === steps.length - 1} max={max} />
           </div>
-        )
-      })}
+        ))}
+      </div>
     </div>
   )
 }
@@ -561,6 +610,13 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
   })
   const topReferrers = Object.entries(refCounts).sort((a, b) => b[1] - a[1]).slice(0, 5)
 
+  // UTM source — só existe para quem se registou depois do first-touch
+  // capture ficar a sério (App.jsx grava no localStorage à primeira
+  // página, não só no momento do registo). Contas antigas ficam de fora.
+  const utmCounts = {}
+  users.forEach(u => { if (u.signup_utm_source) utmCounts[u.signup_utm_source] = (utmCounts[u.signup_utm_source] || 0) + 1 })
+  const topUtmSources = Object.entries(utmCounts).sort((a, b) => b[1] - a[1]).slice(0, 5)
+
   // Sorted & filtered users
   const uq = userSearch.toLowerCase()
   const sortedUsers = [...users]
@@ -644,10 +700,10 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
         <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Funil de conversão · mês atual</h3>
         <p style={{ margin: '0 0 18px', fontSize: 11, color: C.subtle }}>Do limite atingido ao início do checkout — dados reais, não estimativa. A % é a taxa de passagem entre passos.</p>
         <FunnelFlow steps={[
-          { label: 'Bateram num limite', value: usersAtLimit, onClick: usersAtLimit > 0 ? () => setShowLimitUsers(o => !o) : undefined },
-          { label: 'Viram o nudge', value: nudgeShown },
-          { label: 'Clicaram no nudge', value: nudgeClicked },
-          { label: 'Iniciaram checkout', value: checkoutStarted },
+          { label: 'Bateram num limite', value: usersAtLimit, onClick: usersAtLimit > 0 ? () => setShowLimitUsers(o => !o) : undefined, icon: <AlertTriangle size={14} />, color: C.red },
+          { label: 'Viram o nudge', value: nudgeShown, icon: <Megaphone size={14} />, color: C.yellow },
+          { label: 'Clicaram no nudge', value: nudgeClicked, icon: <Check size={14} />, color: C.blue },
+          { label: 'Iniciaram checkout', value: checkoutStarted, icon: <Star size={14} />, color: C.green },
         ]} />
         {showLimitUsers && usersAtLimitList.length > 0 && (
           <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -723,6 +779,16 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
             {topReferrers.length > 0 ? topReferrers.map(([ref, count]) => (
               <MiniBar key={ref} label={ref} value={count} total={totalUsers} color={C.purple} />
             )) : <span style={{ fontSize: 12, color: C.subtle }}>Sem dados ainda</span>}
+          </div>
+        </div>
+
+        {/* UTM source */}
+        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
+          <h3 style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Por UTM source</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {topUtmSources.length > 0 ? topUtmSources.map(([utm, count]) => (
+              <MiniBar key={utm} label={utm} value={count} total={totalUsers} color={C.orange} />
+            )) : <span style={{ fontSize: 12, color: C.subtle }}>Sem dados ainda — só regista a partir de agora</span>}
           </div>
         </div>
       </div>
