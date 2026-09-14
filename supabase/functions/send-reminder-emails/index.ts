@@ -15,7 +15,7 @@ function buildHtml(title: string, dateLabel: string, notes?: string) {
   return `
 <div style="background:#03060d;padding:48px 24px;font-family:-apple-system,Helvetica,Arial,sans-serif;">
   <div style="max-width:480px;margin:0 auto;">
-    <img src="https://showo.pt/icon_light.png" alt="Showo" width="32" height="32"
+    <img src="https://showo.pt/icon.png" alt="Showo" width="32" height="32"
       style="display:block;margin:0 auto 24px;border:0;" />
     <h1 style="margin:0 0 8px;color:#eef2f8;font-size:20px;line-height:1.3;text-align:center;">
       Lembrete para amanhã
