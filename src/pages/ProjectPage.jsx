@@ -103,6 +103,7 @@ const ANON_PROJECT_COLUMNS = [
   'visibility', 'edit_token', 'notified_milestones',
   'library_file_url', 'library_file_name', 'library_file_type', 'parent_project_id',
   'github_stats', 'github_synced_at', 'timeline_public',
+  'project_started_on', 'project_finished_on',
 ].join(', ')
 // timeline_public entrou aqui porque o RPC get_project_timeline só protege
 // os DADOS da timeline — o componente ProjectTimeline também lê este campo

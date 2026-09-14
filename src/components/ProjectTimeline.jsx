@@ -45,6 +45,8 @@ export default function ProjectTimeline({ project, isOwner, viewOnly = false }) 
   const [tl, setTl] = useState(undefined)          // undefined=loading, null=nada
   const [milestones, setMilestones] = useState([])
   const [isPublic, setIsPublic] = useState(!!project.timeline_public)
+  const [startedOn, setStartedOn] = useState(project.project_started_on || '')
+  const [finishedOn, setFinishedOn] = useState(project.project_finished_on || '')
   const [busy, setBusy] = useState(false)
   const [form, setForm] = useState(null)           // {id?, title, happened_on, note}
   const [suggestions, setSuggestions] = useState(null)
@@ -70,6 +72,19 @@ export default function ProjectTimeline({ project, isOwner, viewOnly = false }) 
     const next = !isPublic
     setIsPublic(next)
     await supabase.from('projects').update({ timeline_public: next }).eq('id', project.id)
+  }
+
+  // Sem isto, quem olha para um projeto parado há 6 meses não sabe se foi
+  // abandonado (inconsistência) ou se já está feito — a presença da data de
+  // fim é o que distingue os dois casos, não um estado à parte para não
+  // haver dois campos a poder discordar.
+  async function saveStarted(value) {
+    setStartedOn(value)
+    await supabase.from('projects').update({ project_started_on: value || null }).eq('id', project.id)
+  }
+  async function saveFinished(value) {
+    setFinishedOn(value)
+    await supabase.from('projects').update({ project_finished_on: value || null }).eq('id', project.id)
   }
 
   async function saveMilestone() {
@@ -131,16 +146,22 @@ export default function ProjectTimeline({ project, isOwner, viewOnly = false }) 
   // Fora do preview, um visitante nunca vê isto (o pai já gere, mas por via das dúvidas).
   if (!isOwner && !viewOnly) return null
 
-  const startDate = tl?.first_entry || tl?.created_on
+  // Data do dono (project_started_on) tem prioridade sobre o primeiro
+  // registo do diário — um projeto pode ter começado antes de haver
+  // qualquer entrada escrita. finishedOn marca o fim: a duração conta até
+  // lá, não até "agora", senão um projeto concluído há meses continuava a
+  // mostrar "X meses de trabalho" a crescer sozinho.
+  const startDate = startedOn || tl?.first_entry || tl?.created_on
   const weekly = weeksWindow(tl?.weekly, 13) // ~90 dias
   const maxWeek = Math.max(1, ...weekly.map(w => w.count))
-  const durMonths = startDate ? monthsBetween(startDate, new Date()) : 0
+  const durMonths = startDate ? monthsBetween(startDate, finishedOn ? new Date(finishedOn) : new Date()) : 0
 
   const header = (
     <div className="ptl-card-head">
       <div className="ptl-card-head-main">
         <Route size={15} className="ptl-card-icon" />
         <span className="ptl-card-title">Percurso</span>
+        {finishedOn && <span className="ptl-status-pill">Concluído</span>}
       </div>
       {canEdit && (
         <button className={`ptl-toggle${isPublic ? ' is-on' : ''}`} onClick={togglePublic}>
@@ -148,6 +169,21 @@ export default function ProjectTimeline({ project, isOwner, viewOnly = false }) 
           {isPublic ? 'Visível no perfil' : 'Só tu vês'}
         </button>
       )}
+    </div>
+  )
+
+  // Só o dono edita — assim um recrutador nunca fica com dúvidas: parado
+  // sem data de fim é inconsistência, com data de fim é projeto acabado.
+  const dateEditor = canEdit && (
+    <div className="ptl-dates">
+      <label className="ptl-dates-field">
+        <span>Início</span>
+        <input type="date" className="ptl-input" value={startedOn} onChange={e => saveStarted(e.target.value)} />
+      </label>
+      <label className="ptl-dates-field">
+        <span>Fim (deixa em branco se ainda estiver a decorrer)</span>
+        <input type="date" className="ptl-input" value={finishedOn} onChange={e => saveFinished(e.target.value)} />
+      </label>
     </div>
   )
 
@@ -169,6 +205,7 @@ export default function ProjectTimeline({ project, isOwner, viewOnly = false }) 
     return (
       <div className="ptl-card ptl-card--empty">
         {header}
+        {dateEditor}
         <p className="ptl-empty-text">
           Regista os momentos importantes do projeto. No perfil, mostram a um
           recrutador que trabalhaste nele ao longo do tempo.
@@ -183,6 +220,7 @@ export default function ProjectTimeline({ project, isOwner, viewOnly = false }) 
   return (
     <div className="ptl-card">
       {header}
+      {dateEditor}
 
       {showStats && (
         <>
