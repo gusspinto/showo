@@ -250,17 +250,27 @@ function FeedbackModal({ project, teacherId, onClose }) {
   )
 }
 
-function EditTurmaModal({ turma, onClose, onSave }) {
+function EditTurmaModal({ turma, onClose, onSave, onDelete }) {
   const [name, setName] = useState(turma.name || '')
   const [subject, setSubject] = useState(turma.subject || '')
   const [academicYear, setAcademicYear] = useState(turma.academic_year || getCurrentAcademicYear())
   const [saving, setSaving] = useState(false)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [deleteText, setDeleteText] = useState('')
+  const [deleting, setDeleting] = useState(false)
 
   async function handleSave() {
     if (!name.trim()) return
     setSaving(true)
     await onSave(name.trim(), subject.trim(), academicYear)
     setSaving(false)
+  }
+
+  async function handleDelete() {
+    if (deleteText.trim().toUpperCase() !== turma.name.trim().toUpperCase()) return
+    setDeleting(true)
+    await onDelete()
+    setDeleting(false)
   }
 
   return (
@@ -291,6 +301,33 @@ function EditTurmaModal({ turma, onClose, onSave }) {
           <button onClick={handleSave} disabled={saving || !name.trim()} style={{ background: 'var(--color-primary)', border: 'none', borderRadius: 8, padding: '11px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: saving || !name.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
             {saving ? 'A guardar…' : 'Guardar alterações'}
           </button>
+
+          {/* Zona perigosa — apagar a turma */}
+          <div style={{ marginTop: 8, paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
+            {!confirmingDelete ? (
+              <button onClick={() => setConfirmingDelete(true)} style={{ background: 'none', border: 'none', color: 'var(--color-error)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>
+                Apagar turma
+              </button>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <p style={{ margin: 0, fontSize: 12.5, color: C.muted, lineHeight: 1.5 }}>
+                  Isto apaga a turma, remove todos os alunos dela, as tarefas, os critérios de avaliação e as notas dadas dentro desta turma. Os projetos dos alunos não são apagados. <strong style={{ color: C.text }}>Não pode ser desfeito.</strong>
+                </p>
+                <p style={{ margin: 0, fontSize: 12, color: C.muted }}>Escreve <strong style={{ color: C.text }}>{turma.name}</strong> para confirmar.</p>
+                <input value={deleteText} onChange={e => setDeleteText(e.target.value)} placeholder={turma.name}
+                  style={{ width: '100%', background: 'var(--color-bg)', border: `1px solid var(--color-error-subtle)`, borderRadius: 8, padding: '9px 12px', color: C.text, fontSize: 13, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={() => { setConfirmingDelete(false); setDeleteText('') }} style={{ flex: 1, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '9px 0', color: C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    Cancelar
+                  </button>
+                  <button onClick={handleDelete} disabled={deleting || deleteText.trim().toUpperCase() !== turma.name.trim().toUpperCase()}
+                    style={{ flex: 1, background: 'var(--color-error)', border: 'none', borderRadius: 8, padding: '9px 0', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: deleting || deleteText.trim().toUpperCase() !== turma.name.trim().toUpperCase() ? 0.5 : 1 }}>
+                    {deleting ? 'A apagar…' : 'Apagar definitivamente'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -1021,6 +1058,13 @@ export default function TurmaPage() {
     showToast('Turma atualizada')
   }
 
+  async function handleDeleteTurma() {
+    const { error } = await supabase.rpc('delete_class', { p_class_id: turma.id })
+    if (error) { showToast(friendlyError(error, 'Não foi possível apagar a turma.')); return }
+    setShowEditTurma(false)
+    navigate('/turmas')
+  }
+
   async function handleRemoveMember(memberUserId) {
     const { error } = await supabase.rpc('remove_class_member', { p_class_id: turma.id, p_user_id: memberUserId })
     if (error) { showToast(friendlyError(error, 'Não foi possível remover o aluno.')); return }
@@ -1064,7 +1108,7 @@ export default function TurmaPage() {
 
       {/* Edit turma */}
       {showEditTurma && (
-        <EditTurmaModal turma={turma} onClose={() => setShowEditTurma(false)} onSave={handleUpdateTurma} />
+        <EditTurmaModal turma={turma} onClose={() => setShowEditTurma(false)} onSave={handleUpdateTurma} onDelete={handleDeleteTurma} />
       )}
 
       {/* New task */}
