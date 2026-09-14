@@ -319,8 +319,9 @@ export default function Register() {
       }
     }
 
-    // Send welcome email (fire-and-forget)
-    if (newUser) {
+    // Send welcome email (fire-and-forget) — só para quem cria projeto,
+    // o texto ("organiza o teu projeto") não faz sentido para professores
+    if (newUser && effectiveRole !== 'professor') {
       supabase.functions.invoke('send-welcome-email').catch(() => {})
     }
 
