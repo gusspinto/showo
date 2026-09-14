@@ -1808,8 +1808,10 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   e.currentTarget.style.setProperty('--oy', '0px')
                 }}
               >
-                <Globe size={16} />
-                <span className="pmf-tooltip">{extras.viewAsPublic ? 'Sair preview' : 'Preview visitante'}</span>
+                {extras.editingAppearance && extras.viewAsPublic ? <Paintbrush size={16} /> : <Globe size={16} />}
+                <span className="pmf-tooltip">
+                  {extras.editingAppearance && extras.viewAsPublic ? 'Fechar editor' : extras.viewAsPublic ? 'Sair preview' : 'Preview visitante'}
+                </span>
               </button>
             </>
           )}

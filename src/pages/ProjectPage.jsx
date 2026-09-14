@@ -1443,7 +1443,7 @@ function ProjectAttachments({ project }) {
   )
 }
 
-function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview, previewBlocks, setPreviewBlocks, previewStyle, setPreviewStyle, previewEditing, setPreviewEditing,
+function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview, editingAppearance, previewBlocks, setPreviewBlocks, previewStyle, setPreviewStyle, previewEditing, setPreviewEditing,
   liked, likeCount, likeLoading, onLike,
   hasInterest, interestCount, interestLoading, onInterest,
   isRecruiterRole,
@@ -1832,7 +1832,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
         }}>
           <Globe size={13} color={colors.blue} style={{ flexShrink: 0 }} />
           <span className="pv-banner-label" style={{ fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600, letterSpacing: '-0.1px' }}>
-            Preview do visitante
+            {editingAppearance ? 'A editar a aparência' : 'Preview do visitante'}
           </span>
 
           <div style={{ flex: 1 }} />
@@ -5332,8 +5332,14 @@ export default function ProjectPage() {
         // Só alterna a vista — deixou de ativar o editor de estilo sozinho.
         // "Preview visitante" é só para veres a página como um visitante vê;
         // editar o visual passa a ser só a partir do botão "Editar" (que leva
-        // à secção "Aparência" em /editar/:slug).
-        onTogglePublicView: () => setViewAsPublic(v => !v),
+        // à secção "Aparência" em /editar/:slug). Se chegámos aqui a editar
+        // a aparência (?workspace=1), fechar volta para lá, não deixa a
+        // pessoa pendurada numa "vista de visitante" sem contexto nenhum.
+        onTogglePublicView: () => {
+          if (openWorkspaceOnLoad && viewAsPublic) { navigate(`/editar/${project.slug}`); return }
+          setViewAsPublic(v => !v)
+        },
+        editingAppearance: openWorkspaceOnLoad,
         previewEditing,
         onEditWorkspace: () => { setPreviewEditing(true); setWsExpanded(e => !e) },
         previewDevice,
@@ -7043,8 +7049,13 @@ export default function ProjectPage() {
               setShowRegisterPopup(true)
               return
             }
+            // Veio de "Editar → Aparência" (?workspace=1), não do botão
+            // "Preview visitante" — sair devia voltar para o editar, não
+            // deixar a pessoa pendurada na vista de dono sem contexto.
+            if (openWorkspaceOnLoad) { navigate(`/editar/${project.slug}`); return }
             setViewAsPublic(false); setPreviewEditing(false)
           }}
+          editingAppearance={openWorkspaceOnLoad}
           previewBlocks={previewBlocks}
           setPreviewBlocks={setPreviewBlocks}
           previewStyle={previewStyle}
