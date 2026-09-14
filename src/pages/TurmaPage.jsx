@@ -440,62 +440,25 @@ export default function TurmaPage() {
       const teacherNow = user && cls.teacher_id === user.id
       if (teacherNow) setIsTeacher(true)
 
-      let crit = []
-      if (teacherNow) {
-        const { data: critData } = await supabase
-          .from('class_evaluation_criteria')
-          .select('*')
-          .eq('class_id', cls.id)
-          .order('sort_order')
-        crit = critData || []
-        setCriteria(crit)
-      }
+      // These three don't depend on each other — fire together instead of
+      // waiting on each round trip in turn (was the main cause of the slow
+      // open: 7 sequential awaits before anything rendered).
+      const [critRes, cpRes, membersRes] = await Promise.all([
+        teacherNow
+          ? supabase.from('class_evaluation_criteria').select('*').eq('class_id', cls.id).order('sort_order')
+          : Promise.resolve({ data: [] }),
+        supabase.from('class_projects').select('project_id').eq('class_id', cls.id),
+        supabase.from('class_members').select('user_id, joined_at').eq('class_id', cls.id),
+      ])
 
-      const { data: cp } = await supabase
-        .from('class_projects')
-        .select('project_id')
-        .eq('class_id', cls.id)
+      const crit = critRes.data || []
+      if (teacherNow) setCriteria(crit)
 
-      let projs = []
-      if (cp?.length) {
-        const ids = cp.map(r => r.project_id)
-        const { data, error: projectsError } = await supabase
-          .from('projects')
-          .select('id, name, slug, score, area, creator_name, cover_url, ai_tagline, created_at, user_id, goal, problem, solution, features, technologies, results, linkedin_url, github_url, portfolio_url, review_status, teacher_score')
-          .in('id', ids)
-        if (projectsError) {
-          console.error('projects fetch failed:', projectsError)
-          showToast(friendlyError(projectsError, 'Não foi possível carregar os projetos.'))
-        }
-        projs = data || []
-        setProjects(projs)
-
-        // Fetch per-criterion scores if this class has criteria
-        if (teacherNow && crit.length > 0 && projs.length > 0) {
-          const { data: scores } = await supabase
-            .from('project_criterion_scores')
-            .select('project_id, criterion_id, score')
-            .in('project_id', projs.map(p => p.id))
-          if (scores?.length) {
-            const map = {}
-            scores.forEach(s => {
-              if (!map[s.project_id]) map[s.project_id] = {}
-              map[s.project_id][s.criterion_id] = s.score
-            })
-            setCriterionScoresMap(map)
-          }
-        }
-      }
-
-      // Fetch all members from class_members table (source of truth)
-      const { data: classMembers, error: classMembersError } = await supabase
-        .from('class_members')
-        .select('user_id, joined_at')
-        .eq('class_id', cls.id)
-
-      if (classMembersError) {
-        console.error('class_members fetch failed:', classMembersError)
-        showToast(friendlyError(classMembersError, 'Não foi possível carregar os alunos.'))
+      const cp = cpRes.data
+      const classMembers = membersRes.data
+      if (membersRes.error) {
+        console.error('class_members fetch failed:', membersRes.error)
+        showToast(friendlyError(membersRes.error, 'Não foi possível carregar os alunos.'))
       }
 
       const memberUserIds = (classMembers || []).map(m => m.user_id)
@@ -504,12 +467,44 @@ export default function TurmaPage() {
         ? [...new Set([cls.teacher_id, ...memberUserIds])]
         : [...new Set(memberUserIds)]
 
+      // Projects and profiles are independent of each other too — run together.
+      const [projectsRes, profilesRes] = await Promise.all([
+        cp?.length
+          ? supabase.from('projects')
+              .select('id, name, slug, score, area, creator_name, cover_url, ai_tagline, created_at, user_id, goal, problem, solution, features, technologies, results, linkedin_url, github_url, portfolio_url, review_status, teacher_score')
+              .in('id', cp.map(r => r.project_id))
+          : Promise.resolve({ data: [] }),
+        allIds.length > 0
+          ? supabase.from('profiles').select('id, full_name, username, avatar_url, role').in('id', allIds)
+          : Promise.resolve({ data: [] }),
+      ])
+
+      if (projectsRes.error) {
+        console.error('projects fetch failed:', projectsRes.error)
+        showToast(friendlyError(projectsRes.error, 'Não foi possível carregar os projetos.'))
+      }
+      const projs = projectsRes.data || []
+      setProjects(projs)
+
+      // Fetch per-criterion scores if this class has criteria
+      if (teacherNow && crit.length > 0 && projs.length > 0) {
+        const { data: scores } = await supabase
+          .from('project_criterion_scores')
+          .select('project_id, criterion_id, score')
+          .in('project_id', projs.map(p => p.id))
+        if (scores?.length) {
+          const map = {}
+          scores.forEach(s => {
+            if (!map[s.project_id]) map[s.project_id] = {}
+            map[s.project_id][s.criterion_id] = s.score
+          })
+          setCriterionScoresMap(map)
+        }
+      }
+
       if (allIds.length > 0) {
-        const { data: profiles, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, full_name, username, avatar_url, role')
-          .in('id', allIds)
-        if (profilesError) console.error('profiles fetch failed:', profilesError)
+        if (profilesRes.error) console.error('profiles fetch failed:', profilesRes.error)
+        const profiles = profilesRes.data
         const profileMap = {}
         ;(profiles || []).forEach(p => { profileMap[p.id] = p })
         const memberList = allIds.map(uid => {
