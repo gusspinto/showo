@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { QRCodeSVG } from 'qrcode.react'
 import { supabase, supabaseUrl, supabaseAnonKey } from '../lib/supabase'
+import { getVisitorCity } from '../lib/geolocation'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
 import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
@@ -497,15 +498,9 @@ export default function UserProfile() {
 
     const visitor_role = myProfile?.role ?? null
     const t = setTimeout(() => {
-      fetch('https://ip-api.com/json/?fields=city,status')
-        .then(r => r.json())
-        .then(geo => {
-          const city = geo?.status === 'success' ? (geo.city || 'Portugal') : 'Portugal'
-          supabase.functions.invoke('notify-profile-view', { body: { profile_id: pid, city, visitor_role } })
-        })
-        .catch(() => {
-          supabase.functions.invoke('notify-profile-view', { body: { profile_id: pid, city: 'Portugal', visitor_role } })
-        })
+      getVisitorCity().then(city => {
+        supabase.functions.invoke('notify-profile-view', { body: { profile_id: pid, city, visitor_role } })
+      })
     }, 15000)
     return () => clearTimeout(t)
   }, [profile?.id, user, myProfile?.role])

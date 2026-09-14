@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { getVisitorCity } from '../lib/geolocation'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
@@ -149,6 +150,13 @@ export default function Explore() {
   const [showFilters, setShowFilters] = useState(() => !!searchParams.get('tech'))
   const [showPeopleFilters, setShowPeopleFilters] = useState(false)
 
+  // Cobre o caso de a página montar já com tab=pessoas na URL (ex: voltar
+  // atrás de um perfil) — handleTabChange só carrega ao clicar na aba.
+  useEffect(() => {
+    if (tab === 'pessoas') loadPeople()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   useEffect(() => {
     async function load() {
       const { data, error } = await supabase
@@ -248,15 +256,9 @@ export default function Explore() {
 
     if (profile?.id && !isOwn && !sessionStorage.getItem(key)) {
       sessionStorage.setItem(key, '1')
-      fetch('https://ip-api.com/json/?fields=city,status')
-        .then(r => r.json())
-        .then(geo => {
-          const city = geo?.status === 'success' ? (geo.city || 'Portugal') : 'Portugal'
-          supabase.functions.invoke('notify-view', { body: { project_slug: project.slug, type, city, visitor_role: role } })
-        })
-        .catch(() => {
-          supabase.functions.invoke('notify-view', { body: { project_slug: project.slug, type, city: 'Portugal', visitor_role: role } })
-        })
+      getVisitorCity().then(city => {
+        supabase.functions.invoke('notify-view', { body: { project_slug: project.slug, type, city, visitor_role: role } })
+      })
     }
 
     navigate(`/projeto/${project.slug}`)

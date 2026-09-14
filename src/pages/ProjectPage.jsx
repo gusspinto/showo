@@ -4,6 +4,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { QRCodeSVG } from 'qrcode.react'
 import { supabase, supabaseUrl, supabaseAnonKey } from '../lib/supabase'
+import { getVisitorCity } from '../lib/geolocation'
 import { useIsMobile } from '../lib/useIsMobile'
 import { calculateScore, looksLikeSpam } from '../lib/score'
 import { containsProfanity } from '../lib/profanity'
@@ -5536,17 +5537,10 @@ export default function ProjectPage() {
       t1 = setTimeout(() => {
         sessionStorage.setItem(notifKey, '1')
         // Get city first, then notify
-        fetch('https://ip-api.com/json/?fields=city,status')
-          .then(r => r.json())
-          .then(geo => {
-            const city = geo?.status === 'success' ? (geo.city || 'Portugal') : 'Portugal'
-            const visitor_role = profile?.role ?? null
-            supabase.functions.invoke('notify-view', { body: { project_slug: project.slug, type: 'PROJECT_VIEW', city, visitor_role } })
-          })
-          .catch(() => {
-            const visitor_role = profile?.role ?? null
-            supabase.functions.invoke('notify-view', { body: { project_slug: project.slug, type: 'PROJECT_VIEW', city: 'Portugal', visitor_role } })
-          })
+        getVisitorCity().then(city => {
+          const visitor_role = profile?.role ?? null
+          supabase.functions.invoke('notify-view', { body: { project_slug: project.slug, type: 'PROJECT_VIEW', city, visitor_role } })
+        })
       }, 15000)
     }
 
