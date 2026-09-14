@@ -9,9 +9,6 @@ import { DocumentTextIcon as FileText } from '@solar-icons/react/bold/document-t
 import { StarsIcon as Sparkles } from '@solar-icons/react/bold/stars'
 import { AltArrowDownIcon as ChevronDown } from '@solar-icons/react/bold/alt-arrow-down'
 import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/square-academic-cap'
-import { RouteIcon as Route } from '@solar-icons/react/bold/route'
-import { CupStarIcon as Trophy } from '@solar-icons/react/bold/cup-star'
-import { Book2Icon as BookOpen } from '@solar-icons/react/bold/book-2'
 import { DatabaseIcon as Database } from '@solar-icons/react/bold/database'
 import { CodeIcon as Code } from '@solar-icons/react/bold/code'
 import { GlobeIcon as Globe } from '@solar-icons/react/bold/globe'
@@ -191,14 +188,6 @@ const COMPARE_ROWS = [
   { label: 'Recap semanal por email', free: false, plus: true, pro: true },
   { label: 'Página de estágio', free: false, plus: false, pro: true },
   { label: 'Todo o mês renova os limites', free: true, plus: true, pro: true },
-]
-
-/* Sempre disponíveis, mesmo no Grátis — não são motivo para pagar, mas
-   mostram que a plataforma não pára nas features de IA. */
-const PLATFORM_FEATURES = [
-  { Icon: Route, title: 'Timeline do projeto', desc: 'Todo o percurso organizado por datas, do primeiro rascunho à defesa.' },
-  { Icon: Trophy, title: 'Recompensas', desc: 'Objetivos e conquistas que mantêm o ritmo entre entregas.' },
-  { Icon: BookOpen, title: 'Biblioteca', desc: 'Recursos e exemplos para consultar sempre que precisares de referência.' },
 ]
 
 /* Testemunhos reais de alunos que já usam a plataforma — texto e autoria
@@ -500,20 +489,6 @@ export default function Pricing() {
                 ))}
               </tbody>
             </table>
-          </div>
-        </section>
-
-        {/* ══════════════ SEMPRE INCLUÍDO ══════════════ */}
-        <section className="pricing-section">
-          <h2 className="pricing-section-title">Em todos os planos, mesmo no Grátis</h2>
-          <div className="pricing-platform-grid">
-            {PLATFORM_FEATURES.map(({ Icon, title, desc }) => (
-              <div key={title} className="pricing-platform-card">
-                <span className="pricing-platform-icon"><Icon size={16} /></span>
-                <strong>{title}</strong>
-                <span>{desc}</span>
-              </div>
-            ))}
           </div>
         </section>
 
