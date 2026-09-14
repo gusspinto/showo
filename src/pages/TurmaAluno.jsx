@@ -73,7 +73,7 @@ const SECTION_LABELS = {
   links: 'Links', demo: 'Demo', team: 'Equipa', gallery: 'Galeria',
 }
 
-function InlineFeedback({ project, teacherId }) {
+function InlineFeedback({ project, teacherId, onChange }) {
   const [items, setItems] = useState(null) // null = not loaded yet
   const [open, setOpen] = useState(false)
   const [comment, setComment] = useState('')
@@ -104,6 +104,7 @@ function InlineFeedback({ project, teacherId }) {
     }
     if (data) {
       setItems(prev => { const idx = (prev || []).findIndex(f => f.field_key === fieldKey); return idx >= 0 ? prev.map((f, i) => i === idx ? data : f) : [...(prev || []), data] })
+      onChange?.()
       // Only ping the student on a genuinely new comment — not every time the
       // teacher tweaks wording on one that's already there.
       if (project.user_id && !wasEditing) {
@@ -117,6 +118,7 @@ function InlineFeedback({ project, teacherId }) {
   async function handleDelete(id) {
     await supabase.from('teacher_feedback').delete().eq('id', id)
     setItems(prev => (prev || []).filter(f => f.id !== id))
+    onChange?.()
   }
 
   const count = items?.length ?? 0
@@ -188,6 +190,7 @@ export default function TurmaAluno() {
   const [tasks, setTasks] = useState([])           // class tasks with this student's completion
   const [joinedAt, setJoinedAt] = useState(null)
   const [journalEntries, setJournalEntries] = useState([]) // all entries across projects in this turma
+  const [allFeedback, setAllFeedback] = useState([]) // teacher_feedback across all this student's projects, newest first
 
   useEffect(() => {
     if (authLoading) return
@@ -224,6 +227,20 @@ export default function TurmaAluno() {
           .in('id', ids)
           .eq('user_id', userId)
         if (!cancelled) setProjects(projs || [])
+
+        const studentProjIds = (projs || []).map(p => p.id)
+        if (studentProjIds.length) {
+          const { data: fb } = await supabase
+            .from('teacher_feedback')
+            .select('id, project_id, field_key, comment, created_at')
+            .in('project_id', studentProjIds)
+            .eq('teacher_id', user.id)
+            .order('created_at', { ascending: false })
+          if (!cancelled) {
+            const nameById = {}; (projs || []).forEach(p => { nameById[p.id] = p.name })
+            setAllFeedback((fb || []).map(f => ({ ...f, projectName: nameById[f.project_id] })))
+          }
+        }
       }
 
       // Journal entries for all this student's projects in the turma
@@ -321,6 +338,19 @@ export default function TurmaAluno() {
     pesquisa: '#0d9488', ideia: '#f59e0b', resultado: 'var(--color-success)', nota: 'var(--color-text-secondary)',
   }
 
+  async function reloadFeedback() {
+    const ids = projects.map(p => p.id)
+    if (!ids.length) return
+    const { data: fb } = await supabase
+      .from('teacher_feedback')
+      .select('id, project_id, field_key, comment, created_at')
+      .in('project_id', ids)
+      .eq('teacher_id', user.id)
+      .order('created_at', { ascending: false })
+    const nameById = {}; projects.forEach(p => { nameById[p.id] = p.name })
+    setAllFeedback((fb || []).map(f => ({ ...f, projectName: nameById[f.project_id] })))
+  }
+
   function formatRelativeDate(d) {
     const diff = Math.floor((Date.now() - d.getTime()) / 86400000)
     if (diff === 0) return 'hoje'
@@ -395,6 +425,30 @@ export default function TurmaAluno() {
           ))}
         </div>
 
+        {/* All feedback given, across every project — no need to open project by project */}
+        {allFeedback.length > 0 && (
+          <div style={{ marginBottom: 28 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+              <MessageSquare size={14} color={C.muted} />
+              <span style={{ fontSize: 13, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Feedback dado</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: C.subtle }}>{allFeedback.length}</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {allFeedback.map(f => (
+                <div key={f.id} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 10, padding: '12px 16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6, gap: 8 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: C.blue, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                      {SECTION_LABELS[f.field_key] || f.field_key} · {f.projectName}
+                    </span>
+                    <span style={{ fontSize: 11, color: C.subtle, whiteSpace: 'nowrap' }}>{formatRelativeDate(new Date(f.created_at))}</span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: 13, color: C.text, lineHeight: 1.5 }}>{f.comment}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Projects */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
           <Folder size={14} color={C.muted} />
@@ -437,7 +491,7 @@ export default function TurmaAluno() {
                     </div>
                     <ChevronRight size={15} color={C.subtle} style={{ flexShrink: 0 }} />
                   </div>
-                  <InlineFeedback project={p} teacherId={user.id} />
+                  <InlineFeedback project={p} teacherId={user.id} onChange={reloadFeedback} />
                 </div>
               )
             })}
