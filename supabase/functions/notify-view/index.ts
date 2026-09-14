@@ -1,5 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { checkRateLimit, getCorsHeaders } from '../_shared/rateLimit.ts'
+import { checkRateLimit, getCorsHeaders, getAuthUser } from '../_shared/rateLimit.ts'
 
 const VALID_TYPES = ['PROJECT_VIEW', 'COMPANY_VIEW']
 const VALID_ROLES = ['empresa', 'recrutador', 'estudante', 'outro', '']
@@ -39,6 +39,12 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     )
 
+    // Se quem visita tem sessão (não é anónimo), guarda quem foi — usado só
+    // para mostrar avatares desfocados no check-in semanal, nunca o nome.
+    // Visitantes anónimos continuam totalmente sem identidade, como sempre.
+    const viewerUser = await getAuthUser(req)
+    let viewer_id: string | null = viewerUser?.id ?? null
+
     // Get project owner and name
     const { data: project } = await supabase
       .from('projects')
@@ -49,6 +55,7 @@ Deno.serve(async (req) => {
     if (!project?.user_id) return new Response(JSON.stringify({ ok: false }), { headers: corsHeaders })
 
     const user_id = project.user_id
+    if (viewer_id === user_id) viewer_id = null // não te mostres a ti próprio como visita
     const projectName = project.name || 'o teu projeto'
     const now = new Date()
 
@@ -98,6 +105,7 @@ Deno.serve(async (req) => {
       message,
       project_slug,
       read: false,
+      viewer_id,
     })
 
     return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders })

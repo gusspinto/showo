@@ -87,7 +87,7 @@ export default function Welcome() {
   useEffect(() => {
     if (loading) return
     if (!user) { navigate('/login', { replace: true }); return }
-    if (!needsRoleSelect) { navigate('/dashboard', { replace: true }); return }
+    if (!needsRoleSelect) { goToDashboardOrNovo(); return }
 
     // Seguimento do clique no botão do Google no /register (ver googleIntent
     // acima): o passo inicial já foi decidido no render. Aqui só falta o caso
@@ -100,9 +100,22 @@ export default function Welcome() {
     }
   }, [user, loading, needsRoleSelect, navigate])
 
+  // Quem ainda não tem projeto nenhum vai para /novo em vez da dashboard
+  // vazia — mesma correção do /register (commit ac07c2b), que nunca chegava
+  // a quem entra por "Continuar com Google" porque esse caminho passa todo
+  // por aqui, não por finishAccountSetup(). Confirmado com dados reais:
+  // 0 de 14 contas Google desde esse fix criaram algum projeto.
+  async function goToDashboardOrNovo() {
+    const { count } = await supabase
+      .from('projects')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+    navigate(count ? '/dashboard' : '/novo', { replace: true })
+  }
+
   function finishAsAluno() {
     if (flagKey) localStorage.removeItem(flagKey)
-    navigate('/dashboard', { replace: true })
+    goToDashboardOrNovo()
   }
 
   function selectCategory(catId) {

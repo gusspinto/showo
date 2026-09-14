@@ -332,12 +332,15 @@ export default function Register() {
 
     setLoading(false)
     const primaryClaimed = claimSlug || claimedSlugs[0]
-    // Alunos (individual ou institucional) sem projeto nenhum vão direto para
+    // Quem não é professor e ainda não tem projeto nenhum vai direto para
     // /novo em vez da dashboard vazia — é o mesmo problema de ativação que
-    // levava a muitas contas nunca criarem um projeto. Quem já reclamou um
-    // projeto anónimo, ou veio de um ?next explícito, segue esse caminho.
-    const isStudentSignup = effectiveRole === 'aluno'
-    const destination = nextPath ?? (isStudentSignup && !primaryClaimed ? '/novo' : '/dashboard')
+    // levava a muitas contas nunca criarem um projeto, e que continuava a
+    // acontecer aos novos públicos (freelancers, profissionais) depois da
+    // expansão para lá de estudantes. Professor fica de fora: gere turmas,
+    // não cria projeto próprio. Quem já reclamou um projeto anónimo, ou veio
+    // de um ?next explícito, segue esse caminho.
+    const createsOwnProject = effectiveRole !== 'professor'
+    const destination = nextPath ?? (createsOwnProject && !primaryClaimed ? '/novo' : '/dashboard')
     navigate(destination, primaryClaimed ? { state: { claimedSlug: primaryClaimed } } : undefined)
   }
 
