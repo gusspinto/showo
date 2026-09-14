@@ -19,6 +19,16 @@ export function trackPageview(path) {
   posthog.capture('$pageview', { $current_url: path })
 }
 
+// Funil de registo → primeiro projeto. Funciona também para visitantes sem
+// conta (distinct_id anónimo do PostHog) — ao contrário de funnel_events na
+// base de dados, que exige auth.uid() e por isso não serve para medir onde
+// se perde gente ANTES de ter conta, que é exatamente o troço que falta ver
+// desde que /novo passou a aceitar visitantes sem sessão.
+export function trackEvent(name, props = {}) {
+  if (!analyticsEnabled) return
+  posthog.capture(name, props)
+}
+
 export function identifyUser(user, profile) {
   if (!analyticsEnabled || !user) return
   posthog.identify(user.id, { role: profile?.role })

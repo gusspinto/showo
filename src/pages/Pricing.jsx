@@ -45,7 +45,8 @@ const PLANS = [
         ],
       },
       {
-        label: 'IA (limitada por mês)',
+        label: 'IA',
+        ai: true,
         items: [
           { label: 'Coach IA', value: '10 msgs' },
           { label: 'Criar projeto com IA', value: '3x' },
@@ -77,6 +78,13 @@ const PLANS = [
         items: [
           { label: 'Base de dados + API do projeto', value: '2 tabelas' },
           { label: '15 projetos' },
+          { label: 'Recap semanal' },
+        ],
+      },
+      {
+        label: 'IA',
+        ai: true,
+        items: [
           { label: 'Coach IA', value: '100 msgs' },
           { label: 'Criar com IA', value: '15x' },
           { label: 'Entrevista guiada', value: '15x' },
@@ -87,7 +95,6 @@ const PLANS = [
           { label: 'Treino de defesa', value: '5x' },
           { label: 'Carta de apresentação', value: '5x' },
           { label: 'Exportar PowerPoint', value: '15x' },
-          { label: 'Recap semanal' },
         ],
       },
     ],
@@ -109,11 +116,17 @@ const PLANS = [
         items: [
           { label: 'Base de dados + API do projeto', value: '8 tabelas' },
           { label: 'Projetos ilimitados' },
+          { label: 'Portfólio pro com link limpo' },
+          { label: 'Página de estágio' },
+        ],
+      },
+      {
+        label: 'IA',
+        ai: true,
+        items: [
           { label: 'Coach IA', value: '300 msgs' },
           { label: 'Todas as features IA', value: '25x' },
           { label: 'Exportar PowerPoint', value: 'ilimitado' },
-          { label: 'Portfólio pro com link limpo' },
-          { label: 'Página de estágio' },
         ],
       },
     ],
@@ -346,7 +359,13 @@ export default function Pricing() {
 
                 {plan.groups.map(group => (
                   <div key={group.label} className="pricing-group">
-                    {!plan.inherits && <span className="pricing-group-label">{group.label}</span>}
+                    {group.ai ? (
+                      <span className="pricing-group-label">
+                        <span className="pricing-ai-badge">IA</span> limitada por mês
+                      </span>
+                    ) : !plan.inherits && (
+                      <span className="pricing-group-label">{group.label}</span>
+                    )}
                     <ul className="pricing-list">
                       {group.items.map(item => (
                         <li key={item.label} className="pricing-item">

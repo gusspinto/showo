@@ -275,21 +275,24 @@
   cursor: pointer;
 }
 
-/* "Continuar a explorar" — a saída que o Claude não dá. */
-.home-start-explore {
-  width: 100%; min-height: 48px; margin-top: 14px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.14);
+/* "Começar a criar" — ao contrário do antigo "Continuar a explorar" (saída
+   passiva, sem conta), isto leva a /novo, que já aceita visitantes sem
+   conta até ao momento de gerar/guardar. Não faz sentido escondê-lo como
+   um link secundário: merece o mesmo peso do "Continuar com email". */
+.home-start-create-btn {
+  width: 100%; min-height: 50px; margin-top: 10px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
   border-radius: var(--radius-md);
   color: #fff;
-  font-family: inherit; font-size: 14px; font-weight: 600;
+  font-family: inherit; font-size: 15px; font-weight: 700;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: background 0.15s;
+  transition: background 0.15s, transform 0.1s var(--ease-out);
 }
-.home-start-explore:active { background: rgba(255,255,255,0.1); }
+.home-start-create-btn:active { transform: scale(0.96); background: rgba(255,255,255,0.16); }
 @media (hover: hover) {
-  .home-start-explore:hover { background: rgba(255,255,255,0.09); }
+  .home-start-create-btn:hover { background: rgba(255,255,255,0.16); border-color: rgba(255,255,255,0.3); }
 }
 
 /* ══ PROJECTS SECTION ══ */
