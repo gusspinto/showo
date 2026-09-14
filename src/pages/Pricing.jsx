@@ -200,6 +200,74 @@ const PLATFORM_FEATURES = [
   { Icon: BookOpen, title: 'Biblioteca', desc: 'Recursos e exemplos para consultar sempre que precisares de referência.' },
 ]
 
+/* Testemunhos reais de alunos que já usam a plataforma — texto e autoria
+   tal como foram dados pelos próprios, sem fotos (não temos os ficheiros),
+   por isso o avatar é a inicial do nome, como já se faz nos comentários
+   (ver ProjectComments.jsx). */
+const TESTIMONIALS = [
+  {
+    quote: 'A vida universitária ficou mais leve com a qualidade e desenvolvimento desta plataforma. Não há desculpas agora para não concluir desafios académicos!',
+    name: 'Sara Silva',
+    role: 'Finalista na Faculdade de Direito da Universidade de Coimbra',
+  },
+  {
+    quote: 'Era esta a ferramenta que me faltava para os meus estudos. Bastante alinhado com as necessidades dos alunos.',
+    name: 'Maria Eduarda',
+    role: 'Estudante de Engenharia da Computação e Engenharia de Software — Natixis',
+  },
+  {
+    quote: 'Para alguém que fez PAP e queria usá-la para exposição, esta app é um gamechanger para estudantes na mesma situação.',
+    name: 'Rafael Matos',
+    role: 'Estudante de Engenharia Informática da Universidade de Aveiro',
+  },
+  {
+    quote: 'Parabéns pela plataforma! Acho que é algo necessário e inovador.',
+    name: 'Martim Gonçalves',
+    role: 'Estudante de Multimédia da Universidade da Maia e Videógrafo/Fotógrafo',
+  },
+  {
+    quote: 'Na minha opinião, um dos pontos mais fortes da plataforma é a Defesa. A organização e preparação torna tudo mais interativo e envolvente.',
+    name: 'Rita Sousa',
+    role: 'Estudante na Escola Profissional Bento de Jesus Caraça',
+  },
+  {
+    quote: 'Uma ideia bastante interessante e bem estruturada, que permite aos alunos criar portfólios e valorizar os seus projetos e competências.',
+    name: 'Duarte Leal',
+    role: 'Estudante na Escola Profissional Bento de Jesus Caraça',
+  },
+  {
+    quote: 'Gostei da ideia da plataforma. O design é apelativo e faz querer explorar mais. Acho que vai ajudar bastante a quem tem projetos e ideias, tanto a nível escolar como profissional.',
+    name: 'Rafael Carvalho',
+    role: 'Estudante no Instituto Superior Politécnico Gaya',
+  },
+]
+
+function testimonialInitials(name) {
+  return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()
+}
+
+const AVATAR_COLORS = ['#2B7EF5', '#D64550', '#D4A017', '#2a9d6a']
+
+function TestimonialCard({ quote, name, role, index }) {
+  return (
+    <figure className="pricing-testimonial-card">
+      <blockquote className="pricing-testimonial-quote">“{quote}”</blockquote>
+      <figcaption className="pricing-testimonial-author">
+        <span
+          className="pricing-testimonial-avatar"
+          style={{ background: AVATAR_COLORS[index % AVATAR_COLORS.length] }}
+        >
+          {testimonialInitials(name)}
+        </span>
+        <span>
+          <strong>{name}</strong>
+          <span className="pricing-testimonial-role">{role}</span>
+        </span>
+      </figcaption>
+    </figure>
+  )
+}
+
 const FAQ = [
   {
     q: 'O que acontece quando esgoto os limites de um mês?',
@@ -394,6 +462,14 @@ export default function Pricing() {
         <p className="pricing-foot">
           Muda ou cancela quando quiseres. Contas de escola têm acesso incluído para todos os alunos.
         </p>
+
+        {/* ══════════════ TESTEMUNHOS ══════════════ */}
+        <section className="pricing-section">
+          <h2 className="pricing-section-title">Quem já usa</h2>
+          <div className="pricing-testimonials-grid">
+            {TESTIMONIALS.map((t, i) => <TestimonialCard key={t.name} {...t} index={i} />)}
+          </div>
+        </section>
 
         {/* ══════════════ TABELA COMPARATIVA ══════════════ */}
         <section className="pricing-section">
