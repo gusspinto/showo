@@ -1751,6 +1751,14 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               <ArrowLeft size={16} />
               <span className="pmf-tooltip">Ver projeto</span>
             </button>
+          ) : extras.editingAppearance ? (
+            // A editar a aparência, este botão já não abre o "Editar" —
+            // fecha de volta para lá. Ícone de X, não lápis, para não
+            // parecer que ainda estamos à procura de onde editar.
+            <button className="pmf-btn" aria-label="Fechar" onClick={() => navigate(`/editar/${extras.slug}`)}>
+              <X size={16} />
+              <span className="pmf-tooltip">Fechar</span>
+            </button>
           ) : (
             <button className="pmf-btn" aria-label="Editar" onClick={() => navigate(`/editar/${extras.slug}`)}>
               <Pencil size={16} />
