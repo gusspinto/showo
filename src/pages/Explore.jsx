@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { getVisitorCity } from '../lib/geolocation'
+import { getAreaColor } from '../lib/areaColor'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
@@ -52,15 +53,6 @@ const TYPE_COLORS = {
   personal:    'var(--color-primary)',
   competition: 'var(--color-error)',
   presentation:'var(--color-accent)',
-}
-
-function getAreaColor(area) {
-  const a = (area || '').toLowerCase()
-  if (a.includes('educa')) return 'var(--color-info-subtle)'
-  if (a.includes('comercial') || a.includes('marketing') || a.includes('vendas')) return 'var(--color-primary-subtle)'
-  if (a.includes('tecnolog') || a.includes('informátic') || a.includes('programaç') || a.includes('software')) return 'var(--color-surface-alt)'
-  if (a.includes('saúde') || a.includes('saude') || a.includes('medical') || a.includes('bio')) return 'var(--color-success-subtle)'
-  return 'var(--color-surface-alt)'
 }
 
 function SelectFilter({ value, onChange, options, label }) {

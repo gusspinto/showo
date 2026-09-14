@@ -127,13 +127,14 @@
    só que fora do cartão, como segunda opção e não a mesma coisa. */
 .np-alt-path {
   display: flex; align-items: center; justify-content: center;
-  width: 100%; padding: 15px 0;
+  width: 100%; padding: 15px 0; margin-top: 10px;
   background: var(--color-text); color: var(--color-bg);
   border: none; border-radius: var(--radius-lg);
   font-size: 15px; font-weight: 700; cursor: pointer;
   font-family: inherit; -webkit-tap-highlight-color: transparent;
   transition: opacity 0.15s, transform 0.1s;
 }
+.np-alt-path:first-child { margin-top: 0; }
 .np-alt-path:hover:not(:disabled) { opacity: 0.88; }
 .np-alt-path:active:not(:disabled) { transform: scale(0.96); }
 .np-alt-path:disabled {

@@ -11,6 +11,8 @@ import { claimAnonymousProjects } from '../lib/claimAnonymousProjects'
 import GoogleButton from '../components/GoogleButton'
 import HomeHow from '../components/HomeHow'
 import { useAuth } from '../context/AuthContext'
+import { getAreaColor } from '../lib/areaColor'
+import { trackEvent } from '../lib/analytics'
 import './Home.css'
 
 const TITLE_FONT_CSS = {
@@ -174,10 +176,12 @@ export default function Home() {
       // baixo, rede — não podemos deixar a pessoa presa: seguimos para o
       // registo, que é o caminho seguro (se o email já existir, o signUp
       // diz "já registado" e a pessoa vai para o login).
+      trackEvent('home_email_signup_started')
       navigate(`/register?email=${encodeURIComponent(email.trim())}`)
       return
     }
     if (!methods?.exists) {
+      trackEvent('home_email_signup_started')
       navigate(`/register?email=${encodeURIComponent(email.trim())}`)
     } else if (!methods.has_password && methods.has_google) {
       // Conta só-Google: não tem palavra-passe, o signInWithPassword ia
@@ -308,8 +312,8 @@ export default function Home() {
                 <button type="submit" className="home-start-email-btn" disabled={authLoading}>
                   {authLoading ? 'A verificar…' : 'Continuar com email'}
                 </button>
-                <button type="button" className="home-start-explore" onClick={() => navigate('/explorar')}>
-                  Continuar a explorar
+                <button type="button" className="home-start-create-btn" onClick={() => { trackEvent('home_create_clicked'); navigate('/novo') }}>
+                  Começar a criar
                 </button>
               </form>
             ) : (
@@ -470,7 +474,7 @@ export default function Home() {
                   className="home-card-cover"
                   style={{
                     height: p.cover_url ? 120 : 72,
-                    background: p.cover_url ? undefined : (AREA_COLORS[p.area] || 'var(--color-primary)'),
+                    background: p.cover_url ? undefined : getAreaColor(p.area),
                     padding: p.cover_url ? 0 : '0 16px',
                   }}
                 >

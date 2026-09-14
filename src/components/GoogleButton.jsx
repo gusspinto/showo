@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { trackEvent } from '../lib/analytics'
 
 // Google's 4-colour "G" mark (official proportions).
 function GoogleG({ size = 18 }) {
@@ -35,6 +36,7 @@ export default function GoogleButton({ label = 'Continuar com Google', redirectT
   const s = VARIANTS[variant] ?? VARIANTS.default
 
   async function go() {
+    trackEvent('google_auth_clicked', { intent: intent?.role || null })
     setErr('')
     setLoading(true)
     // Carrega o papel/categoria escolhidos no /register através do redirect do

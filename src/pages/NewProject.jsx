@@ -17,6 +17,7 @@ import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { Toast, useToast } from '../components/Toast'
 import { PlanGateModal, AiUsageBadge } from '../components/PlanGate'
+import { trackEvent } from '../lib/analytics'
 import './NewProject.css'
 
 /* "Pessoal" vem primeiro e sozinho — é o caminho de quem usa a conta
@@ -31,12 +32,16 @@ const PROJECT_TYPES = [
   { id: 'pap',      label: 'PAP', group: 'school' },
 ]
 
+/* Mínimos baixos de propósito — dados reais mostram 76% dos alunos que se
+   registam nunca chegam a criar projeto, e um preenchimento da IA que
+   fique um pouco curto não pode ser motivo para travar aqui. É melhor
+   deixar passar um "Objetivo" de 10 caracteres do que perder a pessoa. */
 const REVIEW_FIELDS = [
-  { key: 'name',            label: 'Nome do projeto',      multiline: false, required: true,  minLen: 3  },
-  { key: 'area',            label: 'Área',                 multiline: false, required: true,  minLen: 3  },
-  { key: 'goal',            label: 'Objetivo',             multiline: true,  required: true,  minLen: 30 },
-  { key: 'problem',         label: 'Problema que resolve', multiline: true,  required: true,  minLen: 40 },
-  { key: 'solution',        label: 'Como resolve',         multiline: true,  required: true,  minLen: 40 },
+  { key: 'name',            label: 'Nome do projeto',      multiline: false, required: true,  minLen: 2  },
+  { key: 'area',            label: 'Área',                 multiline: false, required: true,  minLen: 2  },
+  { key: 'goal',            label: 'Objetivo',             multiline: true,  required: true,  minLen: 10 },
+  { key: 'problem',         label: 'Problema que resolve', multiline: true,  required: true,  minLen: 10 },
+  { key: 'solution',        label: 'Como resolve',         multiline: true,  required: true,  minLen: 10 },
   { key: 'features',        label: 'Funcionalidades',      multiline: true,  required: false, minLen: 20 },
   { key: 'target_audience', label: 'Público-alvo',         multiline: true,  required: false, minLen: 20 },
   { key: 'technologies',    label: 'Tecnologias',          multiline: false, required: false, minLen: 5, skippable: true },
@@ -178,6 +183,9 @@ export default function NewProject() {
      também aterra aqui; é ignorado de propósito, não precisa de fazer nada. */
   const [step, setStep] = useState('choose')
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { trackEvent('novo_viewed', { logged_in: !!user }) }, [])
+
   /* As edge functions de IA exigem sessão. Sem conta, o fluxo dava erro
      genérico já dentro do passo de análise — depois de o aluno escrever a
      descrição ou escolher os ficheiros. Pedimos a conta à entrada e
@@ -193,6 +201,7 @@ export default function NewProject() {
   const [error, setError] = useState(null)
   const [interviewData, setInterviewData] = useState(null)
   const [gateMsg, setGateMsg] = useState(null)
+  const [isManual, setIsManual] = useState(false)
 
   /* Adicionar — enviar um trabalho já feito */
   const [files, setFiles] = useState([])
@@ -249,6 +258,20 @@ export default function NewProject() {
     return true
   }
 
+  /* ── Preencher à mão, sem IA ── Escape hatch para quando a IA falha (ou a
+     pessoa prefere logo assim): usa a descrição como ponto de partida do
+     nome e avança direto para a revisão, com os campos vazios por preencher
+     — os mínimos de REVIEW_FIELDS já são baixos o suficiente para isto ser
+     rápido. Sem isto, uma falha da IA aqui era um beco sem saída. */
+  function startManual() {
+    if (requireAccount('/novo')) return
+    trackEvent('novo_manual_started')
+    setForm({ name: description.trim().slice(0, 60), project_type: projectType })
+    setError(null)
+    setIsManual(true)
+    setStep('review')
+  }
+
   /* ── Gerar a partir de uma descrição ── */
   async function handleGenerate() {
     if (!description.trim()) return
@@ -263,12 +286,25 @@ export default function NewProject() {
       const { data, error: fnErr } = await supabase.functions.invoke('prefill-project', {
         body: { text: description, projectType },
       })
-      if (fnErr) throw new Error()
+      if (fnErr) {
+        // supabase-js devolve data:null num non-2xx — o erro real está no
+        // corpo da resposta, dentro do FunctionsHttpError.
+        let body = null
+        try { body = await fnErr.context?.json?.() } catch { /* ignore */ }
+        throw new Error(body?.error || 'generate_failed')
+      }
       consumeAI('createProject')
       setForm({ ...(data?.prefill ?? {}), project_type: projectType })
+      setIsManual(false)
+      trackEvent('novo_ai_generate_result', { ok: true })
       setStep('review')
-    } catch {
-      setError('Não foi possível gerar. Tenta novamente.')
+    } catch (err) {
+      trackEvent('novo_ai_generate_result', { ok: false, reason: err.message || 'unknown' })
+      setError(
+        err.message === 'generate_failed' || !err.message
+          ? 'Não foi possível gerar agora. Podes tentar de novo, ou preencher o projeto à mão.'
+          : err.message
+      )
       setStep('describe')
     }
   }
@@ -291,7 +327,7 @@ export default function NewProject() {
       setInterviewData({ ...data, projectType })
       setStep('interview')
     } catch {
-      setError('Não foi possível iniciar a entrevista. Tenta novamente.')
+      setError('Não foi possível iniciar a entrevista agora. Podes tentar de novo, ou preencher o projeto à mão.')
       setStep('describe')
     }
   }
@@ -363,6 +399,7 @@ export default function NewProject() {
       setImportSummary(data?.summary ?? null)
       setImportMissing(Array.isArray(data?.missing) ? data.missing : [])
       setSkippedFields(new Set())
+      setIsManual(false)
       setStep('review')
     } catch (err) {
       setError(
@@ -493,6 +530,7 @@ export default function NewProject() {
         parentProjectId: asAttachment ? parentId : null,
       })
       if (user?.id) localStorage.setItem(`edit_token_${project.slug}`, project.edit_token)
+      trackEvent('project_created', { manual: isManual, attachment: asAttachment })
 
       // Veio de um ficheiro? Anexa o original ao projeto — fica transferível
       // e serve de fonte. Não bloqueia a navegação.
@@ -536,7 +574,15 @@ export default function NewProject() {
   }
 
   const canSubmit = REVIEW_FIELDS.filter(f => f.required)
-    .every(f => (form[f.key] ?? '').trim().length >= (f.minLen ?? 1))
+    .every(f => {
+      const v = (form[f.key] ?? '').trim()
+      if (v.length < (f.minLen ?? 1)) return false
+      // Nome tem de ter pelo menos uma letra — evita nomes como "." ou "..."
+      // que passavam no mínimo de caracteres mas ficam ilegíveis em toda a
+      // app (avatar, cartões, etc.).
+      if (f.key === 'name' && !/\p{L}/u.test(v)) return false
+      return true
+    })
 
   const filledCount = REVIEW_FIELDS.filter(f => (form[f.key] ?? '').trim().length > 0).length
 
@@ -633,6 +679,9 @@ export default function NewProject() {
             <button className="np-alt-path" onClick={handleInterview} disabled={!description.trim()}>
               Responder a perguntas guiadas
             </button>
+            <button className="np-alt-path" onClick={startManual}>
+              Prefiro preencher à mão
+            </button>
             <AiUsageBadge feature="createProject" style={{ marginTop: 8 }} />
           </div>
         </div>
@@ -673,6 +722,7 @@ export default function NewProject() {
               data={interviewData}
               onComplete={answers => {
                 setForm({ ...Object.fromEntries(Object.entries(answers).filter(([, v]) => v)), project_type: interviewData.projectType })
+                setIsManual(false)
                 setStep('review')
               }}
             />
@@ -693,7 +743,9 @@ export default function NewProject() {
       <div className="np-center np-center--review">
         <div className="np-wrap np-wrap--review">
           <StepBar current={3} total={3} label="Rever" />
-          <h2 className="np-headline np-headline--sm">{importSummary ? 'Isto foi o que a IA encontrou.' : 'Parece bem?'}</h2>
+          <h2 className="np-headline np-headline--sm">
+            {importSummary ? 'Isto foi o que a IA encontrou.' : isManual ? 'Vamos a isso.' : 'Parece bem?'}
+          </h2>
 
           {importSummary && (
             <div className="np-import-summary">
@@ -1039,6 +1091,9 @@ function ReviewField({ field, value, isEditing, editValue, onEdit, onEditValueCh
           )}
           {field.minLen && editValue.trim().length < field.minLen && (
             <p className="np-field-hint">Mínimo {field.minLen} caracteres · {editValue.trim().length}/{field.minLen}</p>
+          )}
+          {field.key === 'name' && editValue.trim().length >= (field.minLen ?? 1) && !/\p{L}/u.test(editValue.trim()) && (
+            <p className="np-field-hint">Tem de incluir pelo menos uma letra</p>
           )}
           {field.skippable && (
             <button

@@ -562,7 +562,7 @@ function OnboardingModal({ user, profile, onDismiss, onCreateTurma }) {
               </p>
             </div>
             <Button fullWidth iconRight={<ArrowRight size={15} />} onClick={handleCta}>{cfg.cta}</Button>
-            <Button variant="secondary" fullWidth onClick={onDismiss} style={{ marginTop: 'var(--sp-2)' }}>Explorar primeiro</Button>
+            <button onClick={onDismiss} style={{ display: 'block', width: '100%', background: 'none', border: 'none', color: 'var(--color-text-tertiary)', fontSize: 'var(--text-base)', cursor: 'pointer', marginTop: 14, fontFamily: 'inherit', padding: 0 }}>Explorar primeiro</button>
           </>
         )}
         <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 20 }}>
