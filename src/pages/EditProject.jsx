@@ -28,6 +28,7 @@ import { logFieldsFilled } from '../lib/autoJournal'
 import { parseGithubRepo, syncGithub, removeGithubEntries, topLanguages, commitSpanMonths, repoAgeMonths, shareOnLinkedIn } from '../lib/social'
 import { DatabaseIcon as Database } from '@solar-icons/react/bold/database'
 import { PaintRollerIcon as Paintbrush } from '@solar-icons/react/bold/paint-roller'
+import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
 import { AddCircleIcon as PlusCircle } from '@solar-icons/react/bold/add-circle'
 import { GlobeIcon as Globe } from '@solar-icons/react/bold/globe'
 import { EyeClosedIcon as EyeOff } from '@solar-icons/react/bold/eye-closed'
@@ -1246,6 +1247,8 @@ function DataTableCard({ project, table, expanded, onToggleExpand, onChanged }) 
 function RowsPanel({ project, table, onChanged }) {
   const [rows, setRows] = useState(null)
   const [showForm, setShowForm] = useState(false)
+  // null = a criar linha nova; um id = a editar essa linha existente.
+  const [editingId, setEditingId] = useState(null)
   const [form, setForm] = useState({})
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState(null)
@@ -1258,22 +1261,36 @@ function RowsPanel({ project, table, onChanged }) {
   }
   useEffect(() => { load() }, [table.id])
 
-  async function handleAdd() {
+  function openNewForm() {
+    setEditingId(null); setForm({}); setErr(null); setShowForm(true)
+  }
+  function openEditForm(row) {
+    setEditingId(row.id); setForm({ ...row.data }); setErr(null); setShowForm(true)
+  }
+
+  async function handleSave() {
     setErr(null); setSaving(true)
     try {
-      await ProjectDb.insertRow(project.id, table.id, form)
-      setForm({}); setShowForm(false)
+      if (editingId) await ProjectDb.updateRow(project.id, table.id, editingId, form)
+      else await ProjectDb.insertRow(project.id, table.id, form)
+      setForm({}); setShowForm(false); setEditingId(null)
       await load(); onChanged()
     } catch (e) { setErr(e.message) }
     setSaving(false)
   }
 
   async function handleDeleteRow(rowId) {
-    try { await ProjectDb.deleteRow(project.id, table.id, rowId); await load(); onChanged() } catch {}
+    try {
+      await ProjectDb.deleteRow(project.id, table.id, rowId)
+      if (editingId === rowId) { setShowForm(false); setEditingId(null) }
+      await load(); onChanged()
+    } catch {}
   }
 
   if (rows === null) return <p style={{ fontSize: 12.5, color: colors.subtle, margin: 0 }}>A carregar linhas…</p>
 
+  // Nomes de coluna como cabeçalho, não só os valores em fila — para
+  // parecer uma app com dados a sério, não uma lista de debug.
   return (
     <div>
       {rows.length === 0 ? (
@@ -1281,11 +1298,27 @@ function RowsPanel({ project, table, onChanged }) {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
           {rows.map(r => (
-            <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 8, padding: '8px 10px' }}>
-              <div style={{ flex: 1, fontSize: 12.5, color: colors.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {table.columns.map(c => r.data[c.name]).filter(v => v !== undefined && v !== '').join(' · ') || <span style={{ color: colors.subtle }}>(vazio)</span>}
+            <div
+              key={r.id}
+              onClick={() => openEditForm(r)}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 8, padding: '8px 10px', cursor: 'pointer' }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = colors.borderBright}
+              onMouseLeave={e => e.currentTarget.style.borderColor = colors.border}
+            >
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', flexWrap: 'wrap', gap: '2px 14px' }}>
+                {table.columns.map(c => {
+                  const v = r.data[c.name]
+                  if (v === undefined || v === '') return null
+                  return (
+                    <span key={c.name} style={{ fontSize: 12.5, color: colors.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 220 }}>
+                      <span style={{ color: colors.subtle }}>{c.name}: </span>
+                      {typeof v === 'boolean' ? (v ? 'Sim' : 'Não') : String(v)}
+                    </span>
+                  )
+                })}
               </div>
-              <button type="button" onClick={() => handleDeleteRow(r.id)} style={{ background: 'none', border: 'none', color: colors.subtle, cursor: 'pointer', padding: 2, flexShrink: 0 }}><Trash2 size={13} /></button>
+              <Pencil size={12} color={colors.subtle} style={{ flexShrink: 0 }} />
+              <button type="button" onClick={e => { e.stopPropagation(); handleDeleteRow(r.id) }} style={{ background: 'none', border: 'none', color: colors.subtle, cursor: 'pointer', padding: 2, flexShrink: 0 }}><Trash2 size={13} /></button>
             </div>
           ))}
         </div>
@@ -1293,6 +1326,9 @@ function RowsPanel({ project, table, onChanged }) {
 
       {showForm ? (
         <div style={{ background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 8, padding: 12 }}>
+          {editingId && (
+            <p style={{ margin: '0 0 10px', fontSize: 11.5, color: colors.subtle, fontWeight: 600 }}>A editar linha existente</p>
+          )}
           {table.columns.map(c => (
             <div key={c.name} style={{ marginBottom: 8 }}>
               <label style={{ fontSize: 10.5, fontWeight: 600, color: colors.subtle, textTransform: 'uppercase', letterSpacing: 0.4, display: 'block', marginBottom: 4 }}>
@@ -1313,16 +1349,16 @@ function RowsPanel({ project, table, onChanged }) {
           ))}
           {err && <p style={{ margin: '0 0 8px', fontSize: 12, color: colors.red }}>{err}</p>}
           <div style={{ display: 'flex', gap: 6 }}>
-            <button type="button" onClick={handleAdd} disabled={saving} style={{ background: colors.blue, color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-              {saving ? 'A guardar…' : 'Guardar linha'}
+            <button type="button" onClick={handleSave} disabled={saving} style={{ background: colors.blue, color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+              {saving ? 'A guardar…' : editingId ? 'Guardar alterações' : 'Guardar linha'}
             </button>
-            <button type="button" onClick={() => { setShowForm(false); setErr(null) }} style={{ background: 'none', border: `1px solid ${colors.border}`, borderRadius: 6, padding: '6px 14px', fontSize: 12.5, fontWeight: 600, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit' }}>
+            <button type="button" onClick={() => { setShowForm(false); setEditingId(null); setErr(null) }} style={{ background: 'none', border: `1px solid ${colors.border}`, borderRadius: 6, padding: '6px 14px', fontSize: 12.5, fontWeight: 600, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit' }}>
               Cancelar
             </button>
           </div>
         </div>
       ) : (
-        <button type="button" onClick={() => setShowForm(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: `1px dashed ${colors.border}`, borderRadius: 7, padding: '7px 12px', fontSize: 12.5, fontWeight: 600, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit' }}>
+        <button type="button" onClick={openNewForm} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: `1px dashed ${colors.border}`, borderRadius: 7, padding: '7px 12px', fontSize: 12.5, fontWeight: 600, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit' }}>
           <PlusCircle size={13} /> Adicionar linha
         </button>
       )}
