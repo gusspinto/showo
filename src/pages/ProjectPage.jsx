@@ -24,6 +24,7 @@ import { useTheme } from '../context/ThemeContext'
 const DefenseMode = lazy(() => import('../components/DefenseMode'))
 import ProjectComments from '../components/ProjectComments'
 import ProjectTimeline from '../components/ProjectTimeline'
+import ProjectTimelineBadge from '../components/ProjectTimelineBadge'
 import { ShareStoryModal } from '../components/ShareStoryModal'
 import { logFieldFilled } from '../lib/autoJournal'
 import { analyzeProject } from '../lib/analyzeProject'
@@ -103,6 +104,7 @@ const ANON_PROJECT_COLUMNS = [
   'visibility', 'edit_token', 'notified_milestones',
   'library_file_url', 'library_file_name', 'library_file_type', 'parent_project_id',
   'github_stats', 'github_synced_at', 'timeline_public',
+  'project_started_on', 'project_finished_on',
 ].join(', ')
 // timeline_public entrou aqui porque o RPC get_project_timeline só protege
 // os DADOS da timeline — o componente ProjectTimeline também lê este campo
@@ -2139,6 +2141,8 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
               {customTagline || project.ai_tagline}
             </p>
           )}
+
+          {!isOwner && <ProjectTimelineBadge project={project} />}
 
           {/* Creator pill */}
           {displayName && (
