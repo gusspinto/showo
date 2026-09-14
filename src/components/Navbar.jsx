@@ -1788,7 +1788,12 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               <span className="pmf-tooltip">Partilhar nas stories</span>
             </button>
           )}
-          {extras.onTogglePublicView && (
+          {/* Escondido enquanto se edita a aparência (chegou via ?workspace=1)
+              — este botão era só confusão ali: mostrava-se como "pincel"
+              destacado, sem se perceber porquê, ao lado de um "Editar" que
+              já faz a mesma coisa (volta para /editar/:slug). Preview a
+              sério continua disponível fora deste modo. */}
+          {extras.onTogglePublicView && !(extras.editingAppearance && extras.viewAsPublic) && (
             <>
               <div className="pmf-divider" />
               <button
@@ -1808,10 +1813,8 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   e.currentTarget.style.setProperty('--oy', '0px')
                 }}
               >
-                {extras.editingAppearance && extras.viewAsPublic ? <Paintbrush size={16} /> : <Globe size={16} />}
-                <span className="pmf-tooltip">
-                  {extras.editingAppearance && extras.viewAsPublic ? 'Fechar editor' : extras.viewAsPublic ? 'Sair preview' : 'Preview visitante'}
-                </span>
+                <Globe size={16} />
+                <span className="pmf-tooltip">{extras.viewAsPublic ? 'Sair preview' : 'Preview visitante'}</span>
               </button>
             </>
           )}
