@@ -337,6 +337,42 @@
   color: var(--color-text);
 }
 
+/* ── Testemunhos ── */
+.pricing-testimonials-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+.pricing-testimonial-card {
+  display: flex; flex-direction: column; gap: 16px;
+  margin: 0;
+  padding: 20px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+.pricing-testimonial-quote {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.55;
+  color: var(--color-text);
+}
+.pricing-testimonial-author {
+  display: flex; align-items: center; gap: 10px;
+  margin-top: auto;
+  font-size: var(--text-xs);
+}
+.pricing-testimonial-author strong { display: block; color: var(--color-text); font-weight: 600; }
+.pricing-testimonial-role { display: block; color: var(--color-text-secondary); }
+.pricing-testimonial-avatar {
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  font-size: 12px; font-weight: 700;
+  color: #fff;
+}
+
 /* ── FAQ ── */
 .pricing-faq { display: flex; flex-direction: column; gap: 8px; }
 .pricing-faq-item {
@@ -363,5 +399,6 @@
 
 @media (max-width: 700px) {
   .pricing-platform-grid { grid-template-columns: 1fr; }
+  .pricing-testimonials-grid { grid-template-columns: 1fr; }
   .pricing-section { margin-top: 52px; }
 }
