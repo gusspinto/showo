@@ -94,7 +94,7 @@
 .up-name {
   color: var(--color-text);
   font-size: 24px;
-  font-weight: 400;
+  font-weight: 600;
   margin: 0;
   letter-spacing: -0.4px;
   line-height: 1.2;
@@ -338,13 +338,6 @@
 .up-icon-btn.up-personalize:focus-visible {
   outline: 2px solid var(--color-text);
   outline-offset: 2px;
-}
-
-@media (max-width: 600px) {
-  .up-head-actions .up-action-btn.primary {
-    flex: 1;
-    justify-content: center;
-  }
 }
 
 /* ── Section label ── */
@@ -895,42 +888,61 @@
 }
 
 @media (max-width: 600px) {
+  /* Cabeçalho mobile redesenhado como grid: avatar + ações lado a lado no
+     topo (o padrão de qualquer perfil social — LinkedIn, Twitter/X), nome
+     e bio a ganharem a largura toda por baixo, em vez de disputarem
+     espaço com os botões na mesma linha (o que cortava o nome cedo demais
+     e deixava o "· Ocupação" órfão quando o texto não coubesse ao lado).
+     `display: contents` nos wrappers intermédios (up-head-main,
+     up-head-top) é o que permite avatar/ações/identidade/bio partilharem
+     uma única grelha, sem mexer no JSX nem no layout de ecrã largo. */
   .up-head {
-    gap: 14px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      "avatar actions"
+      "identity identity"
+      "bio bio";
+    column-gap: 14px;
+    row-gap: 10px;
+    align-items: start;
     margin-top: 20px;
   }
+  .up-head-main { display: contents; }
+  .up-head-top { display: contents; }
 
   .up-avatar,
   .up-avatar-placeholder {
-    width: 68px;
-    height: 68px;
-    font-size: 26px;
+    grid-area: avatar;
+    width: 88px;
+    height: 88px;
+    font-size: 32px;
   }
   .page-content.has-banner .up-avatar,
   .page-content.has-banner .up-avatar-placeholder {
-    margin-top: -40px;
+    margin-top: -48px;
+  }
+
+  .up-head-actions {
+    grid-area: actions;
+    justify-content: flex-end;
+    align-self: center;
+  }
+
+  .up-head-identity {
+    grid-area: identity;
+    min-width: 0;
   }
 
   .up-name {
     font-size: 19px;
-  }
-  .up-occupation { font-size: 13.5px; }
-  .up-skills-section { margin-top: 32px; }
-
-  /* Os botões (Personalizar/Editar/etc.) ficam ao lado do nome, na mesma
-     linha do avatar — não empilhados por baixo do "@user · Ocupação",
-     onde ficavam espremidos contra a margem esquerda. Nome com ellipsis
-     para nunca empurrar os botões para fora do ecrã. */
-  .up-head-top {
-    gap: 10px;
-  }
-  .up-head-identity { flex: 1; }
-  .up-name {
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
   }
-  .up-head-actions {
-    justify-content: flex-end;
-  }
+  .up-occupation { font-size: 13.5px; }
+
+  .up-bio { grid-area: bio; }
+
+  .up-skills-section { margin-top: 32px; }
 
   .up-projects-grid,
   .up-skeleton-projects,
@@ -946,6 +958,7 @@
 
   .up-bio {
     font-size: 14px !important;
+    margin-top: 14px !important;
   }
 
   /* Alvos de toque — botões de ícone do dono (Personalizar, etc.) */
@@ -992,15 +1005,16 @@
   border-color: var(--up-accent);
 }
 
-/* ── Frase de topo: entre o nome e a meta. Secundária ao nome, mas o
-   "hook" de identidade — por isso não é itálico nem tão apagada como a meta. */
+/* ── Frase de topo: entre o nome e a meta. Mais forte que a bio por baixo
+   — lê-se como o "hook" de identidade, não como mais uma linha de texto
+   corrido igual à bio. */
 .up-headline {
   margin: 5px 0 0;
   max-width: 52ch;
   font-size: 15px;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1.45;
-  color: var(--color-text-secondary);
+  color: var(--color-text);
 }
 .up-headline + .up-meta-row {
   margin-top: 8px;
