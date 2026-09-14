@@ -440,10 +440,12 @@ export default function Register() {
         pending_partner_token: isPartnerFlow ? partnerToken : null,
         pending_phone: phone.trim() || null,
         // Capturados já aqui (não depois) porque sobrevivem em user_metadata
-        // mesmo que a confirmação de email demore — document.referrer só é
-        // válido agora, nesta carga de página, não quando a pessoa voltar.
-        pending_signup_referrer: document.referrer || null,
-        pending_signup_utm_source: new URLSearchParams(window.location.search).get('utm_source') || null,
+        // mesmo que a confirmação de email demore. Lidos do localStorage
+        // (gravado na primeira página vista, em App.jsx) e não de
+        // document.referrer/da URL atual — quem navegou dentro da Showo antes
+        // de chegar aqui já perdeu os dois.
+        pending_signup_referrer: localStorage.getItem('showo_referrer') || document.referrer || 'direct',
+        pending_signup_utm_source: localStorage.getItem('showo_utm_source') || new URLSearchParams(window.location.search).get('utm_source') || null,
       } },
     })
     if (err) {
