@@ -746,9 +746,11 @@ export default function UserProfile() {
                     <Palette size={15} />
                   </button>
                 )}
-                <button onClick={() => setShowQR(true)} className="up-icon-btn" title="QR Code" aria-label="QR Code">
-                  <QrCode size={15} />
-                </button>
+                {isOwnProfile && (
+                  <button onClick={() => setShowQR(true)} className="up-icon-btn" title="QR Code" aria-label="QR Code">
+                    <QrCode size={15} />
+                  </button>
+                )}
                 {!isOwnProfile && user && (
                   <button onClick={() => navigate(`/mensagens?to=${profile.id}`)} className="up-action-btn primary">
                     <MessageSquare size={13} /> Mensagem
