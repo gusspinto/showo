@@ -27,6 +27,7 @@ import { containsProfanity } from '../lib/profanity'
 import { logFieldsFilled } from '../lib/autoJournal'
 import { parseGithubRepo, syncGithub, removeGithubEntries, topLanguages, commitSpanMonths, repoAgeMonths, shareOnLinkedIn } from '../lib/social'
 import { DatabaseIcon as Database } from '@solar-icons/react/bold/database'
+import { PaintRollerIcon as Paintbrush } from '@solar-icons/react/bold/paint-roller'
 import { AddCircleIcon as PlusCircle } from '@solar-icons/react/bold/add-circle'
 import { GlobeIcon as Globe } from '@solar-icons/react/bold/globe'
 import { EyeClosedIcon as EyeOff } from '@solar-icons/react/bold/eye-closed'
@@ -351,6 +352,7 @@ export default function EditProject() {
     { id: 'criador',  label: 'Criador',  Icon: User,     filled: creatorFilled, total: creatorTotal },
     { id: 'tipo',     label: 'Tipo',     Icon: Layers,   filled: typeFilled,    total: typeTotal },
     { id: 'imagem',   label: 'Imagem',   Icon: Image,    filled: coverFilled,   total: 1 },
+    { id: 'aparencia', label: 'Aparência', Icon: Paintbrush, filled: 0,         total: 0 },
     { id: 'database', label: 'Base de dados', Icon: Database, filled: 0,        total: 0 },
     { id: 'avancado', label: 'Avançado', Icon: Settings, filled: 0,             total: 0 },
   ]
@@ -631,6 +633,10 @@ export default function EditProject() {
               )}
 
               {/* Avançado */}
+              {activeSection === 'aparencia' && (
+                <AppearanceSection project={project} navigate={navigate} />
+              )}
+
               {activeSection === 'avancado' && (
                 <AdvancedSection project={project} isOwner={isOwner} navigate={navigate} />
               )}
@@ -678,6 +684,37 @@ export default function EditProject() {
           {saving ? 'A guardar…' : 'Guardar'}
         </button>
       </div>
+    </div>
+  )
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   APARÊNCIA — o editor visual (cores, fontes, blocos, secções) vive na
+   própria página do projeto (a mesma que já desenha a pré-visualização ao
+   vivo), não é reconstruído aqui. Isto é só o atalho: só quem clicava em
+   "Preview visitante" primeiro é que o encontrava, o que não faz sentido
+   nenhum para quem vem a "Editar" à procura disto. `?workspace=1` abre-o
+   já pronto, sem passar pelo preview.
+   ══════════════════════════════════════════════════════════════════════════ */
+function AppearanceSection({ project, navigate }) {
+  return (
+    <div className="ep-sec-card">
+      <h2 className="ep-sec-heading">Aparência</h2>
+      <p style={{ margin: '0 0 20px', fontSize: 14, color: colors.muted, lineHeight: 1.6 }}>
+        Cores, fontes, fundo, blocos e a ordem das secções da página pública. Abre num editor visual, ao lado da pré-visualização ao vivo.
+      </p>
+      <button
+        type="button"
+        onClick={() => navigate(`/projeto/${project.slug}?workspace=1`)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          padding: '11px 20px', background: colors.blue, border: 'none',
+          borderRadius: 10, color: '#fff', fontSize: 14, fontWeight: 700,
+          cursor: 'pointer', fontFamily: 'inherit',
+        }}
+      >
+        <Paintbrush size={15} /> Abrir editor visual
+      </button>
     </div>
   )
 }
