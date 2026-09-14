@@ -96,83 +96,47 @@ function StatCard({ icon, label, value, color = C.blue, sub }) {
 // conta eventos (avisos repetidos, antes de esgotar), "bateram num limite"
 // conta utilizadores únicos que esgotaram mesmo. Por isso um passo pode ter
 // mais eventos que o anterior (ex: 32 vs 1), o que dava percentagens tipo
-// "3200%" sem sentido nenhum. Quando isso acontece, mostra-se a variação
-// como contagem neutra ("+31"), não como uma falsa taxa de conversão.
-function FunnelStep({ step, isFirst, isLast, max }) {
-  const pct = Math.round((step.value / max) * 100)
-  return (
-    <div
-      onClick={step.onClick}
-      style={{
-        flex: 1, minWidth: 0, borderRadius: 10, padding: '14px 16px',
-        cursor: step.onClick ? 'pointer' : 'default',
-        background: isLast ? C.blueSoft : C.bgAlt,
-        border: `1px solid ${isLast ? C.blue + '40' : C.border}`,
-        transition: 'background 0.15s, border-color 0.15s',
-      }}
-      onMouseEnter={e => { if (step.onClick) e.currentTarget.style.borderColor = C.blue }}
-      onMouseLeave={e => { e.currentTarget.style.borderColor = isLast ? C.blue + '40' : C.border }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-        <div style={{
-          width: 26, height: 26, borderRadius: 7, flexShrink: 0,
-          background: step.color + '18', border: `1px solid ${step.color}35`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', color: step.color,
-        }}>{step.icon}</div>
-        <span style={{ fontSize: 11, fontWeight: 600, color: step.onClick ? C.blue : C.muted, lineHeight: 1.3 }}>
-          {step.label}{step.onClick && step.value > 0 ? ' →' : ''}
-        </span>
-      </div>
-      <div style={{ fontSize: 26, fontWeight: 400, color: C.text, fontFamily: 'var(--font-heading)', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
-        {step.value}
-      </div>
-      <div style={{ height: 5, borderRadius: 99, background: C.bg, overflow: 'hidden', marginTop: 10 }}>
-        <div style={{ height: '100%', width: `${Math.max(pct, step.value > 0 ? 4 : 0)}%`, borderRadius: 99, background: isFirst ? step.color : 'var(--brand-gradient)', transition: 'width 0.4s' }} />
-      </div>
-    </div>
-  )
-}
-
-function StepConnector({ value, prev }) {
-  // prev === null: primeiro passo, sem conector.
-  // Sem histórico anterior (0) não há taxa nenhuma para calcular.
-  const grew = prev != null && value > prev
-  const pct = prev ? Math.round((value / prev) * 100) : null
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '0 4px', flexShrink: 0, width: 46 }}>
-      <ArrowRight2 size={13} color={C.subtle} />
-      {prev === 0 || prev == null ? (
-        <span style={{ fontSize: 9, fontWeight: 700, color: C.subtle }}>—</span>
-      ) : grew ? (
-        <span style={{ fontSize: 9, fontWeight: 700, color: C.muted, whiteSpace: 'nowrap' }} title="Não é um subconjunto estrito do passo anterior">+{value - prev}</span>
-      ) : (
-        <span style={{ fontSize: 10, fontWeight: 700, color: pct >= 50 ? C.green : pct >= 20 ? C.yellow : C.red, whiteSpace: 'nowrap' }}>{pct}%</span>
-      )}
-    </div>
-  )
-}
-
+// "3200%" sem sentido nenhum — mostra-se "+31" nesse caso, não uma % falsa.
 function FunnelFlow({ steps }) {
   const max = Math.max(1, ...steps.map(s => s.value))
-  const first = steps[0]
-  const last = steps[steps.length - 1]
-  const overallPct = first.value > 0 ? Math.round((last.value / first.value) * 1000) / 10 : null
   return (
-    <div>
-      {overallPct != null && (
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 14 }}>
-          <span style={{ fontSize: 20, fontWeight: 400, fontFamily: 'var(--font-heading)', color: overallPct >= 10 ? C.green : overallPct >= 2 ? C.yellow : C.red }}>{overallPct}%</span>
-          <span style={{ fontSize: 11, color: C.subtle }}>conversão total · "{first.label}" → "{last.label}"</span>
-        </div>
-      )}
-      <div style={{ display: 'flex', alignItems: 'stretch', gap: 0, flexWrap: 'wrap' }}>
-        {steps.map((s, i) => (
-          <div key={s.label} style={{ display: 'flex', alignItems: 'center', flex: '1 1 auto', minWidth: 150 }}>
-            {i > 0 && <StepConnector value={s.value} prev={steps[i - 1].value} />}
-            <FunnelStep step={s} isFirst={i === 0} isLast={i === steps.length - 1} max={max} />
+    <div style={{ display: 'flex', alignItems: 'stretch', gap: 0, flexWrap: 'wrap' }}>
+      {steps.map((s, i) => {
+        const pct = Math.round((s.value / max) * 100)
+        const prev = i > 0 ? steps[i - 1].value : null
+        const grew = prev != null && s.value > prev
+        const dropPct = prev ? Math.round((s.value / prev) * 100) : null
+        return (
+          <div key={s.label} style={{ display: 'flex', alignItems: 'center', flex: '1 1 auto', minWidth: 140 }}>
+            {i > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '0 10px', flexShrink: 0 }}>
+                <ArrowRight2 size={13} color={C.subtle} />
+                {prev === 0 ? (
+                  <span style={{ fontSize: 10, fontWeight: 700, color: C.subtle }}>—</span>
+                ) : grew ? (
+                  <span style={{ fontSize: 10, fontWeight: 700, color: C.muted, whiteSpace: 'nowrap' }}>+{s.value - prev}</span>
+                ) : (
+                  <span style={{ fontSize: 10, fontWeight: 700, color: dropPct >= 50 ? C.green : dropPct >= 20 ? C.yellow : C.red, whiteSpace: 'nowrap' }}>{dropPct}%</span>
+                )}
+              </div>
+            )}
+            <div
+              onClick={s.onClick}
+              style={{ flex: 1, minWidth: 0, cursor: s.onClick ? 'pointer' : 'default', borderRadius: 8, padding: 4, margin: -4 }}
+              onMouseEnter={e => { if (s.onClick) e.currentTarget.style.background = C.bgAlt }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+            >
+              <div style={{ fontSize: 20, fontWeight: 400, color: C.text, fontFamily: 'var(--font-heading)', lineHeight: 1 }}>{s.value}</div>
+              <div style={{ fontSize: 11, color: s.onClick ? C.blue : C.muted, marginTop: 4, marginBottom: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {s.label}{s.onClick && s.value > 0 ? ' →' : ''}
+              </div>
+              <div style={{ height: 6, borderRadius: 99, background: C.bgAlt, overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${Math.max(pct, s.value > 0 ? 4 : 0)}%`, borderRadius: 99, background: 'var(--brand-gradient)' }} />
+              </div>
+            </div>
           </div>
-        ))}
-      </div>
+        )
+      })}
     </div>
   )
 }
