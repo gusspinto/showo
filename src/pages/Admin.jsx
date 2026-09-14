@@ -64,14 +64,18 @@ const PROFILE_COLUMNS = 'id, username, total_xp, created_at, full_name, bio, is_
 const PLAN_COLORS = { free: '#6b7280', school: '#8B5CF6', school_pro: '#6D28D9', plus: '#2B7EF5', pro: '#C49A20', build: '#2B7EF5', launch: '#C49A20' }
 const PLAN_LABELS = { free: 'Free', school: 'Escola Plus', school_pro: 'Escola Pro', plus: 'Plus', pro: 'Pro', build: 'Plus', launch: 'Pro' }
 
-function StatCard({ icon, label, value, color = C.blue, sub }) {
+function StatCard({ icon, label, value, color = C.blue, sub, onClick }) {
   return (
-    <div style={{
-      ...C.glassStyle,
-      background: C.glass, border: `1px solid ${C.glassBorder}`,
-      borderRadius: 12, padding: '22px 24px',
-      display: 'flex', alignItems: 'flex-start', gap: 16,
-    }}>
+    <div
+      onClick={onClick}
+      style={{
+        ...C.glassStyle,
+        background: C.glass, border: `1px solid ${C.glassBorder}`,
+        borderRadius: 12, padding: '22px 24px',
+        display: 'flex', alignItems: 'flex-start', gap: 16,
+        cursor: onClick ? 'pointer' : 'default',
+      }}
+    >
       <div style={{
         width: 44, height: 44, borderRadius: 10, flexShrink: 0,
         background: color + '18', border: `1px solid ${color}30`,
@@ -80,7 +84,7 @@ function StatCard({ icon, label, value, color = C.blue, sub }) {
       }}>{icon}</div>
       <div>
         <div style={{ fontSize: 26, fontWeight: 400, color, letterSpacing: '-0.5px', lineHeight: 1, fontFamily: 'var(--font-heading)' }}>{value}</div>
-        <div style={{ fontSize: 13, color: C.muted, fontWeight: 500, marginTop: 4 }}>{label}</div>
+        <div style={{ fontSize: 13, color: onClick ? C.blue : C.muted, fontWeight: 500, marginTop: 4 }}>{label}{onClick ? ' →' : ''}</div>
         {sub && <div style={{ fontSize: 11, color: C.subtle, marginTop: 3 }}>{sub}</div>}
       </div>
     </div>
@@ -415,6 +419,7 @@ function generateMeetingSummary(users, projects, activityStats, range) {
 function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSummary }) {
   const [userSearch, setUserSearch] = useState('')
   const [showLimitUsers, setShowLimitUsers] = useState(false)
+  const [showSubscribers, setShowSubscribers] = useState(false)
   const [sort, setSort] = useState('active')
   const [range, setRange] = useState(TIME_RANGES[1])
 
@@ -650,7 +655,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
         <StatCard icon={<BarChart2 size={20} />} label="Ativos (semana)" value={activeThisWeek} color={activeThisWeek > 0 ? C.green : C.red} sub={`${activeThisMonth} mês · ${neverActive} nunca`} />
         <StatCard icon={<Star size={20} />} label="Retenção mensal" value={`${retentionRate}%`} color={retentionRate > 30 ? C.green : retentionRate > 10 ? C.yellow : C.red} sub={`${priorUsersReturned}/${priorUsersCount} de quem já cá estava`} />
         <StatCard icon={<Star size={20} />} label="Score médio" value={avgScore} color={C.yellow} sub={`${scores.length} com score`} />
-        <StatCard icon={<Star size={20} />} label="Assinantes reais" value={paidUsers} color={paidUsers > 0 ? C.green : C.muted} sub={`${realPlusCount} Plus · ${realProCount} Pro · pagam via Stripe`} />
+        <StatCard icon={<Star size={20} />} label="Assinantes reais" value={paidUsers} color={paidUsers > 0 ? C.green : C.muted} sub={`${realPlusCount} Plus · ${realProCount} Pro · pagam via Stripe`} onClick={paidUsers > 0 ? () => setShowSubscribers(o => !o) : undefined} />
         <StatCard icon={<Star size={20} />} label="MRR real" value={`€${mrrEstimate.toFixed(2)}`} color={mrrEstimate > 0 ? C.green : C.muted} sub="Só assinantes Stripe, preço de lista" />
         <StatCard icon={<Star size={20} />} label="Acesso Plus/Pro oferecido" value={grantedUsers} color={C.purple} sub="Professores e ofertas manuais, sem Stripe" />
         <StatCard icon={<School size={20} />} label="Alunos de escola" value={planCounts.school + planCounts.school_pro} color={C.purple} sub={`${planCounts.school} Escola Plus · ${planCounts.school_pro} Escola Pro`} />
@@ -658,6 +663,20 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
         <StatCard icon={<Star size={20} />} label="Cancelamentos" value={churnedThisMonth} color={churnedThisMonth > 0 ? C.red : C.muted} sub="Este mês" />
         <StatCard icon={<Star size={20} />} label="Receita cobrada" value={`€${revenueThisMonth.toFixed(2)}`} color={revenueThisMonth > 0 ? C.green : C.muted} sub="Faturas pagas este mês" />
       </div>
+
+      {showSubscribers && realSubscribers.length > 0 && (
+        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 20px', marginBottom: 24, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Quem paga — dados reais do Stripe</h3>
+          {realSubscribers.map(u => (
+            <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12.5 }}>
+              <Avatar name={u.full_name || u.username || '?'} size={22} color={PLAN_COLORS[resolvePlanId(u)]} />
+              <span style={{ fontWeight: 600, color: C.text }}>{u.full_name || u.username || 'Utilizador removido'}</span>
+              {u.email && <span style={{ color: C.subtle }}>{u.email}</span>}
+              <span style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color: PLAN_COLORS[resolvePlanId(u)] }}>{PLAN_LABELS[resolvePlanId(u)]}</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Funil de conversão */}
       <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px', marginBottom: 24 }}>
