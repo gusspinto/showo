@@ -5021,9 +5021,14 @@ export default function ProjectPage() {
   const [narrativeError, setNarrativeError]           = useState('')
   const [narrativeSaved, setNarrativeSaved]           = useState(false)
   const [confirmNarrativeUse, setConfirmNarrativeUse] = useState(null)
-  const [viewAsPublic, setViewAsPublic] = useState(false)
-  const [previewEditing, setPreviewEditing] = useState(false)
-  const [wsExpanded, setWsExpanded] = useState(false)
+  // ?workspace=1 abre o editor visual (Estilo/Blocos/Secções) direto, sem
+  // passar pelo "Preview visitante" — é o link usado pela secção "Aparência"
+  // do /editar/:slug, para o editor visual deixar de só ser alcançável a
+  // partir do preview (onde ninguém o ia procurar).
+  const openWorkspaceOnLoad = new URLSearchParams(window.location.search).get('workspace') === '1'
+  const [viewAsPublic, setViewAsPublic] = useState(openWorkspaceOnLoad)
+  const [previewEditing, setPreviewEditing] = useState(openWorkspaceOnLoad)
+  const [wsExpanded, setWsExpanded] = useState(openWorkspaceOnLoad)
   const [previewBlocks, setPreviewBlocks] = useState([])
   const [previewStyle, setPreviewStyle] = useState({})
   const [previewDevice, setPreviewDevice] = useState('desktop')
@@ -5324,11 +5329,11 @@ export default function ProjectPage() {
         onShareStory: () => setShowStoryModal(true),
         onDefense: project.project_type === 'pap' ? () => setDefenseMode(true) : null,
         onAnalyze: handleAIClick,
-        onTogglePublicView: () => {
-          const entering = !viewAsPublic
-          setViewAsPublic(entering)
-          if (entering) { setPreviewEditing(true); setWsExpanded(false) }
-        },
+        // Só alterna a vista — deixou de ativar o editor de estilo sozinho.
+        // "Preview visitante" é só para veres a página como um visitante vê;
+        // editar o visual passa a ser só a partir do botão "Editar" (que leva
+        // à secção "Aparência" em /editar/:slug).
+        onTogglePublicView: () => setViewAsPublic(v => !v),
         previewEditing,
         onEditWorkspace: () => { setPreviewEditing(true); setWsExpanded(e => !e) },
         previewDevice,
