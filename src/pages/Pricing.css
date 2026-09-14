@@ -52,63 +52,69 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
-  align-items: start;
+  align-items: stretch;
+  padding-top: 10px;
 }
 
+/* O Plus é o plano que queremos que se escolha — os outros dois recuam
+   (borda mais discreta, sem sombra) para o olho ir direto ao do meio, em
+   vez de três colunas a competir pela mesma atenção. */
 .pricing-card {
   position: relative;
   display: flex; flex-direction: column;
   padding: 26px 22px 24px;
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-subtle, var(--color-border));
   border-radius: var(--radius-xl);
+  transition: border-color 0.2s ease;
 }
-.pricing-card.is-popular,
+
+.pricing-card.is-popular {
+  border-color: var(--color-text);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06), 0 16px 40px rgba(0,0,0,0.08);
+}
+
 .pricing-card.is-career { border-color: var(--color-border-hover); }
 
 .pricing-flag {
-  position: absolute; top: -10px; left: 22px;
-  padding: 3px 11px;
+  position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+  padding: 4px 13px;
   border-radius: var(--radius-full);
   background: var(--color-text);
   color: var(--color-bg);
   font-size: 10px; font-weight: 800;
   letter-spacing: 0.06em; text-transform: uppercase;
+  white-space: nowrap;
 }
 .pricing-flag--career { background: var(--color-text); color: var(--color-bg); }
 
-/* "Mais escolhido" ganha o gradiente da marca nas letras — contorno em vez
-   de fundo sólido, para o texto poder usar background-clip:text. */
+/* "Mais escolhido" ganha o gradiente da marca como fundo sólido — é o único
+   selo com cor na página, por isso lê-se como o plano recomendado à
+   primeira vista, sem precisar de ler o texto. */
 .pricing-card.is-popular .pricing-flag:not(.pricing-flag--career) {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-}
-.pricing-flag-text {
   background-image: var(--brand-gradient);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: #fff;
 }
 
-.pricing-card-head { margin-bottom: 18px; }
+.pricing-card-head { margin-bottom: 20px; }
 .pricing-name {
-  margin: 0 0 8px;
+  margin: 0 0 6px;
   font-family: var(--font-heading);
-  font-size: var(--text-lg);
+  font-size: var(--text-2xl, 26px);
   font-weight: 700;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.5px;
 }
-.pricing-price { display: flex; align-items: baseline; gap: 3px; margin-bottom: 18px; }
-.pricing-amount { font-size: 34px; font-weight: 800; letter-spacing: -1.2px; line-height: 1; }
-.pricing-period { font-size: var(--text-base); color: var(--color-text-tertiary); font-weight: 600; }
-.pricing-tagline { margin: 0 0 4px; font-size: var(--text-base); font-weight: 700; }
-.pricing-positioning {
+.pricing-tagline {
   margin: 0;
-  min-height: 44px;
+  min-height: calc(var(--text-sm) * 1.5 * 2);
   font-size: var(--text-sm);
-  line-height: 1.55;
+  line-height: 1.5;
   color: var(--color-text-secondary);
 }
+
+.pricing-price { display: flex; align-items: baseline; gap: 3px; margin: 22px 0 14px; }
+.pricing-amount { font-size: 34px; font-weight: 800; letter-spacing: -1.2px; line-height: 1; }
+.pricing-period { font-size: var(--text-base); color: var(--color-text-tertiary); font-weight: 600; }
 
 .pricing-cta {
   display: flex; align-items: center; justify-content: center; gap: 7px;
@@ -180,6 +186,8 @@
   font-size: var(--text-base); font-weight: 600;
 }
 
+.pricing-cta, .pricing-current { margin-bottom: 4px; }
+
 .pricing-inherits {
   margin: 20px 0 10px;
   font-size: var(--text-sm);
@@ -198,7 +206,7 @@
 
 .pricing-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
 .pricing-item { display: flex; align-items: flex-start; gap: 9px; font-size: var(--text-base); line-height: 1.45; }
-.pricing-check { color: var(--color-success); flex-shrink: 0; margin-top: 2px; }
+.pricing-check { color: var(--color-text-tertiary); flex-shrink: 0; margin-top: 2px; }
 .pricing-item-label { flex: 1; min-width: 0; }
 .pricing-item-value {
   flex-shrink: 0;
@@ -209,45 +217,17 @@
   padding: 2px 7px;
 }
 
-/* ── Bloco Carreira ── */
-.pricing-career {
-  margin-top: 22px;
-  padding: 16px;
-  background: var(--color-bg-alt);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-}
-.pricing-career-head {
-  display: flex; align-items: center; gap: 7px;
-  margin-bottom: 14px;
-  font-size: 10px; font-weight: 800;
-  letter-spacing: 0.08em; text-transform: uppercase;
-}
-.pricing-career-head-icon { color: var(--color-text-secondary); flex-shrink: 0; }
-.pricing-career-head-text { color: var(--color-text-secondary); }
-.pricing-career-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
-.pricing-career-list li { display: flex; align-items: flex-start; gap: 11px; }
-.pricing-career-list li > span:last-child { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-.pricing-career-list strong { font-size: var(--text-sm); font-weight: 700; }
-.pricing-career-icon {
-  display: flex; align-items: center; justify-content: center;
-  width: 30px; height: 30px; flex-shrink: 0;
-  border-radius: var(--radius-md);
-  background: var(--color-badge-bg);
-  color: var(--color-text);
-}
-.pricing-career-desc {
-  font-size: var(--text-xs);
-  line-height: 1.5;
-  color: var(--color-text-secondary);
-}
-
 .pricing-foot {
   margin: 36px auto 0;
-  max-width: 520px; text-align: center;
+  text-align: center;
   font-size: var(--text-sm);
-  color: var(--color-text-tertiary);
+  color: var(--color-text-secondary);
   line-height: 1.6;
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .pricing-foot { white-space: normal; }
 }
 
 @media (max-width: 900px) {
@@ -316,7 +296,7 @@
 .pricing-cmp tbody tr:not(:last-child) th,
 .pricing-cmp tbody tr:not(:last-child) td { border-bottom: 1px solid var(--color-border); }
 .pricing-cmp-highlight { background: color-mix(in srgb, var(--color-primary) 6%, transparent); }
-.pricing-cmp-yes { color: var(--color-success); }
+.pricing-cmp-yes { color: var(--color-text-secondary); }
 .pricing-cmp-no { color: var(--color-text-tertiary); opacity: 0.5; }
 
 /* ── Testemunhos ──
