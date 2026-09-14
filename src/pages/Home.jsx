@@ -3,6 +3,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
 import { CupStarIcon as Trophy } from '@solar-icons/react/bold/cup-star'
 import { EyeIcon as Eye } from '@solar-icons/react/bold/eye'
+import { FireIcon as Fire } from '@solar-icons/react/bold/fire'
 import { EyeClosedIcon as EyeOff } from '@solar-icons/react/bold/eye-closed'
 import { RefreshCircleIcon as RefreshCw } from '@solar-icons/react/bold/refresh-circle'
 import { Navbar } from '../components/Navbar'
@@ -111,12 +112,12 @@ export default function Home() {
 
   useEffect(() => {
     async function load() {
-      const { data } = await supabase
-        .from('projects')
-        .select('id,name,slug,area,creator_name,ai_tagline,score,cover_url,views,project_type,preview_style')
-        .or('visibility.eq.public,visibility.is.null')
-        .order('score', { ascending: false })
-        .limit(6)
+      // Ordenado por consistência (semanas com registo no diário, últimas 12
+      // semanas) antes do score — quem acompanha o projeto ao longo do tempo
+      // fica à frente de quem o fez tudo numa noite. Score continua a
+      // desempatar e a preencher quando ninguém tem atividade recente, por
+      // isso a secção nunca fica vazia.
+      const { data } = await supabase.rpc('get_featured_projects', { p_limit: 6, p_weeks: 12 })
       if (data) setProjects(data)
       setProjectsLoading(false)
 
@@ -495,9 +496,14 @@ export default function Home() {
                     ...(p.preview_style?.titleStyle === 'caps' ? { textTransform: 'uppercase', letterSpacing: '0.04em' } : {}),
                   }}>{p.name}</h3>
                   {p.ai_tagline && <p className="home-card-tagline">{p.ai_tagline}</p>}
-                  {p.views != null && (
-                    <div className="home-card-views"><Eye size={12} /> {p.views}</div>
-                  )}
+                  <div className="home-card-footer">
+                    {p.views != null && (
+                      <div className="home-card-views"><Eye size={12} /> {p.views}</div>
+                    )}
+                    {p.active_weeks >= 3 && (
+                      <div className="home-card-streak"><Fire size={12} /> {p.active_weeks} semanas seguidas</div>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
