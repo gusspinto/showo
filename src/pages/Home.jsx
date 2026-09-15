@@ -368,7 +368,7 @@ export default function Home() {
                   <button type="button" className="home-start-back" onClick={() => { setHeroAuthStep('email'); setAuthError(''); setNotConfirmed(false) }}>
                     Usar outro email
                   </button>
-                  <Link to="/login?forgot=1" className="home-start-back">Esqueceste a password?</Link>
+                  <Link to="/login?forgot=1" className="home-start-back">Esqueceste-te da password?</Link>
                 </div>
               </form>
             )}
