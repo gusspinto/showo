@@ -1185,9 +1185,11 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           gap: 12,
         }}
       >
-        {/* Mobile/tablet drawer trigger — leftmost, animated 3-line hamburger
-            that morphs into an X while the sheet is open. Yields to a
-            page-provided back button (mobileLeft), e.g. inside a message thread. */}
+        {/* Mobile/tablet drawer trigger — leftmost. No telemóvel mantém o
+            ícone original (painel); no tablet (601–900px, ver Navbar.css)
+            mostra em vez disso o hambúrguer animado de 3 linhas → X. Yields
+            to a page-provided back button (mobileLeft), e.g. inside a
+            message thread. */}
         {!mobileLeft && (
           <button
             className="mob-drawer-trigger"
@@ -1195,6 +1197,10 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
             aria-label="Abrir menu"
             style={{ color: menuOpen ? 'var(--color-text)' : undefined, borderColor: menuOpen ? 'var(--color-text)' : undefined }}
           >
+            <svg className="mob-drawer-icon-phone" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <line x1="9" y1="3" x2="9" y2="21" />
+            </svg>
             <span className="ham-lines">
               <span style={{ transform: menuOpen ? 'translateY(6px) rotate(45deg)' : 'none' }} />
               <span style={{ opacity: menuOpen ? 0 : 1 }} />

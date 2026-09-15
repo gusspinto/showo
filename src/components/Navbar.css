@@ -28,7 +28,11 @@
   transition: background 0.13s, color 0.13s;
 }
 .mob-drawer-trigger:active { background: var(--color-surface-hover); color: var(--color-text); }
-.ham-lines { display: flex; flex-direction: column; gap: 5px; align-items: center; justify-content: center; }
+/* Dois ícones no mesmo botão — qual se vê depende da largura (ver breakpoints
+   abaixo). Telemóvel mantém o ícone original (painel); só o tablet troca
+   para o hambúrguer animado. */
+.mob-drawer-icon-phone { display: block; }
+.ham-lines { display: none; flex-direction: column; gap: 5px; align-items: center; justify-content: center; }
 .ham-lines span {
   display: block; width: 18px; height: 1.5px; border-radius: 1px;
   background: currentColor;
@@ -386,6 +390,8 @@ body.sidebar-collapsed .proj-manage-float { left: 84px; }
   .nav-mid       { display: none !important; }
   .mob-drawer-trigger { display: flex !important; }
   .nav-mob-logo  { display: flex !important; }
+  .mob-drawer-icon-phone { display: none; }
+  .ham-lines { display: flex; }
 }
 
 /* ── Mobile (≤600px) ── */

@@ -548,6 +548,10 @@ export default function Register() {
   }, [confirmationPending])
 
   const selectedRole = ROLES.find(r => r.id === role)
+  // Cor do papel só entra nos botões da Versão Escola (azul para aluno
+  // institucional, verde para professor) — Individual mantém-se a preto,
+  // como sempre foi.
+  const roleAccent = (role === 'aluno_institucional' || role === 'professor') ? selectedRole?.color : null
 
   return (
     <div className="auth-shell">
@@ -884,7 +888,7 @@ export default function Register() {
                   </Field>
                 )}
                 {needsOccupation && (
-                  <Field label="O que fazes?">
+                  <Field label={<>O que fazes?<span style={{ color: 'var(--color-error)', marginLeft: 2 }}>*</span></>}>
                     <Select
                       value={occupation}
                       onChange={setOccupation}
@@ -936,7 +940,7 @@ export default function Register() {
                   }}
                   className="auth-submit"
                   style={{
-                    width: '100%', background: selectedRole?.color || C.text, color: '#fff', border: 'none',
+                    width: '100%', background: roleAccent || C.text, color: roleAccent ? '#fff' : C.bg, border: 'none',
                     borderRadius: 10, padding: '12px 0', fontSize: 15, fontWeight: 700,
                     cursor: 'pointer', fontFamily: 'inherit', marginTop: 4,
                   }}
@@ -1032,8 +1036,8 @@ export default function Register() {
                   type="submit" disabled={loading}
                   className="auth-submit"
                   style={{
-                    background: loading ? 'var(--color-border)' : (selectedRole?.color || C.text),
-                    color: loading ? C.muted : '#fff', border: 'none',
+                    background: loading ? 'var(--color-border)' : (roleAccent || C.text),
+                    color: loading ? C.muted : (roleAccent ? '#fff' : C.bg), border: 'none',
                     borderRadius: 10, padding: '12px 0', fontSize: 15, fontWeight: 700,
                     cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', marginTop: 4,
                   }}

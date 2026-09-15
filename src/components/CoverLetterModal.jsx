@@ -126,7 +126,7 @@ export default function CoverLetterModal({ projects, studentName, onClose }) {
       <div style={{
         background: 'var(--color-surface)', border: '1px solid var(--color-border)',
         borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: 620,
-        maxHeight: 'calc(100vh - 48px)', overflow: 'auto',
+        maxHeight: 'calc(100dvh - 48px)', overflow: 'auto',
         boxShadow: 'var(--shadow-xl)',
       }}>
         {/* Header */}
