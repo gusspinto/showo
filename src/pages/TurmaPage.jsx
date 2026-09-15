@@ -463,17 +463,16 @@ export default function TurmaPage() {
 
   useEffect(() => {
     async function load() {
-      const { data: cls, error } = await supabase
-        .from('classes')
-        .select('id, name, subject, code, teacher_name, teacher_id, academic_year, created_at')
-        .eq('code', code.toUpperCase())
-        .single()
+      // get_class_by_code (migration 154) em vez de select direto — a
+      // tabela classes já não é publicamente listável (auditoria de
+      // segurança: os códigos de turma não podiam ser enumeráveis), mas
+      // esta página é pública e precisa de resolver o código exato do URL.
+      const { data: rows, error } = await supabase.rpc('get_class_by_code', { p_code: code.toUpperCase() })
+      const cls = rows?.[0]
 
       if (error || !cls) { setLoading(false); return }
       setTurma(cls)
-      // show_ranking só existe depois da migration 067 — falha silenciosamente se ainda não existir
-      supabase.from('classes').select('show_ranking').eq('id', cls.id).maybeSingle()
-        .then(({ data }) => { if (data?.show_ranking != null) setRankingEnabled(!!data.show_ranking) })
+      if (cls.show_ranking != null) setRankingEnabled(!!cls.show_ranking)
       const teacherNow = user && cls.teacher_id === user.id
       if (teacherNow) setIsTeacher(true)
 
