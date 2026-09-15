@@ -314,65 +314,6 @@
 .pricing-cmp-yes { color: var(--color-text-secondary); }
 .pricing-cmp-no { color: var(--color-text-tertiary); opacity: 0.5; }
 
-/* ── Testemunhos ──
-   Sangra para fora do container (largura do ecrã) para o desvanecimento
-   nas pontas não cortar a meio de um card, e para haver espaço de sobra
-   para a faixa deslizar sem se ver o limite. */
-.pricing-testimonials-marquee {
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
-  overflow: hidden;
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
-}
-.pricing-testimonials-track {
-  display: flex;
-  width: max-content;
-  animation: pricing-marquee 90s linear infinite;
-}
-.pricing-testimonials-marquee:hover .pricing-testimonials-track,
-.pricing-testimonials-marquee:focus-within .pricing-testimonials-track {
-  animation-play-state: paused;
-}
-@keyframes pricing-marquee {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .pricing-testimonials-track { animation: none; }
-  .pricing-testimonials-marquee { overflow-x: auto; }
-}
-.pricing-testimonial-card {
-  display: flex; flex-direction: column; gap: 16px;
-  flex: 0 0 300px;
-  width: 300px;
-  margin: 0 7px;
-  padding: 20px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-}
-.pricing-testimonial-quote {
-  margin: 0;
-  font-size: var(--text-sm);
-  line-height: 1.55;
-  color: var(--color-text);
-}
-.pricing-testimonial-author {
-  display: flex; align-items: center; gap: 10px;
-  margin-top: auto;
-  font-size: var(--text-xs);
-}
-.pricing-testimonial-author strong { display: block; color: var(--color-text); font-weight: 600; }
-.pricing-testimonial-role { display: block; color: var(--color-text-secondary); }
-.pricing-testimonial-avatar {
-  flex-shrink: 0;
-  width: 34px; height: 34px;
-  border-radius: 50%;
-  object-fit: cover;
-  background: var(--color-bg-alt);
-}
-
 /* ── FAQ ── */
 .pricing-faq { display: flex; flex-direction: column; gap: 8px; }
 .pricing-faq-item {
@@ -410,6 +351,5 @@
 }
 
 @media (max-width: 700px) {
-  .pricing-testimonial-card { flex-basis: 260px; width: 260px; }
   .pricing-section { margin-top: 52px; }
 }

@@ -11,6 +11,7 @@ import { supabase } from '../lib/supabase'
 import { claimAnonymousProjects } from '../lib/claimAnonymousProjects'
 import GoogleButton from '../components/GoogleButton'
 import HomeHow from '../components/HomeHow'
+import TestimonialsMarquee from '../components/TestimonialsMarquee'
 import { useAuth } from '../context/AuthContext'
 import { getAreaColor } from '../lib/areaColor'
 import { trackEvent } from '../lib/analytics'
@@ -527,6 +528,14 @@ export default function Home() {
       {/* ══ Como funciona (+ ligações) ══ */}
       <Reveal className="home-how-reveal">
         <HomeHow />
+      </Reveal>
+
+      {/* ══ Testemunhos ("prova", entre "como funciona" e a última ação) ══ */}
+      <Reveal className="home-section home-testimonials-section">
+        <div className="home-section-inner">
+          <h2 className="home-section-title home-testimonials-title">Quem já usa</h2>
+          <TestimonialsMarquee />
+        </div>
       </Reveal>
 
       {/* ══ Footer ══ */}

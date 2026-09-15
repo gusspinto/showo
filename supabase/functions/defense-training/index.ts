@@ -29,8 +29,13 @@ Deno.serve(async (req) => {
   try {
     const { transcript, project, durationSeconds } = await req.json()
 
-    if (!transcript || transcript.trim().length < 50) {
-      return new Response(JSON.stringify({ error: 'Transcrição demasiado curta. Tenta apresentar pelo menos 1 minuto.' }), {
+    if (!durationSeconds || durationSeconds < 30) {
+      return new Response(JSON.stringify({ error: 'Grava pelo menos 30 segundos antes de pedires feedback.' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+    if (!transcript || transcript.trim().length < 20) {
+      return new Response(JSON.stringify({ error: 'Não conseguimos perceber a tua voz. Verifica o microfone e tenta novamente.' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
@@ -63,7 +68,7 @@ Deno.serve(async (req) => {
     }
 
     const msg = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 1500,
       messages: [{
         role: 'user',
@@ -106,7 +111,7 @@ Dá feedback estruturado em JSON com EXATAMENTE estes campos:
 Responde APENAS com o JSON, sem texto antes ou depois.`,
       }],
     })
-    logAiCost('defenseTraining', 'claude-sonnet-4-20250514', msg.usage, user?.id)
+    logAiCost('defenseTraining', 'claude-sonnet-4-6', msg.usage, user?.id)
 
     const raw = msg.content[0].type === 'text' ? msg.content[0].text : ''
     const jsonMatch = raw.match(/\{[\s\S]*\}/)
