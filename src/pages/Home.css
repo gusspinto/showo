@@ -253,11 +253,18 @@
   margin-top: 2px;
 }
 .home-start-back {
-  background: none; border: none; padding: 6px;
+  background: none; border: 1px solid transparent; border-radius: 6px;
+  padding: 6px 10px;
   font-family: inherit; font-size: 13px; font-weight: 600;
   color: rgba(255,255,255,0.55);
-  text-decoration: underline; text-underline-offset: 3px;
   cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+@media (hover: hover) {
+  .home-start-back:hover {
+    border-color: rgba(255,255,255,0.25);
+    color: rgba(255,255,255,0.85);
+  }
 }
 
 /* ── Rodapé do bloco ── */
@@ -725,10 +732,19 @@ body.light .home-card-cover img {
 
 /* ══ RESPONSIVE ══ */
 @media (max-width: 860px) {
+  /* Como no telemóvel: o herói ocupa o ecrã todo em vez de ficar um bloco
+     preto a meio da página com o resto do conteúdo logo a seguir. */
+  .home-hero {
+    min-height: calc(100dvh - 62px);
+    display: flex;
+    align-items: stretch;
+  }
   .home-hero-grid {
     flex-direction: column;
     align-items: stretch;
+    justify-content: center;
     text-align: center;
+    width: 100%;
   }
   .home-hero-copy {
     order: 1;
