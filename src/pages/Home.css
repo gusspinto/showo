@@ -829,15 +829,16 @@ body.light .home-card-cover img {
     flex-shrink: 0;
   }
 
-  /* Projeto do mês → Projetos em destaque, direto a seguir ao herói: prova
-     em vez de explicação. "Como funciona" (com as ligações) vem a seguir,
+  /* Testemunhos logo a seguir ao herói/sign-in — prova social antes de
+     mostrar qualquer projeto. Projeto do mês → Projetos em destaque a
+     seguir. "Como funciona" (com as ligações) fecha antes do rodapé,
      agora numa versão compacta que cabe no telemóvel. O "Começa a criar" já
      vive dentro da secção de projetos (home-section). */
   .home-hero    { order: 1; }
-  .home-pom-wrap { order: 2; }
-  .home-section  { order: 3; }
-  .home-how-reveal { order: 4; }
-  .home-testimonials-section { order: 5; }
+  .home-testimonials-section { order: 2; }
+  .home-pom-wrap { order: 3; }
+  .home-section  { order: 4; }
+  .home-how-reveal { order: 5; }
   .home-footer   { order: 6; }
 }
 

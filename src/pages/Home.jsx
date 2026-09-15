@@ -381,6 +381,14 @@ export default function Home() {
         </div>
       </div>
 
+      {/* ══ Testemunhos (logo a seguir ao hero/sign-in, antes dos projetos) ══ */}
+      <Reveal className="home-section home-testimonials-section">
+        <div className="home-section-inner">
+          <h2 className="home-section-title home-testimonials-title">Quem já usa</h2>
+          <TestimonialsMarquee />
+        </div>
+      </Reveal>
+
       {/* ══ Projeto do Mês ══ */}
       {projectOfMonth && (() => {
         const p = projectOfMonth.project
@@ -528,14 +536,6 @@ export default function Home() {
       {/* ══ Como funciona (+ ligações) ══ */}
       <Reveal className="home-how-reveal">
         <HomeHow />
-      </Reveal>
-
-      {/* ══ Testemunhos ("prova", entre "como funciona" e a última ação) ══ */}
-      <Reveal className="home-section home-testimonials-section">
-        <div className="home-section-inner">
-          <h2 className="home-section-title home-testimonials-title">Quem já usa</h2>
-          <TestimonialsMarquee />
-        </div>
       </Reveal>
 
       {/* ══ Footer ══ */}
