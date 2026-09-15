@@ -349,32 +349,6 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
   )
 }
 
-// ─── Teleprompter cover fallback ─────────────────────────────────────────────
-function tpCoverFallback(project) {
-  const name   = project?.name        || 'o meu projeto'
-  const school = project?.school      || ''
-  const course = project?.school_course || project?.course || ''
-  const goal   = project?.goal        || ''
-
-  const schoolLine = school || course
-    ? `Sou aluno${course ? ` do curso de ${course}` : ''}${school ? ` na ${school}` : ''}.`
-    : ''
-
-  const goalLine = goal
-    ? `O objetivo deste projeto é ${goal.charAt(0).toLowerCase()}${goal.slice(1)}.`
-    : ''
-
-  return [
-    `Bom dia. O meu nome é [o teu nome] e venho hoje apresentar o meu projeto: ${name}.`,
-    schoolLine,
-    `Ao longo desta apresentação irei explicar o problema que identifiquei, a solução que desenvolvi, as tecnologias que utilizei e os resultados que obtive.`,
-    goalLine,
-    `Peço que guardem as questões para o final. Obrigado pela atenção.`,
-  ].filter(Boolean).join('\n\n')
-}
-
-// ─── Backup slides ────────────────────────────────────────────────────────────
-
 // ─── Presenter guide (phone companion) ───────────────────────────────────────
 
 const SECTIONS = [
@@ -966,6 +940,8 @@ function getSlideContent(project, sectionId) {
 
 // ─── Defense Training (record + AI feedback) ────────────────────────────────
 
+const MIN_TRAINING_SECONDS = 30
+
 function DefenseTraining({ project, checkGate, consumeAI }) {
   const [phase, setPhase] = useState('idle') // idle | recording | processing | done | error | unsupported
   const [transcript, setTranscript] = useState('')
@@ -1030,8 +1006,13 @@ function DefenseTraining({ project, checkGate, consumeAI }) {
     }
 
     const finalTranscript = transcriptRef.current
-    if (finalTranscript.length < 50) {
-      setError('Transcrição demasiado curta. Tenta apresentar pelo menos 1 minuto.')
+    if (elapsed < MIN_TRAINING_SECONDS) {
+      setError(`Grava pelo menos ${MIN_TRAINING_SECONDS} segundos antes de parares.`)
+      setPhase('idle')
+      return
+    }
+    if (finalTranscript.length < 20) {
+      setError('Não conseguimos perceber a tua voz. Verifica o microfone e tenta novamente.')
       setPhase('idle')
       return
     }
@@ -1173,11 +1154,21 @@ function DefenseTraining({ project, checkGate, consumeAI }) {
           )}
           <button
             onClick={stopRecording}
+            disabled={elapsed < MIN_TRAINING_SECONDS}
             style={{
-              background: 'var(--color-error)', border: 'none', borderRadius: 10, padding: '12px 28px',
-              color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+              background: elapsed < MIN_TRAINING_SECONDS ? C.card : 'var(--color-error)',
+              border: elapsed < MIN_TRAINING_SECONDS ? `1px solid ${C.border}` : 'none',
+              borderRadius: 10, padding: '12px 28px',
+              color: elapsed < MIN_TRAINING_SECONDS ? C.subtle : '#fff',
+              fontSize: 14, fontWeight: 700,
+              cursor: elapsed < MIN_TRAINING_SECONDS ? 'default' : 'pointer',
+              fontFamily: 'inherit',
             }}
-          >Parar e obter feedback</button>
+          >
+            {elapsed < MIN_TRAINING_SECONDS
+              ? `Grava mais ${MIN_TRAINING_SECONDS - elapsed}s`
+              : 'Parar e obter feedback'}
+          </button>
         </>
       )}
 

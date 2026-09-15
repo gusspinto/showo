@@ -6916,8 +6916,10 @@ export default function ProjectPage() {
             <span className="proj-ai-fab-label">{analyzingAI ? 'A analisar…' : 'Análise IA'}</span>
           </button>
         )}
-        {/* Defense FAB — circular on mobile, pill with text on tablet */}
-        {(isOwner || collaboratorSections !== null) && (
+        {/* Defense FAB — circular on mobile, pill with text on tablet. PAP-only,
+            tal como a entrada da barra lateral — a Defesa assume um contexto
+            de júri que não faz sentido fora de um projeto de PAP. */}
+        {(isOwner || collaboratorSections !== null) && project.project_type === 'pap' && (
           <button
             className="proj-fab-defense"
             data-tour="defense"
