@@ -32,7 +32,7 @@ import { ClipboardTextIcon as ClipboardCheck } from '@solar-icons/react/bold/cli
 import { BookBookmarkIcon as BookMarked } from '@solar-icons/react/bold/book-bookmark'
 import { Button, Card, SectionLabel, Modal, Select } from '../components/ui'
 import { useAuth } from '../context/AuthContext'
-import { remainingUses, AI_FEATURE_LABELS, getPlan } from '../lib/plans'
+import { remainingUses, featureUsed, AI_FEATURE_LABELS, getPlan } from '../lib/plans'
 import ExportProjectsModal from '../components/ExportProjectsModal'
 import { ShareStoryModal } from '../components/ShareStoryModal'
 
@@ -180,8 +180,12 @@ export default function StudentDashboard({ user, profile }) {
     const hasSignal = NUDGE_FEATURES.some(f => {
       const limit = getPlan(planId).ai[f]
       if (!(limit > 0)) return false
-      const remaining = remainingUses(planId, f, aiUsage)
-      return remaining <= Math.max(1, Math.ceil(limit * 0.3))
+      // Sobre o que já foi usado, não sobre o que resta — com limites de 1x
+      // (Defesa IA, Narrativa IA), "resta 1" é indistinguível de "nunca usou
+      // nada", o que disparava o aviso "estás quase a esgotar" para quem
+      // ainda não tinha tocado em nenhuma feature de IA.
+      const used = featureUsed(f, aiUsage)
+      return used > 0 && used >= limit * 0.7
     })
     if (!hasSignal) return
     const shownKey = `showo_nudge_shown_${user.id}_${new Date().toISOString().slice(0, 7)}`
