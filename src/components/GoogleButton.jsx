@@ -60,7 +60,11 @@ export default function GoogleButton({ label = 'Continuar com Google', redirectT
 
   return (
     <>
-      <style>{`.google-btn:active:not(:disabled) { transform: scale(0.96); }`}</style>
+      <style>{`
+        .google-btn { box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+        .google-btn:hover:not(:disabled) { box-shadow: 0 4px 14px rgba(0,0,0,0.1); }
+        .google-btn:active:not(:disabled) { transform: scale(0.96); }
+      `}</style>
       <button
         type="button"
         onClick={go}
@@ -70,7 +74,7 @@ export default function GoogleButton({ label = 'Continuar com Google', redirectT
           width: '100%',
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
           background: s.background, color: s.color,
-          border: s.border, borderRadius: 8,
+          border: s.border, borderRadius: 10,
           padding: '12px', fontSize: 14, fontWeight: 600,
           cursor: loading ? 'default' : 'pointer', fontFamily: 'inherit',
           opacity: loading ? 0.7 : 1,
