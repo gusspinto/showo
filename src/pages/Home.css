@@ -319,6 +319,10 @@
   color: var(--color-text);
 }
 
+/* Sem "Ver todos" ao lado, título sozinho fica melhor centrado — mesmo
+   tratamento do título de testemunhos na página de Preços. */
+.home-testimonials-title { text-align: center; margin-bottom: 28px; }
+
 /* Mesmo gradiente do "Cria projeto" (NewProject.jsx, gradientLetterStyle) —
    aqui a palavra é estática, por isso um único background-clip:text chega,
    sem precisar da versão letra-a-letra animada. */
@@ -817,7 +821,8 @@ body.light .home-card-cover img {
   .home-pom-wrap { order: 2; }
   .home-section  { order: 3; }
   .home-how-reveal { order: 4; }
-  .home-footer   { order: 5; }
+  .home-testimonials-section { order: 5; }
+  .home-footer   { order: 6; }
 }
 
 /* ══ PROJETO DO MÊS ══ */
