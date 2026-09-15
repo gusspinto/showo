@@ -266,10 +266,15 @@ Deno.serve(async (req) => {
 
     if (action === 'update_row') {
       const rowId = String(body.rowId ?? '')
-      const { data: existingRow } = await sb.from('project_data_rows').select('id, table_id').eq('id', rowId).single()
+      const { data: existingRow } = await sb.from('project_data_rows').select('id, table_id, data').eq('id', rowId).single()
       if (!existingRow || existingRow.table_id !== table.id) return json({ error: 'Linha não encontrada.' }, 404)
+      // Merge, não substituição: um pedido que só manda o campo que quer
+      // mudar não pode apagar em silêncio os campos que não mencionou —
+      // era isso que acontecia antes (guardava só o payload recebido).
+      const incoming = (body.data && typeof body.data === 'object') ? body.data as Record<string, unknown> : {}
+      const merged = { ...(existingRow.data as Record<string, unknown> ?? {}), ...incoming }
       let coerced
-      try { coerced = coerceRow(body.data, table.columns) } catch (e) { return json({ error: (e as Error).message }, 400) }
+      try { coerced = coerceRow(merged, table.columns) } catch (e) { return json({ error: (e as Error).message }, 400) }
       const { data: updated, error } = await sb.from('project_data_rows').update({ data: coerced, updated_at: new Date().toISOString() }).eq('id', rowId).select().single()
       if (error) return json({ error: 'Não foi possível atualizar a linha.' }, 500)
       return json({ row: updated })

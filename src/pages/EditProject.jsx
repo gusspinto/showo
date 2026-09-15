@@ -1595,6 +1595,7 @@ function ApiKeyCard({ project, apiKey, firstTable, onKeyChanged }) {
           {(docAction === 'update_row' || docAction === 'delete_row') && (
             <p style={{ margin: '0 0 10px', fontSize: 11.5, color: colors.subtle, lineHeight: 1.5 }}>
               Substitui <code>ID_DA_LINHA</code> pelo <code>id</code> que "Ler" devolve para cada linha.
+              {docAction === 'update_row' && ' Podes mandar só os campos que queres mudar — os outros mantêm-se.'}
             </p>
           )}
 
