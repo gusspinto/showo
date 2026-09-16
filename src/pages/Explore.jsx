@@ -134,6 +134,7 @@ export default function Explore() {
 
   const [tab, setTab] = useState(() => searchParams.get('tab') === 'pessoas' ? 'pessoas' : 'projetos')
   const [people, setPeople] = useState([])
+  const [peopleTotal, setPeopleTotal] = useState(null)
   const [peopleLoading, setPeopleLoading] = useState(false)
   const [peopleLoaded, setPeopleLoaded] = useState(false)
   const [peopleSearch, setPeopleSearch] = useState('')
@@ -193,13 +194,25 @@ export default function Explore() {
   async function loadPeople() {
     if (peopleLoaded) return
     setPeopleLoading(true)
-    const { data } = await supabase
-      .from('profiles')
-      .select('id, full_name, username, bio, role, avatar_url, company, company_role, looking_for, available_for_work, skills, area, organization_id')
-      .not('full_name', 'is', null)
-      .is('banned_at', null)
-      .order('created_at', { ascending: false })
-      .limit(200)
+    // "X pessoas" contava filteredPeople.length, que vinha sempre desta
+    // mesma query limitada a 200 — batia sempre no limite e ficava
+    // parado em "200 pessoas" para sempre, em vez do total real. O total
+    // vem agora de uma contagem à parte, sem o limite.
+    const [{ data }, { count }] = await Promise.all([
+      supabase
+        .from('profiles')
+        .select('id, full_name, username, bio, role, avatar_url, company, company_role, looking_for, available_for_work, skills, area, organization_id')
+        .not('full_name', 'is', null)
+        .is('banned_at', null)
+        .order('created_at', { ascending: false })
+        .limit(500),
+      supabase
+        .from('profiles')
+        .select('id', { count: 'exact', head: true })
+        .not('full_name', 'is', null)
+        .is('banned_at', null),
+    ])
+    setPeopleTotal(count ?? null)
 
     // Tecnologias/competências DEMONSTRADAS: união do que a IA extraiu dos
     // projetos públicos de cada pessoa (pedido do Hugo — o recrutador filtra
@@ -645,7 +658,14 @@ export default function Explore() {
             ) : (
               <>
                 <p className="explore-result-count">
-                  {filteredPeople.length} pessoa{filteredPeople.length !== 1 ? 's' : ''}{peopleQuery && ` para "${peopleSearch}"`}
+                  {(() => {
+                    // Sem filtro nenhum ativo, mostra o total real (a query
+                    // paginada em baixo pode estar limitada a 500 linhas,
+                    // mas a contagem não é — ver loadPeople).
+                    const unfiltered = !peopleQuery && !filterSkill && !filterPeopleArea
+                    const n = unfiltered && peopleTotal != null ? peopleTotal : filteredPeople.length
+                    return <>{n} pessoa{n !== 1 ? 's' : ''}{peopleQuery && ` para "${peopleSearch}"`}</>
+                  })()}
                 </p>
                 <div className="explore-grid">
                   {filteredPeople.map(p => {

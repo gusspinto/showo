@@ -380,6 +380,19 @@ body.sidebar-collapsed .proj-manage-float { left: 84px; }
   .msg-inner { max-width: 1088px !important; }
 }
 
+/* .proj-manage-float é position:fixed, fora do fluxo — nada reservava
+   espaço para ele. Entre ~860px e ~1250-1400px de largura de janela
+   (dependendo do estado da sidebar) o conteúdo centrado ainda não tinha
+   margem automática suficiente e ficava por baixo do painel. Este padding
+   extra garante sempre distância, nos dois estados da sidebar
+   (box-sizing:border-box global — não aumenta a largura total, só o
+   espaço interno). Só a partir de 861px: até aí (601-860px) o próprio
+   ProjectPage já aperta o .proj-wrap para o layout tablet/FAB, que não
+   precisa desta reserva. */
+@media (min-width: 861px) {
+  body.has-proj-manage-float .proj-wrap { padding-left: 72px !important; }
+}
+
 /* ── Tablet, sem sessão (601–900px) — os links do topo (Explorar, Aprende a
    usar, Planos) já não cabem numa linha só sem se espremer; usa-se o mesmo
    hambúrguer + gaveta do telemóvel em vez de introduzir um terceiro layout.

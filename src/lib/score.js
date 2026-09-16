@@ -1,3 +1,5 @@
+import { PROJECT_FIELDS } from './projectFields'
+
 /**
  * Detects if text looks like random keyboard mashing or spam.
  * Returns true if the text should NOT count toward the score.
@@ -138,19 +140,15 @@ export function calculateScore(project, journalEntries = []) {
   const len = (key) => val(key).length
 
   // ── Campos de texto — máx 60pts ──────────────────────────────────────────
-  // Mínimos mais exigentes para garantir conteúdo real, não preenchimento rápido
+  // Limiares partilhados com challenges.js e ProjectPage.jsx — uma só fonte
+  // (projectFields.js), para "missões completas" e "score" nunca discordarem.
   if (raw('name') && !looksLikeSpam(raw('name'))) total += 3
   if (raw('area') && !looksLikeSpam(raw('area'))) total += 2
 
-  if (len('problem') >= 120)        total += 8
-  if (len('solution') >= 120)       total += 8
-  if (len('target_audience') >= 60) total += 5
-  if (len('features') >= 120)       total += 5
-  if (val('technologies'))           total += 4
-  if (len('challenges') >= 60)      total += 5
-  if (len('results') >= 100)        total += 8
-  if (len('learnings') >= 100)      total += 8
-  if (raw('cover_url'))              total += 4
+  for (const f of PROJECT_FIELDS) {
+    if (len(f.key) >= f.minLen) total += f.scoreGain
+  }
+  if (raw('cover_url')) total += 4
 
   // ── Bónus de apresentação — máx 10pts ────────────────────────────────────
   // Recompensa quem constrói a preview — não basta preencher campos de texto

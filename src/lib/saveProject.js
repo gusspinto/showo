@@ -1,5 +1,12 @@
 import { supabase } from './supabase'
 import { calculateScore } from './score'
+import { hasPlaceholder } from './textQuality'
+
+// Campos de texto que a IA escreve (no /novo ou na entrevista) e que podem
+// ficar com o modelo por preencher — "[período]", "[X]%" — sem que o dono
+// tenha reparado. Nunca gravamos isso: o campo fica vazio em vez de ir
+// para uma página pública com parênteses, e o dono é avisado a seguir.
+const TEXT_FIELDS = ['goal', 'problem', 'solution', 'target_audience', 'features', 'technologies', 'challenges', 'results', 'learnings']
 
 function generateToken() {
   return crypto.randomUUID().replace(/-/g, '')
@@ -23,8 +30,18 @@ export async function saveProject(formData, aiResult, userId, opts = {}) {
   if (!userId) throw new Error('saveProject requires an authenticated userId')
   const slug = generateSlug(formData.name)
   const isPap = formData.is_pap || formData.project_type === 'pap'
-  const { score } = calculateScore(formData)
   const edit_token = generateToken()
+
+  const clearedFields = []
+  const cleaned = { ...formData }
+  for (const key of TEXT_FIELDS) {
+    if (hasPlaceholder(cleaned[key])) {
+      clearedFields.push(key)
+      cleaned[key] = ''
+    }
+  }
+
+  const { score } = calculateScore(cleaned)
 
   const payload = {
     user_id: userId,
@@ -33,15 +50,15 @@ export async function saveProject(formData, aiResult, userId, opts = {}) {
     parent_project_id: opts.parentProjectId || null,
     name: formData.name,
     area: formData.area,
-    goal: formData.goal,
-    problem: formData.problem,
-    solution: formData.solution,
-    target_audience: formData.target_audience,
-    features: formData.features,
-    technologies: formData.technologies,
-    challenges: formData.challenges,
-    results: formData.results,
-    learnings: formData.learnings,
+    goal: cleaned.goal,
+    problem: cleaned.problem,
+    solution: cleaned.solution,
+    target_audience: cleaned.target_audience,
+    features: cleaned.features,
+    technologies: cleaned.technologies,
+    challenges: cleaned.challenges,
+    results: cleaned.results,
+    learnings: cleaned.learnings,
     cover_url: formData.cover_url || null,
     linkedin_url: formData.linkedin_url || null,
     github_url: formData.github_url || null,
@@ -87,5 +104,7 @@ export async function saveProject(formData, aiResult, userId, opts = {}) {
     supabase.functions.invoke('extract-skills', { body: { projectId: data.id } }).catch(() => {})
   }
 
-  return data
+  // Não persistido — só para o ecrã seguinte poder avisar "limpámos X, Y"
+  // sem ter de repetir a verificação de placeholder.
+  return { ...data, _clearedFields: clearedFields }
 }

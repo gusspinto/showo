@@ -445,6 +445,17 @@
 
 /* ── Revisão ── */
 .np-fields { display: flex; flex-direction: column; gap: 8px; }
+.np-fields--extra { margin-top: 10px; }
+
+.np-extra-toggle {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 14px; padding: 8px 4px;
+  background: none; border: none;
+  color: var(--color-text-secondary);
+  font-size: 13px; font-weight: 600; font-family: inherit;
+  cursor: pointer;
+}
+.np-extra-toggle:hover { color: var(--color-text); }
 
 .np-field {
   padding: 15px 17px;

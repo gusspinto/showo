@@ -23,6 +23,21 @@ import './ProjectTimeline.css'
 // esconder o heatmap de quem só usa o GitHub e não escreve marcos).
 const HIDE_TIMELINE_WHEN_ONLY_AUTO_DIARY = false
 
+// Limites para os campos de data — sem isto o <input type="date"> deixa
+// escrever qualquer sequência de dígitos no ano (ex: "275760"), porque o
+// browser só valida o formato, não valores plausíveis.
+const TODAY_ISO = new Date().toISOString().slice(0, 10)
+const MIN_DATE_ISO = '2000-01-01'
+// Nunca deixa uma data sair do intervalo plausível — chamado sempre que se
+// grava início/fim/momento, para o caso de o browser deixar passar algo
+// (colar texto, autofill) que o atributo min/max por si só não bloqueia.
+function clampDate(value, min, max) {
+  if (!value) return value
+  if (min && value < min) return min
+  if (max && value > max) return max
+  return value
+}
+
 const MONTHS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
 const fmtMonthYear = d => { const x = new Date(d); return `${MONTHS[x.getMonth()]} ${x.getFullYear()}` }
 const fmtDay = d => { const x = new Date(d + 'T00:00:00'); return `${x.getDate()} ${MONTHS[x.getMonth()]} ${x.getFullYear()}` }
@@ -45,8 +60,13 @@ export default function ProjectTimeline({ project, isOwner, viewOnly = false }) 
   const [tl, setTl] = useState(undefined)          // undefined=loading, null=nada
   const [milestones, setMilestones] = useState([])
   const [isPublic, setIsPublic] = useState(!!project.timeline_public)
-  const [startedOn, setStartedOn] = useState(project.project_started_on || '')
-  const [finishedOn, setFinishedOn] = useState(project.project_finished_on || '')
+  // Início/fim já não têm um formulário próprio para editar — duas formas de
+  // marcar "quando" (datas soltas + momentos com data) deixavam o cartão
+  // com informação a mais e sem relação clara entre as partes. Ficam só
+  // como leitura de dados antigos (quem já os tinha definido); o único
+  // sítio para marcar datas passa a ser "Adicionar momento".
+  const startedOn = project.project_started_on || ''
+  const finishedOn = project.project_finished_on || ''
   const [busy, setBusy] = useState(false)
   const [form, setForm] = useState(null)           // {id?, title, happened_on, note}
   const [suggestions, setSuggestions] = useState(null)
@@ -72,19 +92,6 @@ export default function ProjectTimeline({ project, isOwner, viewOnly = false }) 
     const next = !isPublic
     setIsPublic(next)
     await supabase.from('projects').update({ timeline_public: next }).eq('id', project.id)
-  }
-
-  // Sem isto, quem olha para um projeto parado há 6 meses não sabe se foi
-  // abandonado (inconsistência) ou se já está feito — a presença da data de
-  // fim é o que distingue os dois casos, não um estado à parte para não
-  // haver dois campos a poder discordar.
-  async function saveStarted(value) {
-    setStartedOn(value)
-    await supabase.from('projects').update({ project_started_on: value || null }).eq('id', project.id)
-  }
-  async function saveFinished(value) {
-    setFinishedOn(value)
-    await supabase.from('projects').update({ project_finished_on: value || null }).eq('id', project.id)
   }
 
   async function saveMilestone() {
@@ -172,24 +179,14 @@ export default function ProjectTimeline({ project, isOwner, viewOnly = false }) 
     </div>
   )
 
-  // Só o dono edita — assim um recrutador nunca fica com dúvidas: parado
-  // sem data de fim é inconsistência, com data de fim é projeto acabado.
-  const dateEditor = canEdit && (
-    <div className="ptl-dates">
-      <label className="ptl-dates-field">
-        <span>Início</span>
-        <input type="date" className="ptl-input" value={startedOn} onChange={e => saveStarted(e.target.value)} />
-      </label>
-      <label className="ptl-dates-field">
-        <span>Fim (deixa em branco se ainda estiver a decorrer)</span>
-        <input type="date" className="ptl-input" value={finishedOn} onChange={e => saveFinished(e.target.value)} />
-      </label>
-    </div>
-  )
+  // Datas dos momentos — só limitadas ao intervalo plausível (não a
+  // início/fim do projeto, que já não têm aqui um formulário próprio).
+  const milestoneMin = MIN_DATE_ISO
+  const milestoneMax = TODAY_ISO
 
   const ownerActions = canEdit && (
     <div className="ptl-actions">
-      <button className="ptl-btn" onClick={() => setForm({ title: '', happened_on: new Date().toISOString().slice(0, 10), note: '' })}>
+      <button className="ptl-btn" onClick={() => setForm({ title: '', happened_on: clampDate(TODAY_ISO, milestoneMin, milestoneMax), note: '' })}>
         <Plus size={13} /> Adicionar momento
       </button>
       {hasEntries && (
@@ -205,13 +202,12 @@ export default function ProjectTimeline({ project, isOwner, viewOnly = false }) 
     return (
       <div className="ptl-card ptl-card--empty">
         {header}
-        {dateEditor}
         <p className="ptl-empty-text">
           Regista os momentos importantes do projeto. No perfil, mostram a um
           recrutador que trabalhaste nele ao longo do tempo.
         </p>
         {ownerActions}
-        {form && <MilestoneForm form={form} setForm={setForm} onSave={saveMilestone} busy={busy} />}
+        {form && <MilestoneForm form={form} setForm={setForm} onSave={saveMilestone} busy={busy} min={milestoneMin} max={milestoneMax} />}
         {suggestions && <Suggestions list={suggestions} onAccept={acceptSuggestion} onDismiss={s => setSuggestions(p => p.filter(x => x !== s))} />}
       </div>
     )
@@ -220,7 +216,6 @@ export default function ProjectTimeline({ project, isOwner, viewOnly = false }) 
   return (
     <div className="ptl-card">
       {header}
-      {dateEditor}
 
       {showStats && (
         <>
@@ -265,7 +260,7 @@ export default function ProjectTimeline({ project, isOwner, viewOnly = false }) 
       {ownerActions}
 
       {suggestions && <Suggestions list={suggestions} onAccept={acceptSuggestion} onDismiss={s => setSuggestions(p => p.filter(x => x !== s))} />}
-      {form && <MilestoneForm form={form} setForm={setForm} onSave={saveMilestone} busy={busy} />}
+      {form && <MilestoneForm form={form} setForm={setForm} onSave={saveMilestone} busy={busy} min={milestoneMin} max={milestoneMax} />}
 
       {milestones.length > 0 ? (
         <ol className="ptl-list">
@@ -295,13 +290,13 @@ export default function ProjectTimeline({ project, isOwner, viewOnly = false }) 
 
 const byDate = (a, b) => (a.happened_on < b.happened_on ? -1 : 1)
 
-function MilestoneForm({ form, setForm, onSave, busy }) {
+function MilestoneForm({ form, setForm, onSave, busy, min, max }) {
   return (
     <div className="ptl-form">
       <input className="ptl-input" placeholder="O que aconteceu? (ex: primeira demo a funcionar)" maxLength={120}
         value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} autoFocus />
-      <input className="ptl-input" type="date" value={form.happened_on}
-        onChange={e => setForm(f => ({ ...f, happened_on: e.target.value }))} />
+      <input className="ptl-input" type="date" value={form.happened_on} min={min} max={max}
+        onChange={e => setForm(f => ({ ...f, happened_on: clampDate(e.target.value, min, max) }))} />
       <textarea className="ptl-input ptl-textarea" rows={2} placeholder="Uma frase de contexto (opcional)" maxLength={500}
         value={form.note} onChange={e => setForm(f => ({ ...f, note: e.target.value }))} />
       <div className="ptl-form-acts">

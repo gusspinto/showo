@@ -6,90 +6,74 @@ import { SettingsMinimalisticIcon as Wrench } from '@solar-icons/react/bold/sett
 import { PanoramaIcon as Mountain } from '@solar-icons/react/bold/panorama'
 import { GraphNewUpIcon as TrendingUp } from '@solar-icons/react/bold/graph-new-up'
 import { BrainIcon as Brain } from '@solar-icons/react/bold/brain'
+import { getProjectField } from './projectFields'
 
-// scoreGain = pontos máximos de score que esta missão desbloqueia (ao atingir o threshold)
+// threshold/scoreGain vêm agora de projectFields.js — antes tinham números
+// próprios (100/100/50/100/1/50/80/80) que não coincidiam com os do score
+// (120/120/60/120/1/60/100/100), por isso uma missão podia ficar "completa"
+// sem dar nenhum ponto de score real. Só title/description/icon ficam aqui,
+// que são específicos da apresentação da missão.
 export const CHALLENGES = [
   {
     id: 'problem',
     icon: Target,
     title: 'Apresenta o problema',
-    description: 'Descreve o problema que o teu projeto resolve com pelo menos 100 caracteres.',
-    scoreGain: 15,
+    description: 'Descreve o problema que o teu projeto resolve.',
     field: 'problem',
-    fieldLabel: 'Problema',
-    threshold: 100,
   },
   {
     id: 'solution',
     icon: Lightbulb,
     title: 'Descreve a solução',
-    description: 'Explica a tua solução com pelo menos 100 caracteres.',
-    scoreGain: 15,
+    description: 'Explica a tua solução.',
     field: 'solution',
-    fieldLabel: 'Solução',
-    threshold: 100,
   },
   {
     id: 'target_audience',
     icon: Users,
     title: 'Define o teu público',
-    description: 'Descreve quem vai usar o teu projeto com pelo menos 50 caracteres.',
-    scoreGain: 10,
+    description: 'Descreve quem vai usar o teu projeto.',
     field: 'target_audience',
-    fieldLabel: 'Público-alvo',
-    threshold: 50,
   },
   {
     id: 'features',
     icon: Settings,
     title: 'Lista as funcionalidades',
-    description: 'Descreve as funcionalidades principais com pelo menos 100 caracteres.',
-    scoreGain: 10,
+    description: 'Descreve as funcionalidades principais.',
     field: 'features',
-    fieldLabel: 'Funcionalidades',
-    threshold: 100,
   },
   {
     id: 'technologies',
     icon: Wrench,
     title: 'Mostra as tecnologias',
     description: 'Menciona as tecnologias utilizadas no projeto.',
-    scoreGain: 8,
     field: 'technologies',
-    fieldLabel: 'Tecnologias',
-    threshold: 1,
   },
   {
     id: 'challenges',
     icon: Mountain,
     title: 'Documenta os desafios',
-    description: 'Partilha os desafios que enfrentaste com pelo menos 50 caracteres.',
-    scoreGain: 8,
+    description: 'Partilha os desafios que enfrentaste.',
     field: 'challenges',
-    fieldLabel: 'Desafios',
-    threshold: 50,
   },
   {
     id: 'results',
     icon: TrendingUp,
     title: 'Prova os resultados',
-    description: 'Mostra os resultados alcançados com pelo menos 80 caracteres.',
-    scoreGain: 12,
+    description: 'Mostra os resultados alcançados.',
     field: 'results',
-    fieldLabel: 'Resultados',
-    threshold: 80,
   },
   {
     id: 'learnings',
     icon: Brain,
     title: 'Reflete sobre o aprendizado',
-    description: 'Partilha o que aprendeste com pelo menos 80 caracteres.',
-    scoreGain: 12,
+    description: 'Partilha o que aprendeste.',
     field: 'learnings',
-    fieldLabel: 'Aprendizagens',
-    threshold: 80,
   },
-]
+].map(c => {
+  const f = getProjectField(c.field)
+  return { ...c, fieldLabel: f.label, threshold: f.minLen, scoreGain: f.scoreGain }
+})
 
 export function getChallengeStatus(challenge, project) {
   const val = String(project[challenge.field] || '').trim()

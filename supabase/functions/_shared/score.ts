@@ -104,6 +104,7 @@ export function calculateScore(
   if (raw('name') && !looksLikeSpam(raw('name'))) total += 3
   if (raw('area') && !looksLikeSpam(raw('area'))) total += 2
 
+  // manter sincronizado com src/lib/projectFields.js (Deno não importa de src/)
   if (len('problem') >= 120) total += 8
   if (len('solution') >= 120) total += 8
   if (len('target_audience') >= 60) total += 5

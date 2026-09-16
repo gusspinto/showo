@@ -47,6 +47,18 @@ const REVIEW_FIELDS = [
   { key: 'technologies',    label: 'Tecnologias',          multiline: false, required: false, minLen: 5, skippable: true },
 ]
 
+/* Estes três a IA escreve sempre (challenges/results/learnings vão para a
+   base de dados e para a página pública desde a criação), mas nunca
+   apareciam aqui para revisão — por isso projetos novos podiam nascer com
+   o texto-modelo da IA ("[período]", "[X]%") publicado sem ninguém ver.
+   Ficam à parte, num grupo fechado por defeito: são reais mas secundários,
+   e empilhá-los com os 8 de cima só voltava a dar 11 campos do mesmo peso. */
+const REVIEW_FIELDS_EXTRA = [
+  { key: 'challenges', label: 'Desafios',       multiline: true, required: false, minLen: 20 },
+  { key: 'results',    label: 'Resultados',     multiline: true, required: false, minLen: 20 },
+  { key: 'learnings',  label: 'Aprendizagens',  multiline: true, required: false, minLen: 20 },
+]
+
 /* Aceitamos o que um aluno português tem mesmo na mão. O .doc/.ppt antigos
    ficam de fora de propósito: são formatos binários que não conseguimos ler
    de forma fiável, e é melhor dizê-lo à entrada do que falhar na análise. */
@@ -198,6 +210,7 @@ export default function NewProject() {
   const [editingField, setEditingField] = useState(null)
   const [editValue, setEditValue] = useState('')
   const [skippedFields, setSkippedFields] = useState(new Set())
+  const [showExtraFields, setShowExtraFields] = useState(false)
   const [error, setError] = useState(null)
   const [interviewData, setInterviewData] = useState(null)
   const [gateMsg, setGateMsg] = useState(null)
@@ -552,11 +565,14 @@ export default function NewProject() {
           })
       }
 
+      const clearedLabels = (project._clearedFields || [])
+        .map(k => REVIEW_FIELDS_EXTRA.find(f => f.key === k)?.label || REVIEW_FIELDS.find(f => f.key === k)?.label || k)
       navigate(`/projeto/${project.slug}`, {
         state: {
           newProject: true,
           projectData: project,
           message: asAttachment ? 'Anexo adicionado.' : 'Projeto criado! Começa a melhorar o teu score.',
+          clearedFields: clearedLabels,
         },
       })
     } catch (err) {
@@ -778,6 +794,36 @@ export default function NewProject() {
               />
             ))}
           </div>
+
+          {/* Fechado por defeito — são campos reais (a IA já os escreveu),
+              mas secundários; abrir só quem quiser rever/corrigir agora
+              em vez de depois de publicado. */}
+          <button
+            type="button"
+            className="np-extra-toggle"
+            onClick={() => setShowExtraFields(s => !s)}
+          >
+            {showExtraFields ? 'Esconder' : 'Mais detalhe'} ({REVIEW_FIELDS_EXTRA.length})
+            <ArrowRight size={12} style={{ transform: showExtraFields ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.15s' }} />
+          </button>
+          {showExtraFields && (
+            <div className="np-fields np-fields--extra">
+              {REVIEW_FIELDS_EXTRA.map(field => (
+                <ReviewField
+                  key={field.key}
+                  field={field}
+                  value={form[field.key] ?? ''}
+                  isEditing={editingField === field.key}
+                  editValue={editValue}
+                  onEdit={() => startEdit(field)}
+                  onEditValueChange={setEditValue}
+                  onCommit={commitEdit}
+                  isSkipped={skippedFields.has(field.key)}
+                  onToggleSkip={() => toggleSkip(field.key)}
+                />
+              ))}
+            </div>
+          )}
 
           {error && <p className="np-err"><AlertTriangle size={13} /> {error}</p>}
 

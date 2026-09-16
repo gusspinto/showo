@@ -944,6 +944,16 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
     }
   }, [showSidebar, collapsed])
 
+  // O painel flutuante "Gerir projeto" (.proj-manage-float) é position:fixed,
+  // fora do fluxo — nada reservava espaço para ele, por isso em larguras de
+  // desktop "estreitas" (~900-1250px, onde o conteúdo centrado ainda não
+  // ganhou margem automática suficiente) ficava por cima do título do
+  // projeto. Esta classe deixa o CSS reservar sempre o espaço certo.
+  useEffect(() => {
+    document.body.classList.toggle('has-proj-manage-float', extras?.type === 'project')
+    return () => document.body.classList.remove('has-proj-manage-float')
+  }, [extras?.type])
+
   const isRecruiter = profile?.role === 'recrutador' || profile?.role === 'empresa'
   const isTeacher = profile?.role === 'professor'
   const recruiterAccent = 'var(--color-accent)'
