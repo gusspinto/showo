@@ -17,10 +17,10 @@ const NOTE = (
 )
 
 const TAGS = [
-  'Diário de projeto',
+  'Diário automático do projeto',
+  'IA com contexto contínuo',
   'Sincroniza o GitHub',
-  'Importa PDF e slides',
-  'Publica no LinkedIn',
+  'Portfólio pronto a partilhar',
 ]
 
 const ENTRIES = [
@@ -39,7 +39,9 @@ export default function HomeHow() {
           </h2>
           <p className="home-hw-lead">
             Cada avanço fica no diário do projeto, e os commits do GitHub entram
-            sozinhos. A página monta-se com ele, pronta a partilhar num link.
+            sozinhos. A IA acompanha tudo desde o início, ao contrário do
+            ChatGPT, que começa do zero em cada conversa. No fim, a página
+            monta-se sozinha, pronta a partilhar num link.
           </p>
           <ul className="home-hw-tags">
             {TAGS.map(t => (

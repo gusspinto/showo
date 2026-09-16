@@ -40,7 +40,7 @@ export default function Privacidade() {
         <li><strong>Anthropic (Claude)</strong>, a IA que escreve a análise. O texto do teu projeto vai para lá só para gerar o feedback, e não serve para treinar o modelo.</li>
         <li><strong>Resend</strong>, que envia os emails transacionais (confirmações, relatórios mensais).</li>
         <li><strong>Google</strong>, se escolheres entrar com a conta Google (autenticação OAuth).</li>
-        <li><strong>Stripe</strong>, que processa os pagamentos das subscrições. Os dados do cartão nunca passam pelos nossos servidores — ficam só com a Stripe.</li>
+        <li><strong>Stripe</strong>, que processa os pagamentos das subscrições. Os dados do cartão nunca passam pelos nossos servidores, ficam só com a Stripe.</li>
       </ul>
       <p>
         Alguns destes serviços podem tratar dados fora da Europa, por exemplo nos EUA. Quando isso acontece, é feito com as
