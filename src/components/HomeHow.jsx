@@ -34,6 +34,10 @@ export default function HomeHow() {
     <section className="home-hw" id="como-funciona" aria-labelledby="home-hw-title">
       <div className="home-hw-inner">
         <div className="home-hw-copy">
+          <p className="home-hw-eyebrow">
+            O Showo organiza os teus projetos e transforma-os num portfólio
+            profissional, com IA a ajudar em cada etapa.
+          </p>
           <h2 id="home-hw-title" className="home-hw-title">
             O projeto conta-se <span className="home-gradient-word">enquanto acontece</span>
           </h2>
