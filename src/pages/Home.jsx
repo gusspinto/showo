@@ -241,7 +241,8 @@ export default function Home() {
 
             <p className="home-hero-subtitle">
               De um projeto de curso a um trabalho freelance, com a IA a
-              acompanhar do primeiro rascunho ao portfólio pronto a partilhar.
+              acompanhar do primeiro rascunho ao portfólio pronto a abrir
+              oportunidades.
             </p>
           </div>
 

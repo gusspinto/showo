@@ -42,10 +42,10 @@ export default function HomeHow() {
           </h2>
           <p className="home-hw-lead">
             O Showo organiza os teus projetos, escolares ou freelance, num
-            portfólio pronto a mostrar. Cada avanço fica no diário, os
-            commits do GitHub entram sozinhos, e a IA acompanha tudo desde o
-            início, ao contrário do ChatGPT, que começa do zero em cada
-            conversa.
+            portfólio pronto a mostrar a recrutadores e a abrir oportunidades.
+            Cada avanço fica no diário, os commits do GitHub entram sozinhos,
+            e a IA acompanha tudo desde o início, ao contrário do ChatGPT,
+            que começa do zero em cada conversa.
           </p>
           <ul className="home-hw-tags">
             {TAGS.map(t => (
