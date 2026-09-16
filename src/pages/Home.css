@@ -74,31 +74,16 @@
   font-family: var(--font-heading);
 }
 
-/* ── Stats counter ──
-   Discreto — número e legenda no mesmo tom de cinza, sem o azul vibrante
-   que tinha antes; é um número de rodapé, não um segundo título. */
-.home-hero-stats {
-  display: inline-flex;
-  align-items: center;
-  gap: 14px;
-  border-left: 2px solid rgba(255,255,255,0.16);
-  padding-left: 16px;
-}
-.home-hero-stats-number {
-  font-family: var(--font-heading);
-  font-weight: 400;
-  font-size: clamp(20px, 2.4vw, 26px);
-  color: rgba(255,255,255,0.75);
-  letter-spacing: -0.8px;
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-}
-.home-hero-stats-label {
-  font-size: 12px;
-  color: rgba(255,255,255,0.4);
+/* ── Subtítulo ──
+   Substitui o contador de projetos — com a base de utilizadores ainda
+   pequena, um número real lia-se como fraco em vez de como prova social. */
+.home-hero-subtitle {
+  font-size: 16px;
+  color: rgba(255,255,255,0.55);
   font-weight: 500;
-  line-height: 1.4;
-  max-width: 22ch;
+  line-height: 1.5;
+  max-width: 34ch;
+  margin: 0;
 }
 
 /* ── Arranque (Google + email/password progressivo) ──
@@ -748,7 +733,7 @@ body.light .home-card-cover img {
     flex: none;
     padding: 44px clamp(24px, 6vw, 48px) 64px;
   }
-  .home-hero-stats { justify-content: center; }
+  .home-hero-subtitle { text-align: center; }
 }
 
 @media (max-width: 860px) and (min-width: 601px) {
@@ -786,7 +771,7 @@ body.light .home-card-cover img {
     font-size: clamp(38px, 12vw, 52px);
     margin-bottom: 14px;
   }
-  .home-hero-stats { display: none; }
+  .home-hero-subtitle { display: none; }
 
   /* Projects: horizontal scroll with snap */
   .home-section { padding: 40px 0 32px; }
