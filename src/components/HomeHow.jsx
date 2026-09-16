@@ -35,17 +35,17 @@ export default function HomeHow() {
       <div className="home-hw-inner">
         <div className="home-hw-copy">
           <p className="home-hw-eyebrow">
-            O Showo organiza os teus projetos e transforma-os num portfólio
-            profissional, com IA a ajudar em cada etapa.
+            O que é o Showo
           </p>
           <h2 id="home-hw-title" className="home-hw-title">
             O projeto conta-se <span className="home-gradient-word">enquanto acontece</span>
           </h2>
           <p className="home-hw-lead">
-            Cada avanço fica no diário do projeto, e os commits do GitHub entram
-            sozinhos. A IA acompanha tudo desde o início, ao contrário do
-            ChatGPT, que começa do zero em cada conversa. No fim, a página
-            monta-se sozinha, pronta a partilhar num link.
+            O Showo organiza os teus projetos, escolares ou freelance, num
+            portfólio pronto a mostrar. Cada avanço fica no diário, os
+            commits do GitHub entram sozinhos, e a IA acompanha tudo desde o
+            início, ao contrário do ChatGPT, que começa do zero em cada
+            conversa.
           </p>
           <ul className="home-hw-tags">
             {TAGS.map(t => (

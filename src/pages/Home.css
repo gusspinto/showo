@@ -542,12 +542,12 @@ body.light .home-card-cover img {
   align-items: center;
 }
 .home-hw-eyebrow {
-  font-size: 15px;
-  font-weight: 600;
-  line-height: 1.45;
-  color: var(--color-text);
-  margin: 0 0 12px;
-  max-width: 38ch;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  margin: 0 0 10px;
 }
 .home-hw-title {
   font-size: clamp(24px, 3vw, 34px);
