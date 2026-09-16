@@ -89,6 +89,8 @@ export default function Home() {
   const [resendState, setResendState] = useState('idle') // idle | sending | sent
   const [projects, setProjects] = useState([])
   const [projectsLoading, setProjectsLoading] = useState(true)
+  const [projectCount, setProjectCount] = useState(null)
+  const [animatedCount, setAnimatedCount] = useState(0)
   // Email primeiro, como o Claude — só pede a password depois de sabermos
   // que a conta já existe (handleContinueWithEmail).
   const [heroAuthStep, setHeroAuthStep] = useState('email')
@@ -121,9 +123,30 @@ export default function Home() {
       const { data } = await supabase.rpc('get_featured_projects', { p_limit: 6, p_weeks: 12 })
       if (data) setProjects(data)
       setProjectsLoading(false)
+
+      const { count } = await supabase
+        .from('projects')
+        .select('id', { count: 'exact', head: true })
+        .or('visibility.eq.public,visibility.is.null')
+      if (count != null) setProjectCount(count)
     }
     load()
   }, [])
+
+  useEffect(() => {
+    if (projectCount == null) return
+    let raf
+    const duration = 1100
+    const start = performance.now()
+    function tick(now) {
+      const progress = Math.min((now - start) / duration, 1)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setAnimatedCount(Math.round(eased * projectCount))
+      if (progress < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [projectCount])
 
   /* Suporte genérico para /#id — o hambúrguer já não aponta para cá (passou
      a linkar /aprende, a página a sério, não este scroll), mas a secção
@@ -231,19 +254,20 @@ export default function Home() {
                 o desktop mantinha o "." e o azul em itálico, tirados agora
                 por pedido, para bater com a simplicidade pretendida para
                 menus/ecrãs de entrada (preto e branco; cor fica para dentro
-                da app, sobretudo a dashboard). O número de projetos saiu
-                daqui — com a base ainda pequena, um número real lia-se como
-                fraco em vez de como prova. Volta quando fizer sentido como
-                prova social (ver growth_stat_threshold em memória). */}
+                da app, sobretudo a dashboard). O subtítulo também saiu — a
+                explicação já está no "Como funciona", logo a seguir. */}
             <h1 className="home-hero-h1">
               Mostra o que<br />construíste
             </h1>
 
-            <p className="home-hero-subtitle">
-              De um projeto de curso a um trabalho freelance, com a IA a
-              acompanhar do primeiro rascunho ao portfólio pronto a abrir
-              oportunidades.
-            </p>
+            <div className="home-hero-stats">
+              <span className="home-hero-stats-number">
+                {projectCount == null ? '—' : animatedCount}
+              </span>
+              <span className="home-hero-stats-label">
+                projetos criados<br />por estudantes portugueses
+              </span>
+            </div>
           </div>
 
           {/* ── Arranque ── Mesmo bloco em qualquer ecrã, já não só no
