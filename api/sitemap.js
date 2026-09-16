@@ -3,13 +3,16 @@ const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_
 const BASE = 'https://showo.pt'
 
 export default async function handler(req, res) {
+  // Rotas reais em src/App.jsx — /ranking e /empresa nunca existiram como
+  // páginas (dava 404 a crawlers), e /aprende-a-usar está errado (a rota é
+  // /aprende). /pricing faltava por completo apesar de ser uma página com
+  // intenção comercial clara, que devia mesmo estar indexada.
   const staticUrls = [
     { loc: BASE, priority: '1.0', changefreq: 'daily' },
     { loc: `${BASE}/explorar`, priority: '0.8', changefreq: 'daily' },
-    { loc: `${BASE}/ranking`, priority: '0.8', changefreq: 'daily' },
-    { loc: `${BASE}/login`, priority: '0.7', changefreq: 'monthly' },
-    { loc: `${BASE}/empresa`, priority: '0.7', changefreq: 'monthly' },
-    { loc: `${BASE}/aprende-a-usar`, priority: '0.6', changefreq: 'monthly' },
+    { loc: `${BASE}/pricing`, priority: '0.8', changefreq: 'monthly' },
+    { loc: `${BASE}/aprende`, priority: '0.6', changefreq: 'monthly' },
+    { loc: `${BASE}/login`, priority: '0.5', changefreq: 'monthly' },
   ]
 
   let projectUrls = []
