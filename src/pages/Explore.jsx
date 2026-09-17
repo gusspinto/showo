@@ -28,6 +28,26 @@ const TITLE_FONT_CSS = {
   inter:    'Inter, sans-serif',
 }
 
+// A coluna `area` é texto livre (escrito por quem cria o projeto, ou pela
+// IA), por isso os valores reais são muito específicos e às vezes nem fazem
+// sentido como área ("aplicação de gestão (CRUD)"). Em vez de mostrar cada
+// valor distinto como um chip à parte, agrupa por tópico geral — ordem
+// importa, o primeiro padrão que bater ganha.
+const AREA_CATEGORIES = [
+  { id: 'tecnologia', label: 'Tecnologia',              match: /tecnolog|informátic|informatic|software|programa|mobile|\bapp\b|\bweb\b|jogo|game|mecatron|automaç[aã]o|crud|sistema|machine learn|intelig[êe]ncia artificial/ },
+  { id: 'saude',      label: 'Saúde e bem-estar',       match: /sa[uú]de|fitness|gin[aá]sio|desporto|bem-estar|cabeleireiro|medic|\bbio/ },
+  { id: 'marketing',  label: 'Marketing e comunicação', match: /marketing|comunicaç|public|redes sociais|social media|vendas|comercial/ },
+  { id: 'gestao',     label: 'Gestão e negócio',        match: /gest[aã]o|empreendedor|produto|evento|com[eé]rcio|neg[oó]cio/ },
+  { id: 'educacao',   label: 'Educação',                match: /educa[cç][aã]o|ensino|escola|forma[cç][aã]o/ },
+  { id: 'energia',    label: 'Energia e sustentabilidade', match: /energia|renov[aá]vel|\biot\b|sustentab/ },
+  { id: 'design',     label: 'Design e vídeo',          match: /design|v[ií]deo|criativ/ },
+]
+function categorizeArea(area) {
+  const a = (area || '').toLowerCase()
+  const hit = AREA_CATEGORIES.find(c => c.match.test(a))
+  return hit ? hit.id : 'outra'
+}
+
 const PROJECT_TYPES = [
   { id: '', label: 'Todos os tipos' },
   { id: 'pap', label: 'PAP / Projeto final' },
@@ -182,8 +202,12 @@ export default function Explore() {
         })
         try { localStorage.setItem(VIEWS_KEY, JSON.stringify(viewCache)) } catch {}
         setProjects(merged)
-        const areaSet = [...new Set(merged.map(p => p.area).filter(Boolean))].sort()
-        setAreas([{ id: '', label: 'Todas as áreas' }, ...areaSet.map(a => ({ id: a, label: a }))])
+        const categoryIds = [...new Set(merged.map(p => categorizeArea(p.area)))]
+        const categoryOptions = AREA_CATEGORIES
+          .filter(c => categoryIds.includes(c.id))
+          .map(c => ({ id: c.id, label: c.label }))
+        if (categoryIds.includes('outra')) categoryOptions.push({ id: 'outra', label: 'Outra' })
+        setAreas([{ id: '', label: 'Todas as áreas' }, ...categoryOptions])
       }
       setLoading(false)
     }
@@ -265,7 +289,7 @@ export default function Explore() {
       p.course?.toLowerCase().includes(query) ||
       p.creator_name?.toLowerCase().includes(query)
     )) return false
-    if (filterArea && p.area !== filterArea) return false
+    if (filterArea && categorizeArea(p.area) !== filterArea) return false
     if (filterType) {
       if (filterType === 'pap') { if (!p.is_pap && p.project_type !== 'pap') return false }
       else if (p.project_type !== filterType) return false
