@@ -58,3 +58,24 @@ export function hsvToHex(h, s, v) {
 export function isValidHex(v) {
   return /^#?[0-9a-f]{6}$/i.test(v)
 }
+
+/* Luminância percebida — decide se o texto por cima de um fundo escolhido
+   pela pessoa tem de ser escuro ou claro. O 0.6 é o ponto onde os amarelos
+   e os beges deixam de aguentar texto branco. */
+export function isLightHex(hex) {
+  const { r, g, b } = hexToRgb(hex)
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.6
+}
+
+/* Uma cor só não faz um hero: as paletas escolhidas à mão são sempre um par
+   com profundidade. Isto reconstrói esse par a partir de um hex qualquer —
+   uma âncora mais escura e um segundo tom com a matiz rodada, que é o que dá
+   o degradê em vez de um bloco de cor chapado. */
+export function accentGradientFromHex(hex) {
+  const { h, s, v } = hexToHsv(hex)
+  const clamp = n => Math.max(0, Math.min(100, n))
+  return {
+    c1: hsvToHex(h, clamp(s * 1.05), clamp(v * 0.55)),
+    c2: hsvToHex((h + 24) % 360, clamp(s * 0.92), clamp(v * 0.8)),
+  }
+}

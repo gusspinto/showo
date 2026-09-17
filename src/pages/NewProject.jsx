@@ -628,7 +628,7 @@ export default function NewProject() {
                   <div className="np-filemeta">
                     {files.length} {files.length === 1 ? 'ficheiro' : 'ficheiros'} · {prettySize(totalBytes)}
                   </div>
-                  <TypeRow value={projectType} onChange={setProjectType} />
+                  <TypeRow value={projectType} onChange={setProjectType} accountType={profile?.account_type} />
                   <label className="np-notes-label" htmlFor="np-notes">Algo a acrescentar antes de a IA ler? (opcional)</label>
                   <textarea
                     id="np-notes"
@@ -682,7 +682,7 @@ export default function NewProject() {
 
             <DescribeTextarea value={description} onChange={setDescription} onSubmit={handleGenerate} />
 
-            <TypeRow value={projectType} onChange={setProjectType} />
+            <TypeRow value={projectType} onChange={setProjectType} accountType={profile?.account_type} />
 
             {error && <p className="np-err"><AlertTriangle size={13} /> {error}</p>}
 
@@ -985,16 +985,20 @@ function StepBar({ current, total, label }) {
   )
 }
 
-function TypeRow({ value, onChange }) {
+function TypeRow({ value, onChange, accountType }) {
   const personal = PROJECT_TYPES.filter(t => !t.group)
   const school = PROJECT_TYPES.filter(t => t.group === 'school')
+  // "PAP" só faz sentido para quem está mesmo numa escola — numa conta
+  // individual é uma sigla demasiado específica (e limitada a um tipo de
+  // curso português) para quem só quer dizer "o meu projeto final".
+  const label = t => (t.id === 'pap' && accountType !== 'school') ? 'Projeto Final' : t.label
   const renderType = t => (
     <button
       key={t.id}
       type="button"
       className={`np-type${value === t.id ? ' is-active' : ''}`}
       onClick={() => onChange(t.id)}
-    >{t.label}</button>
+    >{label(t)}</button>
   )
 
   return (

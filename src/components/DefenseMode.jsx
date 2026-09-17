@@ -2,6 +2,7 @@
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { AiUsageBadge, ConfirmUseModal, PlanGateModal } from './PlanGate'
+import SegmentedTabs from './SegmentedTabs'
 import { HandShakeIcon as Hand } from '@solar-icons/react/bold/hand-shake'
 import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
 import { LightbulbIcon as Lightbulb } from '@solar-icons/react/bold/lightbulb'
@@ -1305,28 +1306,16 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
 
         <style>{`
           .dm-icon-btn:hover { color: var(--color-text) !important; }
-          .dm-tab-btn:hover:not(.active) { color: var(--color-text) !important; border-color: var(--color-border-hover) !important; }
         `}</style>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: 4, padding: '16px 28px 0', flexShrink: 0 }}>
-          {tabs.map(t => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`dm-tab-btn${tab === t.id ? ' active' : ''}`}
-              style={{
-                background: tab === t.id ? 'var(--color-surface-hover)' : 'transparent',
-                border: `1px solid ${tab === t.id ? 'var(--color-surface-hover)' : C.border}`,
-                borderRadius: 9, padding: '8px 16px',
-                color: tab === t.id ? C.blue : C.muted,
-                fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-                transition: 'all 0.15s',
-              }}
-            >
-              {t.label}
-            </button>
-          ))}
+        <div style={{ padding: '16px 28px 0', flexShrink: 0 }}>
+          <SegmentedTabs
+            size="compact"
+            value={tab}
+            onChange={setTab}
+            options={tabs.map(t => ({ id: t.id, label: t.label }))}
+          />
         </div>
 
         {/* Content */}

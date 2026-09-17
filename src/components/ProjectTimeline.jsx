@@ -281,9 +281,7 @@ export default function ProjectTimeline({ project, isOwner, viewOnly = false }) 
             </li>
           ))}
         </ol>
-      ) : canEdit && (
-        <p className="ptl-nomarks">Ainda sem momentos. Adiciona o primeiro ou deixa a IA sugerir a partir do diário.</p>
-      )}
+      ) : null}
     </div>
   )
 }

@@ -16,6 +16,9 @@ import { DatabaseIcon as Database } from '@solar-icons/react/bold/database'
 import { CHALLENGES, getChallengeStatus } from '../../lib/challenges'
 import { getProjectField, PROJECT_FIELDS } from '../../lib/projectFields'
 import { useTheme } from '../../context/ThemeContext'
+import ColorPicker from '../ColorPicker'
+import SegmentedTabs from '../SegmentedTabs'
+import { accentGradientFromHex, isLightHex, isValidHex } from '../../lib/color'
 import ProjectComments from '../ProjectComments'
 import ProjectTimeline from '../ProjectTimeline'
 import ProjectTimelineBadge from '../ProjectTimelineBadge'
@@ -345,29 +348,27 @@ export function DbSetupNudge({ project, isOwner }) {
   }
 
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: 12,
-      background: 'color-mix(in srgb, var(--color-primary) 8%, var(--color-surface))',
-      border: '1px solid color-mix(in srgb, var(--color-primary) 25%, var(--color-border))',
-      borderRadius: 12, padding: '14px 16px', marginBottom: 16,
-      fontFamily: 'var(--font-body, system-ui, sans-serif)',
-    }}>
-      <Database size={18} color="var(--color-primary)" style={{ flexShrink: 0 }} />
-      <p style={{ margin: 0, flex: 1, fontSize: 12.5, color: 'var(--color-text)', lineHeight: 1.5 }}>
-        Tens tecnologia a sério neste projeto — liga uma base de dados própria em 2 minutos e mostra uma API a funcionar.
+    <div
+      onClick={() => navigate(`/editar/${project.slug}?tab=database`)}
+      role="button" tabIndex={0}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') navigate(`/editar/${project.slug}?tab=database`) }}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 8,
+        background: 'color-mix(in srgb, var(--color-primary) 8%, var(--color-surface))',
+        border: '1px solid color-mix(in srgb, var(--color-primary) 25%, var(--color-border))',
+        borderRadius: 12, padding: '10px 12px', marginBottom: 10, cursor: 'pointer',
+        fontFamily: 'var(--font-body, system-ui, sans-serif)',
+      }}
+    >
+      <Database size={15} color="var(--color-primary)" style={{ flexShrink: 0 }} />
+      <p style={{ margin: 0, flex: 1, fontSize: 12, color: 'var(--color-text)', lineHeight: 1.5 }}>
+        Liga uma base de dados própria em 2 minutos.
       </p>
       <button
-        onClick={() => navigate(`/editar/${project.slug}?tab=database`)}
-        style={{
-          flexShrink: 0, fontSize: 12, fontWeight: 700, color: 'var(--color-primary)',
-          background: 'none', border: 'none', cursor: 'pointer', padding: '4px 6px',
-        }}
-      >Ligar agora →</button>
-      <button
-        onClick={dismiss}
+        onClick={e => { e.stopPropagation(); dismiss() }}
         aria-label="Dispensar"
-        style={{ flexShrink: 0, color: 'var(--color-text-tertiary)', background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex' }}
-      ><X size={14} /></button>
+        style={{ flexShrink: 0, color: 'var(--color-text-tertiary)', background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex' }}
+      ><X size={13} /></button>
     </div>
   )
 }
@@ -860,7 +861,7 @@ export const Section = memo(function Section({ fieldKey, content, isOwner, canEd
 
   return (
     <div className="proj-card-pad proj-card" style={{
-      border: `1px solid ${isShort || isPlaceholder ? 'var(--color-warning-subtle)' : showHighlight ? 'var(--color-primary-subtle)' : isEmpty ? colors.subtle + '55' : colors.border}`,
+      border: `1px solid ${isShort || isPlaceholder ? 'var(--color-warning-subtle)' : showHighlight ? 'var(--color-primary-subtle)' : isEmpty ? colors.subtle + '55' : isComplete ? 'var(--color-success-subtle)' : colors.border}`,
       background: showHighlight ? 'color-mix(in srgb, var(--color-primary) 4%, var(--color-surface))' : undefined,
     }}>
       <div
@@ -873,7 +874,7 @@ export const Section = memo(function Section({ fieldKey, content, isOwner, canEd
       >
         <h3 style={{
           margin: 0, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
-          color: isShort || isPlaceholder ? colors.yellow : isEmpty ? colors.subtle : colors.muted,
+          color: isShort || isPlaceholder ? colors.yellow : isEmpty ? colors.subtle : isComplete && !showHighlight ? 'var(--color-success)' : colors.muted,
           display: 'flex', alignItems: 'center', gap: 7, minWidth: 0, flex: 1,
         }}>
           <meta.Icon size={13} style={{ flexShrink: 0 }} />
@@ -1304,13 +1305,41 @@ export const wsGroup = {
 }
 export const wsGroupLabel = {
   fontSize: 10, fontWeight: 700,
-  color: 'var(--color-text-tertiary)',
+  color: 'var(--color-text-secondary)',
   textTransform: 'uppercase', letterSpacing: '0.1em',
   marginBottom: 11,
 }
 export const wsControlLabel = {
   fontSize: 11, fontWeight: 600,
   color: 'var(--color-text-secondary)', marginBottom: 6,
+}
+// Bolas de cor — as mesmas do editor de perfil (mesmo tamanho, 34px no
+// mobile), para escolher uma cor ser o mesmo gesto e a mesma medida nos
+// dois sítios. overflow:hidden é necessário — sem isto o conic-gradient da
+// bola personalizada não fica bem cortado pelo border-radius nos cantos.
+export const wsSwatch = {
+  appearance: 'none', WebkitAppearance: 'none', outline: 'none',
+  boxSizing: 'border-box',
+  width: 34, height: 34, minHeight: 34, minWidth: 34, borderRadius: '50%',
+  border: '2px solid transparent', cursor: 'pointer', padding: 0, margin: 0,
+  boxShadow: '0 0 0 1px var(--color-border) inset',
+  // overflow:hidden não chega sozinho com escala de ecrã fracionária (125%,
+  // 150%) — um pixel da cor de fundo escapa a um canto por arredondamento
+  // do border-radius. clip-path força o corte circular sem depender disso.
+  overflow: 'hidden', position: 'relative', clipPath: 'circle(50%)',
+  flexShrink: 0,
+}
+// Estado selecionado neutro (branco em tema escuro, preto em tema claro)
+// para as opções do editor — botões de tamanho, tipografia, alinhamento,
+// estilo de cards. O azul já é o significado de "cor de destaque" nas
+// bolas de cor; reutilizá-lo em toda a seleção de opções sem relação com
+// o accent do projeto ficava a dizer a mesma coisa em sítios diferentes.
+export function wsOptStyle(isSel) {
+  return {
+    border: `1px solid ${isSel ? 'var(--color-text)' : 'var(--color-border)'}`,
+    background: isSel ? 'var(--color-surface-hover)' : 'var(--color-bg)',
+    color: isSel ? 'var(--color-text)' : 'var(--color-text-secondary)',
+  }
 }
 export const wsInputNew = {
   width: '100%', boxSizing: 'border-box',
@@ -1414,6 +1443,24 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
 }) {
   const navigate = useNavigate()
   const { theme } = useTheme()
+  // O painel do workspace vive dentro da mesma árvore que o [data-pv-theme]
+  // (usado para forçar claro/escuro no PREVIEW conforme o fundo que o dono
+  // escolheu para a página pública). Sem isto, escolher um fundo claro no
+  // projeto também clareava o editor por herança de custom properties. O
+  // workspace deve seguir só o tema da app (claro/escuro do utilizador),
+  // nunca a cor de fundo do projeto — por isso redeclara as variáveis aqui,
+  // cortando a herança do ancestral.
+  const wsThemeVars = theme === 'light' ? {
+    '--color-bg': '#f2f0ec', '--color-bg-alt': '#e6e3de',
+    '--color-surface': '#ffffff', '--color-surface-hover': '#f7f5f2',
+    '--color-border': '#d4cfc8', '--color-border-hover': '#b8b0a5',
+    '--color-text': '#1a1a1a', '--color-text-secondary': '#5a5a5a', '--color-text-tertiary': '#8a8a8a',
+  } : {
+    '--color-bg': '#080808', '--color-bg-alt': '#111111',
+    '--color-surface': '#1a1a1a', '--color-surface-hover': '#222222',
+    '--color-border': 'rgba(255,255,255,0.08)', '--color-border-hover': 'rgba(255,255,255,0.14)',
+    '--color-text': '#f0f0f0', '--color-text-secondary': '#888888', '--color-text-tertiary': '#555555',
+  }
 
   // Hooks must be at top level — never inside conditionals or IIFEs
   const dragIdx    = useRef(null)
@@ -1440,6 +1487,27 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
   const [templateApplied, setTemplateApplied] = useState('')
   const sectionDragRef = useRef(null)
   const [dragOverSectionIdx, setDragOverSectionIdx] = useState(null)
+  // Qual dos dois seletores de cor está aberto: 'accent', 'bg' ou nenhum.
+  const [colorPicker, setColorPicker] = useState(null)
+
+  function pickCoverImage() {
+    const input = document.createElement('input')
+    input.type = 'file'; input.accept = 'image/jpeg,image/png,image/webp,image/gif'
+    input.onchange = async () => {
+      const file = input.files[0]; if (!file) return
+      if (file.size > 10 * 1024 * 1024) { alert('Ficheiro demasiado grande (máx 10 MB)'); return }
+      if (!file.type.startsWith('image/')) { alert('Apenas imagens são permitidas'); return }
+      const ext = file.name.split('.').pop()
+      const path = `${project.id}/cover_${Date.now()}.${ext}`
+      const { error: upErr } = await supabase.storage.from('covers').upload(path, file, { upsert: true })
+      if (!upErr) {
+        const { data: { publicUrl } } = supabase.storage.from('covers').getPublicUrl(path)
+        await supabase.from('projects').update({ cover_url: publicUrl }).eq('id', project.id)
+        onCoverChange?.(publicUrl)
+      }
+    }
+    input.click()
+  }
   const layoutListRef = useRef(null)
 
   const layoutDragOverRef = useRef(null)
@@ -1634,20 +1702,38 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
     { key: 'full',    label: 'Impactante', height: 400 },
   ]
 
+  // Cor livre — guardada à parte da chave da paleta, para quem tiver escolhido
+  // uma cor própria não a perder ao espreitar uma paleta pronta e voltar atrás.
+  const customAccent = isValidHex(previewStyle.accentCustom || '') ? previewStyle.accentCustom : null
+  const usingCustomAccent = previewStyle.accent === 'custom' && !!customAccent
+  const customBg = isValidHex(previewStyle.bgCustom || '') ? previewStyle.bgCustom : null
+  const usingCustomBg = previewStyle.bg === 'custom' && !!customBg
+
   const selectedPalette = ACCENT_PALETTES.find(p => p.key === previewStyle.accent) || ACCENT_PALETTES[0]
   const typeHero = TYPE_HERO_PUBLIC[project.project_type] ?? TYPE_HERO_PUBLIC.personal
-  const hero = selectedPalette.c1
-    ? { c1: selectedPalette.c1, c2: selectedPalette.c2 }
-    : typeHero
+  const hero = usingCustomAccent
+    ? accentGradientFromHex(customAccent)
+    : selectedPalette.c1
+      ? { c1: selectedPalette.c1, c2: selectedPalette.c2 }
+      : typeHero
 
   const heroHeight        = (HERO_SIZES.find(s => s.key === previewStyle.heroSize) || HERO_SIZES[0]).height
   const selectedFont      = FONT_OPTIONS.find(f => f.key === (previewStyle.font || 'default')) || FONT_OPTIONS[0]
   const selectedTitleFont = TITLE_FONT_OPTIONS.find(f => f.key === (previewStyle.titleFont || 'croogla')) || TITLE_FONT_OPTIONS[0]
   const titleStyle        = previewStyle.titleStyle || 'normal'
   const selectedBg        = BG_OPTIONS.find(b => b.key === (previewStyle.bg || 'default')) || BG_OPTIONS[0]
-  const resolvedBg        = selectedBg.bg || 'var(--color-bg)'
-  // pvTheme: force dark/light CSS vars inside preview regardless of app theme
-  const pvTheme           = selectedBg.isLight ? 'light' : selectedBg.key !== 'default' ? 'dark' : null
+  const resolvedBg        = usingCustomBg ? customBg : (selectedBg.bg || 'var(--color-bg)')
+  // pvTheme: force dark/light CSS vars inside preview regardless of app theme.
+  // Num fundo escolhido à mão isso passa a depender da luminância do hex, senão
+  // um fundo claro ficava com texto branco por cima.
+  const pvTheme           = usingCustomBg
+    ? (isLightHex(customBg) ? 'light' : 'dark')
+    : selectedBg.isLight ? 'light' : selectedBg.key !== 'default' ? 'dark' : null
+  // A tagline vive na zona onde o hero (com o scrim escuro atrás) já
+  // desvaneceu para o fundo da página — por isso a cor dela segue o fundo
+  // escolhido, não a foto de capa. Sem fundo escolhido (pvTheme null),
+  // segue o tema da própria app.
+  const heroSurfaceIsLight = pvTheme === 'light' || (!pvTheme && theme === 'light')
   const titleAlign        = previewStyle.titleAlign || 'left'
   const coverAsHero       = !!(previewStyle.coverAsHero && project.cover_url)
   const customTagline     = previewStyle.customTagline || ''
@@ -1776,6 +1862,20 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
           margin: 10px auto 0;
           flex-shrink: 0;
         }
+        /* Cinco separadores fixos do painel, sempre a dividir a barra toda —
+           painel estreito (360px) para 5 labels, por isso menos padding
+           horizontal que a variante compacta por omissão. */
+        /* Sem flex:1 a dividir por igual — a 360px, 5 separadores (um deles
+           "Secções") não cabem sem se esmagarem uns contra os outros.
+           Fica com o comportamento normal da variante compacta: cada botão
+           do tamanho do seu conteúdo, e a barra desliza se não couber tudo
+           — o mesmo que já resolvia isto no editor de projeto. */
+        .ws-segtabs { flex: 1; min-width: 0; }
+        .ws-segtabs .seg-btn { padding-left: 8px; padding-right: 8px; gap: 4px; font-size: 11px; }
+        /* Mesma razão do painel desktop: 5 separadores não cabem divididos
+           por igual sem esmagar "Secções"/"Templates". Tamanho ao
+           conteúdo + scroll horizontal em vez de forçar. */
+        .ws-mobile-segtabs { width: 100%; min-width: 0; border: none; background: none; padding: 0; }
         .pv-workspace input:focus,
         .pv-workspace textarea:focus {
           border-color: var(--color-primary-subtle) !important;
@@ -1789,7 +1889,6 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
         /* ── Mobile: banner ── */
         @media (max-width: 600px) {
           .pv-banner-inner { flex-wrap: wrap; gap: 6px !important; padding: 8px 12px !important; }
-          .pv-banner-label { display: none; }
           .pv-banner-sep { display: none !important; }
         }
         /* ── Mobile: content ── */
@@ -1876,38 +1975,28 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
           paddingBottom: 'env(safe-area-inset-bottom, 0px)',
           height: 'calc(60px + env(safe-area-inset-bottom, 0px))',
         }}>
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', overflowX: 'auto', scrollbarWidth: 'none' }}>
-            {[
-              { id: 'conteudo',  label: 'Conteúdo',  Icon: FileText       },
-              { id: 'estilo',    label: 'Estilo',    Icon: Palette        },
-              { id: 'blocos',    label: 'Blocos',    Icon: Layout         },
-              { id: 'seccoes',   label: 'Secções',   Icon: Eye            },
-              { id: 'templates', label: 'Templates', Icon: LayoutTemplate },
-            ].map(t => {
-              const active = wsExpanded && previewTab === t.id
-              return (
-                <button key={t.id} onClick={() => {
-                  if (wsExpanded && previewTab === t.id) setWsExpanded(false)
-                  else { setPreviewTab(t.id); setWsExpanded(true) }
-                }} style={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                  gap: 3, padding: '6px 14px', flexShrink: 0,
-                  background: 'transparent', border: 'none', cursor: 'pointer',
-                  color: active ? 'var(--color-primary)' : 'var(--color-text-tertiary)',
-                  WebkitTapHighlightColor: 'transparent',
-                }}>
-                  <div style={{
-                    width: 36, height: 26, borderRadius: 8,
-                    background: active ? 'var(--color-primary-subtle)' : 'transparent',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    transition: 'background 0.15s',
-                  }}>
-                    <t.Icon size={16} />
-                  </div>
-                  <span style={{ fontSize: 10, fontWeight: active ? 700 : 500, lineHeight: 1 }}>{t.label}</span>
-                </button>
-              )
-            })}
+          <div style={{ flex: 1, padding: '0 8px', minWidth: 0 }}>
+            {/* Mesmos cinco separadores do cabeçalho do painel no desktop —
+                eram a mesma funcionalidade com dois desenhos diferentes
+                (aqui, ícone+label empilhados sem pílula nem slide; lá,
+                a pílula partilhada). Ficam iguais nos dois sítios. */}
+            <SegmentedTabs
+              size="compact"
+              className="ws-mobile-segtabs"
+              value={wsExpanded ? previewTab : ''}
+              onChange={id => {
+                if (wsExpanded && previewTab === id) setWsExpanded(false)
+                else { setPreviewTab(id); setWsExpanded(true) }
+              }}
+              options={[
+                { id: 'conteudo',  label: 'Conteúdo',  icon: <FileText size={13} /> },
+                { id: 'estilo',    label: 'Estilo',    icon: <Palette size={13} /> },
+                { id: 'blocos',    label: 'Blocos',    icon: <Layout size={13} /> },
+                { id: 'seccoes',   label: 'Secções',   icon: <Eye size={13} /> },
+                // Templates fica de fora por agora — vai ser refeito do
+                // zero, não faz sentido continuar acessível entretanto.
+              ]}
+            />
           </div>
           <button
             onClick={async () => {
@@ -1921,8 +2010,8 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
               width: 44, height: 44, borderRadius: 12, border: 'none', cursor: 'pointer', flexShrink: 0,
               margin: '0 10px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: previewSaveError ? 'var(--color-error-subtle)' : previewSaved ? 'var(--color-success-subtle)' : 'var(--color-primary-subtle)',
-              color: previewSaveError ? 'var(--color-error)' : previewSaved ? 'var(--color-success)' : 'var(--color-primary)',
+              background: previewSaveError ? 'var(--color-error-subtle)' : previewSaved ? 'var(--color-success-subtle)' : '#fff',
+              color: previewSaveError ? 'var(--color-error)' : previewSaved ? 'var(--color-success)' : '#111',
               transition: 'all 0.15s', WebkitTapHighlightColor: 'transparent',
             }}
           >
@@ -2098,7 +2187,13 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
             textTransform: titleStyle === 'caps' ? 'uppercase' : 'none',
             textAlign: titleAlign,
             ...(titleStyle === 'gradient' ? {
-              background: `linear-gradient(135deg, ${hero.c1}, ${hero.c2})`,
+              // backgroundImage, não o shorthand "background" — o shorthand
+              // reinicia background-clip para border-box sempre que o valor
+              // muda (nova cor de destaque), e como o React só reatribui
+              // propriedades de estilo cujo valor mudou, backgroundClip:'text'
+              // (que fica igual entre renders) deixava de ser reaplicado,
+              // ficando o texto transparente sobre um retângulo sólido.
+              backgroundImage: `linear-gradient(135deg, ${hero.c1}, ${hero.c2})`,
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
@@ -2122,7 +2217,8 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
 
           {(customTagline || project.ai_tagline) && (
             <p style={{
-              fontSize: 'clamp(16px, 2.2vw, 20px)', color: coverAsHero ? 'rgba(255,255,255,0.75)' : 'var(--color-text-secondary)',
+              fontSize: 'clamp(16px, 2.2vw, 20px)',
+              color: coverAsHero && !heroSurfaceIsLight ? 'rgba(255,255,255,0.75)' : 'var(--color-text-secondary)',
               margin: titleAlign === 'right' ? '0 0 28px auto' : '0 0 28px',
               maxWidth: titleAlign === 'center' ? '100%' : 600, lineHeight: 1.5, fontWeight: 400, textAlign: titleAlign,
             }}>
@@ -2181,6 +2277,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
           fontFamily: 'var(--font-body)',
           transition: isDesktop ? 'width 0.22s cubic-bezier(0.4,0,0.2,1)' : undefined,
           overflow: 'visible',
+          ...wsThemeVars,
         }}>
           {/* Collapse/expand control — outside the clipped skin so the arrow is never cut off */}
           {isDesktop && (
@@ -2223,7 +2320,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                 { id: 'estilo',    Icon: Palette        },
                 { id: 'blocos',    Icon: Layout         },
                 { id: 'seccoes',   Icon: Eye            },
-                { id: 'templates', Icon: LayoutTemplate },
+                // Templates de fora por agora (vai ser refeito do zero).
               ].map(t => (
                 <button
                   key={t.id}
@@ -2249,52 +2346,19 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
           }}>
             {/* Tabs + actions row */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-              {/* Segmented tab control with sliding pill */}
-              {(() => {
-                const wsTabs = [
-                  { id: 'conteudo',  label: 'Conteúdo',  Icon: FileText       },
-                  { id: 'estilo',    label: 'Estilo',    Icon: Palette        },
-                  { id: 'blocos',    label: 'Blocos',    Icon: Layout         },
-                  { id: 'seccoes',   label: 'Secções',   Icon: Eye            },
-                  { id: 'templates', label: 'Templates', Icon: LayoutTemplate },
-                ]
-                const activeIdx = wsTabs.findIndex(t => t.id === previewTab)
-                return (
-                  <div style={{
-                    position: 'relative', display: 'flex', flex: 1,
-                    background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)',
-                    borderRadius: 10, padding: '3px', overflow: 'hidden',
-                  }}>
-                    {/* sliding pill */}
-                    <div style={{
-                      position: 'absolute',
-                      top: 3, bottom: 3,
-                      left: 3,
-                      width: `calc(${100 / wsTabs.length}% - 3px)`,
-                      transform: `translateX(${activeIdx * 100}%)`,
-                      transition: 'transform 0.28s cubic-bezier(0.4,0,0.2,1)',
-                      background: 'var(--color-primary)',
-                      borderRadius: 7,
-                      boxShadow: '0 1px 8px var(--color-primary-subtle)',
-                      pointerEvents: 'none',
-                    }} />
-                    {wsTabs.map(t => (
-                      <button key={t.id} onClick={() => setPreviewTab(t.id)} style={{
-                        flex: 1, padding: '6px 4px', borderRadius: 7, border: 'none',
-                        cursor: 'pointer', fontFamily: 'inherit',
-                        background: 'transparent',
-                        color: previewTab === t.id ? '#fff' : 'var(--color-text-secondary)',
-                        fontSize: 11, fontWeight: previewTab === t.id ? 700 : 500,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
-                        position: 'relative', zIndex: 1,
-                        transition: 'color 0.25s cubic-bezier(0.4,0,0.2,1)',
-                      }}>
-                        <t.Icon size={11} /> {t.label}
-                      </button>
-                    ))}
-                  </div>
-                )
-              })()}
+              <SegmentedTabs
+                size="compact"
+                className="ws-segtabs"
+                value={previewTab}
+                onChange={setPreviewTab}
+                options={[
+                  { id: 'conteudo',  label: 'Conteúdo',  icon: <FileText size={11} />,       pillColor: 'var(--color-primary)', activeColor: '#fff' },
+                  { id: 'estilo',    label: 'Estilo',    icon: <Palette size={11} />,        pillColor: 'var(--color-primary)', activeColor: '#fff' },
+                  { id: 'blocos',    label: 'Blocos',    icon: <Layout size={11} />,         pillColor: 'var(--color-primary)', activeColor: '#fff' },
+                  { id: 'seccoes',   label: 'Secções',   icon: <Eye size={11} />,            pillColor: 'var(--color-primary)', activeColor: '#fff' },
+                  // Templates de fora por agora (vai ser refeito do zero).
+                ]}
+              />
 
               {/* Save icon */}
               <button
@@ -2364,7 +2428,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                       style={{ ...wsInputNew, minHeight: 92, resize: 'vertical', lineHeight: 1.55 }}
                     />
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 7 }}>
-                      <span style={{ fontSize: 11, color: isDone ? 'var(--color-success)' : 'var(--color-text-tertiary)' }}>
+                      <span style={{ fontSize: 11, color: isDone ? 'var(--color-success)' : 'var(--color-text-secondary)' }}>
                         {len} / {f.minLen} caracteres
                       </span>
                       {dirty && (
@@ -2401,107 +2465,155 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                 {/* Accent color — 5-col grid */}
                 <div style={{ marginBottom: 14 }}>
                   <div style={wsControlLabel}>Cor de destaque</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
-                    {ACCENT_PALETTES.map(p => {
-                      const isSelected = (previewStyle.accent || 'default') === p.key
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px 8px', alignItems: 'center' }}>
+                    {/* "Padrão" fica fora da lista de propósito: era um disco
+                        aos gajos de várias cores que não dizia nada sobre o que
+                        ia sair. Continua a ser o valor de arranque, só não é
+                        uma bola para escolher. */}
+                    {ACCENT_PALETTES.filter(p => p.swatch).map(p => {
+                      const isSelected = previewStyle.accent === p.key
                       return (
                         <button key={p.key} title={p.label}
+                          aria-label={p.label}
                           onClick={() => setPreviewStyle(s => ({ ...s, accent: p.key }))}
                           style={{
-                            height: 36, borderRadius: 9, border: 'none',
-                            cursor: 'pointer', padding: 0, position: 'relative',
-                            background: p.swatch
-                              ? `linear-gradient(135deg, ${p.c1}, ${p.c2})`
-                              : 'conic-gradient(#1e40af 0deg 60deg,#7c3aed 60deg 120deg,#065f46 120deg 180deg,#7c2d12 180deg 240deg,#d97706 240deg 300deg,#db2777 300deg 360deg)',
-                            outline: isSelected ? '2px solid rgba(255,255,255,0.8)' : '2px solid transparent',
-                            outlineOffset: 2, transition: 'outline-color 0.15s',
+                            ...wsSwatch,
+                            background: p.swatch,
+                            borderColor: isSelected ? 'var(--color-text)' : 'transparent',
                           }}
-                        >
-                          {isSelected && (
-                            <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <Check size={13} color="#fff" strokeWidth={3} />
-                            </span>
-                          )}
-                        </button>
+                        />
                       )
                     })}
+                    {/* Cor livre — igual ao seletor do perfil: bola arco-íris
+                        fixa, o picker é que mostra a cor atual por dentro. */}
+                    <div style={{ position: 'relative', display: 'flex' }}>
+                      <button
+                        type="button"
+                        title="Cor personalizada"
+                        aria-label="Escolher cor de destaque personalizada"
+                        onClick={() => setColorPicker(c => (c === 'accent' ? null : 'accent'))}
+                        style={{
+                          ...wsSwatch,
+                          background: 'conic-gradient(from 180deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)',
+                        }}
+                      />
+                      {colorPicker === 'accent' && (
+                        <ColorPicker
+                          value={customAccent || '#2563eb'}
+                          onChange={c => setPreviewStyle(s => ({ ...s, accent: 'custom', accentCustom: c }))}
+                          onClose={() => setColorPicker(null)}
+                        />
+                      )}
+                    </div>
                   </div>
-                  <div style={{ fontSize: 10, color: 'var(--color-text-tertiary)', marginTop: 5, textAlign: 'right' }}>
-                    {(ACCENT_PALETTES.find(p => p.key === (previewStyle.accent || 'default')) || ACCENT_PALETTES[0]).label}
+                  <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', marginTop: 5, textAlign: 'right' }}>
+                    {usingCustomAccent
+                      ? customAccent.toUpperCase()
+                      : (ACCENT_PALETTES.find(p => p.key === (previewStyle.accent || 'default')) || ACCENT_PALETTES[0]).label}
                   </div>
                 </div>
 
                 {/* Background — 4-col grid */}
                 <div>
                   <div style={wsControlLabel}>Fundo da página</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 5 }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px 8px', alignItems: 'center' }}>
                     {BG_OPTIONS.map(b => {
-                      const isSel = (previewStyle.bg || 'default') === b.key
-                      const labelColor = b.isLight ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.65)'
-                      const labelColorSel = b.isLight ? '#0f172a' : '#fff'
-                      const checkColor = b.isLight ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.9)'
+                      const isSel = !usingCustomBg && (previewStyle.bg || 'default') === b.key
                       return (
                         <button key={b.key} title={b.label}
+                          aria-label={b.label}
                           onClick={() => setPreviewStyle(ps => ({ ...ps, bg: b.key }))}
                           style={{
-                            borderRadius: 9, border: isSel ? '2px solid var(--color-primary)' : '2px solid transparent', cursor: 'pointer', padding: 0, overflow: 'hidden',
-                            background: b.previewGradient || '#060c18',
-                            outline: isSel ? '2px solid var(--color-primary-subtle)' : '2px solid transparent',
-                            outlineOffset: 2, transition: 'all 0.15s',
+                            ...wsSwatch,
+                            background: b.preview,
+                            borderColor: isSel ? 'var(--color-text)' : 'transparent',
                           }}
-                        >
-                          <div style={{ height: 28, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            {isSel && <Check size={11} color={checkColor} strokeWidth={3} />}
-                          </div>
-                          <div style={{
-                            padding: '3px 2px 4px',
-                            background: b.isLight ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.35)',
-                            fontSize: 9, fontWeight: isSel ? 700 : 600,
-                            color: isSel ? labelColorSel : labelColor,
-                            textAlign: 'center', lineHeight: 1,
-                          }}>{b.label}</div>
-                        </button>
+                        />
                       )
                     })}
+                    {/* Fundo livre — mesma ideia da cor de destaque. */}
+                    <div style={{ position: 'relative', display: 'flex' }}>
+                      <button
+                        type="button"
+                        title="Fundo personalizado"
+                        aria-label="Escolher fundo personalizado"
+                        onClick={() => setColorPicker(c => (c === 'bg' ? null : 'bg'))}
+                        style={{
+                          ...wsSwatch,
+                          background: 'conic-gradient(from 180deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)',
+                        }}
+                      />
+                      {colorPicker === 'bg' && (
+                        <ColorPicker
+                          value={customBg || '#0c1018'}
+                          onChange={c => setPreviewStyle(s => ({ ...s, bg: 'custom', bgCustom: c }))}
+                          onClose={() => setColorPicker(null)}
+                        />
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', marginTop: 5, textAlign: 'right' }}>
+                    {usingCustomBg
+                      ? customBg.toUpperCase()
+                      : (BG_OPTIONS.find(b => b.key === (previewStyle.bg || 'default')) || BG_OPTIONS[0]).label}
                   </div>
                 </div>
               </div>
 
-              {/* Group: Hero & Capa */}
+              {/* Group: Capa — logo a seguir à Identidade Visual, não a meio
+                  da lista atrás de tipografia e links. É a decisão visual
+                  mais visível da página (o hero) e a ação mais provável
+                  a seguir a escolher as cores, por isso é a primeira coisa
+                  que se vê ao abrir "Estilo". Junta a imagem e o toggle que
+                  a liga ao hero — estavam em grupos separados, mas são a
+                  mesma decisão vista de dois ângulos. */}
               <div style={wsGroup}>
-                <div style={wsGroupLabel}>Hero & capa</div>
-                <div style={{ marginBottom: 12 }}>
-                  <div style={wsControlLabel}>Tamanho do hero</div>
-                  <div style={{ display: 'flex', gap: 4 }}>
-                    {HERO_SIZES.map(s => {
-                      const isSelected = (previewStyle.heroSize || 'default') === s.key
-                      return (
-                        <button key={s.key} onClick={() => setPreviewStyle(ps => ({ ...ps, heroSize: s.key }))}
-                          style={{
-                            flex: 1, padding: '8px 4px', borderRadius: 8,
-                            border: `1px solid ${isSelected ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                            background: isSelected ? 'var(--color-primary-subtle)' : 'var(--color-bg)',
-                            color: isSelected ? 'var(--color-primary)' : 'var(--color-text-secondary)',
-                            fontSize: 11, fontWeight: isSelected ? 700 : 500,
-                            cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s',
-                          }}
-                        >{s.label}</button>
-                      )
-                    })}
+                <div style={wsGroupLabel}>Capa</div>
+                {project.cover_url ? (
+                  <div style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', height: 120, marginBottom: 12 }}>
+                    <img src={project.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                    <button
+                      onClick={() => pickCoverImage()}
+                      style={{
+                        position: 'absolute', right: 8, bottom: 8,
+                        display: 'flex', alignItems: 'center', gap: 6,
+                        padding: '6px 11px', borderRadius: 8,
+                        background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
+                        border: '1px solid rgba(255,255,255,0.18)', color: '#fff',
+                        fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                      }}
+                    >
+                      <Camera size={12} /> Trocar
+                    </button>
                   </div>
-                </div>
+                ) : (
+                  <button
+                    onClick={() => pickCoverImage()}
+                    style={{
+                      width: '100%', height: 90, borderRadius: 10, marginBottom: 12,
+                      background: 'var(--color-bg)', border: '1.5px dashed var(--color-border)',
+                      color: 'var(--color-text-secondary)', cursor: 'pointer', fontFamily: 'inherit',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6,
+                      fontSize: 12, fontWeight: 600, transition: 'all 0.15s',
+                    }}
+                  >
+                    <Camera size={18} />
+                    Carregar capa
+                  </button>
+                )}
+
                 <div style={{ marginBottom: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
                     <div>
                       <div style={wsControlLabel}>Capa como fundo do hero</div>
-                      <div style={{ fontSize: 10, color: 'var(--color-text-tertiary)', marginTop: 1 }}>
-                        {project.cover_url ? 'Usa a imagem de capa no hero' : 'Adiciona uma capa primeiro'}
+                      <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', marginTop: 1 }}>
+                        {project.cover_url ? 'Usa a imagem de capa no hero' : 'Carrega uma capa primeiro'}
                       </div>
                     </div>
                     <button
                       onClick={() => project.cover_url && setPreviewStyle(ps => ({ ...ps, coverAsHero: !ps.coverAsHero }))}
                       style={{
-                        width: 42, height: 24, borderRadius: 99, flexShrink: 0,
+                        width: 42, height: 24, minWidth: 42, minHeight: 24, borderRadius: 99, flexShrink: 0,
                         background: previewStyle.coverAsHero && project.cover_url ? 'var(--color-primary)' : 'var(--color-border)',
                         border: 'none', cursor: project.cover_url ? 'pointer' : 'not-allowed',
                         transition: 'background 0.2s', position: 'relative',
@@ -2517,6 +2629,25 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                     </button>
                   </div>
                 </div>
+
+                <div style={{ marginBottom: 12 }}>
+                  <div style={wsControlLabel}>Tamanho do hero</div>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    {HERO_SIZES.map(s => {
+                      const isSelected = (previewStyle.heroSize || 'default') === s.key
+                      return (
+                        <button key={s.key} onClick={() => setPreviewStyle(ps => ({ ...ps, heroSize: s.key }))}
+                          style={{
+                            flex: 1, padding: '8px 4px', borderRadius: 8,
+                            ...wsOptStyle(isSelected),
+                            fontSize: 11, fontWeight: isSelected ? 700 : 500,
+                            cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s',
+                          }}
+                        >{s.label}</button>
+                      )
+                    })}
+                  </div>
+                </div>
                 <div>
                   <div style={wsControlLabel}>Tagline personalizada</div>
                   <input
@@ -2526,7 +2657,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                     style={wsInputNew}
                     maxLength={120}
                   />
-                  <div style={{ fontSize: 10, color: 'var(--color-text-tertiary)', marginTop: 5 }}>Uma frase curta que resume o teu projeto.</div>
+                  <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', marginTop: 5 }}>Uma frase curta que resume o teu projeto.</div>
                 </div>
               </div>
 
@@ -2543,9 +2674,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                           onClick={() => setPreviewStyle(ps => ({ ...ps, titleFont: f.key }))}
                           style={{
                             padding: '8px 2px', borderRadius: 8, cursor: 'pointer', textAlign: 'center',
-                            border: `1px solid ${isSel ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                            background: isSel ? 'var(--color-primary-subtle)' : 'var(--color-bg)',
-                            color: isSel ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+                            ...wsOptStyle(isSel),
                             transition: 'all 0.12s',
                           }}
                         >
@@ -2562,9 +2691,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                         <button key={s.key} onClick={() => setPreviewStyle(ps => ({ ...ps, titleStyle: s.key }))}
                           style={{
                             flex: 1, padding: '7px 4px', borderRadius: 8, cursor: 'pointer',
-                            border: `1px solid ${isSel ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                            background: isSel ? 'var(--color-primary-subtle)' : 'var(--color-bg)',
-                            color: isSel ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+                            ...wsOptStyle(isSel),
                             fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-body)', transition: 'all 0.12s',
                           }}
                         >{s.label}</button>
@@ -2583,9 +2710,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                         <button key={a.val} onClick={() => setPreviewStyle(ps => ({ ...ps, titleAlign: a.val }))}
                           style={{
                             flex: 1, padding: '8px 0', borderRadius: 8, cursor: 'pointer',
-                            border: `1px solid ${isSel ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                            background: isSel ? 'var(--color-primary-subtle)' : 'var(--color-bg)',
-                            color: isSel ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+                            ...wsOptStyle(isSel),
                             display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.12s',
                           }}
                         ><a.Icon size={14} /></button>
@@ -2603,9 +2728,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                           onClick={() => setPreviewStyle(ps => ({ ...ps, font: f.key }))}
                           style={{
                             padding: '8px 2px', borderRadius: 8, cursor: 'pointer', textAlign: 'center',
-                            border: `1px solid ${isSel ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                            background: isSel ? 'var(--color-primary-subtle)' : 'var(--color-bg)',
-                            color: isSel ? 'var(--color-primary)' : 'var(--color-text-secondary)', transition: 'all 0.12s',
+                            ...wsOptStyle(isSel), transition: 'all 0.12s',
                           }}
                         >
                           <div style={{ height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, fontFamily: f.css, lineHeight: 1 }}>{f.sample}</div>
@@ -2639,7 +2762,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                     </div>
                   ))}
                 </div>
-                <div style={{ fontSize: 10, color: 'var(--color-text-tertiary)', marginTop: 6 }}>Aparecem no hero como botões de acção.</div>
+                <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', marginTop: 6 }}>Aparecem no hero como botões de acção.</div>
               </div>
 
               {/* Group: Estilo dos cards */}
@@ -2656,59 +2779,15 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                       <button key={c.key} onClick={() => setPreviewStyle(ps => ({ ...ps, cardStyle: c.key }))}
                         style={{
                           flex: 1, padding: '10px 4px', borderRadius: 9, cursor: 'pointer', textAlign: 'center',
-                          border: `1px solid ${isSel ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                          background: isSel ? 'var(--color-primary-subtle)' : 'var(--color-bg)',
-                          color: isSel ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+                          ...wsOptStyle(isSel),
                           fontFamily: 'inherit', transition: 'all 0.12s',
                         }}
                       >
                         <div style={{ fontSize: 12, fontWeight: 700 }}>{c.label}</div>
-                        <div style={{ fontSize: 9, marginTop: 3, color: isSel ? 'var(--color-primary-subtle)' : 'var(--color-text-tertiary)' }}>{c.desc}</div>
+                        <div style={{ fontSize: 9, marginTop: 3, color: isSel ? 'var(--color-text-secondary)' : 'var(--color-text-tertiary)' }}>{c.desc}</div>
                       </button>
                     )
                   })}
-                </div>
-              </div>
-
-              {/* Group: Imagem de capa */}
-              <div style={wsGroup}>
-                <div style={wsGroupLabel}>Imagem de capa</div>
-                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                  {project.cover_url && (
-                    <img src={project.cover_url} alt="" style={{ width: 58, height: 42, borderRadius: 8, objectFit: 'cover', flexShrink: 0, border: '1px solid var(--color-border)' }} />
-                  )}
-                  <button
-                    onClick={() => {
-                      const input = document.createElement('input')
-                      input.type = 'file'; input.accept = 'image/jpeg,image/png,image/webp,image/gif'
-                      input.onchange = async () => {
-                        const file = input.files[0]; if (!file) return
-                        if (file.size > 10 * 1024 * 1024) { alert('Ficheiro demasiado grande (máx 10 MB)'); return }
-                        if (!file.type.startsWith('image/')) { alert('Apenas imagens são permitidas'); return }
-                        const ext = file.name.split('.').pop()
-                        const path = `${project.id}/cover_${Date.now()}.${ext}`
-                        const { error: upErr } = await supabase.storage.from('covers').upload(path, file, { upsert: true })
-                        if (!upErr) {
-                          const { data: { publicUrl } } = supabase.storage.from('covers').getPublicUrl(path)
-                          await supabase.from('projects').update({ cover_url: publicUrl }).eq('id', project.id)
-                          onCoverChange?.(publicUrl)
-                        }
-                      }
-                      input.click()
-                    }}
-                    style={{
-                      flex: 1, padding: '11px 14px', borderRadius: 9,
-                      background: 'var(--color-primary-subtle)', border: '1.5px dashed var(--color-primary-subtle)',
-                      color: 'var(--color-primary)', cursor: 'pointer', fontFamily: 'inherit',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                      fontSize: 12, fontWeight: 600, transition: 'all 0.15s',
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-primary-subtle)'; e.currentTarget.style.borderColor = 'var(--color-primary-subtle)' }}
-                    onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-primary-subtle)'; e.currentTarget.style.borderColor = 'var(--color-primary-subtle)' }}
-                  >
-                    <Camera size={14} />
-                    {project.cover_url ? 'Alterar capa' : 'Carregar capa'}
-                  </button>
                 </div>
               </div>
 
@@ -2722,7 +2801,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                   style={wsInputNew}
                   maxLength={120}
                 />
-                <div style={{ fontSize: 10, color: 'var(--color-text-tertiary)', marginTop: 5 }}>Aparece no fundo da preview pública.</div>
+                <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', marginTop: 5 }}>Aparece no fundo da preview pública.</div>
               </div>
             </div>
           )}
@@ -2754,7 +2833,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
 
               {/* Block type picker — compact 3-col chip grid */}
               <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--color-border)' }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Adicionar bloco</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Adicionar bloco</div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 5 }}>
                   {BLOCK_TYPES.map(bt => {
                     const BtIcon = bt.Icon
@@ -2798,7 +2877,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                     </div>
                     <div>
                       <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', fontWeight: 700 }}>Nenhum bloco ainda</div>
-                      <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)', marginTop: 3, lineHeight: 1.5 }}>Adiciona um bloco acima para<br/>personalizar a tua preview.</div>
+                      <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 3, lineHeight: 1.5 }}>Adiciona um bloco acima para<br/>personalizar a tua preview.</div>
                     </div>
                   </div>
                 ) : previewBlocks.map((block, idx) => {
@@ -2953,7 +3032,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                       )}
                       {block.type === 'dbtable' && (
                         dbTablesForBlock.length === 0 ? (
-                          <p style={{ margin: 0, fontSize: 11, color: 'var(--color-text-tertiary)', lineHeight: 1.5 }}>
+                          <p style={{ margin: 0, fontSize: 11, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
                             Ainda não ligaste nenhuma tabela a este projeto — faz isso em "Base de dados" no editor do projeto.
                           </p>
                         ) : (
@@ -3059,7 +3138,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
 
             return (
               <div style={{ flex: 1, overflowY: 'scroll', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', padding: '12px 14px' }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Ordem da página</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Ordem da página</div>
                 <p style={{ margin: '0 0 12px', fontSize: 11, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
                   Arrasta o ≡ para reordenar. Toca em <Eye size={10} style={{ verticalAlign: 'middle' }} /> para ocultar.
                 </p>
@@ -3132,7 +3211,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                         <span style={{ fontSize: 12, fontWeight: 600, flex: 1, color: isHidden ? 'var(--color-text-tertiary)' : 'var(--color-text)', textDecoration: isHidden ? 'line-through' : 'none' }}>
                           {s.label}
                         </span>
-                        {!hasContent && <span style={{ fontSize: 9, color: 'var(--color-text-tertiary)', fontWeight: 600, background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 4, padding: '1px 5px' }}>vazio</span>}
+                        {!hasContent && <span style={{ fontSize: 9, color: 'var(--color-text-secondary)', fontWeight: 600, background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 4, padding: '1px 5px' }}>vazio</span>}
                         <button
                           onClick={() => {
                             const newHidden = new Set(hidden)
@@ -3189,7 +3268,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                           />
                           {media && (
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <span style={{ fontSize: 10, color: 'var(--color-text-tertiary)', fontWeight: 600 }}>Lado:</span>
+                              <span style={{ fontSize: 10, color: 'var(--color-text-secondary)', fontWeight: 600 }}>Lado:</span>
                               {['right', 'left'].map(side => (
                                 <button
                                   key={side}
@@ -3213,7 +3292,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                     )
                   })}
                 </div>
-                <p style={{ margin: '12px 0 0', fontSize: 10, color: 'var(--color-text-tertiary)', lineHeight: 1.5 }}>
+                <p style={{ margin: '12px 0 0', fontSize: 10, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
                   A ordem é guardada ao clicar em "Guardar alterações".
                 </p>
               </div>
@@ -3330,7 +3409,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
 
             return (
               <div style={{ flex: 1, overflowY: 'scroll', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', padding: '12px 10px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 2, padding: '0 4px' }}>Templates completos</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 2, padding: '0 4px' }}>Templates completos</div>
 
                 {templateApplied && (
                   <div style={{ padding: '8px 10px', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 8, fontSize: 12, color: 'var(--color-success)', display: 'flex', alignItems: 'center', gap: 5 }}>

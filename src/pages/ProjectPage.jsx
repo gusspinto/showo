@@ -16,6 +16,7 @@ import { CHALLENGES, getChallengeStatus } from '../lib/challenges'
 import { getProjectField } from '../lib/projectFields'
 import { getProjectState } from '../lib/projectState'
 import { Navbar } from '../components/Navbar'
+import SegmentedTabs from '../components/SegmentedTabs'
 import { PlanGateModal, AiUsageBadge, ConfirmUseModal } from '../components/PlanGate'
 import { chatProjectCoach } from '../lib/chatProjectCoach'
 import { useAuth } from '../context/AuthContext'
@@ -1131,6 +1132,10 @@ export default function ProjectPage() {
   const [tipsOpen, setTipsOpen] = useState(true)
   const [viewsExpanded, setViewsExpanded] = useState(false)
   const [sectionsOpen, setSectionsOpen] = useState(false)
+  // "Como subir o score" e "Missões" começam fechados no mobile — logo
+  // após o scroll para a tab Melhorar já vinha muita informação de uma vez.
+  const [scoreOpen, setScoreOpen] = useState(false)
+  const [missionsOpenMobile, setMissionsOpenMobile] = useState(false)
   const [showQR, setShowQR] = useState(false)
   const [showInvite, setShowInvite] = useState(false)
   const [inviteInput, setInviteInput] = useState('')
@@ -1420,12 +1425,46 @@ export default function ProjectPage() {
   // project_finished_on a ter ou não valor. Update direto: é o dono a
   // escrever na sua própria linha, já coberto pela RLS existente.
   const [stateSaving, setStateSaving] = useState(false)
+
+  // Trocar a capa direto no banner (mobile) — sem passar pelo formulário
+  // de Editar Projeto, que noutro ecrã pedia para escolher a imagem antes
+  // de gravar tudo o resto. Aqui é uma ação isolada e imediata: escolhe,
+  // sobe, grava, pronto.
+  const [coverUploading, setCoverUploading] = useState(false)
+  const heroCoverInputRef = useRef(null)
+  async function handleHeroCoverUpload(e) {
+    const file = e.target.files[0]
+    e.target.value = ''
+    if (!file || !project) return
+    if (file.size > 10 * 1024 * 1024) { triggerToast('Imagem demasiado grande (máx. 10MB)'); return }
+    setCoverUploading(true)
+    try {
+      const ext = file.name.split('.').pop() || 'jpg'
+      const path = `${project.slug}-${Date.now()}.${ext}`
+      const { error: upErr } = await supabase.storage.from('covers').upload(path, file, { upsert: true, contentType: file.type })
+      if (upErr) throw upErr
+      const { data: { publicUrl } } = supabase.storage.from('covers').getPublicUrl(path)
+      const { error } = await supabase.from('projects').update({ cover_url: publicUrl }).eq('id', project.id)
+      if (error) throw error
+      setProject(p => ({ ...p, cover_url: publicUrl }))
+      triggerToast('Imagem atualizada')
+    } catch {
+      triggerToast('Não foi possível carregar a imagem — tenta outra vez')
+    }
+    setCoverUploading(false)
+  }
+
   async function toggleProjectState() {
     if (!project || stateSaving) return
     setStateSaving(true)
     const next = project.project_finished_on ? null : new Date().toISOString().slice(0, 10)
     const { error } = await supabase.from('projects').update({ project_finished_on: next }).eq('id', project.id)
-    if (!error) setProject(p => ({ ...p, project_finished_on: next }))
+    if (!error) {
+      setProject(p => ({ ...p, project_finished_on: next }))
+      triggerToast(next ? 'Projeto marcado como concluído' : 'Projeto reaberto')
+    } else {
+      triggerToast('Não foi possível guardar — verifica a ligação e tenta outra vez')
+    }
     setStateSaving(false)
   }
 
@@ -1849,7 +1888,11 @@ export default function ProjectPage() {
       .update({ [challenge.field]: fieldValue, score: newScore })
       .eq('id', project.id)
 
-    if (error) { setSaving(false); return false }
+    if (error) {
+      setSaving(false)
+      triggerToast('Não foi possível guardar — verifica a ligação e tenta outra vez')
+      return false
+    }
 
     setProject(updatedProject)
     setScore(newScore)
@@ -2326,7 +2369,7 @@ export default function ProjectPage() {
            conteúdo, só um atalho para não precisar de scroll cego. */
         .proj-anchor-nav {
           display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none;
-          padding-bottom: 2px; margin-bottom: 4px;
+          padding-bottom: 2px; margin-bottom: 22px;
         }
         .proj-anchor-nav::-webkit-scrollbar { display: none; }
         .proj-anchor-chip {
@@ -2448,7 +2491,7 @@ export default function ProjectPage() {
         }
         @media (max-width: 600px) {
           .proj-wrap         { padding: 0 14px calc(60px + env(safe-area-inset-bottom, 0px)) !important; overflow-x: hidden !important; }
-          .proj-cover        { height: 180px !important; margin-top: 16px !important; border-radius: 12px !important; }
+          .proj-cover        { height: 180px !important; margin-top: 0 !important; border-radius: 12px !important; }
           .proj-hero         { padding: 16px 0 12px !important; }
           .proj-h1           { font-size: 32px !important; }
           .proj-score-abs    { display: none !important; }
@@ -2477,13 +2520,19 @@ export default function ProjectPage() {
           .proj-identity-row > span { white-space: nowrap; flex-shrink: 0; }
           /* Tighter hero on mobile */
           .proj-hero { padding: 10px 0 6px !important; }
+          /* Ginásio/Outro (a linha de identidade, sem o nome — já não faz
+             sentido no meio do título e do subtítulo) sobe para cima do
+             título, e o score fica mais compacto logo a seguir. */
+          .proj-hero-content { display: flex !important; flex-direction: column; }
+          .proj-identity-row { order: -1; margin-bottom: 8px !important; }
+          .proj-cover-edit-fab { display: flex !important; }
+          .proj-views-widget-desktop { display: none !important; }
+          .proj-dashboard { align-items: center; text-align: center; }
+          .proj-dashboard > div { justify-content: center !important; }
           /* Highlights: stack on mobile */
           .proj-highlights-grid { grid-template-columns: 1fr !important; gap: 8px !important; }
           /* Mini dashboard inner grids: 2 cols on mobile */
           .proj-mini-dash > div[style*="grid"] { grid-template-columns: 1fr 1fr !important; }
-          /* Missions header: stack on mobile */
-          .proj-missions-header { flex-direction: column !important; }
-          .proj-missions-header > div:last-child { width: 100% !important; min-width: 0 !important; }
           /* Mobile: AI FAB hidden, Defense FAB circular */
           .proj-ai-fab       { display: none !important; }
           .proj-ai-fab-label { display: none !important; }
@@ -2506,6 +2555,23 @@ export default function ProjectPage() {
           /* In Explorar tab: always show sections, hide the toggle button */
           .proj-mobile-active .proj-sections-toggle { display: none !important; }
           .proj-mobile-active .proj-sections-body.collapsed { display: flex !important; flex-direction: column; gap: 12px; }
+          /* Percurso e Comentários usam os 32px de padding lateral no
+             desktop para respirar dentro de um layout mais largo; no
+             mobile isso só os deixava mais estreitos que o card de
+             Missões ao lado. Aqui ficam à mesma largura, sem padding
+             próprio — herdam o inset do .proj-body como tudo o resto. */
+          .proj-timeline-wrap, .proj-comments-wrap { padding-left: 0 !important; padding-right: 0 !important; }
+          /* Mesmo espaçamento entre todos os cards empilhados de "Melhorar"
+             (score, missões, percurso, comentários) — cada um tinha a sua
+             própria margem improvisada e ficavam a distâncias diferentes
+             umas das outras. .ptl-card tem margem própria (8px/14px) usada
+             no resto da app; aqui é anulada a favor do valor único. */
+          .proj-timeline-wrap { margin-bottom: 14px; }
+          .proj-timeline-wrap .ptl-card { margin: 0 !important; }
+          /* Linha de separação entre Percurso e Comentários — os dois cards
+             ficavam encostados sem nenhuma quebra visual entre eles. */
+          .proj-comments-wrap { border-top: 1px solid var(--color-border); padding-top: 14px !important; }
+          .proj-comments-wrap > div:first-child { padding-top: 0 !important; }
           /* proj-body comes before sidebar on mobile */
           .proj-body   { order: 2 !important; }
           /* Tab bar — pílula com fundo a deslizar, como o resto do editor
@@ -2521,41 +2587,12 @@ export default function ProjectPage() {
             z-index: 10;
             flex-shrink: 0;
           }
-          .proj-mobile-tabs-pill {
-            position: relative;
-            display: flex; flex: 1;
-            background: var(--color-bg-alt);
-            border: 1px solid var(--color-border);
-            border-radius: 12px;
-            padding: 3px;
-            overflow: hidden;
-          }
-          .proj-mobile-tabs-slider {
-            position: absolute; top: 3px; bottom: 3px; left: 3px;
-            border-radius: 9px;
-            background: var(--color-primary);
-            box-shadow: 0 2px 10px var(--color-primary-subtle);
-            transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
-            pointer-events: none;
-          }
-          .proj-mobile-tab-btn {
-            position: relative; z-index: 1;
-            flex: 1;
-            display: flex; align-items: center; justify-content: center; gap: 6px;
-            padding: 9px 6px;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--color-text-secondary);
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-family: inherit;
-            white-space: nowrap;
-            transition: color 0.25s cubic-bezier(0.4,0,0.2,1);
-          }
-          .proj-mobile-tab-active {
-            color: #fff !important;
-          }
+          /* Três separadores fixos, sempre a dividir a barra toda —
+             ao contrário da variante "compact" por omissão (que dá só o
+             espaço que o conteúdo pede, para caber tabs de tamanhos
+             desiguais como as do editor de projeto). */
+          .proj-mobile-segtabs { width: 100%; background: var(--color-bg-alt); }
+          .proj-mobile-segtabs .seg-btn { flex: 1; }
           /* Tab content sections */
           .proj-mobile-section { display: none !important; }
           .proj-mobile-active  { display: flex !important; flex-direction: column; gap: 10px; }
@@ -3366,6 +3403,35 @@ export default function ProjectPage() {
         const ag = getAreaGradient(project.area)
         return (
           <div style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
+            {isOwner && (
+              <>
+                <input
+                  ref={heroCoverInputRef}
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={handleHeroCoverUpload}
+                />
+                {/* Trocar a capa direto no banner — só no mobile; no
+                    formulário de Editar Projeto (desktop) fica como estava. */}
+                <button
+                  className="proj-cover-edit-fab"
+                  onClick={() => heroCoverInputRef.current?.click()}
+                  disabled={coverUploading}
+                  aria-label="Alterar imagem de capa"
+                  style={{
+                    position: 'absolute', top: 12, right: 12, zIndex: 5,
+                    width: 42, height: 42, borderRadius: 12,
+                    background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+                    border: '1px solid rgba(255,255,255,0.25)', color: '#fff',
+                    display: 'none', alignItems: 'center', justifyContent: 'center',
+                    cursor: coverUploading ? 'default' : 'pointer',
+                  }}
+                >
+                  {coverUploading ? <Loader size={16} /> : <Camera size={16} />}
+                </button>
+              </>
+            )}
             {project.cover_url ? (
               <div className="proj-cover" style={{ width: '100%', height: 320, position: 'relative' }}>
                 <img src={project.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
@@ -3399,7 +3465,7 @@ export default function ProjectPage() {
         {/* Hero */}
         <div className="proj-hero" style={{ padding: '24px 0 40px' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 24 }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="proj-hero-content" style={{ flex: 1, minWidth: 0 }}>
 
           {/* Badges + invite */}
           {(() => {
@@ -3578,7 +3644,12 @@ export default function ProjectPage() {
             )
           })()}
 
-          {/* Title row — uses titleFont + titleStyle from previewStyle */}
+          {/* Title row — uses titleFont + titleStyle from previewStyle.
+              O ícone de vistas vivia aqui ao lado do título, mas com o h1
+              a flex:1 isso empurrava o centro visual do texto para a
+              esquerda no mobile (onde o título fica centrado) — passou
+              para junto do score, que já é uma linha de estado, não de
+              identidade. */}
           <div className="proj-h1-row" style={{ alignItems: 'flex-start' }}>
             <h1 className="proj-h1" style={{
               fontSize: 'clamp(34px, 5.5vw, 48px)',
@@ -3593,9 +3664,11 @@ export default function ProjectPage() {
             }}>
               {project.name}
             </h1>
-            {/* Views — eye icon, hover/click to reveal count */}
+            {/* Views — só no desktop; no mobile passou para a linha do
+                score (o h1 a flex:1 ao lado deste ícone descentrava o
+                título quando a hero fica centrada no telemóvel). */}
             <div
-              className={`proj-views-widget${viewsExpanded ? ' expanded' : ''}`}
+              className={`proj-views-widget proj-views-widget-desktop${viewsExpanded ? ' expanded' : ''}`}
               onClick={() => setViewsExpanded(v => !v)}
               title={`${project.views ?? 0} visualizações`}
               style={{ display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer', color: colors.muted, flexShrink: 0, padding: '4px 6px', borderRadius: 6, marginTop: 8 }}
@@ -3614,7 +3687,7 @@ export default function ProjectPage() {
           )}
 
           {/* Student identity line — name · area · course + status badges */}
-          {(project.creator_name || project.area || project.course || internshipReady || ownerProfile?.available_for_work || project.review_status) && (
+          {(project.area || project.course || project.school_year || ownerProfile?.available_for_work || project.review_status) && (
             <div className="proj-identity-row" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
               {/* "Disponível" — blue briefcase icon only */}
               {ownerProfile?.available_for_work && (
@@ -3657,7 +3730,11 @@ export default function ProjectPage() {
                   </div>
                 )
               })()}
-              {[...new Set([project.creator_name, project.area, project.course, project.school_year])]
+              {/* Sem o nome do criador — já aparece no cartão de autor mais
+                  abaixo (tab Partilha); repeti-lo aqui, ainda por cima ao
+                  lado do "Editar", era o mesmo dado três vezes na mesma
+                  página. */}
+              {[...new Set([project.area, project.course, project.school_year])]
                 .filter(Boolean)
                 .map((item, i) => (
                   <span key={i} style={{ fontSize: 13, color: colors.muted, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -3693,8 +3770,10 @@ export default function ProjectPage() {
                   <Check size={11} /> Concluído
                 </span>
               )}
-              {/* Review state (falls back to the score level when there's no teacher review) */}
-              {project.review_status ? (() => {
+              {/* Review state — só aparece quando há mesmo algo a dizer (nota
+                  do professor). "A ganhar forma" (o nível genérico do score)
+                  foi removido: não dizia nada de novo além do próprio número. */}
+              {project.review_status && (() => {
                 const rs = project.review_status
                 const cfg = rs === 'ready_for_defense'
                   ? { tone: '34,197,94', color: 'var(--color-success)', label: 'Pronto para defesa' }
@@ -3702,15 +3781,24 @@ export default function ProjectPage() {
                   ? { tone: '27,120,247', color: 'var(--color-primary)', label: 'Correções enviadas' }
                   : { tone: '245,158,11', color: 'var(--color-warning)', label: 'Precisa de revisão' }
                 return (
-                  <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 6, background: `rgba(${cfg.tone},0.12)`, color: cfg.color, border: `1px solid rgba(${cfg.tone},0.28)`, borderRadius: 999, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: `rgba(${cfg.tone},0.12)`, color: cfg.color, border: `1px solid rgba(${cfg.tone},0.28)`, borderRadius: 999, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>
                     {cfg.label}
                   </span>
                 )
-              })() : (
-                <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 6, background: level.color + '15', color: level.color, border: `1px solid ${level.color}35`, borderRadius: 999, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>
-                  {level.label}
+              })()}
+              {/* Views — ícone do olho, antes ao lado do título (descentrava-o
+                  no mobile); aqui é uma linha de estado, é o sítio certo. */}
+              <div
+                className={`proj-views-widget${viewsExpanded ? ' expanded' : ''}`}
+                onClick={() => setViewsExpanded(v => !v)}
+                title={`${project.views ?? 0} visualizações`}
+                style={{ display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer', color: colors.muted, flexShrink: 0, padding: '4px 6px', borderRadius: 6 }}
+              >
+                <Eye size={14} color={colors.muted} />
+                <span className="proj-views-count" style={{ fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' }}>
+                  {project.views ?? 0}
                 </span>
-              )}
+              </div>
             </div>
           </div>
 
@@ -3739,50 +3827,37 @@ export default function ProjectPage() {
         {/* proj-body: everything after hero — ordered after sidebar on tablet/mobile */}
         <div className={`proj-body${isOwner ? '' : ' proj-body--flat'}`}>
 
+        {/* Prova de trabalho do GitHub/BD — antes da barra de separadores,
+            não depois: é um empurrão contextual sobre o próprio projeto,
+            não um separador de navegação, e ficava perdido lá abaixo. */}
+        <DbSetupNudge project={project} isOwner={isOwner} />
+        <GithubProof project={project} />
+        <ApiProof project={project} />
+
         {/* ── Separadores mobile — só para o dono ──
             Quem chega de um link partilhado não quer navegar num produto:
             quer ler um projeto. Para visitantes, a página é um scroll só
             (a CSS trata de mostrar todas as secções quando não há barra). */}
-        {isOwner && (() => {
-          const mobileTabs = [
-            { id: 'projeto',  label: 'Projeto',  Icon: BookOpen },
-            { id: 'melhorar', label: 'Melhorar', Icon: Sparkles, dataTour: 'missions' },
-            { id: 'partilha', label: 'Partilha', Icon: Globe },
-          ]
-          const activeIdx = mobileTabs.findIndex(t => t.id === mobileTab)
-          return (
-            <div className="proj-mobile-tabs" style={{ display: 'none' }}>
-              <div className="proj-mobile-tabs-pill">
-                <div className="proj-mobile-tabs-slider" style={{
-                  width: `calc(${100 / mobileTabs.length}% - 3px)`,
-                  transform: `translateX(${activeIdx * 100}%)`,
-                }} />
-                {mobileTabs.map(({ id, label, Icon, dataTour }) => (
-                  <button
-                    key={id}
-                    data-tour={dataTour || undefined}
-                    onClick={() => {
-                      setMobileTab(id)
-                      if (id === 'projeto') setSectionsOpen(true)
-                    }}
-                    className={`proj-mobile-tab-btn${mobileTab === id ? ' proj-mobile-tab-active' : ''}`}
-                  >
-                    <Icon size={14} /> {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )
-        })()}
-
-        {/* Prova de trabalho do GitHub — logo no topo, antes de qualquer
-            separador: fora de todos os wrappers "proj-mobile-section", por
-            isso aparece sempre, seja qual for o separador ativo no
-            telemóvel, e é a primeira coisa a seguir ao cabeçalho no
-            desktop. */}
-        <DbSetupNudge project={project} isOwner={isOwner} />
-        <GithubProof project={project} />
-        <ApiProof project={project} />
+        {isOwner && (
+          <div className="proj-mobile-tabs" style={{ display: 'none' }}>
+            <SegmentedTabs
+              size="compact"
+              className="proj-mobile-segtabs"
+              value={mobileTab}
+              onChange={id => {
+                setMobileTab(id)
+                if (id === 'projeto') setSectionsOpen(true)
+              }}
+              options={[
+                { id: 'projeto',  label: 'Projeto',  icon: <BookOpen size={14} />, pillColor: '#fff', activeColor: '#111' },
+                // "Melhorar" é a única tab de ação; Projeto e Partilha são de
+                // leitura e não precisam de puxar o azul da marca para cima delas.
+                { id: 'melhorar', label: 'Melhorar', icon: <Sparkles size={14} />, dataTour: 'missions', pillColor: 'var(--color-primary)', activeColor: '#fff' },
+                { id: 'partilha', label: 'Partilha', icon: <Globe size={14} />, pillColor: '#fff', activeColor: '#111' },
+              ]}
+            />
+          </div>
+        )}
 
         {/* ── TAB: melhorar — mini-dashboard + completude + tips ── */}
         <div className={`proj-mobile-section${tabActive('melhorar') ? ' proj-mobile-active' : ''}`}>
@@ -3797,18 +3872,25 @@ export default function ProjectPage() {
             nenhuma ação. */}
         {isOwner && (completedCount < CHALLENGES.length ? (
           <button
-            onClick={() => document.getElementById('missions-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+            onClick={() => {
+              // Abre o dropdown, não só desloca até lá — arrastar o dono
+              // para uma secção que continua fechada não é "ver o que
+              // melhorar", é só um scroll sem propósito.
+              setMissionsOpenMobile(true)
+              requestAnimationFrame(() => {
+                document.getElementById('missions-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              })
+            }}
             style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              width: '100%', background: 'var(--color-primary)', color: '#fff', border: 'none',
-              borderRadius: 12, padding: '14px', fontSize: 15, fontWeight: 800,
-              letterSpacing: '-0.2px', cursor: 'pointer', fontFamily: 'inherit',
-              boxShadow: '0 8px 20px -6px var(--color-primary-subtle)', marginBottom: 4,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              width: '100%', background: 'var(--color-primary-subtle)', color: 'var(--color-primary)',
+              border: '1px solid var(--color-primary-subtle)',
+              borderRadius: 12, padding: '13px', fontSize: 14, fontWeight: 600,
+              letterSpacing: '-0.1px', cursor: 'pointer', fontFamily: 'inherit', marginBottom: 4,
             }}
           >
-            <Sparkles size={17} />
             Ver o que melhorar
-            <span style={{ fontWeight: 600, fontSize: 12.5, opacity: 0.85 }}>· {CHALLENGES.length - completedCount} {CHALLENGES.length - completedCount === 1 ? 'campo' : 'campos'}</span>
+            <span style={{ fontWeight: 500, opacity: 0.75 }}>· {CHALLENGES.length - completedCount} {CHALLENGES.length - completedCount === 1 ? 'campo' : 'campos'}</span>
           </button>
         ) : placeholderFieldCount > 0 ? (
           <button
@@ -3840,32 +3922,6 @@ export default function ProjectPage() {
             Pedir ajuda à IA para aprofundar
           </button>
         ))}
-
-        {/* Estado — separado da ação de melhorar de propósito: se um
-            projeto continuar aberto para sempre a ser editado, o dono
-            nunca sai de lá com nada. Isto dá um gesto explícito de
-            "isto está pronto para mostrar", sem trancar o projeto —
-            continua editável depois de concluído, só deixa de aparecer
-            como "em construção" na Biblioteca. */}
-        {isOwner && (
-          <button
-            onClick={toggleProjectState}
-            disabled={stateSaving}
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-              width: '100%', background: 'none', border: 'none',
-              color: colors.subtle, fontSize: 12, fontWeight: 500,
-              cursor: stateSaving ? 'default' : 'pointer', fontFamily: 'inherit',
-              padding: '2px 4px', marginBottom: 12, opacity: stateSaving ? 0.6 : 1,
-            }}
-          >
-            {getProjectState(project) === 'concluido' ? (
-              <><Loader size={12} /> Reabrir projeto</>
-            ) : (
-              <><Check size={12} /> Marcar como concluído</>
-            )}
-          </button>
-        )}
 
         {/* ── Owner mini-dashboard: defense / AI analysis / report ── */}
         {isOwner && (() => {
@@ -4029,22 +4085,33 @@ export default function ProjectPage() {
           const goodCount = fq.filter(f => f.quality === 'good').length
           const pct = Math.round((goodCount / fq.length) * 100)
           return (
-            <div className="proj-mobile-only proj-card" style={{ padding: 0, overflow: 'hidden' }}>
-              <div style={{ padding: '15px 16px 14px', borderBottom: `1px solid ${colors.border}` }}>
-                <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <div>
+            <div className="proj-mobile-only proj-card" style={{ padding: 0, overflow: 'hidden', marginBottom: 14 }}>
+              <button
+                onClick={() => setScoreOpen(o => !o)}
+                style={{
+                  display: 'flex', flexDirection: 'column', width: '100%',
+                  background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+                  padding: '15px 16px 14px', borderBottom: scoreOpen ? `1px solid ${colors.border}` : 'none',
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 12, gap: 10 }}>
+                  <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: '-0.2px', color: colors.text }}>Como subir o score</div>
                     <div style={{ fontSize: 12, color: colors.muted, marginTop: 3 }}>
                       {pct === 100 ? 'Perfil completo — bom trabalho.' : `${goodCount} de ${fq.length} campos · toca para editar`}
                     </div>
                   </div>
-                  <span style={{ fontSize: 22, fontWeight: 900, color: pct === 100 ? 'var(--color-success)' : 'var(--color-primary)', letterSpacing: '-0.5px', lineHeight: 1 }}>{pct}%</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                    <span style={{ fontSize: 22, fontWeight: 900, color: pct === 100 ? 'var(--color-success)' : 'var(--color-primary)', letterSpacing: '-0.5px', lineHeight: 1 }}>{pct}%</span>
+                    <ChevronDown size={16} color={colors.muted} style={{ transition: 'transform 0.22s', transform: scoreOpen ? 'rotate(180deg)' : 'none' }} />
+                  </div>
                 </div>
                 <div style={{ height: 6, background: progTrack(pct), borderRadius: 99, overflow: 'hidden' }}>
                   <div style={{ height: '100%', borderRadius: 99, width: `${pct}%`, background: progBar(pct), transition: 'width 0.5s' }} />
                 </div>
-              </div>
-              <div>
+              </button>
+              {scoreOpen && <div>
                 {fq.map((f, i) => {
                   const done = f.quality === 'good'
                   const tagColor = f.quality === 'short' ? 'var(--color-warning)' : 'var(--color-primary)'
@@ -4073,7 +4140,7 @@ export default function ProjectPage() {
                     </button>
                   )
                 })}
-              </div>
+              </div>}
             </div>
           )
         })()}
@@ -4164,45 +4231,84 @@ export default function ProjectPage() {
           })()}
         </div>
 
+        {/* Estado — no fundo, depois de todo o conteúdo, não no topo antes
+            de o dono ver seja o que for. Um botão grande logo à entrada
+            dizia "isto devia estar concluído" antes de ter havido tempo de
+            rever nada; aqui é um gesto discreto de fim de revisão, não uma
+            declaração. Continua editável depois de concluído, só deixa de
+            aparecer como "em construção" na Biblioteca. */}
+        {isOwner && (
+          <button
+            onClick={toggleProjectState}
+            disabled={stateSaving}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              margin: '18px auto 4px', background: 'none',
+              border: `1px solid ${getProjectState(project) === 'concluido' ? 'var(--color-success-subtle)' : colors.border}`,
+              color: getProjectState(project) === 'concluido' ? 'var(--color-success)' : colors.subtle,
+              borderRadius: 99, padding: '8px 16px', fontSize: 12.5, fontWeight: 600,
+              cursor: stateSaving ? 'default' : 'pointer', fontFamily: 'inherit',
+              opacity: stateSaving ? 0.6 : 1, transition: 'all 0.15s',
+            }}
+          >
+            {stateSaving ? (
+              <><Loader size={13} /> A guardar...</>
+            ) : getProjectState(project) === 'concluido' ? (
+              <><Loader size={13} /> Concluído · toca para reabrir</>
+            ) : (
+              <><Check size={13} /> Marcar como concluído</>
+            )}
+          </button>
+        )}
+
         </div>{/* end explorar tab section */}
 
         {/* ── TAB: missoes — missions ── */}
         <div className={`proj-mobile-section${tabActive('missoes') ? ' proj-mobile-active' : ''}`}>
 
         {/* Missions — owner only */}
-        {(isOwner || collaboratorSections !== null) && <div id="missions-section" data-tour="missions" className="proj-card" style={{ scrollMarginTop: 88 }}>
-          {/* Header */}
-          <div className="proj-missions-header" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16, gap: 12 }}>
-            <div>
-              <h3 className="proj-sec-label" style={{ marginBottom: 4 }}>Missões</h3>
-              <p style={{ margin: 0, fontSize: 12, color: colors.muted }}>Completa missões para melhorar o teu score</p>
-            </div>
-            {/* XP card with progress bar inside */}
-            <div style={{
-              background: colors.bg, border: `1px solid ${colors.border}`,
-              borderRadius: 12, padding: '12px 16px', minWidth: 110, flexShrink: 0,
-            }}>
-              <div style={{ fontSize: 20, fontWeight: 800, color: colors.blue, letterSpacing: '-0.5px', marginBottom: 6 }}>
-                {earnedXP}<span style={{ fontSize: 12, color: colors.subtle, fontWeight: 500 }}>/{totalXP} pts</span>
+        {(isOwner || collaboratorSections !== null) && (() => {
+          const missionsPct = Math.round((earnedXP / totalXP) * 100)
+          return (
+          <div id="missions-section" data-tour="missions" className="proj-card proj-missions-card" style={{ scrollMarginTop: 88, marginBottom: 14, padding: 0, overflow: 'hidden' }}>
+          {/* Header — clicável, mesma organização do "Como subir o score":
+              título + descrição à esquerda, número em destaque + seta à
+              direita, barra de progresso por baixo. Eram dois cards com
+              layouts completamente diferentes (um em linha, outro em coluna
+              com uma caixa pesada do lado); agora leem-se como a mesma
+              família. */}
+          <button
+            onClick={() => setMissionsOpenMobile(o => !o)}
+            style={{
+              display: 'flex', flexDirection: 'column', width: '100%',
+              background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+              padding: '15px 16px 14px', borderBottom: missionsOpenMobile ? `1px solid ${colors.border}` : 'none',
+              WebkitTapHighlightColor: 'transparent',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 12, gap: 10 }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: '-0.2px', color: colors.text }}>Missões</div>
+                <div style={{ fontSize: 12, color: colors.muted, marginTop: 3 }}>{completedCount}/{CHALLENGES.length} completas</div>
               </div>
-              <div style={{ height: 4, background: progTrack(Math.round((earnedXP / totalXP) * 100)), borderRadius: 99, overflow: 'hidden', marginBottom: 5 }}>
-                <div style={{
-                  height: '100%', borderRadius: 99,
-                  width: `${(earnedXP / totalXP) * 100}%`,
-                  background: progBar(Math.round((earnedXP / totalXP) * 100)),
-                  transition: 'width 0.6s ease-out',
-                }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                <span style={{ fontSize: 22, fontWeight: 900, color: colors.blue, letterSpacing: '-0.5px', lineHeight: 1 }}>{earnedXP}<span style={{ fontSize: 12, fontWeight: 600, color: colors.subtle }}>/{totalXP}</span></span>
+                <ChevronDown size={16} color={colors.muted} style={{ transition: 'transform 0.22s', transform: missionsOpenMobile ? 'rotate(180deg)' : 'none' }} />
               </div>
-              <div style={{ fontSize: 10, color: colors.subtle, fontWeight: 600 }}>{completedCount}/{CHALLENGES.length} completas</div>
             </div>
-          </div>
+            <div style={{ height: 6, background: progTrack(missionsPct), borderRadius: 99, overflow: 'hidden' }}>
+              <div style={{ height: '100%', borderRadius: 99, width: `${missionsPct}%`, background: progBar(missionsPct), transition: 'width 0.6s ease-out' }} />
+            </div>
+          </button>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {missionsOpenMobile && <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '12px 16px 16px' }}>
             {sortedChallenges.map(c => (
               <MissionRow key={c.id} challenge={c} project={project} onImprove={openContentEditor} isOwner={isOwner} />
             ))}
+          </div>}
           </div>
-        </div>}
+          )
+        })()}
 
         </div>{/* end missoes tab section */}
 
@@ -4217,14 +4323,14 @@ export default function ProjectPage() {
       {/* ── Percurso / timeline — na vista de dono/professor. Na vista pública
              (visitante ou preview) o timeline vem dentro do PublicView. ── */}
       {project && project.user_id && (isOwner || isProfessor || collaboratorSections !== null) && !viewAsPublic && (
-        <div style={{ padding: '0 32px' }}>
+        <div className="proj-timeline-wrap" style={{ padding: '0 32px' }}>
           <ProjectTimeline project={project} isOwner={isOwner} />
         </div>
       )}
 
       {/* ── Likes + Interest + Comments — visible to ALL (owners, recruiters, visitors) ── */}
       {project && (
-        <div style={{ padding: '0 32px 40px' }}>
+        <div className="proj-comments-wrap" style={{ padding: '0 32px 40px' }}>
 
           {/* Barra de gostos / interesse (owner view) */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '20px 0 8px', flexWrap: 'wrap' }}>
@@ -5446,7 +5552,12 @@ export default function ProjectPage() {
                   </div>
                   {isOwner && (
                     <button
-                      onClick={() => document.getElementById('missions-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                      onClick={() => {
+                        setMissionsOpenMobile(true)
+                        requestAnimationFrame(() => {
+                          document.getElementById('missions-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                        })
+                      }}
                       style={{ marginTop: 14, width: '100%', background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', color: '#5a9ff5', borderRadius: 10, padding: '9px 0', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
                     >
                       <span style={{display:'flex',alignItems:'center',gap:6,justifyContent:'center'}}>Ver missões <ChevronDown size={14} /></span>
@@ -5479,7 +5590,7 @@ export default function ProjectPage() {
             bottom: 'calc(16px + env(safe-area-inset-bottom, 0px))',
             right: 16,
             zIndex: 200,
-            width: 46, height: 46, borderRadius: '50%',
+            width: 42, height: 42, borderRadius: 12,
             background: 'var(--color-primary)',
             border: 'none',
             boxShadow: '0 4px 20px rgba(27,120,247,0.35)',
@@ -5502,7 +5613,7 @@ export default function ProjectPage() {
             className="proj-coach-fab"
             style={{
               position: 'fixed', bottom: 20, right: 20, zIndex: 200,
-              width: 44, height: 44, borderRadius: '50%',
+              width: 42, height: 42, borderRadius: 12,
               background: 'var(--color-primary)',
               border: '2px solid transparent',
               boxShadow: '0 4px 20px var(--color-primary-subtle)',

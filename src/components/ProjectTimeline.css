@@ -100,7 +100,7 @@
 }
 
 /* Owner actions */
-.ptl-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+.ptl-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 6px; }
 .ptl-btn {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 7px 12px; border-radius: 8px; min-height: 0;

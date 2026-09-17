@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
+import SegmentedTabs from '../components/SegmentedTabs'
 import { CaseIcon as Briefcase } from '@solar-icons/react/bold/case'
 import { MapPointIcon as MapPin } from '@solar-icons/react/bold/map-point'
 import { GlobeIcon as Globe } from '@solar-icons/react/bold/globe'
@@ -795,16 +796,15 @@ export default function Vagas() {
 
         {/* Tabs */}
         {isRecruiter && (
-          <div style={{ display: 'flex', gap: 4, marginBottom: 24, background: 'var(--color-surface)', border: `1px solid ${C.border}`, borderRadius: 12, padding: 5, width: 'fit-content' }}>
-            {[
-              { id: 'minhas', label: `As minhas (${myVagas.length})` },
-              { id: 'todas',  label: 'Todas as vagas' },
-            ].map(t => (
-              <button key={t.id} onClick={() => setActiveTab(t.id)}
-                style={{ padding: '9px 18px', borderRadius: 8, border: 'none', fontFamily: 'inherit', fontSize: 13, fontWeight: activeTab === t.id ? 700 : 500, cursor: 'pointer', background: activeTab === t.id ? accentColor : 'transparent', color: activeTab === t.id ? 'var(--color-bg)' : C.muted, transition: 'all 0.15s' }}>
-                {t.label}
-              </button>
-            ))}
+          <div style={{ marginBottom: 24 }}>
+            <SegmentedTabs
+              value={activeTab}
+              onChange={setActiveTab}
+              options={[
+                { id: 'minhas', label: `As minhas (${myVagas.length})`, pillColor: accentColor, activeColor: 'var(--color-bg)' },
+                { id: 'todas',  label: 'Todas as vagas', pillColor: accentColor, activeColor: 'var(--color-bg)' },
+              ]}
+            />
           </div>
         )}
 

@@ -11,10 +11,9 @@
   position: absolute;
   top: 4px;
   bottom: 4px;
-  left: 4px;
   background: var(--color-text);
   border-radius: 9px;
-  transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: left 0.32s cubic-bezier(0.4, 0, 0.2, 1), width 0.32s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s ease;
   box-shadow: 0 2px 12px var(--color-border-hover);
   z-index: 0;
 }
@@ -39,9 +38,38 @@
 }
 .seg-btn.active { color: var(--color-bg); }
 .seg-btn:not(.active) { color: var(--color-text-secondary); }
+/* Sem isto, o ícone e o label competem por espaço dentro do botão mais
+   comprido de um grupo com muitas opções (ex: "Base de dados" ao lado de
+   "Tipo") — o ícone, sem proteção contra encolher, colapsava para 0. */
+.seg-icon { display: flex; flex-shrink: 0; }
 
 @media (max-width: 560px) {
-  .seg-label { display: none; }
-  .seg-wrap { flex-shrink: 0; }
-  .seg-btn { min-width: 48px; padding: 10px 0; }
+  .seg-wrap--md .seg-label { display: none; }
+  .seg-wrap--md { flex-shrink: 0; }
+  .seg-wrap--md .seg-btn { min-width: 48px; padding: 10px 0; }
 }
+
+/* Variante compacta — separadores com muitas opções, labels mais longos, ou
+   pouco espaço (barra de tabs do mobile, painel do workspace, editor de
+   projeto). Sem largura mínima por botão: cada um ocupa só o que o
+   conteúdo pede, e a barra desliza horizontalmente se não couber tudo, em
+   vez de espremer o texto. Os labels ficam sempre visíveis — ao contrário
+   da variante "md", aqui o contexto já é apertado por natureza, não faz
+   sentido apagar a única pista de para onde cada botão vai. */
+.seg-wrap--compact {
+  padding: 3px;
+  border-radius: 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  max-width: 100%;
+}
+.seg-wrap--compact::-webkit-scrollbar { display: none; }
+.seg-wrap--compact .seg-btn {
+  min-width: 0;
+  flex: 0 0 auto;
+  padding: 7px 12px;
+  gap: 5px;
+  font-size: 12px;
+  border-radius: 7px;
+}
+.seg-wrap--compact .seg-pill { border-radius: 7px; }
