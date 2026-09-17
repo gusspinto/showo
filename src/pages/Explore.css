@@ -386,6 +386,9 @@
   position: relative;
   height: 150px;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .explore-featured-cover img {
   width: 100%;
