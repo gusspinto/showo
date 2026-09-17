@@ -12,6 +12,10 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
    Modo de teste: { test_project_id } no corpo, para ver o email a sério
    antes de deixar isto correr contra gente real.
+
+   verify_jwt=false, como as funções irmãs (send-weekly-checkin,
+   send-onboarding-sequence) — a autorização é o x-cron-secret próprio,
+   não o gateway JWT do Supabase.
    ══════════════════════════════════════════════════════════════════════════ */
 
 const FROM = 'Showo <hello@showo.pt>'
@@ -78,7 +82,7 @@ Deno.serve(async (req) => {
 
     // Mesma função e mesmos parâmetros que o Home e o Explorar usam para
     // decidir "em destaque" — nunca inventa uma lista diferente.
-    const { data: featured, error: featErr } = await supabase.rpc('get_featured_projects', { p_limit: 4, p_weeks: 12 })
+    const { data: featured, error: featErr } = await supabase.rpc('get_featured_projects', { p_limit: 2, p_weeks: 12 })
     if (featErr) throw featErr
 
     const candidates = testProjectId
