@@ -13,6 +13,7 @@ import { CaseIcon as Briefcase } from '@solar-icons/react/bold/case'
 import { UsersGroupRoundedIcon as Users } from '@solar-icons/react/bold/users-group-rounded'
 import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/square-academic-cap'
 import { Book2Icon as BookOpen } from '@solar-icons/react/bold/book-2'
+import { FireIcon as Fire } from '@solar-icons/react/bold/fire'
 import { Tuning2Icon as SlidersHorizontal } from '@solar-icons/react/bold/tuning-2'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { Select } from '../components/ui'
@@ -26,6 +27,26 @@ const TITLE_FONT_CSS = {
   space:    '"Space Grotesk", sans-serif',
   fredoka:  '"Fredoka One", cursive',
   inter:    'Inter, sans-serif',
+}
+
+// A coluna `area` é texto livre (escrito por quem cria o projeto, ou pela
+// IA), por isso os valores reais são muito específicos e às vezes nem fazem
+// sentido como área ("aplicação de gestão (CRUD)"). Em vez de mostrar cada
+// valor distinto como um chip à parte, agrupa por tópico geral — ordem
+// importa, o primeiro padrão que bater ganha.
+const AREA_CATEGORIES = [
+  { id: 'tecnologia', label: 'Tecnologia',              match: /tecnolog|informátic|informatic|software|programa|mobile|\bapp\b|\bweb\b|jogo|game|mecatron|automaç[aã]o|crud|sistema|machine learn|intelig[êe]ncia artificial/ },
+  { id: 'saude',      label: 'Saúde e bem-estar',       match: /sa[uú]de|fitness|gin[aá]sio|desporto|bem-estar|cabeleireiro|medic|\bbio/ },
+  { id: 'marketing',  label: 'Marketing e comunicação', match: /marketing|comunicaç|public|redes sociais|social media|vendas|comercial/ },
+  { id: 'gestao',     label: 'Gestão e negócio',        match: /gest[aã]o|empreendedor|produto|evento|com[eé]rcio|neg[oó]cio/ },
+  { id: 'educacao',   label: 'Educação',                match: /educa[cç][aã]o|ensino|escola|forma[cç][aã]o/ },
+  { id: 'energia',    label: 'Energia e sustentabilidade', match: /energia|renov[aá]vel|\biot\b|sustentab/ },
+  { id: 'design',     label: 'Design e vídeo',          match: /design|v[ií]deo|criativ/ },
+]
+function categorizeArea(area) {
+  const a = (area || '').toLowerCase()
+  const hit = AREA_CATEGORIES.find(c => c.match.test(a))
+  return hit ? hit.id : 'outra'
 }
 
 const PROJECT_TYPES = [
@@ -117,6 +138,7 @@ export default function Explore() {
   const { profile, user } = useAuth()
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
+  const [featuredList, setFeaturedList] = useState([])
   const [search, setSearch] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [filterArea, setFilterArea] = useState('')
@@ -147,6 +169,17 @@ export default function Explore() {
   useEffect(() => {
     if (tab === 'pessoas') loadPeople()
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Destaques — mesma função e critério do "Projetos em destaque" do Home
+  // (consistência de diário ao longo de 12 semanas, não profile_featured
+  // manual, que quase nunca estava preenchido e por isso a secção ficava
+  // vazia ou sem nada de especial a mostrar). Garante sempre algo, porque a
+  // função ordena por atividade e depois por score, nunca fica vazia
+  // havendo projetos públicos suficientes.
+  useEffect(() => {
+    supabase.rpc('get_featured_projects', { p_limit: 2, p_weeks: 12 })
+      .then(({ data }) => { if (data) setFeaturedList(data) })
   }, [])
 
   useEffect(() => {
@@ -182,8 +215,12 @@ export default function Explore() {
         })
         try { localStorage.setItem(VIEWS_KEY, JSON.stringify(viewCache)) } catch {}
         setProjects(merged)
-        const areaSet = [...new Set(merged.map(p => p.area).filter(Boolean))].sort()
-        setAreas([{ id: '', label: 'Todas as áreas' }, ...areaSet.map(a => ({ id: a, label: a }))])
+        const categoryIds = [...new Set(merged.map(p => categorizeArea(p.area)))]
+        const categoryOptions = AREA_CATEGORIES
+          .filter(c => categoryIds.includes(c.id))
+          .map(c => ({ id: c.id, label: c.label }))
+        if (categoryIds.includes('outra')) categoryOptions.push({ id: 'outra', label: 'Outra' })
+        setAreas([{ id: '', label: 'Todas as áreas' }, ...categoryOptions])
       }
       setLoading(false)
     }
@@ -265,7 +302,7 @@ export default function Explore() {
       p.course?.toLowerCase().includes(query) ||
       p.creator_name?.toLowerCase().includes(query)
     )) return false
-    if (filterArea && p.area !== filterArea) return false
+    if (filterArea && categorizeArea(p.area) !== filterArea) return false
     if (filterType) {
       if (filterType === 'pap') { if (!p.is_pap && p.project_type !== 'pap') return false }
       else if (p.project_type !== filterType) return false
@@ -319,6 +356,11 @@ export default function Explore() {
     if (sortBy === 'views') return (b.views ?? 0) - (a.views ?? 0)
     return new Date(b.created_at) - new Date(a.created_at)
   }), [filtered, sortBy])
+
+  // Destaques — só na navegação normal, não durante pesquisa/filtros, para
+  // não competir com o que a pessoa está mesmo a tentar encontrar.
+  const showFeatured = !query && !hasFilters
+  const featured = showFeatured ? featuredList : []
 
   useEffect(() => { setVisibleCount(24) }, [query, filterArea, filterType, filterZone, filterAvailable, filterTech, sortBy])
 
@@ -385,6 +427,43 @@ export default function Explore() {
 
         {/* ── Projetos tab ── */}
         {tab === 'projetos' && (<>
+          {areas.length > 1 && (
+            <div className="filter-chip-group explore-area-chips">
+              {areas.map(a => (
+                <button key={a.id || 'todas'} onClick={() => setFilterArea(a.id)}
+                  className={`filter-chip${filterArea === a.id ? ' active' : ''}`}>
+                  {a.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {featured.length > 0 && (
+            <div className="explore-featured">
+              <p className="explore-result-count">Em destaque</p>
+              <div className="explore-featured-grid">
+                {featured.map(project => (
+                  <div key={project.id} className="explore-featured-card" onClick={() => handleProjectClick(project)}>
+                    <div
+                      className="explore-featured-cover"
+                      style={{ background: project.cover_url ? undefined : getAreaColor(project.area) }}
+                    >
+                      {project.cover_url && <img src={project.cover_url} alt="" />}
+                      <div className="explore-card-cover-gradient" />
+                      {project.manual_weeks >= 3 && (
+                        <div className="explore-featured-streak"><Fire size={12} /> {project.manual_weeks} semanas seguidas</div>
+                      )}
+                    </div>
+                    <div className="explore-featured-body">
+                      <h3 className="explore-card-name">{project.name}</h3>
+                      {project.ai_tagline && <p className="explore-card-tagline">{project.ai_tagline}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {recruiterMode && roleInfo && (
             <div className="explore-recruiter-banner" style={{ borderLeftColor: roleInfo.color }}>
               <span className="flex-shrink-0 flex items-center" style={{ color: roleInfo.color }}>{roleInfo.icon}</span>
