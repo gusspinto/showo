@@ -36,7 +36,11 @@ function page(title: string, body: string) {
 }
 
 Deno.serve(async (req) => {
-  if (req.method !== 'GET') {
+  // GET é o link clicável no corpo do email. POST é o one-click da RFC 8058
+  // (List-Unsubscribe-Post), o que o Gmail/Yahoo disparam quando alguém usa
+  // o botão "Cancelar subscrição" ao lado do remetente, sem abrir página
+  // nenhuma — por isso não pode exigir mais nenhuma interação, só confirmar.
+  if (req.method !== 'GET' && req.method !== 'POST') {
     return new Response('method not allowed', { status: 405 })
   }
 
@@ -46,6 +50,7 @@ Deno.serve(async (req) => {
 
   const secret = Deno.env.get('CRON_SECRET')
   if (!secret || !userId || !sig) {
+    if (req.method === 'POST') return new Response(null, { status: 400 })
     return new Response(page('Link inválido', 'Este link não é válido.'), {
       status: 400,
       headers: { 'Content-Type': 'text/html; charset=utf-8' },
@@ -54,6 +59,7 @@ Deno.serve(async (req) => {
 
   const valid = await verifySignature(userId, sig, secret)
   if (!valid) {
+    if (req.method === 'POST') return new Response(null, { status: 400 })
     return new Response(page('Link inválido', 'Este link não é válido.'), {
       status: 400,
       headers: { 'Content-Type': 'text/html; charset=utf-8' },
@@ -65,6 +71,8 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   )
   await supabase.from('profiles').update({ weekly_checkin_opted_out: true }).eq('id', userId)
+
+  if (req.method === 'POST') return new Response(null, { status: 200 })
 
   return new Response(
     page('Cancelado', 'Já não vais receber mais estes emails de check-in semanal. O resto da tua conta continua na mesma.'),

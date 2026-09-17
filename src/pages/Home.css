@@ -562,7 +562,7 @@ body.light .home-card-cover img {
 
 /* ══ O PROJETO CONTA-SE ENQUANTO ACONTECE ══ */
 .home-hw {
-  padding: 16px 24px 64px;
+  padding: 56px 24px 64px;
 }
 .home-hw-inner {
   max-width: 1060px;
@@ -571,6 +571,14 @@ body.light .home-card-cover img {
   grid-template-columns: 1fr 1fr;
   gap: 56px;
   align-items: center;
+}
+.home-hw-eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  margin: 0 0 10px;
 }
 .home-hw-title {
   font-size: clamp(24px, 3vw, 34px);
@@ -838,16 +846,15 @@ body.light .home-card-cover img {
     flex-shrink: 0;
   }
 
-  /* Testemunhos logo a seguir ao herói/sign-in — prova social antes de
-     mostrar qualquer projeto. Projeto do mês → Projetos em destaque a
-     seguir. "Como funciona" (com as ligações) fecha antes do rodapé,
-     agora numa versão compacta que cabe no telemóvel. O "Começa a criar" já
-     vive dentro da secção de projetos (home-section). */
+  /* "Como funciona" logo a seguir ao herói, antes de qualquer prova social —
+     quem chega do vídeo/anúncio precisa de perceber o que é isto primeiro.
+     Testemunhos a seguir, depois projeto do mês → projetos em destaque.
+     O "Começa a criar" já vive dentro da secção de projetos (home-section). */
   .home-hero    { order: 1; }
-  .home-testimonials-section { order: 2; }
-  .home-pom-wrap { order: 3; }
-  .home-section  { order: 4; }
-  .home-how-reveal { order: 5; }
+  .home-how-reveal { order: 2; }
+  .home-testimonials-section { order: 3; }
+  .home-pom-wrap { order: 4; }
+  .home-section  { order: 5; }
   .home-footer   { order: 6; }
 }
 

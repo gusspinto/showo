@@ -124,11 +124,11 @@ export default function Home() {
       if (data) setProjects(data)
       setProjectsLoading(false)
 
-      const { count } = await supabase
-        .from('projects')
-        .select('id', { count: 'exact', head: true })
-        .or('visibility.eq.public,visibility.is.null')
-      if (count != null) setProjectCount(count)
+      // Total real (inclui privados) via RPC — desde a RLS 163, uma query
+      // direta a esta tabela como anon só via visibility=public/null,
+      // deixaria de contar os privados. A função devolve só o número.
+      const { data: totalCount } = await supabase.rpc('get_total_project_count')
+      if (totalCount != null) setProjectCount(totalCount)
     }
     load()
   }, [])
@@ -381,7 +381,14 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ══ Testemunhos (logo a seguir ao hero/sign-in, antes dos projetos) ══ */}
+      {/* ══ Como funciona (logo a seguir ao hero, antes de qualquer prova social —
+          quem chega do vídeo/anúncio precisa de perceber o que é isto antes de
+          ver projetos ou testemunhos) ══ */}
+      <Reveal className="home-how-reveal">
+        <HomeHow />
+      </Reveal>
+
+      {/* ══ Testemunhos (a seguir ao "como funciona", antes dos projetos) ══ */}
       <Reveal className="home-section home-testimonials-section">
         <div className="home-section-inner">
           <h2 className="home-section-title home-testimonials-title">Quem já usa</h2>
@@ -531,11 +538,6 @@ export default function Home() {
             </button>
           )}
         </div>
-      </Reveal>
-
-      {/* ══ Como funciona (+ ligações) ══ */}
-      <Reveal className="home-how-reveal">
-        <HomeHow />
       </Reveal>
 
       {/* ══ Footer ══ */}
