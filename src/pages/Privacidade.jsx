@@ -4,7 +4,7 @@ export default function Privacidade() {
   return (
     <LegalLayout
       title="Política de Privacidade"
-      updated="16 de setembro de 2026"
+      updated="17 de setembro de 2026"
       intro="Aqui explicamos, em português simples, que dados guardamos sobre ti, para que servem e o que podes fazer com eles. Sem juridiquês desnecessário."
     >
       <h2>Quem somos</h2>
@@ -15,7 +15,7 @@ export default function Privacidade() {
 
       <h2>Que dados guardamos</h2>
       <ul>
-        <li><strong>Dados da conta:</strong> o teu nome, email, a palavra-passe (guardada sempre encriptada) e o papel que escolheste, seja aluno, professor ou recrutador.</li>
+        <li><strong>Dados da conta:</strong> o teu nome, email, a palavra-passe (guardada sempre encriptada), o número de telemóvel e o papel que escolheste, seja aluno, professor ou recrutador.</li>
         <li><strong>Perfil:</strong> escola, curso, ano, foto, competências e links como o LinkedIn ou o GitHub. Preenches só o que quiseres.</li>
         <li><strong>O que crias:</strong> os teus projetos, os textos de cada secção, as imagens de capa, as mensagens e os comentários.</li>
         <li><strong>Como usas a app:</strong> que páginas visitas e que ações fazes, para percebermos o que ajuda e o que atrapalha.</li>
@@ -27,6 +27,7 @@ export default function Privacidade() {
         <li>Para te dar o serviço: criar a tua conta, montar as tuas páginas de projeto e deixar-te partilhá-las.</li>
         <li>Para gerar a análise e o feedback da inteligência artificial sobre os teus projetos.</li>
         <li>Para falar contigo quando é preciso, seja confirmar o email, repor a palavra-passe ou avisar de algo importante.</li>
+        <li>Para te contactar por telemóvel, por WhatsApp ou meio parecido, sobre feedback ao produto, apoio ou, de vez em quando, novidades comerciais. Se não quiseres, é só dizeres que queres parar.</li>
         <li>Para melhorar e proteger a Showo, olhando para estatísticas no conjunto e travando abusos.</li>
       </ul>
 
