@@ -9,7 +9,7 @@ export default function Privacidade() {
     >
       <h2>Quem somos</h2>
       <p>
-        A Showo ajuda estudantes a transformar os seus projetos (PAPs, estágios, trabalhos) em páginas profissionais.
+        A Showo ajuda estudantes e profissionais independentes a transformar os seus projetos (PAPs, estágios, trabalhos freelance) em páginas profissionais.
         Quem trata os teus dados é a Showo, e podes falar connosco quando quiseres em <a href="mailto:hello@showo.pt">hello@showo.pt</a>.
       </p>
 
