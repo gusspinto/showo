@@ -153,7 +153,7 @@ export default function Explore() {
     async function load() {
       const { data, error } = await supabase
         .from('projects')
-        .select('id,name,slug,area,creator_name,course,school_year,ai_tagline,project_type,is_pap,score,created_at,technologies,tech_stack,views,cover_url,user_id,tags,preview_style')
+        .select('id,name,slug,area,creator_name,course,school_year,ai_tagline,project_type,is_pap,score,created_at,technologies,tech_stack,views,cover_url,user_id,tags,preview_style,profile_featured')
         .or('visibility.eq.public,visibility.is.null')
         // Itens da Biblioteca (ficheiro + nome, sem ficha nenhuma) nunca
         // aparecem aqui — já vêm 'private' desde a origem, isto é só
@@ -320,6 +320,14 @@ export default function Explore() {
     return new Date(b.created_at) - new Date(a.created_at)
   }), [filtered, sortBy])
 
+  // Destaques — só na navegação normal, não durante pesquisa/filtros, para
+  // não competir com o que a pessoa está mesmo a tentar encontrar.
+  const showFeatured = !query && !hasFilters
+  const featured = useMemo(
+    () => (showFeatured ? projects.filter(p => p.profile_featured).slice(0, 4) : []),
+    [projects, showFeatured],
+  )
+
   useEffect(() => { setVisibleCount(24) }, [query, filterArea, filterType, filterZone, filterAvailable, filterTech, sortBy])
 
   return (
@@ -385,6 +393,40 @@ export default function Explore() {
 
         {/* ── Projetos tab ── */}
         {tab === 'projetos' && (<>
+          {areas.length > 1 && (
+            <div className="filter-chip-group explore-area-chips">
+              {areas.map(a => (
+                <button key={a.id || 'todas'} onClick={() => setFilterArea(a.id)}
+                  className={`filter-chip${filterArea === a.id ? ' active' : ''}`}>
+                  {a.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {featured.length > 0 && (
+            <div className="explore-featured">
+              <p className="explore-result-count">Em destaque</p>
+              <div className="explore-featured-grid">
+                {featured.map(project => (
+                  <div key={project.id} className="explore-featured-card" onClick={() => handleProjectClick(project)}>
+                    <div
+                      className="explore-featured-cover"
+                      style={{ background: project.cover_url ? undefined : getAreaColor(project.area) }}
+                    >
+                      {project.cover_url && <img src={project.cover_url} alt="" />}
+                      <div className="explore-card-cover-gradient" />
+                    </div>
+                    <div className="explore-featured-body">
+                      <h3 className="explore-card-name">{project.name}</h3>
+                      {project.ai_tagline && <p className="explore-card-tagline">{project.ai_tagline}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {recruiterMode && roleInfo && (
             <div className="explore-recruiter-banner" style={{ borderLeftColor: roleInfo.color }}>
               <span className="flex-shrink-0 flex items-center" style={{ color: roleInfo.color }}>{roleInfo.icon}</span>
