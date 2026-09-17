@@ -178,7 +178,7 @@ export default function Explore() {
   // função ordena por atividade e depois por score, nunca fica vazia
   // havendo projetos públicos suficientes.
   useEffect(() => {
-    supabase.rpc('get_featured_projects', { p_limit: 4, p_weeks: 12 })
+    supabase.rpc('get_featured_projects', { p_limit: 2, p_weeks: 12 })
       .then(({ data }) => { if (data) setFeaturedList(data) })
   }, [])
 
