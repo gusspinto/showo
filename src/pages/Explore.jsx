@@ -13,6 +13,7 @@ import { CaseIcon as Briefcase } from '@solar-icons/react/bold/case'
 import { UsersGroupRoundedIcon as Users } from '@solar-icons/react/bold/users-group-rounded'
 import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/square-academic-cap'
 import { Book2Icon as BookOpen } from '@solar-icons/react/bold/book-2'
+import { FireIcon as Fire } from '@solar-icons/react/bold/fire'
 import { Tuning2Icon as SlidersHorizontal } from '@solar-icons/react/bold/tuning-2'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { Select } from '../components/ui'
@@ -137,6 +138,7 @@ export default function Explore() {
   const { profile, user } = useAuth()
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
+  const [featuredList, setFeaturedList] = useState([])
   const [search, setSearch] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [filterArea, setFilterArea] = useState('')
@@ -169,11 +171,22 @@ export default function Explore() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Destaques — mesma função e critério do "Projetos em destaque" do Home
+  // (consistência de diário ao longo de 12 semanas, não profile_featured
+  // manual, que quase nunca estava preenchido e por isso a secção ficava
+  // vazia ou sem nada de especial a mostrar). Garante sempre algo, porque a
+  // função ordena por atividade e depois por score, nunca fica vazia
+  // havendo projetos públicos suficientes.
+  useEffect(() => {
+    supabase.rpc('get_featured_projects', { p_limit: 4, p_weeks: 12 })
+      .then(({ data }) => { if (data) setFeaturedList(data) })
+  }, [])
+
   useEffect(() => {
     async function load() {
       const { data, error } = await supabase
         .from('projects')
-        .select('id,name,slug,area,creator_name,course,school_year,ai_tagline,project_type,is_pap,score,created_at,technologies,tech_stack,views,cover_url,user_id,tags,preview_style,profile_featured')
+        .select('id,name,slug,area,creator_name,course,school_year,ai_tagline,project_type,is_pap,score,created_at,technologies,tech_stack,views,cover_url,user_id,tags,preview_style')
         .or('visibility.eq.public,visibility.is.null')
         // Itens da Biblioteca (ficheiro + nome, sem ficha nenhuma) nunca
         // aparecem aqui — já vêm 'private' desde a origem, isto é só
@@ -347,10 +360,7 @@ export default function Explore() {
   // Destaques — só na navegação normal, não durante pesquisa/filtros, para
   // não competir com o que a pessoa está mesmo a tentar encontrar.
   const showFeatured = !query && !hasFilters
-  const featured = useMemo(
-    () => (showFeatured ? projects.filter(p => p.profile_featured).slice(0, 4) : []),
-    [projects, showFeatured],
-  )
+  const featured = showFeatured ? featuredList : []
 
   useEffect(() => { setVisibleCount(24) }, [query, filterArea, filterType, filterZone, filterAvailable, filterTech, sortBy])
 
@@ -440,6 +450,9 @@ export default function Explore() {
                     >
                       {project.cover_url && <img src={project.cover_url} alt="" />}
                       <div className="explore-card-cover-gradient" />
+                      {project.manual_weeks >= 3 && (
+                        <div className="explore-featured-streak"><Fire size={12} /> {project.manual_weeks} semanas seguidas</div>
+                      )}
                     </div>
                     <div className="explore-featured-body">
                       <h3 className="explore-card-name">{project.name}</h3>
