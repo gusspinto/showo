@@ -34,6 +34,24 @@
 -- item como privado força profile_featured a false, os dois são estados
 -- mutuamente exclusivos ali) — nunca deve valer para entry_kind = 'full'.
 -- Passa a exigir entry_kind = 'library' também nesse ramo.
+--
+-- Acrescenta também is_admin() (já existente desde a 011, já usado nas
+-- policies de UPDATE/DELETE de projects para o admin poder moderar
+-- qualquer projeto). Sem isto, o admin passava a poder editar/apagar um
+-- projeto privado mas não o conseguia sequer LER no painel (src/pages/
+-- Admin.jsx faz um select('*') simples, sujeito a esta policy) — ficava
+-- inconsistente com o acesso de escrita que já tinha antes desta migration.
+--
+-- is_admin() teve EXECUTE revogado de anon/authenticated/public na 031,
+-- como "helper interno, não é para chamar via REST". Isso está correto para
+-- RPC direto, mas uma policy USING (is_admin()) só consegue avaliar a
+-- função se o role que corre a query tiver EXECUTE nela — testado ao vivo,
+-- deu "permission denied for function is_admin" tanto para authenticated
+-- como para anon assim que esta policy passou a referenciá-la. Tem de voltar
+-- a ter EXECUTE para os dois. Isto não reabre o que a 031 queria fechar: a
+-- função só devolve is_admin do PRÓPRIO utilizador que chama (auth.uid()),
+-- não lê nem confirma nada sobre outra conta, por isso não há fuga de dados
+-- em deixar qualquer um perguntar "sou admin?" sobre si mesmo.
 -- ============================================================================
 
 CREATE OR REPLACE FUNCTION public.is_project_collaborator(p_project_id uuid)
@@ -51,12 +69,15 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.is_project_collaborator(uuid) TO authenticated;
 
+GRANT EXECUTE ON FUNCTION public.is_admin() TO authenticated, anon;
+
 DROP POLICY IF EXISTS "Public read projects" ON public.projects;
 
 CREATE POLICY "Public read projects"
   ON public.projects FOR SELECT
   USING (
     user_id = auth.uid()::text
+    OR public.is_admin()
     OR (entry_kind = 'library' AND profile_featured = true)
     OR (
       entry_kind = 'full'
