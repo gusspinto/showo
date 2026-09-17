@@ -448,7 +448,13 @@ export default function Explore() {
                       className="explore-featured-cover"
                       style={{ background: project.cover_url ? undefined : getAreaColor(project.area) }}
                     >
-                      {project.cover_url && <img src={project.cover_url} alt="" />}
+                      {project.cover_url ? (
+                        <img src={project.cover_url} alt="" />
+                      ) : (
+                        <span className="explore-card-cover-letter">
+                          {project.name ? project.name[0].toUpperCase() : '?'}
+                        </span>
+                      )}
                       <div className="explore-card-cover-gradient" />
                       {project.manual_weeks >= 3 && (
                         <div className="explore-featured-streak"><Fire size={12} /> {project.manual_weeks} semanas seguidas</div>
