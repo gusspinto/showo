@@ -124,11 +124,11 @@ export default function Home() {
       if (data) setProjects(data)
       setProjectsLoading(false)
 
-      const { count } = await supabase
-        .from('projects')
-        .select('id', { count: 'exact', head: true })
-        .or('visibility.eq.public,visibility.is.null')
-      if (count != null) setProjectCount(count)
+      // Total real (inclui privados) via RPC — desde a RLS 163, uma query
+      // direta a esta tabela como anon só via visibility=public/null,
+      // deixaria de contar os privados. A função devolve só o número.
+      const { data: totalCount } = await supabase.rpc('get_total_project_count')
+      if (totalCount != null) setProjectCount(totalCount)
     }
     load()
   }, [])
