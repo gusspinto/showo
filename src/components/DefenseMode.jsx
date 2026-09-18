@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { AiUsageBadge, ConfirmUseModal, PlanGateModal } from './PlanGate'
@@ -1257,6 +1258,16 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
+  // Sem isto, a página por trás continua a dar scroll enquanto o modal
+  // está aberto (no telemóvel isso arrasta o modal com ela, porque não
+  // fica mesmo fixo ao ecrã — o mesmo problema que já corrigimos no chat
+  // da IA). Trava o scroll do body enquanto o Modo Defesa está aberto.
+  useEffect(() => {
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prev }
+  }, [])
+
   function tryLoadAI() {
     const gate = checkGate('defense')
     if (!gate.allowed) { setAiError(true); return }
@@ -1306,7 +1317,11 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
     { id: 'grupo', label: 'Grupo',    show: isOwner },
   ].filter(t => t.show)
 
-  return (
+  // Portal para document.body: dentro da árvore normal da página do
+  // projeto, um ancestral com transform cria um "containing block" novo e
+  // o `position: fixed` deixa de se ancorar ao ecrã a sério — ficava
+  // solto, a mexer-se com o scroll da página por trás em vez de fixo.
+  return createPortal(
     <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, fontFamily: 'inherit' }}
       onClick={e => e.target === e.currentTarget && onClose()}
     >
@@ -1444,6 +1459,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

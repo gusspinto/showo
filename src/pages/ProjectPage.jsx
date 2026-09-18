@@ -62,6 +62,7 @@ import { CalendarIcon as Calendar } from '@solar-icons/react/bold/calendar'
 import { LetterIcon as Mail } from '@solar-icons/react/bold/letter'
 import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
 import { AltArrowRightIcon as ChevronRight } from '@solar-icons/react/bold/alt-arrow-right'
+import { RoundAltArrowRightIcon as TourNextArrow } from '@solar-icons/react/linear/round-alt-arrow-right'
 import { AltArrowLeftIcon as ChevronLeft } from '@solar-icons/react/bold/alt-arrow-left'
 import { GlobeIcon as Globe } from '@solar-icons/react/bold/globe'
 import { GalleryWideIcon as Image } from '@solar-icons/react/bold/gallery-wide'
@@ -855,7 +856,15 @@ const TOUR_STEPS_MOBILE_PAP = [
     ],
   },
 ]
-const TOUR_STEPS_MOBILE_OTHER = TOUR_STEPS_MOBILE_PAP.filter(s => s.target !== 'defense')
+// Projeto pessoal/de escola não tem Modo Defesa (é só para Projeto Final/
+// PAP, gerido no menu por project_type === 'pap') — o passo do menu tinha
+// exatamente o mesmo texto do PAP, a mencionar uma funcionalidade que
+// estes projetos nem mostram.
+const TOUR_STEPS_MOBILE_OTHER = TOUR_STEPS_MOBILE_PAP.map(s =>
+  s.target === 'preview'
+    ? { ...s, bullets: ['Toca aqui para aceder a: Editar, Diário, Análise IA, Preview e Convidar colegas'] }
+    : s
+)
 
 function ProjectTour({ isPap, onClose, onStep }) {
   const isMobileSteps = window.innerWidth < 640
@@ -865,6 +874,19 @@ function ProjectTour({ isPap, onClose, onStep }) {
   const [stepIdx, setStepIdx] = useState(0)
   const [rect, setRect] = useState(null)
   const skipRef = useRef(false)
+
+  // Junta dois retângulos no menor que envolve os dois — usado para o
+  // destaque do passo "preview" cobrir o botão E o menu aberto por baixo
+  // dele, não só o botão sozinho com o menu a espreitar por fora da luz.
+  function unionRect(a, b) {
+    if (!a) return b
+    if (!b) return a
+    const left = Math.min(a.left, b.left)
+    const top = Math.min(a.top, b.top)
+    const right = Math.max(a.right, b.right)
+    const bottom = Math.max(a.bottom, b.bottom)
+    return { left, top, right, bottom, width: right - left, height: bottom - top }
+  }
 
   function measureStep(idx, stepsArr) {
     const step = stepsArr[idx]
@@ -878,7 +900,15 @@ function ProjectTour({ isPap, onClose, onStep }) {
       const els = document.querySelectorAll(`[data-tour="${t}"]`)
       for (const el of els) {
         const r = el.getBoundingClientRect()
-        if (r.width > 0 || r.height > 0) return r
+        if (r.width > 0 || r.height > 0) {
+          if (t !== 'preview') return r
+          // "Gerir projeto" — o menu que este passo descreve fica aberto
+          // por baixo do botão (ver forceMenuOpen); o destaque tem de
+          // abranger o menu inteiro, não só o botão que o abre.
+          const menuEl = document.querySelector('.mob-proj-menu')
+          const menuRect = menuEl?.getBoundingClientRect()
+          return menuRect && (menuRect.width > 0 || menuRect.height > 0) ? unionRect(r, menuRect) : r
+        }
       }
     }
     return null
@@ -912,7 +942,7 @@ function ProjectTour({ isPap, onClose, onStep }) {
     const el = resolveEl(steps[stepIdx].target)
     if (el) el.scrollIntoView({ behavior: 'instant', block: 'center' })
 
-    let raf1, raf2
+    let raf1, raf2, remeasureTimer
     raf1 = requestAnimationFrame(() => {
       raf2 = requestAnimationFrame(() => {
         if (skipRef.current) return
@@ -922,7 +952,18 @@ function ProjectTour({ isPap, onClose, onStep }) {
         setRect(found.rect)
       })
     })
-    return () => { skipRef.current = true; cancelAnimationFrame(raf1); cancelAnimationFrame(raf2) }
+    // O passo "preview" abre o menu real (forceMenuOpen) — isso atravessa
+    // Context + outro componente (Navbar), pode não estar montado ainda
+    // aos 2 frames daqui. Remede um pouco depois, só para apanhar o menu
+    // já aberto e alargar o destaque a ele.
+    if (steps[stepIdx].target === 'preview') {
+      remeasureTimer = setTimeout(() => {
+        if (skipRef.current) return
+        const r = measureStep(stepIdx, steps)
+        if (r) setRect(r)
+      }, 150)
+    }
+    return () => { skipRef.current = true; cancelAnimationFrame(raf1); cancelAnimationFrame(raf2); clearTimeout(remeasureTimer) }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepIdx])
 
@@ -1002,18 +1043,26 @@ function ProjectTour({ isPap, onClose, onStep }) {
         }}>
           Saltar tour
         </button>
-        <button onClick={() => isLast ? onClose() : setStepIdx(i => i + 1)} style={{
-          background: 'var(--color-primary)', border: 'none', borderRadius: 8,
-          padding: '9px 18px', color: '#fff', fontSize: 13, fontWeight: 600,
-          cursor: 'pointer', fontFamily: 'inherit',
-        }}>
-          {isLast ? 'Começar' : 'Próximo'}
+        <button
+          onClick={() => isLast ? onClose() : setStepIdx(i => i + 1)}
+          aria-label={isLast ? 'Começar' : 'Próximo'}
+          style={{
+            backgroundImage: 'var(--brand-gradient)', border: 'none',
+            borderRadius: isLast ? 8 : 12,
+            width: isLast ? 'auto' : 42, height: isLast ? 'auto' : 42,
+            padding: isLast ? '9px 18px' : 0, flexShrink: 0, boxSizing: 'border-box',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+            color: '#fff', fontSize: 13, fontWeight: 600,
+            cursor: 'pointer', fontFamily: 'inherit',
+          }}
+        >
+          {isLast ? 'Começar' : <TourNextArrow size={19} strokeWidth={2.5} />}
         </button>
       </div>
     </>
   )
 
-  return (
+  return createPortal(
     <div style={{ position: 'fixed', inset: 0, zIndex: 9100, pointerEvents: 'none' }}>
       {spotlight && (
         <div style={{
@@ -1021,7 +1070,7 @@ function ProjectTour({ isPap, onClose, onStep }) {
           left: spotlight.left, top: spotlight.top,
           width: spotlight.width, height: spotlight.height,
           borderRadius: 10,
-          boxShadow: '0 0 0 9999px rgba(7,13,26,0.87)',
+          boxShadow: '0 0 0 9999px color-mix(in srgb, var(--color-bg) 87%, transparent)',
           outline: '2.5px solid var(--color-primary)',
           outlineOffset: 1,
           transition: 'left 0.3s ease, top 0.3s ease, width 0.3s ease, height 0.3s ease',
@@ -1081,7 +1130,8 @@ function ProjectTour({ isPap, onClose, onStep }) {
           </div>
         )
       )}
-    </div>
+    </div>,
+    document.body
   )
 }
 
@@ -1146,6 +1196,11 @@ export default function ProjectPage() {
   const [showLaunchOverlay, setShowLaunchOverlay] = useState(() => !!location.state?.newProject)
   const [launchCopied, setLaunchCopied] = useState(false)
   const [showTour, setShowTour] = useState(false)
+  // Passo final do tour mobile ("Menu do projeto") aponta para o pincel
+  // mas o menu real ficava fechado, escondido atrás do overlay escuro do
+  // tour — o utilizador via só um botão a piscar, não o menu que estava a
+  // ser descrito. Isto força o menu a abrir a sério nesse passo.
+  const [tourMenuOpen, setTourMenuOpen] = useState(false)
   const tourPendingRef = useRef(false)
   const [claimBannerDismissed, setClaimBannerDismissed] = useState(false)
   const [defenseDate, setDefenseDate] = useState('')
@@ -1160,6 +1215,15 @@ export default function ProjectPage() {
   const [resolvingId, setResolvingId] = useState(null)
   const [resolveNote, setResolveNote] = useState('')
   const [showDefensePopup, setShowDefensePopup] = useState(false)
+  // Sem isto, a página por trás continua a dar scroll com o popup aberto,
+  // e no telemóvel isso arrasta o popup com ela (não fica fixo ao ecrã a
+  // sério) — o mesmo problema já corrigido no chat da IA e no Modo Defesa.
+  useEffect(() => {
+    if (!showDefensePopup) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prev }
+  }, [showDefensePopup])
 
   const { setExtras } = useSidebar()
   const { theme } = useTheme()
@@ -1611,12 +1675,13 @@ export default function ProjectPage() {
         onEditWorkspace: () => { setPreviewEditing(true); setWsExpanded(e => !e) },
         previewDevice,
         setPreviewDevice,
+        forceMenuOpen: tourMenuOpen,
       })
     } else {
       setExtras(null)
     }
     return () => setExtras(null)
-  }, [project?.id, project?.project_type, project?.defense_date, project?.ai_score, user?.id, analyzingAI, aiFeedback, viewAsPublic, score, previewEditing, previewDevice])
+  }, [project?.id, project?.project_type, project?.defense_date, project?.ai_score, user?.id, analyzingAI, aiFeedback, viewAsPublic, score, previewEditing, previewDevice, tourMenuOpen])
 
   const pageUrl = window.location.href
 
@@ -2717,7 +2782,7 @@ export default function ProjectPage() {
 
 
       {/* ── Launch overlay (shown once after project creation) ── */}
-      {showLaunchOverlay && project && (
+      {showLaunchOverlay && project && createPortal(
         <div
           style={{
             position: 'fixed', inset: 0, zIndex: 700,
@@ -2873,25 +2938,27 @@ export default function ProjectPage() {
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ── Spotlight Tour ── */}
       {showTour && (
         <ProjectTour
           isPap={isPap}
-          onClose={() => setShowTour(false)}
+          onClose={() => { setShowTour(false); setTourMenuOpen(false) }}
           onStep={target => {
             if (window.innerWidth < 640) {
               if (target === 'missions') setMobileTab('melhorar')
               else setMobileTab('projeto')
             }
+            setTourMenuOpen(target === 'preview')
           }}
         />
       )}
 
       {/* ── Milestone shareable card overlay ── */}
-      {milestoneCard && (
+      {milestoneCard && createPortal(
         <div
           style={{
             position: 'fixed', inset: 0, zIndex: 600,
@@ -2991,11 +3058,12 @@ export default function ProjectPage() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Register popup — shown to anonymous users after creating a project */}
-      {showRegisterPopup && !user && project && (
+      {showRegisterPopup && !user && project && createPortal(
         <>
           <div style={{ position: 'fixed', inset: 0, zIndex: 700, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }} />
           <div style={{ position: 'fixed', zIndex: 701, left: '50%', top: '50%', transform: 'translate(-50%, -50%)', width: '100%', maxWidth: 540, padding: '0 16px', boxSizing: 'border-box' }}>
@@ -3081,11 +3149,12 @@ export default function ProjectPage() {
               )}
             </div>
           </div>
-        </>
+        </>,
+        document.body
       )}
 
       {/* AI Feedback Modal */}
-      {aiModalOpen && (
+      {aiModalOpen && createPortal(
         <div
           style={{
             position: 'fixed', inset: 0, zIndex: 2000,
@@ -3274,7 +3343,8 @@ export default function ProjectPage() {
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* FABs — visible on tablet + mobile via CSS (hidden on desktop) */}
@@ -4111,11 +4181,11 @@ export default function ProjectPage() {
 
         {/* Popup "Data de defesa" — telemóvel (sem sidebar). Mesmo estilo
             minimalista dos outros popups da página (QR code, análise IA). */}
-        {showDefensePopup && (
+        {showDefensePopup && createPortal(
           <div
             onClick={() => setShowDefensePopup(false)}
             style={{
-              position: 'fixed', inset: 0, zIndex: 800,
+              position: 'fixed', inset: 0, zIndex: 2000,
               background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
             }}
@@ -4157,7 +4227,8 @@ export default function ProjectPage() {
                 {savingDefense && <div style={{ position: 'absolute', top: 12, right: 12, width: 12, height: 12, border: `1.5px solid ${colors.border}`, borderTop: `1.5px solid ${colors.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />}
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
 
         {/* AI Analysis teaser for non-owners */}
@@ -4480,7 +4551,7 @@ export default function ProjectPage() {
           </div>
 
           {/* Modal: lista de recrutadores com interesse */}
-          {showInterestors && (
+          {showInterestors && createPortal(
             <div onClick={() => setShowInterestors(false)} style={{
               position: 'fixed', inset: 0, zIndex: 200,
               background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)',
@@ -4538,7 +4609,8 @@ export default function ProjectPage() {
                   </div>
                 )}
               </div>
-            </div>
+            </div>,
+            document.body
           )}
 
           {/* Comments */}
@@ -4853,7 +4925,7 @@ export default function ProjectPage() {
         </div>
 
         {/* QR Modal */}
-        {showQR && (
+        {showQR && createPortal(
           <div
             onClick={() => setShowQR(false)}
             style={{
@@ -4889,7 +4961,8 @@ export default function ProjectPage() {
                 {pageUrl}
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
 
         {/* Author — bottom of page */}

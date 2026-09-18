@@ -895,6 +895,9 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
   // "+" while viewing your own project (keeps those actions out of the drawer).
   const [projMenuOpen, setProjMenuOpen] = useState(false)
   useEffect(() => { setProjMenuOpen(false) }, [location.pathname])
+  // O passo final do tour do projeto ("Menu do projeto") pede para este
+  // menu abrir a sério, não só apontar para o botão fechado.
+  useEffect(() => { if (extras?.forceMenuOpen) setProjMenuOpen(true) }, [extras?.forceMenuOpen])
   // Sidebar is icon-only by default and expands on sustained hover — no manual
   // toggle button (manual open/close — hover-to-expand was costing too much on
   // weaker machines since it fired constantly just from moving the mouse near
@@ -1423,8 +1426,11 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
       {/* ── Mobile "Gerir projeto" popup (≤600px) — dropped from the paintbrush ── */}
       {projMenuOpen && extras?.type === 'project' && (
         <>
-          <div style={{ position: 'fixed', inset: 0, zIndex: 398 }} onClick={() => setProjMenuOpen(false)} />
-          <div className="mob-proj-menu">
+          <div style={{ position: 'fixed', inset: 0, zIndex: extras.forceMenuOpen ? 9198 : 398 }} onClick={() => setProjMenuOpen(false)} />
+          {/* Durante o tour, o overlay escuro do spotlight (zIndex 9100/9101)
+              esbatia este menu por baixo — sobe acima disso para aparecer
+              mesmo aberto, não só um botão aceso atrás de um véu escuro. */}
+          <div className="mob-proj-menu" style={extras.forceMenuOpen ? { zIndex: 9199 } : undefined}>
             <span className="mob-nav-section-label" style={{ padding: '4px 10px 6px' }}>Gerir projeto</span>
             <button className="mob-nav-btn" onClick={() => { navigate(`/editar/${extras.slug}`); setProjMenuOpen(false) }}>
               <Pencil size={18} /> Editar
