@@ -29,7 +29,10 @@ import './NewProject.css'
    cá (há quem os use mesmo numa conta pessoal), mas agrupados à parte,
    como o conjunto secundário — ainda não temos escolas a usar a app
    para justificar um modo à parte a sério; isto é só o primeiro passo
-   dessa separação. */
+   dessa separação. Rótulo "PAP / Projeto final", mesmo já usado no
+   Explore.jsx e no ProjectPage.jsx — "PAP" sozinho soa estranho para
+   quem usa a conta individual (freelancers, profissionais); o id na
+   base de dados mantém-se 'pap' nos dois casos. */
 // Impede "d", "...", "123" de avançarem como descrição — sem anunciar a
 // regra em lado nenhum (nada de "mínimo 12 caracteres" visível), porque
 // isso só criaria fricção para quem já ia escrever a sério. O botão fica
@@ -45,7 +48,7 @@ function isDescriptionValid(text) {
 const PROJECT_TYPES = [
   { id: 'personal', label: 'Projeto pessoal' },
   { id: 'school',   label: 'Projeto de escola', group: 'school' },
-  { id: 'pap',      label: 'PAP', group: 'school' },
+  { id: 'pap',      label: 'PAP / Projeto final', group: 'school' },
 ]
 
 /* Mínimos baixos de propósito — dados reais mostram 76% dos alunos que se

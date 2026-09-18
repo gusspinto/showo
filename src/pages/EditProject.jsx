@@ -57,7 +57,7 @@ const colors = {
 const PROJECT_TYPES = [
   { value: '', label: 'Selecionar tipo...' },
   { value: 'school', label: 'Projeto de escola' },
-  { value: 'pap', label: 'PAP' },
+  { value: 'pap', label: 'PAP / Projeto final' },
   { value: 'personal', label: 'Projeto pessoal' },
 ]
 
