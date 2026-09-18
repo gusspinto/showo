@@ -427,14 +427,33 @@ export default function Explore() {
 
         {/* ── Projetos tab ── */}
         {tab === 'projetos' && (<>
-          {areas.length > 1 && (
-            <div className="filter-chip-group explore-area-chips">
-              {areas.map(a => (
-                <button key={a.id || 'todas'} onClick={() => setFilterArea(a.id)}
-                  className={`filter-chip${filterArea === a.id ? ' active' : ''}`}>
-                  {a.label}
+          {showFilters && (
+            <div className="explore-filter-panel">
+              <SelectFilter value={filterArea} onChange={setFilterArea} options={areas} label="Filtrar por área" />
+              <SelectFilter value={filterType} onChange={setFilterType} options={PROJECT_TYPES} label="Filtrar por tipo" />
+              <SelectFilter value={filterZone} onChange={setFilterZone} options={ZONES} label="Filtrar por zona" />
+              {techOptions.length > 0 && (
+                <SelectFilter value={filterTech} onChange={setFilterTech}
+                  options={[{ id: '', label: 'Todas as tecnologias' }, ...techOptions.map(t => ({ id: t, label: t }))]}
+                  label="Filtrar por tecnologia" />
+              )}
+              <SelectFilter value={sortBy} onChange={setSortBy} options={SORT_OPTIONS} label="Ordenar por" />
+
+              <button
+                onClick={() => setFilterAvailable(v => !v)}
+                className={`filter-toggle-btn${filterAvailable ? ' active' : ''}`}
+              >
+                <Briefcase size={13} /> Disponível p/ estágio
+              </button>
+
+              {hasFilters && (
+                <button
+                  className="filter-clear-btn"
+                  onClick={() => { setFilterArea(''); setFilterType(''); setFilterZone(''); setFilterAvailable(false); setFilterSkill(''); setFilterTech('') }}
+                >
+                  <X size={13} /> Limpar filtros
                 </button>
-              ))}
+              )}
             </div>
           )}
 
@@ -477,36 +496,6 @@ export default function Explore() {
                 <strong style={{ color: roleInfo.color }}>Estás em modo {roleInfo.label}</strong> — os criadores dos projetos são notificados quando os visitas.
                 Vês também as tecnologias usadas em cada projeto.
               </p>
-            </div>
-          )}
-
-          {showFilters && (
-            <div className="explore-filter-panel">
-              <SelectFilter value={filterArea} onChange={setFilterArea} options={areas} label="Filtrar por área" />
-              <SelectFilter value={filterType} onChange={setFilterType} options={PROJECT_TYPES} label="Filtrar por tipo" />
-              <SelectFilter value={filterZone} onChange={setFilterZone} options={ZONES} label="Filtrar por zona" />
-              {techOptions.length > 0 && (
-                <SelectFilter value={filterTech} onChange={setFilterTech}
-                  options={[{ id: '', label: 'Todas as tecnologias' }, ...techOptions.map(t => ({ id: t, label: t }))]}
-                  label="Filtrar por tecnologia" />
-              )}
-              <SelectFilter value={sortBy} onChange={setSortBy} options={SORT_OPTIONS} label="Ordenar por" />
-
-              <button
-                onClick={() => setFilterAvailable(v => !v)}
-                className={`filter-toggle-btn${filterAvailable ? ' active' : ''}`}
-              >
-                <Briefcase size={13} /> Disponível p/ estágio
-              </button>
-
-              {hasFilters && (
-                <button
-                  className="filter-clear-btn"
-                  onClick={() => { setFilterArea(''); setFilterType(''); setFilterZone(''); setFilterAvailable(false); setFilterSkill(''); setFilterTech('') }}
-                >
-                  <X size={13} /> Limpar filtros
-                </button>
-              )}
             </div>
           )}
 
