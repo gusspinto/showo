@@ -35,6 +35,7 @@ import { GlobeIcon as Globe } from '@solar-icons/react/bold/globe'
 import { EyeClosedIcon as EyeOff } from '@solar-icons/react/bold/eye-closed'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import * as ProjectDb from '../lib/projectDb'
+import { isTechnicalArea } from '../lib/technologies'
 
 const colors = {
   bg: 'var(--color-bg)',
@@ -397,11 +398,14 @@ export default function EditProject() {
   const canSave  = !saving && !!form.name?.trim() && !!form.area?.trim() && linkedin.valid && github.valid
   const linksFilled = (!linkedin.empty && linkedin.valid ? 1 : 0) + (!github.empty && github.valid ? 1 : 0)
 
+  // "Base de dados" (tabelas + API) só faz sentido para projetos com
+  // componente de software a sério — não aparece para áreas como Moda,
+  // Design Gráfico, Marketing, etc.
   const sections = [
     { id: 'tipo',     label: 'Tipo',     Icon: Layers,   filled: typeFilled,    total: typeTotal },
     { id: 'links',    label: 'Redes',    Icon: Link2,    filled: linksFilled,   total: 2 },
     { id: 'imagem',   label: 'Imagem',   Icon: Image,    filled: coverFilled,   total: 1 },
-    { id: 'database', label: 'Base de dados', Icon: Database, filled: 0,        total: 0 },
+    ...(isTechnicalArea(form.area) ? [{ id: 'database', label: 'Base de dados', Icon: Database, filled: 0, total: 0 }] : []),
     { id: 'avancado', label: 'Avançado', Icon: Settings, filled: 0,             total: 0 },
   ]
 

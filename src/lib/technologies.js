@@ -97,3 +97,22 @@ export function suggestTech(input, exclude = [], limit = 6) {
     .sort((a, b) => a.toLowerCase().indexOf(q) - b.toLowerCase().indexOf(q))
     .slice(0, limit)
 }
+
+// A funcionalidade de Base de dados (tabelas + API) só faz sentido para
+// projetos com componente de software a sério — um PAP/Projeto Final de
+// Moda ou Design Gráfico não precisa de uma API, mas um de Informática ou
+// Engenharia de Software precisa. `area` é texto livre, por isso isto é
+// por palavras-chave, não uma lista fechada.
+const TECHNICAL_AREA_KEYWORDS = [
+  'informát', 'informatic', 'programa', 'software', 'computad', 'computer',
+  'engenharia informática', 'engenharia de software', 'ciência', 'ciencias',
+  'dados', 'data', 'web', 'app', 'aplicaç', 'tecnolog', 'sistemas',
+  'redes e comunicaç', 'cibersegurança', 'cybersecurity', 'ti ',
+  'eletrónica', 'eletronica', 'robótica', 'robotica', 'algoritm',
+]
+
+export function isTechnicalArea(area) {
+  const a = String(area || '').trim().toLowerCase()
+  if (!a) return false
+  return TECHNICAL_AREA_KEYWORDS.some(k => a.includes(k))
+}

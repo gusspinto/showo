@@ -77,6 +77,8 @@ export async function saveProject(formData, aiResult, userId, opts = {}) {
     is_pap: isPap || false,
     pap_supervisor: formData.pap_supervisor || null,
     pap_date: formData.pap_date || null,
+    defense_date: formData.defense_date || null,
+    evaluation_mode: formData.evaluation_mode || null,
     project_type: formData.project_type || null,
     tags: formData.tags || [],
     score,

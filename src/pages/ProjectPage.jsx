@@ -67,7 +67,6 @@ import { GlobeIcon as Globe } from '@solar-icons/react/bold/globe'
 import { GalleryWideIcon as Image } from '@solar-icons/react/bold/gallery-wide'
 import { ChatRoundLineIcon as MessageSquare } from '@solar-icons/react/bold/chat-round-line'
 import { ChatRoundLineIcon as Quote } from '@solar-icons/react/bold/chat-round-line'
-import { Widget4Icon as Layout } from '@solar-icons/react/bold/widget-4'
 import { TextBoldIcon as Type } from '@solar-icons/react/bold/text-bold'
 import { LinkIcon as Link } from '@solar-icons/react/bold/link'
 import { SortVerticalIcon as GripVertical } from '@solar-icons/react/bold/sort-vertical'
@@ -89,13 +88,11 @@ import { Palette2Icon as Palette } from '@solar-icons/react/bold/palette-2'
 import { DangerTriangleIcon as AlertTriangle } from '@solar-icons/react/bold/danger-triangle'
 import { UserIcon as User } from '@solar-icons/react/bold/user'
 import { SettingsIcon as Settings } from '@solar-icons/react/bold/settings'
-import { BellIcon as Bell } from '@solar-icons/react/bold/bell'
-import { FlagIcon as Swords } from '@solar-icons/react/bold/flag'
 import { PaintRollerIcon as Paintbrush } from '@solar-icons/react/bold/paint-roller'
 import { WindowFrameIcon as LayoutTemplate } from '@solar-icons/react/bold/window-frame'
 
 import {
-  ANON_PROJECT_COLUMNS, ApiProof, DbSetupNudge, GithubProof, colors,
+  ANON_PROJECT_COLUMNS, AUTH_PROJECT_COLUMNS, ApiProof, DbSetupNudge, GithubProof, colors,
   PROJECT_TYPE_LABELS, TYPE_HERO, PROFILE_SCORE_FIELDS, SECTION_GROUPS,
   humanizeFieldKey, FeedbackCommentText, progBar, progTrack, getAreaGradient,
   getLevelInfo, ScoreRing, Section, MissionRow, Toast, Confetti,
@@ -1162,8 +1159,7 @@ export default function ProjectPage() {
   const [fbEditing, setFbEditing] = useState(null)
   const [resolvingId, setResolvingId] = useState(null)
   const [resolveNote, setResolveNote] = useState('')
-  const [featureInterest, setFeatureInterest] = useState({}) // { pap_slides: true, boss_fight: true }
-  const [fiLoading, setFiLoading] = useState({})
+  const [showDefensePopup, setShowDefensePopup] = useState(false)
 
   const { setExtras } = useSidebar()
   const { theme } = useTheme()
@@ -1181,6 +1177,21 @@ export default function ProjectPage() {
         partilha → mostrar a alguém (link, QR, autor, nota do professor)
      Os blocos ficaram exatamente onde estavam; só mudou quem os agrupa. */
   const [mobileTab, setMobileTab] = useState('projeto')
+  // Chat da IA (mobile): o teclado a abrir não redimensiona o viewport de
+  // layout em todos os browsers — um overlay com `inset: 0` fica então
+  // por baixo do teclado, com o input escondido. A visualViewport API dá
+  // a altura visível a sério, e é isso que usamos para o overlay, em vez
+  // de depender só de 100dvh.
+  const [iaViewportH, setIaViewportH] = useState(null)
+  useEffect(() => {
+    if (mobileTab !== 'ia' || typeof window === 'undefined' || !window.visualViewport) return
+    const vv = window.visualViewport
+    const update = () => setIaViewportH(vv.height)
+    update()
+    vv.addEventListener('resize', update)
+    vv.addEventListener('scroll', update)
+    return () => { vv.removeEventListener('resize', update); vv.removeEventListener('scroll', update) }
+  }, [mobileTab])
   const MOBILE_TAB_GROUP = {
     historia: 'projeto', explorar: 'projeto',
     melhorar: 'melhorar', missoes: 'melhorar',
@@ -1222,6 +1233,39 @@ export default function ProjectPage() {
   const [wsExpanded, setWsExpanded] = useState(openWorkspaceOnLoad)
   const [previewBlocks, setPreviewBlocks] = useState([])
   const [previewStyle, setPreviewStyle] = useState({})
+  // Partilhado entre o "Sair" da PublicView e o botão de voltar da navbar
+  // mobile — sem isto, entrar em preview a partir do pincel (que troca o
+  // ícone para só abrir/fechar o painel) deixava o dono sem nenhuma forma
+  // de voltar ao editar o projeto.
+  function exitPreview() {
+    if (!user && isAnonCreator && anonEditCount >= 3) {
+      setShowRegisterPopup(true)
+      return
+    }
+    if (openWorkspaceOnLoad) { navigate(`/editar/${project.slug}`); return }
+    setViewAsPublic(false); setPreviewEditing(false); setContentTargetField(null)
+  }
+  // Entrar no preview (ex: a partir de uma missão) não navega para uma
+  // página nova, é só um estado local — sem isto, "voltar" no telemóvel/
+  // browser saltava o preview por completo e ia parar à página anterior
+  // (ex: Dashboard), em vez de primeiro sair do preview e voltar ao
+  // projeto normal. Empurra uma entrada de histórico "vazia" (mesmo URL)
+  // enquanto o preview está aberto, para o browser ter algo para desfazer.
+  useEffect(() => {
+    if (!viewAsPublic) return
+    window.history.pushState({ projectPreviewGuard: true }, '')
+    const onPopState = () => {
+      if (!user && isAnonCreator && anonEditCount >= 3) {
+        setShowRegisterPopup(true)
+        window.history.pushState({ projectPreviewGuard: true }, '')
+        return
+      }
+      if (openWorkspaceOnLoad) { navigate(`/editar/${project.slug}`); return }
+      setViewAsPublic(false); setPreviewEditing(false); setContentTargetField(null)
+    }
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+  }, [viewAsPublic])
   const [previewDevice, setPreviewDevice] = useState('desktop')
   // Professor grade state (0-20, sum of 5 criteria x 0-4) — lives on the project itself
   // (project.teacher_score / _note / _ratings), not in teacher_feedback.
@@ -1236,6 +1280,12 @@ export default function ProjectPage() {
   const juryHydrated = useRef(false)
   useEffect(() => {
     if (juryHydrated.current || !project) return
+    // teacher_score* já não vem no fetch inicial do projeto (ver
+    // AUTH_PROJECT_COLUMNS) — só chega a seguir, via get_project_grades,
+    // que o servidor só responde a dono/professor/admin. Espera por isso
+    // chegar antes de hidratar, senão isto corria cedo de mais com
+    // undefined e nunca mais corria (o ref já ficava marcado).
+    if (project.teacher_score === undefined) return
     if (project.teacher_score_ratings) setJuryRatings(project.teacher_score_ratings)
     if (project.teacher_score_note) setJuryNote(project.teacher_score_note)
     setJuryEditing(project.teacher_score == null)
@@ -1312,19 +1362,6 @@ export default function ProjectPage() {
     }
   }
 
-  // Fetch which coming-soon features this user already signed up for
-  useEffect(() => {
-    if (!user?.id) return
-    supabase.from('feature_interest').select('feature').eq('user_id', user.id)
-      .then(({ data }) => {
-        if (data) {
-          const map = {}
-          data.forEach(r => { map[r.feature] = true })
-          setFeatureInterest(map)
-        }
-      })
-  }, [user?.id])
-
   // Load persisted coach messages for this project
   useEffect(() => {
     if (!project?.id || !user?.id) return
@@ -1393,18 +1430,6 @@ export default function ProjectPage() {
       setCoachMessages(prev => [...prev, { role: 'assistant', content: 'Ocorreu um erro. Tenta novamente.' }])
     }
     setCoachLoading(false)
-  }
-
-  async function handleFeatureInterest(featureName) {
-    if (!user?.id || fiLoading[featureName]) return
-    setFiLoading(l => ({ ...l, [featureName]: true }))
-    const { data: { user: authUser } } = await supabase.auth.getUser()
-    const email = authUser?.email || ''
-    const { error } = await supabase.from('feature_interest').insert({
-      user_id: user.id, feature: featureName, email,
-    })
-    if (!error) setFeatureInterest(fi => ({ ...fi, [featureName]: true }))
-    setFiLoading(l => ({ ...l, [featureName]: false }))
   }
 
   // Student: mark teacher-flagged revisions as done — notifies the teacher
@@ -1567,15 +1592,19 @@ export default function ProjectPage() {
         onShareStory: () => setShowStoryModal(true),
         onDefense: project.project_type === 'pap' ? () => setDefenseMode(true) : null,
         onAnalyze: handleAIClick,
-        // Só alterna a vista — deixou de ativar o editor de estilo sozinho.
-        // "Preview visitante" é só para veres a página como um visitante vê;
-        // editar o visual passa a ser só a partir do botão "Editar" (que leva
-        // à secção "Aparência" em /editar/:slug). Se chegámos aqui a editar
-        // a aparência (?workspace=1), fechar volta para lá, não deixa a
-        // pessoa pendurada numa "vista de visitante" sem contexto nenhum.
+        // Entrar em "Preview visitante" já abre o workspace direto — é o
+        // único sítio de onde o dono normalmente chega lá, não faz sentido
+        // obrigar a um segundo clique (ex: em "Preencher" nalgum campo) só
+        // para o editor aparecer. Se chegámos aqui a editar a aparência
+        // (?workspace=1), fechar volta para /editar, não deixa a pessoa
+        // pendurada numa "vista de visitante" sem contexto nenhum.
         onTogglePublicView: () => {
           if (openWorkspaceOnLoad && viewAsPublic) { navigate(`/editar/${project.slug}`); return }
-          setViewAsPublic(v => !v)
+          setViewAsPublic(v => {
+            const next = !v
+            if (next) { setPreviewEditing(true); setWsExpanded(true) }
+            return next
+          })
         },
         editingAppearance: openWorkspaceOnLoad,
         previewEditing,
@@ -1609,7 +1638,7 @@ export default function ProjectPage() {
       const currentUser = user
       const { data, error } = await supabase
         .from('projects')
-        .select(currentUser ? '*' : ANON_PROJECT_COLUMNS)
+        .select(currentUser ? AUTH_PROJECT_COLUMNS : ANON_PROJECT_COLUMNS)
         .eq('slug', slug)
         .single()
 
@@ -1634,11 +1663,20 @@ export default function ProjectPage() {
         const isOwner = currentUser?.id === data.user_id
         const hasToken = data.edit_token && localStorage.getItem(`edit_token_${data.slug}`) === data.edit_token
         let teacherOfClass = false
+        let isCollaborator = false
         if (!isOwner && !hasToken && currentUser?.id) {
-          const { data: inClass } = await supabase.rpc('is_project_in_my_class', { p_project_id: data.id })
+          const [{ data: inClass }, { data: collabRow }] = await Promise.all([
+            supabase.rpc('is_project_in_my_class', { p_project_id: data.id }),
+            // Este gate corria só no frontend e nunca olhava para
+            // project_collaborators — um colaborador aceite num projeto
+            // privado passava a RLS (que já sabe disto) mas ficava preso
+            // aqui, a ver "este projeto não existe".
+            supabase.from('project_collaborators').select('status').eq('project_id', data.id).eq('user_id', currentUser.id).eq('status', 'accepted').maybeSingle(),
+          ])
           teacherOfClass = !!inClass
+          isCollaborator = !!collabRow
         }
-        if (!isOwner && !hasToken && !teacherOfClass) {
+        if (!isOwner && !hasToken && !teacherOfClass && !isCollaborator) {
           setLoading(false)
           return
         }
@@ -2175,16 +2213,16 @@ export default function ProjectPage() {
           {profile?.role !== 'professor' && (
             <button
               onClick={() => navigate('/novo')}
-              style={{ background: colors.blue, color: '#fff', border: 'none', borderRadius: 10, padding: '12px 28px', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginTop: 8, boxShadow: '0 2px 8px var(--color-primary-subtle)', fontFamily: 'inherit' }}
+              style={{ background: colors.text, color: colors.bg, border: 'none', borderRadius: 10, padding: '12px 28px', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginTop: 8, fontFamily: 'inherit' }}
             >
               <span style={{display:"flex",alignItems:"center",gap:6}}>Criar o meu projeto <ArrowRight size={15} /></span>
             </button>
           )}
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/dashboard')}
             style={{ background: 'transparent', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 8, padding: '10px 22px', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}
           >
-            Ir para o início
+            Ir para o Dashboard
           </button>
         </div>
       </div>
@@ -2193,6 +2231,17 @@ export default function ProjectPage() {
 
   const highlights = Array.isArray(project.ai_highlights) ? project.ai_highlights : []
   const isPap = project.is_pap || project.project_type === 'pap'
+  // Partilhado entre o card "Data de defesa" da sidebar (desktop/tablet) e o
+  // botão compacto do telemóvel — os dois mostram a mesma urgência.
+  const defenseToday = new Date(); defenseToday.setHours(0, 0, 0, 0)
+  const defenseTarget = defenseDate ? new Date(defenseDate + 'T00:00:00') : null
+  const defenseDaysLeft = defenseTarget ? Math.ceil((defenseTarget - defenseToday) / 86400000) : null
+  const defenseUrgentColor = defenseDaysLeft != null && defenseDaysLeft <= 7 ? 'var(--color-error)' : defenseDaysLeft != null && defenseDaysLeft <= 30 ? 'var(--color-warning)' : 'var(--color-primary)'
+  const defenseLabel = defenseDaysLeft === null ? 'Data de defesa' :
+    defenseDaysLeft < 0 ? 'Defesa concluída' :
+    defenseDaysLeft === 0 ? 'Defesa é hoje!' :
+    defenseDaysLeft === 1 ? 'Defesa é amanhã!' :
+    `${defenseDaysLeft} dias para a defesa`
 
   async function handleSaveDefenseDate(dateStr) {
     setDefenseDate(dateStr)
@@ -2403,6 +2452,16 @@ export default function ProjectPage() {
           .proj-highlights-grid { grid-template-columns: 1fr !important; }
         }
         .proj-layout > * { min-width: 0; }
+        /* Divisória simples entre secções empilhadas (Missões/Percurso,
+           Partilhar/Comentários) */
+        .proj-section-divider { border-top: 1px solid ${colors.border}; margin: 4px 0; }
+        /* No desktop, Comentários aparece fisicamente a seguir a Percurso no
+           código (para partilhar a tab "Melhorar" no telemóvel), mas
+           visualmente deve ficar depois do Partilhar — só CSS order
+           consegue isto sem duplicar o agrupamento por tab do telemóvel. */
+        @media (min-width: 861px) {
+          .proj-comments-tabsec { order: 10; border-top: 1px solid ${colors.border}; margin-top: 4px; padding-top: 20px; }
+        }
         .proj-sidebar {
           position: sticky;
           top: 16px;
@@ -2525,6 +2584,7 @@ export default function ProjectPage() {
              título, e o score fica mais compacto logo a seguir. */
           .proj-hero-content { display: flex !important; flex-direction: column; }
           .proj-identity-row { order: -1; margin-bottom: 8px !important; }
+          .proj-type-badge-mobile { display: inline-flex !important; }
           .proj-cover-edit-fab { display: flex !important; }
           .proj-views-widget-desktop { display: none !important; }
           .proj-dashboard { align-items: center; text-align: center; }
@@ -2552,6 +2612,9 @@ export default function ProjectPage() {
           .proj-body { gap: 0; padding-top: 8px; }
           /* Sidebar hidden on mobile — content moves into tabs */
           .proj-sidebar { display: none !important; }
+          /* Sem sidebar no telemóvel, o card "Data de defesa" fica um
+             botão compacto que abre um popup, em vez do card inteiro. */
+          .proj-defense-mobile-btn { display: flex !important; }
           /* In Explorar tab: always show sections, hide the toggle button */
           .proj-mobile-active .proj-sections-toggle { display: none !important; }
           .proj-mobile-active .proj-sections-body.collapsed { display: flex !important; flex-direction: column; gap: 12px; }
@@ -2623,9 +2686,15 @@ export default function ProjectPage() {
           .proj-coach-panel { width: 280px !important; right: 20px !important; }
         }
         ${viewAsPublic ? `
-          /* ── Preview mode: the sidebar stays visible (so the owner can keep
-             navigating the app) — .pv-outer already offsets to clear it. ── */
-          .top-nav          { display: none !important; }
+          /* ── Preview mode no desktop: a sidebar fica visível (o dono
+             continua a navegar a app por ela) — .pv-outer já desloca o
+             conteúdo para a deixar livre, por isso a .top-nav de cima
+             ficava a duplicar a navegação. No mobile não há sidebar
+             nenhuma a substituir isto, por isso a navbar de cima
+             (logo + hamburguer) continua a aparecer. ── */
+          @media (min-width: 601px) {
+            .top-nav        { display: none !important; }
+          }
           .bottom-nav       { display: none !important; }
         ` : ''}
       `}</style>
@@ -3030,48 +3099,43 @@ export default function ProjectPage() {
           <div
             style={{
               background: 'var(--color-surface)',
-              border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-xl)',
-              padding: 'var(--sp-6)',
+              border: `1px solid ${colors.borderBright}`,
+              borderRadius: 14,
+              padding: '28px',
               maxWidth: 660,
               width: '100%',
               maxHeight: 'calc(100vh - 48px)',
               overflowY: 'auto',
-              boxShadow: 'var(--shadow-xl)',
+              boxShadow: 'none',
             }}
             onClick={e => e.stopPropagation()}
           >
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 'var(--sp-5)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 38, height: 38, borderRadius: 10, flexShrink: 0, background: 'rgba(129,140,248,0.12)', border: '1px solid rgba(129,140,248,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Bot size={20} color="#818cf8" />
-                </div>
-                <div>
-                  <h3 style={{ margin: 0, fontSize: 'var(--text-lg)', fontWeight: 700, fontFamily: 'var(--font-heading)', letterSpacing: '-0.02em', color: 'var(--color-text)' }}>Análise da IA</h3>
-                  <p style={{ margin: '4px 0 0', fontSize: 'var(--text-sm)', color: colors.muted }}>Feedback personalizado para melhorar o teu projeto</p>
-                </div>
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 'var(--sp-5)' }}>
+              <h3 style={{ margin: 0, fontSize: 'var(--text-lg)', fontWeight: 700, fontFamily: 'var(--font-heading)', letterSpacing: '-0.02em', color: 'var(--color-text)' }}>Análise da IA</h3>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                {isOwner && (
+                {/* Só existe "Reanalisar" aqui — a primeira análise faz-se
+                    pelo botão principal no corpo do modal, para não haver
+                    dois CTAs a fazer a mesma coisa ao mesmo tempo. */}
+                {isOwner && aiFeedback && (
                   <button
                     onClick={handleAnalyzeAI}
                     disabled={analyzingAI}
                     style={{
-                      background: analyzingAI ? 'var(--color-primary-subtle)' : aiFeedback ? 'var(--color-primary-subtle)' : 'var(--color-primary)',
-                      border: analyzingAI || aiFeedback ? `1px solid ${colors.blue}30` : 'none',
+                      background: 'var(--color-primary-subtle)',
+                      border: `1px solid ${colors.blue}30`,
                       borderRadius: 8, padding: '8px 16px',
-                      color: analyzingAI || aiFeedback ? colors.blue : '#fff',
+                      color: colors.blue,
                       fontSize: 12, fontWeight: 700,
                       cursor: analyzingAI ? 'default' : 'pointer',
                       fontFamily: 'inherit',
-                      boxShadow: analyzingAI || aiFeedback ? 'none' : '0 2px 8px var(--color-primary-subtle)',
+                      boxShadow: 'none',
                       display: 'flex', alignItems: 'center', gap: 7,
-                      transition: 'all 0.15s',
+                      opacity: analyzingAI ? 0.6 : 1,
                     }}
                   >
                     <Sparkles size={13} />
-                    {analyzingAI ? 'A analisar…' : aiFeedback ? 'Reanalisar' : 'Analisar'}
+                    {analyzingAI ? 'A analisar…' : 'Reanalisar'}
                   </button>
                 )}
                 <button
@@ -3175,19 +3239,37 @@ export default function ProjectPage() {
             )}
 
             {!aiFeedback && !analyzingAI && (
-              <div style={{ textAlign: 'center', padding: '32px 0' }}>
-                <p style={{ color: colors.muted, fontSize: 14, margin: '0 0 16px' }}>
+              <div style={{ textAlign: 'center', padding: '20px 0 8px' }}>
+                <h4 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 800, color: colors.text, fontFamily: 'var(--font-heading)', letterSpacing: '-0.01em' }}>
+                  {isOwner ? 'O que é que um recrutador acharia?' : 'Ainda sem análise'}
+                </h4>
+                <p style={{ color: colors.muted, fontSize: 13.5, lineHeight: 1.55, margin: '0 auto 20px', maxWidth: 380 }}>
                   {isOwner
-                    ? 'A IA vai analisar cada secção do teu projeto e dar-te feedback personalizado.'
+                    ? 'Lemos o teu projeto secção a secção, tal como um júri leria, e dizemos onde estás forte, o que falta e uma nota honesta de 0 a 10.'
                     : 'O dono do projeto ainda não gerou uma análise.'}
                 </p>
                 {isOwner && (
-                  <button
-                    onClick={handleAnalyzeAI}
-                    style={{ background: colors.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '10px 22px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
-                  >
-                    Analisar projeto
-                  </button>
+                  <>
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 22 }}>
+                      {[
+                        { Icon: Target, label: 'Nota /10' },
+                        { Icon: TrendingUp, label: 'Pontos fortes' },
+                        { Icon: Lightbulb, label: 'O que melhorar' },
+                      ].map(({ Icon, label }) => (
+                        <span key={label} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 999, padding: '6px 12px', fontSize: 12, fontWeight: 600, color: colors.muted }}>
+                          <Icon size={12} color={colors.blue} /> {label}
+                        </span>
+                      ))}
+                    </div>
+                    <button
+                      onClick={handleAnalyzeAI}
+                      style={{ backgroundImage: 'var(--brand-gradient)', color: '#fff', border: 'none', borderRadius: 9, padding: '12px 26px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'filter 0.2s ease', boxShadow: '0 6px 18px -6px rgba(219,74,61,0.4)' }}
+                      onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(1.05)' }}
+                      onMouseLeave={e => { e.currentTarget.style.filter = 'none' }}
+                    >
+                      Analisar projeto
+                    </button>
+                  </>
                 )}
               </div>
             )}
@@ -3197,7 +3279,7 @@ export default function ProjectPage() {
 
       {/* FABs — visible on tablet + mobile via CSS (hidden on desktop) */}
       <div className="proj-fab-area" style={{
-        position: 'fixed', bottom: 24, right: 20,
+        position: 'fixed', bottom: 24, right: 16,
         flexDirection: 'column', gap: 10, zIndex: 90,
         pointerEvents: 'none',
       }}>
@@ -3258,6 +3340,7 @@ export default function ProjectPage() {
         showCreateProject={true}
         previewEditingMobile={isOwner && viewAsPublic}
         onWorkspaceToggle={() => { setPreviewEditing(true); setWsExpanded(e => !e) }}
+        onExitWorkspace={exitPreview}
       >
         <div className="proj-nav-btns" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {isOwner && (
@@ -3356,17 +3439,7 @@ export default function ProjectPage() {
           ownerProfile={ownerProfile}
           isOwner={isOwner}
           isProfessor={isProfessor}
-          onExitPreview={() => {
-            if (!user && isAnonCreator && anonEditCount >= 3) {
-              setShowRegisterPopup(true)
-              return
-            }
-            // Veio de "Editar → Aparência" (?workspace=1), não do botão
-            // "Preview visitante" — sair devia voltar para o editar, não
-            // deixar a pessoa pendurada na vista de dono sem contexto.
-            if (openWorkspaceOnLoad) { navigate(`/editar/${project.slug}`); return }
-            setViewAsPublic(false); setPreviewEditing(false); setContentTargetField(null)
-          }}
+          onExitPreview={exitPreview}
           editingAppearance={openWorkspaceOnLoad}
           contentTargetField={contentTargetField}
           onSaveField={handleSaveField}
@@ -3413,22 +3486,29 @@ export default function ProjectPage() {
                   onChange={handleHeroCoverUpload}
                 />
                 {/* Trocar a capa direto no banner — só no mobile; no
-                    formulário de Editar Projeto (desktop) fica como estava. */}
+                    formulário de Editar Projeto (desktop) fica como estava.
+                    Sem capa, vira um pill com texto — um ícone sozinho
+                    sobre um gradiente vazio passava por um erro de
+                    carregamento, não por um espaço por preencher. */}
                 <button
                   className="proj-cover-edit-fab"
                   onClick={() => heroCoverInputRef.current?.click()}
                   disabled={coverUploading}
                   aria-label="Alterar imagem de capa"
                   style={{
-                    position: 'absolute', top: 12, right: 12, zIndex: 5,
-                    width: 42, height: 42, borderRadius: 12,
+                    position: 'absolute', top: 12, right: 16, zIndex: 5,
+                    height: 42, borderRadius: 12,
+                    width: project.cover_url ? 42 : 'auto',
+                    padding: project.cover_url ? 0 : '0 16px 0 14px',
                     background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
                     border: '1px solid rgba(255,255,255,0.25)', color: '#fff',
-                    display: 'none', alignItems: 'center', justifyContent: 'center',
+                    display: 'none', alignItems: 'center', justifyContent: 'center', gap: 8,
                     cursor: coverUploading ? 'default' : 'pointer',
+                    fontFamily: 'inherit', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap',
                   }}
                 >
                   {coverUploading ? <Loader size={16} /> : <Camera size={16} />}
+                  {!project.cover_url && !coverUploading && 'Adicionar capa'}
                 </button>
               </>
             )}
@@ -3537,11 +3617,13 @@ export default function ProjectPage() {
                       boxShadow: '0 24px 64px rgba(0,0,0,0.4)',
                       animation: 'ppInvFade 0.2s ease',
                     }}>
-                      {/* Header */}
+                      {/* Header — neutro (preto/branco), como o resto da app
+                          desde o redesign; o azul fica reservado para o
+                          accent do projeto, não para cada ícone decorativo. */}
                       <div style={{ padding: '18px 20px 14px', borderBottom: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <UserPlus size={15} color={colors.blue} />
+                          <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <UserPlus size={15} color={colors.text} />
                           </div>
                           <div>
                             <div style={{ fontSize: 15, fontWeight: 700, color: colors.text }}>Convidar colaborador</div>
@@ -3556,16 +3638,15 @@ export default function ProjectPage() {
                           <input
                             value={inviteInput}
                             onChange={handleInviteSearchInput}
-                            onFocus={() => { if (inviteSearchResults.length) setInviteShowDropdown(true) }}
-                            onBlur={() => setTimeout(() => setInviteShowDropdown(false), 150)}
+                            onFocus={e => { if (inviteSearchResults.length) setInviteShowDropdown(true); e.target.style.borderColor = colors.text }}
+                            onBlur={e => { e.target.style.borderColor = colors.border; setTimeout(() => setInviteShowDropdown(false), 150) }}
                             placeholder="Pesquisar utilizador..."
                             style={{
-                              width: '100%', background: 'var(--color-bg)', border: `1.5px solid ${colors.border}`,
-                              borderRadius: 10, padding: '11px 14px', color: colors.text,
-                              fontSize: 15, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box',
-                              transition: 'border-color 0.15s',
+                              width: '100%', background: 'var(--color-input-bg)', border: `1.5px solid ${colors.border}`,
+                              borderRadius: 10, padding: '12px 14px', color: colors.text,
+                              fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box',
+                              transition: 'border-color 0.2s, box-shadow 0.2s',
                             }}
-                            onFocus={e => e.target.style.borderColor = colors.blue}
                           />
                           {inviteShowDropdown && inviteSearchResults.length > 0 && (
                             <div style={{
@@ -3586,9 +3667,9 @@ export default function ProjectPage() {
                                 >
                                   <div style={{
                                     width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
-                                    background: 'var(--color-primary-subtle)',
+                                    background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`,
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    fontSize: 13, fontWeight: 700, color: colors.blue, overflow: 'hidden',
+                                    fontSize: 13, fontWeight: 700, color: colors.text, overflow: 'hidden',
                                   }}>
                                     {u.avatar_url
                                       ? <img src={u.avatar_url} alt="" style={{ width: 34, height: 34, objectFit: 'cover' }} />
@@ -3606,8 +3687,8 @@ export default function ProjectPage() {
                         </div>
 
                         {inviteSelectedUser && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'rgba(27,120,247,0.07)', border: '1px solid rgba(27,120,247,0.2)', borderRadius: 10 }}>
-                            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: colors.blue, flexShrink: 0, overflow: 'hidden' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 10 }}>
+                            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--color-surface)', border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: colors.text, flexShrink: 0, overflow: 'hidden' }}>
                               {inviteSelectedUser.avatar_url
                                 ? <img src={inviteSelectedUser.avatar_url} alt="" style={{ width: 32, height: 32, objectFit: 'cover' }} />
                                 : (inviteSelectedUser.full_name || inviteSelectedUser.username || '?')[0].toUpperCase()
@@ -3617,7 +3698,7 @@ export default function ProjectPage() {
                               <div style={{ fontSize: 13, fontWeight: 600, color: colors.text }}>{inviteSelectedUser.full_name || inviteSelectedUser.username}</div>
                               {inviteSelectedUser.username && <div style={{ fontSize: 11, color: colors.muted }}>@{inviteSelectedUser.username}</div>}
                             </div>
-                            <Check size={15} color={colors.blue} />
+                            <Check size={15} color="var(--color-success)" />
                           </div>
                         )}
 
@@ -3628,9 +3709,10 @@ export default function ProjectPage() {
                         )}
 
                         <button type="submit" disabled={(!inviteInput.trim() && !inviteSelectedUser) || inviting} style={{
-                          width: '100%', padding: '12px', background: colors.blue, border: 'none', borderRadius: 10,
-                          color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                          width: '100%', padding: '12px', background: 'var(--color-text)', border: 'none', borderRadius: 10,
+                          color: 'var(--color-bg)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
                           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                          boxShadow: '0 2px 8px color-mix(in srgb, var(--color-text) 20%, transparent)',
                           opacity: (!inviteInput.trim() && !inviteSelectedUser) ? 0.5 : 1,
                           transition: 'opacity 0.15s',
                         }}>
@@ -3689,6 +3771,21 @@ export default function ProjectPage() {
           {/* Student identity line — name · area · course + status badges */}
           {(project.area || project.course || project.school_year || ownerProfile?.available_for_work || project.review_status) && (
             <div className="proj-identity-row" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
+              {/* Tipo do projeto (Projeto Final/PAP) — no telemóvel, os
+                  badges completos ficam escondidos (.proj-badges), por
+                  isso isto é o único sítio onde a etiqueta ainda aparece,
+                  agora na mesma linha que a área, à esquerda. */}
+              {project.project_type && PROJECT_TYPE_LABELS[project.project_type] && (() => {
+                const hero = TYPE_HERO[project.project_type] ?? TYPE_HERO.personal
+                return (
+                  <span className="proj-type-badge-mobile" style={{ display: 'none', alignItems: 'center', gap: 5 }}>
+                    {hero.Icon && <hero.Icon size={12} color={hero.c1} />}
+                    <span style={{ color: hero.c1, fontSize: 12, fontWeight: 700, letterSpacing: '0.06em' }}>
+                      {PROJECT_TYPE_LABELS[project.project_type].toUpperCase()}
+                    </span>
+                  </span>
+                )
+              })()}
               {/* "Disponível" — blue briefcase icon only */}
               {ownerProfile?.available_for_work && (
                 <div
@@ -3734,7 +3831,10 @@ export default function ProjectPage() {
                   abaixo (tab Partilha); repeti-lo aqui, ainda por cima ao
                   lado do "Editar", era o mesmo dado três vezes na mesma
                   página. */}
-              {[...new Set([project.area, project.course, project.school_year])]
+              {/* project.course vem do perfil do próprio utilizador (o que
+                  ele estuda/faz), não do projeto — mostrá-lo aqui ao lado
+                  da área do projeto confundia as duas coisas. */}
+              {[...new Set([project.area, project.school_year])]
                 .filter(Boolean)
                 .map((item, i) => (
                   <span key={i} style={{ fontSize: 13, color: colors.muted, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -3982,68 +4082,83 @@ export default function ProjectPage() {
                 </div>
               )}
 
-              {/* PAP defense date */}
-              {project.project_type === 'pap' && (
-                <div style={{ ...miniCardBase, background: `rgba(${urgentColor === 'var(--color-error)' ? '239,68,68' : urgentColor === 'var(--color-warning)' ? '249,115,22' : '27,120,247'},0.05)`, border: `1px solid ${urgentColor}30`, position: 'relative' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 8, background: `${urgentColor}15`, border: `1px solid ${urgentColor}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Calendar size={13} color={urgentColor} />
-                    </div>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: daysLeft != null && daysLeft <= 7 ? 'var(--color-error)' : colors.text, flex: 1, minWidth: 0 }}>
-                      {daysLeft === null ? 'Data de defesa' :
-                       daysLeft < 0 ? 'Defesa concluída' :
-                       daysLeft === 0 ? 'Hoje!' :
-                       daysLeft === 1 ? 'Amanhã!' :
-                       `${daysLeft}d restantes`}
-                    </div>
-                  </div>
-                  <input
-                    type="date"
-                    value={defenseDate}
-                    onChange={e => handleSaveDefenseDate(e.target.value)}
-                    onClick={e => e.stopPropagation()}
-                    style={{
-                      width: '100%', boxSizing: 'border-box',
-                      background: 'var(--color-surface)', border: `1px solid ${colors.border}`,
-                      borderRadius: 6, padding: '5px 8px', color: colors.text,
-                      fontSize: 11, fontFamily: 'inherit', cursor: 'pointer', outline: 'none',
-                      colorScheme: theme === 'light' ? 'light' : 'dark',
-                    }}
-                  />
-                  {savingDefense && <div style={{ position: 'absolute', top: 8, right: 8, width: 10, height: 10, border: `1.5px solid ${colors.border}`, borderTop: `1.5px solid ${colors.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />}
-                </div>
-              )}
-
-
             </div>{/* end actionable grid */}
 
-            {/* ── Em breve — only relevant for PAP projects ── */}
-            {isPap && <div style={{ marginTop: 2 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: colors.subtle, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Em breve</div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {[
-                  { key: 'pap_slides', Icon: Layout, label: 'Slides PAP' },
-                  { key: 'boss_fight', Icon: Swords, label: 'Boss Fight' },
-                ].map(({ key, Icon, label }) => {
-                  const on = featureInterest[key]
-                  return (
-                    <button
-                      key={key}
-                      onClick={() => !on && handleFeatureInterest(key)}
-                      title={on ? 'Vamos avisar-te por email' : 'Notificar-me quando sair'}
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 999, padding: '7px 13px', cursor: on ? 'default' : 'pointer', fontFamily: 'inherit', opacity: on ? 0.7 : 1, WebkitTapHighlightColor: 'transparent' }}
-                    >
-                      <Icon size={13} color={colors.muted} />
-                      <span style={{ fontSize: 12.5, fontWeight: 600, color: colors.text }}>{label}</span>
-                      {on ? <Check size={12} color="var(--color-primary)" /> : <Bell size={11} color={colors.subtle} />}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>}
+            {/* Data de defesa — card completo vive na sidebar (desktop/
+                tablet, em cima da Completude); no telemóvel, sem sidebar,
+                fica este botão discreto que abre um popup com a data. */}
+            {isPap && (
+              <button
+                className="proj-defense-mobile-btn"
+                onClick={() => setShowDefensePopup(true)}
+                style={{
+                  display: 'none', alignItems: 'center', gap: 8, width: '100%',
+                  background: `${defenseUrgentColor}0d`, border: `1px solid ${defenseUrgentColor}30`,
+                  borderRadius: 10, padding: '10px 12px', cursor: 'pointer', fontFamily: 'inherit',
+                  textAlign: 'left',
+                }}
+              >
+                <Calendar size={14} color={defenseUrgentColor} style={{ flexShrink: 0 }} />
+                <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, fontWeight: 700, color: defenseDaysLeft != null && defenseDaysLeft <= 7 ? 'var(--color-error)' : colors.text }}>
+                  {defenseLabel}
+                </span>
+                <ChevronRight size={14} color={colors.subtle} style={{ flexShrink: 0 }} />
+              </button>
+            )}
             </div>
           )
         })()}
+
+        {/* Popup "Data de defesa" — telemóvel (sem sidebar). Mesmo estilo
+            minimalista dos outros popups da página (QR code, análise IA). */}
+        {showDefensePopup && (
+          <div
+            onClick={() => setShowDefensePopup(false)}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 800,
+              background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+            }}
+          >
+            <div
+              onClick={e => e.stopPropagation()}
+              style={{
+                background: colors.card, border: `1px solid ${colors.borderBright}`,
+                borderRadius: 14, padding: '24px 26px',
+                display: 'flex', flexDirection: 'column', gap: 16,
+                maxWidth: 320, width: '100%', position: 'relative',
+              }}
+            >
+              <button
+                onClick={() => setShowDefensePopup(false)}
+                style={{ position: 'absolute', top: 14, right: 14, background: 'var(--color-surface-hover)', border: `1px solid ${colors.border}`, borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: colors.muted }}
+              ><X size={14} /></button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 34, height: 34, borderRadius: 9, flexShrink: 0, background: `${defenseUrgentColor}15`, border: `1px solid ${defenseUrgentColor}30`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Calendar size={16} color={defenseUrgentColor} />
+                </div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: defenseDaysLeft != null && defenseDaysLeft <= 7 ? 'var(--color-error)' : colors.text }}>
+                  {defenseLabel}
+                </div>
+              </div>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="date"
+                  value={defenseDate}
+                  onChange={e => handleSaveDefenseDate(e.target.value)}
+                  style={{
+                    width: '100%', boxSizing: 'border-box',
+                    background: 'var(--color-surface)', border: `1px solid ${colors.border}`,
+                    borderRadius: 8, padding: '10px 12px', color: colors.text,
+                    fontSize: 14, fontFamily: 'inherit', cursor: 'pointer', outline: 'none',
+                    colorScheme: theme === 'light' ? 'light' : 'dark',
+                  }}
+                />
+                {savingDefense && <div style={{ position: 'absolute', top: 12, right: 12, width: 12, height: 12, border: `1.5px solid ${colors.border}`, borderTop: `1.5px solid ${colors.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* AI Analysis teaser for non-owners */}
         {!isOwner && profile?.role !== 'professor' && (
@@ -4317,20 +4432,30 @@ export default function ProjectPage() {
           sinal de progresso/engajamento, por isso mudam-se para a tab
           Melhorar no telemóvel. No desktop e para visitantes (que não têm
           separadores) o wrapper é invisível e isto continua a aparecer
-          sempre, sem qualquer mudança de posição. */}
+          sempre, sem qualquer mudança de posição.
+          Percurso e Comentários são dois <div> irmãos (não um só) para que,
+          no desktop, os Comentários possam ser reordenados para depois do
+          Partilhar via CSS `order` sem mexer no agrupamento por tab do
+          telemóvel — os dois continuam a aparecer juntos na tab Melhorar. */}
       <div className={`proj-mobile-section${tabActive('missoes') ? ' proj-mobile-active' : ''}`}>
+
+      {/* Divisória entre Missões e Percurso */}
+      <div className="proj-section-divider" />
 
       {/* ── Percurso / timeline — na vista de dono/professor. Na vista pública
              (visitante ou preview) o timeline vem dentro do PublicView. ── */}
       {project && project.user_id && (isOwner || isProfessor || collaboratorSections !== null) && !viewAsPublic && (
-        <div className="proj-timeline-wrap" style={{ padding: '0 32px' }}>
+        <div className="proj-timeline-wrap">
           <ProjectTimeline project={project} isOwner={isOwner} />
         </div>
       )}
 
+      </div>{/* end proj-mobile-section (missoes) — Percurso */}
+
       {/* ── Likes + Interest + Comments — visible to ALL (owners, recruiters, visitors) ── */}
+      <div className={`proj-mobile-section proj-comments-tabsec${tabActive('missoes') ? ' proj-mobile-active' : ''}`}>
       {project && (
-        <div className="proj-comments-wrap" style={{ padding: '0 32px 40px' }}>
+        <div className="proj-comments-wrap">
 
           {/* Barra de gostos / interesse (owner view) */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '20px 0 8px', flexWrap: 'wrap' }}>
@@ -4426,15 +4551,20 @@ export default function ProjectPage() {
         </div>
       )}
 
-      </div>{/* end proj-mobile-section (missoes) — Percurso + Comentários */}
+      </div>{/* end proj-mobile-section (missoes) — Comentários */}
 
         {/* ── TAB: ia — project coach chatbot (mobile) ── */}
         {/* IA — full-screen chat overlay (messages-thread style) instead of a
             loose tab section that left half the screen empty. Opened by the "IA"
-            tab; the back button returns to the project. */}
-        {isOwner && mobileTab === 'ia' && (
+            tab; the back button returns to the project.
+            Portal para document.body: dentro da árvore normal, um ancestral
+            qualquer com transform/filter cria um "containing block" novo e
+            o `position: fixed` deixa de se ancorar ao viewport a sério —
+            era por isso que a capa do projeto aparecia por cima do chat. */}
+        {isOwner && mobileTab === 'ia' && createPortal(
           <div style={{
-            position: 'fixed', inset: 0, zIndex: 400, background: 'var(--color-bg)',
+            position: 'fixed', inset: 0, zIndex: 2000, background: 'var(--color-bg)',
+            height: iaViewportH ? `${iaViewportH}px` : '100dvh',
             display: 'flex', flexDirection: 'column',
             animation: 'proj-ia-sheet-in 0.28s cubic-bezier(0.16,1,0.3,1)',
           }}>
@@ -4519,20 +4649,20 @@ export default function ProjectPage() {
                   </div>
                 )
                 return (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', maxWidth: '90%' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', maxWidth: '92%' }}>
                     {botAvatar}
-                    <div style={{ background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: '4px 16px 16px 16px', padding: '12px 15px', fontSize: 13.5, color: colors.text, lineHeight: 1.6 }}>
+                    <div style={{ background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: '4px 18px 18px 18px', padding: '13px 16px', fontSize: 15.5, color: colors.text, lineHeight: 1.65 }}>
                       Olá! Sou o teu assistente para melhorar o <strong>{project.name}</strong>.{greetingDetail}
                     </div>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginLeft: 32 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginLeft: 32 }}>
                     {suggestions.slice(0, 3).map(q => (
                       <button
                         key={q}
                         onClick={() => { setCoachInput(q); setTimeout(() => document.getElementById('coach-input')?.focus(), 50) }}
-                        style={{ display: 'flex', alignItems: 'center', gap: 9, textAlign: 'left', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 11, padding: '11px 14px', fontSize: 13, color: colors.text, cursor: 'pointer', fontFamily: 'inherit', WebkitTapHighlightColor: 'transparent' }}
-                      ><Sparkles size={13} color={colors.blue} style={{ flexShrink: 0 }} />{q}</button>
+                        style={{ display: 'flex', alignItems: 'center', gap: 9, textAlign: 'left', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 12, padding: '12px 15px', fontSize: 14.5, color: colors.text, cursor: 'pointer', fontFamily: 'inherit', WebkitTapHighlightColor: 'transparent' }}
+                      ><Sparkles size={14} color={colors.blue} style={{ flexShrink: 0 }} />{q}</button>
                     ))}
                   </div>
                 </div>
@@ -4541,7 +4671,7 @@ export default function ProjectPage() {
                 <div key={i} style={{
                   display: 'flex', gap: 8, alignItems: 'flex-end',
                   alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
-                  maxWidth: '90%',
+                  maxWidth: '92%',
                 }}>
                   {m.role !== 'user' && (
                     <div style={{ width: 24, height: 24, borderRadius: '50%', flexShrink: 0, background: m.isGate ? 'var(--color-warning)' : 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -4551,11 +4681,11 @@ export default function ProjectPage() {
                   <div style={{
                     background: m.isGate ? 'rgba(245,158,11,0.1)' : m.role === 'user' ? 'var(--color-primary)' : 'var(--color-bg-alt)',
                     border: m.isGate ? '1px solid rgba(245,158,11,0.35)' : m.role === 'user' ? 'none' : `1px solid ${colors.border}`,
-                    borderRadius: m.role === 'user' ? '16px 16px 4px 16px' : '4px 16px 16px 16px',
-                    padding: '10px 14px',
-                    fontSize: 13.5,
+                    borderRadius: m.role === 'user' ? '18px 18px 4px 18px' : '4px 18px 18px 18px',
+                    padding: '12px 16px',
+                    fontSize: 15.5,
                     color: m.isGate ? '#B45309' : m.role === 'user' ? '#fff' : colors.text,
-                    lineHeight: 1.6,
+                    lineHeight: 1.65,
                     whiteSpace: m.role === 'user' ? 'pre-wrap' : undefined,
                     minWidth: 0,
                   }}>{m.role === 'assistant' ? renderMd(m.content) : m.content}</div>
@@ -4584,7 +4714,7 @@ export default function ProjectPage() {
                 disabled={coachLoading}
                 style={{
                   flex: 1, background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`,
-                  borderRadius: 11, padding: '12px 14px', fontSize: 14,
+                  borderRadius: 12, padding: '13px 15px', fontSize: 16,
                   color: colors.text, fontFamily: 'inherit', outline: 'none',
                   opacity: coachLoading ? 0.6 : 1,
                 }}
@@ -4596,47 +4726,20 @@ export default function ProjectPage() {
                 style={{
                   background: coachInput.trim() && !coachLoading ? 'var(--color-primary)' : 'var(--color-bg-alt)',
                   border: `1px solid ${coachInput.trim() && !coachLoading ? 'var(--color-primary)' : colors.border}`,
-                  borderRadius: 11, padding: '0 16px', minWidth: 48,
+                  borderRadius: 12, padding: '0 18px', minWidth: 50,
                   color: coachInput.trim() && !coachLoading ? '#fff' : colors.muted,
                   cursor: coachInput.trim() && !coachLoading ? 'pointer' : 'default',
-                  fontFamily: 'inherit', fontSize: 14, fontWeight: 700,
+                  fontFamily: 'inherit', fontSize: 14.5, fontWeight: 700,
                   transition: 'all 0.15s', flexShrink: 0,
                 }}
               >Enviar</button>
             </form>
-          </div>
+          </div>,
+          document.body
         )}
 
         {/* ── TAB: overview — nota professor + share + author ── */}
         <div className={`proj-mobile-section${tabActive('overview') ? ' proj-mobile-active' : ''}`}>
-
-        {/* Mobile-only: identity meta (hidden from hero on mobile) */}
-        <div className="proj-mobile-only proj-card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {/* Type + area badges */}
-          {(project.project_type || project.area) && (() => {
-            const hero = TYPE_HERO[project.project_type] ?? TYPE_HERO.personal
-            return (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                {project.project_type && PROJECT_TYPE_LABELS[project.project_type] && (
-                  <span style={{ color: hero.c1, fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', display: 'flex', alignItems: 'center', gap: 5 }}>
-                    {hero.Icon && <hero.Icon size={11} />}{PROJECT_TYPE_LABELS[project.project_type].toUpperCase()}
-                  </span>
-                )}
-                {project.area && <><span style={{ color: colors.subtle, fontSize: 11 }}>·</span><span style={{ color: colors.blue, fontSize: 12, fontWeight: 600 }}>{project.area}</span></>}
-              </div>
-            )
-          })()}
-          {/* Creator identity (review state now lives in the status card above) */}
-          {[project.creator_name, project.course, project.school_year].filter(Boolean).length > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-              {[project.creator_name, project.course, project.school_year].filter(Boolean).map((item, i) => (
-                <span key={i} style={{ fontSize: 12, color: colors.muted, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  {i > 0 && <span style={{ color: colors.subtle, fontSize: 10 }}>·</span>}{item}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
 
         {/* Teacher's written note — the scores themselves now live in the status
             card at the top, so here we keep only the qualitative feedback. */}
@@ -5425,6 +5528,44 @@ export default function ProjectPage() {
               </div>
             )
           })()}
+
+          {/* Data de defesa — card próprio no topo da sidebar (desktop/
+              tablet), acima da Completude: é a informação mais urgente
+              para quem está a preparar um projeto final. No telemóvel
+              (sem sidebar) isto não aparece — o botão compacto no corpo
+              do projeto abre o popup equivalente. */}
+          {isOwner && isPap && (
+            <div className="proj-card" style={{
+              padding: '16px 18px', position: 'relative',
+              background: `linear-gradient(135deg, ${defenseUrgentColor}12, ${defenseUrgentColor}03)`,
+              border: `1px solid ${defenseUrgentColor}30`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                <div style={{ width: 32, height: 32, borderRadius: 9, flexShrink: 0, background: `${defenseUrgentColor}18`, border: `1px solid ${defenseUrgentColor}35`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Calendar size={15} color={defenseUrgentColor} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: colors.subtle, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Projeto final</div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: defenseDaysLeft != null && defenseDaysLeft <= 7 ? 'var(--color-error)' : colors.text, letterSpacing: '-0.1px' }}>
+                    {defenseLabel}
+                  </div>
+                </div>
+                {savingDefense && <div style={{ width: 12, height: 12, flexShrink: 0, border: `1.5px solid ${colors.border}`, borderTop: `1.5px solid ${colors.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />}
+              </div>
+              <input
+                type="date"
+                value={defenseDate}
+                onChange={e => handleSaveDefenseDate(e.target.value)}
+                style={{
+                  width: '100%', boxSizing: 'border-box',
+                  background: 'var(--color-surface)', border: `1px solid ${colors.border}`,
+                  borderRadius: 8, padding: '8px 10px', color: colors.text,
+                  fontSize: 12.5, fontFamily: 'inherit', cursor: 'pointer', outline: 'none',
+                  colorScheme: theme === 'light' ? 'light' : 'dark',
+                }}
+              />
+            </div>
+          )}
 
           {/* Profile completeness + tips */}
           <div className="proj-completude-grid" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>

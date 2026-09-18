@@ -1428,11 +1428,11 @@ function ProjectRow({ project, shared, onOpen, onEdit, onCopy, copied, onDelete,
 }
 
 /* ── Card de projecto fixado na dashboard ─────────────────────────────────── */
-const TYPE_MAP = { pap: 'PAP', internship: 'Estágio', group: 'Trabalho de grupo', personal: 'Projeto pessoal', competition: 'Competição', presentation: 'Apresentação' }
+const TYPE_MAP = { pap: 'Projeto Final', internship: 'Estágio', group: 'Trabalho de grupo', personal: 'Projeto pessoal', competition: 'Competição', presentation: 'Apresentação' }
 
 function PinnedProjectCard({ project, auto, coverage, onOpenReport, onUnpin, onEdit, onDelete, onOpen, onOpenDiary, onLog, onShare, activeThisWeek, streak, daysLeftInWeek }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const typeLabel = auto ? 'Em foco' : (project.is_pap ? 'PAP' : (TYPE_MAP[project.project_type] || 'Projeto'))
+  const typeLabel = auto ? 'Em foco' : (project.is_pap ? 'Projeto Final' : (TYPE_MAP[project.project_type] || 'Projeto'))
 
   return (
     <section
@@ -1520,7 +1520,7 @@ function PinnedProjectCard({ project, auto, coverage, onOpenReport, onUnpin, onE
               ))}
             </div>
             <div className="sdb-pinned-pap-foot">
-              <span>PAP · {coverage.covered}/{coverage.total} secções</span>
+              <span>Projeto Final · {coverage.covered}/{coverage.total} secções</span>
               {onOpenReport && (
                 <button className="sdb-linkbtn" onClick={onOpenReport}>Ver rascunho</button>
               )}

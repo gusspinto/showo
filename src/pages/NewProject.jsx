@@ -12,6 +12,10 @@ import { UploadIcon as Upload } from '@solar-icons/react/bold/upload'
 import { DocumentTextIcon as FileText } from '@solar-icons/react/bold/document-text'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { DangerTriangleIcon as AlertTriangle } from '@solar-icons/react/bold/danger-triangle'
+import { containsProfanity } from '../lib/profanity'
+import { looksLikeSpam } from '../lib/score'
+import { CalendarIcon as Calendar } from '@solar-icons/react/bold/calendar'
+import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
 import { PlusIcon } from '../components/icons/PlusIcon'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
@@ -26,6 +30,18 @@ import './NewProject.css'
    como o conjunto secundário — ainda não temos escolas a usar a app
    para justificar um modo à parte a sério; isto é só o primeiro passo
    dessa separação. */
+// Impede "d", "...", "123" de avançarem como descrição — sem anunciar a
+// regra em lado nenhum (nada de "mínimo 12 caracteres" visível), porque
+// isso só criaria fricção para quem já ia escrever a sério. O botão fica
+// desativado em silêncio até haver conteúdo real.
+function isDescriptionValid(text) {
+  const str = (text || '').trim()
+  if (str.length < 12) return false
+  if (looksLikeSpam(str)) return false
+  if (containsProfanity(str)) return false
+  return true
+}
+
 const PROJECT_TYPES = [
   { id: 'personal', label: 'Projeto pessoal' },
   { id: 'school',   label: 'Projeto de escola', group: 'school' },
@@ -206,6 +222,13 @@ export default function NewProject() {
   const requireAccount = path => { if (!user) { navigate(authNext(path)); return true } return false }
   const [description, setDescription] = useState('')
   const [projectType, setProjectType] = useState('personal')
+  // Só para project_type 'pap' — perguntadas inline, dentro do mesmo passo
+  // onde o tipo é escolhido, em vez de um passo novo no assistente.
+  const [defenseDate, setDefenseDate] = useState('')
+  const [defenseDateUnknown, setDefenseDateUnknown] = useState(false)
+  // PAP costuma ter as duas coisas ao mesmo tempo (júri no dia, orientador
+  // ao longo do ano) — por isso multi-seleção, não uma escolha exclusiva.
+  const [evaluationModes, setEvaluationModes] = useState([]) // ['jury', 'evaluator']
   const [form, setForm] = useState({})
   const [editingField, setEditingField] = useState(null)
   const [editValue, setEditValue] = useState('')
@@ -287,7 +310,7 @@ export default function NewProject() {
 
   /* ── Gerar a partir de uma descrição ── */
   async function handleGenerate() {
-    if (!description.trim()) return
+    if (!isDescriptionValid(description)) return
     if (requireAccount('/novo')) return
     if (!(await guardProjectCount())) return
     const aiGate = checkGate('createProject')
@@ -324,7 +347,7 @@ export default function NewProject() {
 
   /* ── Entrevista guiada ── */
   async function handleInterview() {
-    if (!description.trim()) return
+    if (!isDescriptionValid(description)) return
     if (requireAccount('/novo')) return
     const gate = checkGate('interviewProject')
     if (!gate.allowed) { setGateMsg(gate.message); return }
@@ -537,6 +560,12 @@ export default function NewProject() {
       creator_name: form.creator_name || profile?.full_name || '',
       school: form.school || profile?.school || '',
       course: form.course || profile?.area || '',
+      // Só têm sentido para project_type 'pap' — perguntadas inline no
+      // TypeRow, não num passo à parte do assistente.
+      defense_date: form.project_type === 'pap' && !defenseDateUnknown ? (defenseDate || null) : null,
+      evaluation_mode: form.project_type === 'pap' && evaluationModes.length
+        ? (evaluationModes.length === 2 ? 'both' : evaluationModes[0])
+        : null,
     }
     try {
       const project = await saveProject(withCreator, aiResult, user?.id ?? null, {
@@ -628,7 +657,10 @@ export default function NewProject() {
                   <div className="np-filemeta">
                     {files.length} {files.length === 1 ? 'ficheiro' : 'ficheiros'} · {prettySize(totalBytes)}
                   </div>
-                  <TypeRow value={projectType} onChange={setProjectType} accountType={profile?.account_type} />
+                  <TypeRow value={projectType} onChange={setProjectType} accountType={profile?.account_type}
+                    defenseDate={defenseDate} setDefenseDate={setDefenseDate}
+                    defenseDateUnknown={defenseDateUnknown} setDefenseDateUnknown={setDefenseDateUnknown}
+                    evaluationModes={evaluationModes} setEvaluationModes={setEvaluationModes} />
                   <label className="np-notes-label" htmlFor="np-notes">Algo a acrescentar antes de a IA ler? (opcional)</label>
                   <textarea
                     id="np-notes"
@@ -651,7 +683,7 @@ export default function NewProject() {
                   {savingToLibrary ? 'A guardar…' : 'Adicionar à Biblioteca'}
                 </button>
               )}
-              <AiUsageBadge feature="createProject" style={{ marginTop: 8 }} />
+              <AiUsageBadge feature="createProject" style={{ marginTop: 8, marginLeft: 'auto', marginRight: 'auto', display: 'flex', width: 'fit-content' }} />
             </div>
 
             <div className="np-or-divider">ou</div>
@@ -682,23 +714,31 @@ export default function NewProject() {
 
             <DescribeTextarea value={description} onChange={setDescription} onSubmit={handleGenerate} />
 
-            <TypeRow value={projectType} onChange={setProjectType} accountType={profile?.account_type} />
+            <TypeRow value={projectType} onChange={setProjectType} accountType={profile?.account_type}
+              defenseDate={defenseDate} setDefenseDate={setDefenseDate}
+              defenseDateUnknown={defenseDateUnknown} setDefenseDateUnknown={setDefenseDateUnknown}
+              evaluationModes={evaluationModes} setEvaluationModes={setEvaluationModes} />
 
             {error && <p className="np-err"><AlertTriangle size={13} /> {error}</p>}
 
-            <button className="np-btn-primary np-btn-ai" onClick={handleGenerate} disabled={!description.trim()}>
+            <button className="np-btn-primary np-btn-ai" onClick={handleGenerate} disabled={!isDescriptionValid(description)}>
               <Sparkles size={15} /> Criar com IA
             </button>
 
-            <div className="np-or-divider">ou</div>
-
-            <button className="np-alt-path" onClick={handleInterview} disabled={!description.trim()}>
-              Responder a perguntas guiadas
-            </button>
-            <button className="np-alt-path" onClick={startManual}>
-              Prefiro preencher à mão
-            </button>
-            <AiUsageBadge feature="createProject" style={{ marginTop: 8 }} />
+            {/* As outras duas formas de criar deixaram de ser botões pretos
+                do mesmo tamanho e cor do CTA principal — três opções com
+                peso visual idêntico só empurravam a decisão para o user
+                logo à entrada. Ficam como link secundário, discreto. */}
+            <div className="np-alt-links">
+              <button className="np-alt-link" onClick={handleInterview} disabled={!isDescriptionValid(description)}>
+                Responder a perguntas guiadas
+              </button>
+              <span className="np-alt-links-sep">·</span>
+              <button className="np-alt-link" onClick={startManual}>
+                Prefiro preencher à mão
+              </button>
+            </div>
+            <AiUsageBadge feature="createProject" style={{ marginTop: 8, marginLeft: 'auto', marginRight: 'auto', display: 'flex', width: 'fit-content' }} />
           </div>
         </div>
       </NpShell>
@@ -985,7 +1025,7 @@ function StepBar({ current, total, label }) {
   )
 }
 
-function TypeRow({ value, onChange, accountType }) {
+function TypeRow({ value, onChange, accountType, defenseDate, setDefenseDate, defenseDateUnknown, setDefenseDateUnknown, evaluationModes, setEvaluationModes }) {
   const personal = PROJECT_TYPES.filter(t => !t.group)
   const school = PROJECT_TYPES.filter(t => t.group === 'school')
   // "PAP" só faz sentido para quem está mesmo numa escola — numa conta
@@ -1000,14 +1040,70 @@ function TypeRow({ value, onChange, accountType }) {
       onClick={() => onChange(t.id)}
     >{label(t)}</button>
   )
+  const toggleEvalMode = id => setEvaluationModes(m => m.includes(id) ? m.filter(x => x !== id) : [...m, id])
 
   return (
-    <div className="np-types">
-      {personal.map(renderType)}
-      {/* "De escola"/PAP ao lado de "Pessoal", só que dentro da sua
-          própria cápsula tracejada — dá para ver que são um grupo à
-          parte sem parecer uma secção inteira separada. */}
-      <div className="np-types-school-group">{school.map(renderType)}</div>
+    <div>
+      <div className="np-types np-types--center">
+        {personal.map(renderType)}
+        {/* "De escola"/PAP ao lado de "Pessoal", dentro da sua própria
+            cápsula tracejada — dá para ver que são um grupo à parte sem
+            parecer uma secção inteira separada. */}
+        <div className="np-types-school-group">{school.map(renderType)}</div>
+      </div>
+
+      {/* Data da defesa + como és avaliado — só para PAP/Projeto Final, e só
+          aqui, dentro do mesmo passo. Não é um passo novo no assistente.
+          Fica centrado como um bloco próprio (não espremido dentro da
+          cápsula dos pills) — o mesmo tracejado azul é o que liga
+          visualmente as duas coisas, não a forma. */}
+      {value === 'pap' && (
+        <div className="np-pap-extra">
+          <div className="np-pap-row">
+            <span className="np-pap-label"><Calendar size={13} /> Data da defesa/apresentação</span>
+            <div className="np-pap-date-row">
+              <input
+                type="date"
+                value={defenseDate}
+                onChange={e => setDefenseDate(e.target.value)}
+                disabled={defenseDateUnknown}
+                className="np-pap-date-input"
+              />
+              <label className="np-pap-checkbox">
+                <input
+                  type="checkbox"
+                  checked={defenseDateUnknown}
+                  onChange={e => { setDefenseDateUnknown(e.target.checked); if (e.target.checked) setDefenseDate('') }}
+                />
+                Ainda não sei
+              </label>
+            </div>
+          </div>
+
+          <div className="np-pap-row">
+            <span className="np-pap-label">Como vais ser avaliado <span className="np-pap-label-hint">(escolhe as que se aplicam)</span></span>
+            <div className="np-pap-evalmode-row">
+              {[
+                { id: 'jury', label: 'Júri' },
+                { id: 'evaluator', label: 'Um professor/orientador' },
+              ].map(o => {
+                const on = evaluationModes.includes(o.id)
+                return (
+                  <button
+                    key={o.id}
+                    type="button"
+                    className={`np-pap-evalmode-chip${on ? ' is-active' : ''}`}
+                    onClick={() => toggleEvalMode(o.id)}
+                  >
+                    {on && <Check size={13} />}
+                    {o.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

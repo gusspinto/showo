@@ -1037,6 +1037,22 @@ function DefenseTraining({ project, checkGate, consumeAI }) {
     }
   }
 
+  // Cancelar a meio — alguém pode enganar-se a falar, ou simplesmente
+  // desistir. Ao contrário de stopRecording (que tenta sempre gerar
+  // feedback), isto pára o microfone e volta ao início em silêncio, sem
+  // mostrar o aviso de "grava pelo menos Ns".
+  function cancelRecording() {
+    clearInterval(timerRef.current)
+    if (recognitionRef.current) {
+      recognitionRef.current.onend = null
+      recognitionRef.current.stop()
+    }
+    setError('')
+    setTranscript('')
+    setElapsed(0)
+    setPhase('idle')
+  }
+
   const formatTime = (s) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`
 
   if (phase === 'unsupported') {
@@ -1125,14 +1141,16 @@ function DefenseTraining({ project, checkGate, consumeAI }) {
         <>
           <Mic size={32} color={C.blue} style={{ marginBottom: 12 }} />
           <h3 style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 800, color: C.text }}>Treina a tua defesa</h3>
-          <p style={{ margin: '0 0 20px', fontSize: 13, color: C.muted, lineHeight: 1.6 }}>
-            Carrega em gravar e apresenta o teu projeto como se estivesses frente ao júri. A IA vai analisar o conteúdo, a clareza e dar-te dicas.
+          <p style={{ margin: '0 auto 20px', maxWidth: 360, fontSize: 13, color: C.muted, lineHeight: 1.6 }}>
+            Carrega em gravar e apresenta o teu projeto como se estivesses frente ao júri.
+            <br /><br />
+            A IA vai analisar o conteúdo, a clareza e dar-te dicas.
           </p>
           {error && <p style={{ margin: '0 0 12px', fontSize: 12, color: C.red }}>{typeof error === 'string' ? error : error.body || 'Erro'}</p>}
           <button
             onClick={startRecording}
             style={{
-              background: C.blue, border: 'none', borderRadius: 10, padding: '12px 28px',
+              background: 'var(--color-success)', border: 'none', borderRadius: 10, padding: '12px 28px',
               color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
               display: 'inline-flex', alignItems: 'center', gap: 8,
             }}
@@ -1153,23 +1171,38 @@ function DefenseTraining({ project, checkGate, consumeAI }) {
               {transcript.slice(-200)}
             </p>
           )}
-          <button
-            onClick={stopRecording}
-            disabled={elapsed < MIN_TRAINING_SECONDS}
-            style={{
-              background: elapsed < MIN_TRAINING_SECONDS ? C.card : 'var(--color-error)',
-              border: elapsed < MIN_TRAINING_SECONDS ? `1px solid ${C.border}` : 'none',
-              borderRadius: 10, padding: '12px 28px',
-              color: elapsed < MIN_TRAINING_SECONDS ? C.subtle : '#fff',
-              fontSize: 14, fontWeight: 700,
-              cursor: elapsed < MIN_TRAINING_SECONDS ? 'default' : 'pointer',
-              fontFamily: 'inherit',
-            }}
-          >
-            {elapsed < MIN_TRAINING_SECONDS
-              ? `Grava mais ${MIN_TRAINING_SECONDS - elapsed}s`
-              : 'Parar e obter feedback'}
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+            <button
+              onClick={stopRecording}
+              disabled={elapsed < MIN_TRAINING_SECONDS}
+              style={{
+                background: elapsed < MIN_TRAINING_SECONDS ? C.card : 'var(--color-error)',
+                border: elapsed < MIN_TRAINING_SECONDS ? `1px solid ${C.border}` : 'none',
+                borderRadius: 10, padding: '12px 28px',
+                color: elapsed < MIN_TRAINING_SECONDS ? C.muted : '#fff',
+                fontSize: 14, fontWeight: 700,
+                cursor: elapsed < MIN_TRAINING_SECONDS ? 'default' : 'pointer',
+                fontFamily: 'inherit',
+              }}
+            >
+              {elapsed < MIN_TRAINING_SECONDS
+                ? `Grava mais ${MIN_TRAINING_SECONDS - elapsed}s`
+                : 'Parar e obter feedback'}
+            </button>
+            {/* Enganaste-te ou queres desistir? Isto pára já, sem esperar
+                pelo mínimo nem tentar gerar feedback. */}
+            <button
+              onClick={cancelRecording}
+              style={{
+                background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)',
+                color: 'var(--color-error)', borderRadius: 8,
+                fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                padding: '7px 16px',
+              }}
+            >
+              Cancelar gravação
+            </button>
+          </div>
         </>
       )}
 
@@ -1268,7 +1301,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
 
   const tabs = [
     { id: 'notes', label: 'Notas',    show: canSeeFullPrep },
-    { id: 'jury',  label: 'Júri',     show: canSeeFullPrep },
+    { id: 'jury',  label: project.evaluation_mode === 'evaluator' ? 'Orientador' : 'Júri', show: canSeeFullPrep },
     { id: 'guide', label: 'No dia',   show: true },
     { id: 'grupo', label: 'Grupo',    show: isOwner },
   ].filter(t => t.show)

@@ -2,9 +2,9 @@ import { useState, useEffect, lazy, Suspense, Component } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { DangerTriangleIcon as AlertTriangle } from '@solar-icons/react/bold/danger-triangle'
 import { CloseIcon as XIcon } from '@solar-icons/react/bold/close'
-import { SadCircleIcon as Frown } from '@solar-icons/react/bold/sad-circle'
-import { RefreshCircleIcon as RefreshCw } from '@solar-icons/react/bold/refresh-circle'
+import { RefreshIcon as RefreshCw } from '@solar-icons/react/bold/refresh'
 import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
+import { ShowoMark } from './components/icons/ShowoMark'
 import { PhoneIcon as Phone } from '@solar-icons/react/bold/phone'
 import { HelmetProvider } from 'react-helmet-async'
 import { AuthProvider, useAuth } from './context/AuthContext'
@@ -352,15 +352,9 @@ function ErrorFallback({ error, onReset }) {
       display: 'flex', flexDirection: 'column', alignItems: 'center',
       justifyContent: 'center', padding: 32, fontFamily: 'var(--font-body)', gap: 20,
     }}>
-      <div style={{
-        width: 56, height: 56, borderRadius: 16,
-        background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
-        <Frown size={26} color="var(--color-error)" />
-      </div>
+      <ShowoMark size={30} style={{ color: 'var(--color-text-tertiary)' }} />
       <div style={{ textAlign: 'center', maxWidth: 400 }}>
-        <h2 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 800, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px' }}>
+        <h2 style={{ margin: '0 0 8px', fontSize: 19, fontWeight: 800, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px' }}>
           Algo correu mal
         </h2>
         <p style={{ margin: 0, fontSize: 14, color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
@@ -372,7 +366,7 @@ function ErrorFallback({ error, onReset }) {
           onClick={() => { onReset(); window.location.href = '/' }}
           style={{
             display: 'flex', alignItems: 'center', gap: 6,
-            background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)',
+            background: 'none', border: '1px solid var(--color-border)',
             borderRadius: 10, padding: '10px 18px',
             color: 'var(--color-text-secondary)', fontSize: 14, fontWeight: 600,
             cursor: 'pointer', fontFamily: 'inherit',
@@ -384,11 +378,10 @@ function ErrorFallback({ error, onReset }) {
           onClick={() => window.location.reload()}
           style={{
             display: 'flex', alignItems: 'center', gap: 6,
-            background: 'var(--color-primary)',
+            background: 'var(--color-text)',
             border: 'none', borderRadius: 10, padding: '10px 18px',
-            color: '#fff', fontSize: 14, fontWeight: 700,
+            color: 'var(--color-bg)', fontSize: 14, fontWeight: 700,
             cursor: 'pointer', fontFamily: 'inherit',
-            boxShadow: '0 4px 16px var(--color-primary-subtle)',
           }}
         >
           <RefreshCw size={14} /> Recarregar

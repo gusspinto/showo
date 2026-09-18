@@ -847,7 +847,7 @@ const dropItemStyle = {
   transition: 'background 0.12s',
 }
 
-export function Navbar({ children, showLinks = true, showCreateProject = false, previewEditingMobile = false, onWorkspaceToggle, hideSidebar = false, mobileLeft = null }) {
+export function Navbar({ children, showLinks = true, showCreateProject = false, previewEditingMobile = false, onWorkspaceToggle, onExitWorkspace, hideSidebar = false, mobileLeft = null }) {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, profile, signOut, isAdmin, isSchoolAccount } = useAuth()
@@ -1291,9 +1291,18 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           {showLinks && (
             <div className="mob-nav-actions">
               {!user ? null : previewEditingMobile ? (
-                <button className="mob-nav-icon-btn primary" onClick={onWorkspaceToggle} aria-label="Editar preview">
-                  <Paintbrush size={18} strokeWidth={2} />
-                </button>
+                <>
+                  {/* Sem isto não havia forma nenhuma de sair da preview no
+                      mobile: o pincel aqui já não abre o menu "Gerir
+                      projeto" (só alterna o painel), por isso "Sair da
+                      preview" ficava inalcançável. */}
+                  <button className="mob-nav-icon-btn ghost" onClick={onExitWorkspace} aria-label="Voltar a editar o projeto">
+                    <ArrowLeft size={18} strokeWidth={2} />
+                  </button>
+                  <button className="mob-nav-icon-btn primary" onClick={onWorkspaceToggle} aria-label="Editar preview">
+                    <Paintbrush size={18} strokeWidth={2} />
+                  </button>
+                </>
               ) : extras?.type === 'project' ? (
                 <>
                   {/* Dentro de um projeto continua a haver o "Criar projeto" —

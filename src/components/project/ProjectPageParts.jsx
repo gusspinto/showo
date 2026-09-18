@@ -12,6 +12,7 @@ import { calculateScore } from '../../lib/score'
 import { hasPlaceholder } from '../../lib/textQuality'
 import { topLanguages, commitSpanMonths, repoAgeMonths } from '../../lib/social'
 import { listPublicTables, publicCurlExample, listRows, listTables } from '../../lib/projectDb'
+import { isTechnicalArea } from '../../lib/technologies'
 import { DatabaseIcon as Database } from '@solar-icons/react/bold/database'
 import { CHALLENGES, getChallengeStatus } from '../../lib/challenges'
 import { getProjectField, PROJECT_FIELDS } from '../../lib/projectFields'
@@ -89,6 +90,34 @@ export const ANON_PROJECT_COLUMNS = [
   'library_file_url', 'library_file_name', 'library_file_type', 'parent_project_id',
   'github_stats', 'github_synced_at', 'timeline_public',
   'project_started_on', 'project_finished_on',
+].join(', ')
+
+// Todas as colunas do projeto, exceto as notas/nota do professor. Usada em
+// vez de `select('*')` para QUALQUER utilizador autenticado (dono incluído)
+// — o grant de coluna de `teacher_score*` para `authenticated` não distingue
+// "és o dono/professor" de "és só um colaborador aceite": a policy de RLS já
+// deixa um colaborador ler a linha toda (para poder editar as suas secções),
+// e sem esta lista explícita o `select('*')` trazia a nota privada do
+// professor no JSON de resposta, mesmo que a interface nunca a mostrasse a
+// quem não é dono/professor. get_project_grades (RPC, verifica no servidor
+// quem pode ver) continua a repor estes campos a seguir, só para quem tem
+// direito — dono/professor não perdem nada, só deixam de vir no pedido inicial.
+export const AUTH_PROJECT_COLUMNS = [
+  'id', 'created_at', 'user_id', 'name', 'area', 'goal', 'problem', 'solution',
+  'target_audience', 'features', 'technologies', 'challenges', 'results', 'learnings',
+  'cover_url', 'slug', 'ai_tagline', 'ai_description', 'ai_highlights',
+  'school_year', 'course', 'school', 'creator_name', 'is_pap', 'pap_supervisor', 'pap_date',
+  'project_type', 'score', 'linkedin_url', 'github_url', 'portfolio_url',
+  'edit_token', 'ai_feedback', 'views', 'notified_milestones', 'defense_date',
+  'preview_style', 'tags', 'guide_config', 'preview_blocks',
+  'likes_count', 'interest_count', 'review_status', 'review_status_updated_at',
+  'report_draft', 'report_updated_at', 'featured', 'featured_order', 'dashboard_pinned',
+  'visibility', 'defense_ai_data', 'entry_kind',
+  'library_description', 'library_file_url', 'library_file_name', 'library_file_type',
+  'library_thumb_url', 'profile_featured', 'profile_featured_order', 'profile_layout',
+  'library_pdf_url', 'parent_project_id', 'library_skills', 'skills', 'tech_stack',
+  'timeline_public', 'github_stats', 'github_synced_at',
+  'project_started_on', 'project_finished_on', 'featured_notified_at', 'evaluation_mode',
 ].join(', ')
 // timeline_public entrou aqui porque o RPC get_project_timeline só protege
 // os DADOS da timeline — o componente ProjectTimeline também lê este campo
@@ -331,16 +360,18 @@ export function DbSetupNudge({ project, isOwner }) {
     try { return localStorage.getItem(dismissKey) === '1' } catch { return false }
   })
 
+  const technical = isTechnicalArea(project?.area)
+
   useEffect(() => {
-    if (!isOwner || !project?.id || !project?.technologies?.trim()) return
+    if (!isOwner || !project?.id || !technical || !project?.technologies?.trim()) return
     let cancelled = false
     listTables(project.id).then(data => {
       if (!cancelled) setTableCount((data.tables || []).length)
     }).catch(() => { if (!cancelled) setTableCount(0) })
     return () => { cancelled = true }
-  }, [isOwner, project?.id, project?.technologies])
+  }, [isOwner, project?.id, technical, project?.technologies])
 
-  if (!isOwner || dismissed || !project?.technologies?.trim() || tableCount === null || tableCount > 0) return null
+  if (!isOwner || dismissed || !technical || !project?.technologies?.trim() || tableCount === null || tableCount > 0) return null
 
   function dismiss() {
     setDismissed(true)
@@ -491,7 +522,7 @@ export const CONFETTI_COLORS = ['var(--color-primary)', 'var(--color-success)', 
 
 export const PROJECT_TYPE_LABELS = {
   group: 'Trabalho de grupo',
-  pap: 'PAP / Projeto final',
+  pap: 'Projeto final',
   presentation: 'Apresentação',
   personal: 'Projeto pessoal',
   competition: 'Projeto de competição',
@@ -500,7 +531,7 @@ export const PROJECT_TYPE_LABELS = {
 }
 
 export const TYPE_HERO = {
-  pap:         { c1: 'var(--color-accent)', c2: 'var(--color-primary)', Icon: GraduationCap },
+  pap:         { c1: 'var(--color-primary)', c2: 'var(--color-primary)', Icon: GraduationCap },
   internship:  { c1: 'var(--color-success)', c2: 'var(--color-success)', Icon: Briefcase },
   group:       { c1: 'var(--color-warning)', c2: 'var(--color-warning)', Icon: Users },
   personal:    { c1: 'var(--color-primary)', c2: 'var(--color-accent)', Icon: Rocket },
@@ -1462,10 +1493,6 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
     '--color-text': '#f0f0f0', '--color-text-secondary': '#888888', '--color-text-tertiary': '#555555',
   }
 
-  // Hooks must be at top level — never inside conditionals or IIFEs
-  const dragIdx    = useRef(null)
-  const dragOver   = useRef(null)
-  const [dragOverIdx, setDragOverIdx] = useState(null)
   // Tab "Conteúdo" — edição inline dos 8 campos, a substituir o EditModal
   // que abria por cima da página. Rascunho local por campo: só sai daqui
   // (e volta a refletir project[key]) depois de guardar com sucesso.
@@ -1623,24 +1650,6 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
     obs.observe(bannerRef.current)
     return () => obs.disconnect()
   }, [])
-
-  function onDragStart(i) { dragIdx.current = i }
-  function onDragEnter(i) { dragOver.current = i; setDragOverIdx(i) }
-  function onDragEnd() {
-    setDragOverIdx(null)
-    if (dragIdx.current === null || dragOver.current === null || dragIdx.current === dragOver.current) {
-      dragIdx.current = null; dragOver.current = null; return
-    }
-    const from = dragIdx.current
-    const to   = dragOver.current
-    dragIdx.current = null; dragOver.current = null
-    setPreviewBlocks(bs => {
-      const arr = [...bs]
-      const [moved] = arr.splice(from, 1)
-      arr.splice(to, 0, moved)
-      return arr
-    })
-  }
 
   function uploadImage(blockId, field) {
     const input = document.createElement('input')
@@ -1903,11 +1912,13 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
         }
       `}</style>
 
-      {/* ── Owner preview banner — desktop moves these controls into the sidebar's
-          "Gerir projeto" section instead (no room for a floating top bar there
-          since the sidebar now stays visible during preview/edit). Mobile/tablet
-          has no sidebar, so it keeps this bar. ── */}
-      {((isOwner && !isDesktop) || isProfessor) && (
+      {/* ── Preview banner — só para o professor. O dono já tem a navbar
+          normal (logo + hamburguer) em qualquer ecrã: no mobile, o pincel no
+          hamburguer troca sozinho para o menu "Gerir projeto" com "Sair da
+          preview" quando está em preview, e no desktop os mesmos controlos
+          vivem na sidebar. Um segundo bar azul por cima disso era
+          redundante e tapava a navbar que o dono queria continuar a ver. ── */}
+      {isProfessor && (
         <div ref={bannerRef} className="pv-banner-inner" style={{
           flexShrink: 0, zIndex: 300,
           background: theme === 'light' ? 'rgba(248,250,252,0.97)' : 'rgba(6,12,24,0.97)',
@@ -1992,7 +2003,6 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                 { id: 'conteudo',  label: 'Conteúdo',  icon: <FileText size={13} /> },
                 { id: 'estilo',    label: 'Estilo',    icon: <Palette size={13} /> },
                 { id: 'blocos',    label: 'Blocos',    icon: <Layout size={13} /> },
-                { id: 'seccoes',   label: 'Secções',   icon: <Eye size={13} /> },
                 // Templates fica de fora por agora — vai ser refeito do
                 // zero, não faz sentido continuar acessível entretanto.
               ]}
@@ -2319,7 +2329,6 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                 { id: 'conteudo',  Icon: FileText       },
                 { id: 'estilo',    Icon: Palette        },
                 { id: 'blocos',    Icon: Layout         },
-                { id: 'seccoes',   Icon: Eye            },
                 // Templates de fora por agora (vai ser refeito do zero).
               ].map(t => (
                 <button
@@ -2355,7 +2364,6 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                   { id: 'conteudo',  label: 'Conteúdo',  icon: <FileText size={11} />,       pillColor: 'var(--color-primary)', activeColor: '#fff' },
                   { id: 'estilo',    label: 'Estilo',    icon: <Palette size={11} />,        pillColor: 'var(--color-primary)', activeColor: '#fff' },
                   { id: 'blocos',    label: 'Blocos',    icon: <Layout size={11} />,         pillColor: 'var(--color-primary)', activeColor: '#fff' },
-                  { id: 'seccoes',   label: 'Secções',   icon: <Eye size={11} />,            pillColor: 'var(--color-primary)', activeColor: '#fff' },
                   // Templates de fora por agora (vai ser refeito do zero).
                 ]}
               />
@@ -2391,7 +2399,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
               const dx = e.changedTouches[0].clientX - (swipeTouchRef.current.x ?? 0)
               const dy = e.changedTouches[0].clientY - (swipeTouchRef.current.y ?? 0)
               if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 48) {
-                const tabs = ['conteudo', 'estilo', 'blocos', 'seccoes', 'templates']
+                const tabs = ['conteudo', 'estilo', 'blocos', 'templates']
                 const cur = tabs.indexOf(previewTab)
                 if (dx < 0 && cur < tabs.length - 1) setPreviewTab(tabs[cur + 1])
                 if (dx > 0 && cur > 0) setPreviewTab(tabs[cur - 1])
@@ -2806,8 +2814,30 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
             </div>
           )}
 
-          {/* ── TAB: BLOCOS ── */}
-          {previewTab === 'blocos' && (
+          {/* ── TAB: BLOCOS ── (secções nativas + blocos personalizados numa
+              só lista reordenável: são a mesma decisão — "o que aparece e em
+              que ordem" — vista de dois sítios diferentes só criava trabalho
+              duplicado para dizer a mesma coisa) */}
+          {previewTab === 'blocos' && (() => {
+            const NATIVE_SECTIONS_MAP = {
+              problem:         { label: 'Problema',        Icon: Search     },
+              solution:        { label: 'Solução',         Icon: Lightbulb  },
+              target_audience: { label: 'Público-alvo',    Icon: Target     },
+              features:        { label: 'Funcionalidades', Icon: Wrench     },
+              technologies:    { label: 'Tecnologias',     Icon: Zap        },
+              challenges:      { label: 'Desafios',        Icon: Zap        },
+              results:         { label: 'Resultados',      Icon: TrendingUp },
+              learnings:       { label: 'Aprendizagens',   Icon: BookOpen   },
+              pap_supervisor:  { label: 'Orientador',       Icon: GraduationCap },
+            }
+            const hidden = new Set(previewStyle.hiddenSections || [])
+            const defaultLayout = [
+              ...orderedSections.map(key => ({ kind: 'section', key })),
+              ...previewBlocks.map(b => ({ kind: 'block', id: b.id })),
+            ]
+            const layoutDisplay = previewStyle.layoutOrder?.length ? previewStyle.layoutOrder : defaultLayout
+
+            return (
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
               {/* Canvas mode toggle */}
               <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
@@ -2817,7 +2847,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                 <button
                   onClick={() => setPreviewStyle(ps => ({ ...ps, canvasMode: !ps.canvasMode }))}
                   style={{
-                    width: 38, height: 22, borderRadius: 99, flexShrink: 0,
+                    width: 38, height: 22, minWidth: 38, minHeight: 22, borderRadius: 99, flexShrink: 0,
                     background: previewStyle.canvasMode ? 'var(--color-primary)' : 'var(--color-border)',
                     border: 'none', cursor: 'pointer', transition: 'background 0.2s', position: 'relative',
                   }}
@@ -2831,10 +2861,16 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                 </button>
               </div>
 
-              {/* Block type picker — compact 3-col chip grid */}
-              <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--color-border)' }}>
+              {/* Lista única reordenável: adicionar bloco + secções nativas +
+                  blocos personalizados. O picker de blocos vai aqui dentro
+                  (não numa secção fixa acima) porque, sozinho, já é mais alto
+                  do que a folha inteira no mobile — se ficasse fora da área
+                  com scroll, a lista de baixo ("Ordem da página") nunca
+                  ganhava espaço nenhum para aparecer, e dava a sensação de
+                  scroll preso. */}
+              <div style={{ flex: 1, overflowY: 'scroll', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y', padding: '12px 14px' }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Adicionar bloco</div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 5 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 5, marginBottom: 16 }}>
                   {BLOCK_TYPES.map(bt => {
                     const BtIcon = bt.Icon
                     return (
@@ -2866,43 +2902,41 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                     )
                   })}
                 </div>
-              </div>
-
-              {/* Existing blocks list */}
-              <div style={{ flex: 1, overflowY: 'scroll', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y', padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 7 }}>
-                {previewBlocks.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '40px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 48, height: 48, borderRadius: 14, background: 'var(--color-bg-alt)', border: '1.5px dashed var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Layout size={20} color="var(--color-text-tertiary)" />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', fontWeight: 700 }}>Nenhum bloco ainda</div>
-                      <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 3, lineHeight: 1.5 }}>Adiciona um bloco acima para<br/>personalizar a tua preview.</div>
-                    </div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Ordem da página</div>
+                <p style={{ margin: '0 0 12px', fontSize: 11, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+                  Arrasta o ≡ para reordenar. Toca em <Eye size={10} style={{ verticalAlign: 'middle' }} /> para ocultar uma secção.
+                </p>
+                {previewStyle.canvasMode && previewBlocks.length > 0 && (
+                  <div style={{ margin: '0 0 10px', padding: '6px 10px', borderRadius: 8, background: 'rgba(255,180,0,0.1)', border: '1px solid rgba(255,180,0,0.25)', fontSize: 11, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+                    ⚠️ <strong>Posição livre</strong> está ativa — os blocos flutuam livremente e não seguem esta ordem.
                   </div>
-                ) : previewBlocks.map((block, idx) => {
+                )}
+                <div ref={layoutListRef} style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                {layoutDisplay.map((item, idx) => {
+                  if (item.kind === 'block') {
+                  const block = previewBlocks.find(b => b.id === item.id)
+                  if (!block) return null
                   const bt = BLOCK_TYPES.find(b => b.type === block.type) || BLOCK_TYPES[0]
                   const BtIcon = bt.Icon
-                  const isDragTarget = dragOverIdx === idx
+                  const isDragTarget = dragOverSectionIdx === idx
                   const accentColor = block.color || 'var(--color-primary)'
                   const hasText = ['heading','note','quote','callout','metric','stats'].includes(block.type)
                   return (
-                    <div key={block.id} draggable
-                      onDragStart={() => onDragStart(idx)} onDragEnter={() => onDragEnter(idx)}
-                      onDragEnd={onDragEnd} onDragOver={e => e.preventDefault()}
+                    <div key={block.id} data-layout-idx={idx}
                       style={{
                         background: isDragTarget ? 'var(--color-primary-subtle)' : 'var(--color-bg-alt)',
                         border: `1px solid ${isDragTarget ? 'var(--color-primary-subtle)' : 'var(--color-border)'}`,
                         borderLeft: `3px solid ${accentColor}`,
                         borderRadius: 9, padding: '9px 10px',
-                        cursor: 'grab', transition: 'all 0.1s',
+                        transition: 'all 0.1s',
                         transform: isDragTarget ? 'scale(1.01)' : 'none',
-                        touchAction: 'pan-y',
                       }}
                     >
                       {/* Block header */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                        <GripVertical size={12} color="var(--color-text-tertiary)" style={{ flexShrink: 0, cursor: 'grab' }} />
+                        <div onPointerDown={e => startLayoutDrag(e, idx)} style={{ cursor: 'grab', display: 'flex', flexShrink: 0, touchAction: 'none' }}>
+                          <GripVertical size={12} color="var(--color-text-tertiary)" />
+                        </div>
                         <div style={{ width: 20, height: 20, borderRadius: 5, background: `${accentColor}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                           <BtIcon size={10} color={accentColor} />
                         </div>
@@ -2910,7 +2944,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                         <button onClick={() => {
                             setPreviewBlocks(bs => bs.filter(b => b.id !== block.id))
                             setPreviewStyle(ps => ps.layoutOrder?.length
-                              ? { ...ps, layoutOrder: ps.layoutOrder.filter(item => !(item.kind === 'block' && item.id === block.id)) }
+                              ? { ...ps, layoutOrder: ps.layoutOrder.filter(li => !(li.kind === 'block' && li.id === block.id)) }
                               : ps)
                           }}
                           style={{ background: 'none', border: 'none', color: 'var(--color-text-tertiary)', cursor: 'pointer', padding: '2px 3px', display: 'flex', alignItems: 'center', borderRadius: 4, transition: 'color 0.12s' }}
@@ -3060,7 +3094,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                             <button key={c.value} title={c.label}
                               onClick={() => upd(block.id, 'color', block.color === c.value ? '' : c.value)}
                               style={{
-                                width: 28, height: 28, borderRadius: '50%', background: c.value,
+                                width: 28, height: 28, minWidth: 28, minHeight: 28, borderRadius: '50%', background: c.value,
                                 border: block.color === c.value ? '2px solid var(--color-text)' : '1.5px solid transparent',
                                 cursor: 'pointer', padding: 0, flexShrink: 0,
                                 boxShadow: block.color === c.value ? `0 0 0 1px ${c.value}` : 'none',
@@ -3103,83 +3137,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                       </div>
                     </div>
                   )
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* ── TAB: SECÇÕES ── */}
-          {previewTab === 'seccoes' && (() => {
-            const NATIVE_SECTIONS_MAP = {
-              problem:         { label: 'Problema',        Icon: Search     },
-              solution:        { label: 'Solução',         Icon: Lightbulb  },
-              target_audience: { label: 'Público-alvo',    Icon: Target     },
-              features:        { label: 'Funcionalidades', Icon: Wrench     },
-              technologies:    { label: 'Tecnologias',     Icon: Zap        },
-              challenges:      { label: 'Desafios',        Icon: Zap        },
-              results:         { label: 'Resultados',      Icon: TrendingUp },
-              learnings:       { label: 'Aprendizagens',   Icon: BookOpen   },
-              pap_supervisor:  { label: 'Orientador',       Icon: GraduationCap },
-            }
-            const hidden = new Set(previewStyle.hiddenSections || [])
-            const blocksById = Object.fromEntries(previewBlocks.map(b => [b.id, b]))
-            const defaultLayout = [
-              ...orderedSections.map(key => ({ kind: 'section', key })),
-              ...previewBlocks.map(b => ({ kind: 'block', id: b.id })),
-            ]
-            const layoutDisplay = previewStyle.layoutOrder?.length ? previewStyle.layoutOrder : defaultLayout
-
-            function moveLayoutItem(from, to) {
-              if (from === to || from < 0 || to < 0 || from >= layoutDisplay.length || to >= layoutDisplay.length) return
-              const next = [...layoutDisplay]
-              ;[next[from], next[to]] = [next[to], next[from]]
-              setPreviewStyle(ps => ({ ...ps, layoutOrder: next }))
-            }
-
-            return (
-              <div style={{ flex: 1, overflowY: 'scroll', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', padding: '12px 14px' }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Ordem da página</div>
-                <p style={{ margin: '0 0 12px', fontSize: 11, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
-                  Arrasta o ≡ para reordenar. Toca em <Eye size={10} style={{ verticalAlign: 'middle' }} /> para ocultar.
-                </p>
-                {previewStyle.canvasMode && previewBlocks.length > 0 && (
-                  <div style={{ margin: '0 0 10px', padding: '6px 10px', borderRadius: 8, background: 'rgba(255,180,0,0.1)', border: '1px solid rgba(255,180,0,0.25)', fontSize: 11, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
-                    ⚠️ <strong>Posição livre</strong> está ativa — os blocos flutuam livremente e não seguem esta ordem. Desativa na tab Blocos para os intercalar com secções.
-                  </div>
-                )}
-                <div ref={layoutListRef} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {layoutDisplay.map((item, idx) => {
-                    if (item.kind === 'block') {
-                      const block = blocksById[item.id]
-                      if (!block) return null
-                      const bt = BLOCK_TYPES.find(b => b.type === block.type) || BLOCK_TYPES[0]
-                      const BIcon = bt.Icon
-                      const previewText = block.content || block.cardTitle || block.label || bt.label
-                      return (
-                        <div key={block.id} data-layout-idx={idx}
-                          style={{
-                            display: 'flex', alignItems: 'center', gap: 8,
-                            background: dragOverSectionIdx === idx ? 'var(--color-primary-subtle)' : 'var(--color-bg-alt)',
-                            border: `1px solid ${dragOverSectionIdx === idx ? 'var(--color-primary)' : 'var(--color-primary-subtle)'}`,
-                            borderLeft: '3px solid var(--color-primary)',
-                            borderRadius: 10, padding: '8px 10px',
-                            userSelect: 'none', transition: 'background 0.1s, border-color 0.1s',
-                          }}
-                        >
-                          <div
-                            onPointerDown={e => startLayoutDrag(e, idx)}
-                            style={{ cursor: 'grab', color: 'var(--color-text-tertiary)', display: 'flex', flexShrink: 0, touchAction: 'none' }}
-                          ><GripVertical size={14} /></div>
-                          <div style={{ width: 26, height: 26, borderRadius: 7, flexShrink: 0, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)' }}>
-                            <BIcon size={12} strokeWidth={2} />
-                          </div>
-                          <span style={{ fontSize: 12, fontWeight: 600, flex: 1, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {bt.label}{previewText ? ` · ${previewText}` : ''}
-                          </span>
-                          {block.width === 'half' && <span style={{ fontSize: 9, color: 'var(--color-primary)', fontWeight: 700, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 4, padding: '1px 5px', flexShrink: 0 }}>metade</span>}
-                        </div>
-                      )
-                    }
+                  }
 
                     const key = item.key
                     const s = NATIVE_SECTIONS_MAP[key]
@@ -3290,12 +3248,13 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                       )}
                       </div>
                     )
-                  })}
+                })}
                 </div>
                 <p style={{ margin: '12px 0 0', fontSize: 10, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
                   A ordem é guardada ao clicar em "Guardar alterações".
                 </p>
               </div>
+            </div>
             )
           })()}
 
