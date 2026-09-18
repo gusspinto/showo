@@ -121,6 +121,7 @@ function LibAddedTile({ item, onOpen, onDelete, removing, analyzing, editing, on
             </span>
           )}
           {item.visibility === 'private' && <span className="lib-badge-private">Privado</span>}
+          {item.visibility === 'unlisted' && <span className="lib-badge-unlisted">Só com link</span>}
           {!isImage && onChangeCover && (
             <span
               role="button"
@@ -259,6 +260,7 @@ function LibBuildingRow({ item, onOpen, onDelete, removing, editing, onSetState,
           <span className="lib-row-name">
             {item.name}
             {item.visibility === 'private' && <span className="lib-badge-private lib-badge-private--inline">Privado</span>}
+            {item.visibility === 'unlisted' && <span className="lib-badge-unlisted lib-badge-unlisted--inline">Só com link</span>}
           </span>
           {item.area && <span className="lib-row-desc">{item.area}</span>}
         </div>

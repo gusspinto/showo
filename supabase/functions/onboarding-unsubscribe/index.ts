@@ -1,12 +1,11 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 /* ══════════════════════════════════════════════════════════════════════════
-   UNSUBSCRIBE DO CHECK-IN SEMANAL — link assinado (HMAC), sem precisar de
-   login. Recebe ?u=<user_id>&sig=<hmac hex>, confirma que o sig bate com o
-   user_id (usando o mesmo CRON_SECRET como chave — não expõe o segredo,
-   só prova que quem gerou o link foi o backend), e desliga o opt-out.
-   Sem isto, a única forma de alguém parar de receber é marcar como spam,
-   o que estraga a reputação do domínio inteiro.
+   UNSUBSCRIBE DA SEQUÊNCIA DE ONBOARDING — mesmo padrão do
+   checkin-unsubscribe (link assinado por HMAC, GET para o link no corpo do
+   email, POST para o one-click da RFC 8058), mas grava numa coluna
+   diferente (onboarding_opted_out), para cancelar isto não cancelar
+   também o check-in semanal, são duas listas distintas.
    ══════════════════════════════════════════════════════════════════════════ */
 
 async function verifySignature(userId: string, sig: string, secret: string): Promise<boolean> {
@@ -36,10 +35,6 @@ function page(title: string, body: string) {
 }
 
 Deno.serve(async (req) => {
-  // GET é o link clicável no corpo do email. POST é o one-click da RFC 8058
-  // (List-Unsubscribe-Post), o que o Gmail/Yahoo disparam quando alguém usa
-  // o botão "Cancelar subscrição" ao lado do remetente, sem abrir página
-  // nenhuma — por isso não pode exigir mais nenhuma interação, só confirmar.
   if (req.method !== 'GET' && req.method !== 'POST') {
     return new Response('method not allowed', { status: 405 })
   }
@@ -70,12 +65,12 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   )
-  await supabase.from('profiles').update({ weekly_checkin_opted_out: true }).eq('id', userId)
+  await supabase.from('profiles').update({ onboarding_opted_out: true }).eq('id', userId)
 
   if (req.method === 'POST') return new Response(null, { status: 200 })
 
   return new Response(
-    page('Cancelado', 'Já não vais receber mais estes emails de check-in semanal. O resto da tua conta continua na mesma.'),
+    page('Cancelado', 'Já não vais receber mais emails da sequência de boas-vindas. O resto da tua conta continua na mesma.'),
     { headers: { 'Content-Type': 'text/html; charset=utf-8' } },
   )
 })

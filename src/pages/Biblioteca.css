@@ -73,6 +73,18 @@
   background: var(--color-warning-subtle); color: var(--color-warning);
   backdrop-filter: none;
 }
+.lib-badge-unlisted {
+  position: absolute; top: 8px; left: 8px;
+  padding: 2px 8px; border-radius: 6px;
+  background: rgba(0, 0, 0, 0.6); color: #fff;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.02em;
+  backdrop-filter: blur(4px);
+}
+.lib-badge-unlisted--inline {
+  position: static; display: inline-block; margin-left: 8px; vertical-align: middle;
+  background: var(--color-info-subtle); color: var(--color-info);
+  backdrop-filter: none;
+}
 .lib-seg {
   display: inline-flex; background: var(--color-surface);
   border: 1px solid var(--color-border);

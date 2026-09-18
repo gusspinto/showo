@@ -369,9 +369,18 @@ Deno.serve(async (req) => {
               unsubscribeUrl,
               variantIndex: currentStreak,
             }),
-            // Marca como "importante" — não garante notificação nem entrega
+            // Marca como "importante", não garante notificação nem entrega
             // na Primary, é só um sinal que alguns clientes de email mostram.
-            headers: { Importance: 'high', 'X-Priority': '1' },
+            // List-Unsubscribe + List-Unsubscribe-Post (RFC 8058) é o que dá
+            // o botão nativo "Cancelar subscrição" ao lado do remetente no
+            // Gmail/Yahoo, sem abrir link nenhum. Além de RGPD, é também um
+            // sinal real de reputação, ajuda a não cair em Promoções.
+            headers: {
+              Importance: 'high',
+              'X-Priority': '1',
+              'List-Unsubscribe': `<${unsubscribeUrl}>`,
+              'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+            },
           }),
         })
         if (!res.ok) { errors.push(await res.text()); continue }

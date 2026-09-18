@@ -80,6 +80,12 @@ export async function saveProject(formData, aiResult, userId, opts = {}) {
     project_type: formData.project_type || null,
     tags: formData.tags || [],
     score,
+    // Explícito, não implícito via NULL: público por defeito é a decisão
+    // (o produto existe para mostrar trabalho, não para o esconder), mas
+    // NULL a significar "público" espalhado por todo o código era frágil,
+    // dependia de ninguém nunca definir a coluna. O dono continua a poder
+    // mudar para privado ou só-com-link em Editar Projeto quando quiser.
+    visibility: 'public',
   }
 
   let { data, error } = await supabase.from('projects').insert([payload]).select().single()
