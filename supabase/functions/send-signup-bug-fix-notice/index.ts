@@ -122,7 +122,7 @@ Deno.serve(async (req) => {
         if (!res.ok) { errors.push(`${userData.user.email}: ${await res.text()}`); continue }
 
         const { id: resendId } = await res.json()
-        if (resendId && !testUserId) {
+        if (resendId) {
           await supabase.from('email_sends').insert({
             user_id: userId,
             email_type: 'signup_bug_fix_notice',
