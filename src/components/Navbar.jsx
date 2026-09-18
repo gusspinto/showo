@@ -7,6 +7,7 @@ import { supabase } from '../lib/supabase'
 import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
 import { ShareIcon as Share2 } from '@solar-icons/react/bold/share'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
+import { DisketteIcon as Save } from '@solar-icons/react/bold/diskette'
 import { Folder2Icon as FolderOpen } from '@solar-icons/react/bold/folder-2'
 import { UserIcon as User } from '@solar-icons/react/bold/user'
 import { SettingsIcon as SettingsIcon } from '@solar-icons/react/bold/settings'
@@ -847,7 +848,7 @@ const dropItemStyle = {
   transition: 'background 0.12s',
 }
 
-export function Navbar({ children, showLinks = true, showCreateProject = false, previewEditingMobile = false, onWorkspaceToggle, onExitWorkspace, hideSidebar = false, mobileLeft = null }) {
+export function Navbar({ children, showLinks = true, showCreateProject = false, previewEditingMobile = false, onExitWorkspace, onSaveWorkspace, wsSaving, wsSaved, wsSaveError, hideSidebar = false, mobileLeft = null }) {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, profile, signOut, isAdmin, isSchoolAccount } = useAuth()
@@ -897,7 +898,14 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
   useEffect(() => { setProjMenuOpen(false) }, [location.pathname])
   // O passo final do tour do projeto ("Menu do projeto") pede para este
   // menu abrir a sério, não só apontar para o botão fechado.
-  useEffect(() => { if (extras?.forceMenuOpen) setProjMenuOpen(true) }, [extras?.forceMenuOpen])
+  // Ao ligar, força aberto; ao desligar (tour fechado/"Começar" clicado),
+  // fecha também — sem isto o menu ficava aberto para sempre depois do
+  // tour acabar, a tapar o projeto que o tour supostamente vinha mostrar.
+  const wasForcedOpenRef = useRef(false)
+  useEffect(() => {
+    if (extras?.forceMenuOpen) { setProjMenuOpen(true); wasForcedOpenRef.current = true }
+    else if (wasForcedOpenRef.current) { setProjMenuOpen(false); wasForcedOpenRef.current = false }
+  }, [extras?.forceMenuOpen])
   // Sidebar is icon-only by default and expands on sustained hover — no manual
   // toggle button (manual open/close — hover-to-expand was costing too much on
   // weaker machines since it fired constantly just from moving the mouse near
@@ -1302,8 +1310,19 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   <button className="mob-nav-icon-btn ghost" onClick={onExitWorkspace} aria-label="Voltar a editar o projeto">
                     <ArrowLeft size={18} strokeWidth={2} />
                   </button>
-                  <button className="mob-nav-icon-btn primary" onClick={onWorkspaceToggle} aria-label="Editar preview">
-                    <Paintbrush size={18} strokeWidth={2} />
+                  {/* Já não é preciso um botão para abrir/fechar o painel
+                      aqui — isso já é feito pela barra de tabs fixa no
+                      fundo do ecrã. Fica antes reservado para guardar. */}
+                  <button
+                    className="mob-nav-icon-btn primary"
+                    onClick={onSaveWorkspace}
+                    disabled={wsSaving}
+                    aria-label="Guardar alterações"
+                    style={{
+                      background: wsSaveError ? 'var(--color-error)' : wsSaved ? 'var(--color-success)' : undefined,
+                    }}
+                  >
+                    {wsSaveError ? <X size={18} strokeWidth={2} /> : wsSaved ? <Check size={18} strokeWidth={2} /> : <Save size={18} strokeWidth={2} />}
                   </button>
                 </>
               ) : extras?.type === 'project' ? (
@@ -1426,7 +1445,15 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
       {/* ── Mobile "Gerir projeto" popup (≤600px) — dropped from the paintbrush ── */}
       {projMenuOpen && extras?.type === 'project' && (
         <>
-          <div style={{ position: 'fixed', inset: 0, zIndex: extras.forceMenuOpen ? 9198 : 398 }} onClick={() => setProjMenuOpen(false)} />
+          {/* Durante o tour (forceMenuOpen), o menu fica preso aberto — um
+              clique fora não o fecha, para o utilizador não perder o passo
+              a meio sem querer enquanto ainda está a ler. */}
+          {/* Durante o tour (forceMenuOpen) isto não faz nada ao clicar — mas
+              sendo full-screen a um z-index acima do overlay do tour,
+              continuava a APANHAR o clique, impedindo "Começar"/"Saltar
+              tour" de responder por baixo. pointerEvents:none deixa o
+              clique passar para o que estiver lá. */}
+          <div style={{ position: 'fixed', inset: 0, zIndex: extras.forceMenuOpen ? 9198 : 398, pointerEvents: extras.forceMenuOpen ? 'none' : 'auto' }} onClick={() => { if (!extras.forceMenuOpen) setProjMenuOpen(false) }} />
           {/* Durante o tour, o overlay escuro do spotlight (zIndex 9100/9101)
               esbatia este menu por baixo — sobe acima disso para aparecer
               mesmo aberto, não só um botão aceso atrás de um véu escuro. */}

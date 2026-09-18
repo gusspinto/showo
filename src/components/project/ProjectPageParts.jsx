@@ -1360,6 +1360,15 @@ export const wsSwatch = {
   overflow: 'hidden', position: 'relative', clipPath: 'circle(50%)',
   flexShrink: 0,
 }
+// Bola de "cor personalizada" — exatamente a mesma receita do
+// ProfileCustomizer.css (.pc-swatch--custom): backgroundClip:padding-box
+// em vez de confiar só no clip-path, que é o que estava a deixar um bocado
+// de branco a escapar pelo canto do círculo neste sítio.
+export const wsSwatchCustom = {
+  ...wsSwatch,
+  backgroundClip: 'padding-box',
+  backgroundImage: 'conic-gradient(from 180deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)',
+}
 // Estado selecionado neutro (branco em tema escuro, preto em tema claro)
 // para as opções do editor — botões de tamanho, tipografia, alinhamento,
 // estilo de cards. O azul já é o significado de "cor de destaque" nas
@@ -1498,6 +1507,41 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
   // (e volta a refletir project[key]) depois de guardar com sucesso.
   const [contentDrafts, setContentDrafts] = useState({})
   const contentFieldRefs = useRef({})
+  // Arrastar a pega da folha do workspace (mobile): para baixo fecha, para
+  // cima abre — sem isto só dava para fechar tocando no botão "Fechar
+  // editor" lá em cima, longe do polegar.
+  // Três paragens: colapsada (barra fina) → normal (48vh, o "aberto" de
+  // sempre) → cheia (a preencher o ecrã). "Normal" continua a ser o que
+  // já era; arrastar mais para cima a partir daí é que preenche tudo.
+  const [wsFull, setWsFull] = useState(false)
+  // Reabrir (toque na barra, eyedropper, etc.) volta sempre ao "normal",
+  // nunca fica preso em "cheia" de uma vez anterior.
+  useEffect(() => { if (!wsExpanded) setWsFull(false) }, [wsExpanded])
+  const wsDragRef = useRef(null)
+  function handleWsDragStart(e) {
+    wsDragRef.current = { startY: e.touches[0].clientY, moved: false }
+  }
+  function handleWsDragMove(e) {
+    if (!wsDragRef.current) return
+    const dy = e.touches[0].clientY - wsDragRef.current.startY
+    if (Math.abs(dy) > 6) wsDragRef.current.moved = true
+    wsDragRef.current.dy = dy
+  }
+  function handleWsDragEnd() {
+    const d = wsDragRef.current
+    wsDragRef.current = null
+    if (!d?.moved) return
+    const THRESHOLD = 40
+    if (d.dy < -THRESHOLD) {
+      // Arrastar para cima: colapsada → normal → cheia.
+      if (!wsExpanded) setWsExpanded(true)
+      else if (!wsFull) setWsFull(true)
+    } else if (d.dy > THRESHOLD) {
+      // Arrastar para baixo: cheia → normal → colapsada.
+      if (wsFull) setWsFull(false)
+      else if (wsExpanded) { setWsExpanded(false); setWsFull(false) }
+    }
+  }
   // Tabelas de BD públicas do projeto — só para preencher o seletor do
   // bloco "Tabela de dados" no editor. Os dados em si vêm sempre em direto
   // via DbTableBlock, isto é só a lista de tabelas disponíveis para escolher.
@@ -1516,6 +1560,19 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
   const [dragOverSectionIdx, setDragOverSectionIdx] = useState(null)
   // Qual dos dois seletores de cor está aberto: 'accent', 'bg' ou nenhum.
   const [colorPicker, setColorPicker] = useState(null)
+  // EyeDropper (escolher cor da própria capa do projeto): enquanto ativo,
+  // o próprio picker some (senão apanhava-se a cor do picker, não a da
+  // página por trás) e a folha do workspace compacta no telemóvel, para
+  // a capa ficar visível para apontar. Restaura os dois a seguir.
+  const [eyedropperActive, setEyedropperActive] = useState(false)
+  function startEyedropper() {
+    setEyedropperActive(true)
+    if (!isDesktop) setWsExpanded(false)
+  }
+  function endEyedropper() {
+    setEyedropperActive(false)
+    if (!isDesktop) setWsExpanded(true)
+  }
 
   function pickCoverImage() {
     const input = document.createElement('input')
@@ -1856,6 +1913,21 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
           box-shadow: 0 -8px 32px rgba(0,0,0,0.3) !important;
           animation: pv-slidein-up 0.28s cubic-bezier(0.22,1,0.36,1) !important;
           z-index: 510 !important;
+          transition: height 0.22s cubic-bezier(0.4,0,0.2,1) !important;
+        }
+        /* Colapsada no mobile: só a pega + etiqueta, sem overlay nem
+           conteúdo por baixo — toca ou arrasta para cima para abrir. */
+        .pv-ws-sheet.ws-collapsed {
+          height: 52px !important;
+          box-shadow: 0 -4px 16px rgba(0,0,0,0.2) !important;
+        }
+        /* Arrastada até ao fim: preenche o ecrã, do topo até à barra de
+           navegação — o "normal" (48vh) continua a ser o que abre por
+           omissão, isto é só quando o utilizador puxa mais. */
+        .pv-ws-sheet.ws-full {
+          top: 0 !important;
+          height: auto !important;
+          border-radius: 0 !important;
         }
         /* Overlay behind bottom sheet */
         .pv-ws-overlay {
@@ -1884,7 +1956,12 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
         /* Mesma razão do painel desktop: 5 separadores não cabem divididos
            por igual sem esmagar "Secções"/"Templates". Tamanho ao
            conteúdo + scroll horizontal em vez de forçar. */
-        .ws-mobile-segtabs { width: 100%; min-width: 0; border: none; background: none; padding: 0; }
+        .ws-mobile-segtabs { width: 100%; min-width: 0; border: none; background: none; padding: 0; justify-content: center; }
+        /* Botões a largura igual — sem isto, "Conteúdo"/"Estilo"/"Blocos"
+           têm larguras diferentes e, estando centrada, a barra inteira
+           deslocava-se ao trocar de separador, por cima do slide da pill.
+           Só a pill a deslizar (como no resto da app) fica "super smooth". */
+        .ws-mobile-segtabs .seg-btn { min-width: 92px; flex: 0 0 auto; }
         .pv-workspace input:focus,
         .pv-workspace textarea:focus {
           border-color: var(--color-primary-subtle) !important;
@@ -1986,7 +2063,11 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
           paddingBottom: 'env(safe-area-inset-bottom, 0px)',
           height: 'calc(60px + env(safe-area-inset-bottom, 0px))',
         }}>
-          <div style={{ flex: 1, padding: '0 8px', minWidth: 0 }}>
+          {/* Centrado com a página inteira, não só com o espaço que sobra
+              ao lado do botão de guardar — position:absolute tira-o do
+              fluxo do flex, senão o botão de guardar empurrava o centro
+              visual para a esquerda. */}
+          <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', padding: '0 8px', maxWidth: 'calc(100% - 80px)' }}>
             {/* Mesmos cinco separadores do cabeçalho do painel no desktop —
                 eram a mesma funcionalidade com dois desenhos diferentes
                 (aqui, ícone+label empilhados sem pílula nem slide; lá,
@@ -2008,25 +2089,9 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
               ]}
             />
           </div>
-          <button
-            onClick={async () => {
-              const { error } = await supabase.from('projects')
-                .update({ preview_blocks: previewBlocks, preview_style: previewStyle })
-                .eq('id', project.id)
-              if (!error) { setPreviewSaved(true); setTimeout(() => setPreviewSaved(false), 2000) }
-              else { setPreviewSaveError(true); setTimeout(() => setPreviewSaveError(false), 4000) }
-            }}
-            style={{
-              width: 44, height: 44, borderRadius: 12, border: 'none', cursor: 'pointer', flexShrink: 0,
-              margin: '0 10px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: previewSaveError ? 'var(--color-error-subtle)' : previewSaved ? 'var(--color-success-subtle)' : '#fff',
-              color: previewSaveError ? 'var(--color-error)' : previewSaved ? 'var(--color-success)' : '#111',
-              transition: 'all 0.15s', WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            {previewSaveError ? <X size={16} strokeWidth={3} /> : previewSaved ? <Check size={16} strokeWidth={3} /> : <Save size={16} />}
-          </button>
+          {/* O botão de guardar mudou-se para a navbar (onde estava o
+              pincel) — abrir/fechar o painel já é feito por estas tabs,
+              não precisava dos dois. */}
         </div>
       )}
 
@@ -2123,70 +2188,24 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
               padding: '6px 12px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.1)',
             } : {}),
           }}>
-            {project.project_type && (
+            {/* project_type já passa por PROJECT_TYPE_LABELS (ex: "pap" →
+                "Projeto final") — antes mostrava o id em bruto ("PAP"). */}
+            {project.project_type && PROJECT_TYPE_LABELS[project.project_type] && (
               <span style={{
                 color: hero.c1, fontSize: 12, fontWeight: 700, letterSpacing: '0.06em',
               }}>
-                {project.project_type.toUpperCase()}
+                {PROJECT_TYPE_LABELS[project.project_type].toUpperCase()}
               </span>
             )}
-            {project.project_type && project.area && (
+            {project.project_type && PROJECT_TYPE_LABELS[project.project_type] && project.area && (
               <span style={{ color: colors.subtle, fontSize: 12 }}>·</span>
             )}
             {project.area && (
               <span style={{ color: colors.blue, fontSize: 12, fontWeight: 600 }}>{project.area}</span>
             )}
-            {project.score != null && (project.project_type || project.area) && (
-              <span style={{ color: colors.subtle, fontSize: 12 }}>·</span>
-            )}
-            {project.score != null && isOwner && (
-              <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
-                <button
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 4,
-                    color: colors.subtle, fontSize: 12,
-                    background: 'none', border: 'none', cursor: 'pointer',
-                    padding: 0, fontFamily: 'inherit',
-                  }}
-                  title="Score privado — clica para saber mais"
-                  onClick={e => {
-                    e.stopPropagation()
-                    const el = e.currentTarget.nextSibling
-                    if (el) el.style.display = el.style.display === 'block' ? 'none' : 'block'
-                  }}
-                >
-                  <span style={{
-                    width: 5, height: 5, borderRadius: '50%',
-                    background: project.score >= 86 ? 'var(--color-success)' : project.score >= 51 ? 'var(--color-primary)' : 'var(--color-warning)',
-                  }} />
-                  {project.score} score
-                </button>
-                <span style={{
-                  display: 'none', position: 'absolute', top: 'calc(100% + 8px)', left: 0, zIndex: 20,
-                  background: 'var(--color-surface)', border: '1px solid var(--color-border)',
-                  borderRadius: 10, padding: '12px 14px', width: 252,
-                  boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
-                  fontSize: 12, lineHeight: 1.5, color: 'var(--color-text-secondary)',
-                }}>
-                  <strong style={{ color: 'var(--color-text)', display: 'block', marginBottom: 2 }}>Score privado — {project.score}/100</strong>
-                  <span style={{ display: 'block', marginBottom: 8 }}>{getLevelInfo(project.score).label}</span>
-                  {project.score < 100 && (() => {
-                    const tips = getScoreTips(project)
-                    return tips.length > 0 ? (
-                      <>
-                        <span style={{ display: 'block', fontWeight: 700, color: 'var(--color-text)', marginBottom: 5 }}>Para subir:</span>
-                        {tips.map((t, i) => (
-                          <span key={i} style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 4 }}>
-                            <span style={{ color: 'var(--color-success)', fontWeight: 700, flexShrink: 0 }}>+{t.gain}</span>
-                            <span>{t.text}</span>
-                          </span>
-                        ))}
-                      </>
-                    ) : null
-                  })()}
-                </span>
-              </span>
-            )}
+            {/* O score é informação privada do dono, sem sentido nenhum
+                nesta vista — ela existe exatamente para simular o que um
+                visitante real vê, e um visitante nunca vê o score. */}
           </div>
 
           <h1 className="pv-hero-title" style={{
@@ -2207,7 +2226,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
-            } : { color: 'var(--color-text)' }),
+            } : { color: hero.c1 }),
           }}>
             {project.name}
             {(project.score || 0) >= 100 && (
@@ -2279,9 +2298,15 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
         </div>
       </div>
 
-      {/* ── Workspace panel — sidebar (desktop) or bottom sheet (mobile, only when expanded) ── */}
-      {isOwner && previewEditing && (isDesktop || wsExpanded) && (
-        <div className={`pv-workspace${isDesktop ? '' : ` pv-ws-sheet${wsExpanded ? '' : ' ws-collapsed'}`}`} style={{
+      {/* ── Workspace panel — sidebar (desktop) or bottom sheet (mobile) ── */}
+      {/* No mobile, um clique fora fecha a folha — antes não havia nada a
+          apanhar esse clique. Fica atrás do painel (z-index mais baixo),
+          antes dele na árvore para não roubar foco a nada lá dentro. */}
+      {isOwner && previewEditing && !isDesktop && wsExpanded && (
+        <div className="pv-ws-overlay" onClick={() => setWsExpanded(false)} />
+      )}
+      {isOwner && previewEditing && (
+        <div className={`pv-workspace${isDesktop ? '' : ` pv-ws-sheet${!wsExpanded ? ' ws-collapsed' : wsFull ? ' ws-full' : ''}`}`} style={{
           position: 'fixed', right: isDesktop ? 8 : 0, top: isDesktop ? 8 : bannerH, bottom: isDesktop ? 8 : 0, zIndex: 200,
           width: isDesktop ? (wsExpanded ? 360 : 60) : 360,
           fontFamily: 'var(--font-body)',
@@ -2315,10 +2340,29 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
             overflow: 'hidden',
             display: 'flex', flexDirection: 'column',
           }}>
-          {/* Mobile panel handle */}
+          {/* Mobile panel handle — arrasta para cima (abre) ou para baixo
+              (fecha). Colapsada, é uma barra fina sempre presente: toca
+              ou arrasta para cima para voltar a abrir o editor. */}
           {!isDesktop && (
-            <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 0 4px', flexShrink: 0 }}>
+            <div
+              onTouchStart={handleWsDragStart}
+              onTouchMove={handleWsDragMove}
+              onTouchEnd={handleWsDragEnd}
+              onClick={() => { if (!wsExpanded) setWsExpanded(true) }}
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                gap: wsExpanded ? 0 : 4,
+                padding: wsExpanded ? '8px 0 4px' : '10px 0',
+                flexShrink: 0, touchAction: 'none',
+                cursor: wsExpanded ? 'default' : 'pointer',
+              }}
+            >
               <div style={{ width: 36, height: 4, borderRadius: 99, background: 'var(--color-border-hover)' }} />
+              {!wsExpanded && (
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <ChevronRight size={11} style={{ transform: 'rotate(-90deg)' }} /> Editar aparência
+                </span>
+              )}
             </div>
           )}
 
@@ -2353,22 +2397,29 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
             borderBottom: '1px solid var(--color-border)',
             flexShrink: 0,
           }}>
-            {/* Tabs + actions row */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-              <SegmentedTabs
-                size="compact"
-                className="ws-segtabs"
-                value={previewTab}
-                onChange={setPreviewTab}
-                options={[
-                  { id: 'conteudo',  label: 'Conteúdo',  icon: <FileText size={11} />,       pillColor: 'var(--color-primary)', activeColor: '#fff' },
-                  { id: 'estilo',    label: 'Estilo',    icon: <Palette size={11} />,        pillColor: 'var(--color-primary)', activeColor: '#fff' },
-                  { id: 'blocos',    label: 'Blocos',    icon: <Layout size={11} />,         pillColor: 'var(--color-primary)', activeColor: '#fff' },
-                  // Templates de fora por agora (vai ser refeito do zero).
-                ]}
-              />
+            {/* Tabs + actions row — tabs centradas com a barra toda (não só
+                com o espaço que sobra ao lado do botão de guardar),
+                mesma receita da barra do mobile. */}
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', minHeight: 30, marginBottom: 10 }}>
+              <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
+                <SegmentedTabs
+                  size="compact"
+                  className="ws-segtabs"
+                  value={previewTab}
+                  onChange={setPreviewTab}
+                  options={[
+                    { id: 'conteudo',  label: 'Conteúdo',  icon: <FileText size={11} /> },
+                    { id: 'estilo',    label: 'Estilo',    icon: <Palette size={11} /> },
+                    { id: 'blocos',    label: 'Blocos',    icon: <Layout size={11} /> },
+                    // Templates de fora por agora (vai ser refeito do zero).
+                    // Sem pillColor/activeColor: monocromático (preto/branco),
+                    // igual ao resto da app e ao mobile — o azul destoava.
+                  ]}
+                />
+              </div>
 
-              {/* Save icon */}
+              {/* Save icon — branco/monocromático, igual ao resto da app
+                  (era azul, destoava do preto/branco usado em todo o lado). */}
               <button
                 onClick={async () => {
                   const { error } = await supabase.from('projects')
@@ -2385,14 +2436,20 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                   }
                 }}
                 title={previewSaveError ? 'Erro ao guardar, tenta novamente' : 'Guardar'}
-                style={{ width: 28, height: 28, borderRadius: 7, background: previewSaveError ? 'var(--color-error-subtle)' : previewSaved ? 'var(--color-success-subtle)' : 'var(--color-primary-subtle)', border: `1px solid ${previewSaveError ? 'var(--color-error-subtle)' : previewSaved ? 'var(--color-success-subtle)' : 'var(--color-primary-subtle)'}`, color: previewSaveError ? 'var(--color-error)' : previewSaved ? 'var(--color-success)' : 'var(--color-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s', flexShrink: 0 }}
+                style={{
+                  width: 28, height: 28, borderRadius: 7, marginLeft: 'auto',
+                  background: previewSaveError ? 'var(--color-error-subtle)' : previewSaved ? 'var(--color-success-subtle)' : 'var(--color-text)',
+                  border: `1px solid ${previewSaveError ? 'var(--color-error-subtle)' : previewSaved ? 'var(--color-success-subtle)' : 'var(--color-text)'}`,
+                  color: previewSaveError ? 'var(--color-error)' : previewSaved ? 'var(--color-success)' : 'var(--color-bg)',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s', flexShrink: 0,
+                }}
               >
                 {previewSaveError ? <X size={13} strokeWidth={3} /> : previewSaved ? <Check size={13} strokeWidth={3} /> : <Save size={13} />}
               </button>
             </div>
           </div>}
 
-          {(!isDesktop || wsExpanded) && <div
+          {wsExpanded && <div
             style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
             onTouchStart={!isDesktop ? (e => { swipeTouchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY } }) : undefined}
             onTouchEnd={!isDesktop ? (e => {
@@ -2464,7 +2521,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
 
           {/* ── TAB: ESTILO ── */}
           {previewTab === 'estilo' && (
-            <div style={{ flex: 1, overflowY: 'scroll', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ flex: 1, overflowY: 'scroll', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8, textAlign: 'center' }}>
 
               {/* Group: Identidade visual */}
               <div style={wsGroup}>
@@ -2472,8 +2529,8 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
 
                 {/* Accent color — 5-col grid */}
                 <div style={{ marginBottom: 14 }}>
-                  <div style={wsControlLabel}>Cor de destaque</div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px 8px', alignItems: 'center' }}>
+                  <div style={wsControlLabel}>Cor do título do projeto</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', justifyItems: 'center', rowGap: 14, columnGap: 8 }}>
                     {/* "Padrão" fica fora da lista de propósito: era um disco
                         aos gajos de várias cores que não dizia nada sobre o que
                         ia sair. Continua a ser o valor de arranque, só não é
@@ -2500,16 +2557,15 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                         title="Cor personalizada"
                         aria-label="Escolher cor de destaque personalizada"
                         onClick={() => setColorPicker(c => (c === 'accent' ? null : 'accent'))}
-                        style={{
-                          ...wsSwatch,
-                          background: 'conic-gradient(from 180deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)',
-                        }}
+                        style={wsSwatchCustom}
                       />
-                      {colorPicker === 'accent' && (
+                      {colorPicker === 'accent' && !eyedropperActive && (
                         <ColorPicker
                           value={customAccent || '#2563eb'}
                           onChange={c => setPreviewStyle(s => ({ ...s, accent: 'custom', accentCustom: c }))}
                           onClose={() => setColorPicker(null)}
+                          onEyedropperStart={startEyedropper}
+                          onEyedropperEnd={endEyedropper}
                         />
                       )}
                     </div>
@@ -2524,7 +2580,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                 {/* Background — 4-col grid */}
                 <div>
                   <div style={wsControlLabel}>Fundo da página</div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px 8px', alignItems: 'center' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', justifyItems: 'center', rowGap: 14, columnGap: 8 }}>
                     {BG_OPTIONS.map(b => {
                       const isSel = !usingCustomBg && (previewStyle.bg || 'default') === b.key
                       return (
@@ -2546,16 +2602,15 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                         title="Fundo personalizado"
                         aria-label="Escolher fundo personalizado"
                         onClick={() => setColorPicker(c => (c === 'bg' ? null : 'bg'))}
-                        style={{
-                          ...wsSwatch,
-                          background: 'conic-gradient(from 180deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)',
-                        }}
+                        style={wsSwatchCustom}
                       />
-                      {colorPicker === 'bg' && (
+                      {colorPicker === 'bg' && !eyedropperActive && (
                         <ColorPicker
                           value={customBg || '#0c1018'}
                           onChange={c => setPreviewStyle(s => ({ ...s, bg: 'custom', bgCustom: c }))}
                           onClose={() => setColorPicker(null)}
+                          onEyedropperStart={startEyedropper}
+                          onEyedropperEnd={endEyedropper}
                         />
                       )}
                     </div>
@@ -2748,31 +2803,6 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                 </div>
               </div>
 
-              {/* Group: Links do projeto */}
-              <div style={wsGroup}>
-                <div style={wsGroupLabel}>Links</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {[
-                    { key: 'linkDemo',     Icon: Globe,       placeholder: 'Demo / site (https://...)' },
-                    { key: 'linkGithub',   Icon: FileText,    placeholder: 'GitHub (https://github.com/...)' },
-                    { key: 'linkLinkedin', Icon: User,        placeholder: 'LinkedIn (https://linkedin.com/...)' },
-                  ].map(({ key, Icon, placeholder }) => (
-                    <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                      <div style={{ width: 26, height: 26, borderRadius: 7, background: 'var(--color-bg)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <Icon size={12} color="var(--color-text-secondary)" />
-                      </div>
-                      <input
-                        value={previewStyle[key] || ''}
-                        onChange={e => setPreviewStyle(ps => ({ ...ps, [key]: e.target.value }))}
-                        placeholder={placeholder}
-                        style={{ ...wsInputNew, flex: 1 }}
-                      />
-                    </div>
-                  ))}
-                </div>
-                <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', marginTop: 6 }}>Aparecem no hero como botões de acção.</div>
-              </div>
-
               {/* Group: Estilo dos cards */}
               <div style={wsGroup}>
                 <div style={wsGroupLabel}>Estilo dos cards</div>
@@ -2797,6 +2827,31 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                     )
                   })}
                 </div>
+              </div>
+
+              {/* Group: Links do projeto */}
+              <div style={wsGroup}>
+                <div style={wsGroupLabel}>Links</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {[
+                    { key: 'linkDemo',     Icon: Globe,       placeholder: 'Demo / site (https://...)' },
+                    { key: 'linkGithub',   Icon: FileText,    placeholder: 'GitHub (https://github.com/...)' },
+                    { key: 'linkLinkedin', Icon: User,        placeholder: 'LinkedIn (https://linkedin.com/...)' },
+                  ].map(({ key, Icon, placeholder }) => (
+                    <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                      <div style={{ width: 26, height: 26, borderRadius: 7, background: 'var(--color-bg)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <Icon size={12} color="var(--color-text-secondary)" />
+                      </div>
+                      <input
+                        value={previewStyle[key] || ''}
+                        onChange={e => setPreviewStyle(ps => ({ ...ps, [key]: e.target.value }))}
+                        placeholder={placeholder}
+                        style={{ ...wsInputNew, flex: 1 }}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', marginTop: 6 }}>Aparecem no hero como botões de acção.</div>
               </div>
 
               {/* Group: Rodapé */}

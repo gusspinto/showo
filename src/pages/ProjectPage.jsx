@@ -901,10 +901,11 @@ function ProjectTour({ isPap, onClose, onStep }) {
       for (const el of els) {
         const r = el.getBoundingClientRect()
         if (r.width > 0 || r.height > 0) {
-          if (t !== 'preview') return r
+          if (t !== 'preview' || !isMob) return r
           // "Gerir projeto" — o menu que este passo descreve fica aberto
-          // por baixo do botão (ver forceMenuOpen); o destaque tem de
-          // abranger o menu inteiro, não só o botão que o abre.
+          // por baixo do botão (ver forceMenuOpen, só no telemóvel); o
+          // destaque tem de abranger o menu inteiro, não só o botão que
+          // o abre. No desktop "preview" é outro botão, sem menu nenhum.
           const menuEl = document.querySelector('.mob-proj-menu')
           const menuRect = menuEl?.getBoundingClientRect()
           return menuRect && (menuRect.width > 0 || menuRect.height > 0) ? unionRect(r, menuRect) : r
@@ -1010,10 +1011,10 @@ function ProjectTour({ isPap, onClose, onStep }) {
 
   const tooltipContent = (
     <>
-      <span style={{ fontSize: 11, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 600 }}>
+      <span style={{ fontSize: isMobile ? 13 : 11, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 600 }}>
         {stepIdx + 1} / {steps.length}
       </span>
-      <p style={{ margin: 0, fontFamily: 'var(--font-heading)', fontSize: 15, fontWeight: 700, color: 'var(--color-text)', letterSpacing: '-0.02em' }}>
+      <p style={{ margin: 0, fontFamily: 'var(--font-heading)', fontSize: isMobile ? 20 : 15, fontWeight: 700, color: 'var(--color-text)', letterSpacing: '-0.02em' }}>
         {step.title}
       </p>
       {step.visual && !isMobile && (
@@ -1021,9 +1022,9 @@ function ProjectTour({ isPap, onClose, onStep }) {
           {step.visual}
         </div>
       )}
-      <ul style={{ margin: 0, padding: '0 0 0 16px', display: 'flex', flexDirection: 'column', gap: 5 }}>
+      <ul style={{ margin: 0, padding: '0 0 0 16px', display: 'flex', flexDirection: 'column', gap: isMobile ? 8 : 5 }}>
         {step.bullets.map((b, i) => (
-          <li key={i} style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.55 }}>{b}</li>
+          <li key={i} style={{ fontSize: isMobile ? 16 : 13, color: 'var(--color-text-secondary)', lineHeight: 1.55 }}>{b}</li>
         ))}
       </ul>
       <div style={{ display: 'flex', gap: 5, marginTop: 2 }}>
@@ -1037,7 +1038,14 @@ function ProjectTour({ isPap, onClose, onStep }) {
         ))}
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
-        <button onClick={onClose} style={{
+        {/* No mobile, "Saltar tour" precisa de se notar — antes era texto
+            cinzento quase invisível ao lado de um botão gradiente que
+            dominava tudo; agora tem contorno e peso próprios. */}
+        <button onClick={onClose} style={isMobile ? {
+          background: 'none', border: '1.5px solid var(--color-border)', borderRadius: 8,
+          padding: '8px 14px', cursor: 'pointer',
+          fontSize: 14, fontWeight: 700, color: 'var(--color-text-secondary)', fontFamily: 'inherit',
+        } : {
           background: 'none', border: 'none', cursor: 'pointer', padding: 0,
           fontSize: 12, color: 'var(--color-text-tertiary)', fontFamily: 'inherit',
         }}>
@@ -1297,6 +1305,22 @@ export default function ProjectPage() {
   const [wsExpanded, setWsExpanded] = useState(openWorkspaceOnLoad)
   const [previewBlocks, setPreviewBlocks] = useState([])
   const [previewStyle, setPreviewStyle] = useState({})
+  // Guardar o workspace a partir do botão da navbar (mobile) — substitui o
+  // pincel lá em cima, que só abria/fechava o painel; isso já é feito pela
+  // barra de tabs fixa no fundo, o pincel deixou de ser preciso para isso.
+  const [wsSaving, setWsSaving] = useState(false)
+  const [wsSaved, setWsSaved] = useState(false)
+  const [wsSaveError, setWsSaveError] = useState(false)
+  async function handleSaveWorkspace() {
+    if (!project?.id || wsSaving) return
+    setWsSaving(true)
+    const { error } = await supabase.from('projects')
+      .update({ preview_blocks: previewBlocks, preview_style: previewStyle })
+      .eq('id', project.id)
+    setWsSaving(false)
+    if (!error) { setWsSaved(true); setTimeout(() => setWsSaved(false), 2000) }
+    else { setWsSaveError(true); setTimeout(() => setWsSaveError(false), 4000) }
+  }
   // Partilhado entre o "Sair" da PublicView e o botão de voltar da navbar
   // mobile — sem isto, entrar em preview a partir do pincel (que troca o
   // ícone para só abrir/fechar o painel) deixava o dono sem nenhuma forma
@@ -2951,8 +2975,14 @@ export default function ProjectPage() {
             if (window.innerWidth < 640) {
               if (target === 'missions') setMobileTab('melhorar')
               else setMobileTab('projeto')
+              // Só no telemóvel: no desktop "preview" é o botão real de
+              // Modo Preview, não o menu do pincel — forçar o menu mobile
+              // a abrir aí é que estava a mostrar coisas de telemóvel
+              // (o dropdown "Gerir projeto") por cima do layout de desktop.
+              setTourMenuOpen(target === 'preview')
+            } else {
+              setTourMenuOpen(false)
             }
-            setTourMenuOpen(target === 'preview')
           }}
         />
       )}
@@ -3409,8 +3439,11 @@ export default function ProjectPage() {
       <Navbar
         showCreateProject={true}
         previewEditingMobile={isOwner && viewAsPublic}
-        onWorkspaceToggle={() => { setPreviewEditing(true); setWsExpanded(e => !e) }}
         onExitWorkspace={exitPreview}
+        onSaveWorkspace={handleSaveWorkspace}
+        wsSaving={wsSaving}
+        wsSaved={wsSaved}
+        wsSaveError={wsSaveError}
       >
         <div className="proj-nav-btns" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {isOwner && (
