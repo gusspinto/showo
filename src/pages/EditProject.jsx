@@ -217,6 +217,7 @@ export default function EditProject() {
         project_type: data.project_type || '',
         pap_supervisor: data.pap_supervisor || '',
         pap_date: data.pap_date || '',
+        evaluation_mode: data.evaluation_mode || null,
         cover_url: data.cover_url || '',
         linkedin_url: data.linkedin_url || '',
         github_url: data.github_url || '',
@@ -631,6 +632,37 @@ export default function EditProject() {
                         <input type="text" value={form.pap_date} onChange={e => set('pap_date', e.target.value)} style={inputStyle} placeholder="Ex: Junho 2025" {...inputHandlers} />
                       </Field>
                     </div>
+                  )}
+                  {isPap && (
+                    <Field label="Como és avaliado" filled={!!form.evaluation_mode}>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        {[
+                          { id: 'jury', label: 'Júri' },
+                          { id: 'evaluator', label: 'Um professor/orientador' },
+                        ].map(opt => {
+                          const on = form.evaluation_mode === 'both' || form.evaluation_mode === opt.id
+                          return (
+                            <button
+                              key={opt.id}
+                              type="button"
+                              onClick={() => {
+                                const current = form.evaluation_mode === 'both' ? ['jury', 'evaluator'] : form.evaluation_mode ? [form.evaluation_mode] : []
+                                const next = current.includes(opt.id) ? current.filter(x => x !== opt.id) : [...current, opt.id]
+                                set('evaluation_mode', next.length === 2 ? 'both' : next[0] || null)
+                              }}
+                              style={{
+                                flex: 1, padding: '9px 4px', fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
+                                border: `1.5px solid ${on ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                                borderRadius: 8, cursor: 'pointer',
+                                background: on ? 'var(--color-primary-subtle)' : 'transparent',
+                                color: on ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                                transition: 'all 0.15s',
+                              }}
+                            >{opt.label}</button>
+                          )
+                        })}
+                      </div>
+                    </Field>
                   )}
                 </div>
               )}

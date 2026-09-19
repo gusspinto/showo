@@ -29,6 +29,7 @@ export async function updateProject(id, formData, editToken = null) {
     is_pap: isPap || false,
     pap_supervisor: formData.pap_supervisor || null,
     pap_date: formData.pap_date || null,
+    evaluation_mode: formData.evaluation_mode || null,
     project_type: formData.project_type || null,
     tags: formData.tags || [],
     visibility: formData.visibility || 'public',
