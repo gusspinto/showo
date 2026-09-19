@@ -7214,7 +7214,7 @@ export default function ProjectPage() {
                           <input
                             value={inviteInput}
                             onChange={handleInviteSearchInput}
-                            onFocus={() => { if (inviteSearchResults.length) setInviteShowDropdown(true) }}
+                            onFocus={e => { if (inviteSearchResults.length) setInviteShowDropdown(true); e.target.style.borderColor = colors.blue }}
                             onBlur={() => setTimeout(() => setInviteShowDropdown(false), 150)}
                             placeholder="Pesquisar utilizador..."
                             style={{
@@ -7223,7 +7223,6 @@ export default function ProjectPage() {
                               fontSize: 15, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box',
                               transition: 'border-color 0.15s',
                             }}
-                            onFocus={e => e.target.style.borderColor = colors.blue}
                           />
                           {inviteShowDropdown && inviteSearchResults.length > 0 && (
                             <div style={{
