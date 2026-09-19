@@ -50,7 +50,8 @@ Projetos validados por professor. Não construir features que não aproximem des
 - Analytics como visualizações, aberturas e métricas de engagement são visíveis só ao próprio utilizador dono dos dados, nunca publicamente nem entre contas, a não ser que eu diga explicitamente o contrário.
 
 ## Regras de engenharia
-- Nunca fazer commit direto em `main` sem passar por revisão.
+- Trabalho normal (fixes, features, dependências, config) é commitado e enviado (`push`) direto para `dev` — não é preciso abrir PR nem pedir aprovação para isso.
+- `main` só recebe alterações quando eu disser explicitamente (ex.: "passa isto para main", "faz deploy"). Nessa altura, abre PR de `dev` para `main`. Nunca faças merge ou commit direto em `main` sem esse pedido explícito.
 - Preservar sempre as dependências existentes ao editar fórmulas/lógica de scoring.
 - Antes de dar QUALQUER tarefa que toque na UI como terminada, é obrigatório testá-la com a extensão do Chrome ligada ao Claude Code e confirmar visualmente que funciona — nunca reportar como concluído só por o código compilar ou os testes automáticos passarem.
 - Quando estiveres a construir/alterar UI, mete verificação dentro da própria to-do list, não só no fim: 1) implementa, 2) tira um screenshot com a extensão do Chrome e confere visualmente, tanto em modo claro como escuro, em mobile e desktop, 3) abre a consola/DevTools e confirma que não há erros. Não avances para o próximo item da lista até teres pelo menos 95% de confiança de que o atual está bem — é preferível avançar mais devagar e correto do que rápido e a meio.
