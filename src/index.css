@@ -153,15 +153,18 @@ body.light nav {
    email/password do herói da Home — esse bloco é sempre escuro, por
    desenho, independente do tema do resto da app (Home.css define o seu
    próprio fundo translúcido branco-sobre-preto), e o !important daqui
-   estava a sobrepor-se sempre, pintando-o de branco liso. */
-body.light input:not(.home-start-input),
+   estava a sobrepor-se sempre, pintando-o de branco liso. :not(.auth-input)
+   exclui o mesmo campo nos ecrãs de login/registo — esses usam um campo
+   com só underline (sem caixa), e este !important tinha mais especificidade
+   do que a regra do .auth-input, pintando uma caixa branca por cima. */
+body.light input:not(.home-start-input):not(.auth-input),
 body.light textarea,
 body.light select {
   background: var(--color-input-bg) !important;
   color: var(--color-text) !important;
   border-color: var(--color-border) !important;
 }
-body.light input:not(.home-start-input)::placeholder,
+body.light input:not(.home-start-input):not(.auth-input)::placeholder,
 body.light textarea::placeholder {
   color: var(--color-text-tertiary) !important;
 }

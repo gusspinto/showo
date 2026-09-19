@@ -123,10 +123,17 @@
   max-width: 344px;
 }
 
+/* Google é o caminho principal do herói (um toque, sem digitar nada) —
+   por isso é o único botão com o branco cheio de alto contraste; era o
+   "Continuar com email" que tinha esse peso antes, o que dava dois botões
+   a competir pela mesma atenção (Hick's Law: menos decisão = menos fricção). */
 .home-hero-start .google-btn {
-  background: rgba(255,255,255,0.1) !important;
-  color: #fff !important;
-  border-color: rgba(255,255,255,0.2) !important;
+  background: #fff !important;
+  color: #171717 !important;
+  border: none !important;
+}
+@media (hover: hover) {
+  .home-hero-start .google-btn:hover:not(:disabled) { background: #eee !important; }
 }
 
 .home-start-divider {
@@ -230,22 +237,23 @@
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
-/* Botão branco cheio — a mesma família visual do Google, para os dois se
-   lerem como opções do mesmo peso, não uma principal e uma secundária. */
+/* Segundo plano, de propósito — o Google acima é que é a ação principal.
+   Mesma família visual do "Começar a criar" mais abaixo: contorno
+   translúcido, não o branco cheio que só a ação de um toque merece. */
 .home-start-email-btn {
   width: 100%; min-height: 50px;
-  background: #fff; border: none;
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
   border-radius: var(--radius-md);
-  color: #171717;
+  color: #fff;
   font-family: inherit; font-size: 15px; font-weight: 700;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: background 0.15s, transform 0.1s var(--ease-out);
+  transition: background 0.15s, border-color 0.15s, transform 0.1s var(--ease-out);
 }
 .home-start-email-btn:active { transform: scale(0.96); }
 .home-start-email-btn:disabled { opacity: 0.6; cursor: default; }
 @media (hover: hover) {
-  .home-start-email-btn:hover:not(:disabled) { background: #eee; }
+  .home-start-email-btn:hover:not(:disabled) { background: rgba(255,255,255,0.16); border-color: rgba(255,255,255,0.3); }
 }
 
 .home-start-form-links {
@@ -253,11 +261,19 @@
   margin-top: 2px;
 }
 .home-start-back {
-  background: none; border: none; padding: 6px;
+  display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;
+  background: none; border: 1px solid transparent; border-radius: 6px;
+  padding: 6px 10px; min-height: 44px; line-height: 1.3;
   font-family: inherit; font-size: 13px; font-weight: 600;
   color: rgba(255,255,255,0.55);
-  text-decoration: underline; text-underline-offset: 3px;
-  cursor: pointer;
+  cursor: pointer; text-decoration: none; white-space: nowrap;
+  transition: border-color 0.15s, color 0.15s;
+}
+@media (hover: hover) {
+  .home-start-back:hover {
+    border-color: rgba(255,255,255,0.25);
+    color: rgba(255,255,255,0.85);
+  }
 }
 
 /* ── Rodapé do bloco ── */
@@ -275,24 +291,26 @@
   cursor: pointer;
 }
 
-/* "Começar a criar" — ao contrário do antigo "Continuar a explorar" (saída
-   passiva, sem conta), isto leva a /novo, que já aceita visitantes sem
-   conta até ao momento de gerar/guardar. Não faz sentido escondê-lo como
-   um link secundário: merece o mesmo peso do "Continuar com email". */
+/* "Começar a criar" — leva a /novo, que já aceita visitantes sem conta até
+   ao momento de gerar/guardar. Mas é a terceira opção do herói, não a
+   segunda: um link de texto, sem caixa, para não competir visualmente com
+   o Google (principal) nem com "Continuar com email" (alternativa). Só um
+   botão deve parecer um botão — o resto é escolha deliberadamente mais
+   silenciosa (Hick's Law: três caixas do mesmo tamanho é três decisões
+   com o mesmo peso). */
 .home-start-create-btn {
-  width: 100%; min-height: 50px; margin-top: 10px;
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: var(--radius-md);
-  color: #fff;
-  font-family: inherit; font-size: 15px; font-weight: 700;
+  width: 100%; min-height: 44px; margin-top: 6px;
+  padding: 8px 0;
+  background: none; border: none;
+  color: rgba(255,255,255,0.55);
+  font-family: inherit; font-size: 13px; font-weight: 600;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: background 0.15s, transform 0.1s var(--ease-out);
+  transition: color 0.15s;
 }
-.home-start-create-btn:active { transform: scale(0.96); background: rgba(255,255,255,0.16); }
+.home-start-create-btn:active { color: rgba(255,255,255,0.85); }
 @media (hover: hover) {
-  .home-start-create-btn:hover { background: rgba(255,255,255,0.16); border-color: rgba(255,255,255,0.3); }
+  .home-start-create-btn:hover { color: rgba(255,255,255,0.85); }
 }
 
 /* ══ PROJECTS SECTION ══ */
@@ -541,7 +559,15 @@ body.light .home-card-cover img {
 }
 
 @media (max-width: 600px) {
-  .home-cta-btn { width: 100%; margin-top: 20px; }
+  /* Mesma altura/peso dos outros botões da app (50px, texto 15px) — sem
+     isto ficava mais fino, lendo-se como uma família diferente. A largura
+     mantém-se fit-content: este botão não vive dentro de uma coluna estreita
+     do herói como os outros, é uma CTA solta a meio da página — estica-la
+     à largura toda ficava desproporcionado ao lado do grid de projetos. */
+  .home-cta-btn {
+    min-height: 50px; margin-top: 20px;
+    padding: 13px 28px; border-radius: var(--radius-md); font-size: 15px;
+  }
 }
 
 /* ══ O PROJETO CONTA-SE ENQUANTO ACONTECE ══ */
@@ -737,10 +763,19 @@ body.light .home-card-cover img {
 
 /* ══ RESPONSIVE ══ */
 @media (max-width: 860px) {
+  /* Como no telemóvel: o herói ocupa o ecrã todo em vez de ficar um bloco
+     preto a meio da página com o resto do conteúdo logo a seguir. */
+  .home-hero {
+    min-height: calc(100dvh - 62px);
+    display: flex;
+    align-items: stretch;
+  }
   .home-hero-grid {
     flex-direction: column;
     align-items: stretch;
+    justify-content: center;
     text-align: center;
+    width: 100%;
   }
   .home-hero-copy {
     order: 1;

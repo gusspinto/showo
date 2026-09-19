@@ -28,6 +28,16 @@
   transition: background 0.13s, color 0.13s;
 }
 .mob-drawer-trigger:active { background: var(--color-surface-hover); color: var(--color-text); }
+/* Dois ícones no mesmo botão — qual se vê depende da largura (ver breakpoints
+   abaixo). Telemóvel mantém o ícone original (painel); só o tablet troca
+   para o hambúrguer animado. */
+.mob-drawer-icon-phone { display: block; }
+.ham-lines { display: none; flex-direction: column; gap: 5px; align-items: center; justify-content: center; }
+.ham-lines span {
+  display: block; width: 18px; height: 1.5px; border-radius: 1px;
+  background: currentColor;
+  transition: transform 0.22s cubic-bezier(0.4,0,0.2,1), opacity 0.2s;
+}
 
 /* Marca ao lado do hambúrguer, telemóvel — escondida no desktop, onde o
    logótipo centrado (.nav-mid) já faz esse trabalho. */
@@ -57,7 +67,7 @@
 .mob-nav-auth-btn.primary { background: var(--color-text); border: none; color: var(--color-bg); box-shadow: 0 3px 12px rgba(26,138,122,0.3); }
 .mob-nav-auth-btn.primary:active { transform: scale(0.96); }
 .mob-nav-icon-btn {
-  width: 38px; height: 38px; border-radius: 9px;
+  width: 42px; height: 42px; border-radius: 12px;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; padding: 0; flex-shrink: 0; font-family: inherit;
   -webkit-tap-highlight-color: transparent;
@@ -368,6 +378,33 @@ body.sidebar-collapsed .proj-manage-float { left: 84px; }
   .page-content { max-width: 1068px !important; }
   .page-content-wide { max-width: 1168px !important; }
   .msg-inner { max-width: 1088px !important; }
+}
+
+/* .proj-manage-float é position:fixed, fora do fluxo — nada reservava
+   espaço para ele. Entre ~860px e ~1250-1400px de largura de janela
+   (dependendo do estado da sidebar) o conteúdo centrado ainda não tinha
+   margem automática suficiente e ficava por baixo do painel. Este padding
+   extra garante sempre distância, nos dois estados da sidebar
+   (box-sizing:border-box global — não aumenta a largura total, só o
+   espaço interno). Só a partir de 861px: até aí (601-860px) o próprio
+   ProjectPage já aperta o .proj-wrap para o layout tablet/FAB, que não
+   precisa desta reserva. */
+@media (min-width: 861px) {
+  body.has-proj-manage-float .proj-wrap { padding-left: 72px !important; }
+}
+
+/* ── Tablet, sem sessão (601–900px) — os links do topo (Explorar, Aprende a
+   usar, Planos) já não cabem numa linha só sem se espremer; usa-se o mesmo
+   hambúrguer + gaveta do telemóvel em vez de introduzir um terceiro layout.
+   Só afeta quem não tem sessão: com sidebar, .top-nav já está escondida a
+   partir de 601px (regra abaixo). ── */
+@media (min-width: 601px) and (max-width: 900px) {
+  .nav-left      { display: none !important; }
+  .nav-mid       { display: none !important; }
+  .mob-drawer-trigger { display: flex !important; }
+  .nav-mob-logo  { display: flex !important; }
+  .mob-drawer-icon-phone { display: none; }
+  .ham-lines { display: flex; }
 }
 
 /* ── Mobile (≤600px) ── */

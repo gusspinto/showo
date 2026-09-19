@@ -2,9 +2,9 @@ import { useState, useEffect, lazy, Suspense, Component } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { DangerTriangleIcon as AlertTriangle } from '@solar-icons/react/bold/danger-triangle'
 import { CloseIcon as XIcon } from '@solar-icons/react/bold/close'
-import { SadCircleIcon as Frown } from '@solar-icons/react/bold/sad-circle'
-import { RefreshCircleIcon as RefreshCw } from '@solar-icons/react/bold/refresh-circle'
+import { RefreshIcon as RefreshCw } from '@solar-icons/react/bold/refresh'
 import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
+import { ShowoMark } from './components/icons/ShowoMark'
 import { PhoneIcon as Phone } from '@solar-icons/react/bold/phone'
 import { HelmetProvider } from 'react-helmet-async'
 import { AuthProvider, useAuth } from './context/AuthContext'
@@ -352,15 +352,9 @@ function ErrorFallback({ error, onReset }) {
       display: 'flex', flexDirection: 'column', alignItems: 'center',
       justifyContent: 'center', padding: 32, fontFamily: 'var(--font-body)', gap: 20,
     }}>
-      <div style={{
-        width: 56, height: 56, borderRadius: 16,
-        background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
-        <Frown size={26} color="var(--color-error)" />
-      </div>
+      <ShowoMark size={30} style={{ color: 'var(--color-text-tertiary)' }} />
       <div style={{ textAlign: 'center', maxWidth: 400 }}>
-        <h2 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 800, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px' }}>
+        <h2 style={{ margin: '0 0 8px', fontSize: 19, fontWeight: 800, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px' }}>
           Algo correu mal
         </h2>
         <p style={{ margin: 0, fontSize: 14, color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
@@ -372,7 +366,7 @@ function ErrorFallback({ error, onReset }) {
           onClick={() => { onReset(); window.location.href = '/' }}
           style={{
             display: 'flex', alignItems: 'center', gap: 6,
-            background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)',
+            background: 'none', border: '1px solid var(--color-border)',
             borderRadius: 10, padding: '10px 18px',
             color: 'var(--color-text-secondary)', fontSize: 14, fontWeight: 600,
             cursor: 'pointer', fontFamily: 'inherit',
@@ -384,11 +378,10 @@ function ErrorFallback({ error, onReset }) {
           onClick={() => window.location.reload()}
           style={{
             display: 'flex', alignItems: 'center', gap: 6,
-            background: 'var(--color-primary)',
+            background: 'var(--color-text)',
             border: 'none', borderRadius: 10, padding: '10px 18px',
-            color: '#fff', fontSize: 14, fontWeight: 700,
+            color: 'var(--color-bg)', fontSize: 14, fontWeight: 700,
             cursor: 'pointer', fontFamily: 'inherit',
-            boxShadow: '0 4px 16px var(--color-primary-subtle)',
           }}
         >
           <RefreshCw size={14} /> Recarregar
@@ -496,20 +489,30 @@ function RecoveryGate({ pwRecovery, children }) {
 
 function AuthErrorBanner() {
   const [msg, setMsg] = useState('')
+  const [oauthRetry, setOauthRetry] = useState(false)
 
   useEffect(() => {
+    // O Supabase devolve erros de auth ora na hash (#error=…, confirmação de
+    // email) ora na query string (?error=…, callback OAuth do GoTrue) —
+    // conferir as duas, senão erros como bad_oauth_state ficam sem feedback
+    // nenhum e a página parece só ter "partido" sem explicação.
     const hash = window.location.hash.slice(1)
-    if (!hash.includes('error=')) return
-    const p = new URLSearchParams(hash)
+    const search = window.location.search.slice(1)
+    const source = hash.includes('error=') ? hash : search.includes('error=') ? search : null
+    if (!source) return
+    const p = new URLSearchParams(source)
     const code = p.get('error_code')
     const desc = p.get('error_description')
     if (code === 'otp_expired' || desc?.includes('expired')) {
       setMsg('O link de confirmação expirou. Faz login e pede um novo email de confirmação.')
+    } else if (code === 'bad_oauth_state') {
+      setMsg('Não foi possível concluir o login com o Google. Tenta novamente — se estiveres em Navegação Privada, tenta num separador normal.')
+      setOauthRetry(true)
     } else if (p.get('error')) {
       setMsg('Erro de autenticação. Tenta entrar novamente.')
     }
-    // clean the hash from the URL
-    window.history.replaceState(null, '', window.location.pathname + window.location.search)
+    // clean the hash/query from the URL
+    window.history.replaceState(null, '', window.location.pathname)
   }, [])
 
   if (!msg) return null
@@ -526,6 +529,21 @@ function AuthErrorBanner() {
       <span style={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}><AlertTriangle size={18} /></span>
       <div style={{ flex: 1 }}>
         <p style={{ margin: 0, fontSize: 14, color: '#fca5a5', lineHeight: 1.5 }}>{msg}</p>
+        {oauthRetry && (
+          <button
+            onClick={() => supabase.auth.signInWithOAuth({
+              provider: 'google',
+              options: { redirectTo: `${window.location.origin}/welcome` },
+            })}
+            style={{
+              marginTop: 10, background: 'none', border: '1px solid var(--color-error-subtle)',
+              borderRadius: 8, padding: '6px 12px', color: '#fca5a5', fontSize: 13, fontWeight: 600,
+              cursor: 'pointer', fontFamily: 'inherit',
+            }}
+          >
+            Tentar novamente com Google
+          </button>
+        )}
       </div>
       <button
         onClick={() => setMsg('')}

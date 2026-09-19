@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { resolvePlanId, getPlan, AI_FEATURE_LABELS } from '../lib/plans'
 import { Navbar } from '../components/Navbar'
+import SegmentedTabs from '../components/SegmentedTabs'
 import { DangerTriangleIcon as AlertTriangle } from '@solar-icons/react/bold/danger-triangle'
 import { QuestionCircleIcon as HelpCircle } from '@solar-icons/react/bold/question-circle'
 import { UserIcon as User } from '@solar-icons/react/bold/user'
@@ -1405,15 +1406,15 @@ function SignupsTab({ signups, users }) {
             }}
           />
         </div>
-        <div style={{ display: 'flex', gap: 4, background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 8, padding: 3 }}>
-          {['waitlist', 'registered'].map(v => (
-            <button key={v} onClick={() => setView(v)} style={{
-              background: view === v ? C.blue : 'transparent', color: view === v ? '#fff' : C.muted,
-              border: 'none', borderRadius: 6, padding: '5px 12px', fontSize: 12, fontWeight: 600,
-              cursor: 'pointer', fontFamily: 'inherit',
-            }}>{v === 'waitlist' ? `Waitlist (${signups.length})` : `Registados (${users.length})`}</button>
-          ))}
-        </div>
+        <SegmentedTabs
+          size="compact"
+          value={view}
+          onChange={setView}
+          options={[
+            { id: 'waitlist',   label: `Waitlist (${signups.length})` },
+            { id: 'registered', label: `Registados (${users.length})` },
+          ]}
+        />
         <span style={{ fontSize: 12, color: C.muted }}>{filtered.length} resultado{filtered.length !== 1 ? 's' : ''}</span>
       </div>
 
@@ -2136,21 +2137,13 @@ export default function Admin() {
         </div>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: 4, marginBottom: 24, background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: 4, width: 'fit-content' }}>
-          {tabs.map(t => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              style={{
-                background: tab === t.id ? C.blue : 'transparent',
-                color: tab === t.id ? '#fff' : C.muted,
-                border: 'none', borderRadius: 8,
-                padding: '8px 18px', fontSize: 13, fontWeight: 600,
-                cursor: 'pointer', fontFamily: 'inherit',
-                transition: 'all 0.15s',
-              }}
-            >{t.label}</button>
-          ))}
+        <div style={{ marginBottom: 24 }}>
+          <SegmentedTabs
+            size="compact"
+            value={tab}
+            onChange={setTab}
+            options={tabs.map(t => ({ id: t.id, label: t.label }))}
+          />
         </div>
 
         {/* Content */}

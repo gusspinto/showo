@@ -12,7 +12,9 @@ import { TrashBinTrashIcon as Trash } from '@solar-icons/react/bold/trash-bin-tr
 import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
 import { LibraryIcon } from '@solar-icons/react/bold/library'
 import { ArrowRightUpIcon as ExternalLink } from '@solar-icons/react/bold/arrow-right-up'
+import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
 import { fileTypeStyle, withSignedLibraryUrls } from '../lib/libraryFile'
+import { getProjectState } from '../lib/projectState'
 import { getTaggingIds, markLibraryTagging } from '../lib/libraryTagging'
 import LibFileViewer from '../components/LibFileViewer'
 import './Biblioteca.css'
@@ -196,6 +198,55 @@ function LibAddedTile({ item, onOpen, onDelete, removing, analyzing, editing, on
   )
 }
 
+/* Projeto "criado" (entry_kind='full') já marcado como concluído — sai da
+   lista de "A criar" e ganha o mesmo destaque de tile que os adicionados,
+   com a capa do projeto (não faz sentido reaproveitar o LibAddedTile: esse
+   espera ficheiro/miniatura de biblioteca, não cover_url). É isto que
+   resolve o "um projeto criado nunca se gradua" — antes ficava sempre na
+   lista compacta, por definição, independentemente do que o dono fizesse. */
+function LibDoneTile({ item, onOpen, onDelete, removing, editing, onSetState, onSetLayout }) {
+  return (
+    <div className={`lib-tile${editing ? ' is-editing' : ''}${editing && item.profile_featured ? ' is-on' : ''}`}>
+      <button type="button" className="lib-tile-main" onClick={() => onOpen(item)}>
+        <span className="lib-tile-cover" style={!item.cover_url ? { background: 'color-mix(in srgb, var(--color-success) 16%, var(--color-bg-alt))' } : undefined}>
+          {item.cover_url ? (
+            <img src={item.cover_url} alt="" loading="lazy" />
+          ) : (
+            <span className="lib-tile-filetype" style={{ color: 'var(--color-success)' }}>
+              <Check size={30} />
+            </span>
+          )}
+          {item.visibility === 'private' && <span className="lib-badge-private">Privado</span>}
+        </span>
+        <span className="lib-tile-footer">
+          <span className="lib-tile-text">
+            <span className="lib-tile-name">{item.name}</span>
+            {item.area && <span className="lib-tile-area">{item.area}</span>}
+            <span className="lib-tile-skills">
+              <span className="lib-tile-skill" style={{ color: 'var(--color-success)' }}><Check size={11} style={{ marginRight: 3, verticalAlign: '-1px' }} />Concluído</span>
+            </span>
+          </span>
+        </span>
+      </button>
+
+      {editing && <ProfileControls item={item} onSetState={onSetState} onSetLayout={onSetLayout} />}
+      <div className="lib-tile-tools">
+        <span
+          role="button"
+          tabIndex={0}
+          className="lib-tile-tool lib-tile-tool--danger"
+          onClick={e => { e.stopPropagation(); if (removing !== item.id) onDelete(item.id) }}
+          onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && removing !== item.id) { e.stopPropagation(); onDelete(item.id) } }}
+          aria-label="Remover"
+          aria-disabled={removing === item.id}
+        >
+          <Trash size={13} />
+        </span>
+      </div>
+    </div>
+  )
+}
+
 /* Projeto "criado" (entry_kind='full') — ainda em construção, por isso
    sem o destaque todo: linha compacta, não tile. */
 function LibBuildingRow({ item, onOpen, onDelete, removing, editing, onSetState, onSetLayout }) {
@@ -266,7 +317,7 @@ export default function Biblioteca() {
     let cancelled = false
     supabase
       .from('projects')
-      .select('id, user_id, name, slug, entry_kind, area, score, ai_tagline, cover_url, library_description, library_skills, skills, tech_stack, library_file_url, library_file_name, library_file_type, library_thumb_url, library_pdf_url, profile_featured, profile_featured_order, profile_layout, visibility, created_at')
+      .select('id, user_id, name, slug, entry_kind, area, score, ai_tagline, cover_url, library_description, library_skills, skills, tech_stack, library_file_url, library_file_name, library_file_type, library_thumb_url, library_pdf_url, profile_featured, profile_featured_order, profile_layout, visibility, project_finished_on, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .then(async ({ data }) => {
@@ -383,7 +434,9 @@ export default function Biblioteca() {
   }
 
   const added = items?.filter(i => i.entry_kind === 'library') ?? []
-  const building = items?.filter(i => i.entry_kind === 'full') ?? []
+  const fullProjects = items?.filter(i => i.entry_kind === 'full') ?? []
+  const building = fullProjects.filter(i => getProjectState(i) === 'em_progresso')
+  const done = fullProjects.filter(i => getProjectState(i) === 'concluido')
 
   return (
     <div className="min-h-screen bg-page font-body">
@@ -445,6 +498,22 @@ export default function Biblioteca() {
                       onRename={name => patchItem(item.id, { name })}
                       onChangeCover={changeCover}
                       onOpen={it => it.library_file_url && setViewing(it)} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Concluídos — marcados pelo dono na página do projeto
+                ("Marcar como concluído"). Mesmo destaque de tile que os
+                adicionados: já não é "trabalho a meio", é para mostrar. */}
+            {done.length > 0 && (
+              <div className="lib-section">
+                <h2 className="lib-section-title">Concluídos</h2>
+                <div className="lib-tile-grid">
+                  {done.map(item => (
+                    <LibDoneTile key={item.id} item={item} removing={removing} onDelete={handleDelete}
+                      editing={editing} onSetState={setProfileState} onSetLayout={setLayout}
+                      onOpen={it => navigate(`/projeto/${it.slug}`)} />
                   ))}
                 </div>
               </div>

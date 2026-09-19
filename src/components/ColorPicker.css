@@ -55,6 +55,14 @@
   outline: none;
 }
 .cpk-hex:focus { border-color: var(--color-text); }
+.cpk-eyedropper {
+  flex-shrink: 0; width: 30px; height: 30px; padding: 0;
+  border-radius: 7px; border: 1px solid var(--color-border);
+  background: var(--color-bg); color: var(--color-text-secondary);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: border-color 0.15s, color 0.15s;
+}
+.cpk-eyedropper:hover { border-color: var(--color-text); color: var(--color-text); }
 
 /* ── Mobile: em vez de um popover minúsculo preso à bolinha (que fica
    cortado pelo overflow do painel e é impossível de arrastar com o dedo),

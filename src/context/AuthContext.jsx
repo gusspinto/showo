@@ -33,7 +33,7 @@ export function AuthProvider({ children }) {
   const fetchProfile = useCallback(async (uid) => {
     if (!uid) { setProfile(null); setAiUsage({}); resetAnalytics(); return }
 
-    const PROFILE_SELECT = 'id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, occupation, plan, phone, organization_id, account_type, signup_country'
+    const PROFILE_SELECT = 'id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, occupation, plan, phone, organization_id, account_type, signup_country, course, academic_year'
     const PROFILE_SELECT_LEGACY = 'id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, occupation, plan, phone'
 
     const [profileRes, userRes] = await Promise.all([
@@ -189,8 +189,8 @@ export function AuthProvider({ children }) {
     // resolvePlanId precisa disto para distinguir Escola Plus de Escola Pro —
     // organizations.plan não vem no select de profiles (não há FK embutida).
     if (data?.organization_id) {
-      const { data: org } = await supabase.from('organizations').select('plan').eq('id', data.organization_id).single()
-      if (org) data = { ...data, organization_plan: org.plan }
+      const { data: org } = await supabase.from('organizations').select('plan, name').eq('id', data.organization_id).single()
+      if (org) data = { ...data, organization_plan: org.plan, organization_name: org.name }
     }
 
     setProfile(data ?? null)

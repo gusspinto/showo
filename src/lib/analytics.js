@@ -31,7 +31,15 @@ export function trackEvent(name, props = {}) {
 
 export function identifyUser(user, profile) {
   if (!analyticsEnabled || !user) return
-  posthog.identify(user.id, { role: profile?.role })
+  const props = {
+    email: user.email,
+    name: profile?.full_name,
+    role: profile?.role,
+  }
+  // Diagnóstico temporário: confirmar no console se o identify dispara e
+  // com que dados, antes de assumir que o problema é do lado do PostHog.
+  console.debug('[analytics] identify', user.id, props)
+  posthog.identify(user.id, props)
 }
 
 export function resetAnalytics() {

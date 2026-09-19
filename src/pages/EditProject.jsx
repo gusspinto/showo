@@ -3,6 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { updateProject } from '../lib/updateProject'
 import { Navbar } from '../components/Navbar'
+import SegmentedTabs from '../components/SegmentedTabs'
 import { useAuth } from '../context/AuthContext'
 import { useSidebar } from '../context/SidebarContext'
 import { LockKeyholeIcon as Lock } from '@solar-icons/react/bold/lock-keyhole'
@@ -10,7 +11,6 @@ import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
 import { GalleryWideIcon as Image } from '@solar-icons/react/bold/gallery-wide'
 import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
 import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
-import { UserIcon as User } from '@solar-icons/react/bold/user'
 import { LayersIcon as Layers } from '@solar-icons/react/bold/layers'
 import { LinkIcon as Link2 } from '@solar-icons/react/bold/link'
 import { SettingsIcon as Settings } from '@solar-icons/react/bold/settings'
@@ -27,7 +27,6 @@ import { containsProfanity } from '../lib/profanity'
 import { logFieldsFilled } from '../lib/autoJournal'
 import { parseGithubRepo, syncGithub, removeGithubEntries, topLanguages, commitSpanMonths, repoAgeMonths, shareOnLinkedIn } from '../lib/social'
 import { DatabaseIcon as Database } from '@solar-icons/react/bold/database'
-import { PaintRollerIcon as Paintbrush } from '@solar-icons/react/bold/paint-roller'
 import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
 import { UploadMinimalisticIcon as Upload } from '@solar-icons/react/bold/upload-minimalistic'
 import { DownloadMinimalisticIcon as Download } from '@solar-icons/react/bold/download-minimalistic'
@@ -36,6 +35,7 @@ import { GlobeIcon as Globe } from '@solar-icons/react/bold/globe'
 import { EyeClosedIcon as EyeOff } from '@solar-icons/react/bold/eye-closed'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import * as ProjectDb from '../lib/projectDb'
+import { isTechnicalArea } from '../lib/technologies'
 
 const colors = {
   bg: 'var(--color-bg)',
@@ -117,11 +117,36 @@ function Field({ label, children, required, filled, error }) {
   )
 }
 
+// Para dados que vêm da conta/turma, não do formulário — sem cursor de
+// texto nem estado "preenchido", porque não há nada aqui para o aluno
+// escrever ou confirmar.
+function ReadOnlyField({ label, value }) {
+  return (
+    <div style={{ marginBottom: 18 }}>
+      <label style={{
+        display: 'block', fontSize: 11, fontWeight: 700,
+        color: colors.subtle, marginBottom: 7,
+        textTransform: 'uppercase', letterSpacing: 0.6,
+      }}>
+        {label}
+      </label>
+      <div style={{
+        padding: '11px 14px', borderRadius: 8,
+        background: colors.bg, border: `1px solid ${colors.border}`,
+        color: value ? colors.text : colors.muted, fontSize: 14,
+      }}>
+        {value || '—'}
+      </div>
+    </div>
+  )
+}
+
 export default function EditProject() {
   const { slug } = useParams()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
+  const isSchoolAccount = profile?.account_type === 'school'
   const { setExtras } = useSidebar()
   const [project, setProject] = useState(null)
   const [form, setForm] = useState({})
@@ -129,9 +154,8 @@ export default function EditProject() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [accessDenied, setAccessDenied] = useState(false)
-  const [dirty, setDirty] = useState(false)
   const [isOwner, setIsOwner] = useState(false)
-  const [activeSection, setActiveSection] = useState(() => searchParams.get('tab') || 'criador')
+  const [activeSection, setActiveSection] = useState(() => searchParams.get('tab') || 'tipo')
   const coverInputRef = useRef(null)
   const originalRef = useRef({})
 
@@ -212,15 +236,40 @@ export default function EditProject() {
     load()
   }, [slug])
 
+  // Sem setExtras aqui de propósito — isso é o que faz a Navbar mostrar o
+  // menu flutuante/paintbrush "Gerir projeto" (com um atalho "Editar" lá
+  // dentro), pensado para quem está a VER o projeto. Estando já dentro do
+  // editor, com o nosso próprio botão "Voltar ao projeto" na página, esse
+  // menu só duplicava a mesma ação de forma confusa.
   useEffect(() => {
     if (!project) return
-    setExtras({ type: 'project', slug: project.slug, title: project.name, showBack: true })
-    return () => setExtras(null)
+    setExtras(null)
   }, [project?.id])
+
+  // "Sobre o criador" vem da conta, não é para reescrever a cada projeto.
+  // Individual: só o nome é auto-preenchido (uma sugestão editável, não um
+  // valor trancado — pode haver razão para assinar um projeto com outro
+  // nome). Escola: nome/curso/ano/escola vêm todos da conta e da turma por
+  // onde o aluno entrou (join_class/register_institutional_student), e são
+  // só leitura no formulário — por isso ficam sincronizados aqui sempre que
+  // o perfil muda, não só uma vez.
+  useEffect(() => {
+    if (!project || !profile) return
+    if (isSchoolAccount) {
+      setForm(f => ({
+        ...f,
+        creator_name: profile.full_name || f.creator_name,
+        course: profile.course || f.course,
+        school_year: profile.academic_year || f.school_year,
+        school: profile.organization_name || f.school,
+      }))
+    } else if (!project.creator_name && profile.full_name) {
+      setForm(f => (f.creator_name ? f : { ...f, creator_name: profile.full_name }))
+    }
+  }, [project?.id, profile, isSchoolAccount])
 
   function set(key, value) {
     setForm(f => ({ ...f, [key]: value }))
-    setDirty(true)
   }
 
   async function handleCoverImage(e) {
@@ -335,210 +384,197 @@ export default function EditProject() {
   const isPap = form.project_type === 'pap'
 
   const isFilled = k => String(form[k] ?? '').trim().length > 0
-  const creatorKeys   = ['creator_name', 'course', 'school_year', 'school']
-  const creatorFilled = creatorKeys.filter(isFilled).length
-  const creatorTotal  = creatorKeys.length
+  // Nome/curso/ano/escola deixaram de ser tarefas do formulário — vêm da
+  // conta e da turma. Isto só alimenta os badges "X/Y" de cada separador,
+  // não uma percentagem global — um editor de configurações não é uma
+  // tarefa para "completar", é o score do projeto que já mostra isso.
   const nameFilled    = isFilled('name') ? 1 : 0
   const typeFilled    = (nameFilled + (form.project_type ? 1 : 0))
   const typeTotal     = 2
   const coverFilled   = (form.cover_url && form.cover_url !== '__uploading__') ? 1 : 0
-  // LinkedIn/GitHub são opcionais e NÃO contam para a percentagem.
-  const totalFilled   = creatorFilled + typeFilled + coverFilled
-  const totalAll      = creatorTotal + typeTotal + 1
-  const pct           = Math.round((totalFilled / totalAll) * 100)
 
   const linkedin = socialUrlState(form.linkedin_url, 'linkedin.com')
   const github   = socialUrlState(form.github_url, 'github.com')
   const canSave  = !saving && !!form.name?.trim() && !!form.area?.trim() && linkedin.valid && github.valid
+  const linksFilled = (!linkedin.empty && linkedin.valid ? 1 : 0) + (!github.empty && github.valid ? 1 : 0)
 
+  // "Base de dados" (tabelas + API) só faz sentido para projetos com
+  // componente de software a sério — não aparece para áreas como Moda,
+  // Design Gráfico, Marketing, etc.
   const sections = [
-    { id: 'criador',  label: 'Criador',  Icon: User,     filled: creatorFilled, total: creatorTotal },
-    { id: 'aparencia', label: 'Aparência', Icon: Paintbrush, filled: 0,         total: 0 },
     { id: 'tipo',     label: 'Tipo',     Icon: Layers,   filled: typeFilled,    total: typeTotal },
+    { id: 'links',    label: 'Redes',    Icon: Link2,    filled: linksFilled,   total: 2 },
     { id: 'imagem',   label: 'Imagem',   Icon: Image,    filled: coverFilled,   total: 1 },
-    { id: 'database', label: 'Base de dados', Icon: Database, filled: 0,        total: 0 },
+    ...(isTechnicalArea(form.area) ? [{ id: 'database', label: 'Base de dados', Icon: Database, filled: 0, total: 0 }] : []),
     { id: 'avancado', label: 'Avançado', Icon: Settings, filled: 0,             total: 0 },
   ]
 
   return (
     <div style={{ minHeight: '100dvh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'var(--font-body)' }}>
-      <Navbar
-        showLinks={false}
-        mobileLeft={
-          <button
-            onClick={() => navigate(`/projeto/${slug}`)}
-            aria-label="Voltar ao projeto"
-            style={{
-              background: 'transparent', border: 'none',
-              color: 'var(--color-text-secondary)', cursor: 'pointer', fontFamily: 'inherit',
-              width: 38, height: 38, borderRadius: 9, padding: 0,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            <ArrowLeft size={20} />
-          </button>
-        }
-      >
-        <button
-          onClick={() => navigate(`/projeto/${slug}`)}
-          style={{
-            background: 'transparent',
-            border: `1px solid ${colors.border}`,
-            color: colors.muted, borderRadius: 8,
-            padding: '8px 16px', fontSize: 13, fontWeight: 600,
-            cursor: 'pointer', fontFamily: 'inherit',
-            transition: 'border-color 0.2s',
-          }}
-        >
-          <ArrowLeft size={14} style={{ marginRight: 5, verticalAlign: 'middle' }} />Cancelar
-        </button>
-      </Navbar>
+      {/* Navbar normal — com sidebar e logo, como em Definições. A versão
+          anterior (showLinks={false} + mobileLeft custom) escondia tudo
+          isso, deixando o ecrã sem a navegação principal da app, só um
+          botão de recuar sozinho sobre fundo preto. */}
+      <Navbar />
 
       <style>{`
         @keyframes spin{to{transform:rotate(360deg)}}
         @media(max-width:600px){.ep-2col{grid-template-columns:1fr!important;}}
-        .ep-progress { display: flex; align-items: center; gap: 12px; margin-top: 18px; }
-        .ep-progress-track { flex: 1; height: 8px; border-radius: 99px; background: var(--color-bg-alt); overflow: hidden; }
-        .ep-progress-fill { height: 100%; border-radius: 99px; background: var(--color-primary); transition: width 0.4s cubic-bezier(0.22,1,0.36,1); }
-        .ep-progress-label { font-size: 12px; font-weight: 800; color: var(--color-text-secondary); flex-shrink: 0; font-variant-numeric: tabular-nums; }
-        .ep-layout { display: flex; gap: 20px; align-items: flex-start; }
-        .ep-tabs { width: 164px; flex-shrink: 0; display: flex; flex-direction: column; gap: 3px; position: sticky; top: 20px; }
-        .ep-tab-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; border-radius: 10px; border: none; background: transparent; cursor: pointer; font-family: inherit; text-align: left; -webkit-tap-highlight-color: transparent; color: var(--color-text-secondary); transition: background 0.15s, color 0.15s; }
-        .ep-tab-btn:hover { background: var(--color-bg-alt); color: var(--color-text); }
-        .ep-tab-btn.active { background: var(--color-primary-subtle); color: var(--color-primary); }
-        .ep-tab-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--color-bg-alt); transition: background 0.15s; }
-        .ep-tab-btn.active .ep-tab-icon { background: var(--color-primary-muted); }
-        .ep-tab-label { flex: 1; font-size: 14px; font-weight: 600; }
-        .ep-tab-badge { font-size: 11px; font-weight: 700; color: var(--color-text-secondary); background: var(--color-bg-alt); padding: 2px 6px; border-radius: 99px; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+        .ep-layout { display: flex; flex-direction: column; gap: 18px; align-items: stretch; }
+        /* Preenche a barra toda, como as pílulas do resto da app (página do
+           projeto, painel de workspace) — não uma pílula pequena a boiar
+           centrada com fundo vazio dos dois lados. */
+        .ep-segtabs { width: 100%; }
+        .ep-segtabs .seg-btn { flex: 1; }
+        .ep-tab-badge { font-size: 10px; font-weight: 700; color: var(--color-text-secondary); background: var(--color-bg-alt); padding: 1px 6px; border-radius: 99px; font-variant-numeric: tabular-nums; flex-shrink: 0; }
         .ep-tab-badge.done { color: var(--color-primary); background: var(--color-primary-muted); }
+        .seg-btn.active .ep-tab-badge { color: inherit; background: rgba(255,255,255,0.16); }
         .ep-main { flex: 1; min-width: 0; }
-        .ep-sec-card { background: var(--color-glass); border: 1px solid var(--color-glass-border); border-radius: 14px; padding: 20px 18px; }
+        .ep-sec-card { background: var(--color-glass); border: 1px solid var(--color-glass-border); border-radius: 12px; padding: 28px 28px 22px; }
         .ep-sec-heading { font-size: 17px; font-weight: 700; color: var(--color-text); margin: 0 0 20px; font-family: var(--font-heading); }
-        .ep-save-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 300; display: flex; align-items: center; gap: 12px; padding: 11px 16px calc(11px + env(safe-area-inset-bottom,0px)); background: var(--color-bg-overlay); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-top: 1px solid var(--color-border); }
-        .ep-save-status { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; color: var(--color-text-secondary); display: flex; align-items: center; gap: 8px; }
-        .ep-save-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-warning); flex-shrink: 0; }
-        .ep-save-btn { flex-shrink: 0; padding: 12px 30px; border-radius: 10px; border: none; font-size: 15px; font-weight: 700; font-family: inherit; letter-spacing: -0.1px; }
+        /* Barra flutuante, não uma faixa azul a atravessar o ecrã todo —
+           mesmo padrão do botão "Guardar" de Definições: só o botão (e,
+           quando há algo a dizer, uma mensagem) flutuam sobre o conteúdo,
+           sem bloquear cliques no resto da página. */
+        .ep-save-bar {
+          position: fixed; left: 0; right: 0; bottom: 0; z-index: 300;
+          display: flex; align-items: center; justify-content: flex-end; gap: 10px;
+          padding: 0 16px calc(14px + env(safe-area-inset-bottom, 0px));
+          background: none; pointer-events: none;
+        }
+        .ep-save-status {
+          font-size: 13px; font-weight: 600; padding: 8px 12px; border-radius: 10px;
+          background: var(--color-bg-overlay); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+          pointer-events: auto;
+        }
+        .ep-save-btn {
+          flex-shrink: 0; pointer-events: auto;
+          padding: 13px 28px; border-radius: 10px; border: none;
+          font-size: 14px; font-weight: 700; font-family: inherit; letter-spacing: -0.1px;
+          box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+        }
         @media (min-width: 601px) {
-          .ep-save-bar { left: 248px; }
-          body.sidebar-collapsed .ep-save-bar { left: 80px; }
+          /* O Guardar já vive no cabeçalho a este tamanho — a barra
+             flutuante do fundo era um segundo botão a fazer a mesma coisa. */
+          .ep-save-bar { display: none; }
         }
         @media (max-width: 600px) {
-          .ep-layout { flex-direction: column; gap: 0; }
-          .ep-tabs {
-            width: 100%;
-            flex-direction: row;
-            overflow-x: auto;
-            position: static;
-            gap: 0;
-            padding: 0 0 12px;
-            scrollbar-width: none;
-            border-bottom: 1px solid var(--color-border);
-            margin-bottom: 16px;
-          }
-          .ep-tabs::-webkit-scrollbar { display: none; }
-          .ep-tab-btn {
-            flex-direction: column;
-            gap: 4px;
-            padding: 10px 14px;
-            min-width: 72px;
-            align-items: center;
-            justify-content: center;
-            border-radius: 0;
-            border-bottom: 2px solid transparent;
-            background: transparent !important;
-            color: var(--color-text-secondary);
-          }
-          .ep-tab-btn.active {
-            background: transparent !important;
-            color: var(--color-primary) !important;
-            border-bottom-color: var(--color-primary);
-          }
-          .ep-tab-label { font-size: 11px; font-weight: 700; }
+          /* Sem espaço no cabeçalho para os dois botões lado a lado — o
+             Guardar volta a viver só na barra flutuante do fundo. */
+          .ep-header-save { display: none; }
+          .ep-segtabs { margin-bottom: 4px; }
+          /* A capa já se troca direto no banner da página do projeto no
+             mobile (ícone de câmara por cima da imagem) — este separador
+             fica redundante aqui; no desktop mantém-se como estava. */
+          .ep-tab-imagem { display: none !important; }
           .ep-tab-badge { display: none; }
-          .ep-tab-icon {
-            width: 24px; height: 24px;
-            border-radius: 0;
-            background: transparent !important;
-          }
-          .ep-tab-btn.active .ep-tab-icon { background: transparent !important; }
           .ep-main { width: 100%; }
-          .ep-sec-card { border-radius: 0; border-left: none; border-right: none; margin: 0 -16px; padding: 20px 16px; }
+          /* Sem override aqui — o card mantém-se arredondado e destacado do
+             fundo também no mobile, como o das Definições. A versão antiga
+             esticava-o de ponta a ponta e tirava-lhe o arredondamento,
+             fazendo-o parecer colado ao ecrã em vez de um cartão. */
+          .ep-sec-card { padding: 20px 18px; }
           .page-content { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important; }
         }
       `}</style>
 
       <div className="page-content">
-        <div style={{ marginBottom: 22 }}>
-          <h1 style={{ fontSize: 'clamp(24px, 4vw, 34px)', fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 6px', letterSpacing: '-0.5px', color: colors.text }}>Editar projeto</h1>
-          <p style={{ color: colors.muted, margin: 0, fontSize: 15 }}>{project.name}</p>
-          <div className="ep-progress">
-            <div className="ep-progress-track"><div className="ep-progress-fill" style={{ width: `${pct}%` }} /></div>
-            <span className="ep-progress-label">{pct}% completo</span>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 22 }}>
+          <div>
+            <h1 style={{ fontSize: 'clamp(24px, 4vw, 34px)', fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 6px', letterSpacing: '-0.5px', color: colors.text }}>Editar projeto</h1>
+            <p style={{ color: colors.muted, margin: 0, fontSize: 15 }}>{project.name}</p>
+          </div>
+          {/* No desktop o Guardar vive aqui, ao lado do "Voltar ao projeto"
+              — como em Definições. A barra flutuante no fundo do ecrã
+              (.ep-save-bar) fica só para o mobile, onde não há cabeçalho
+              com espaço para os dois botões lado a lado. */}
+          <div className="ep-header-actions" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <button
+              onClick={handleSubmit}
+              disabled={!canSave}
+              className="ep-header-save"
+              style={{
+                padding: '10px 20px', borderRadius: 10, border: 'none',
+                fontSize: 13, fontWeight: 700, fontFamily: 'inherit',
+                background: canSave ? 'var(--color-text)' : colors.border,
+                color: canSave ? 'var(--color-bg)' : 'var(--color-text-tertiary)',
+                cursor: canSave ? 'pointer' : 'default',
+                opacity: saving ? 0.7 : 1,
+              }}
+            >
+              {saving ? 'A guardar…' : 'Guardar'}
+            </button>
+            <button
+              onClick={() => navigate(`/projeto/${slug}`)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                background: 'transparent', border: `1px solid ${colors.border}`,
+                color: colors.text, borderRadius: 10,
+                padding: '10px 14px', fontSize: 13, fontWeight: 700,
+                cursor: 'pointer', fontFamily: 'inherit',
+                transition: 'background 0.15s, border-color 0.15s',
+              }}
+            >
+              <ArrowLeft size={14} /> Voltar ao projeto
+            </button>
           </div>
         </div>
 
         <form onSubmit={handleSubmit}>
           <div className="ep-layout">
-            {/* Section nav */}
-            <nav className="ep-tabs">
-              {sections.map(s => (
-                <button key={s.id} type="button" onClick={() => setActiveSection(s.id)}
-                  className={`ep-tab-btn${activeSection === s.id ? ' active' : ''}`}>
-                  <span className="ep-tab-icon"><s.Icon size={16} /></span>
-                  <span className="ep-tab-label">{s.label}</span>
-                  {/* "Avançado" não é um passo de preenchimento — não tem
-                      campos obrigatórios, por isso s.total é 0. Mostrar
-                      "0/0" fazia parecer um contador partido, e como
-                      0 === 0 ainda ganhava o estilo "done" (verde), o que
-                      lia mal ao lado de contadores reais como 1/4. */}
-                  {s.total > 0 && (
-                    <span className={`ep-tab-badge${s.filled === s.total ? ' done' : ''}`}>{s.filled}/{s.total}</span>
-                  )}
-                </button>
-              ))}
-            </nav>
+            {/* Section nav — mesma pílula com slide do resto da app (página
+                do projeto, painel de workspace), não mais uma coluna
+                vertical de ícones inventada só para este ecrã. */}
+            <SegmentedTabs
+              size="compact"
+              className="ep-segtabs"
+              value={activeSection}
+              onChange={setActiveSection}
+              options={sections.map(s => ({
+                id: s.id,
+                label: s.label,
+                icon: <s.Icon size={14} />,
+                className: s.id === 'imagem' ? 'ep-tab-imagem' : undefined,
+                // "Avançado" não é um passo de preenchimento — não tem campos
+                // obrigatórios, por isso s.total é 0. Mostrar "0/0" fazia
+                // parecer um contador partido.
+                badge: s.total > 0 ? (
+                  <span className={`ep-tab-badge${s.filled === s.total ? ' done' : ''}`}>{s.filled}/{s.total}</span>
+                ) : null,
+              }))}
+            />
 
             <div className="ep-main">
-              {/* Criador */}
-              {activeSection === 'criador' && (
+              {/* Redes — LinkedIn/GitHub, com peso a sério: é uma das ligações
+                  mais fortes que a Showo tem para oferecer (prova social
+                  direta para quem vê o projeto), não um extra a esconder no
+                  fundo de outro separador. Tinha vindo a viver dentro de
+                  "Sobre o criador", que deixou de fazer sentido como
+                  separador próprio depois de nome/curso/ano/escola terem
+                  passado a automáticos — mas os links não perderam
+                  importância só porque perderam a secção ao lado. */}
+              {activeSection === 'links' && (
                 <div className="ep-sec-card">
-                  <h2 className="ep-sec-heading">Sobre o criador</h2>
-                  <div className="ep-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                    <Field label="O teu nome" filled={isFilled('creator_name')}>
-                      <input type="text" value={form.creator_name} onChange={e => set('creator_name', e.target.value)} style={inputStyle} placeholder="Ex: João Silva" {...inputHandlers} />
+                  <h2 className="ep-sec-heading">Redes</h2>
+                  <p style={{ margin: '-6px 0 20px', fontSize: 13, color: colors.muted, lineHeight: 1.5 }}>
+                    Aparecem na página pública do projeto. É uma das formas mais fortes de mostrar
+                    a quem vê que trabalhaste nisto a sério — vale a pena preencher.
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <Field
+                      label="LinkedIn"
+                      filled={!linkedin.empty && linkedin.valid}
+                      error={!linkedin.valid ? 'Tem de ser um link do linkedin.com/…' : null}
+                    >
+                      <input type="url" value={form.linkedin_url} onChange={e => set('linkedin_url', e.target.value)} style={inputStyle} placeholder="https://linkedin.com/in/..." {...inputHandlers} />
                     </Field>
-                    <Field label="Curso" filled={isFilled('course')}>
-                      <input type="text" value={form.course} onChange={e => set('course', e.target.value)} style={inputStyle} placeholder="Ex: Informática" {...inputHandlers} />
+                    <Field
+                      label="GitHub"
+                      filled={!github.empty && github.valid}
+                      error={!github.valid ? 'Tem de ser um link do github.com/…' : null}
+                    >
+                      <input type="url" value={form.github_url} onChange={e => set('github_url', e.target.value)} style={inputStyle} placeholder="https://github.com/..." {...inputHandlers} />
                     </Field>
-                    <Field label="Ano letivo" filled={isFilled('school_year')}>
-                      <input type="text" value={form.school_year} onChange={e => set('school_year', e.target.value)} style={inputStyle} placeholder="Ex: 2024/2025" {...inputHandlers} />
-                    </Field>
-                    <Field label="Escola" filled={isFilled('school')}>
-                      <input type="text" value={form.school} onChange={e => set('school', e.target.value)} style={inputStyle} placeholder="Ex: ESMAD" {...inputHandlers} />
-                    </Field>
-                  </div>
-                  <div style={{ marginTop: 20 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, color: colors.subtle, marginBottom: 14, textTransform: 'uppercase', letterSpacing: 0.6 }}>
-                      <Link2 size={12} /> Links e redes
-                      <span style={{ fontWeight: 600, textTransform: 'none', letterSpacing: 0, color: colors.subtle, opacity: 0.8 }}>(opcional)</span>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                      <Field
-                        label="LinkedIn"
-                        filled={!linkedin.empty && linkedin.valid}
-                        error={!linkedin.valid ? 'Tem de ser um link do linkedin.com/…' : null}
-                      >
-                        <input type="url" value={form.linkedin_url} onChange={e => set('linkedin_url', e.target.value)} style={inputStyle} placeholder="https://linkedin.com/in/..." {...inputHandlers} />
-                      </Field>
-                      <Field
-                        label="GitHub"
-                        filled={!github.empty && github.valid}
-                        error={!github.valid ? 'Tem de ser um link do github.com/…' : null}
-                      >
-                        <input type="url" value={form.github_url} onChange={e => set('github_url', e.target.value)} style={inputStyle} placeholder="https://github.com/..." {...inputHandlers} />
-                      </Field>
-                    </div>
                   </div>
                 </div>
               )}
@@ -547,6 +583,16 @@ export default function EditProject() {
               {activeSection === 'tipo' && (
                 <div className="ep-sec-card">
                   <h2 className="ep-sec-heading">Tipo de projeto</h2>
+                  {/* Curso/ano/escola de uma conta de escola: vêm da turma,
+                      só leitura, e cabem aqui — é contexto do projeto, não
+                      uma tarefa para o aluno preencher. */}
+                  {isSchoolAccount && (
+                    <div className="ep-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 4 }}>
+                      <ReadOnlyField label="Curso" value={form.course} />
+                      <ReadOnlyField label="Ano letivo" value={form.school_year} />
+                      <ReadOnlyField label="Escola" value={form.school} />
+                    </div>
+                  )}
                   <Field label="Nome do projeto" filled={isFilled('name')}>
                     <input type="text" value={form.name} onChange={e => set('name', e.target.value)} style={inputStyle} placeholder="Ex: TaskFlow, EduApp..." {...inputHandlers} />
                   </Field>
@@ -636,10 +682,6 @@ export default function EditProject() {
               )}
 
               {/* Avançado */}
-              {activeSection === 'aparencia' && (
-                <AppearanceSection project={project} navigate={navigate} />
-              )}
-
               {activeSection === 'avancado' && (
                 <AdvancedSection project={project} isOwner={isOwner} navigate={navigate} />
               )}
@@ -661,63 +703,29 @@ export default function EditProject() {
         </form>
       </div>
 
-      {/* Save bar — rendered outside all scrollable containers so position:fixed is never trapped */}
+      {/* Save bar — rendered outside all scrollable containers so position:fixed
+          is never trapped. Só o botão flutua (mesmo padrão de Definições);
+          um estado persistente de "tudo guardado" não é preciso aqui — quem
+          termina de editar sai da página logo a seguir a guardar. */}
       <div className="ep-save-bar">
-        <div className="ep-save-status">
-          {!canSave && !saving ? (
-            <span style={{ color: colors.red }}>Falta o nome e a área</span>
-          ) : dirty ? (
-            <><span className="ep-save-dot" /> Alterações por guardar</>
-          ) : (
-            <><Check size={15} color={colors.blue} strokeWidth={3} /> Tudo guardado</>
-          )}
-        </div>
+        {!canSave && !saving && (
+          <div className="ep-save-status" style={{ color: colors.red }}>Falta o nome e a área</div>
+        )}
         <button
           onClick={handleSubmit}
           disabled={!canSave}
           className="ep-save-btn"
           style={{
-            background: canSave ? colors.blue : colors.border,
-            color: canSave ? '#fff' : 'var(--color-text-tertiary)',
+            background: canSave ? 'var(--color-text)' : colors.border,
+            color: canSave ? 'var(--color-bg)' : 'var(--color-text-tertiary)',
             cursor: canSave ? 'pointer' : 'default',
             opacity: saving ? 0.7 : 1,
-            boxShadow: canSave ? '0 4px 14px rgba(27,120,247,0.3)' : 'none',
+            boxShadow: canSave ? '0 8px 24px rgba(0,0,0,0.35)' : 'none',
           }}
         >
           {saving ? 'A guardar…' : 'Guardar'}
         </button>
       </div>
-    </div>
-  )
-}
-
-/* ══════════════════════════════════════════════════════════════════════════
-   APARÊNCIA — o editor visual (cores, fontes, blocos, secções) vive na
-   própria página do projeto (a mesma que já desenha a pré-visualização ao
-   vivo), não é reconstruído aqui. Isto é só o atalho: só quem clicava em
-   "Preview visitante" primeiro é que o encontrava, o que não faz sentido
-   nenhum para quem vem a "Editar" à procura disto. `?workspace=1` abre-o
-   já pronto, sem passar pelo preview.
-   ══════════════════════════════════════════════════════════════════════════ */
-function AppearanceSection({ project, navigate }) {
-  return (
-    <div className="ep-sec-card">
-      <h2 className="ep-sec-heading">Aparência</h2>
-      <p style={{ margin: '0 0 20px', fontSize: 14, color: colors.muted, lineHeight: 1.6 }}>
-        Cores, fontes, fundo, blocos e a ordem das secções da página pública. Abre num editor visual, ao lado da pré-visualização ao vivo.
-      </p>
-      <button
-        type="button"
-        onClick={() => navigate(`/projeto/${project.slug}?workspace=1`)}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 8,
-          padding: '11px 20px', background: colors.blue, border: 'none',
-          borderRadius: 10, color: '#fff', fontSize: 14, fontWeight: 700,
-          cursor: 'pointer', fontFamily: 'inherit',
-        }}
-      >
-        <Paintbrush size={15} /> Abrir editor visual
-      </button>
     </div>
   )
 }

@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { hexToHsv, hsvToHex, isValidHex } from '../lib/color'
+import { PipetteIcon as Eyedropper } from '@solar-icons/react/bold/pipette'
 import './ColorPicker.css'
 
 /* Seletor de cor próprio — substitui o <input type="color"> nativo do
    browser (feio, inconsistente entre browsers, difícil de conter numa
    bolinha). Quadrado de saturação/brilho + barra de matiz + hex, tudo
    desenhado com gradientes CSS, sem dependências. */
-export default function ColorPicker({ value, onChange, onClose }) {
+export default function ColorPicker({ value, onChange, onClose, onEyedropperStart, onEyedropperEnd }) {
   const start = hexToHsv(value || '#2563eb')
   const [h, setH] = useState(start.h)
   const [s, setS] = useState(start.s)
@@ -75,6 +76,34 @@ export default function ColorPicker({ value, onChange, onClose }) {
     window.removeEventListener('pointercancel', onUp)
   }
 
+  // EyeDropper API (Chrome/Edge) — deixa escolher uma cor de qualquer
+  // pixel do ecrã, incluindo a capa do próprio projeto por trás do
+  // picker. onEyedropperStart/End dão ao chamador a hipótese de afastar
+  // o resto da UI (ex: compactar o workspace) enquanto se apanta a cor.
+  async function pickFromScreen() {
+    if (!window.EyeDropper) return
+    onEyedropperStart?.()
+    // Dá tempo ao React para desmontar este picker e compactar o
+    // workspace antes de tirar a "foto" do ecrã — sem isto, o
+    // EyeDropper apanhava a cor do próprio picker, não da página.
+    await new Promise(r => setTimeout(r, 120))
+    try {
+      const ed = new window.EyeDropper()
+      const result = await ed.open()
+      if (result?.sRGBHex) {
+        const hex = result.sRGBHex.toUpperCase()
+        const hsv = hexToHsv(hex)
+        setH(hsv.h); setS(hsv.s); setV(hsv.v)
+        setHexInput(hex.replace('#', ''))
+        onChange(hex)
+      }
+    } catch {
+      /* utilizador cancelou (Esc) — nada a fazer */
+    } finally {
+      onEyedropperEnd?.()
+    }
+  }
+
   function onHexChange(e) {
     const raw = e.target.value.replace(/[^0-9a-f]/gi, '').slice(0, 6).toUpperCase()
     setHexInput(raw)
@@ -122,6 +151,17 @@ export default function ColorPicker({ value, onChange, onClose }) {
           inputMode="text"
           aria-label="Código hexadecimal"
         />
+        {typeof window !== 'undefined' && window.EyeDropper && (
+          <button
+            type="button"
+            className="cpk-eyedropper"
+            onClick={pickFromScreen}
+            title="Escolher cor do ecrã (ex: a capa do projeto)"
+            aria-label="Escolher cor do ecrã"
+          >
+            <Eyedropper size={17} />
+          </button>
+        )}
       </div>
     </div>
     </>

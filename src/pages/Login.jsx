@@ -39,7 +39,7 @@ function PasswordInput({ value, onChange, placeholder }) {
   const [show, setShow] = useState(false)
   const [focused, setFocused] = useState(false)
   return (
-    <div className="auth-field-wrap" style={{ borderBottomColor: focused ? C.blue : C.border }}>
+    <div className="auth-field-wrap" style={{ borderColor: focused ? C.blue : C.border, boxShadow: focused ? '0 0 0 3px var(--color-primary-subtle)' : 'none' }}>
       <input
         type={show ? 'text' : 'password'}
         value={value} onChange={onChange} required placeholder={placeholder}
@@ -200,14 +200,19 @@ export default function Login() {
         body.light .auth-input {
           flex: 1; width: 100%; background: transparent !important; border: none;
           color: var(--color-text); font-size: 16px; outline: none; font-family: inherit;
-          padding: 10px 0; box-sizing: border-box;
+          padding: 11px 0; box-sizing: border-box;
         }
         .auth-field-wrap {
           display: flex; align-items: center; gap: 10px;
-          border-bottom: 1.5px solid var(--color-border); transition: border-color 0.15s;
+          border: 1.5px solid var(--color-border); border-radius: 10px;
+          padding: 0 14px;
+          transition: border-color 0.15s, box-shadow 0.15s;
         }
-        .auth-submit { transition: opacity 0.15s, transform 0.1s var(--ease-out, ease-out); }
-        .auth-submit:hover:not(:disabled) { opacity: 0.88; }
+        .auth-submit {
+          box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+          transition: opacity 0.15s, transform 0.1s var(--ease-out, ease-out), box-shadow 0.15s;
+        }
+        .auth-submit:hover:not(:disabled) { opacity: 0.88; box-shadow: 0 4px 14px rgba(0,0,0,0.14); }
         .auth-submit:active:not(:disabled) { transform: scale(0.96); }
         .role-card:active { transform: scale(0.98); }
         .auth-icon-btn {
@@ -234,8 +239,14 @@ export default function Login() {
           caret-color: var(--color-text) !important;
           transition: background-color 9999s ease-in-out 0s;
         }
-        .login-forgot-link { transition: opacity 0.15s; }
-        .login-forgot-link:hover { opacity: 1 !important; }
+        .auth-ghost-btn {
+          border: 1px solid transparent !important; border-radius: 6px;
+          padding: 6px 10px !important; margin: -6px -10px;
+          transition: border-color 0.15s, opacity 0.15s;
+        }
+        @media (hover: hover) {
+          .auth-ghost-btn:hover { border-color: var(--color-border) !important; opacity: 1 !important; }
+        }
         @media (max-width: 860px) {
           .auth-side { display: none; }
         }
@@ -257,7 +268,7 @@ export default function Login() {
           {mode === 'forgot' ? (
             <>
               <h1 style={{ color: C.text, fontSize: 26, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 8px', letterSpacing: '-0.5px', textAlign: 'center' }}>Recuperar acesso</h1>
-              <p style={{ color: C.muted, fontSize: 14, margin: '0 0 32px', textAlign: 'center' }}>Enviamos-te um link para definires uma nova palavra-passe</p>
+              <p style={{ color: C.muted, fontSize: 14, margin: '0 0 32px', textAlign: 'center' }}>Escreve o teu email, nós tratamos do resto</p>
 
               {forgotSent ? (
                 <div style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 10, padding: '16px 18px' }}>
@@ -272,7 +283,7 @@ export default function Login() {
                 <form onSubmit={handleForgotPassword} style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     <label style={{ color: C.muted, fontSize: 13, fontWeight: 500 }}>Email</label>
-                    <div className="auth-field-wrap" style={{ borderBottomColor: C.border }}>
+                    <div className="auth-field-wrap" style={{ borderColor: C.border }}>
                       <input
                         type="email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} required placeholder="tu@email.com"
                         className="auth-input"
@@ -297,8 +308,9 @@ export default function Login() {
               <p style={{ textAlign: 'center', color: C.muted, fontSize: 14, marginTop: 24 }}>
                 <button
                   type="button"
+                  className="auth-ghost-btn"
                   onClick={() => { setMode('login'); setForgotSent(false) }}
-                  style={{ background: 'none', border: 'none', color: C.blue, fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}
+                  style={{ background: 'none', color: C.blue, fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}
                 >
                   Voltar a entrar
                 </button>
@@ -322,7 +334,7 @@ export default function Login() {
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <label style={{ color: C.muted, fontSize: 13, fontWeight: 500 }}>Email</label>
-              <div className="auth-field-wrap" style={{ borderBottomColor: emailFocused ? C.blue : C.border }}>
+              <div className="auth-field-wrap" style={{ borderColor: emailFocused ? C.blue : C.border, boxShadow: emailFocused ? '0 0 0 3px var(--color-primary-subtle)' : 'none' }}>
                 <input
                   type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="tu@email.com"
                   className="auth-input"
@@ -336,9 +348,9 @@ export default function Login() {
                 <label style={{ color: C.muted, fontSize: 13, fontWeight: 500 }}>Palavra-passe</label>
                 <button
                   type="button"
-                  className="login-forgot-link"
+                  className="auth-ghost-btn"
                   onClick={() => { setMode('forgot'); setForgotEmail(email) }}
-                  style={{ background: 'none', border: 'none', color: 'var(--color-primary)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: 0, opacity: 1 }}
+                  style={{ background: 'none', color: 'var(--color-primary)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: 1 }}
                 >
                   Esqueceste-te da password?
                 </button>

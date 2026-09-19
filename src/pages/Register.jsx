@@ -55,7 +55,7 @@ const ROLES = [
 // "freelancer" à parte, seria distinção sem diferença nas funcionalidades.
 const CATEGORIES = [
   {
-    id: 'individual', label: 'Conta Individual', sub: 'Aluno ou já a começar carreira',
+    id: 'individual', label: 'Conta Individual',
     icon: <DiplomaIcon size={23} />, roleIds: ['aluno'],
   },
   {
@@ -91,7 +91,7 @@ function Input({ type = 'text', value, onChange, placeholder, required }) {
   const [show, setShow] = useState(false)
   const isPassword = type === 'password'
   return (
-    <div className="auth-field-wrap" style={{ borderBottomColor: focused ? C.blue : C.border }}>
+    <div className="auth-field-wrap" style={{ borderColor: focused ? C.blue : C.border, boxShadow: focused ? '0 0 0 3px var(--color-primary-subtle)' : 'none' }}>
       <input
         type={isPassword ? (show ? 'text' : 'password') : type}
         value={value} onChange={onChange} placeholder={placeholder} required={required}
@@ -548,6 +548,10 @@ export default function Register() {
   }, [confirmationPending])
 
   const selectedRole = ROLES.find(r => r.id === role)
+  // Cor do papel só entra nos botões da Versão Escola (azul para aluno
+  // institucional, verde para professor) — Individual mantém-se a preto,
+  // como sempre foi.
+  const roleAccent = (role === 'aluno_institucional' || role === 'professor') ? selectedRole?.color : null
 
   return (
     <div className="auth-shell">
@@ -596,14 +600,19 @@ export default function Register() {
         body.light .auth-input {
           flex: 1; width: 100%; background: transparent !important; border: none;
           color: var(--color-text); font-size: 16px; outline: none; font-family: inherit;
-          padding: 10px 0; box-sizing: border-box;
+          padding: 11px 0; box-sizing: border-box;
         }
         .auth-field-wrap {
           display: flex; align-items: center; gap: 10px;
-          border-bottom: 1.5px solid var(--color-border); transition: border-color 0.15s;
+          border: 1.5px solid var(--color-border); border-radius: 10px;
+          padding: 0 14px;
+          transition: border-color 0.15s, box-shadow 0.15s;
         }
-        .auth-submit { transition: opacity 0.15s, transform 0.1s var(--ease-out, ease-out); }
-        .auth-submit:hover:not(:disabled) { opacity: 0.88; }
+        .auth-submit {
+          box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+          transition: opacity 0.15s, transform 0.1s var(--ease-out, ease-out), box-shadow 0.15s;
+        }
+        .auth-submit:hover:not(:disabled) { opacity: 0.88; box-shadow: 0 4px 14px rgba(0,0,0,0.14); }
         .auth-submit:active:not(:disabled) { transform: scale(0.96); }
         .role-card:active { transform: scale(0.98); }
         .auth-icon-btn {
@@ -621,6 +630,13 @@ export default function Register() {
           transition: opacity 0.2s cubic-bezier(0.2,0,0,1), transform 0.2s cubic-bezier(0.2,0,0,1), filter 0.2s cubic-bezier(0.2,0,0,1);
         }
         .auth-eye-icon.is-visible { opacity: 1; transform: scale(1); filter: blur(0px); }
+        .auth-ghost-btn {
+          border: 1px solid transparent !important; border-radius: 6px;
+          transition: border-color 0.15s, opacity 0.15s;
+        }
+        @media (hover: hover) {
+          .auth-ghost-btn:hover { border-color: var(--color-border) !important; opacity: 1 !important; }
+        }
         .auth-input:-webkit-autofill,
         .auth-input:-webkit-autofill:hover,
         .auth-input:-webkit-autofill:focus {
@@ -739,7 +755,7 @@ export default function Register() {
                       <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>
                         {cat.label}{cat.disabled && ' — brevemente'}
                       </div>
-                      <div style={{ fontSize: 12, color: C.muted, fontWeight: 400 }}>{cat.sub}</div>
+                      {cat.sub && <div style={{ fontSize: 12, color: C.muted, fontWeight: 400 }}>{cat.sub}</div>}
                     </div>
                     {!cat.disabled && <ArrowLeft size={16} style={{ color: C.muted, transform: 'rotate(180deg)', flexShrink: 0 }} />}
                   </div>
@@ -750,16 +766,19 @@ export default function Register() {
           ) : step === 'role' ? (
             /* ── STEP 2: papel dentro da categoria ── */
             <>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 28 }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
                 <button
+                  className="auth-ghost-btn"
                   onClick={() => { setStep('category'); setRole('') }}
-                  style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', padding: 4, display: 'flex' }}
+                  style={{
+                    background: 'none', color: C.text, cursor: 'pointer', fontFamily: 'var(--font-heading)',
+                    fontSize: 20, fontWeight: 400, letterSpacing: '-0.4px',
+                    padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 8,
+                  }}
                 >
-                  <ArrowLeft size={18} />
-                </button>
-                <h1 style={{ color: C.text, fontSize: 20, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: 0, letterSpacing: '-0.4px' }}>
+                  <ArrowLeft size={16} style={{ opacity: 0.6 }} />
                   {selectedCategory?.label}
-                </h1>
+                </button>
               </div>
 
               <div className="register-role-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 28 }}>
@@ -805,20 +824,22 @@ export default function Register() {
           ) : step === 'identity' ? (
             /* ── STEP 3: nome e email (+ campos do papel) ── */
             <>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ color: C.text, display: 'flex', alignItems: 'center', transform: 'scale(0.85)' }}>{selectedRole?.icon}</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+                {!isPartnerFlow && !autoRole ? (
+                  <button
+                    className="auth-ghost-btn"
+                    onClick={() => { setError(''); setStep(selectedCategory?.roleIds.length > 1 ? 'role' : 'category') }}
+                    style={{ background: 'none', color: C.muted, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 7 }}
+                  >
+                    <ArrowLeft size={13} style={{ opacity: 0.6 }} />
+                    <span style={{ color: C.text, display: 'flex', alignItems: 'center', transform: 'scale(0.85)' }}>{selectedRole?.icon}</span>
+                    {selectedRole?.label}
+                  </button>
+                ) : (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 7, color: C.text, fontSize: 13, fontWeight: 700 }}>
+                    <span style={{ display: 'flex', alignItems: 'center', transform: 'scale(0.85)' }}>{selectedRole?.icon}</span>
                     {selectedRole?.label}
                   </span>
-                </div>
-                {!isPartnerFlow && !autoRole && (
-                  <button
-                    onClick={() => { setError(''); setStep(selectedCategory?.roleIds.length > 1 ? 'role' : 'category') }}
-                    style={{ background: 'none', border: 'none', color: C.muted, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', padding: 0, display: 'flex', alignItems: 'center', gap: 5 }}
-                  >
-                    <ArrowLeft size={14} />Alterar
-                  </button>
                 )}
               </div>
 
@@ -828,7 +849,7 @@ export default function Register() {
                 </div>
               )}
 
-              <h1 style={{ color: C.text, fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 24px', letterSpacing: '-0.5px' }}>
+              <h1 style={{ color: C.text, fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 24px', letterSpacing: '-0.5px', textAlign: 'center' }}>
                 Os teus dados
               </h1>
 
@@ -867,14 +888,16 @@ export default function Register() {
                   </Field>
                 )}
                 {needsOccupation && (
-                  <Select
-                    label="O que fazes?"
-                    value={occupation}
-                    onChange={setOccupation}
-                    options={OCCUPATIONS}
-                    placeholder="Seleciona uma opção"
-                    required
-                  />
+                  <Field label={<>O que fazes?<span style={{ color: 'var(--color-error)', marginLeft: 2 }}>*</span></>}>
+                    <Select
+                      value={occupation}
+                      onChange={setOccupation}
+                      options={OCCUPATIONS}
+                      placeholder="Seleciona uma opção"
+                      required
+                      inputStyle={{ background: 'transparent', fontSize: 16, padding: '11px 36px 11px 14px' }}
+                    />
+                  </Field>
                 )}
                 <Field label="Email">
                   <Input
@@ -917,7 +940,7 @@ export default function Register() {
                   }}
                   className="auth-submit"
                   style={{
-                    width: '100%', background: C.text, color: C.bg, border: 'none',
+                    width: '100%', background: roleAccent || C.text, color: roleAccent ? '#fff' : C.bg, border: 'none',
                     borderRadius: 10, padding: '12px 0', fontSize: 15, fontWeight: 700,
                     cursor: 'pointer', fontFamily: 'inherit', marginTop: 4,
                   }}
@@ -932,20 +955,22 @@ export default function Register() {
                quem entra por Google nunca chega aqui, o telemóvel fica só
                para o PhoneGate depois do login). ── */
             <>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ color: C.text, display: 'flex', alignItems: 'center', transform: 'scale(0.85)' }}>{selectedRole?.icon}</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+                {!isPartnerFlow && !accountCreated ? (
+                  <button
+                    className="auth-ghost-btn"
+                    onClick={() => { setError(''); setStep('identity') }}
+                    style={{ background: 'none', color: C.muted, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 7 }}
+                  >
+                    <ArrowLeft size={13} style={{ opacity: 0.6 }} />
+                    <span style={{ color: C.text, display: 'flex', alignItems: 'center', transform: 'scale(0.85)' }}>{selectedRole?.icon}</span>
+                    {selectedRole?.label}
+                  </button>
+                ) : (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 7, color: C.text, fontSize: 13, fontWeight: 700 }}>
+                    <span style={{ display: 'flex', alignItems: 'center', transform: 'scale(0.85)' }}>{selectedRole?.icon}</span>
                     {selectedRole?.label}
                   </span>
-                </div>
-                {!isPartnerFlow && !accountCreated && (
-                  <button
-                    onClick={() => { setError(''); setStep('identity') }}
-                    style={{ background: 'none', border: 'none', color: C.muted, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', padding: 0, display: 'flex', alignItems: 'center', gap: 5 }}
-                  >
-                    <ArrowLeft size={14} />Alterar
-                  </button>
                 )}
               </div>
 
@@ -955,7 +980,7 @@ export default function Register() {
                 </div>
               )}
 
-              <h1 style={{ color: C.text, fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 24px', letterSpacing: '-0.5px' }}>
+              <h1 style={{ color: C.text, fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 24px', letterSpacing: '-0.5px', textAlign: 'center' }}>
                 {accountCreated ? (isPartnerFlow ? 'Só falta ligar à empresa' : 'Só falta o código') : 'Palavra-passe'}
               </h1>
 
@@ -1011,8 +1036,8 @@ export default function Register() {
                   type="submit" disabled={loading}
                   className="auth-submit"
                   style={{
-                    background: loading ? 'var(--color-border)' : C.text,
-                    color: loading ? C.muted : C.bg, border: 'none',
+                    background: loading ? 'var(--color-border)' : (roleAccent || C.text),
+                    color: loading ? C.muted : (roleAccent ? '#fff' : C.bg), border: 'none',
                     borderRadius: 10, padding: '12px 0', fontSize: 15, fontWeight: 700,
                     cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', marginTop: 4,
                   }}
@@ -1025,7 +1050,7 @@ export default function Register() {
 
           <p style={{ textAlign: 'center', color: C.muted, fontSize: 14, marginTop: 24 }}>
             Já tens conta?{' '}
-            <Link to="/login" style={{ color: C.text, textDecoration: 'underline', fontWeight: 700 }}>Entrar</Link>
+            <Link to="/login" style={{ color: C.blue, textDecoration: 'none', fontWeight: 700 }}>Entrar</Link>
           </p>
         </div>
       </div>

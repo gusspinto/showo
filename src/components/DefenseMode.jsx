@@ -1,7 +1,9 @@
 ﻿import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { AiUsageBadge, ConfirmUseModal, PlanGateModal } from './PlanGate'
+import SegmentedTabs from './SegmentedTabs'
 import { HandShakeIcon as Hand } from '@solar-icons/react/bold/hand-shake'
 import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
 import { LightbulbIcon as Lightbulb } from '@solar-icons/react/bold/lightbulb'
@@ -1036,6 +1038,22 @@ function DefenseTraining({ project, checkGate, consumeAI }) {
     }
   }
 
+  // Cancelar a meio — alguém pode enganar-se a falar, ou simplesmente
+  // desistir. Ao contrário de stopRecording (que tenta sempre gerar
+  // feedback), isto pára o microfone e volta ao início em silêncio, sem
+  // mostrar o aviso de "grava pelo menos Ns".
+  function cancelRecording() {
+    clearInterval(timerRef.current)
+    if (recognitionRef.current) {
+      recognitionRef.current.onend = null
+      recognitionRef.current.stop()
+    }
+    setError('')
+    setTranscript('')
+    setElapsed(0)
+    setPhase('idle')
+  }
+
   const formatTime = (s) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`
 
   if (phase === 'unsupported') {
@@ -1124,14 +1142,16 @@ function DefenseTraining({ project, checkGate, consumeAI }) {
         <>
           <Mic size={32} color={C.blue} style={{ marginBottom: 12 }} />
           <h3 style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 800, color: C.text }}>Treina a tua defesa</h3>
-          <p style={{ margin: '0 0 20px', fontSize: 13, color: C.muted, lineHeight: 1.6 }}>
-            Carrega em gravar e apresenta o teu projeto como se estivesses frente ao júri. A IA vai analisar o conteúdo, a clareza e dar-te dicas.
+          <p style={{ margin: '0 auto 20px', maxWidth: 360, fontSize: 13, color: C.muted, lineHeight: 1.6 }}>
+            Carrega em gravar e apresenta o teu projeto como se estivesses frente ao júri.
+            <br /><br />
+            A IA vai analisar o conteúdo, a clareza e dar-te dicas.
           </p>
           {error && <p style={{ margin: '0 0 12px', fontSize: 12, color: C.red }}>{typeof error === 'string' ? error : error.body || 'Erro'}</p>}
           <button
             onClick={startRecording}
             style={{
-              background: C.blue, border: 'none', borderRadius: 10, padding: '12px 28px',
+              background: 'var(--color-success)', border: 'none', borderRadius: 10, padding: '12px 28px',
               color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
               display: 'inline-flex', alignItems: 'center', gap: 8,
             }}
@@ -1152,23 +1172,38 @@ function DefenseTraining({ project, checkGate, consumeAI }) {
               {transcript.slice(-200)}
             </p>
           )}
-          <button
-            onClick={stopRecording}
-            disabled={elapsed < MIN_TRAINING_SECONDS}
-            style={{
-              background: elapsed < MIN_TRAINING_SECONDS ? C.card : 'var(--color-error)',
-              border: elapsed < MIN_TRAINING_SECONDS ? `1px solid ${C.border}` : 'none',
-              borderRadius: 10, padding: '12px 28px',
-              color: elapsed < MIN_TRAINING_SECONDS ? C.subtle : '#fff',
-              fontSize: 14, fontWeight: 700,
-              cursor: elapsed < MIN_TRAINING_SECONDS ? 'default' : 'pointer',
-              fontFamily: 'inherit',
-            }}
-          >
-            {elapsed < MIN_TRAINING_SECONDS
-              ? `Grava mais ${MIN_TRAINING_SECONDS - elapsed}s`
-              : 'Parar e obter feedback'}
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+            <button
+              onClick={stopRecording}
+              disabled={elapsed < MIN_TRAINING_SECONDS}
+              style={{
+                background: elapsed < MIN_TRAINING_SECONDS ? C.card : 'var(--color-error)',
+                border: elapsed < MIN_TRAINING_SECONDS ? `1px solid ${C.border}` : 'none',
+                borderRadius: 10, padding: '12px 28px',
+                color: elapsed < MIN_TRAINING_SECONDS ? C.muted : '#fff',
+                fontSize: 14, fontWeight: 700,
+                cursor: elapsed < MIN_TRAINING_SECONDS ? 'default' : 'pointer',
+                fontFamily: 'inherit',
+              }}
+            >
+              {elapsed < MIN_TRAINING_SECONDS
+                ? `Grava mais ${MIN_TRAINING_SECONDS - elapsed}s`
+                : 'Parar e obter feedback'}
+            </button>
+            {/* Enganaste-te ou queres desistir? Isto pára já, sem esperar
+                pelo mínimo nem tentar gerar feedback. */}
+            <button
+              onClick={cancelRecording}
+              style={{
+                background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)',
+                color: 'var(--color-error)', borderRadius: 8,
+                fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                padding: '7px 16px',
+              }}
+            >
+              Cancelar gravação
+            </button>
+          </div>
         </>
       )}
 
@@ -1223,6 +1258,16 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
+  // Sem isto, a página por trás continua a dar scroll enquanto o modal
+  // está aberto (no telemóvel isso arrasta o modal com ela, porque não
+  // fica mesmo fixo ao ecrã — o mesmo problema que já corrigimos no chat
+  // da IA). Trava o scroll do body enquanto o Modo Defesa está aberto.
+  useEffect(() => {
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prev }
+  }, [])
+
   function tryLoadAI() {
     const gate = checkGate('defense')
     if (!gate.allowed) { setAiError(true); return }
@@ -1267,12 +1312,16 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
 
   const tabs = [
     { id: 'notes', label: 'Notas',    show: canSeeFullPrep },
-    { id: 'jury',  label: 'Júri',     show: canSeeFullPrep },
+    { id: 'jury',  label: project.evaluation_mode === 'evaluator' ? 'Orientador' : 'Júri', show: canSeeFullPrep },
     { id: 'guide', label: 'No dia',   show: true },
     { id: 'grupo', label: 'Grupo',    show: isOwner },
   ].filter(t => t.show)
 
-  return (
+  // Portal para document.body: dentro da árvore normal da página do
+  // projeto, um ancestral com transform cria um "containing block" novo e
+  // o `position: fixed` deixa de se ancorar ao ecrã a sério — ficava
+  // solto, a mexer-se com o scroll da página por trás em vez de fixo.
+  return createPortal(
     <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, fontFamily: 'inherit' }}
       onClick={e => e.target === e.currentTarget && onClose()}
     >
@@ -1305,28 +1354,16 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
 
         <style>{`
           .dm-icon-btn:hover { color: var(--color-text) !important; }
-          .dm-tab-btn:hover:not(.active) { color: var(--color-text) !important; border-color: var(--color-border-hover) !important; }
         `}</style>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: 4, padding: '16px 28px 0', flexShrink: 0 }}>
-          {tabs.map(t => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`dm-tab-btn${tab === t.id ? ' active' : ''}`}
-              style={{
-                background: tab === t.id ? 'var(--color-surface-hover)' : 'transparent',
-                border: `1px solid ${tab === t.id ? 'var(--color-surface-hover)' : C.border}`,
-                borderRadius: 9, padding: '8px 16px',
-                color: tab === t.id ? C.blue : C.muted,
-                fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-                transition: 'all 0.15s',
-              }}
-            >
-              {t.label}
-            </button>
-          ))}
+        <div style={{ padding: '16px 28px 0', flexShrink: 0 }}>
+          <SegmentedTabs
+            size="compact"
+            value={tab}
+            onChange={setTab}
+            options={tabs.map(t => ({ id: t.id, label: t.label }))}
+          />
         </div>
 
         {/* Content */}
@@ -1422,6 +1459,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

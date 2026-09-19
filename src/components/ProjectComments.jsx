@@ -125,17 +125,22 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
     if (looksLikeSpam(content)) { setSendError('Comentário detetado como spam. Escreve algo mais elaborado.'); return }
     setSendError('')
     setSending(true)
-    setDraft('')
-    const { data: newComment } = await supabase
+    const { data: newComment, error } = await supabase
       .from('project_comments')
       .insert({ project_id: projectId, user_id: user.id, content })
       .select()
       .single()
     if (newComment) {
+      setDraft('')
       setComments(prev => prev.find(x => x.id === newComment.id) ? prev : [...prev, newComment])
       // Garante que o perfil do autor está no mapa
       if (profile) setProfiles(prev => prev[user.id] ? prev : { ...prev, [user.id]: profile })
       // Notificação gerada automaticamente pelo trigger notify_on_comment() na DB
+    } else {
+      // Sem isto o texto desaparecia (o draft já tinha sido limpo antes do
+      // insert) sem dizer porquê — a pessoa via o comentário "desaparecer".
+      console.error('send comment failed:', error)
+      setSendError('Não foi possível enviar. Verifica a ligação e tenta outra vez.')
     }
     setSending(false)
   }

@@ -142,6 +142,23 @@
   cursor: not-allowed;
 }
 
+/* Segunda forma de criar, ao lado do CTA "Criar com IA" — texto simples,
+   não outro botão preto do mesmo peso (isso é que fazia o ecrã parecer
+   ter 3 opções iguais e nenhum caminho óbvio). */
+.np-alt-links {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin-top: 16px; flex-wrap: wrap;
+}
+.np-alt-link {
+  background: none; border: none; padding: 4px 0;
+  font-size: 13px; font-weight: 600; color: var(--color-text-secondary);
+  cursor: pointer; font-family: inherit; -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+.np-alt-link:hover:not(:disabled) { color: var(--color-text); text-decoration: underline; }
+.np-alt-link:disabled { opacity: 0.4; cursor: not-allowed; }
+.np-alt-links-sep { color: var(--color-text-tertiary); font-size: 13px; }
+
 /* Variante discreta — o "guardar sem analisar" a seguir ao botão de IA. */
 .np-alt-path--quiet {
   background: transparent; color: var(--color-text-secondary);
@@ -326,6 +343,54 @@
   font-weight: 700;
 }
 
+.np-types--center { justify-content: center; }
+
+/* ── Extra do PAP/Projeto Final — data da defesa + avaliação. Fica no seu
+   próprio bloco centrado, tal como estava — o que o liga visualmente à
+   cápsula dos pills é a mesma borda tracejada azul, não a forma. ── */
+.np-pap-extra {
+  display: flex; flex-direction: column; gap: 16px;
+  margin: -12px 0 24px;
+  padding: 18px 20px;
+  border: 1px dashed var(--color-primary);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-primary) 5%, var(--color-bg-alt));
+}
+.np-pap-row { display: flex; flex-direction: column; gap: 8px; align-items: center; text-align: center; }
+.np-pap-label { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; color: var(--color-text); }
+.np-pap-label-hint { font-weight: 400; color: var(--color-text-secondary); }
+.np-pap-date-row { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+.np-pap-date-input {
+  padding: 7px 10px; border-radius: var(--radius-md);
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface); color: var(--color-text);
+  font-size: 13px; font-family: inherit;
+}
+.np-pap-date-input:disabled { opacity: 0.5; }
+.np-pap-checkbox {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12.5px; color: var(--color-text-secondary);
+  cursor: pointer; user-select: none;
+}
+.np-pap-evalmode-row { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+.np-pap-evalmode-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: var(--radius-full);
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: 13px; font-weight: 500;
+  cursor: pointer; font-family: inherit;
+  transition: border-color 0.15s, color 0.15s, background 0.15s, transform 0.1s;
+}
+.np-pap-evalmode-chip:active { transform: scale(0.95); }
+.np-pap-evalmode-chip.is-active {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
 /* ── Descrição ── */
 .np-describe {
   width: 100%; box-sizing: border-box;
@@ -445,6 +510,17 @@
 
 /* ── Revisão ── */
 .np-fields { display: flex; flex-direction: column; gap: 8px; }
+.np-fields--extra { margin-top: 10px; }
+
+.np-extra-toggle {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 14px; padding: 8px 4px;
+  background: none; border: none;
+  color: var(--color-text-secondary);
+  font-size: 13px; font-weight: 600; font-family: inherit;
+  cursor: pointer;
+}
+.np-extra-toggle:hover { color: var(--color-text); }
 
 .np-field {
   padding: 15px 17px;
