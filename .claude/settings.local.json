@@ -5,7 +5,29 @@
       "Bash(git push *)",
       "Bash(git pull *)",
       "Bash(npx vite *)",
-      "Bash(node_modules/.bin/vite build *)"
+      "Bash(node_modules/.bin/vite build *)",
+      "mcp__4167455e-e2a3-4dd8-bf3c-65c1e831a91f__execute_sql"
+    ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean -f*)",
+      "Bash(git branch -D*)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "osascript -e 'display notification \"O rascunho está pronto — abre o Claude Desktop para reveres.\" with title \"Nino\" sound name \"Glass\"'"
+          }
+        ]
+      }
     ]
   }
 }

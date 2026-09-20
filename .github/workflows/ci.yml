@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-test-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # O lint tem ~1900 problemas já existentes no código antes disto.
+      # Corre e reporta, mas não trava o CI até isso ser limpo aos poucos.
+      - run: npm run lint
+        continue-on-error: true
+      - run: npm run test
+      - run: npm run build
