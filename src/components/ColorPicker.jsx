@@ -1,13 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { hexToHsv, hsvToHex, isValidHex } from '../lib/color'
 import { PipetteIcon as Eyedropper } from '@solar-icons/react/bold/pipette'
+import { GalleryIcon as ImageIcon } from '@solar-icons/react/bold/gallery'
+import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import './ColorPicker.css'
 
 /* Seletor de cor próprio — substitui o <input type="color"> nativo do
    browser (feio, inconsistente entre browsers, difícil de conter numa
    bolinha). Quadrado de saturação/brilho + barra de matiz + hex, tudo
-   desenhado com gradientes CSS, sem dependências. */
-export default function ColorPicker({ value, onChange, onClose, onEyedropperStart, onEyedropperEnd }) {
+   desenhado com gradientes CSS, sem dependências.
+   `imageUrl` (opcional): dá acesso a "escolher da capa" via canvas — a
+   única forma de apanhar uma cor da própria imagem em Safari/Firefox,
+   que não têm a EyeDropper API nativa (só Chrome/Edge têm). */
+export default function ColorPicker({ value, onChange, onClose, onEyedropperStart, onEyedropperEnd, imageUrl }) {
   const start = hexToHsv(value || '#2563eb')
   const [h, setH] = useState(start.h)
   const [s, setS] = useState(start.s)
@@ -18,6 +24,7 @@ export default function ColorPicker({ value, onChange, onClose, onEyedropperStar
   const hueRef = useRef(null)
   const rootRef = useRef(null)
   const dragging = useRef(null)
+  const canvasPickerOpenRef = useRef(false)
 
   useEffect(() => {
     setHexInput((value || hsvToHex(h, s, v)).replace('#', '').toUpperCase())
@@ -26,6 +33,12 @@ export default function ColorPicker({ value, onChange, onClose, onEyedropperStar
 
   useEffect(() => {
     function onDocDown(e) {
+      // O popup do canvas (escolher da capa) é um irmão do picker
+      // principal, não um filho — sem isto, qualquer toque nele (incluindo
+      // a própria imagem, a apanhar a cor) contava como "clique fora" e
+      // fechava tudo antes do clique chegar a ser processado. Enquanto
+      // estiver aberto, ele já tem os seus próprios fechos (X, fundo).
+      if (canvasPickerOpenRef.current) return
       if (rootRef.current && !rootRef.current.contains(e.target)) onClose?.()
     }
     document.addEventListener('pointerdown', onDocDown)
@@ -104,6 +117,60 @@ export default function ColorPicker({ value, onChange, onClose, onEyedropperStar
     }
   }
 
+  // Fallback universal (funciona em qualquer browser, Safari incluído):
+  // desenha a capa do projeto num canvas escondido e deixa tocar/clicar
+  // em cima da imagem visível para ler a cor desse pixel exato.
+  const [canvasPickerOpen, setCanvasPickerOpen] = useState(false)
+  const [canvasError, setCanvasError] = useState(false)
+  const canvasRef = useRef(null)
+  const imgElRef = useRef(null)
+  useEffect(() => { canvasPickerOpenRef.current = canvasPickerOpen }, [canvasPickerOpen])
+
+  // Ao contrário do fluxo nativo (que precisa de esconder este picker
+  // para a "foto" do ecrã não o apanhar a ele próprio), o popup do
+  // canvas mostra a sua própria imagem — não precisa nem quer que o
+  // pai desmonte este componente. onEyedropperStart/End ficam de fora
+  // de propósito aqui.
+  function openCanvasPicker() {
+    setCanvasError(false)
+    setCanvasPickerOpen(true)
+  }
+  function closeCanvasPicker() {
+    setCanvasPickerOpen(false)
+  }
+  function handleImgLoad() {
+    const img = imgElRef.current
+    const canvas = canvasRef.current
+    if (!img || !canvas) return
+    canvas.width = img.naturalWidth
+    canvas.height = img.naturalHeight
+    try {
+      canvas.getContext('2d').drawImage(img, 0, 0)
+    } catch {
+      setCanvasError(true)
+    }
+  }
+  function pickFromImage(e) {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const r = canvas.getBoundingClientRect()
+    const x = Math.round(((e.clientX - r.left) / r.width) * canvas.width)
+    const y = Math.round(((e.clientY - r.top) / r.height) * canvas.height)
+    try {
+      const [red, green, blue] = canvas.getContext('2d').getImageData(x, y, 1, 1).data
+      const hex = '#' + [red, green, blue].map(n => n.toString(16).padStart(2, '0')).join('').toUpperCase()
+      const hsv = hexToHsv(hex)
+      setH(hsv.h); setS(hsv.s); setV(hsv.v)
+      setHexInput(hex.replace('#', ''))
+      onChange(hex)
+      closeCanvasPicker()
+    } catch {
+      // Imagem de outra origem sem CORS liberado — o canvas fica
+      // "manchado" e não deixa ler pixels. Avisa em vez de rebentar.
+      setCanvasError(true)
+    }
+  }
+
   function onHexChange(e) {
     const raw = e.target.value.replace(/[^0-9a-f]/gi, '').slice(0, 6).toUpperCase()
     setHexInput(raw)
@@ -120,7 +187,7 @@ export default function ColorPicker({ value, onChange, onClose, onEyedropperStar
   // e fica meio cortado por cima do fundo do painel.
   const inset = (pct, px = 7) => `calc(${pct}% + ${((50 - pct) / 50) * px}px)`
 
-  return (
+  return createPortal(
     <>
     <div className="cpk-scrim" onPointerDown={onClose} aria-hidden="true" />
     <div className="cpk" ref={rootRef} role="dialog" aria-label="Escolher cor personalizada">
@@ -162,8 +229,49 @@ export default function ColorPicker({ value, onChange, onClose, onEyedropperStar
             <Eyedropper size={17} />
           </button>
         )}
+        {/* Sem EyeDropper nativa (Safari, Firefox) mas há capa: oferece a
+            mesma ideia via canvas — funciona em qualquer browser. */}
+        {!(typeof window !== 'undefined' && window.EyeDropper) && imageUrl && (
+          <button
+            type="button"
+            className="cpk-eyedropper"
+            onClick={openCanvasPicker}
+            title="Escolher cor da capa do projeto"
+            aria-label="Escolher cor da capa do projeto"
+          >
+            <ImageIcon size={17} />
+          </button>
+        )}
       </div>
     </div>
-    </>
+
+    {canvasPickerOpen && (
+      <div className="cpk-img-scrim" onPointerDown={e => { if (e.target === e.currentTarget) closeCanvasPicker() }}>
+        <div className="cpk-img-panel">
+          <div className="cpk-img-head">
+            <span>Toca na imagem para escolher a cor</span>
+            <button type="button" onClick={closeCanvasPicker} aria-label="Fechar"><X size={16} /></button>
+          </div>
+          {canvasError ? (
+            <p className="cpk-img-error">Não foi possível ler esta imagem para escolher uma cor.</p>
+          ) : (
+            <canvas ref={canvasRef} className="cpk-img-canvas" onClick={pickFromImage} />
+          )}
+          {/* Imagem real invisível — só serve para carregar os pixels
+              para o canvas; o que se vê e se toca é o canvas. */}
+          <img
+            ref={imgElRef}
+            src={imageUrl}
+            alt=""
+            crossOrigin="anonymous"
+            onLoad={handleImgLoad}
+            onError={() => setCanvasError(true)}
+            style={{ display: 'none' }}
+          />
+        </div>
+      </div>
+    )}
+    </>,
+    document.body
   )
 }

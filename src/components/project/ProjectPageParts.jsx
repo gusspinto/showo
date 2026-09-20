@@ -2566,6 +2566,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                           onClose={() => setColorPicker(null)}
                           onEyedropperStart={startEyedropper}
                           onEyedropperEnd={endEyedropper}
+                          imageUrl={project.cover_url}
                         />
                       )}
                     </div>
@@ -2611,6 +2612,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                           onClose={() => setColorPicker(null)}
                           onEyedropperStart={startEyedropper}
                           onEyedropperEnd={endEyedropper}
+                          imageUrl={project.cover_url}
                         />
                       )}
                     </div>

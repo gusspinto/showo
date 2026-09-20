@@ -64,6 +64,34 @@
 }
 .cpk-eyedropper:hover { border-color: var(--color-text); color: var(--color-text); }
 
+/* Escolher cor a partir da capa (fallback sem EyeDropper nativa) */
+.cpk-img-scrim {
+  position: fixed; inset: 0; z-index: 220;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.cpk-img-panel {
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: 14px; padding: 14px;
+  max-width: min(480px, calc(100vw - 40px));
+  display: flex; flex-direction: column; gap: 12px;
+}
+.cpk-img-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; font-size: 13px; font-weight: 700; color: var(--color-text);
+}
+.cpk-img-head button {
+  background: none; border: none; color: var(--color-text-secondary);
+  cursor: pointer; padding: 2px; display: flex;
+}
+.cpk-img-canvas {
+  width: 100%; height: auto; max-height: 60vh; object-fit: contain;
+  border-radius: 8px; cursor: crosshair; display: block;
+  border: 1px solid var(--color-border);
+}
+.cpk-img-error { font-size: 13px; color: var(--color-text-secondary); margin: 0; }
+
 /* ── Mobile: em vez de um popover minúsculo preso à bolinha (que fica
    cortado pelo overflow do painel e é impossível de arrastar com o dedo),
    uma folha centrada no ecrã, com alvos maiores. ── */
