@@ -13,7 +13,28 @@ import './ColorPicker.css'
    `imageUrl` (opcional): dá acesso a "escolher da capa" via canvas — a
    única forma de apanhar uma cor da própria imagem em Safari/Firefox,
    que não têm a EyeDropper API nativa (só Chrome/Edge têm). */
-export default function ColorPicker({ value, onChange, onClose, onEyedropperStart, onEyedropperEnd, imageUrl }) {
+export default function ColorPicker({ value, onChange, onClose, onEyedropperStart, onEyedropperEnd, imageUrl, anchorRef }) {
+  // No desktop, o picker sempre se posicionou por herança de
+  // `position:relative` no botão que o abre (position:absolute; top:
+  // calc(100% + 8px)). Agora que o picker vai por portal para
+  // document.body (para nunca ficar cortado por um antepassado com
+  // transform), essa herança deixou de existir — sem isto, o picker
+  // aparecia ancorado ao canto do documento em vez de ao botão, ou seja,
+  // "não abria" (aparecia fora do ecrã visível). No mobile a folha fica
+  // sempre centrada no ecrã por CSS, não precisa disto.
+  const [anchorPos, setAnchorPos] = useState(null)
+  useEffect(() => {
+    if (!anchorRef?.current || window.innerWidth <= 600) return
+    const r = anchorRef.current.getBoundingClientRect()
+    const CPK_WIDTH = 200
+    const MARGIN = 12
+    // Encostado à esquerda do botão (r.left) transbordava para fora do
+    // ecrã sempre que o botão estava perto da margem direita — a maioria
+    // dos casos aqui, já que os swatches vivem na sidebar do workspace.
+    // Clampar ao próprio viewport garante que fica sempre visível.
+    const left = Math.min(r.left, window.innerWidth - CPK_WIDTH - MARGIN)
+    setAnchorPos({ top: r.bottom + 8, left: Math.max(MARGIN, left) })
+  }, [anchorRef])
   const start = hexToHsv(value || '#2563eb')
   const [h, setH] = useState(start.h)
   const [s, setS] = useState(start.s)
@@ -190,7 +211,13 @@ export default function ColorPicker({ value, onChange, onClose, onEyedropperStar
   return createPortal(
     <>
     <div className="cpk-scrim" onPointerDown={onClose} aria-hidden="true" />
-    <div className="cpk" ref={rootRef} role="dialog" aria-label="Escolher cor personalizada">
+    <div
+      className="cpk"
+      ref={rootRef}
+      role="dialog"
+      aria-label="Escolher cor personalizada"
+      style={anchorPos ? { position: 'fixed', top: anchorPos.top, left: anchorPos.left } : undefined}
+    >
       <div
         className="cpk-square"
         ref={sqRef}

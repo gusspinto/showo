@@ -34,6 +34,11 @@ import { AddCircleIcon as PlusCircle } from '@solar-icons/react/bold/add-circle'
 import { GlobeIcon as Globe } from '@solar-icons/react/bold/globe'
 import { EyeClosedIcon as EyeOff } from '@solar-icons/react/bold/eye-closed'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
+import { EyeIcon as Eye } from '@solar-icons/react/bold/eye'
+import { PaintRollerIcon as Paintbrush } from '@solar-icons/react/bold/paint-roller'
+import { Book2Icon as BookOpen } from '@solar-icons/react/bold/book-2'
+import { StarsIcon as Sparkles } from '@solar-icons/react/bold/stars'
+import { ShareIcon as Share } from '@solar-icons/react/bold/share'
 import * as ProjectDb from '../lib/projectDb'
 import { isTechnicalArea } from '../lib/technologies'
 
@@ -408,6 +413,11 @@ export default function EditProject() {
     { id: 'imagem',   label: 'Imagem',   Icon: Image,    filled: coverFilled,   total: 1 },
     ...(isTechnicalArea(form.area) ? [{ id: 'database', label: 'Base de dados', Icon: Database, filled: 0, total: 0 }] : []),
     { id: 'avancado', label: 'Avançado', Icon: Settings, filled: 0,             total: 0 },
+    // Aqui só se edita texto/campos em bruto — cores, fontes, layout dos
+    // blocos e capa como fundo vivem no editor visual, dentro da própria
+    // página do projeto. Sem isto, quem só passa por aqui nunca descobria
+    // que esse editor existe.
+    { id: 'preview',  label: 'Preview',  Icon: Eye,      filled: 0,             total: 0 },
   ]
 
   return (
@@ -425,8 +435,8 @@ export default function EditProject() {
         /* Preenche a barra toda, como as pílulas do resto da app (página do
            projeto, painel de workspace) — não uma pílula pequena a boiar
            centrada com fundo vazio dos dois lados. */
-        .ep-segtabs { width: 100%; }
-        .ep-segtabs .seg-btn { flex: 1; }
+        .ep-segtabs { width: 100%; justify-content: space-between; }
+        .ep-segtabs .seg-btn { flex: 0 0 auto; min-width: max-content; }
         .ep-tab-badge { font-size: 10px; font-weight: 700; color: var(--color-text-secondary); background: var(--color-bg-alt); padding: 1px 6px; border-radius: 99px; font-variant-numeric: tabular-nums; flex-shrink: 0; }
         .ep-tab-badge.done { color: var(--color-primary); background: var(--color-primary-muted); }
         .seg-btn.active .ep-tab-badge { color: inherit; background: rgba(255,255,255,0.16); }
@@ -458,7 +468,72 @@ export default function EditProject() {
           /* O Guardar já vive no cabeçalho a este tamanho — a barra
              flutuante do fundo era um segundo botão a fazer a mesma coisa. */
           .ep-save-bar { display: none; }
+          .ep-preview-frame--mobile { display: none !important; }
+          .ep-preview-frame--desktop { display: flex !important; }
         }
+        .ep-preview-card { display: flex; flex-direction: column; align-items: center; }
+        .ep-preview-frame {
+          position: relative; width: 100%; max-width: 300px; height: 168px;
+          margin: 0 auto; border-radius: 16px; overflow: hidden;
+          background: linear-gradient(160deg, var(--color-surface) 0%, var(--color-bg-alt) 100%);
+          border: 1px solid var(--color-glass-border);
+        }
+        .ep-preview-frame--mobile { height: 224px; display: flex; align-items: center; justify-content: center; }
+        .ep-preview-frame--desktop { display: none; height: 240px; align-items: center; justify-content: center; padding: 16px; }
+        .ep-preview-dock-row { display: flex; align-items: flex-end; gap: 10px; }
+        .ep-preview-tag {
+          position: absolute; top: 10px; left: 10px; z-index: 1;
+          display: inline-flex; align-items: center; gap: 5px;
+          font-size: 10.5px; font-weight: 700; color: var(--color-text-secondary);
+          background: var(--color-bg-overlay); backdrop-filter: blur(6px);
+          border-radius: 7px; padding: 5px 9px;
+        }
+        .ep-preview-mock--mobile {
+          width: 168px; text-align: left;
+          background: var(--color-bg); border-radius: 14px; padding: 6px;
+          box-shadow: 0 12px 28px rgba(0,0,0,0.22), 0 2px 6px rgba(0,0,0,0.10);
+        }
+        .ep-preview-mock-title {
+          font-size: 9.5px; font-weight: 700; color: var(--color-text-tertiary);
+          text-transform: uppercase; letter-spacing: 0.06em; padding: 5px 8px 7px;
+        }
+        .ep-preview-mock-item {
+          display: flex; align-items: center; gap: 8px;
+          padding: 6.5px 8px; border-radius: 8px; color: var(--color-text-muted);
+        }
+        .ep-preview-mock-item span { font-size: 11.5px; font-weight: 500; }
+        .ep-preview-mock-item.is-on { background: var(--color-primary-subtle); color: var(--color-primary); }
+        .ep-preview-mock-item.is-on span { font-weight: 700; }
+        .ep-preview-dock {
+          display: flex; flex-direction: column; gap: 5px; padding: 6px;
+          border-radius: 16px; background: var(--color-bg);
+          box-shadow: 0 12px 28px rgba(0,0,0,0.22), 0 2px 6px rgba(0,0,0,0.10);
+          flex-shrink: 0;
+        }
+        .ep-preview-dock-btn {
+          position: relative; width: 32px; height: 32px; border-radius: 10px;
+          display: flex; align-items: center; justify-content: center;
+          color: var(--color-text-muted);
+        }
+        .ep-preview-dock-btn.is-on { background: var(--color-text); color: var(--color-bg); }
+        .ep-preview-dock-glow {
+          position: absolute; inset: -9px; border-radius: 50%; z-index: -1;
+          background: radial-gradient(circle, var(--color-primary-subtle) 0%, transparent 72%);
+        }
+        .ep-preview-dock-label {
+          font-size: 11.5px; font-weight: 700; color: var(--color-text);
+          background: var(--color-surface); border: 1px solid var(--color-glass-border);
+          border-radius: 8px; padding: 6px 10px; margin-bottom: 4px; white-space: nowrap;
+        }
+        .ep-preview-cta {
+          display: inline-flex; align-items: center; gap: 8px;
+          background: var(--color-text); color: var(--color-bg);
+          border: none; border-radius: 10px; padding: 13px 26px;
+          font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer;
+          margin-top: 24px; box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+          transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+        }
+        .ep-preview-cta:active { transform: scale(0.96); box-shadow: 0 4px 12px rgba(0,0,0,0.16); }
         @media (max-width: 600px) {
           /* Sem espaço no cabeçalho para os dois botões lado a lado — o
              Guardar volta a viver só na barra flutuante do fundo. */
@@ -716,6 +791,64 @@ export default function EditProject() {
               {/* Avançado */}
               {activeSection === 'avancado' && (
                 <AdvancedSection project={project} isOwner={isOwner} navigate={navigate} />
+              )}
+
+              {/* Preview: não edita nada aqui, só encaminha para o editor
+                  visual, que vive dentro da própria página do projeto,
+                  não neste ecrã. Dois mockups (mobile/desktop), cada um a
+                  imitar mesmo a UI real onde o atalho vive nesse ecrã. */}
+              {activeSection === 'preview' && (
+                <div className="ep-sec-card ep-preview-card" style={{ padding: '40px 28px' }}>
+                  <h2 className="ep-sec-heading" style={{ margin: '0 0 6px' }}>Personaliza a aparência</h2>
+                  <p style={{ color: colors.muted, fontSize: 13.5, margin: '0 0 28px', textAlign: 'center' }}>
+                    Cores, fontes, capa e blocos, direto na página do projeto.
+                  </p>
+
+                  {/* Mobile: recorte da própria página, com o menu "Gerir
+                      projeto" aberto por cima, "Preview" em
+                      destaque, tal como aparece a sério. */}
+                  <div className="ep-preview-frame ep-preview-frame--mobile">
+                    <span className="ep-preview-tag"><Paintbrush size={11} /> Atalho</span>
+                    <div className="ep-preview-mock--mobile">
+                      <div className="ep-preview-mock-title">Gerir projeto</div>
+                      {[
+                        { Icon: Pencil, label: 'Editar' },
+                        { Icon: BookOpen, label: 'Diário' },
+                        { Icon: Sparkles, label: 'Análise IA' },
+                        { Icon: Share, label: 'Partilhar nas stories' },
+                        { Icon: Globe, label: 'Preview', on: true },
+                      ].map(({ Icon, label, on }) => (
+                        <div key={label} className={`ep-preview-mock-item${on ? ' is-on' : ''}`}>
+                          <Icon size={14} />
+                          <span>{label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Desktop: dock flutuante do lado direito da página, com
+                      o atalho a brilhar e uma legenda ao lado, tal como
+                      aparece a sério na página do projeto. */}
+                  <div className="ep-preview-frame ep-preview-frame--desktop" style={{ display: 'none' }}>
+                    <span className="ep-preview-tag"><Paintbrush size={11} /> Atalho</span>
+                    <div className="ep-preview-dock-row">
+                      <div className="ep-preview-dock">
+                        {[Pencil, BookOpen, Sparkles, Share].map((Icon, i) => (
+                          <div key={i} className="ep-preview-dock-btn"><Icon size={15} /></div>
+                        ))}
+                        <div className="ep-preview-dock-btn is-on">
+                          <div className="ep-preview-dock-glow" />
+                          <Globe size={15} />
+                        </div>
+                      </div>
+                      <span className="ep-preview-dock-label">Preview</span>
+                    </div>
+                  </div>
+
+                  <button onClick={() => navigate(`/projeto/${slug}?workspace=1`)} className="ep-preview-cta">
+                    <Eye size={16} /> Abrir editor visual
+                  </button>
+                </div>
               )}
             </div>
           </div>

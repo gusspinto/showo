@@ -1560,6 +1560,10 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
   const [dragOverSectionIdx, setDragOverSectionIdx] = useState(null)
   // Qual dos dois seletores de cor está aberto: 'accent', 'bg' ou nenhum.
   const [colorPicker, setColorPicker] = useState(null)
+  // Âncora para o ColorPicker se posicionar no desktop (ver comentário
+  // em ColorPicker.jsx sobre o portal para document.body).
+  const accentSwatchBtnRef = useRef(null)
+  const bgSwatchBtnRef = useRef(null)
   // EyeDropper (escolher cor da própria capa do projeto): enquanto ativo,
   // o próprio picker some (senão apanhava-se a cor do picker, não a da
   // página por trás) e a folha do workspace compacta no telemóvel, para
@@ -2553,6 +2557,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                         fixa, o picker é que mostra a cor atual por dentro. */}
                     <div style={{ position: 'relative', display: 'flex' }}>
                       <button
+                        ref={accentSwatchBtnRef}
                         type="button"
                         title="Cor personalizada"
                         aria-label="Escolher cor de destaque personalizada"
@@ -2561,6 +2566,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                       />
                       {colorPicker === 'accent' && !eyedropperActive && (
                         <ColorPicker
+                          anchorRef={accentSwatchBtnRef}
                           value={customAccent || '#2563eb'}
                           onChange={c => setPreviewStyle(s => ({ ...s, accent: 'custom', accentCustom: c }))}
                           onClose={() => setColorPicker(null)}
@@ -2599,6 +2605,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                     {/* Fundo livre — mesma ideia da cor de destaque. */}
                     <div style={{ position: 'relative', display: 'flex' }}>
                       <button
+                        ref={bgSwatchBtnRef}
                         type="button"
                         title="Fundo personalizado"
                         aria-label="Escolher fundo personalizado"
@@ -2607,6 +2614,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                       />
                       {colorPicker === 'bg' && !eyedropperActive && (
                         <ColorPicker
+                          anchorRef={bgSwatchBtnRef}
                           value={customBg || '#0c1018'}
                           onChange={c => setPreviewStyle(s => ({ ...s, bg: 'custom', bgCustom: c }))}
                           onClose={() => setColorPicker(null)}

@@ -4433,7 +4433,13 @@ export default function ProjectPage() {
                   </div>
                 )}
                 {SECTION_GROUPS.map(group => (
-                  <div key={group.id} id={group.id} className="proj-section-group">
+                  // scrollMarginTop: sem isto, "block: 'start'" alinha o
+                  // topo da secção exatamente com o topo do ecrã — mas a
+                  // barra de navegação (e no mobile também as tabs) ficam
+                  // fixas por cima, tapando o título e o início do
+                  // conteúdo. Parecia saltar para o sítio errado; só
+                  // estava escondido atrás da barra fixa.
+                  <div key={group.id} id={group.id} className="proj-section-group" style={{ scrollMarginTop: 88 }}>
                     <div className="proj-section-group-label">{group.label}</div>
                     <div className="proj-section-group-body">
                       {group.fields.map(fk => (

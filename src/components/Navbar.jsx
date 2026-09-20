@@ -1149,7 +1149,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   {extras.onTogglePublicView && (
                     <button className="mobile-drawer-btn" style={{ color: extras.viewAsPublic ? 'var(--color-text)' : undefined }}
                       onClick={() => { extras.onTogglePublicView(); setOpen(false) }}>
-                      <Globe size={16} /> {extras.viewAsPublic ? 'Sair da preview' : 'Preview visitante'}
+                      <Globe size={16} /> {extras.viewAsPublic ? 'Sair da preview' : 'Preview'}
                     </button>
                   )}
                 </>
@@ -1501,7 +1501,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
             {extras.onTogglePublicView && (
               <button className="mob-nav-btn" style={{ color: extras.viewAsPublic ? 'var(--color-text)' : undefined }}
                 onClick={() => { extras.onTogglePublicView(); setProjMenuOpen(false) }}>
-                <Globe size={18} /> {extras.viewAsPublic ? 'Sair da preview' : 'Preview visitante'}
+                <Globe size={18} /> {extras.viewAsPublic ? 'Sair da preview' : 'Preview'}
               </button>
             )}
           </div>
@@ -1867,7 +1867,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               <button
                 className={`pmf-btn${extras.viewAsPublic ? ' active' : ''}`}
                 data-tour="preview"
-                aria-label="Preview visitante"
+                aria-label="Preview"
                 onClick={extras.onTogglePublicView}
                 onMouseMove={e => {
                   const r = e.currentTarget.getBoundingClientRect()
@@ -1882,7 +1882,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 }}
               >
                 <Globe size={16} />
-                <span className="pmf-tooltip">{extras.viewAsPublic ? 'Sair preview' : 'Preview visitante'}</span>
+                <span className="pmf-tooltip">{extras.viewAsPublic ? 'Sair preview' : 'Preview'}</span>
               </button>
             </>
           )}

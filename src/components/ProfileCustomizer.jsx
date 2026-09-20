@@ -25,6 +25,7 @@ export default function ProfileCustomizer({
   const [bannerBusy, setBannerBusy] = useState(false)
   const [bannerErr, setBannerErr] = useState(null)
   const [pickerOpen, setPickerOpen] = useState(false)
+  const customSwatchBtnRef = useRef(null)
 
   function set(patch) { onChange({ ...a, ...patch }) }
 
@@ -157,6 +158,7 @@ export default function ProfileCustomizer({
               ))}
               <div className="pc-swatch-custom-wrap">
                 <button
+                  ref={customSwatchBtnRef}
                   type="button"
                   className="pc-swatch pc-swatch--custom"
                   title="Cor personalizada"
@@ -165,6 +167,7 @@ export default function ProfileCustomizer({
                 />
                 {pickerOpen && (
                   <ColorPicker
+                    anchorRef={customSwatchBtnRef}
                     value={a.accent || DEFAULT_ACCENT}
                     onChange={c => set({ accent: c })}
                     onClose={() => setPickerOpen(false)}

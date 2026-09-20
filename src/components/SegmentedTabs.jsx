@@ -40,7 +40,13 @@ export default function SegmentedTabs({ value, onChange, options, className = ''
     // elemento, seja qual for a causa.
     const ro = new ResizeObserver(measure)
     ro.observe(wrap)
-    return () => ro.disconnect()
+    // Nas variantes com scroll horizontal (--compact, quando os labels não
+    // cabem todos), clicar num botão foca-o e o browser desloca a barra
+    // sozinho para o mostrar — depois da pill já ter sido medida na
+    // posição antiga, ficando presa fora do sítio. Remedir também no
+    // scroll apanha esse deslocamento.
+    wrap.addEventListener('scroll', measure, { passive: true })
+    return () => { ro.disconnect(); wrap.removeEventListener('scroll', measure) }
   }, [value, options.length, size])
 
   return (

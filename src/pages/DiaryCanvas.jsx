@@ -514,7 +514,7 @@ export default function DiaryCanvas() {
         </div>
 
         {/* Right: undo/redo + save */}
-        <div style={{ flex: 1 }} />
+        <div className="dc-tb-spacer" />
         <div className="dc-tb-actions">
           <button
             className="dc-tb-action-btn"
@@ -538,10 +538,9 @@ export default function DiaryCanvas() {
             onClick={saveAll}
             disabled={saveState === 'saving'}
             title={saveState === 'error' ? 'Falhou a guardar — tenta outra vez' : 'Guardar'}
-            style={saveState === 'error' ? { color: 'var(--color-error)', borderColor: 'var(--color-error)' } : undefined}
+            style={saveState === 'error' ? { background: 'var(--color-error)', color: '#fff' } : undefined}
           >
-            {saveState === 'saved' ? <Check size={14} /> : <Save size={14} />}
-            <span>{saveState === 'saving' ? 'A guardar…' : saveState === 'saved' ? 'Guardado' : saveState === 'error' ? 'Erro — tenta outra vez' : 'Guardar'}</span>
+            {saveState === 'saved' ? <Check size={15} /> : <Save size={15} />}
           </button>
         </div>
       </div>
