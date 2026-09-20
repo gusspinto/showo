@@ -555,206 +555,212 @@ export default function AprendeAUsar() {
             <p className="atu-hero-desc">Um guia a todas as funcionalidades da plataforma.</p>
           </header>
 
-          <Section id="dashboard" title="Dashboard" subtitle="O centro de controlo dos teus projetos">
-            <Lead>A dashboard é o primeiro ecrã que vês ao entrar na plataforma. É onde acompanhas os teus projetos, registas entradas no diário e vês o progresso geral.</Lead>
+          <Section id="dashboard" title="Dashboard" subtitle="O centro de controlo do teu projeto e da tua rotina">
+            <Lead>A dashboard é o teu painel principal. É aqui que vês o teu projeto em foco, o estado do teu portfólio, os teus registos recentes e o que ainda tens para avançar.</Lead>
 
-            <H3>Projetos fixados</H3>
-            <Body>Podes fixar até 2 projetos na dashboard com o ícone de pino na lista do portfólio. O card fixado mostra o score, a data de defesa (se for PAP), e três ações diretas: Registar, para adicionar uma entrada no diário; Diário, para ver o historial; e Ver, para abrir a página pública. Se não tiveres nenhum projeto fixado manualmente, o projeto mais recente aparece automaticamente.</Body>
+            <H3>Projeto em foco e projetos fixados</H3>
+            <Body>Na dashboard, o projeto mais relevante aparece em destaque e podes fixar até 2 projetos para os ter sempre acessíveis. Os cards fixados mostram o score, o estado do projeto e ações rápidas como editar, abrir a página pública ou registar uma nova entrada.</Body>
 
-            <H3>Atividade e agenda</H3>
-            <Body>A coluna da direita mostra a atividade dos últimos 7 dias, a streak de semanas consecutivas com registos, e a agenda com eventos e lembretes ligados às datas de defesa.</Body>
+            <H3>Acompanhamento semanal</H3>
+            <Body>Hoje a dashboard também mostra se tens continuidade no teu trabalho: streak semanal, atividade nos últimos dias, check-ins e recaps de progresso. Isto ajuda-te a perceber se o teu processo está consistente e se o projeto está em andamento.</Body>
+
+            <H3>Lembretes, tarefas e feedback</H3>
+            <Body>Além do portfólio, a dashboard centraliza lembretes pessoais, tarefas de turma, feedback do professor e eventos importantes como defesas e datas de entrega. O objetivo é manter toda a rotina num só sítio.</Body>
 
             <MkDashboard />
           </Section>
 
-          <Section id="projetos" title="Projetos" subtitle="Criar, editar e gerir o teu portfólio">
-            <Lead>Cada projeto tem uma página pública. Podes ter quantos projetos quiseres, desde PAP a trabalhos de grupo ou projetos pessoais.</Lead>
+          <Section id="projetos" title="Projetos" subtitle="Criar, editar, publicar e gerir o teu portfólio">
+            <Lead>Cada projeto tem o seu espaço próprio e pode evoluir desde o rascunho até ao estado público. Podes ter vários projetos, em formatos diferentes, e gerir cada um sem perder o contexto do teu processo.</Lead>
 
             <H3>Criar um projeto</H3>
             <Steps items={[
-              'Clica em "Criar projeto" na sidebar.',
-              'Escolhe o nome, tipo e área do projeto.',
-              'O projeto fica criado e a página pública fica acessível por link.',
-              'Preenche os campos no editor para aumentar o score.',
+              'Abre a dashboard ou o menu de projetos.',
+              'Clica em "Criar projeto" e escolhe o tipo e a área.',
+              'Preenche os campos principais e define a visibilidade.',
+              'Vai completando o projeto para aumentar o score e melhorar a apresentação.',
             ]} />
 
             <H3>Tipos de projeto</H3>
             <DefList items={[
-              { term: 'PAP', def: 'Projeto de Aptidão Profissional, com campos específicos como orientador e data de defesa.' },
+              { term: 'PAP', def: 'Projeto de Aptidão Profissional, com campos específicos para apresentação, defesa e acompanhamento escolar.' },
               { term: 'Estágio', def: 'Projeto de estágio curricular ou profissional.' },
-              { term: 'Trabalho de grupo', def: 'Projeto colaborativo com outros alunos.' },
-              { term: 'Projeto pessoal', def: 'Trabalho autónomo fora do contexto escolar.' },
-              { term: 'Competição', def: 'Participação em hackathons ou concursos.' },
-              { term: 'Apresentação', def: 'Trabalho de apresentação oral ou escrito.' },
+              { term: 'Trabalho de grupo', def: 'Projeto colaborativo com outros alunos ou equipas.' },
+              { term: 'Projeto pessoal', def: 'Trabalho autónomo, fora do contexto escolar.' },
+              { term: 'Competição', def: 'Projeto para hackathons, concursos ou eventos de inovação.' },
+              { term: 'Apresentação', def: 'Trabalho de apresentação oral, escrita ou multimédia.' },
             ]} />
 
             <H3>Visibilidade</H3>
-            <Body>Cada projeto tem uma opção de visibilidade que defines no editor, na tab Tipo. Tens três opções:</Body>
+            <Body>O projeto pode estar em diferentes estados de visibilidade. Isto decide quem consegue ver a tua página pública e se ela aparece na galeria do Explorar.</Body>
             <DefList items={[
-              { term: 'Público', def: 'O projeto aparece no Explorar, na Home e é acessível pelo link direto.' },
-              { term: 'Só com link', def: 'O projeto não aparece em nenhuma listagem, mas qualquer pessoa com o link consegue vê-lo.' },
-              { term: 'Privado', def: 'O projeto só é visível por ti. Ninguém mais consegue aceder, mesmo com o link.' },
+              { term: 'Público', def: 'O projeto aparece no Explorar e fica acessível no link público.' },
+              { term: 'Só com link', def: 'Não aparece nas listagens, mas continua acessível para quem recebe o link.' },
+              { term: 'Privado', def: 'Só tu consegues ver o projeto, mesmo com o link.' },
             ]} />
 
             <H3>Fixar e destacar</H3>
-            <Body>O pino fixa um projeto na dashboard (máximo 2). A estrela destaca um projeto no perfil público (máximo 3). São dois sistemas completamente independentes.</Body>
+            <Body>Há dois mecanismos diferentes: o pino fixa um projeto na dashboard; a estrela destaca um projeto no perfil público. Ambos são úteis, mas servem objetivos diferentes e não têm de ser usados ao mesmo tempo.</Body>
 
             <MkProjectList />
           </Section>
 
-          <Section id="diario" title="Diário de Projeto" subtitle="Documenta o processo do teu trabalho">
-            <Lead>O Diário tem duas partes. O Compositor, acessível a partir da dashboard, é onde adicionas entradas rápidas. O Canvas do Diário é um espaço visual livre, com cartões que podes mover e organizar à tua vontade.</Lead>
+          <Section id="diario" title="Diário de Projeto" subtitle="Regista o processo, as ideias e os avanços">
+            <Lead>O diário do projeto é o teu registo de progresso. Serve para documentar avanços, dificuldades, decisões, pesquisas e momentos importantes ao longo do trabalho.</Lead>
 
-            <H3>Registar uma entrada a partir da dashboard</H3>
-            <Body>Clica em "Registar" num projeto fixado na dashboard. Escolhes o tipo de registo, escreves o conteúdo e guardas. A entrada fica associada ao projeto e aparece no Canvas do Diário.</Body>
+            <H3>Registar uma entrada</H3>
+            <Body>Podes escrever uma entrada diretamente da dashboard ou a partir do projeto em foco. Escolhes o tipo de registo, escreves o teu conteúdo e guardas. As entradas ajudam a manter o histórico do projeto e reforçam o score.</Body>
 
             <H3>Tipos de registo</H3>
             <DefList items={[
-              { term: 'Progresso', def: 'O que fizeste: avanços, tarefas concluídas, funcionalidades implementadas.' },
-              { term: 'Dificuldade', def: 'Obstáculos, bugs e bloqueios que encontraste, e como tentaste resolver.' },
-              { term: 'Decisão', def: 'Escolhas importantes que fizeste no projeto e o raciocínio por trás delas.' },
-              { term: 'Pesquisa', def: 'Algo que pesquisaste ou aprendeste durante o processo.' },
-              { term: 'Ideia', def: 'Uma ideia que tiveste e que pode ou não avançar para o projeto.' },
-              { term: 'Resultado', def: 'Conquistas, marcos alcançados e outputs concretos.' },
-              { term: 'Nota', def: 'Qualquer coisa que não queiras esquecer.' },
+              { term: 'Progresso', def: 'O que avançaste, tarefas que concluiste e funcionalidades implementadas.' },
+              { term: 'Dificuldade', def: 'Bloqueios, problemas, bugs e desafios que encontraste no processo.' },
+              { term: 'Decisão', def: 'Escolhas importantes e o raciocínio por detrás delas.' },
+              { term: 'Pesquisa', def: 'Aprendizagens, ideias ou materiais que descobriste durante o trabalho.' },
+              { term: 'Ideia', def: 'Uma hipótese ou conceito que pode ou não ser incorporado no projeto.' },
+              { term: 'Resultado', def: 'Marcos alcançados, entregas e sucessos concretos.' },
+              { term: 'Nota', def: 'Qualquer informação importante que não queiras esquecer.' },
             ]} />
+
+            <H3>Reforço da continuidade</H3>
+            <Body>Na experiência atual, o diário também está ligado ao acompanhamento semanal e ao espírito de progresso. Registos consistentes ajudam a manter a rotina, a mostrar evolução e a acompanhar melhor os marcos do projeto.</Body>
 
             <H3>O Compositor</H3>
             <MkJournalComposer />
 
             <H3>O Canvas do Diário</H3>
-            <Body>O Canvas é um espaço de trabalho livre e infinito que abre em ecrã completo. Podes adicionar três tipos de cartões: Nota, para registos livres; Ideia, para ideias a explorar; e Destaque, para momentos importantes. Cada cartão pode ser arrastado, redimensionado e editado diretamente. Usas o scroll ou os botões de zoom para navegar.</Body>
+            <Body>O Canvas funciona como um espaço visual livre. Podes criar cartões de Nota, Ideia e Destaque, movê-los, reorganizar o espaço e manter o teu processo visualmente organizado. Também é útil para resumir momentos importantes do projeto.</Body>
 
             <MkDiaryCanvas />
           </Section>
 
-          <Section id="preview" title="Preview e Templates" subtitle="A apresentação pública do teu projeto">
-            <Lead>A preview é o que qualquer pessoa vê quando visita o link do teu projeto. Podes personalizar completamente a aparência e adicionar blocos de conteúdo extra.</Lead>
+          <Section id="preview" title="Preview e Templates" subtitle="Como apresentar o teu projeto ao mundo">
+            <Lead>A preview mostra a versão pública do teu projeto. É o ecrã em que decides como a página vai parecer, que blocos aparecem e como a história do trabalho é apresentada.</Lead>
 
             <H3>Abrir o editor</H3>
-            <Body>Na página do projeto, clica no ícone de pincel no canto superior direito para entrar em modo de preview. No desktop, o painel de edição abre à direita. No mobile, aparece uma sheet em baixo. Toca no pincel para expandir ou fechar o painel.</Body>
+            <Body>Na página do projeto, a edição da preview está disponível a partir do botão de pincel ou do menu de gestão. O editor permite ajustar o estilo visual, reorganizar blocos e aplicar templates prontos.</Body>
 
             <DefList items={[
-              { term: 'Estilo', def: 'Cor de destaque, fundo, tipografia, alinhamento do título, tamanho do hero e modo claro ou escuro.' },
-              { term: 'Blocos', def: 'Conteúdo extra que aparece na página: notas, citações, destaques, imagens, vídeos, métricas, botões e links.' },
-              { term: 'Templates', def: 'Aplica o estilo visual e os blocos base de uma vez. Podes modificar tudo depois.' },
-              { term: 'Secções', def: 'Controla a ordem e visibilidade das secções automáticas geradas a partir dos campos do projeto.' },
+              { term: 'Estilo', def: 'Cor de destaque, fundo, tipografia, alinhamento e apresentação geral da página.' },
+              { term: 'Blocos', def: 'Notas, citações, destaques, imagens, vídeos, métricas, botões, links e secções extra.' },
+              { term: 'Templates', def: 'Aplicam um visual e uma estrutura base em poucos cliques.' },
+              { term: 'Secções', def: 'Controlam a ordem e a visibilidade das partes automáticas do projeto.' },
             ]} />
 
             <H3>Templates</H3>
-            <Body>Ao aplicar um template escolhes de uma vez o visual e os blocos iniciais. Se já tiveres blocos, a plataforma pede confirmação antes de os substituir. O template ativo fica marcado na lista.</Body>
+            <Body>Os templates são uma forma rápida de começar com um visual bem pensado. Se já existir conteúdo, a plataforma pede confirmação antes de substituir blocos ou layout.</Body>
 
             <MkPreviewEditor />
 
             <H3>Tipos de blocos</H3>
-            <Body>Os blocos adicionam conteúdo livre à página: Nota, Título, Destaque, Citação, Métrica, Estatísticas, Imagem, Galeria, Vídeo, Card, Botão CTA, Link e Divisor. Podes reordená-los e editá-los a qualquer momento.</Body>
+            <Body>Os blocos ajudam a contar a história do projeto: notas, citações, destaques, estatísticas, imagens, links, botões de ação e divisores. Podes editá-los em qualquer altura e rearranjá-los à medida que o projeto evolui.</Body>
 
             <MkBlocks />
           </Section>
 
-          <Section id="perfil" title="Perfil Público" subtitle="A tua página de portfólio">
-            <Lead>O teu perfil em /u/username é visível a toda a gente, incluindo recrutadores, professores e outras escolas.</Lead>
+          <Section id="perfil" title="Perfil Público" subtitle="O teu portfólio visível para outras pessoas">
+            <Lead>O teu perfil público é a tua página de apresentação. Serve para mostrar quem és, o que fazes e quais os projetos que tens para partilhar com professores, recrutadores e outras pessoas.</Lead>
 
             <H3>Projetos em destaque</H3>
-            <Body>Podes destacar até 3 projetos no teu perfil com a estrela na lista do portfólio. Aparecem no topo com uma borda âmbar, antes dos restantes projetos.</Body>
+            <Body>Podes destacar até 3 projetos no perfil. Esses projetos aparecem primeiro, com destaque visual, antes dos restantes. A estrela no portfólio é a forma de controlar esse destaque.</Body>
 
             <H3>O que aparece no perfil</H3>
             <DefList items={[
               { term: 'Foto e dados', def: 'Foto de perfil, nome, bio, escola e curso.' },
-              { term: 'Em destaque', def: 'Até 3 projetos escolhidos por ti, com destaque visual no topo.' },
-              { term: 'Portfólio', def: 'Todos os projetos públicos ordenados por score.' },
-              { term: 'Links', def: 'LinkedIn, GitHub e portfólio, definidos nas Definições.' },
+              { term: 'Em destaque', def: 'Até 3 projetos selecionados por ti para aparecerem no topo.' },
+              { term: 'Portfólio', def: 'Todos os projetos públicos, organizados por score ou relevância.' },
+              { term: 'Links', def: 'Links para LinkedIn, GitHub, portfólio ou outras redes.' },
             ]} />
 
-            <Body>Podes completar o teu perfil nas Definições: foto, bio e links sociais. Um perfil preenchido é mais apelativo para quem visita.</Body>
+            <Body>É importante distinguir entre destaque no perfil e fixação na dashboard: o primeiro afeta a tua página pública, o segundo afeta o teu painel pessoal.</Body>
 
             <MkProfile />
           </Section>
 
-          <Section id="explorar" title="Explorar" subtitle="Descobre trabalhos de outros alunos">
-            <Lead>A página Explorar é uma galeria com projetos de alunos de toda a plataforma. Podes filtrar por área, tipo e ordenar por score ou data.</Lead>
+          <Section id="explorar" title="Explorar" subtitle="Descobre projetos de outros alunos e inspira-te">
+            <Lead>A página Explorar é uma galeria de projetos na plataforma. Aqui podes ver trabalhos de outras pessoas, pesquisar por área ou tema e descobrir exemplos que te ajudem a evoluir.</Lead>
 
-            <H3>Destaque automático</H3>
-            <Body>A plataforma destaca automaticamente os projetos mais completos e bem avaliados. O algoritmo analisa score, qualidade do diário, apresentação visual e validação externa. Um projeto mais completo tem maior visibilidade no Explorar.</Body>
+            <H3>Projetos em destaque</H3>
+            <Body>A plataforma destaca projetos com maior consistência, melhor apresentação e progresso mais sólido ao longo do tempo. Mesmo sem filtros, a galeria mostra trabalhos de maior qualidade e maior interesse para a comunidade.</Body>
 
             <MkExplore />
           </Section>
 
-          <Section id="turmas" title="Turmas" subtitle="A ligação entre alunos e professores">
-            <Lead>As turmas permitem que professores acompanhem os projetos dos seus alunos diretamente na plataforma.</Lead>
+          <Section id="turmas" title="Turmas" subtitle="Acompanhar alunos e projetos em contexto escolar">
+            <Lead>As turmas permitem conectar alunos e professores num mesmo espaço de acompanhamento. O professor consegue ver progresso, feedback e tarefas sem sair da plataforma.</Lead>
 
             <H3>Para alunos</H3>
             <Steps items={[
-              'O teu professor partilha um código de turma.',
-              'Vai a Turmas e entra com o código.',
-              'Ficas ligado à turma e o professor passa a ver os teus projetos.',
+              'O professor partilha um código de turma.',
+              'Entras em Turmas e introduces o código.',
+              'Ficas ligado à turma e o professor passa a acompanhar o teu projeto.',
             ]} />
 
             <H3>Para professores</H3>
             <Steps items={[
-              'Cria uma turma com nome e ano letivo.',
+              'Cria uma turma com nome, disciplina e ano letivo.',
               'Partilha o código com os alunos.',
-              'Acompanha os projetos de cada aluno e dá feedback estruturado.',
+              'Acompanha a evolução dos projetos, tarefas e feedback por critérios.',
             ]} />
 
-            <Note>O professor pode comentar diretamente na página do projeto com feedback por critérios. Esse feedback conta para o score do projeto.</Note>
+            <Note>Na experiência atual, as turmas incluem também tarefas, feedback do professor e acompanhamento de progresso, não apenas o acesso ao projeto do aluno.</Note>
 
             <MkTurma />
           </Section>
 
-          <Section id="mensagens" title="Mensagens" subtitle="Comunicação direta na plataforma">
-            <Lead>As mensagens permitem falar com outros alunos, professores ou recrutadores sem sair do Showo.</Lead>
+          <Section id="mensagens" title="Mensagens e notificações" subtitle="Comunicação, feedback e acompanhamento">
+            <Lead>O Showo integra comunicação direta com notificações e feedback do professor. Não é apenas chat: também tens alertas sobre progresso, comentários e atividades relevantes no teu projeto.</Lead>
 
             <H3>Enviar uma mensagem</H3>
             <Steps items={[
-              'Clica em Mensagens na sidebar.',
-              'Clica em "Nova conversa" e pesquisa o utilizador pelo nome.',
+              'Abre Mensagens ou a área de notificações.',
+              'Escolhe a conversa ou cria uma nova.',
               'Escreve a mensagem e envia.',
             ]} />
 
-            <Body>Mensagens por ler aparecem com um badge numérico na sidebar. Clica no sino para ver todas as notificações da plataforma.</Body>
+            <Body>As notificações aparecem quando recebes feedback, quando alguém interage contigo ou quando há algo que precisa da tua atenção. Mantêm a comunicação mais clara e menos dispersa.</Body>
 
             <MkMessages />
           </Section>
 
-          <Section id="missoes" title="Missões" subtitle="Desafios que guiam a evolução do teu portfólio">
-            <Lead>As missões são objetivos concretos que te ajudam a construir um portfólio mais completo. Cada missão completada dá XP.</Lead>
+          <Section id="missoes" title="Missões" subtitle="Objetivos que te ajudam a evoluir o portfólio">
+            <Lead>As missões são objetivos concretos que guiam o teu progresso. Cada conclusão adiciona valor ao teu portfólio e ajuda a tornar o processo mais estruturado.</Lead>
 
             <H3>Como funcionam</H3>
-            <Body>Algumas missões completam-se automaticamente quando realizas uma ação, como criar o primeiro projeto. Outras precisam de ser ativas na página de Missões. Quando concluída, a missão fica marcada com um visto.</Body>
+            <Body>Algumas missões completam-se automaticamente ao realizares ações como criar o primeiro projeto ou fazer o perfil completo. Outras estão ligadas ao teu progresso e ao projeto em si.</Body>
 
             <DefList items={[
               { term: 'Primeiro projeto (+20 XP)', def: 'Criar o primeiro projeto na plataforma.' },
               { term: 'Perfil completo (+15 XP)', def: 'Preencher o perfil com foto, bio e escola.' },
-              { term: 'Score 60+ (+25 XP)', def: 'Alcançar um score de 60 ou mais num projeto.' },
-              { term: 'Diário ativo (+20 XP)', def: 'Escrever 5 entradas no diário de um projeto.' },
+              { term: 'Score 60+ (+25 XP)', def: 'Atingir um score de 60 ou mais.' },
+              { term: 'Diário ativo (+20 XP)', def: 'Registar atividade regular no diário.' },
               { term: 'Projeto público (+10 XP)', def: 'Tornar um projeto visível na plataforma.' },
-              { term: 'Em destaque (+10 XP)', def: 'Colocar um projeto em destaque no perfil.' },
+              { term: 'Em destaque (+10 XP)', def: 'Destacar um projeto no perfil público.' },
             ]} />
 
             <MkMissions />
           </Section>
 
-          <Section id="score" title="Sistema de Score" subtitle="Como é calculado o score de cada projeto">
-            <Lead>O score vai de 0 a 100 e reflete a qualidade e completude do projeto. Atualiza automaticamente sempre que editas o projeto ou adicionas entradas ao diário.</Lead>
+          <Section id="score" title="Sistema de Score" subtitle="Como é medido o progresso do projeto">
+            <Lead>O score reflecte a qualidade e a completude do teu projeto. Atualiza conforme preenches campos, publicas conteúdo, registas no diário e recebes feedback.</Lead>
 
             <H3>Componentes do score</H3>
             <DefList items={[
-              { term: 'Projeto (30%)', def: 'Completude dos campos básicos: nome, área, tipo, escola, colaboradores e descrição.' },
-              { term: 'Apresentação (20%)', def: 'Capa, blocos de conteúdo na preview, estilo personalizado e tagline gerada por IA.' },
-              { term: 'Diário (25%)', def: 'Número e regularidade das entradas no diário.' },
-              { term: 'Conteúdo (15%)', def: 'Profundidade dos campos: problema, solução, tecnologias, resultados e aprendizagens.' },
-              { term: 'Validação (10%)', def: 'Score do professor, visualizações e gostos.' },
+              { term: 'Projeto (30%)', def: 'Completude dos campos principais do projeto: nome, área, tipo, descrição e componentes essenciais.' },
+              { term: 'Apresentação (20%)', def: 'Capa, estilo visual, boa estrutura e apresentação da página pública.' },
+              { term: 'Diário (25%)', def: 'Regularidade, profundidade e riqueza das entradas no processo.' },
+              { term: 'Conteúdo (15%)', def: 'Qualidade das respostas, resultados e aprendizagens documentadas.' },
+              { term: 'Validação (10%)', def: 'Feedback do professor, visualizações e validação do projeto.' },
             ]} />
 
             <H3>Como aumentar o score</H3>
             <Steps items={[
-              'Preenche todos os campos no editor do projeto.',
-              'Adiciona uma imagem de capa.',
+              'Completa os campos principais do projeto.',
+              'Adiciona uma capa e estrutura a página pública bem.',
               'Escreve regularmente no diário.',
-              'Personaliza a preview com estilo e blocos.',
-              'Escreve pelo menos 80 caracteres nos campos de Resultados e Aprendizagens, que valem pontos extra.',
-              'Partilha o link do projeto para ganhar visualizações.',
+              'Melhora a preview com estilo e blocos.',
+              'Inclui resultados, aprendizagens e contexto relevante.',
+              'Pede feedback e partilha o projeto para ganhar visibilidade.',
             ]} />
 
             <MkScore />
