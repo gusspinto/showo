@@ -6,6 +6,7 @@ import { GalleryWideIcon as Image } from '@solar-icons/react/bold/gallery-wide'
 import { RefreshCircleIcon as Loader2 } from '@solar-icons/react/bold/refresh-circle'
 import { BugIcon as Bug } from '@solar-icons/react/bold/bug'
 import { supabase } from '../lib/supabase'
+import { toWebP } from '../lib/imageOptimize'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
 import './Feedback.css'
@@ -69,11 +70,12 @@ export default function Feedback() {
       let image_url = null
 
       if (imageFile) {
-        const ext = imageFile.name.split('.').pop()
+        const webpFile = await toWebP(imageFile)
+        const ext = webpFile.name.split('.').pop()
         const path = `${Date.now()}.${ext}`
         const { error: upErr } = await supabase.storage
           .from('feedback-images')
-          .upload(path, imageFile, { upsert: false })
+          .upload(path, webpFile, { upsert: false })
         if (!upErr) {
           const { data } = supabase.storage.from('feedback-images').getPublicUrl(path)
           image_url = data.publicUrl

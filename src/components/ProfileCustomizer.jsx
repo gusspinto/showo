@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { toWebP } from '../lib/imageOptimize'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { GalleryIcon as ImageIcon } from '@solar-icons/react/bold/gallery'
 import { TrashBinTrashIcon as Trash } from '@solar-icons/react/bold/trash-bin-trash'
@@ -37,9 +38,10 @@ export default function ProfileCustomizer({
     setBannerErr(null)
     setBannerBusy(true)
     try {
-      const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'
+      const webpFile = await toWebP(file)
+      const ext = webpFile.name.split('.').pop()?.toLowerCase() || 'jpg'
       const path = `${userId}/${Date.now()}.${ext}`
-      const { error } = await supabase.storage.from('profile-banners').upload(path, file, { contentType: file.type, upsert: true })
+      const { error } = await supabase.storage.from('profile-banners').upload(path, webpFile, { contentType: webpFile.type, upsert: true })
       if (error) throw error
       const { data: { publicUrl } } = supabase.storage.from('profile-banners').getPublicUrl(path)
       set({ bannerUrl: `${publicUrl}?v=${Date.now()}` })

@@ -1,8 +1,9 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { getVisitorCity } from '../lib/geolocation'
 import { getAreaColor } from '../lib/areaColor'
+import { getProjectState, PROJECT_STATE_LABEL } from '../lib/projectState'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
@@ -153,6 +154,19 @@ export default function Explore() {
   const recruiterMode = profile?.role === 'recrutador' || profile?.role === 'empresa'
   const roleInfo = ROLE_LABELS[profile?.role] ?? null
   const [visibleCount, setVisibleCount] = useState(24)
+  // Infinite scroll: carrega mais 24 assim que o sentinel no fundo da lista
+  // entra em vista, em vez de esperar por um clique em "Carregar mais". Ref
+  // de callback porque o próprio <div> só existe no DOM enquanto houver mais
+  // para carregar — um useEffect com [] nunca o veria aparecer depois.
+  const loadMoreObserverRef = useRef(null)
+  const loadMoreSentinelRef = useRef((node) => {
+    loadMoreObserverRef.current?.disconnect()
+    if (!node) return
+    loadMoreObserverRef.current = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) setVisibleCount(v => v + 24)
+    }, { rootMargin: '600px' })
+    loadMoreObserverRef.current.observe(node)
+  }).current
 
   const [tab, setTab] = useState(() => searchParams.get('tab') === 'pessoas' ? 'pessoas' : 'projetos')
   const [people, setPeople] = useState([])
@@ -573,11 +587,14 @@ export default function Explore() {
 
                     {/* Badges */}
                     <div className="explore-card-badges">
-                      {project.area && <span className="text-primary">{project.area}</span>}
-                      {project.is_pap && <>{project.area && <span className="text-subtle">·</span>}<span className="text-warning">{'​'}PAP</span></>}
+                      <span className={getProjectState(project) === 'concluido' ? 'text-success' : 'text-subtle'}>
+                        {PROJECT_STATE_LABEL[getProjectState(project)]}
+                      </span>
+                      {project.area && <><span className="text-subtle">·</span><span className="text-primary">{project.area}</span></>}
+                      {project.is_pap && <><span className="text-subtle">·</span><span className="text-warning">{'​'}PAP</span></>}
                       {project.available_for_work && (
                         <>
-                          {(project.area || project.is_pap) && <span className="text-subtle">·</span>}
+                          <span className="text-subtle">·</span>
                           <span className="text-primary flex items-center gap-1" title="Disponível para estágio">
                             <Briefcase size={10} className="flex-shrink-0" />
                           </span>
@@ -632,7 +649,7 @@ export default function Explore() {
                 ))}
               </div>
               {visibleCount < sorted.length && (
-                <div className="text-center mt-8">
+                <div ref={loadMoreSentinelRef} className="text-center mt-8">
                   <button className="explore-load-more" onClick={() => setVisibleCount(v => v + 24)}>
                     Carregar mais ({sorted.length - visibleCount} restantes)
                   </button>

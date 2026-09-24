@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet-async'
 import { QRCodeSVG } from 'qrcode.react'
 import { supabase, supabaseUrl, supabaseAnonKey } from '../lib/supabase'
 import { getVisitorCity } from '../lib/geolocation'
+import { getProjectState, PROJECT_STATE_LABEL } from '../lib/projectState'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
 import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
@@ -90,6 +91,11 @@ function ProfileItem({ project, onOpen, timeline, publicApiCount }) {
           {(subtitle || project.area) && (
             <span className="up-pf-row-sub">{subtitle || project.area}</span>
           )}
+          {!isLibrary && (
+            <span className="up-pf-row-consist" style={{ color: getProjectState(project) === 'concluido' ? 'var(--color-success)' : undefined }}>
+              {PROJECT_STATE_LABEL[getProjectState(project)]}
+            </span>
+          )}
           {consist && <span className="up-pf-row-consist">{consist}</span>}
           {!isLibrary && publicApiCount > 0 && (
             <span className="up-pf-row-api"><Database size={11} /> API ativa</span>
@@ -128,6 +134,11 @@ function ProfileItem({ project, onOpen, timeline, publicApiCount }) {
         </div>
         {subtitle && <p className="up-card-tagline">{subtitle}</p>}
         <div className="up-card-meta">
+          {!isLibrary && (
+            <span className="up-card-area" style={{ color: getProjectState(project) === 'concluido' ? 'var(--color-success)' : undefined }}>
+              {PROJECT_STATE_LABEL[getProjectState(project)]}
+            </span>
+          )}
           {!isLibrary && project.area && <span className="up-card-area">{project.area}</span>}
           {consist && <span className="up-card-consist">{consist}</span>}
           {!isLibrary && publicApiCount > 0 && (

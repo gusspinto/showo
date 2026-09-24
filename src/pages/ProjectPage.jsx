@@ -4,6 +4,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { QRCodeSVG } from 'qrcode.react'
 import { supabase, supabaseUrl, supabaseAnonKey } from '../lib/supabase'
+import { toWebP } from '../lib/imageOptimize'
 import { getVisitorCity } from '../lib/geolocation'
 import { useIsMobile } from '../lib/useIsMobile'
 import { calculateScore, looksLikeSpam } from '../lib/score'
@@ -1228,9 +1229,17 @@ export default function ProjectPage() {
   // sério) — o mesmo problema já corrigido no chat da IA e no Modo Defesa.
   useEffect(() => {
     if (!showDefensePopup) return
-    const prev = document.body.style.overflow
+    // Só o body não chega — no Safari do iOS a página continua a dar scroll
+    // por baixo do popup na mesma (o "elastic scroll" não olha para o
+    // overflow do body). Bloquear também o <html> resolve nos dois.
+    const prevBody = document.body.style.overflow
+    const prevHtml = document.documentElement.style.overflow
     document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = prev }
+    document.documentElement.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prevBody
+      document.documentElement.style.overflow = prevHtml
+    }
   }, [showDefensePopup])
 
   const { setExtras } = useSidebar()
@@ -1552,9 +1561,10 @@ export default function ProjectPage() {
     if (file.size > 10 * 1024 * 1024) { triggerToast('Imagem demasiado grande (máx. 10MB)'); return }
     setCoverUploading(true)
     try {
-      const ext = file.name.split('.').pop() || 'jpg'
+      const webpFile = await toWebP(file)
+      const ext = webpFile.name.split('.').pop() || 'jpg'
       const path = `${project.slug}-${Date.now()}.${ext}`
-      const { error: upErr } = await supabase.storage.from('covers').upload(path, file, { upsert: true, contentType: file.type })
+      const { error: upErr } = await supabase.storage.from('covers').upload(path, webpFile, { upsert: true, contentType: webpFile.type })
       if (upErr) throw upErr
       const { data: { publicUrl } } = supabase.storage.from('covers').getPublicUrl(path)
       const { error } = await supabase.from('projects').update({ cover_url: publicUrl }).eq('id', project.id)
@@ -1680,6 +1690,10 @@ export default function ProjectPage() {
         onShareStory: () => setShowStoryModal(true),
         onDefense: project.project_type === 'pap' ? () => setDefenseMode(true) : null,
         onAnalyze: handleAIClick,
+        onInvite: isOwner ? () => { setShowInvite(true); document.body.style.overflow = 'hidden' } : null,
+        // "Colega" só faz sentido em contexto de turma — numa conta
+        // individual, quem convidas não é necessariamente um "colega".
+        inviteLabel: profile?.account_type === 'school' ? 'Convidar colega' : 'Convidar',
         // Entrar em "Preview visitante" já abre o workspace direto — é o
         // único sítio de onde o dono normalmente chega lá, não faz sentido
         // obrigar a um segundo clique (ex: em "Preencher" nalgum campo) só
@@ -1705,7 +1719,7 @@ export default function ProjectPage() {
       setExtras(null)
     }
     return () => setExtras(null)
-  }, [project?.id, project?.project_type, project?.defense_date, project?.ai_score, user?.id, analyzingAI, aiFeedback, viewAsPublic, score, previewEditing, previewDevice, tourMenuOpen])
+  }, [project?.id, project?.project_type, project?.defense_date, project?.ai_score, user?.id, profile?.account_type, analyzingAI, aiFeedback, viewAsPublic, score, previewEditing, previewDevice, tourMenuOpen])
 
   const pageUrl = window.location.href
 
@@ -1836,7 +1850,7 @@ export default function ProjectPage() {
 
       // Owner profile
       if (data.user_id) {
-        supabase.from('profiles').select('id, username, full_name, avatar_url, available_for_work').eq('id', data.user_id).single()
+        supabase.from('profiles').select('id, username, full_name, avatar_url, available_for_work, occupation').eq('id', data.user_id).single()
           .then(({ data: prof }) => { if (prof) setOwnerProfile(prof) })
       }
     }
@@ -2674,6 +2688,7 @@ export default function ProjectPage() {
           .proj-hero-content { display: flex !important; flex-direction: column; }
           .proj-identity-row { order: -1; margin-bottom: 8px !important; }
           .proj-type-badge-mobile { display: inline-flex !important; }
+          .proj-identity-area { display: flex !important; }
           .proj-cover-edit-fab { display: flex !important; }
           .proj-views-widget-desktop { display: none !important; }
           .proj-dashboard { align-items: center; text-align: center; }
@@ -3681,11 +3696,13 @@ export default function ProjectPage() {
                   </span>
                 ))}
 
-                {/* Invite collaborator — owner only */}
+                {/* Invite collaborator — owner only. "Colega" só faz sentido em
+                    contexto de turma — numa conta individual, quem convidas
+                    não é necessariamente um colega. */}
                 {isOwner && !showInvite && (
                   <button
                     onClick={() => { setShowInvite(true); document.body.style.overflow = 'hidden' }}
-                    title="Convida o teu colega"
+                    title={profile?.account_type === 'school' ? 'Convida o teu colega' : 'Convida alguém'}
                     data-tour="invite"
                     className="proj-invite-btn"
                     style={{
@@ -3701,7 +3718,7 @@ export default function ProjectPage() {
                     onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.subtle }}
                   >
                     <UserPlus size={13} />
-                    <span className="proj-invite-label">Convida o teu colega</span>
+                    <span className="proj-invite-label">{profile?.account_type === 'school' ? 'Convida o teu colega' : 'Convida alguém'}</span>
                   </button>
                 )}
 
@@ -3940,7 +3957,11 @@ export default function ProjectPage() {
               {[...new Set([project.area, project.school_year])]
                 .filter(Boolean)
                 .map((item, i) => (
-                  <span key={i} style={{ fontSize: 13, color: colors.muted, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  // No desktop, a área já aparece em cima em .proj-badges —
+                  // esta linha só entra em jogo no telemóvel, quando
+                  // .proj-badges se esconde. Sem esta classe, a área
+                  // aparecia duas vezes na mesma página no desktop.
+                  <span key={i} className="proj-identity-area" style={{ display: 'none', fontSize: 13, color: colors.muted, alignItems: 'center', gap: 8 }}>
                     {i > 0 && <span style={{ color: colors.subtle, fontSize: 11 }}>·</span>}
                     {item}
                   </span>
@@ -4227,9 +4248,10 @@ export default function ProjectPage() {
               onClick={e => e.stopPropagation()}
               style={{
                 background: colors.card, border: `1px solid ${colors.borderBright}`,
-                borderRadius: 14, padding: '24px 26px',
+                borderRadius: 14, padding: '24px 22px',
                 display: 'flex', flexDirection: 'column', gap: 16,
-                maxWidth: 320, width: '100%', position: 'relative',
+                maxWidth: 320, width: '100%', boxSizing: 'border-box', position: 'relative',
+                overflow: 'hidden',
               }}
             >
               <button
@@ -4244,13 +4266,13 @@ export default function ProjectPage() {
                   {defenseLabel}
                 </div>
               </div>
-              <div style={{ position: 'relative' }}>
+              <div style={{ position: 'relative', width: '100%', boxSizing: 'border-box' }}>
                 <input
                   type="date"
                   value={defenseDate}
                   onChange={e => handleSaveDefenseDate(e.target.value)}
                   style={{
-                    width: '100%', boxSizing: 'border-box',
+                    display: 'block', width: '100%', minWidth: 0, maxWidth: '100%', boxSizing: 'border-box',
                     background: 'var(--color-surface)', border: `1px solid ${colors.border}`,
                     borderRadius: 8, padding: '10px 12px', color: colors.text,
                     fontSize: 14, fontFamily: 'inherit', cursor: 'pointer', outline: 'none',

@@ -7,6 +7,6 @@ export function getProjectState(project) {
 }
 
 export const PROJECT_STATE_LABEL = {
-  em_progresso: 'Em progresso',
+  em_progresso: 'Em desenvolvimento',
   concluido: 'Concluído',
 }

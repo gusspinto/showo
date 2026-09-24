@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { toWebP } from '../lib/imageOptimize'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
 import { Modal, ModalActions, Button } from '../components/ui'
@@ -421,9 +422,10 @@ export default function Biblioteca() {
       if (!file) return
       if (file.size > 8 * 1024 * 1024) { setToast('Imagem demasiado grande (máx. 8 MB).'); return }
       setToast('A carregar a capa…')
-      const ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg'
+      const webpFile = await toWebP(file)
+      const ext = webpFile.type === 'image/webp' ? 'webp' : webpFile.type === 'image/png' ? 'png' : 'jpg'
       const path = `${user.id}/thumbs/${Date.now()}-${item.id}.${ext}`
-      const up = await supabase.storage.from('library-files').upload(path, file, { contentType: file.type, upsert: true })
+      const up = await supabase.storage.from('library-files').upload(path, webpFile, { contentType: webpFile.type, upsert: true })
       if (up.error) { setToast('Não foi possível carregar a imagem.'); return }
       const { data: signed } = await supabase.storage.from('library-files').createSignedUrl(path, 3600)
       setItems(prev => prev?.map(i => (i.id === item.id ? { ...i, library_thumb_url: path, _signedThumbUrl: signed?.signedUrl } : i)) ?? prev)

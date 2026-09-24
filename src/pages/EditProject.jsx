@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { updateProject } from '../lib/updateProject'
+import { toWebP } from '../lib/imageOptimize'
 import { Navbar } from '../components/Navbar'
 import SegmentedTabs from '../components/SegmentedTabs'
 import { useAuth } from '../context/AuthContext'
@@ -285,9 +286,10 @@ export default function EditProject() {
     setError(null)
     set('cover_url', '__uploading__')
     try {
-      const ext = file.name.split('.').pop() || 'jpg'
+      const webpFile = await toWebP(file)
+      const ext = webpFile.name.split('.').pop() || 'jpg'
       const path = `${project.slug}-${Date.now()}.${ext}`
-      const { error: upErr } = await supabase.storage.from('covers').upload(path, file, { upsert: true, contentType: file.type })
+      const { error: upErr } = await supabase.storage.from('covers').upload(path, webpFile, { upsert: true, contentType: webpFile.type })
       if (upErr) throw upErr
       const { data: { publicUrl } } = supabase.storage.from('covers').getPublicUrl(path)
       set('cover_url', publicUrl)
@@ -633,8 +635,7 @@ export default function EditProject() {
                 <div className="ep-sec-card">
                   <h2 className="ep-sec-heading">Redes</h2>
                   <p style={{ margin: '-6px 0 20px', fontSize: 13, color: colors.muted, lineHeight: 1.5 }}>
-                    Aparecem na página pública do projeto. É uma das formas mais fortes de mostrar
-                    a quem vê que trabalhaste nisto a sério — vale a pena preencher.
+                    Aparecem na página pública. Mostram a quem vê que levaste isto a sério.
                   </p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     <Field
@@ -1012,14 +1013,13 @@ function GithubAdvancedCard({ project }) {
 
       {!repo ? (
         <p style={{ margin: 0, fontSize: 13.5, color: colors.muted, lineHeight: 1.6 }}>
-          Adiciona o link do repositório em cima, em "Criador" (<code style={{ fontSize: 12.5 }}>github.com/utilizador/repositorio</code>).
-          Depois a Showo consegue ler os commits e escrever no diário por ti.
+          Cola o link do GitHub em "Redes", em cima. Depois lemos os commits e escrevemos no diário por ti.
         </p>
       ) : (
         <>
           <p style={{ margin: '0 0 16px', fontSize: 13.5, color: colors.muted, lineHeight: 1.6 }}>
-            Vamos ler <strong style={{ color: colors.text }}>{repo.owner}/{repo.repo}</strong>. Cada dia
-            com commits fica registado no diário, com a data em que trabalhaste. Só funciona com repositórios públicos.
+            Vamos ler <strong style={{ color: colors.text }}>{repo.owner}/{repo.repo}</strong>. Cada dia com
+            commits vira uma entrada no diário. Só funciona com repositórios públicos.
           </p>
 
           {stats && (
@@ -1146,7 +1146,7 @@ function DangerZone({ project, navigate }) {
         <AlertTriangle size={12} /> Zona de perigo
       </div>
       <p style={{ margin: '0 0 16px', fontSize: 14, color: colors.muted, lineHeight: 1.65 }}>
-        Eliminar o projeto é uma ação irreversível. Todos os dados, score e página pública serão apagados permanentemente.
+        Eliminar o projeto é definitivo. Apaga os dados, o score e a página pública para sempre.
       </p>
       {!confirmDelete ? (
         <button type="button" onClick={() => setConfirmDelete(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.25)', borderRadius: 10, color: colors.red, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>

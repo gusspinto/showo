@@ -1,8 +1,11 @@
-import { useRef, useState, useEffect, useCallback } from 'react'
+import { useRef, useState, useEffect, useCallback, useId } from 'react'
 import { createPortal } from 'react-dom'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
 
 const MIN_SIZE = 40
+// Alvo de toque mínimo — o ponto branco visível fica pequeno (14px) para não
+// tapar a imagem, mas a área que reage ao dedo/rato tem de ser bem maior.
+const HANDLE_HIT_SIZE = 40
 
 /**
  * CropModal — canvas-based image cropper
@@ -19,6 +22,8 @@ export function CropModal({ file, imageUrl, aspectRatio, circular = false, onCon
   const containerRef = useRef(null)
   const imgRef       = useRef(null)
   const dragStart    = useRef(null)
+  const closeBtnRef  = useRef(null)
+  const titleId      = useId()
 
   const [mounted,   setMounted]   = useState(false)
   const [imgSrc,    setImgSrc]    = useState(null)
@@ -27,6 +32,16 @@ export function CropModal({ file, imageUrl, aspectRatio, circular = false, onCon
   const [dragging,  setDragging]  = useState(null) // 'move' | 'nw' | 'ne' | 'sw' | 'se'
 
   useEffect(() => { setMounted(true) }, [])
+
+  // Foco inicial no botão fechar (dialog acessível: alguém em teclado tem de
+  // aterrar dentro do modal) e Esc para cancelar, como qualquer outro modal.
+  useEffect(() => {
+    if (!mounted) return
+    closeBtnRef.current?.focus()
+    const onKeyDown = (e) => { if (e.key === 'Escape') onCancel() }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [mounted, onCancel])
 
   // Lock scroll while modal is open (works for both mouse and touch)
   useEffect(() => {
@@ -65,10 +80,17 @@ export function CropModal({ file, imageUrl, aspectRatio, circular = false, onCon
     if (!container) return
     const cw = container.clientWidth
     const ch = container.clientHeight
-    let w = cw * 0.8
-    let h = aspectRatio ? w / aspectRatio : ch * 0.8
-    if (h > ch * 0.88) { h = ch * 0.88; w = aspectRatio ? h * aspectRatio : cw * 0.8 }
-    if (circular) { h = w } // force square for circle crops
+    let w, h
+    if (circular) {
+      // Quadrado limitado pelo lado mais curto do contentor — usar só cw
+      // (como acontecia antes) ignora a altura e deixa a caixa maior do
+      // que a área visível sempre que o contentor é mais baixo que largo.
+      w = h = Math.min(cw, ch) * 0.8
+    } else {
+      w = cw * 0.8
+      h = aspectRatio ? w / aspectRatio : ch * 0.8
+      if (h > ch * 0.88) { h = ch * 0.88; w = aspectRatio ? h * aspectRatio : cw * 0.8 }
+    }
     setCrop({ x: (cw - w) / 2, y: (ch - h) / 2, w, h })
   }, [aspectRatio, circular])
 
@@ -189,7 +211,7 @@ export function CropModal({ file, imageUrl, aspectRatio, circular = false, onCon
     }
 
     ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, canvas.width, canvas.height)
-    canvas.toBlob(blob => onConfirm(blob), 'image/jpeg', 0.92)
+    canvas.toBlob(blob => onConfirm(blob), 'image/webp', 0.9)
   }, [crop, circular, onConfirm])
 
   const C = {
@@ -216,20 +238,41 @@ export function CropModal({ file, imageUrl, aspectRatio, circular = false, onCon
                padding: 20, touchAction: 'none', overflowY: 'hidden' }}
       onClick={onCancel}
     >
+      <style>{`
+        @keyframes cropmodal-in {
+          from { opacity: 0; transform: scale(0.96); }
+          to   { opacity: 1; transform: scale(1); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .cropmodal-dialog { animation: none !important; }
+        }
+        .cropmodal-btn { transition: background-color 150ms, border-color 150ms, transform 150ms; }
+        .cropmodal-btn:hover { background: var(--color-surface-hover); }
+        .cropmodal-btn:active { transform: scale(0.96); }
+        .cropmodal-btn-primary:hover { filter: brightness(0.92); }
+        .cropmodal-btn-primary:active { transform: scale(0.96); }
+        .cropmodal-close:hover { background: var(--color-border); }
+        .cropmodal-close:active { transform: scale(0.96); }
+      `}</style>
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="cropmodal-dialog"
         style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 20,
-                 width: '100%', maxWidth: 620, display: 'flex', flexDirection: 'column',
-                 overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.7)' }}
+                 width: '100%', maxWidth: 620, maxHeight: '90vh', display: 'flex', flexDirection: 'column',
+                 overflowY: 'auto', boxShadow: '0 24px 80px rgba(0,0,0,0.7)',
+                 animation: 'cropmodal-in 200ms cubic-bezier(0.2, 0, 0, 1)' }}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
         <div style={{ padding: '16px 20px', borderBottom: `1px solid ${C.border}`,
                       display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontWeight: 700, color: C.text, fontSize: 15 }}>Recortar imagem</span>
-          <button type="button" onClick={onCancel}
+          <span id={titleId} style={{ fontWeight: 700, color: C.text, fontSize: 15 }}>Recortar imagem</span>
+          <button ref={closeBtnRef} type="button" onClick={onCancel} aria-label="Fechar" className="cropmodal-close"
             style={{ background: 'var(--color-surface-hover)', border: `1px solid ${C.border}`,
-                     borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center',
-                     justifyContent: 'center', color: C.muted, cursor: 'pointer' }}>
+                     borderRadius: 8, width: 36, height: 36, display: 'flex', alignItems: 'center',
+                     justifyContent: 'center', color: C.muted, cursor: 'pointer', flexShrink: 0 }}>
             <X size={16} />
           </button>
         </div>
@@ -237,7 +280,7 @@ export function CropModal({ file, imageUrl, aspectRatio, circular = false, onCon
         {/* Crop area */}
         <div
           ref={containerRef}
-          style={{ position: 'relative', height: 360, background: '#000',
+          style={{ position: 'relative', height: 'min(360px, 55vh)', minHeight: 240, background: '#000',
                    overflow: 'hidden', userSelect: 'none', touchAction: 'none' }}
         >
           {imgSrc && (
@@ -279,18 +322,23 @@ export function CropModal({ file, imageUrl, aspectRatio, circular = false, onCon
                   <div style={{ position:'absolute', left:'66.6%', top:0, bottom:0, width:1, background:'rgba(255,255,255,0.25)', pointerEvents:'none' }} />
                 </>}
 
-                {/* Corner resize handles */}
+                {/* Corner resize handles — o ponto branco mede 14px, mas a
+                    área que responde ao toque é maior (40px) e fica centrada
+                    nele, porque um alvo de 14px é dificil de acertar com o dedo. */}
                 {corners.map(({ dir, cursor, ...pos }) => (
                   <div
                     key={dir}
                     onMouseDown={e => { e.stopPropagation(); startDrag(e, dir) }}
                     onTouchStart={e => { e.stopPropagation(); startDrag(e, dir) }}
                     style={{
-                      position: 'absolute', width: 14, height: 14,
-                      background: '#fff', borderRadius: 3, cursor,
-                      ...pos,
+                      position: 'absolute', width: HANDLE_HIT_SIZE, height: HANDLE_HIT_SIZE,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      cursor,
+                      ...Object.fromEntries(Object.entries(pos).map(([k, v]) => [k, v - (HANDLE_HIT_SIZE - 14) / 2])),
                     }}
-                  />
+                  >
+                    <div style={{ width: 14, height: 14, background: '#fff', borderRadius: 3, boxShadow: '0 0 0 1px rgba(0,0,0,0.25)' }} />
+                  </div>
                 ))}
               </div>
             </>
@@ -305,17 +353,17 @@ export function CropModal({ file, imageUrl, aspectRatio, circular = false, onCon
         {/* Footer */}
         <div style={{ padding: '14px 20px', display: 'flex', gap: 10, justifyContent: 'flex-end',
                       borderTop: `1px solid ${C.border}` }}>
-          <button type="button" onClick={onCancel}
+          <button type="button" onClick={onCancel} className="cropmodal-btn"
             style={{ background: 'transparent', border: `1px solid rgba(255,255,255,0.12)`,
                      borderRadius: 8, padding: '9px 20px', color: C.muted,
                      fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
             Cancelar
           </button>
-          <button type="button" onClick={handleConfirm}
+          <button type="button" onClick={handleConfirm} className="cropmodal-btn-primary"
             style={{ background: 'var(--color-text)', border: 'none',
                      borderRadius: 8, padding: '9px 22px', color: 'var(--color-bg)',
                      fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                     boxShadow: '0 4px 16px var(--color-surface-hover)' }}>
+                     boxShadow: '0 4px 16px var(--color-surface-hover)', transition: 'filter 150ms, transform 150ms' }}>
             Recortar
           </button>
         </div>

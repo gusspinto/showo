@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 import { supabase } from '../lib/supabase'
 import { identifyUser, resetAnalytics } from '../lib/analytics'
 import { getPlan, remainingUses, resolvePlanId, PLAN_GATE_MESSAGES } from '../lib/plans'
+import { toWebP } from '../lib/imageOptimize'
 
 const AuthContext = createContext({})
 
@@ -9,8 +10,8 @@ async function persistGoogleAvatar(uid, googleUrl) {
   try {
     const res = await fetch(googleUrl)
     if (!res.ok) return null
-    const blob = await res.blob()
-    const ext = blob.type === 'image/png' ? 'png' : 'jpg'
+    const blob = await toWebP(await res.blob())
+    const ext = blob.type === 'image/webp' ? 'webp' : (blob.type === 'image/png' ? 'png' : 'jpg')
     const path = `${uid}/avatar.${ext}`
     const { error } = await supabase.storage.from('avatars').upload(path, blob, { upsert: true, contentType: blob.type })
     if (error) return null

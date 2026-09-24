@@ -314,8 +314,8 @@ export default function Settings() {
     setAvatarCropFile(null)
     if (!user) return
     setAvatarUploading(true); setSaveMsg(null)
-    const path = `${user.id}/avatar.jpg`
-    const { error: upErr } = await supabase.storage.from('avatars').upload(path, blob, { upsert: true, contentType: 'image/jpeg' })
+    const path = `${user.id}/avatar.webp`
+    const { error: upErr } = await supabase.storage.from('avatars').upload(path, blob, { upsert: true, contentType: 'image/webp' })
     if (upErr) { setSaveMsg({ type: 'err', text: 'Erro ao carregar imagem.' }); setAvatarUploading(false); return }
     const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
     const bustedUrl = `${publicUrl}?t=${Date.now()}`

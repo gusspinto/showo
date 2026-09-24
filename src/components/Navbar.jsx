@@ -42,7 +42,7 @@ import { HeartIcon as Heart } from '@solar-icons/react/bold/heart'
 import { CheckCircleIcon as CheckCircle } from '@solar-icons/react/bold/check-circle'
 import { CloseCircleIcon as XCircle } from '@solar-icons/react/bold/close-circle'
 import { AlignHorizontalSpacingIcon as AlignJustify } from '@solar-icons/react/bold/align-horizontal-spacing'
-import { PaintRollerIcon as Paintbrush } from '@solar-icons/react/bold/paint-roller'
+import { SliderHorizontalIcon as ManageIcon } from '@solar-icons/react/bold/slider-horizontal'
 import { LetterIcon as Mail } from '@solar-icons/react/bold/letter'
 import { AltArrowRightIcon as ChevronRight } from '@solar-icons/react/bold/alt-arrow-right'
 import { MonitorIcon as Monitor } from '@solar-icons/react/bold/monitor'
@@ -1341,7 +1341,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                     aria-label="Gerir projeto"
                     style={{ background: projMenuOpen ? 'color-mix(in srgb, var(--color-text) 85%, transparent)' : undefined }}
                   >
-                    <Paintbrush size={18} strokeWidth={2} />
+                    <ManageIcon size={18} strokeWidth={2} />
                   </button>
                 </>
               ) : showCreateCta ? (
@@ -1493,15 +1493,20 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 <Trophy size={18} /> Certificado
               </button>
             )}
-            {extras.onShareStory && (
-              <button className="mob-nav-btn" onClick={() => { extras.onShareStory(); setProjMenuOpen(false) }}>
-                <Share2 size={18} /> Partilhar nas stories
-              </button>
-            )}
             {extras.onTogglePublicView && (
               <button className="mob-nav-btn" style={{ color: extras.viewAsPublic ? 'var(--color-text)' : undefined }}
                 onClick={() => { extras.onTogglePublicView(); setProjMenuOpen(false) }}>
                 <Globe size={18} /> {extras.viewAsPublic ? 'Sair da preview' : 'Preview'}
+              </button>
+            )}
+            {extras.onInvite && (
+              <button className="mob-nav-btn" onClick={() => { extras.onInvite(); setProjMenuOpen(false) }}>
+                <UserPlus size={18} /> {extras.inviteLabel || 'Convidar colega'}
+              </button>
+            )}
+            {extras.onShareStory && (
+              <button className="mob-nav-btn" onClick={() => { extras.onShareStory(); setProjMenuOpen(false) }}>
+                <Share2 size={18} /> Partilhar nas stories
               </button>
             )}
           </div>

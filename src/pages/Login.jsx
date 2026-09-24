@@ -123,17 +123,18 @@ export default function Login() {
       return
     }
 
-    // Wrong password or unknown account — check which, using the result that's
-    // already been in flight since the request started.
+    // Wrong password or unknown account — usa a mesma mensagem para as duas
+    // situações, para não revelar a quem tenta logins se um email tem ou não
+    // conta (user enumeration). A exceção é a conta criada por Google, que
+    // continua a ter mensagem própria porque ajuda o utilizador legítimo sem
+    // expor mais do que a UI já expõe no ecrã de registo (login com Google).
     const { data: methods, error: emailCheckError } = await methodsPromise
     if (emailCheckError) {
       setError('Demasiadas tentativas. Aguarda um pouco e tenta novamente.')
-    } else if (!methods?.exists) {
-      setError('Esta conta não existe. Verifica o email ou cria uma conta.')
-    } else if (!methods.has_password && methods.has_google) {
+    } else if (methods?.exists && !methods.has_password && methods.has_google) {
       setError('Esta conta foi criada com o Google. Entra com o Google, ou define uma palavra-passe em "Esqueceste-te da password?".')
     } else {
-      setError('Palavra-passe incorreta.')
+      setError('Email ou palavra-passe incorretos.')
     }
   }
 

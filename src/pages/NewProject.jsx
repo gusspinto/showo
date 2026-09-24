@@ -501,8 +501,9 @@ export default function NewProject() {
       // depois, em segundo plano, sem o user à espera — só aparece um
       // pouco mais tarde na Biblioteca, com o cartão colorido entretanto.
       for (const file of files) {
-        const path = `${user.id}/${Date.now()}-${safePathSegment(file.name)}`
-        const { error: upErr } = await supabase.storage.from('library-files').upload(path, file, { contentType: file.type })
+        const webpFile = await toWebP(file)
+        const path = `${user.id}/${Date.now()}-${safePathSegment(webpFile.name)}`
+        const { error: upErr } = await supabase.storage.from('library-files').upload(path, webpFile, { contentType: webpFile.type })
         if (upErr) throw upErr
 
         const { data: inserted, error: insErr } = await supabase.from('projects').insert({

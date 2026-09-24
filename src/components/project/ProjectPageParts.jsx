@@ -7,12 +7,14 @@
 import { useEffect, useState, useRef, useMemo, memo, lazy, Suspense } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { supabase, supabaseUrl, supabaseAnonKey } from '../../lib/supabase'
+import { toWebP } from '../../lib/imageOptimize'
 import { useIsMobile } from '../../lib/useIsMobile'
 import { calculateScore } from '../../lib/score'
 import { hasPlaceholder } from '../../lib/textQuality'
 import { topLanguages, commitSpanMonths, repoAgeMonths } from '../../lib/social'
 import { listPublicTables, publicCurlExample, listRows, listTables } from '../../lib/projectDb'
 import { isTechnicalArea } from '../../lib/technologies'
+import { occupationLabel } from '../../lib/occupations'
 import { DatabaseIcon as Database } from '@solar-icons/react/bold/database'
 import { CHALLENGES, getChallengeStatus } from '../../lib/challenges'
 import { getProjectField, PROJECT_FIELDS } from '../../lib/projectFields'
@@ -1585,9 +1587,10 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
       const file = input.files[0]; if (!file) return
       if (file.size > 10 * 1024 * 1024) { alert('Ficheiro demasiado grande (máx 10 MB)'); return }
       if (!file.type.startsWith('image/')) { alert('Apenas imagens são permitidas'); return }
-      const ext = file.name.split('.').pop()
+      const webpFile = await toWebP(file)
+      const ext = webpFile.name.split('.').pop()
       const path = `${project.id}/cover_${Date.now()}.${ext}`
-      const { error: upErr } = await supabase.storage.from('covers').upload(path, file, { upsert: true })
+      const { error: upErr } = await supabase.storage.from('covers').upload(path, webpFile, { upsert: true })
       if (!upErr) {
         const { data: { publicUrl } } = supabase.storage.from('covers').getPublicUrl(path)
         await supabase.from('projects').update({ cover_url: publicUrl }).eq('id', project.id)
@@ -1670,9 +1673,10 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
       const file = e.target.files[0]; if (!file) return
       if (file.size > 10 * 1024 * 1024) { alert('Ficheiro demasiado grande (máx 10 MB)'); return }
       if (!file.type.startsWith('image/')) { alert('Apenas imagens são permitidas'); return }
-      const ext = file.name.split('.').pop()
+      const webpFile = await toWebP(file)
+      const ext = webpFile.name.split('.').pop()
       const path = `sections/${project.id}/${sectionKey}_${Date.now()}.${ext}`
-      const { data, error } = await supabase.storage.from('project-images').upload(path, file, { upsert: true })
+      const { data, error } = await supabase.storage.from('project-images').upload(path, webpFile, { upsert: true })
       if (!error && data) {
         const { data: { publicUrl } } = supabase.storage.from('project-images').getPublicUrl(path)
         setPreviewStyle(ps => ({
@@ -1719,9 +1723,10 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
       const file = e.target.files[0]; if (!file) return
       if (file.size > 10 * 1024 * 1024) { alert('Ficheiro demasiado grande (máx 10 MB)'); return }
       if (!file.type.startsWith('image/')) { alert('Apenas imagens são permitidas'); return }
-      const ext = file.name.split('.').pop()
+      const webpFile = await toWebP(file)
+      const ext = webpFile.name.split('.').pop()
       const path = `preview/${project.id}/${blockId}_${field}_${Date.now()}.${ext}`
-      const { data, error } = await supabase.storage.from('project-images').upload(path, file, { upsert: true })
+      const { data, error } = await supabase.storage.from('project-images').upload(path, webpFile, { upsert: true })
       if (!error && data) {
         const { data: { publicUrl } } = supabase.storage.from('project-images').getPublicUrl(path)
         setPreviewBlocks(bs => bs.map(b => b.id === blockId ? { ...b, [field]: publicUrl } : b))
@@ -1743,7 +1748,6 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
   const displayName = ownerProfile?.full_name || ownerProfile?.username || project.creator_name || null
   const avatarUrl   = ownerProfile?.avatar_url || null
   const course      = project.course || ownerProfile?.course || null
-  const school      = project.school || ownerProfile?.school || null
 
   const TYPE_HERO_PUBLIC = {
     pap:       { c1: '#1e40af', c2: '#7c3aed' },
@@ -1804,7 +1808,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
   // escolhido, não a foto de capa. Sem fundo escolhido (pvTheme null),
   // segue o tema da própria app.
   const heroSurfaceIsLight = pvTheme === 'light' || (!pvTheme && theme === 'light')
-  const titleAlign        = previewStyle.titleAlign || 'left'
+  const titleAlign        = previewStyle.titleAlign || 'center'
   const coverAsHero       = !!(previewStyle.coverAsHero && project.cover_url)
   const customTagline     = previewStyle.customTagline || ''
   const cardStyleVal      = previewStyle.cardStyle || 'border'
@@ -2773,12 +2777,12 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                   </div>
                 </div>
                 <div style={{ marginBottom: 12 }}>
-                  <div style={wsControlLabel}>Alinhamento do título</div>
+                  <div style={wsControlLabel}>Alinhamento</div>
                   <div style={{ display: 'flex', gap: 4 }}>
                     {[
                       { val: 'left', Icon: AlignLeft }, { val: 'center', Icon: AlignCenter }, { val: 'right', Icon: AlignRight },
                     ].map(a => {
-                      const isSel = (previewStyle.titleAlign || 'left') === a.val
+                      const isSel = (previewStyle.titleAlign || 'center') === a.val
                       return (
                         <button key={a.val} onClick={() => setPreviewStyle(ps => ({ ...ps, titleAlign: a.val }))}
                           style={{
@@ -3750,20 +3754,22 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
         }
 
         function renderOneSection(key) {
+          const sJustify = titleAlign === 'center' ? 'center' : titleAlign === 'right' ? 'flex-end' : 'flex-start'
+
           if (key === 'problem')
             return !project.problem ? null : withSectionMedia(key,
-              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderLeft: `4px solid ${hero.c1}`, borderRadius: '0 12px 12px 0', padding: '28px 32px' }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Target size={13} /> O problema que resolve
+              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderLeft: `4px solid ${hero.c1}`, borderRadius: '0 12px 12px 0', padding: '30px 32px 26px', textAlign: titleAlign }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: hero.c1, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8, justifyContent: sJustify }}>
+                  <Target size={13} /> O problema
                 </div>
-                <p style={{ margin: 0, fontSize: 'clamp(15px,2vw,18px)', color: 'var(--color-text)', lineHeight: 1.8, fontWeight: 400, overflowWrap: 'break-word' }}>{project.problem}</p>
+                <p style={{ margin: 0, fontSize: 'clamp(19px,2.8vw,26px)', color: 'var(--color-text)', lineHeight: 1.45, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.01em', overflowWrap: 'break-word' }}>{project.problem}</p>
               </div>
             )
 
           if (key === 'solution')
             return !project.solution ? null : withSectionMedia(key,
-              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '28px 32px' }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: colors.blue, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderLeft: `4px solid ${hero.c1}55`, borderRadius: '0 12px 12px 0', padding: '24px 32px', textAlign: titleAlign }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8, justifyContent: sJustify }}>
                   <Zap size={13} /> A solução
                 </div>
                 <p style={{ margin: 0, fontSize: 'clamp(15px,2vw,18px)', color: 'var(--color-text)', lineHeight: 1.8, fontWeight: 400, overflowWrap: 'break-word' }}>{project.solution}</p>
@@ -3772,23 +3778,23 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
 
           if (key === 'target_audience')
             return !project.target_audience ? null : withSectionMedia(key,
-              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '28px 32px' }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Users size={13} /> Público-alvo
+              <div className="pv-section-card" style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap', padding: '2px 4px', justifyContent: sJustify, textAlign: titleAlign }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Users size={12} /> Para quem é
                 </div>
-                <p style={{ margin: 0, fontSize: 'clamp(15px,2vw,18px)', color: 'var(--color-text)', lineHeight: 1.8, fontWeight: 400, overflowWrap: 'break-word' }}>{project.target_audience}</p>
+                <p style={{ margin: 0, fontSize: 14, color: 'var(--color-text-secondary)', lineHeight: 1.6, overflowWrap: 'break-word' }}>{project.target_audience}</p>
               </div>
             )
 
           if (key === 'features')
             return features.length === 0 ? null : withSectionMedia(key,
-              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '28px 32px' }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '28px 32px', textAlign: titleAlign }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8, justifyContent: sJustify }}>
                   <Wrench size={13} /> O que faz
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: titleAlign === 'center' ? 'center' : titleAlign === 'right' ? 'flex-end' : 'stretch' }}>
                   {features.slice(0, 8).map((f, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, flexDirection: titleAlign === 'right' ? 'row-reverse' : 'row', textAlign: titleAlign === 'center' ? 'left' : titleAlign }}>
                       <div style={{ width: 22, height: 22, borderRadius: 6, flexShrink: 0, marginTop: 1, background: `${hero.c1}22`, border: `1px solid ${hero.c1}44`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <CheckCircle size={12} color={`${hero.c1}cc`} />
                       </div>
@@ -3801,13 +3807,18 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
 
           if (key === 'technologies')
             return tech.length === 0 ? null : withSectionMedia(key,
-              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '28px 32px' }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 18, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '28px 32px', textAlign: titleAlign }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8, justifyContent: sJustify }}>
                   <Zap size={13} /> Tecnologias
                 </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, fontSize: 14, color: 'var(--color-text)', fontWeight: 500 }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: sJustify }}>
                   {tech.map((t, i) => (
-                    <span key={i}>{t}{i < tech.length - 1 ? <span style={{ color: 'var(--color-text-tertiary)', margin: '0 8px' }}>·</span> : null}</span>
+                    <span key={i} style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 6,
+                      fontSize: 13, fontWeight: 600, color: 'var(--color-text)',
+                      background: `${hero.c1}14`, border: `1px solid ${hero.c1}33`,
+                      borderRadius: 7, padding: '6px 12px', lineHeight: 1.3,
+                    }}>{t}</span>
                   ))}
                 </div>
               </div>
@@ -3815,8 +3826,8 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
 
           if (key === 'challenges')
             return !project.challenges ? null : withSectionMedia(key,
-              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderLeft: '4px solid var(--color-warning)', borderRadius: '0 12px 12px 0', padding: '28px 32px' }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-warning)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderLeft: '4px solid var(--color-warning)', borderRadius: '0 12px 12px 0', padding: '28px 32px', textAlign: titleAlign }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-warning)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8, justifyContent: sJustify }}>
                   <Zap size={13} /> Desafios
                 </div>
                 <p style={{ margin: 0, fontSize: 'clamp(15px,2vw,18px)', color: 'var(--color-text)', lineHeight: 1.8, fontWeight: 400, overflowWrap: 'break-word' }}>{project.challenges}</p>
@@ -3825,8 +3836,8 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
 
           if (key === 'results')
             return !project.results ? null : withSectionMedia(key,
-              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '28px 32px' }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-success)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '28px 32px', textAlign: titleAlign }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-success)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8, justifyContent: sJustify }}>
                   <BarChart2 size={13} /> Resultados
                 </div>
                 <p style={{ margin: 0, fontSize: 'clamp(15px,2vw,18px)', color: 'var(--color-text)', lineHeight: 1.8, overflowWrap: 'break-word' }}>{project.results}</p>
@@ -3835,8 +3846,8 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
 
           if (key === 'learnings')
             return !project.learnings ? null : withSectionMedia(key,
-              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '28px 32px' }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-accent)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '28px 32px', textAlign: titleAlign }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-accent)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8, justifyContent: sJustify }}>
                   <BookOpen size={13} /> Aprendizagens
                 </div>
                 <p style={{ margin: 0, fontSize: 'clamp(15px,2vw,18px)', color: 'var(--color-text)', lineHeight: 1.8, overflowWrap: 'break-word' }}>{project.learnings}</p>
@@ -3936,46 +3947,52 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
         <ProjectAttachments project={project} />
 
         {/* Creator card */}
-        {(displayName || course || school) && (
-          <div style={{
-            background: 'var(--color-surface)', border: '1px solid var(--color-border)',
-            borderRadius: 12, padding: '28px 32px',
-            display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap',
-            fontFamily: 'var(--font-body, system-ui, sans-serif)',
-          }}>
-            {avatarUrl ? (
-              <img src={avatarUrl} alt="" style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
-            ) : displayName && (
-              <div style={{
-                width: 56, height: 56, borderRadius: '50%', flexShrink: 0,
-                background: hero.c1,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 22, fontWeight: 800, color: '#fff',
-              }}>{displayName[0]?.toUpperCase()}</div>
-            )}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
-                A história de {project.name}
+        {displayName && (() => {
+          const occupation = occupationLabel(ownerProfile?.occupation)
+          return (
+            <div style={{
+              background: 'var(--color-surface)', border: '1px solid var(--color-border)',
+              borderRadius: 16, padding: '20px 22px',
+              display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
+              fontFamily: 'var(--font-body, system-ui, sans-serif)',
+            }}>
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="" style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, outline: '1px solid var(--color-glass-border)', outlineOffset: -1 }} />
+              ) : (
+                <div style={{
+                  width: 64, height: 64, borderRadius: '50%', flexShrink: 0,
+                  background: hero.c1,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 24, fontWeight: 800, color: '#fff',
+                }}>{displayName[0]?.toUpperCase()}</div>
+              )}
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--color-text)' }}>{displayName}</div>
+                {occupation && (
+                  <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-text-secondary)' }}>{occupation}</span>
+                )}
               </div>
-              {displayName && <div style={{ fontSize: 18, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.01em', color: 'var(--color-text)', marginBottom: 4 }}>{displayName}</div>}
-              {course && <div style={{ fontSize: 14, color: 'var(--color-text-secondary)' }}>{course}{school ? ` · ${school}` : ''}</div>}
+              {ownerProfile?.username && (
+                <button
+                  onClick={() => navigate(`/u/${ownerProfile.username}`)}
+                  style={{
+                    background: '#fff', border: 'none',
+                    borderRadius: 9, padding: '9px 18px',
+                    color: '#0a0a0a', fontSize: 13, fontWeight: 700,
+                    cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
+                    transition: 'background 0.15s, transform 0.12s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = '#e8e8e8' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = '#fff' }}
+                  onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.96)' }}
+                  onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)' }}
+                >
+                  Ver perfil
+                </button>
+              )}
             </div>
-            {ownerProfile?.username && (
-              <button
-                onClick={() => navigate(`/u/${ownerProfile.username}`)}
-                style={{
-                  background: 'var(--color-primary)',
-                  border: 'none', borderRadius: 8, padding: '10px 22px',
-                  color: '#fff', fontSize: 13, fontWeight: 700,
-                  cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
-                  boxShadow: '0 2px 8px var(--color-primary-subtle)',
-                }}
-              >
-                Ver perfil
-              </button>
-            )}
-          </div>
-        )}
+          )
+        })()}
 
         {/* ── Engagement: Gostos / Interesse + Comentários ── */}
         <div style={{ width: '100%' }}>
