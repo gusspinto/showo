@@ -404,6 +404,76 @@ export function DbSetupNudge({ project, isOwner }) {
   )
 }
 
+function proofHost(url) {
+  try { return new URL(url).hostname.replace(/^www\./, '') } catch { return url }
+}
+
+// Prova por link: um sítio onde o resultado já funciona (site publicado,
+// demo, vídeo, protótipo). Usa a coluna portfolio_url que já existia; não
+// entra no score.
+export function LiveProof({ project, isOwner, onSave }) {
+  const [draft, setDraft] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const url = project?.portfolio_url
+
+  if (url) {
+    return (
+      <a href={url} target="_blank" rel="noopener noreferrer" style={{
+        display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none',
+        background: 'var(--color-surface)', border: '1px solid var(--color-border)',
+        borderRadius: 10, padding: '10px 16px', marginBottom: 16,
+        fontFamily: 'var(--font-body, system-ui, sans-serif)',
+      }}>
+        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: 0.6, flexShrink: 0 }}>A funcionar</span>
+        <span style={{ fontSize: 13, color: 'var(--color-text-secondary)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{proofHost(url)}</span>
+        <span style={{ marginLeft: 'auto', fontSize: 12.5, color: 'var(--color-text-tertiary)', flexShrink: 0 }}>Ver ↗</span>
+      </a>
+    )
+  }
+
+  if (!isOwner || !onSave || !(project?.results || '').trim()) return null
+
+  async function submit(e) {
+    e.preventDefault()
+    const raw = draft.trim()
+    if (!raw) return
+    let normalized
+    try {
+      if (/\s/.test(raw)) throw new Error('espaços')
+      const u = new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`)
+      if (!u.hostname.includes('.')) throw new Error('host sem ponto')
+      normalized = u.toString()
+    } catch { setError('Isto não parece um link válido.'); return }
+    setSaving(true); setError('')
+    const ok = await onSave(normalized)
+    setSaving(false)
+    if (!ok) setError('Não foi possível guardar. Tenta novamente.')
+  }
+
+  return (
+    <form onSubmit={submit} style={{
+      display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
+      background: 'var(--color-surface)', border: '1px dashed var(--color-border)',
+      borderRadius: 10, padding: '10px 16px', marginBottom: 16,
+      fontFamily: 'var(--font-body, system-ui, sans-serif)',
+    }}>
+      <span style={{ fontSize: 12.5, color: 'var(--color-text-secondary)', flex: '1 1 220px' }}>
+        Tens os resultados escritos. Falta a prova: cola o link de algo que já funciona (site, demo, vídeo).
+      </span>
+      <input
+        type="text" value={draft} onChange={e => setDraft(e.target.value)}
+        placeholder="https://..." aria-label="Link da prova"
+        style={{ flex: '1 1 180px', minWidth: 0, padding: '7px 10px', fontSize: 13, borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-bg)', color: 'var(--color-text)', fontFamily: 'inherit' }}
+      />
+      <button type="submit" disabled={saving || !draft.trim()} style={{ padding: '7px 14px', fontSize: 12.5, fontWeight: 700, borderRadius: 8, border: 'none', background: 'var(--color-primary)', color: '#fff', cursor: saving ? 'default' : 'pointer', opacity: saving || !draft.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
+        {saving ? 'A guardar…' : 'Guardar'}
+      </button>
+      {error && <span style={{ flexBasis: '100%', fontSize: 12, color: 'var(--color-error, #f43f5e)' }}>{error}</span>}
+    </form>
+  )
+}
+
 export function GithubProof({ project }) {
   const stats = project?.github_stats
   if (!stats?.commits) return null
@@ -3520,6 +3590,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
         {/* Prova de trabalho do GitHub — logo no topo do conteúdo, antes de
             qualquer bloco ou secção reordenável: é a primeira coisa que
             quem visita a página vê a seguir ao cabeçalho. */}
+        <LiveProof project={project} isOwner={false} />
         <GithubProof project={project} />
         <ApiProof project={project} />
 
