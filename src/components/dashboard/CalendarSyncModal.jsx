@@ -76,7 +76,9 @@ export default function CalendarSyncModal({ userId, icsToken, onClose, onTokenRo
         method: 'POST', headers: { 'Authorization': `Bearer ${jwt}` },
       })
       const j = await resp.json()
-      if (j.ok) setSyncMsg(`${j.pushed}/${j.total} eventos sincronizados.`)
+      if (j.ok && j.failed > 0) setSyncMsg(`${j.pushed}/${j.total} sincronizados. ${j.failed} falharam — tenta novamente daqui a pouco.`)
+      else if (j.ok && j.total === 0) setSyncMsg('Não há eventos para sincronizar.')
+      else if (j.ok) setSyncMsg(`${j.pushed}/${j.total} eventos sincronizados.`)
       else setSyncMsg(j.error || 'Falhou.')
     } catch {
       setSyncMsg('Não foi possível sincronizar. Tenta novamente.')

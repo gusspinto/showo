@@ -23,7 +23,9 @@ export default function GoogleCalendarCallback() {
       )
       const j = await resp.json()
       if (j.ok) {
-        setStatus(`Ligado! ${j.pushed}/${j.total} eventos sincronizados.`)
+        setStatus(j.failed > 0
+          ? `Ligado. ${j.pushed}/${j.total} eventos sincronizados, ${j.failed} falharam.`
+          : `Ligado! ${j.pushed}/${j.total} eventos sincronizados.`)
         setTimeout(() => navigate('/dashboard'), 1500)
       } else {
         setStatus(`Erro: ${j.error || 'desconhecido'}`)
