@@ -79,3 +79,36 @@ export function accentGradientFromHex(hex) {
     c2: hsvToHex((h + 24) % 360, clamp(s * 0.92), clamp(v * 0.8)),
   }
 }
+
+// Contraste WCAG entre duas cores — usado para saber se um texto fica
+// legível sobre um fundo, não só se o fundo é "claro" (isLightHex acima é
+// mais grosseiro, pensado só para escolher branco/preto).
+function relativeLuminance(hex) {
+  const { r, g, b } = hexToRgb(hex)
+  const chan = c => { c /= 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4 }
+  return 0.2126 * chan(r) + 0.7152 * chan(g) + 0.0722 * chan(b)
+}
+
+export function contrastRatio(hexA, hexB) {
+  const lA = relativeLuminance(hexA)
+  const lB = relativeLuminance(hexB)
+  const [light, dark] = lA > lB ? [lA, lB] : [lB, lA]
+  return (light + 0.05) / (dark + 0.05)
+}
+
+// As paletas de destaque escolhem tons escuros de propósito (para as legendas
+// e o brilho por trás do hero) e o seletor de cor livre não impede escolhas
+// escuras — nenhum dos dois casos verificava se sobrava contraste quando essa
+// mesma cor era reaproveitada como cor do texto do título. Em vez de mudar as
+// paletas ou bloquear o seletor, clareia só a cor final usada no título,
+// mantendo a mesma matiz, até ter contraste suficiente contra o fundo.
+export function ensureReadable(hex, bgHex, minRatio = 4.5) {
+  if (!isValidHex(hex) || !isValidHex(bgHex)) return hex
+  if (contrastRatio(hex, bgHex) >= minRatio) return hex
+  const { h, s } = hexToHsv(hex)
+  for (let v = 10; v <= 100; v += 5) {
+    const candidate = hsvToHex(h, s, v)
+    if (contrastRatio(candidate, bgHex) >= minRatio) return candidate
+  }
+  return hsvToHex(h, s, 100)
+}

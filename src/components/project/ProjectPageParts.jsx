@@ -21,7 +21,7 @@ import { getProjectField, PROJECT_FIELDS } from '../../lib/projectFields'
 import { useTheme } from '../../context/ThemeContext'
 import ColorPicker from '../ColorPicker'
 import SegmentedTabs from '../SegmentedTabs'
-import { accentGradientFromHex, isLightHex, isValidHex } from '../../lib/color'
+import { accentGradientFromHex, isLightHex, isValidHex, ensureReadable } from '../../lib/color'
 import ProjectComments from '../ProjectComments'
 import ProjectTimeline from '../ProjectTimeline'
 import ProjectTimelineBadge from '../ProjectTimelineBadge'
@@ -1797,6 +1797,13 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
   const titleStyle        = previewStyle.titleStyle || 'normal'
   const selectedBg        = BG_OPTIONS.find(b => b.key === (previewStyle.bg || 'default')) || BG_OPTIONS[0]
   const resolvedBg        = usingCustomBg ? customBg : (selectedBg.bg || 'var(--color-bg)')
+  // Cor final do título, corrigida para ter contraste com o fundo do hero —
+  // as paletas e o degradê usam tons escuros de propósito para os brilhos por
+  // trás, mas como texto direto isso podia ficar ilegível (ex: "Carmim" sobre
+  // o fundo escuro por omissão). Só o título usa esta versão clareada; os
+  // brilhos/badges que usam hero.c1/c2 continuam com a cor original.
+  const heroBgHex  = usingCustomBg ? customBg : (selectedBg.preview || '#060c18')
+  const titleColor = { c1: ensureReadable(hero.c1, heroBgHex), c2: ensureReadable(hero.c2, heroBgHex) }
   // pvTheme: force dark/light CSS vars inside preview regardless of app theme.
   // Num fundo escolhido à mão isso passa a depender da luminância do hex, senão
   // um fundo claro ficava com texto branco por cima.
@@ -2230,11 +2237,11 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
               // propriedades de estilo cujo valor mudou, backgroundClip:'text'
               // (que fica igual entre renders) deixava de ser reaplicado,
               // ficando o texto transparente sobre um retângulo sólido.
-              backgroundImage: `linear-gradient(135deg, ${hero.c1}, ${hero.c2})`,
+              backgroundImage: `linear-gradient(135deg, ${titleColor.c1}, ${titleColor.c2})`,
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
-            } : { color: hero.c1 }),
+            } : { color: titleColor.c1 }),
           }}>
             {project.name}
             {(project.score || 0) >= 100 && (
@@ -2481,6 +2488,11 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                 const isShortTxt = !isPlaceholderTxt && len > 0 && len < f.minLen
                 const isDone = len > 0 && len >= f.minLen && !isPlaceholderTxt
                 const dirty = draft !== (project[f.key] || '')
+                // Dica personalizada da Análise IA, quando já existe uma
+                // análise guardada para este projeto — a mesma que aparece no
+                // painel "Análise IA", só que já ao lado do campo em vez de
+                // obrigar a saltar para outro sítio para a ver.
+                const aiTip = project.ai_feedback?.sections?.[f.key]?.tip
                 return (
                   <div key={f.key} style={wsGroup}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 11 }}>
@@ -2493,6 +2505,11 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                         <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-success)', display: 'flex', alignItems: 'center', gap: 3 }}><Check size={10} strokeWidth={3} /> Completo</span>
                       )}
                     </div>
+                    {aiTip && (
+                      <p style={{ margin: '0 0 9px', fontSize: 11.5, color: 'var(--color-primary)', lineHeight: 1.45, display: 'flex', alignItems: 'flex-start', gap: 5 }}>
+                        <ChevronRight size={11} style={{ flexShrink: 0, marginTop: 2 }} /> <span>{aiTip}</span>
+                      </p>
+                    )}
                     <textarea
                       ref={el => { contentFieldRefs.current[f.key] = el }}
                       value={draft}
