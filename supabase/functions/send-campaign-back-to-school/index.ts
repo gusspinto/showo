@@ -64,10 +64,37 @@ Deno.serve(async (req) => {
     if (!resendKey) throw new Error('RESEND_API_KEY not configured')
 
     let testUserId: string | null = null
+    let registeredBefore: Date | null = null
     try {
       const body = await req.json()
       if (typeof body?.test_user_id === 'string') testUserId = body.test_user_id
+      // Só para reenvios: ignora quem se registou a partir desta data.
+      if (typeof body?.registered_before === 'string' && !isNaN(Date.parse(body.registered_before))) {
+        registeredBefore = new Date(body.registered_before)
+      }
     } catch { /* corpo vazio é normal */ }
+
+    const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
+
+    // Um envio falhado deixava só uma linha na resposta HTTP do cron, que se
+    // perde. Aqui tenta de novo em erros temporários (429/5xx), respeitando
+    // Retry-After, e regista sempre o motivo nos logs da função.
+    async function sendWithRetry(payload: unknown, label: string): Promise<Response> {
+      let res: Response | null = null
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        res = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        if (res.ok || (res.status !== 429 && res.status < 500)) break
+        const wait = Number(res.headers.get('retry-after')) * 1000 || attempt * 1500
+        console.error(`[campaign] ${label}: HTTP ${res.status} (tentativa ${attempt}/3), a esperar ${wait}ms`)
+        await sleep(wait)
+      }
+      if (res && !res.ok) console.error(`[campaign] ${label}: falhou com HTTP ${res.status}`)
+      return res!
+    }
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -109,7 +136,15 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Envio real, só quem tem occupation = "Aluno / A estudar", uma vez, sem cooldown (campanha única).
+    // Envio real, só quem tem occupation = "Aluno / A estudar", uma vez por
+    // pessoa: quem já tem linha em email_sends nunca volta a receber, por isso
+    // voltar a correr a função só apanha quem ficou de fora.
+    const { data: already } = await supabase
+      .from('email_sends')
+      .select('user_id')
+      .eq('email_type', 'campaign_back_to_school')
+    const alreadySent = new Set((already ?? []).map(r => r.user_id))
+
     let page = 1
     const perPage = 200
     for (;;) {
@@ -130,25 +165,24 @@ Deno.serve(async (req) => {
           const profile = profileMap.get(u.id)
           if (profile?.occupation !== 'Aluno / A estudar') { skipped++; continue }
           if (profile?.marketing_campaign_opted_out) { skipped++; continue }
+          if (alreadySent.has(u.id)) { skipped++; continue }
+          if (registeredBefore && new Date(u.created_at) >= registeredBefore) { skipped++; continue }
 
           const unsubSig = await signUserId(u.id, cronSecret)
           const unsubscribeUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/campaign-unsubscribe?u=${u.id}&sig=${unsubSig}`
           const html = buildHtml({ firstName: profile?.full_name?.split(' ')[0], unsubscribeUrl })
 
-          const res = await fetch('https://api.resend.com/emails', {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              from: FROM,
-              to: u.email,
-              subject: 'A tua PAP fica com prova, não só com nota',
-              html,
-              headers: {
-                'List-Unsubscribe': `<${unsubscribeUrl}>`,
-                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-              },
-            }),
-          })
+          const res = await sendWithRetry({
+            from: FROM,
+            to: u.email,
+            subject: 'A tua PAP fica com prova, não só com nota',
+            html,
+            headers: {
+              'List-Unsubscribe': `<${unsubscribeUrl}>`,
+              'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+            },
+          }, u.email)
+          await sleep(600)
           if (!res.ok) { errors.push(`${u.email}: ${await res.text()}`); continue }
 
           const { id: resendId } = await res.json()

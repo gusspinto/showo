@@ -94,7 +94,7 @@ import { PaintRollerIcon as Paintbrush } from '@solar-icons/react/bold/paint-rol
 import { WindowFrameIcon as LayoutTemplate } from '@solar-icons/react/bold/window-frame'
 
 import {
-  ANON_PROJECT_COLUMNS, AUTH_PROJECT_COLUMNS, ApiProof, DbSetupNudge, GithubProof, colors,
+  ANON_PROJECT_COLUMNS, AUTH_PROJECT_COLUMNS, ApiProof, DbSetupNudge, GithubProof, LiveProof, colors,
   PROJECT_TYPE_LABELS, TYPE_HERO, PROFILE_SCORE_FIELDS, SECTION_GROUPS,
   humanizeFieldKey, FeedbackCommentText, progBar, progTrack, getAreaGradient,
   getLevelInfo, ScoreRing, Section, MissionRow, Toast, Confetti,
@@ -1575,6 +1575,15 @@ export default function ProjectPage() {
       triggerToast('Não foi possível carregar a imagem — tenta outra vez')
     }
     setCoverUploading(false)
+  }
+
+  async function handleSaveProofUrl(url) {
+    if (!project) return false
+    const { error } = await supabase.from('projects').update({ portfolio_url: url }).eq('id', project.id)
+    if (error) return false
+    setProject(p => ({ ...p, portfolio_url: url }))
+    triggerToast('Prova guardada')
+    return true
   }
 
   async function toggleProjectState() {
@@ -4055,6 +4064,7 @@ export default function ProjectPage() {
             não depois: é um empurrão contextual sobre o próprio projeto,
             não um separador de navegação, e ficava perdido lá abaixo. */}
         <DbSetupNudge project={project} isOwner={isOwner} />
+        <LiveProof project={project} isOwner={isOwner && !!user} onSave={handleSaveProofUrl} />
         <GithubProof project={project} />
         <ApiProof project={project} />
 
