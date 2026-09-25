@@ -27,11 +27,14 @@ Ficam no valor pré-desconto, para o código de 50% do lançamento fazer sentido
 
 | Plano | Agora | Pré-lançamento | Standard pós-campanha |
 |---|---|---|---|
-| Plus | 4,99 | 8,99 | 6,99 |
-| Pro | 9,99 | 17,99 | 13,99 |
+| Plus mensal | 4,99 | 8,99 | 6,99 |
+| Pro mensal | 9,99 | 17,99 | 13,99 |
+| Plus anual | — | 89,90 (7,49/mês) | 69,90 (5,82/mês) |
+| Pro anual | — | 179,90 (14,99/mês) | 139,90 (11,65/mês) |
 
-Suposição minha, para corrigires antes de eu mexer: os números do Pro não foram falados na
-reunião, escalei-os na mesma proporção do Plus. Se quiseres outro valor, diz.
+Confirmado pelo Gustavo a 25/09: se um plano sobe, o outro sobe também. Anual = 10× o
+mensal, os 2 meses de desconto pedidos na reunião. Na UI, valor por mês em destaque e total
+anual cobrado logo abaixo, sem letra pequena.
 
 Trabalho: criar os novos preços no Stripe (nunca editar um price existente, quebra as
 subscrições ativas), atualizar env vars e `plans.js`, e atualizar os valores no
@@ -52,7 +55,33 @@ o correto.
 `SHOWO50`, 50%, `repeating` 6 meses, válido durante 2 semanas de campanha. Criar já,
 guardar desativado, e ativar no dia do lançamento. Não anunciar nada esta semana.
 
-### 4. Onboarding, a partir do StudyFetch
+**Restringir o coupon aos preços mensais.** Num plano anual existe uma só fatura por ano, e
+um desconto `repeating` de 6 meses cai inteiro sobre ela: 50% de 89,90 são 44,95 por um ano
+completo, sem forma de voltar atrás em quem já resgatou. O Stripe permite limitar um coupon a
+produtos específicos — usar isso. Desconto de lançamento no anual, se se quiser, é um segundo
+código com percentagem própria e aplicação única. Confirmar em modo de teste antes de
+produção, não pela documentação.
+
+### 4. Pop-up de upgrade no PlanGate (decidido a 25/09)
+Discutiu-se esconder os preços num pop-up e acabar com a `/pricing`, como o StudyFetch. A
+decisão foi não fazer isso: a `/pricing` fica (âncora de preço, SEO — está no sitemap com
+prioridade 0.8 — e é onde as escolas vêem que a conta institucional não é self-serve). O que
+se copia do StudyFetch é fechar a venda no momento da dor.
+
+Hoje `src/components/PlanGate.jsx:38` faz `navigate('/pricing')` e arranca a pessoa do sítio
+onde estava, precisamente quando ela queria continuar a trabalhar. Passa a:
+
+- Mostrar **um** plano, o tier acima do atual (Grátis → Plus, Plus → Pro), com preço e um
+  botão direto ao checkout. Anual primeiro, com link discreto "prefiro mensal".
+- **Nada de CTA de pagamento em contas de escola.** `resolvePlanId` devolve `school` /
+  `school_pro` a quem entrou por código de turma, e professores são `pro`. Para esses fica a
+  mensagem e o botão de fechar. Um aluno de escola com botão de pagar estraga a conversa
+  comercial com a instituição.
+- `create-checkout` passa a aceitar o path de origem e a usá-lo no `success_url` (hoje é fixo
+  em `/settings?tab=plano&stripe=success`), com allowlist de paths internos para não criar um
+  open redirect. Quem paga volta ao projeto que estava a editar.
+
+### 5. Onboarding, a partir do StudyFetch
 Isto é o que faz a diferença no problema real da reunião: as pessoas entram, não voltam.
 Já existem `src/pages/Onboarding.jsx` e `Welcome.jsx` — o trabalho não é construir de
 novo, é fechar o buraco entre entrar e ter o primeiro projeto no ecrã.
@@ -62,11 +91,12 @@ fazem que nós não fazemos, e escolher **um** passo para implementar. A aposta 
 face ao feedback recebido é acabar o onboarding com um projeto já criado a partir do PDF,
 não com um ecrã vazio.
 
-### 5. Não fazer esta semana
+### 6. Não fazer esta semana
 Automação de áudio no WhatsApp e lançamento oficial. O mentor foi explícito: só depois das
 241 leads contactadas e dos sketches definidos.
 
 ## O que levar à reunião de quarta
 - Preços novos já em produção e plano anual a funcionar, com um pagamento de teste feito.
 - Coupon criado e pronto a ativar.
+- Pop-up de upgrade a converter dentro da app, sem sair da página.
 - Lista de diferenças de onboarding face ao StudyFetch e o passo escolhido.
