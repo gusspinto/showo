@@ -65,6 +65,8 @@ export const PLANS = {
   plus: {
     id: 'plus',
     name: 'Plus',
+    priceLabel: '€4,99',
+    period: '/mês',
     stripePriceId: typeof window !== 'undefined' && window.location?.hostname === 'localhost'
       ? 'price_1U3YjERzbl5ql7IdG7Yf5MhC'
       : 'price_1U3kJ92MED6Xa6YrWrLvrdXG',
@@ -89,6 +91,8 @@ export const PLANS = {
   pro: {
     id: 'pro',
     name: 'Pro',
+    priceLabel: '€9,99',
+    period: '/mês',
     stripePriceId: typeof window !== 'undefined' && window.location?.hostname === 'localhost'
       ? 'price_1U3YjvRzbl5ql7Id7uUcwFFD'
       : 'price_1U3kJA2MED6Xa6YrEQMfJ0q3',
@@ -135,6 +139,43 @@ export function resolvePlanId(profile) {
     return orgPlan === 'pro' ? 'school_pro' : 'school'
   }
   return PLAN_ALIASES[profile.plan] || profile.plan || 'free'
+}
+
+// Próximo tier pago a partir do plano atual, para o pop-up de upgrade dentro da app
+// (PlanGate) mostrar um CTA direto em vez de mandar para /pricing. Devolve null quando
+// não há upgrade self-serve a oferecer: quem já está no Pro, e o Grátis/tudo o resto cai
+// no default 'plus'. As contas de escola (school/school_pro) nunca chamam isto — são
+// vendidas à instituição, nunca self-serve, e o PlanGateModal trata isso à parte.
+const NEXT_PAID_PLAN = { free: 'plus', plus: 'pro' }
+
+export function nextPaidPlan(planId) {
+  const resolved = PLAN_ALIASES[planId] || planId
+  const nextId = NEXT_PAID_PLAN[resolved]
+  return nextId ? PLANS[nextId] : null
+}
+
+// O ganho concreto na feature que bloqueou a pessoa ("3 → 15 projetos", "10 → 100 por
+// mês"), para mostrar no pop-up em vez de uma lista genérica de benefícios do plano.
+export function upgradeGain(feature, fromPlanId, toPlan) {
+  const from = getPlan(fromPlanId)
+  if (!toPlan) return null
+  const fmt = (n) => (n === Infinity ? 'ilimitado' : n)
+
+  if (feature === 'maxProjects') {
+    return { label: 'Projetos', value: `${fmt(from.maxProjects)} → ${fmt(toPlan.maxProjects)}` }
+  }
+  if (feature === 'internshipPage' || feature === 'weeklyRecap') {
+    if (toPlan.career?.[feature] !== true) return null
+    return { label: feature === 'internshipPage' ? 'Página de estágio' : 'Recap semanal', value: 'incluído' }
+  }
+  const fromLimit = from.ai?.[feature]
+  const toLimit = toPlan.ai?.[feature]
+  if (fromLimit === undefined || toLimit === undefined) return null
+  if (toLimit !== Infinity && toLimit <= fromLimit) return null
+  return {
+    label: AI_FEATURE_LABELS[feature] || feature,
+    value: `${fmt(fromLimit)} → ${fmt(toLimit)} por mês`,
+  }
 }
 
 export function remainingUses(planId, feature, usageMap) {
