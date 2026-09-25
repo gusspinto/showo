@@ -111,14 +111,29 @@ async function pushShowoEvents(sb: any, userId: string, accessToken: string) {
       iCalUID: `${ev.id}@showo.pt`,
       source: { title: 'Showo', url: 'https://showo.pt' },
     }
-    return fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events/import', {
+    const resp = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events/import', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     })
+    // Um fetch que devolve 400/403 continua a resolver. Sem esta verificação o
+    // allSettled contava como sucesso eventos que o Google tinha rejeitado, e a
+    // UI dizia "sincronizado" com o calendário do utilizador vazio.
+    if (!resp.ok) {
+      const detail = await resp.text().catch(() => '')
+      throw new Error(`${resp.status} ${detail.slice(0, 200)}`)
+    }
+    return true
   }))
 
-  return { pushed: results.filter(r => r.status === 'fulfilled').length, total: events.length }
+  const failures = results.flatMap(r => (r.status === 'rejected' ? [String((r.reason as Error)?.message ?? r.reason)] : []))
+  return {
+    pushed: results.filter(r => r.status === 'fulfilled').length,
+    total: events.length,
+    failed: failures.length,
+    // Só as primeiras, para não devolver um payload enorme num erro sistémico.
+    errors: failures.slice(0, 3),
+  }
 }
 
 Deno.serve(async (req) => {
@@ -139,7 +154,20 @@ Deno.serve(async (req) => {
   if (action === 'start') {
     const user = await getUser(req)
     if (!user) return json({ error: 'unauthorized' }, 401)
+    // O state é guardado antes de sair daqui para o callback poder confirmar
+    // que foi mesmo o Showo a iniciar este fluxo, e para que utilizador. Sem
+    // isto o user_id vinha do URL e qualquer pessoa podia gravar os seus
+    // tokens na conta de outra.
     const state = crypto.randomUUID()
+    const sbState = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+    await sbState.rpc('purge_expired_google_oauth_states')
+    const { error: stateErr } = await sbState.from('google_oauth_states').insert({
+      state,
+      user_id: user.id,
+      expires_at: new Date(Date.now() + 15 * 60_000).toISOString(),
+    })
+    if (stateErr) return json({ error: 'could not start oauth flow' }, 500)
+
     const consent = new URL('https://accounts.google.com/o/oauth2/v2/auth')
     consent.searchParams.set('client_id', clientId)
     consent.searchParams.set('redirect_uri', redirectUri)
@@ -147,7 +175,8 @@ Deno.serve(async (req) => {
     consent.searchParams.set('scope', SCOPES)
     consent.searchParams.set('access_type', 'offline')
     consent.searchParams.set('prompt', 'consent')
-    consent.searchParams.set('state', `${user.id}:${state}`)
+    // Só o state opaco viaja no URL. O user_id passa a vir da tabela.
+    consent.searchParams.set('state', state)
     return json({ url: consent.toString() })
   }
 
@@ -156,8 +185,19 @@ Deno.serve(async (req) => {
     const code = url.searchParams.get('code')
     const state = url.searchParams.get('state')
     if (!code || !state) return json({ error: 'missing code/state' }, 400)
-    const userId = state.split(':')[0]
-    if (!userId) return json({ error: 'invalid state' }, 400)
+
+    const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+    // De uso único: o delete...select devolve a linha só a quem a apagou, por
+    // isso um state repetido (replay) não passa daqui.
+    const { data: stateRow } = await sb
+      .from('google_oauth_states')
+      .delete()
+      .eq('state', state)
+      .select('user_id, expires_at')
+      .maybeSingle()
+    if (!stateRow) return json({ error: 'invalid state' }, 400)
+    if (new Date(stateRow.expires_at) < new Date()) return json({ error: 'expired state' }, 400)
+    const userId = stateRow.user_id
 
     const tokenResp = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
@@ -169,10 +209,12 @@ Deno.serve(async (req) => {
     })
     const tokens = await tokenResp.json()
     if (!tokens.access_token || !tokens.refresh_token) {
-      return json({ error: 'token exchange failed', details: tokens }, 400)
+      // A resposta crua do Google não volta para o cliente: pode trazer
+      // detalhes da configuração do OAuth que não interessa expor.
+      console.error('token exchange failed', tokens?.error, tokens?.error_description)
+      return json({ error: 'token exchange failed' }, 400)
     }
 
-    const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
     await sb.from('google_calendar_tokens').upsert({
       user_id: userId,
       access_token: tokens.access_token,
@@ -200,6 +242,29 @@ Deno.serve(async (req) => {
     const user = await getUser(req)
     if (!user) return json({ error: 'unauthorized' }, 401)
     const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+
+    // Revogar do lado do Google antes de apagar. Apagar só a nossa linha
+    // deixava o acesso válido na conta do utilizador, o que contraria o que
+    // o botão "Desligar" promete (e o que a política do Google exige).
+    const { data: row } = await sb
+      .from('google_calendar_tokens')
+      .select('refresh_token, access_token')
+      .eq('user_id', user.id)
+      .maybeSingle()
+    if (row) {
+      const token = row.refresh_token ?? row.access_token
+      try {
+        await fetch('https://oauth2.googleapis.com/revoke', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({ token }),
+        })
+      } catch {
+        // Uma revogação falhada não pode impedir o utilizador de desligar:
+        // apagamos os tokens à mesma e ele pode revogar em myaccount.google.com.
+      }
+    }
+
     await sb.from('google_calendar_tokens').delete().eq('user_id', user.id)
     return json({ ok: true })
   }

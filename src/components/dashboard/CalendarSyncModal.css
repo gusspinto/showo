@@ -1,0 +1,155 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   CALENDAR SYNC MODAL
+   Cartão de destaque para o Google (o único fluxo verificado pelo OAuth) e
+   os outros calendários (ICS) escondidos atrás de um disclosure discreto —
+   continuam a funcionar, só deixam de competir visualmente com o Google.
+   Ficheiro próprio (em vez de viver dentro de StudentDashboard.css) porque
+   este modal também é usado a partir de Dashboard.jsx, que não carrega
+   aquele CSS.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.cal-sync {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.cal-sync-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  background: var(--color-bg-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  transition: border-color var(--duration-normal);
+}
+.cal-sync-card.is-connected {
+  border-color: var(--color-success-subtle);
+}
+
+.cal-sync-card-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.cal-sync-mark {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+.cal-sync-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.cal-sync-card-title {
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--color-text);
+  font-family: var(--font-heading);
+}
+.cal-sync-card-status {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+}
+
+.cal-sync-card-actions {
+  display: flex;
+  gap: var(--sp-2);
+}
+.cal-sync-card-actions > * { flex: 1; }
+
+.cal-sync-msg {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+.cal-sync-msg.is-error {
+  color: var(--color-warning);
+}
+
+.cal-sync-other-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-1);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  transition: color var(--duration-fast);
+}
+.cal-sync-other-toggle:hover { color: var(--color-text); }
+.cal-sync-other-chev {
+  flex-shrink: 0;
+  transition: transform var(--duration-normal) var(--ease-out);
+  color: var(--color-text-tertiary);
+}
+.cal-sync-other-chev.is-open { transform: rotate(180deg); }
+
+.cal-sync-other-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding-top: 2px;
+  animation: cal-sync-other-in 0.18s var(--ease-out) both;
+}
+@keyframes cal-sync-other-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.cal-sync-other-hint {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  line-height: 1.5;
+}
+
+.cal-sync-link-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+.cal-sync-link-icon {
+  flex-shrink: 0;
+  color: var(--color-text-tertiary);
+}
+.cal-sync-link-code {
+  flex: 1;
+  min-width: 0;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cal-sync-other-actions {
+  display: flex;
+  gap: var(--sp-2);
+}
+
+@media (max-width: 480px) {
+  .cal-sync-card-actions,
+  .cal-sync-other-actions {
+    flex-direction: column;
+  }
+}
