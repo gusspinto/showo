@@ -40,12 +40,27 @@ export default function Privacidade() {
         <li><strong>Sentry</strong>, que nos avisa quando algo rebenta tecnicamente.</li>
         <li><strong>Anthropic (Claude)</strong>, a IA que escreve a análise. O texto do teu projeto vai para lá só para gerar o feedback, e não serve para treinar o modelo.</li>
         <li><strong>Resend</strong>, que envia os emails transacionais (confirmações, relatórios mensais).</li>
-        <li><strong>Google</strong>, se escolheres entrar com a conta Google (autenticação OAuth).</li>
+        <li><strong>Google</strong>, se escolheres entrar com a conta Google (autenticação OAuth) ou ligar o teu Google Calendar para sincronizar os teus prazos e lembretes.</li>
         <li><strong>Stripe</strong>, que processa os pagamentos das subscrições. Os dados do cartão nunca passam pelos nossos servidores, ficam só com a Stripe.</li>
       </ul>
       <p>
         Alguns destes serviços podem tratar dados fora da Europa, por exemplo nos EUA. Quando isso acontece, é feito com as
         salvaguardas que o RGPD exige, como as Cláusulas Contratuais-Tipo.
+      </p>
+
+      <h2>Google Calendar</h2>
+      <p>
+        Se ligares o teu Google Calendar, o Showo usa esse acesso só para escrever no teu calendário os prazos, lembretes e
+        datas de defesa que já criaste dentro da Showo. O Showo nunca lê o teu Google Calendar de volta, nem outros dados da
+        tua conta Google — a comunicação acontece só num sentido, da Showo para o Google. Podes desligar esta ligação a
+        qualquer momento no painel da Agenda, o que revoga o acesso junto do Google.
+      </p>
+      <p>
+        Os dados obtidos através das APIs da Google Workspace, incluindo através desta integração com o Google Calendar,
+        cumprem os requisitos de <em>Limited Use</em> da <a href="https://developers.google.com/workspace/workspace-api-user-data-developer-policy" target="_blank" rel="noopener noreferrer">Google Workspace API User Data and Developer Policy</a>:
+        não são usados, transferidos nem vendidos para criar, treinar ou melhorar modelos de inteligência artificial. A
+        Showo usa a Anthropic (Claude) para a análise de projetos, mas essa funcionalidade nunca tem acesso a dados vindos
+        do Google Calendar — são sistemas completamente separados dentro da aplicação.
       </p>
 
       <h2>Cookies</h2>
