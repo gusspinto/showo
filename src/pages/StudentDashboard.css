@@ -3551,3 +3551,6 @@
 .sdb-week-rule.is-done {
   color: var(--color-success);
 }
+
+/* CalendarSyncModal tem CSS próprio em components/dashboard/CalendarSyncModal.css
+   (o modal também é usado a partir de Dashboard.jsx, que não carrega este ficheiro). */

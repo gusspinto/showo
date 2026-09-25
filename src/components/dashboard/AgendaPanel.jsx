@@ -152,7 +152,7 @@ export default function AgendaPanel({
 
       {googleConnected === false && upcoming.length > 0 && (
         <p className="sdb-agenda-note">
-          Ainda não está ligado ao Google ou Apple Calendar.
+          Ainda não está ligado ao Google Calendar.
           {' '}<button className="sdb-linkbtn" onClick={onSync}>Ligar agora</button>
         </p>
       )}
