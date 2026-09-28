@@ -301,9 +301,9 @@ function OccupationGate({ children, reopenGate, setReopenGate }) {
 // nem anda na escola. `profile.occupation` já está sempre preenchido a esta
 // altura — o OccupationGate corre antes deste, na mesma stack.
 const STUDENT_INTENT_OPTIONS = [
-  { id: 'pap',             label: 'A minha PAP ou projeto final',        icon: GraduationCap },
-  { id: 'trabalho_escola', label: 'Trabalhos de disciplinas',            icon: BookOpen },
-  { id: 'projetos_pessoais', label: 'Projetos pessoais, por gosto',      icon: Lightbulb },
+  { id: 'pap',             label: 'PAP ou projeto final',                icon: GraduationCap },
+  { id: 'trabalho_escola', label: 'Trabalhos',                           icon: BookOpen },
+  { id: 'projetos_pessoais', label: 'Projetos pessoais',                 icon: Lightbulb },
   { id: 'explorar',        label: 'Ainda estou só a explorar',           icon: Compass },
 ]
 const WORK_INTENT_OPTIONS = [
@@ -370,7 +370,7 @@ function IntentGate({ children, setReopenGate }) {
         <img src="/darkmode_icon_logo.png" alt="Showo" className="onboard-logo" />
         <div className="onboard-head">
           <h1 className="onboard-title">{step === 'pap_timing' ? 'Quando é a tua PAP?' : 'Para que vais usar o Showo?'}</h1>
-          {step === 'intent' && <p className="onboard-subtitle">Escolhe tudo o que se aplica — pode ser mais do que uma.</p>}
+          {step === 'intent' && <p className="onboard-subtitle">Escolhe tudo o que se aplica.</p>}
         </div>
 
         {step === 'pap_timing' ? (
