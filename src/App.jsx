@@ -11,6 +11,7 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { SidebarProvider } from './context/SidebarContext'
 import RestReminder from './components/RestReminder'
+import BrandScene from './components/BrandScene'
 import CookieConsent from './components/CookieConsent'
 import SplashScreen from './components/SplashScreen'
 import { Analytics } from '@vercel/analytics/react'
@@ -374,16 +375,23 @@ function IntentGate({ children }) {
 
   return (
     <div style={{
-      position: 'fixed', inset: 0, zIndex: 99998, background: 'rgba(0,0,0,0.6)',
+      position: 'fixed', inset: 0, zIndex: 99998, background: '#0a0a0a',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontFamily: 'var(--font-body)', padding: 24,
     }}>
+      {/* 28/09: fundo sólido (não translúcido, para não misturar com o tema
+          da página por baixo, seja claro ou escuro) + BrandScene, para o
+          onboarding não parecer um popup solto — mesma identidade do
+          login/registo/home. */}
+      <BrandScene opacity={0.5} />
       <div style={{
+        position: 'relative', zIndex: 2,
         width: '100%', maxWidth: 400,
         background: 'var(--color-surface)', border: '1px solid var(--color-border)',
         borderRadius: 'var(--radius-xl)', padding: '32px 28px',
         display: 'flex', flexDirection: 'column', gap: 16,
         opacity: saving ? 0.6 : 1, pointerEvents: saving ? 'none' : 'auto',
+        boxShadow: '0 24px 60px rgba(0,0,0,0.5)',
       }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <img src="/darkmode_icon_logo.png" alt="Showo" style={{ height: 24, width: 'auto', objectFit: 'contain', alignSelf: 'flex-start', marginBottom: 4 }} />

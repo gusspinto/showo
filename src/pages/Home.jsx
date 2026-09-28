@@ -6,6 +6,7 @@ import { EyeIcon as Eye } from '@solar-icons/react/bold/eye'
 import { FireIcon as Fire } from '@solar-icons/react/bold/fire'
 import { Navbar } from '../components/Navbar'
 import { supabase } from '../lib/supabase'
+import BrandScene from '../components/BrandScene'
 import HomeHow from '../components/HomeHow'
 import TestimonialsMarquee from '../components/TestimonialsMarquee'
 import { useAuth } from '../context/AuthContext'
@@ -160,6 +161,8 @@ export default function Home() {
         <div className="home-hero-grid">
           {/* Left — copy */}
           <div className="home-hero-copy">
+            <BrandScene opacity={0.85} />
+            <div className="home-hero-copy-content">
             {/* 28/09: "Mostra o que construíste" ficou vago a mais — sem
                 dizer para quem nem o que se ganha, não dava para ninguém
                 pensar "é isto que preciso". Volta a tagline que já vivia
@@ -169,7 +172,10 @@ export default function Home() {
                 trabalho". O subtítulo tinha saído de propósito antes — a
                 explicação estava só no "Como funciona" — mas isso fica
                 scroll abaixo, longe do primeiro ecrã que decide se a
-                pessoa fica. */}
+                pessoa fica. 28/09 (2ª ronda): o Gustavo achou o título um
+                "label gigante" — mantém-se o texto (é concreto, diz o que
+                se ganha), mas mais pequeno e com menos peso, para ler como
+                título e não como slogan a gritar. */}
             <h1 className="home-hero-h1">
               Do projeto<br />à oportunidade.
             </h1>
@@ -184,6 +190,7 @@ export default function Home() {
               <span className="home-hero-stats-label">
                 projetos criados<br />por estudantes portugueses
               </span>
+            </div>
             </div>
           </div>
 
