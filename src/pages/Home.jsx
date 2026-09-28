@@ -160,22 +160,9 @@ export default function Home() {
         <div className="home-hero-grid">
           {/* Left — copy */}
           <div className="home-hero-copy">
-            {/* 28/09: "Mostra o que construíste" ficou vago a mais — sem
-                dizer para quem nem o que se ganha, não dava para ninguém
-                pensar "é isto que preciso". Volta a tagline que já vivia
-                só no <title> (index.html) e nunca tinha aparecido na
-                própria página, com uma linha concreta por baixo: quem vê
-                o resultado (professor, recrutador, cliente), não só "o
-                trabalho". O subtítulo tinha saído de propósito antes — a
-                explicação estava só no "Como funciona" — mas isso fica
-                scroll abaixo, longe do primeiro ecrã que decide se a
-                pessoa fica. */}
             <h1 className="home-hero-h1">
               Do projeto<br />à oportunidade.
             </h1>
-            <p className="home-hero-sub">
-              Transforma os teus projetos num portefólio profissional — PAP, trabalhos de curso ou o que estiveres a construir agora — e mostra-o a quem decide.
-            </p>
 
             <div className="home-hero-stats">
               <span className="home-hero-stats-number">

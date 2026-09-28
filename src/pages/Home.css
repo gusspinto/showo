@@ -70,16 +70,6 @@
   font-family: var(--font-heading);
 }
 
-/* Linha concreta por baixo do título — diz o que se ganha e para quem,
-   o que o título sozinho (curto de propósito) não consegue dizer. */
-.home-hero-sub {
-  font-size: clamp(15px, 1.6vw, 17px);
-  line-height: 1.55;
-  color: rgba(255,255,255,0.62);
-  max-width: 46ch;
-  margin: 0 0 28px;
-}
-
 /* ── Stats counter ──
    Discreto — número e legenda no mesmo tom de cinza, sem o azul vibrante
    que tinha antes; é um número de rodapé, não um segundo título. */
@@ -705,10 +695,6 @@ body.light .home-card-cover img {
   .home-hero-h1 {
     font-size: clamp(38px, 12vw, 52px);
     margin-bottom: 14px;
-  }
-  .home-hero-sub {
-    font-size: 15px;
-    margin: 0 auto 24px;
   }
   .home-hero-stats { display: none; }
 
