@@ -389,7 +389,7 @@ a { transition: color 0.15s, opacity 0.15s; }
   transition: background 0.15s, color 0.15s;
 }
 .onboard-card.is-selected .onboard-card-icon { background: var(--color-primary); color: #fff; }
-.onboard-card-label { font-size: 0.85rem; font-weight: 700; line-height: 1.35; text-transform: uppercase; letter-spacing: 0.4px; }
+.onboard-card-label { font-size: 0.9rem; font-weight: 700; line-height: 1.35; }
 .onboard-card-check {
   position: absolute; top: 10px; right: 10px;
   width: 20px; height: 20px; border-radius: 50%;
