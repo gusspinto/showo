@@ -310,6 +310,14 @@ function OccupationGate({ children, reopenGate, setReopenGate }) {
         borderRadius: 'var(--radius-xl)', padding: '32px 28px',
         display: 'flex', flexDirection: 'column', gap: 16,
       }}>
+        <button
+          type="button"
+          onClick={() => setReopenGate('phone')}
+          className="gate-back-btn"
+        >
+          <ArrowLeft size={15} />
+        </button>
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <img src="/darkmode_icon_logo.png" alt="Showo" style={{ height: 24, width: 'auto', objectFit: 'contain', alignSelf: 'flex-start', marginBottom: 4 }} />
           <p style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
@@ -327,27 +335,19 @@ function OccupationGate({ children, reopenGate, setReopenGate }) {
             <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--color-error)' }}>{error}</p>
           )}
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
-            <button
-              type="button"
-              onClick={() => setReopenGate('phone')}
-              style={{ background: 'none', border: 'none', padding: 0, color: 'var(--color-text-secondary)', fontSize: '0.82rem', cursor: 'pointer', fontFamily: 'var(--font-body)' }}
-            >
-              ← Voltar
-            </button>
-            <button
-              type="submit"
-              disabled={saving || !occupation}
-              style={{
-                padding: '9px 18px', borderRadius: 'var(--radius-md)', border: 'none',
-                background: (saving || !occupation) ? 'var(--color-border)' : 'var(--color-text)',
-                color: 'var(--color-bg)', fontWeight: 600, fontSize: '0.85rem',
-                cursor: (saving || !occupation) ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-body)',
-              }}
-            >
-              {saving ? 'A guardar…' : 'Guardar'}
-            </button>
-          </div>
+          <button
+            type="submit"
+            disabled={saving || !occupation}
+            style={{
+              padding: '9px 18px', borderRadius: 'var(--radius-md)', border: 'none',
+              background: (saving || !occupation) ? 'var(--color-border)' : 'var(--color-text)',
+              color: 'var(--color-bg)', fontWeight: 600, fontSize: '0.85rem',
+              cursor: (saving || !occupation) ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-body)',
+              alignSelf: 'flex-end', marginTop: 4,
+            }}
+          >
+            {saving ? 'A guardar…' : 'Guardar'}
+          </button>
         </form>
       </div>
     </div>
@@ -484,6 +484,14 @@ function IntentGate({ children, setReopenGate }) {
         }
       `}</style>
       <div className="intent-gate-panel" style={{ opacity: saving ? 0.6 : 1, pointerEvents: saving ? 'none' : 'auto' }}>
+        <button
+          type="button"
+          onClick={() => step === 'pap_timing' ? setStep('intent') : setReopenGate('occupation')}
+          className="gate-back-btn"
+        >
+          <ArrowLeft size={15} />
+        </button>
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <img src="/darkmode_icon_logo.png" alt="Showo" style={{ height: 24, width: 'auto', objectFit: 'contain', alignSelf: 'flex-start', marginBottom: 4 }} />
           <p style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
@@ -531,27 +539,8 @@ function IntentGate({ children, setReopenGate }) {
         </div>
 
         {step === 'intent' && (
-          <>
-            <button type="button" disabled={saving || !selected.length} onClick={confirmIntent} className="intent-gate-cta">
-              {saving ? 'A guardar…' : 'Continuar'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setReopenGate('occupation')}
-              style={{ alignSelf: 'flex-start', background: 'none', border: 'none', padding: 0, color: 'var(--color-text-secondary)', fontSize: '0.82rem', cursor: 'pointer', fontFamily: 'var(--font-body)' }}
-            >
-              ← Voltar
-            </button>
-          </>
-        )}
-
-        {step === 'pap_timing' && (
-          <button
-            type="button"
-            onClick={() => setStep('intent')}
-            style={{ alignSelf: 'flex-start', background: 'none', border: 'none', padding: 0, color: 'var(--color-text-secondary)', fontSize: '0.82rem', cursor: 'pointer', fontFamily: 'var(--font-body)' }}
-          >
-            ← Voltar
+          <button type="button" disabled={saving || !selected.length} onClick={confirmIntent} className="intent-gate-cta">
+            {saving ? 'A guardar…' : 'Continuar'}
           </button>
         )}
       </div>

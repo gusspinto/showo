@@ -320,3 +320,18 @@ a { transition: color 0.15s, opacity 0.15s; }
   .dash-sec-label { font-size: 11px !important; }
 
 }
+
+/* ── Botão "voltar" dos gates de onboarding (Phone/Occupation/IntentGate,
+   App.jsx) — canto superior esquerdo do cartão, acima do logo. */
+.gate-back-btn {
+  align-self: flex-start;
+  width: 30px; height: 30px; border-radius: 50%;
+  border: 1px solid var(--color-border); background: none;
+  color: var(--color-text-secondary);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; padding: 0; margin-bottom: -4px;
+  transition: border-color 0.15s, color 0.15s;
+}
+@media (hover: hover) {
+  .gate-back-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+}
