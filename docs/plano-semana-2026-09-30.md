@@ -41,12 +41,11 @@ Trazer para quarta (não precisa de estar pronto antes disso):
 Ponto que liga outreach a produto: o feedback recorrente é "entrei, achei bom, esqueci-me".
 - Estudar o processo de onboarding do StudyFetch (referência combinada entre Bruno e
   Gustavo) e o que o torna tão "prendedor".
-- Já existem [`src/pages/Onboarding.jsx`](../src/pages/Onboarding.jsx) e
-  [`Welcome.jsx`](../src/pages/Welcome.jsx) — o trabalho não é construir de novo, é fechar
-  o buraco entre entrar e ter o primeiro projeto no ecrã.
-- Para quarta: lista das diferenças face ao StudyFetch e **um** passo escolhido para
-  implementar. A aposta mais óbvia é acabar o onboarding com um projeto já criado a partir
-  de um PDF, não com um ecrã vazio.
+- Análise feita a 28/09: [`docs/analise-studyfetch.md`](analise-studyfetch.md).
+- Passo escolhido: o `NextStepBlock` do Dashboard deixa de ficar vazio para quem tem um
+  projeto e ainda não está ativado, e mostra sempre o próximo passo pequeno até à ativação.
+  (A ideia inicial de "projeto criado a partir do PDF" já existe no `/novo`, por isso não é
+  aí que está o buraco.)
 
 ## 5. Preços e plano anual (o trabalho que é meu, na app)
 
@@ -128,5 +127,5 @@ Testado no Chrome real: claro/escuro, desktop/mobile, sem erros de consola.
 - [ ] 2 sketches planeados, 1 gravado.
 - [ ] Documento de dores que a app resolve.
 - [ ] Objetivo de leads e plano até ao fim do ano, incluindo arranque de ads.
-- [ ] Lista de diferenças de onboarding face ao StudyFetch, e o passo escolhido.
+- [x] Lista de diferenças de onboarding face ao StudyFetch, e o passo escolhido.
 - [x] Pop-up de upgrade a converter dentro da app — feito, falta só o deploy (secção 6).
