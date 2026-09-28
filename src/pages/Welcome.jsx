@@ -28,6 +28,24 @@ const CATEGORIES = [
   { id: 'empresa',    label: 'Empresa',          sub: 'Recrutadores',                    icon: <Building2 size={22} />, disabled: true },
 ]
 
+// Só para a conta Individual — feedback recorrente nos áudios de outreach:
+// quem chega pelo vídeo da PAP entra a pensar "isto é só para a PAP" e,
+// se a PAP for só para o ano, nunca cria nada. Esta pergunta mostra que há
+// mais usos, e para quem responde PAP, guarda quando é — para reativar essa
+// pessoa mais perto da altura certa, em vez de a perdermos aqui.
+const INTENT_OPTIONS = [
+  { id: 'pap',              label: 'A minha PAP / projeto final' },
+  { id: 'trabalho_escola',  label: 'Um trabalho de uma disciplina' },
+  { id: 'portfolio',        label: 'Um projeto pessoal, para o meu portefólio' },
+  { id: 'explorar',         label: 'Ainda não sei, só estou a ver' },
+]
+
+const PAP_TIMING_OPTIONS = [
+  { id: 'este_ano',     label: 'Este ano letivo' },
+  { id: 'proximo_ano',  label: 'Só para o ano' },
+  { id: 'nao_sei',       label: 'Ainda não sei' },
+]
+
 function buildMailto(roleId, fullName) {
   const roleLabel = ROLES.find(r => r.id === roleId)?.label ?? roleId
   const name = fullName ?? ''
@@ -60,7 +78,7 @@ export default function Welcome() {
     return 'category' // individual → o useEffect encaminha para a dashboard
   })()
 
-  const [step, setStep] = useState(intentStep) // 'category' | 'role' | 'pending' | 'code' | 'classcode'
+  const [step, setStep] = useState(intentStep) // 'category' | 'role' | 'pending' | 'code' | 'classcode' | 'intent' | 'pap_timing'
   const [selectedRole, setSelectedRole] = useState(
     ['professor', 'aluno_institucional', 'recrutador', 'empresa'].includes(googleIntent.current?.role)
       ? googleIntent.current.role : null
@@ -119,10 +137,34 @@ export default function Welcome() {
   }
 
   function selectCategory(catId) {
-    if (catId === 'individual') { finishAsAluno(); return }
+    if (catId === 'individual') { setStep('intent'); return }
     if (catId === 'empresa') return // desativado por agora
     setSelectedRole(null)
     setStep('role')
+  }
+
+  // Escrita best-effort, como o resto do onboarding (ver fetchProfile em
+  // AuthContext) — uma falha aqui não pode travar quem só quer entrar na
+  // app. Sem confirmação de sucesso: se falhar, a pessoa entra na mesma e
+  // perdemos só este sinal, não a conta dela.
+  async function saveIntent(fields) {
+    try {
+      await supabase.from('profiles').update(fields).eq('id', user.id)
+    } catch { /* best-effort */ }
+  }
+
+  function selectIntent(intentId) {
+    if (intentId === 'pap') { setStep('pap_timing'); return }
+    // pap_timing: null — quem volta atrás (seta "voltar") depois de já ter
+    // respondido à pergunta da PAP e escolhe outra opção não pode ficar com
+    // um pap_timing de uma resposta anterior que já não é verdade.
+    saveIntent({ intended_use: intentId, pap_timing: null })
+    finishAsAluno()
+  }
+
+  function selectPapTiming(timingId) {
+    saveIntent({ intended_use: 'pap', pap_timing: timingId })
+    finishAsAluno()
   }
 
   function selectEscolaRole(roleId) {
@@ -267,6 +309,73 @@ export default function Welcome() {
                     <span style={{ display: 'block', fontSize: 15, fontWeight: 700, color: C.text }}>{r.label}</span>
                     {r.sub && <span style={{ display: 'block', fontSize: 12, color: C.muted }}>{r.sub}</span>}
                   </span>
+                  <ArrowRight size={16} style={{ color: C.muted, flexShrink: 0 }} />
+                </button>
+              ))}
+            </div>
+          </>
+        ) : step === 'intent' ? (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
+              <button
+                onClick={() => setStep('category')}
+                style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', padding: 4, display: 'flex' }}
+              >
+                <ArrowLeft size={18} />
+              </button>
+              <h1 style={{ color: C.text, fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: 0, letterSpacing: '-0.5px' }}>
+                Para que vais usar o Showo?
+              </h1>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 10, marginBottom: 8 }}>
+              {INTENT_OPTIONS.map(opt => (
+                <button
+                  key={opt.id}
+                  className="welcome-role-btn"
+                  onClick={() => selectIntent(opt.id)}
+                  style={{
+                    border: `1px solid ${C.border}`, borderRadius: 10, padding: '16px 14px',
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    background: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+                  }}
+                >
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: 700, color: C.text }}>{opt.label}</span>
+                  <ArrowRight size={16} style={{ color: C.muted, flexShrink: 0 }} />
+                </button>
+              ))}
+            </div>
+          </>
+        ) : step === 'pap_timing' ? (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+              <button
+                onClick={() => setStep('intent')}
+                style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', padding: 4, display: 'flex' }}
+              >
+                <ArrowLeft size={18} />
+              </button>
+              <h1 style={{ color: C.text, fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: 0, letterSpacing: '-0.5px' }}>
+                Quando é a tua PAP?
+              </h1>
+            </div>
+            <p style={{ color: C.muted, fontSize: 14, margin: '0 0 24px', lineHeight: 1.5 }}>
+              Sem stress se ainda não sabes. Isto só nos ajuda a avisar-te na altura certa.
+            </p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 10, marginBottom: 8 }}>
+              {PAP_TIMING_OPTIONS.map(opt => (
+                <button
+                  key={opt.id}
+                  className="welcome-role-btn"
+                  onClick={() => selectPapTiming(opt.id)}
+                  style={{
+                    border: `1px solid ${C.border}`, borderRadius: 10, padding: '16px 14px',
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    background: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+                  }}
+                >
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: 700, color: C.text }}>{opt.label}</span>
                   <ArrowRight size={16} style={{ color: C.muted, flexShrink: 0 }} />
                 </button>
               ))}
