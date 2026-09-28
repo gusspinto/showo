@@ -88,6 +88,13 @@ export async function saveProject(formData, aiResult, userId, opts = {}) {
     // dependia de ninguém nunca definir a coluna. O dono continua a poder
     // mudar para privado ou só-com-link em Editar Projeto quando quiser.
     visibility: 'public',
+    // profile_featured controlava só a Biblioteca (103), mas o perfil
+    // (UserProfile.jsx) passou a exigi-lo também para projetos "full" —
+    // sem isto a false por omissão, um projeto público ficava invisível
+    // no próprio perfil do dono sem ele ter escolhido isso (incidente real:
+    // Pedro Falcao, 2026-09-28, ver docs/licoes-aprendidas.md). O dono
+    // continua a poder tirá-lo do perfil na Biblioteca, tal como já podia.
+    profile_featured: true,
   }
 
   let { data, error } = await supabase.from('projects').insert([payload]).select().single()
