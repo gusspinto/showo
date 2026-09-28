@@ -4,6 +4,13 @@ import { DangerTriangleIcon as AlertTriangle } from '@solar-icons/react/bold/dan
 import { CloseIcon as XIcon } from '@solar-icons/react/bold/close'
 import { RefreshIcon as RefreshCw } from '@solar-icons/react/bold/refresh'
 import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
+import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/square-academic-cap'
+import { Book2Icon as BookOpen } from '@solar-icons/react/bold/book-2'
+import { CaseIcon as Briefcase } from '@solar-icons/react/bold/case'
+import { CompassIcon as Compass } from '@solar-icons/react/bold/compass'
+import { Folder2Icon as FolderOpen } from '@solar-icons/react/bold/folder-2'
+import { LightbulbIcon as Lightbulb } from '@solar-icons/react/bold/lightbulb'
+import { CheckCircleIcon as CheckCircle } from '@solar-icons/react/bold/check-circle'
 import { ShowoMark } from './components/icons/ShowoMark'
 import { PhoneIcon as Phone } from '@solar-icons/react/bold/phone'
 import { HelmetProvider } from 'react-helmet-async'
@@ -333,14 +340,39 @@ function OccupationGate({ children }) {
 // nenhuma. O IntentGate corre em qualquer página, como o PhoneGate e o
 // OccupationGate, por isso apanha sempre, seja qual for o caminho de
 // entrada. Mesma condição do OccupationGate: só conta Individual.
+// Duas listas — quem é aluno a estudar vê PAP/trabalhos de disciplina, quem
+// já trabalha (freelancer, à procura de emprego, developer, etc.) vê opções
+// profissionais em vez disso. "A minha PAP" não fazia sentido para quem já
+// nem anda na escola. `profile.occupation` já está sempre preenchido a esta
+// altura — o OccupationGate corre antes deste, na mesma stack.
+const STUDENT_INTENT_OPTIONS = [
+  { id: 'pap',             label: 'A minha PAP ou projeto final',        icon: GraduationCap },
+  { id: 'trabalho_escola', label: 'Trabalhos de disciplinas',            icon: BookOpen },
+  { id: 'projetos_pessoais', label: 'Projetos pessoais, por gosto',      icon: Lightbulb },
+  { id: 'explorar',        label: 'Ainda estou só a explorar',           icon: Compass },
+]
+const WORK_INTENT_OPTIONS = [
+  { id: 'organizar',       label: 'Guardar e organizar o que já fiz',    icon: FolderOpen },
+  { id: 'portfolio',       label: 'Portefólio para procurar oportunidades', icon: Briefcase },
+  { id: 'projetos_pessoais', label: 'Projetos pessoais, fora do trabalho', icon: Lightbulb },
+  { id: 'explorar',        label: 'Ainda estou só a explorar',           icon: Compass },
+]
+const PAP_TIMING_OPTIONS = [
+  { id: 'este_ano',    label: 'Este ano letivo' },
+  { id: 'proximo_ano', label: 'Só para o ano' },
+  { id: 'nao_sei',     label: 'Ainda não sei' },
+]
+
 function IntentGate({ children }) {
   const { user, profile, refreshProfile } = useAuth()
   const location = useLocation()
   const [step, setStep] = useState('intent') // 'intent' | 'pap_timing'
+  const [selected, setSelected] = useState([])
   const [saving, setSaving] = useState(false)
 
   const needsIntent = !isGateExempt(location.pathname) && user && profile
-    && profile.role === 'aluno' && !profile.organization_id && !profile.intended_use
+    && profile.role === 'aluno' && !profile.organization_id
+    && (!profile.intended_use || profile.intended_use.length === 0)
 
   async function save(fields) {
     setSaving(true)
@@ -349,66 +381,130 @@ function IntentGate({ children }) {
     setSaving(false)
   }
 
-  function selectIntent(id) {
-    if (id === 'pap') { setStep('pap_timing'); return }
-    save({ intended_use: id, pap_timing: null })
-  }
-
   if (!needsIntent) return children
 
-  const INTENT_OPTIONS = [
-    { id: 'pap',             label: 'A minha PAP / projeto final' },
-    { id: 'trabalho_escola', label: 'Um trabalho de uma disciplina' },
-    { id: 'portfolio',       label: 'Um projeto pessoal, para o meu portefólio' },
-    { id: 'explorar',        label: 'Ainda não sei, só estou a ver' },
-  ]
-  const PAP_TIMING_OPTIONS = [
-    { id: 'este_ano',    label: 'Este ano letivo' },
-    { id: 'proximo_ano', label: 'Só para o ano' },
-    { id: 'nao_sei',     label: 'Ainda não sei' },
-  ]
+  const isStudent = profile.occupation === 'Aluno / A estudar'
+  const INTENT_OPTIONS = isStudent ? STUDENT_INTENT_OPTIONS : WORK_INTENT_OPTIONS
+
+  function toggle(id) {
+    setSelected(s => s.includes(id) ? s.filter(x => x !== id) : [...s, id])
+  }
+
+  function confirmIntent() {
+    if (!selected.length) return
+    if (selected.includes('pap')) { setStep('pap_timing'); return }
+    save({ intended_use: selected, pap_timing: null })
+  }
+
   const options = step === 'pap_timing' ? PAP_TIMING_OPTIONS : INTENT_OPTIONS
-  const onPick = step === 'pap_timing'
-    ? (id) => save({ intended_use: 'pap', pap_timing: id })
-    : selectIntent
 
   return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 99998, background: 'rgba(0,0,0,0.6)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontFamily: 'var(--font-body)', padding: 24,
-    }}>
-      <div style={{
-        width: '100%', maxWidth: 400,
-        background: 'var(--color-surface)', border: '1px solid var(--color-border)',
-        borderRadius: 'var(--radius-xl)', padding: '32px 28px',
-        display: 'flex', flexDirection: 'column', gap: 16,
-        opacity: saving ? 0.6 : 1, pointerEvents: saving ? 'none' : 'auto',
-      }}>
+    <div className="intent-gate-backdrop">
+      <style>{`
+        @keyframes intent-gate-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes intent-gate-panel-in { from { opacity: 0; transform: scale(0.96) translateY(4px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .intent-gate-backdrop {
+          position: fixed; inset: 0; z-index: 99998;
+          background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+          display: flex; align-items: center; justify-content: center;
+          font-family: var(--font-body); padding: 24px;
+          animation: intent-gate-backdrop-in 0.15s ease-out both;
+        }
+        .intent-gate-panel {
+          width: 100%; max-width: 420px;
+          background: var(--color-surface); border: 1px solid var(--color-border);
+          border-radius: var(--radius-xl); padding: 28px;
+          box-shadow: var(--shadow-xl);
+          display: flex; flex-direction: column; gap: 18px;
+          animation: intent-gate-panel-in 0.2s ease-out both;
+        }
+        .intent-gate-option {
+          display: flex; align-items: center; gap: 12px; width: 100%;
+          text-align: left; border: 1.5px solid var(--color-border); border-radius: var(--radius-md);
+          padding: 12px 14px; background: var(--color-bg); color: var(--color-text);
+          font-size: 0.88rem; font-weight: 600; font-family: inherit; cursor: pointer;
+          transition: border-color 0.15s, background 0.15s;
+        }
+        @media (hover: hover) {
+          .intent-gate-option:hover { border-color: var(--color-primary); }
+        }
+        .intent-gate-option.is-selected { border-color: var(--color-primary); background: var(--color-primary-subtle); }
+        .intent-gate-option-icon {
+          display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+          width: 34px; height: 34px; border-radius: 10px;
+          background: var(--color-primary-subtle); color: var(--color-primary);
+        }
+        .intent-gate-option.is-selected .intent-gate-option-icon { background: var(--color-primary); color: #fff; }
+        .intent-gate-check {
+          width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
+          border: 1.5px solid var(--color-border); margin-left: auto;
+          display: flex; align-items: center; justify-content: center;
+          transition: border-color 0.15s, background 0.15s;
+        }
+        .intent-gate-option.is-selected .intent-gate-check { border-color: var(--color-primary); background: var(--color-primary); }
+        .intent-gate-cta {
+          border: none; border-radius: var(--radius-md); padding: 12px 0;
+          background: var(--color-text); color: var(--color-bg);
+          font-size: 0.92rem; font-weight: 700; font-family: inherit; cursor: pointer;
+          transition: opacity 0.15s;
+        }
+        .intent-gate-cta:disabled { opacity: 0.4; cursor: default; }
+        @media (prefers-reduced-motion: reduce) {
+          .intent-gate-backdrop, .intent-gate-panel { animation: none !important; }
+        }
+      `}</style>
+      <div className="intent-gate-panel" style={{ opacity: saving ? 0.6 : 1, pointerEvents: saving ? 'none' : 'auto' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <img src="/darkmode_icon_logo.png" alt="Showo" style={{ height: 24, width: 'auto', objectFit: 'contain', alignSelf: 'flex-start', marginBottom: 4 }} />
-          <p style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          <p style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
             {step === 'pap_timing' ? 'Quando é a tua PAP?' : 'Para que vais usar o Showo?'}
           </p>
+          {step === 'intent' && (
+            <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
+              Escolhe tudo o que se aplica.
+            </p>
+          )}
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {options.map(opt => (
-            <button
-              key={opt.id}
-              type="button"
-              disabled={saving}
-              onClick={() => onPick(opt.id)}
-              style={{
-                textAlign: 'left', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)',
-                padding: '13px 14px', background: 'var(--color-bg)', color: 'var(--color-text)',
-                fontSize: '0.88rem', fontWeight: 600, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit',
-              }}
-            >
-              {opt.label}
-            </button>
-          ))}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {step === 'pap_timing' ? (
+            PAP_TIMING_OPTIONS.map(opt => (
+              <button
+                key={opt.id}
+                type="button"
+                disabled={saving}
+                onClick={() => save({ intended_use: selected, pap_timing: opt.id })}
+                className="intent-gate-option"
+              >
+                {opt.label}
+              </button>
+            ))
+          ) : (
+            options.map(opt => {
+              const Icon = opt.icon
+              const isSelected = selected.includes(opt.id)
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  disabled={saving}
+                  onClick={() => toggle(opt.id)}
+                  className={`intent-gate-option${isSelected ? ' is-selected' : ''}`}
+                >
+                  <span className="intent-gate-option-icon"><Icon size={17} /></span>
+                  {opt.label}
+                  <span className="intent-gate-check">{isSelected && <CheckCircle size={12} style={{ color: '#fff' }} />}</span>
+                </button>
+              )
+            })
+          )}
         </div>
+
+        {step === 'intent' && (
+          <button type="button" disabled={saving || !selected.length} onClick={confirmIntent} className="intent-gate-cta">
+            {saving ? 'A guardar…' : 'Continuar'}
+          </button>
+        )}
 
         {step === 'pap_timing' && (
           <button
