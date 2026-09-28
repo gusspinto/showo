@@ -194,6 +194,17 @@ export function AuthProvider({ children }) {
       if (org) data = { ...data, organization_plan: org.plan, organization_name: org.name }
     }
 
+    // intended_use/pap_timing não têm GRANT SELECT (migração 178) — não são
+    // dados de perfil público como occupation/area, só um sinal interno para
+    // o IntentGate (App.jsx) saber se já perguntou. Por isso via RPC
+    // SECURITY DEFINER (179), não um select direto: devolve só a linha do
+    // próprio, mesmo padrão do get_ai_usage(). Só para conta Individual —
+    // é a mesma condição do OccupationGate, escola/professor não precisam.
+    if (data && data.role === 'aluno' && !data.organization_id) {
+      const { data: intent } = await supabase.rpc('get_own_intent')
+      if (intent) data = { ...data, intended_use: intent.intended_use, pap_timing: intent.pap_timing }
+    }
+
     setProfile(data ?? null)
     if (data) {
       identifyUser(userRes.data?.user, data)

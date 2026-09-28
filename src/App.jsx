@@ -323,6 +323,112 @@ function OccupationGate({ children }) {
   )
 }
 
+// "Para que vais usar o Showo agora?" — feedback recorrente dos áudios de
+// outreach: quem chega pelo vídeo da PAP entra a pensar "isto é só para a
+// PAP" e, se a PAP for só para o ano, nunca cria nada. Precisava de estar
+// aqui, não num passo do /welcome: nem o registo por email/password nem a
+// maioria dos registos por Google passam de forma fiável pelo /welcome (o
+// próprio ficheiro já avisava que a flag "nem sempre chega a ser posto") —
+// confirmado ao vivo, uma conta nova por email/password não via pergunta
+// nenhuma. O IntentGate corre em qualquer página, como o PhoneGate e o
+// OccupationGate, por isso apanha sempre, seja qual for o caminho de
+// entrada. Mesma condição do OccupationGate: só conta Individual.
+function IntentGate({ children }) {
+  const { user, profile, refreshProfile } = useAuth()
+  const location = useLocation()
+  const [step, setStep] = useState('intent') // 'intent' | 'pap_timing'
+  const [saving, setSaving] = useState(false)
+
+  const needsIntent = !isGateExempt(location.pathname) && user && profile
+    && profile.role === 'aluno' && !profile.organization_id && !profile.intended_use
+
+  async function save(fields) {
+    setSaving(true)
+    const { error: err } = await supabase.from('profiles').update(fields).eq('id', user.id)
+    if (!err) await refreshProfile()
+    setSaving(false)
+  }
+
+  function selectIntent(id) {
+    if (id === 'pap') { setStep('pap_timing'); return }
+    save({ intended_use: id, pap_timing: null })
+  }
+
+  if (!needsIntent) return children
+
+  const INTENT_OPTIONS = [
+    { id: 'pap',             label: 'A minha PAP / projeto final' },
+    { id: 'trabalho_escola', label: 'Um trabalho de uma disciplina' },
+    { id: 'portfolio',       label: 'Um projeto pessoal, para o meu portefólio' },
+    { id: 'explorar',        label: 'Ainda não sei, só estou a ver' },
+  ]
+  const PAP_TIMING_OPTIONS = [
+    { id: 'este_ano',    label: 'Este ano letivo' },
+    { id: 'proximo_ano', label: 'Só para o ano' },
+    { id: 'nao_sei',     label: 'Ainda não sei' },
+  ]
+  const options = step === 'pap_timing' ? PAP_TIMING_OPTIONS : INTENT_OPTIONS
+  const onPick = step === 'pap_timing'
+    ? (id) => save({ intended_use: 'pap', pap_timing: id })
+    : selectIntent
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 99998, background: 'rgba(0,0,0,0.6)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontFamily: 'var(--font-body)', padding: 24,
+    }}>
+      <div style={{
+        width: '100%', maxWidth: 400,
+        background: 'var(--color-surface)', border: '1px solid var(--color-border)',
+        borderRadius: 'var(--radius-xl)', padding: '32px 28px',
+        display: 'flex', flexDirection: 'column', gap: 16,
+        opacity: saving ? 0.6 : 1, pointerEvents: saving ? 'none' : 'auto',
+      }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <img src="/darkmode_icon_logo.png" alt="Showo" style={{ height: 24, width: 'auto', objectFit: 'contain', alignSelf: 'flex-start', marginBottom: 4 }} />
+          <p style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+            {step === 'pap_timing' ? 'Quando é a tua PAP?' : 'Para que vais usar o Showo?'}
+          </p>
+          <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+            {step === 'pap_timing'
+              ? 'Sem stress se ainda não sabes. Isto só nos ajuda a avisar-te na altura certa.'
+              : 'Não é só para a PAP — ajuda-nos a mostrar-te o que mais podes fazer aqui.'}
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {options.map(opt => (
+            <button
+              key={opt.id}
+              type="button"
+              disabled={saving}
+              onClick={() => onPick(opt.id)}
+              style={{
+                textAlign: 'left', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)',
+                padding: '13px 14px', background: 'var(--color-bg)', color: 'var(--color-text)',
+                fontSize: '0.88rem', fontWeight: 600, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
+        {step === 'pap_timing' && (
+          <button
+            type="button"
+            onClick={() => setStep('intent')}
+            style={{ alignSelf: 'flex-start', background: 'none', border: 'none', padding: 0, color: 'var(--color-text-secondary)', fontSize: '0.82rem', cursor: 'pointer', fontFamily: 'var(--font-body)' }}
+          >
+            ← Voltar
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ── Error Boundary ────────────────────────────────────────────────────────────
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -604,6 +710,7 @@ export default function App() {
             <AuthGate>
             <PhoneGate>
             <OccupationGate>
+            <IntentGate>
             <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/"              element={<HomeRoute />}   />
@@ -639,6 +746,7 @@ export default function App() {
               <Route path="*"                   element={<NotFound />}      />
             </Routes>
             </Suspense>
+            </IntentGate>
             </OccupationGate>
             </PhoneGate>
             </AuthGate>
