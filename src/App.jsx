@@ -390,11 +390,6 @@ function IntentGate({ children }) {
           <p style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
             {step === 'pap_timing' ? 'Quando é a tua PAP?' : 'Para que vais usar o Showo?'}
           </p>
-          <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
-            {step === 'pap_timing'
-              ? 'Sem stress se ainda não sabes. Isto só nos ajuda a avisar-te na altura certa.'
-              : 'Não é só para a PAP — ajuda-nos a mostrar-te o que mais podes fazer aqui.'}
-          </p>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

@@ -187,19 +187,14 @@ export default function Home() {
             </div>
           </div>
 
-          {/* ── Arranque ── 28/09: já não faz login/registo aqui dentro.
-              O bloco de email+password progressivo (3 estados: email →
-              password ou "conta é só-Google") tirava a Home da conversa
-              sobre valor para entrar numa conversa sobre credenciais — e
-              cada entrada aqui era outra pessoa que nunca lia a promessa
-              ao lado. Passa a mandar sempre para /register (que já tem o
-              próprio Google + email/password, agora com prova social e a
-              frase de "o que acontece a seguir" — ver AuthSidePanel), à
-              exceção de "Começar a criar": esse continua a ir para /novo
-              sem pedir nada primeiro, porque /novo só pede conta no
-              momento de gerar algo a sério (requireAccount), não à
-              entrada — é o caminho de menor fricção que já existia, só
-              não fazia sentido escondido atrás de um formulário. */}
+          {/* ── Arranque ── 28/09: já não faz login/registo aqui dentro (ver
+              histórico do ficheiro). 28/09 (2ª ronda, feedback do Gustavo):
+              o segundo botão ia direto para /register — mas ir primeiro
+              para /login (mesmo para quem ainda não tem conta) é mais
+              natural: a pessoa vê o ecrã de entrar, percebe "ah, ainda não
+              tenho conta" e só aí segue para criar uma — Login.jsx já tem
+              o link "Regista-te". "Criar conta" fica como texto pequeno
+              por baixo, para quem já sabe que quer registar-se direto. */}
           <div className="home-hero-start">
             <button
               type="button"
@@ -211,13 +206,13 @@ export default function Home() {
             <button
               type="button"
               className="home-start-cta-secondary"
-              onClick={() => { trackEvent('home_email_signup_started'); navigate('/register') }}
+              onClick={() => { trackEvent('home_login_clicked'); navigate('/login') }}
             >
-              Criar conta
+              Entrar
             </button>
 
             <p className="home-start-login">
-              Já tens conta? <Link to="/login">Entrar</Link>
+              Ainda não tens conta? <Link to="/register">Criar conta</Link>
             </p>
 
             <p className="home-start-privacy">
