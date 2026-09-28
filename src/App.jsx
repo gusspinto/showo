@@ -26,7 +26,6 @@ import { trackPageview } from './lib/analytics'
 import { pushRoute } from './lib/routeHistory'
 import { supabase } from './lib/supabase'
 import { OCCUPATIONS } from './lib/occupations'
-import { Select } from './components/ui'
 import ComingSoon from './pages/ComingSoon'
 
 // Shows the "coming soon" cover only on the public domain, and only before
@@ -186,73 +185,36 @@ function PhoneGate({ children, reopenGate, setReopenGate }) {
   if (!needsPhone) return children
 
   return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 99998, background: 'rgba(0,0,0,0.6)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontFamily: 'var(--font-body)', padding: 24,
-    }}>
-      <div style={{
-        width: '100%', maxWidth: 380,
-        background: 'var(--color-surface)', border: '1px solid var(--color-border)',
-        borderRadius: 'var(--radius-xl)', padding: '32px 28px',
-        display: 'flex', flexDirection: 'column', gap: 16,
-      }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <img src="/darkmode_icon_logo.png" alt="Showo" style={{ height: 24, width: 'auto', objectFit: 'contain', alignSelf: 'flex-start', marginBottom: 4 }} />
-          <p style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
-            Deixa-nos o teu contacto
-          </p>
+    <div className="onboard-screen">
+      <div className="onboard-body">
+        <img src="/darkmode_icon_logo.png" alt="Showo" className="onboard-logo" />
+        <div className="onboard-head">
+          <h1 className="onboard-title">Deixa-nos o teu contacto</h1>
           {/* Texto sem marca temporal: esta comporta aparece a quem acabou de
               criar conta E a quem se registou há meses e só agora voltou. O
               "Uma última coisa" anterior soava a fim de registo e não fazia
               sentido para o segundo caso, que é a maioria de quem falta. */}
-          <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
-            Usamos o teu número só para falar contigo sobre o teu percurso na Showo. Nunca é partilhado nem aparece no teu perfil.
-          </p>
+          <p className="onboard-subtitle">Usamos o teu número só para falar contigo sobre o teu percurso na Showo. Nunca é partilhado nem aparece no teu perfil.</p>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{
-            display: 'flex', alignItems: 'center',
-            background: 'var(--color-bg)', border: '1px solid var(--color-border)',
-            borderRadius: 'var(--radius-md)', overflow: 'hidden',
-          }}>
-            <span style={{
-              padding: '9px 12px', fontSize: '0.85rem', color: 'var(--color-text-secondary)',
-              borderRight: '1px solid var(--color-border)', flexShrink: 0, userSelect: 'none',
-            }}>+351</span>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '100%' }}>
+          <div className="onboard-input-wrap">
+            <span className="onboard-input-prefix">+351</span>
             <input
               type="tel"
               value={phone}
               onChange={e => setPhone(e.target.value)}
               placeholder="912 345 678"
               autoFocus
-              style={{
-                flex: 1, background: 'transparent', border: 'none', outline: 'none',
-                fontSize: '0.88rem', color: 'var(--color-text)', fontFamily: 'inherit',
-                padding: '9px 14px',
-              }}
+              className="onboard-input"
             />
           </div>
 
-          {error && (
-            <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--color-error)' }}>{error}</p>
-          )}
+          {error && <p className="onboard-error">{error}</p>}
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
-            <button
-              type="submit"
-              disabled={saving}
-              style={{
-                padding: '9px 18px', borderRadius: 'var(--radius-md)', border: 'none',
-                background: saving ? 'var(--color-border)' : 'var(--color-text)',
-                color: 'var(--color-bg)', fontWeight: 600, fontSize: '0.85rem',
-                cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-body)',
-              }}
-            >
-              {saving ? 'A guardar…' : 'Activar acesso gratuito'}
-            </button>
-          </div>
+          <button type="submit" disabled={saving} className="onboard-cta">
+            {saving ? 'A guardar…' : 'Activar acesso gratuito'}
+          </button>
         </form>
       </div>
     </div>
@@ -280,13 +242,12 @@ function OccupationGate({ children, reopenGate, setReopenGate }) {
     if (reopenGate === 'occupation' && profile?.occupation) setOccupation(profile.occupation)
   }, [reopenGate, profile?.occupation])
 
-  async function handleSubmit(e) {
-    e.preventDefault()
-    if (!occupation) return
+  async function pick(value) {
+    setOccupation(value)
     setSaving(true)
     setError('')
     try {
-      const { error: err } = await supabase.from('profiles').update({ occupation }).eq('id', user.id)
+      const { error: err } = await supabase.from('profiles').update({ occupation: value }).eq('id', user.id)
       if (err) { setSaving(false); setError(err.message); return }
       await refreshProfile()
       setReopenGate(null)
@@ -299,56 +260,26 @@ function OccupationGate({ children, reopenGate, setReopenGate }) {
   if (!needsOccupation) return children
 
   return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 99998, background: 'rgba(0,0,0,0.6)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontFamily: 'var(--font-body)', padding: 24,
-    }}>
-      <div style={{
-        width: '100%', maxWidth: 380,
-        background: 'var(--color-surface)', border: '1px solid var(--color-border)',
-        borderRadius: 'var(--radius-xl)', padding: '32px 28px',
-        display: 'flex', flexDirection: 'column', gap: 16,
-      }}>
-        <button
-          type="button"
-          onClick={() => setReopenGate('phone')}
-          className="gate-back-btn"
-        >
-          <ArrowLeft size={15} />
-        </button>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <img src="/darkmode_icon_logo.png" alt="Showo" style={{ height: 24, width: 'auto', objectFit: 'contain', alignSelf: 'flex-start', marginBottom: 4 }} />
-          <p style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
-            Mais uma coisa
-          </p>
-          <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
-            Diz-nos o que fazes para aparecer no teu perfil público.
-          </p>
+    <div className="onboard-screen">
+      <button type="button" onClick={() => setReopenGate('phone')} className="onboard-back">
+        <ArrowLeft size={13} /> Voltar
+      </button>
+      <div className="onboard-body">
+        <img src="/darkmode_icon_logo.png" alt="Showo" className="onboard-logo" />
+        <div className="onboard-head">
+          <h1 className="onboard-title">O que fazes?</h1>
+          <p className="onboard-subtitle">Aparece no teu perfil público, para quem vê saber quem és.</p>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <Select value={occupation} onChange={setOccupation} options={OCCUPATIONS} placeholder="Seleciona uma opção" />
+        {error && <p className="onboard-error">{error}</p>}
 
-          {error && (
-            <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--color-error)' }}>{error}</p>
-          )}
-
-          <button
-            type="submit"
-            disabled={saving || !occupation}
-            style={{
-              padding: '9px 18px', borderRadius: 'var(--radius-md)', border: 'none',
-              background: (saving || !occupation) ? 'var(--color-border)' : 'var(--color-text)',
-              color: 'var(--color-bg)', fontWeight: 600, fontSize: '0.85rem',
-              cursor: (saving || !occupation) ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-body)',
-              alignSelf: 'flex-end', marginTop: 4,
-            }}
-          >
-            {saving ? 'A guardar…' : 'Guardar'}
-          </button>
-        </form>
+        <div className="onboard-list" style={{ opacity: saving ? 0.5 : 1, pointerEvents: saving ? 'none' : 'auto', maxHeight: '52vh', overflowY: 'auto', paddingRight: 4 }}>
+          {OCCUPATIONS.map(occ => (
+            <button key={occ} type="button" onClick={() => pick(occ)} className={`onboard-row${occ === occupation ? ' is-selected' : ''}`}>
+              {occ}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -426,122 +357,55 @@ function IntentGate({ children, setReopenGate }) {
     save({ intended_use: selected, pap_timing: null })
   }
 
-  const options = step === 'pap_timing' ? PAP_TIMING_OPTIONS : INTENT_OPTIONS
-
   return (
-    <div className="intent-gate-backdrop">
-      <style>{`
-        @keyframes intent-gate-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes intent-gate-panel-in { from { opacity: 0; transform: scale(0.96) translateY(4px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-        .intent-gate-backdrop {
-          position: fixed; inset: 0; z-index: 99998;
-          background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
-          display: flex; align-items: center; justify-content: center;
-          font-family: var(--font-body); padding: 24px;
-          animation: intent-gate-backdrop-in 0.15s ease-out both;
-        }
-        .intent-gate-panel {
-          width: 100%; max-width: 420px;
-          background: var(--color-surface); border: 1px solid var(--color-border);
-          border-radius: var(--radius-xl); padding: 28px;
-          box-shadow: var(--shadow-xl);
-          display: flex; flex-direction: column; gap: 18px;
-          animation: intent-gate-panel-in 0.2s ease-out both;
-        }
-        .intent-gate-option {
-          display: flex; align-items: center; gap: 12px; width: 100%;
-          text-align: left; border: 1.5px solid var(--color-border); border-radius: var(--radius-md);
-          padding: 12px 14px; background: var(--color-bg); color: var(--color-text);
-          font-size: 0.88rem; font-weight: 600; font-family: inherit; cursor: pointer;
-          transition: border-color 0.15s, background 0.15s;
-        }
-        @media (hover: hover) {
-          .intent-gate-option:hover { border-color: var(--color-primary); }
-        }
-        .intent-gate-option.is-selected { border-color: var(--color-primary); background: var(--color-primary-subtle); }
-        .intent-gate-option-icon {
-          display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-          width: 34px; height: 34px; border-radius: 10px;
-          background: var(--color-primary-subtle); color: var(--color-primary);
-        }
-        .intent-gate-option.is-selected .intent-gate-option-icon { background: var(--color-primary); color: #fff; }
-        .intent-gate-check {
-          width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
-          border: 1.5px solid var(--color-border); margin-left: auto;
-          display: flex; align-items: center; justify-content: center;
-          transition: border-color 0.15s, background 0.15s;
-        }
-        .intent-gate-option.is-selected .intent-gate-check { border-color: var(--color-primary); background: var(--color-primary); }
-        .intent-gate-cta {
-          border: none; border-radius: var(--radius-md); padding: 12px 0;
-          background: var(--color-text); color: var(--color-bg);
-          font-size: 0.92rem; font-weight: 700; font-family: inherit; cursor: pointer;
-          transition: opacity 0.15s;
-        }
-        .intent-gate-cta:disabled { opacity: 0.4; cursor: default; }
-        @media (prefers-reduced-motion: reduce) {
-          .intent-gate-backdrop, .intent-gate-panel { animation: none !important; }
-        }
-      `}</style>
-      <div className="intent-gate-panel" style={{ opacity: saving ? 0.6 : 1, pointerEvents: saving ? 'none' : 'auto' }}>
-        <button
-          type="button"
-          onClick={() => step === 'pap_timing' ? setStep('intent') : setReopenGate('occupation')}
-          className="gate-back-btn"
-        >
-          <ArrowLeft size={15} />
-        </button>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <img src="/darkmode_icon_logo.png" alt="Showo" style={{ height: 24, width: 'auto', objectFit: 'contain', alignSelf: 'flex-start', marginBottom: 4 }} />
-          <p style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
-            {step === 'pap_timing' ? 'Quando é a tua PAP?' : 'Para que vais usar o Showo?'}
-          </p>
-          {step === 'intent' && (
-            <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
-              Escolhe tudo o que se aplica.
-            </p>
-          )}
+    <div className="onboard-screen">
+      <button
+        type="button"
+        onClick={() => step === 'pap_timing' ? setStep('intent') : setReopenGate('occupation')}
+        className="onboard-back"
+      >
+        <ArrowLeft size={13} /> Voltar
+      </button>
+      <div className="onboard-body" style={{ opacity: saving ? 0.5 : 1, pointerEvents: saving ? 'none' : 'auto' }}>
+        <img src="/darkmode_icon_logo.png" alt="Showo" className="onboard-logo" />
+        <div className="onboard-head">
+          <h1 className="onboard-title">{step === 'pap_timing' ? 'Quando é a tua PAP?' : 'Para que vais usar o Showo?'}</h1>
+          {step === 'intent' && <p className="onboard-subtitle">Escolhe tudo o que se aplica — pode ser mais do que uma.</p>}
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {step === 'pap_timing' ? (
-            PAP_TIMING_OPTIONS.map(opt => (
-              <button
-                key={opt.id}
-                type="button"
-                disabled={saving}
-                onClick={() => save({ intended_use: selected, pap_timing: opt.id })}
-                className="intent-gate-option"
-              >
+        {step === 'pap_timing' ? (
+          <div className="onboard-list">
+            {PAP_TIMING_OPTIONS.map(opt => (
+              <button key={opt.id} type="button" disabled={saving} onClick={() => save({ intended_use: selected, pap_timing: opt.id })} className="onboard-row">
                 {opt.label}
               </button>
-            ))
-          ) : (
-            options.map(opt => {
-              const Icon = opt.icon
-              const isSelected = selected.includes(opt.id)
-              return (
-                <button
-                  key={opt.id}
-                  type="button"
-                  disabled={saving}
-                  onClick={() => toggle(opt.id)}
-                  className={`intent-gate-option${isSelected ? ' is-selected' : ''}`}
-                >
-                  <span className="intent-gate-option-icon"><Icon size={17} /></span>
-                  {opt.label}
-                  <span className="intent-gate-check">{isSelected && <CheckCircle size={12} style={{ color: '#fff' }} />}</span>
-                </button>
-              )
-            })
-          )}
-        </div>
-
-        {step === 'intent' && (
-          <button type="button" disabled={saving || !selected.length} onClick={confirmIntent} className="intent-gate-cta">
-            {saving ? 'A guardar…' : 'Continuar'}
-          </button>
+            ))}
+          </div>
+        ) : (
+          <>
+            <div className="onboard-grid">
+              {INTENT_OPTIONS.map(opt => {
+                const Icon = opt.icon
+                const isSelected = selected.includes(opt.id)
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    disabled={saving}
+                    onClick={() => toggle(opt.id)}
+                    className={`onboard-card${isSelected ? ' is-selected' : ''}`}
+                  >
+                    {isSelected && <span className="onboard-card-check"><CheckCircle size={13} /></span>}
+                    <span className="onboard-card-icon"><Icon size={22} /></span>
+                    <span className="onboard-card-label">{opt.label}</span>
+                  </button>
+                )
+              })}
+            </div>
+            <button type="button" disabled={saving || !selected.length} onClick={confirmIntent} className="onboard-cta">
+              {saving ? 'A guardar…' : 'Continuar'}
+            </button>
+          </>
         )}
       </div>
     </div>

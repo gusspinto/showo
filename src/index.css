@@ -321,17 +321,118 @@ a { transition: color 0.15s, opacity 0.15s; }
 
 }
 
-/* ── Botão "voltar" dos gates de onboarding (Phone/Occupation/IntentGate,
-   App.jsx) — canto superior esquerdo do cartão, acima do logo. */
-.gate-back-btn {
-  align-self: flex-start;
-  width: 30px; height: 30px; border-radius: 50%;
-  border: 1px solid var(--color-border); background: none;
-  color: var(--color-text-secondary);
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; padding: 0; margin-bottom: -4px;
-  transition: border-color 0.15s, color 0.15s;
+/* ══════════════════════════════════════════════════════════════════════════
+   ONBOARDING (Phone/Occupation/IntentGate, App.jsx) — 30/09, redesign
+   completo pedido pelo Gustavo: deixa de ser um popup pequeno em cima da
+   app, passa a ocupar o ecrã inteiro, sempre escuro (independente do tema),
+   como o onboarding de referência que analisámos (StudyFetch) mas com
+   identidade própria: cartões com ícone, não ilustração, cores da marca.
+   ══════════════════════════════════════════════════════════════════════════ */
+.onboard-screen {
+  position: fixed; inset: 0; z-index: 99998;
+  background: #0a0a0a; color: #fff;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-family: var(--font-body);
+  padding: 96px 24px 48px;
+  overflow-y: auto;
+  animation: onboard-fade-in 0.25s ease-out both;
+}
+@keyframes onboard-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes onboard-rise-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.onboard-back {
+  position: fixed; top: 24px; left: 24px; z-index: 99999;
+  display: flex; align-items: center; gap: 7px;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.75); border-radius: 999px;
+  padding: 9px 16px 9px 12px; font-size: 0.82rem; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 @media (hover: hover) {
-  .gate-back-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+  .onboard-back:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.22); color: #fff; }
+}
+
+.onboard-body { width: 100%; max-width: 560px; display: flex; flex-direction: column; align-items: center; gap: 32px; }
+.onboard-logo { height: 28px; width: auto; }
+.onboard-head { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+.onboard-title {
+  margin: 0; font-family: var(--font-heading); font-weight: 700;
+  font-size: clamp(24px, 4vw, 32px); letter-spacing: -0.6px; line-height: 1.2; color: #fff;
+}
+.onboard-subtitle { margin: 0; font-size: 0.95rem; color: rgba(255,255,255,0.5); max-width: 40ch; }
+
+.onboard-grid {
+  width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+@media (max-width: 480px) {
+  .onboard-grid { grid-template-columns: 1fr; }
+}
+.onboard-card {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center;
+  background: rgba(255,255,255,0.035); border: 1.5px solid rgba(255,255,255,0.1);
+  border-radius: 18px; padding: 24px 16px; cursor: pointer;
+  font-family: inherit; color: #fff;
+  animation: onboard-rise-in 0.35s ease-out both;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s ease-out;
+}
+.onboard-card:active { transform: scale(0.98); }
+@media (hover: hover) {
+  .onboard-card:hover { border-color: rgba(255,255,255,0.28); background: rgba(255,255,255,0.06); }
+}
+.onboard-card.is-selected { border-color: var(--color-primary); background: rgba(59,130,246,0.12); }
+.onboard-card-icon {
+  width: 48px; height: 48px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.7);
+  transition: background 0.15s, color 0.15s;
+}
+.onboard-card.is-selected .onboard-card-icon { background: var(--color-primary); color: #fff; }
+.onboard-card-label { font-size: 0.9rem; font-weight: 700; line-height: 1.35; }
+.onboard-card-check {
+  position: absolute; top: 10px; right: 10px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--color-primary); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  animation: onboard-fade-in 0.15s ease-out both;
+}
+
+.onboard-list { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+.onboard-row {
+  display: flex; align-items: center; gap: 14px; width: 100%;
+  text-align: left; background: rgba(255,255,255,0.035); border: 1.5px solid rgba(255,255,255,0.1);
+  border-radius: 14px; padding: 15px 18px; cursor: pointer; font-family: inherit; color: #fff;
+  font-size: 0.92rem; font-weight: 600;
+  transition: border-color 0.15s, background 0.15s;
+}
+@media (hover: hover) {
+  .onboard-row:hover { border-color: rgba(255,255,255,0.28); }
+}
+.onboard-row.is-selected { border-color: var(--color-primary); background: rgba(59,130,246,0.12); }
+
+.onboard-input-wrap {
+  display: flex; align-items: center; width: 100%;
+  background: rgba(255,255,255,0.04); border: 1.5px solid rgba(255,255,255,0.14);
+  border-radius: 14px; overflow: hidden; transition: border-color 0.15s;
+}
+.onboard-input-wrap:focus-within { border-color: var(--color-primary); }
+.onboard-input-prefix { padding: 15px 14px; font-size: 0.95rem; color: rgba(255,255,255,0.4); border-right: 1px solid rgba(255,255,255,0.12); }
+.onboard-input {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: #fff; font-size: 1rem; font-family: inherit; padding: 15px 16px;
+}
+.onboard-input::placeholder { color: rgba(255,255,255,0.3); }
+
+.onboard-cta {
+  width: 100%; border: none; border-radius: 999px; padding: 15px 0;
+  background: #fff; color: #0a0a0a; font-size: 0.98rem; font-weight: 700;
+  font-family: inherit; cursor: pointer; transition: opacity 0.15s, transform 0.1s ease-out;
+}
+.onboard-cta:active:not(:disabled) { transform: scale(0.98); }
+.onboard-cta:disabled { opacity: 0.35; cursor: default; }
+.onboard-error { margin: 0; font-size: 0.85rem; color: #ff8080; text-align: center; }
+
+@media (prefers-reduced-motion: reduce) {
+  .onboard-screen, .onboard-card, .onboard-card-check { animation: none !important; }
 }
