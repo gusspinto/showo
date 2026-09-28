@@ -155,14 +155,22 @@ const GATE_EXEMPT_PREFIXES = ['/oauth/']
 const isGateExempt = (pathname) =>
   GATE_EXEMPT_PATHS.has(pathname) || GATE_EXEMPT_PREFIXES.some(p => pathname.startsWith(p))
 
-function PhoneGate({ children }) {
+function PhoneGate({ children, reopenGate, setReopenGate }) {
   const { user, profile, refreshProfile } = useAuth()
   const location = useLocation()
   const [phone, setPhone] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
-  const needsPhone = !isGateExempt(location.pathname) && user && profile && profile.role !== 'professor' && !profile.phone
+  const needsPhone = (!isGateExempt(location.pathname) && user && profile && profile.role !== 'professor' && !profile.phone)
+    || reopenGate === 'phone'
+
+  // Reabertura via "← Voltar" no OccupationGate — pré-preenche com o número
+  // que já lá estava, para a pessoa só corrigir o que estava errado, não
+  // escrever tudo de novo.
+  useEffect(() => {
+    if (reopenGate === 'phone' && profile?.phone) setPhone(profile.phone)
+  }, [reopenGate, profile?.phone])
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -172,6 +180,7 @@ function PhoneGate({ children }) {
     if (err) { setError('Erro ao guardar. Tenta novamente.'); setSaving(false); return }
     await refreshProfile()
     setSaving(false)
+    setReopenGate(null)
   }
 
   if (!needsPhone) return children
@@ -254,15 +263,22 @@ function PhoneGate({ children }) {
 // organization_id é aluno institucional, já sabe "o que faz") vê isto,
 // e só quem já não tem occupation preenchida — para quem já respondeu no
 // registo, ou já respondeu aqui uma vez, nunca mais aparece.
-function OccupationGate({ children }) {
+function OccupationGate({ children, reopenGate, setReopenGate }) {
   const { user, profile, refreshProfile } = useAuth()
   const location = useLocation()
   const [occupation, setOccupation] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
-  const needsOccupation = !isGateExempt(location.pathname) && user && profile
-    && profile.role === 'aluno' && !profile.organization_id && !profile.occupation
+  const needsOccupation = (!isGateExempt(location.pathname) && user && profile
+    && profile.role === 'aluno' && !profile.organization_id && !profile.occupation)
+    || reopenGate === 'occupation'
+
+  // Reabertura via "← Voltar" no IntentGate — pré-preenche com a ocupação já
+  // guardada, mesma lógica do PhoneGate acima.
+  useEffect(() => {
+    if (reopenGate === 'occupation' && profile?.occupation) setOccupation(profile.occupation)
+  }, [reopenGate, profile?.occupation])
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -273,6 +289,7 @@ function OccupationGate({ children }) {
       const { error: err } = await supabase.from('profiles').update({ occupation }).eq('id', user.id)
       if (err) { setSaving(false); setError(err.message); return }
       await refreshProfile()
+      setReopenGate(null)
     } catch (ex) {
       setError(String(ex?.message || ex))
     }
@@ -310,7 +327,14 @@ function OccupationGate({ children }) {
             <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--color-error)' }}>{error}</p>
           )}
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+            <button
+              type="button"
+              onClick={() => setReopenGate('phone')}
+              style={{ background: 'none', border: 'none', padding: 0, color: 'var(--color-text-secondary)', fontSize: '0.82rem', cursor: 'pointer', fontFamily: 'var(--font-body)' }}
+            >
+              ← Voltar
+            </button>
             <button
               type="submit"
               disabled={saving || !occupation}
@@ -363,16 +387,23 @@ const PAP_TIMING_OPTIONS = [
   { id: 'nao_sei',     label: 'Ainda não sei' },
 ]
 
-function IntentGate({ children }) {
+function IntentGate({ children, setReopenGate }) {
   const { user, profile, refreshProfile } = useAuth()
   const location = useLocation()
   const [step, setStep] = useState('intent') // 'intent' | 'pap_timing'
   const [selected, setSelected] = useState([])
   const [saving, setSaving] = useState(false)
+  const isStudent = profile?.occupation === 'Aluno / A estudar'
 
   const needsIntent = !isGateExempt(location.pathname) && user && profile
     && profile.role === 'aluno' && !profile.organization_id
     && (!profile.intended_use || profile.intended_use.length === 0)
+
+  // Quem carrega em "← Voltar" e corrige a ocupação (ex: era "Freelancer",
+  // afinal é "Aluno / A estudar") vê um conjunto de opções diferente ao
+  // voltar aqui — uma seleção feita no conjunto anterior já não corresponde
+  // a nada visível, por isso limpa-se.
+  useEffect(() => { setSelected([]) }, [isStudent])
 
   async function save(fields) {
     setSaving(true)
@@ -383,7 +414,6 @@ function IntentGate({ children }) {
 
   if (!needsIntent) return children
 
-  const isStudent = profile.occupation === 'Aluno / A estudar'
   const INTENT_OPTIONS = isStudent ? STUDENT_INTENT_OPTIONS : WORK_INTENT_OPTIONS
 
   function toggle(id) {
@@ -501,9 +531,18 @@ function IntentGate({ children }) {
         </div>
 
         {step === 'intent' && (
-          <button type="button" disabled={saving || !selected.length} onClick={confirmIntent} className="intent-gate-cta">
-            {saving ? 'A guardar…' : 'Continuar'}
-          </button>
+          <>
+            <button type="button" disabled={saving || !selected.length} onClick={confirmIntent} className="intent-gate-cta">
+              {saving ? 'A guardar…' : 'Continuar'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setReopenGate('occupation')}
+              style={{ alignSelf: 'flex-start', background: 'none', border: 'none', padding: 0, color: 'var(--color-text-secondary)', fontSize: '0.82rem', cursor: 'pointer', fontFamily: 'var(--font-body)' }}
+            >
+              ← Voltar
+            </button>
+          </>
         )}
 
         {step === 'pap_timing' && (
@@ -765,6 +804,11 @@ export default function App() {
     () => typeof window !== 'undefined' && window.location.hash.includes('type=recovery')
   )
 
+  // Partilhado entre Phone/Occupation/IntentGate — "← Voltar" num gate mais à
+  // frente reabre o anterior mesmo já tendo dados guardados, para corrigir
+  // um engano sem ter de ir aos Settings. null quando nenhum está reaberto.
+  const [reopenGate, setReopenGate] = useState(null)
+
   useEffect(() => {
     if (!firstVisit) return
     localStorage.setItem(SPLASH_KEY, '1')
@@ -799,9 +843,9 @@ export default function App() {
             <ErrorBoundary>
             <RecoveryGate pwRecovery={pwRecovery}>
             <AuthGate>
-            <PhoneGate>
-            <OccupationGate>
-            <IntentGate>
+            <PhoneGate reopenGate={reopenGate} setReopenGate={setReopenGate}>
+            <OccupationGate reopenGate={reopenGate} setReopenGate={setReopenGate}>
+            <IntentGate reopenGate={reopenGate} setReopenGate={setReopenGate}>
             <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/"              element={<HomeRoute />}   />
