@@ -185,6 +185,15 @@ export default function Login() {
           from { opacity: 0; transform: translateY(60%); }
           to   { opacity: 1; transform: translateY(0); }
         }
+        .auth-side-stat {
+          margin: -4px 0 0; font-size: 14px; color: rgba(255,255,255,0.55);
+          animation: auth-phrase-fade 0.6s ease 0.15s both;
+        }
+        .auth-side-stat strong { color: #fff; font-weight: 700; }
+        .auth-side-note {
+          margin: 0; font-size: 14px; line-height: 1.5; color: rgba(255,255,255,0.55);
+          max-width: 340px;
+        }
         .auth-side-progress {
           position: absolute; left: 64px; right: 56px; bottom: 48px;
           display: flex; align-items: center; gap: 6px; z-index: 3;

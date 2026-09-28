@@ -590,6 +590,15 @@ export default function Register() {
           display: inline-block;
           animation: auth-letter-rise 0.45s ease both;
         }
+        .auth-side-stat {
+          margin: -4px 0 0; font-size: 14px; color: rgba(255,255,255,0.55);
+          animation: auth-phrase-fade 0.6s ease 0.15s both;
+        }
+        .auth-side-stat strong { color: #fff; font-weight: 700; }
+        .auth-side-note {
+          margin: 0; font-size: 14px; line-height: 1.5; color: rgba(255,255,255,0.55);
+          max-width: 340px;
+        }
         @keyframes auth-letter-rise {
           from { opacity: 0; transform: translateY(60%); }
           to   { opacity: 1; transform: translateY(0); }
@@ -656,7 +665,7 @@ export default function Register() {
         @media (max-width: 600px) { .register-role-grid { grid-template-columns: 1fr !important; } }
       `}</style>
 
-      <AuthSidePanel phrases={REGISTER_PHRASES} />
+      <AuthSidePanel phrases={REGISTER_PHRASES} note="Cria a conta, adiciona um projeto, e tens logo um portefólio pronto a partilhar." />
 
       <div className="auth-main">
         <div className="auth-card">
