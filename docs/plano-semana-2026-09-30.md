@@ -85,26 +85,36 @@ Stripe antes de produção.
 **Ainda não decidido — não mexo sem o teu ok:** quando subir os preços de facto (a
 reunião disse "já", mas ainda não confirmaste a data de execução).
 
-## 6. Pop-up de upgrade dentro da app (a implementar agora, prioridade atual)
+## 6. Pop-up de upgrade dentro da app — FEITO (28/09)
 
 Decisão tomada nesta conversa: em vez de esconder os preços e acabar com a `/pricing`
 (como o StudyFetch), a `/pricing` fica — é âncora de preço, está no sitemap com prioridade
 0.8, e é onde as escolas veem que a conta institucional não é self-serve. O que se copia do
 StudyFetch é fechar a venda no momento exato da dor, dentro do pop-up de limite.
 
-Hoje [`src/components/PlanGate.jsx:38`](../src/components/PlanGate.jsx) faz
-`navigate('/pricing')` quando alguém atinge um limite — arranca a pessoa do sítio onde
-estava. Passa a:
-- Mostrar **um** plano, o tier acima do atual (Grátis → Plus, Plus → Pro), com preço e
-  botão direto ao checkout, sem sair da página.
-- Anual primeiro, com link discreto "prefiro mensal".
+[`src/components/PlanGate.jsx`](../src/components/PlanGate.jsx) já não faz
+`navigate('/pricing')` quando alguém atinge um limite. Agora:
+- Mostra **um** plano, o tier acima do atual (Grátis → Plus, Plus → Pro), com preço, o
+  ganho concreto na feature bloqueada ("1 → 10 por mês") e um testemunho real (partilhado
+  com a Pricing/Home, nenhum inventado).
+- Botão direto ao checkout do Stripe, sem sair da página — nada de anual pré-selecionado
+  para já, porque os preços anuais ainda não existem (secção 5 acima, não decidida).
+- Microcopy de confiança junto ao CTA ("Pagamento seguro via Stripe. Cancela quando
+  quiseres.") para não parecer que só vai para uma página de planos.
 - **Sem CTA de pagamento em contas de escola** — `school`/`school_pro`/professor ficam só
   com a mensagem e o botão de fechar, porque essas contas não são self-serve.
-- `create-checkout` passa a devolver a pessoa ao path onde estava, não a um `success_url`
-  fixo.
+- `create-checkout` devolve a pessoa ao path onde estava (o projeto, o Coach, etc.), tanto
+  ao completar como ao cancelar o pagamento — já não vai sempre para `/settings`.
 
-Isto é o que estou a implementar agora, a pedido explícito de "não precisarem de ir à
-página de planos quando chegarem ao limite das features".
+Testado no Chrome real: claro/escuro, desktop/mobile, sem erros de consola.
+
+**Falta só isto para ir a produção:**
+- [ ] Redeploy da edge function `create-checkout` — não tenho o MCP do Supabase ligado
+  nesta sessão para o fazer nem para verificar com uma query real, como manda o CLAUDE.md.
+  Corre: `npx supabase functions deploy create-checkout`
+- [ ] `npx vitest run` falhou por faltar `jsdom` instalado localmente (`npm install`
+  resolve — parece que `node_modules` está incompleto face ao `package.json`). Não
+  relacionado com este trabalho, mas vale corrigir antes de confiar nos testes automáticos.
 
 ## Não fazer esta semana
 
@@ -119,4 +129,4 @@ página de planos quando chegarem ao limite das features".
 - [ ] Documento de dores que a app resolve.
 - [ ] Objetivo de leads e plano até ao fim do ano, incluindo arranque de ads.
 - [ ] Lista de diferenças de onboarding face ao StudyFetch, e o passo escolhido.
-- [ ] Pop-up de upgrade a converter dentro da app (meu, deve estar pronto antes disso).
+- [x] Pop-up de upgrade a converter dentro da app — feito, falta só o deploy (secção 6).
