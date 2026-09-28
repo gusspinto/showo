@@ -92,5 +92,82 @@ Porquê este e não outro:
 nada pendente). Antes de implementar, vale uma query na base de dados para confirmar que é o
 grupo grande. Sem o MCP do Supabase nesta sessão, não consigo fazê-la eu.
 
-**Fica para depois, se o primeiro passo resultar:** mascote/frase rotativa no painel, prazo
-da PAP a organizar o plano do projeto, sequência de dias, botão "pedir aos pais".
+**Atualização 28/09:** o Gustavo apontou que o buraco maior não é quem cria um projeto e se
+esquece, é quem chega pelo vídeo da PAP, pensa "a PAP é só para o ano" e nunca cria nada. Um
+comentário em `src/pages/NewProject.jsx:54` diz que 76% dos alunos registados nunca criam
+projeto (data da medição desconhecida). Decisão: implementar conforme o maior buraco, depois
+de contar as respostas aos áudios por motivo. Ver secção 5, ideia 2.
+
+## 5. Mais ideias, ordenadas
+
+Segunda volta pelo StudyFetch (Conversar, Prática e atividades, Partilhar, Classificação,
+Gravar Aula) e verificação no código do Showo do que já existe. Filtro: aproxima da North
+Star (projetos validados por professor) ou da ativação (1 projeto com 3+ secções,
+partilhado)? Se não, fica de fora.
+
+### Vale a pena
+
+**1. "Pede ao teu professor para validar"** (a nossa versão do "Pedir aos meus pais para
+pagar")
+- No StudyFetch, quem usa não é quem paga, e há um botão para passar a decisão a quem paga.
+  No Showo, quem cria o projeto não é quem o valida.
+- Um botão no projeto que manda ao professor do aluno um link para ver e validar o projeto.
+- É a única ideia desta lista que mexe diretamente na North Star e na meta dos 10 professores
+  validadores até 30/11: cada convite é um professor a entrar pelo aluno. Respeita a regra de
+  entrada pelo professor e nunca pelo diretor, e o professor usa grátis.
+- Verificado: não encontrei nenhum mecanismo destes no código. A validação hoje passa pelas
+  turmas (`review_status`), que o professor cria. Para alunos individuais não há caminho.
+- Por verificar antes de desenhar: como um professor sem turma validaria um projeto de um
+  aluno que não está numa turma dele. Isto precisa de uma decisão de produto tua.
+
+**2. Data da PAP no onboarding + reativação na altura certa**
+- O StudyFetch organiza tudo pela data do exame. Para nós, a data da PAP.
+- Hoje a data da defesa só é pedida ao criar um projeto do tipo PAP. Quem pensa "é para o
+  ano" e não cria nada sai sem nos dar a data.
+- Uma pergunta no `Welcome.jsx` ("Para que vais usar o Showo agora?", com opções que mostram
+  que não é só a PAP) e, se for PAP, "Quando é a tua PAP?". A data fica guardada para um
+  email de reativação quando se aproximar.
+- Depende de contar as respostas aos áudios: se ganhar "PAP é para o ano", é esta.
+
+**3. O próximo passo nunca fica vazio** (secção 4 acima)
+- Para quem já tem projeto e não está ativado. É um grupo mais pequeno do que o da ideia 2,
+  mas a alteração é pequena.
+
+**4. Frase do dia no painel a mostrar usos que não são a PAP**
+- A mascote do StudyFetch diz uma frase diferente a cada visita e aponta para uma
+  funcionalidade concreta.
+- Para nós, ataca a perceção "isto é só para a PAP": uma frase rotativa no topo do Dashboard
+  a apontar para o diário, para um trabalho de disciplina, para a página de estágio, etc.
+- Barato: texto estático em rotação, sem IA.
+
+**5. Tempo em cada passo** ("leva 3 minutos")
+- O StudyFetch põe tempo no primeiro passo. O `NextStepBlock` já diz "menos de 5 minutos"
+  para criar projeto. Levar isso a todos os CTAs de onboarding é só copy.
+
+**6. Inquérito NPS dentro da app**
+- O StudyFetch pergunta de 0 a 10 se recomendarias a app. Hoje o nosso feedback vem dos
+  áudios, um a um. Um NPS dá um número que se acompanha semana a semana.
+- Não aproxima da North Star sozinho, mas diz-nos se o que mudamos está a funcionar.
+
+### Mais tarde
+
+**7. Diário por voz.** O StudyFetch grava a aula e transforma-a em notas. Para nós: gravar 30
+segundos sobre o que se fez hoje e a IA escreve a entrada do diário. Baixa o atrito de
+registar progresso, que alimenta o score. O reconhecimento de voz já existe no
+`DefenseMode.jsx`, mas continua a ser mais trabalho do que as ideias acima.
+
+**8. Partilha com pré-visualização.** O modal de partilha deles mostra um cartão do conjunto e
+botões de WhatsApp, Telegram e mensagens. O Showo já tem WhatsApp na página do projeto
+(`ProjectPage.jsx:4939`). O ganho seria mostrá-lo no momento de publicar, com cartão. É
+melhoria, não buraco.
+
+### Não fazer
+
+- **Classificação pública de sequências.** Viola a regra do Showo de que métricas de
+  envolvimento só são visíveis ao próprio utilizador. O Showo já tem sequência semanal
+  privada (`RhythmPanel`, "semanas seguidas"), e chega.
+- **Quizzes, flashcards, arcade, resumos em áudio.** São ferramentas de estudo. Não
+  aproximam de um portefólio nem de uma validação.
+- **Comunidade no Discord.** Custa moderação contínua e não temos equipa para isso agora.
+- **Preços diferentes por região/teste A/B.** Com o volume atual não há tráfego para um teste
+  dar resultado.
