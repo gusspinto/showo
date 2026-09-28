@@ -11,6 +11,8 @@ import { CompassIcon as Compass } from '@solar-icons/react/bold/compass'
 import { Folder2Icon as FolderOpen } from '@solar-icons/react/bold/folder-2'
 import { LightbulbIcon as Lightbulb } from '@solar-icons/react/bold/lightbulb'
 import { CheckCircleIcon as CheckCircle } from '@solar-icons/react/bold/check-circle'
+import { ChatRoundDotsIcon as ChatDots } from '@solar-icons/react/bold/chat-round-dots'
+import { QuestionCircleIcon as QuestionCircle } from '@solar-icons/react/bold/question-circle'
 import { ShowoMark } from './components/icons/ShowoMark'
 import { PhoneIcon as Phone } from '@solar-icons/react/bold/phone'
 import { HelmetProvider } from 'react-helmet-async'
@@ -149,6 +151,25 @@ function AuthGate({ children }) {
      bloquear o documento que explica o que se faz com eles
    - preços: nunca bloquear quem está a tentar pagar
    Visitantes anónimos nunca veem comporta nenhuma — ela exige `user`. */
+
+// Logótipos monocromáticos (TikTok/Instagram) para o HeardFromGate — o
+// pacote de ícones (Solar) não tem marcas, só ícones genéricos. Mesmo
+// padrão do GoogleG em GoogleButton.jsx: SVG inline, currentColor para
+// herdar a cor do estado selecionado/não selecionado do cartão.
+function TikTokIcon({ size = 22 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M16.6 5.82c-1.36-1.15-1.86-2.54-1.94-4.32h-3.06v13.6c0 1.44-1.18 2.6-2.6 2.6-1.44 0-2.6-1.18-2.6-2.6 0-1.72 1.66-3.01 3.37-2.48V9.65c-3.45-.46-6.47 2.22-6.47 5.64 0 3.33 2.76 5.7 5.69 5.7 3.14 0 5.69-2.55 5.69-5.7V9.01c1.22.87 2.71 1.38 4.3 1.38V7.3c0-.01-1.95.03-3.38-1.48z" />
+    </svg>
+  )
+}
+function InstagramIcon({ size = 22 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M12 2.16c3.2 0 3.58.01 4.85.07 3.25.15 4.77 1.69 4.92 4.92.06 1.27.07 1.64.07 4.85 0 3.2-.01 3.58-.07 4.85-.15 3.23-1.66 4.77-4.92 4.92-1.27.06-1.64.07-4.85.07-3.2 0-3.58-.01-4.85-.07-3.26-.15-4.77-1.7-4.92-4.92-.06-1.27-.07-1.64-.07-4.85 0-3.2.01-3.58.07-4.85.15-3.23 1.66-4.77 4.92-4.92 1.27-.06 1.64-.07 4.85-.07zM12 0C8.74 0 8.33.01 7.05.07 2.7.27.27 2.69.07 7.05.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.2 4.36 2.62 6.78 6.98 6.98 1.28.06 1.69.07 4.95.07s3.67-.01 4.95-.07c4.35-.2 6.78-2.62 6.98-6.98.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.2-4.35-2.62-6.78-6.98-6.98C15.67.01 15.26 0 12 0zm0 5.84a6.16 6.16 0 1 0 0 12.32 6.16 6.16 0 0 0 0-12.32zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.41-10.85a1.44 1.44 0 1 0 0 2.88 1.44 1.44 0 0 0 0-2.88z" />
+    </svg>
+  )
+}
 const GATE_EXEMPT_PATHS = new Set(['/login', '/register', '/recuperar-password', '/privacidade', '/termos', '/pricing', '/welcome'])
 const GATE_EXEMPT_PREFIXES = ['/oauth/']
 const isGateExempt = (pathname) =>
@@ -285,6 +306,74 @@ function OccupationGate({ children, reopenGate, setReopenGate }) {
   )
 }
 
+const HEARD_FROM_OPTIONS = [
+  { id: 'tiktok',      label: 'TikTok',       icon: TikTokIcon },
+  { id: 'instagram',   label: 'Instagram',    icon: InstagramIcon },
+  { id: 'boca_a_boca', label: 'Boca a boca',  icon: ChatDots },
+  { id: 'outro',       label: 'Outro',        icon: QuestionCircle },
+]
+
+// "Onde conheceste o Showo?" — entre o OccupationGate e o IntentGate, pedido
+// do Gustavo à imagem do "Como você soube sobre StudyFetch?" deles. Só
+// conta Individual, mesma condição dos outros gates desta stack.
+function HeardFromGate({ children, reopenGate, setReopenGate }) {
+  const { user, profile, refreshProfile } = useAuth()
+  const location = useLocation()
+  const [heardFrom, setHeardFrom] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  const needsHeardFrom = (!isGateExempt(location.pathname) && user && profile
+    && profile.role === 'aluno' && !profile.organization_id && !profile.heard_from)
+    || reopenGate === 'heard_from'
+
+  useEffect(() => {
+    if (reopenGate === 'heard_from' && profile?.heard_from) setHeardFrom(profile.heard_from)
+  }, [reopenGate, profile?.heard_from])
+
+  async function pick(id) {
+    setHeardFrom(id)
+    setSaving(true)
+    const { error: err } = await supabase.from('profiles').update({ heard_from: id }).eq('id', user.id)
+    if (!err) { await refreshProfile(); setReopenGate(null) }
+    setSaving(false)
+  }
+
+  if (!needsHeardFrom) return children
+
+  return (
+    <div className="onboard-screen">
+      <button type="button" onClick={() => setReopenGate('occupation')} className="onboard-back">
+        <ArrowLeft size={13} /> Voltar
+      </button>
+      <div className="onboard-body" style={{ opacity: saving ? 0.5 : 1, pointerEvents: saving ? 'none' : 'auto' }}>
+        <img src="/darkmode_icon_logo.png" alt="Showo" className="onboard-logo" />
+        <div className="onboard-head">
+          <h1 className="onboard-title">Onde conheceste o Showo?</h1>
+        </div>
+        <div className="onboard-grid">
+          {HEARD_FROM_OPTIONS.map(opt => {
+            const Icon = opt.icon
+            const isSelected = heardFrom === opt.id
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                disabled={saving}
+                onClick={() => pick(opt.id)}
+                className={`onboard-card${isSelected ? ' is-selected' : ''}`}
+              >
+                {isSelected && <span className="onboard-card-check"><CheckCircle size={13} /></span>}
+                <span className="onboard-card-icon"><Icon size={22} /></span>
+                <span className="onboard-card-label">{opt.label}</span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // "Para que vais usar o Showo agora?" — feedback recorrente dos áudios de
 // outreach: quem chega pelo vídeo da PAP entra a pensar "isto é só para a
 // PAP" e, se a PAP for só para o ano, nunca cria nada. Precisava de estar
@@ -361,7 +450,7 @@ function IntentGate({ children, setReopenGate }) {
     <div className="onboard-screen">
       <button
         type="button"
-        onClick={() => step === 'pap_timing' ? setStep('intent') : setReopenGate('occupation')}
+        onClick={() => step === 'pap_timing' ? setStep('intent') : setReopenGate('heard_from')}
         className="onboard-back"
       >
         <ArrowLeft size={13} /> Voltar
@@ -698,6 +787,7 @@ export default function App() {
             <AuthGate>
             <PhoneGate reopenGate={reopenGate} setReopenGate={setReopenGate}>
             <OccupationGate reopenGate={reopenGate} setReopenGate={setReopenGate}>
+            <HeardFromGate reopenGate={reopenGate} setReopenGate={setReopenGate}>
             <IntentGate reopenGate={reopenGate} setReopenGate={setReopenGate}>
             <Suspense fallback={<PageLoader />}>
             <Routes>
@@ -735,6 +825,7 @@ export default function App() {
             </Routes>
             </Suspense>
             </IntentGate>
+            </HeardFromGate>
             </OccupationGate>
             </PhoneGate>
             </AuthGate>
