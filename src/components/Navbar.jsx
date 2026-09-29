@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { PlanGateModal } from './PlanGate'
 import { useTheme } from '../context/ThemeContext'
 import { useSidebar } from '../context/SidebarContext'
 import { supabase } from '../lib/supabase'
@@ -17,6 +18,7 @@ import { CupStarIcon as Trophy } from '@solar-icons/react/bold/cup-star'
 import { Logout2Icon as LogOut } from '@solar-icons/react/bold/logout-2'
 import { DoubleAltArrowRightIcon as ArrowRightToLine } from '@solar-icons/react/bold/double-alt-arrow-right'
 import { BellIcon as Bell } from '@solar-icons/react/bold/bell'
+import { CrownIcon as Crown } from '@solar-icons/react/bold/crown'
 import { EyeIcon as Eye } from '@solar-icons/react/bold/eye'
 import { TargetIcon as Target } from '@solar-icons/react/bold/target'
 import { GraphNewUpIcon as TrendingUp } from '@solar-icons/react/bold/graph-new-up'
@@ -851,7 +853,12 @@ const dropItemStyle = {
 export function Navbar({ children, showLinks = true, showCreateProject = false, previewEditingMobile = false, onExitWorkspace, onSaveWorkspace, wsSaving, wsSaved, wsSaveError, hideSidebar = false, mobileLeft = null }) {
   const navigate = useNavigate()
   const location = useLocation()
-  const { user, profile, signOut, isAdmin, isSchoolAccount } = useAuth()
+  const { user, profile, signOut, isAdmin, isSchoolAccount, planId } = useAuth()
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  // Só conta Individual (aluno sem organization_id) no plano Grátis — quem
+  // tem organization_id é aluno institucional (plano da escola, não
+  // self-serve), mesma condição do IntentGate/OccupationGate em App.jsx.
+  const showSidebarUpgrade = profile?.role === 'aluno' && !profile?.organization_id && planId === 'free'
   const { theme, toggleTheme } = useTheme()
   const { extras } = useSidebar()
   const [open, setOpen] = useState(false)
@@ -1700,6 +1707,20 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   <Bug size={16} />
                 </button>
 
+                {/* Upgrade — pequeno botão azul, ao lado do sino, só para
+                    conta Individual no plano Grátis. Pedido do Gustavo:
+                    versão desktop do cartão "Desbloquear Premium" mobile. */}
+                {showSidebarUpgrade && (
+                  <button
+                    className={`sb-upgrade-btn${collapsed ? ' is-collapsed' : ''}`}
+                    onClick={() => setShowUpgradeModal(true)}
+                    title="Experimenta o Plus" aria-label="Experimenta o Plus"
+                  >
+                    <Crown size={collapsed ? 16 : 14} />
+                    {!collapsed && <span>Plus</span>}
+                  </button>
+                )}
+
                 {/* Notificações — stays visible when collapsed */}
                 <InviteInbox userId={user.id} sidebar={true} collapsed={collapsed} />
                 {/* Avatar — collapsed: tap opens a small Perfil/Sair menu instead of
@@ -1806,6 +1827,13 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           )}
         </div>
       </div>
+      )}
+
+      {showUpgradeModal && (
+        <PlanGateModal
+          message={{ title: 'Experimenta o Plus', body: 'Mais análises de IA, mais defesa, mais espaço para o teu portefólio.' }}
+          onClose={() => setShowUpgradeModal(false)}
+        />
       )}
 
       {/* ── Floating "Gerir projeto" panel — desktop only ── */}

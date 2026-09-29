@@ -3539,6 +3539,30 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
+   Cartão de upgrade — só mobile (StudentDashboard.jsx). Em desktop o CTA
+   equivalente vive na sidebar (Navbar.jsx), por isso este fica escondido
+   a partir do breakpoint em que a sidebar aparece.
+   ══════════════════════════════════════════════════════════════════════════ */
+.sdb-upgrade-card {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--sp-4);
+  margin-bottom: var(--sp-4);
+}
+.sdb-upgrade-card-title { margin: 0 0 2px; font-size: var(--text-base); font-weight: 700; font-family: var(--font-heading); }
+.sdb-upgrade-card-sub { margin: 0; font-size: var(--text-xs); color: var(--on-dim); max-width: 34ch; }
+.sdb-upgrade-card-btn {
+  flex-shrink: 0;
+  padding: 9px 16px;
+  background: #fff; color: var(--color-primary-deep);
+  border: none; border-radius: var(--radius-full);
+  font-size: var(--text-sm); font-weight: 700; font-family: var(--font-body);
+  cursor: pointer; transition: opacity 0.15s;
+}
+.sdb-upgrade-card-btn:hover { opacity: 0.88; }
+@media (min-width: 601px) {
+  .sdb-upgrade-card { display: none; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
    Regra da semana — o streak conta por semanas, e isso tem de estar escrito.
    Sem esta linha o número aparece sem ninguém saber o que o mantém vivo.
    ══════════════════════════════════════════════════════════════════════════ */

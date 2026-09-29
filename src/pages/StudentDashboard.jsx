@@ -31,6 +31,7 @@ import { UploadIcon as Upload } from '@solar-icons/react/bold/upload'
 import { ClipboardTextIcon as ClipboardCheck } from '@solar-icons/react/bold/clipboard-text'
 import { BookBookmarkIcon as BookMarked } from '@solar-icons/react/bold/book-bookmark'
 import { Button, Card, SectionLabel, Modal, Select } from '../components/ui'
+import { PlanGateModal } from '../components/PlanGate'
 import { useAuth } from '../context/AuthContext'
 import { remainingUses, featureUsed, AI_FEATURE_LABELS, getPlan } from '../lib/plans'
 import ExportProjectsModal from '../components/ExportProjectsModal'
@@ -206,6 +207,7 @@ export default function StudentDashboard({ user, profile }) {
   const [composerProject, setComposerProject] = useState(null)
   const [showJournal, setShowJournal] = useState(false)
   const [showJoinTurma, setShowJoinTurma] = useState(false)
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [diaryReminderDismissed, setDiaryReminderDismissed] = useState(
     () => localStorage.getItem(`showo_diary_remind_${new Date().toISOString().slice(0,10)}`) === '1'
   )
@@ -754,6 +756,13 @@ export default function StudentDashboard({ user, profile }) {
         <ExportProjectsModal onClose={() => setShowExportModal(false)} />
       )}
 
+      {showUpgradeModal && (
+        <PlanGateModal
+          message={{ title: 'Experimenta o Plus', body: 'Mais análises de IA, mais defesa, mais espaço para o teu portefólio.' }}
+          onClose={() => setShowUpgradeModal(false)}
+        />
+      )}
+
       {shareProject && (
         <ShareStoryModal project={shareProject} onClose={() => setShareProject(null)} />
       )}
@@ -816,6 +825,21 @@ export default function StudentDashboard({ user, profile }) {
             </aside>
           )}
         </header>
+
+        {/* ══════════════ CARTÃO DE UPGRADE (só mobile) ══════════════
+            Em desktop o CTA vive na sidebar (Navbar.jsx, junto ao sino) —
+            aqui é só mobile, onde a sidebar não aparece. Pedido do Gustavo,
+            à imagem do cartão "Desbloquear Premium" do StudyFetch. Só para
+            quem está no plano Grátis. */}
+        {planId === 'free' && (
+          <div className="sdb-upgrade-card sdb-panel sdb-panel--brand">
+            <div>
+              <p className="sdb-upgrade-card-title">Experimenta o Plus</p>
+              <p className="sdb-upgrade-card-sub">Mais análises de IA, mais defesa, mais espaço para o teu portefólio.</p>
+            </div>
+            <button className="sdb-upgrade-card-btn" onClick={() => setShowUpgradeModal(true)}>Atualizar</button>
+          </div>
+        )}
 
         {/* ══════════════ BANNER ESCOLA ══════════════ */}
         {isSchoolAccount && (

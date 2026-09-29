@@ -314,6 +314,23 @@ body.light .sb-collapse-toggle:hover { border-color: rgba(0,0,0,0.75); }
 .sb-action-btn:active { transform: scale(0.9); }
 .sb-action-btn.danger:hover { background: var(--color-error-subtle); color: var(--color-error); }
 
+/* ── Botão de upgrade na sidebar (Experimenta o Plus) ──
+   Pequeno e azul, "ressaltado" como pedido — só o botão de ação a sério
+   fica cheio de cor nesta barra lateral, tudo o resto é neutro. */
+.sb-upgrade-btn {
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  flex: 0 0 auto; height: 32px; padding: 0 10px;
+  border-radius: 8px; border: none; cursor: pointer;
+  background: var(--color-primary); color: #fff;
+  font-size: 12px; font-weight: 700; font-family: var(--font-body);
+  transition: opacity 0.13s, transform 0.1s;
+}
+.sb-upgrade-btn:hover { opacity: 0.88; }
+.sb-upgrade-btn:active { transform: scale(0.94); }
+/* Colapsada: quadrado 32px igual aos ícones ao lado, sem texto nem
+   padding extra — a versão com "Plus" só cabe com a sidebar aberta. */
+.sb-upgrade-btn.is-collapsed { width: 32px; padding: 0; }
+
 /* ── Floating "Gerir projeto" panel ── */
 .proj-manage-float {
   position: fixed;
