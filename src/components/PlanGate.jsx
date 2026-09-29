@@ -51,30 +51,29 @@ const C = {
     display: 'flex', color: 'var(--color-text-secondary)',
     background: 'none', border: 'none', cursor: 'pointer', padding: '4px', lineHeight: 0,
   },
-  // Cabeçalho simples, sem ícone nem gradiente — a versão anterior (badge
-  // a brilhar num gradiente) soava a genérico de IA, não à marca. Fica só o
-  // texto, com mais respiro, como o resto dos onboardings de referência.
+  // Cabeçalho simples, sem ícone nem gradiente.
   hero: {
     display: 'flex', flexDirection: 'column', alignItems: 'center',
-    gap: '12px', padding: '48px 40px 8px', textAlign: 'center',
+    gap: '12px', padding: 'var(--sp-8) var(--sp-8) var(--sp-2)', textAlign: 'center',
   },
-  // Sem tracked-uppercase — é o "eyebrow em CAIXA ALTA" apontado pela skill
-  // de design como uma das marcas mais óbvias de UI genérica gerada por IA.
+  // Mesmo tratamento do .sdb-eyebrow do Dashboard (StudentDashboard.css) —
+  // maiúsculas com letter-spacing É a convenção desta app para rótulos
+  // pequenos ("RESUMO", "COMPLETUDE"...), não um "tell" genérico aqui.
   eyebrow: {
-    fontSize: '0.82rem', fontWeight: 700,
+    fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em',
     color: 'var(--color-warning)', background: 'var(--color-warning-subtle)',
     padding: '5px 12px', borderRadius: 'var(--radius-full)',
   },
   title: { margin: 0, fontSize: '1.6rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)', lineHeight: 1.25 },
   msg:   { margin: 0, fontSize: '0.98rem', color: 'var(--color-text-secondary)', lineHeight: 1.6, maxWidth: '420px' },
-  body: { display: 'flex', flexDirection: 'column', gap: '20px', padding: '20px 40px 40px' },
-  // Sem faixa azul em CAIXA ALTA a anunciar o plano — outro tell da mesma
-  // família do eyebrow. O nome e o preço falam por si, só um traço fino a
-  // marcar o cartão, não uma bandeira.
+  body: { display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)', padding: 'var(--sp-5) var(--sp-8) var(--sp-8)' },
+  // .sdb-panel--tint do Dashboard — o bloco de apoio à marca, tinta subtil,
+  // não uma faixa azul cheia. É o mesmo painel que o resto da app usa para
+  // "isto é importante mas não é O botão principal".
   upsell: {
-    display: 'flex', flexDirection: 'column', gap: '12px',
-    background: 'transparent', borderTop: '2px solid var(--color-primary)',
-    padding: '16px 0 0',
+    display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)',
+    background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-muted)',
+    borderRadius: 'var(--radius-lg)', padding: 'var(--sp-5)',
   },
   upsellHead: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '8px' },
   upsellName: { fontSize: '1.15rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)' },
@@ -83,17 +82,19 @@ const C = {
   upsellGain: {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
     fontSize: '0.88rem', color: 'var(--color-text-secondary)',
+    borderTop: '1px solid var(--color-primary-muted)', paddingTop: 'var(--sp-3)',
   },
   upsellGainValue: { color: 'var(--color-primary)', fontWeight: 700 },
   errorText: { margin: 0, fontSize: '0.78rem', color: 'var(--color-error)' },
-  // Citação a solo, sem caixa nem fundo — um cartão igual ao de cima só
-  // repetia o mesmo bloco duas vezes. O traço à esquerda basta para separar
-  // do preço sem empilhar mais uma "caixa com sombra".
+  // .sdb-panel simples — mesmo cartão neutro que qualquer painel do
+  // Dashboard, só para o testemunho não se confundir visualmente com o
+  // bloco do preço (que é o único a usar a tinta da marca).
   testimonial: {
-    display: 'flex', flexDirection: 'column', gap: '14px',
-    borderLeft: '2px solid var(--color-border)', padding: '2px 0 2px 18px',
+    display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)',
+    background: 'var(--color-surface)', border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius-lg)', padding: 'var(--sp-5)',
   },
-  testimonialQuote: { margin: 0, fontSize: '1.02rem', color: 'var(--color-text)', lineHeight: 1.55, fontFamily: 'var(--font-heading)', fontWeight: 400, minHeight: '4.6em' },
+  testimonialQuote: { margin: 0, fontSize: '0.95rem', color: 'var(--color-text)', lineHeight: 1.55, minHeight: '4.6em' },
   testimonialFooter: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' },
   testimonialPerson: { display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 },
   testimonialPhoto: { width: '36px', height: '36px', borderRadius: 'var(--radius-full)', objectFit: 'cover', flexShrink: 0 },
