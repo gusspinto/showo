@@ -436,3 +436,41 @@ a { transition: color 0.15s, opacity 0.15s; }
 @media (prefers-reduced-motion: reduce) {
   .onboard-screen, .onboard-card, .onboard-card-check { animation: none !important; }
 }
+
+/* ── PlanGateModal (pop-up de limite/upgrade) ──
+   Mais espaçoso em desktop, pedido do Gustavo à imagem do pop-up do
+   StudyFetch — em mobile fica como estava (a largura vem do overlay). */
+.plan-gate-modal { max-width: 460px; }
+@media (min-width: 640px) {
+  .plan-gate-modal { max-width: 680px; }
+}
+@keyframes plan-gate-fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+.plan-gate-fade { animation: plan-gate-fade-in 0.35s ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .plan-gate-fade { animation: none !important; }
+}
+@media (hover: hover) {
+  .plan-gate-cta-primary:hover:not(:disabled) { opacity: 0.88; }
+}
+.plan-gate-cta-primary:active:not(:disabled) { transform: scale(0.98); }
+
+/* Empilhado em mobile (cartão do plano, depois testemunho, depois botões —
+   ordem de leitura natural). Em desktop, pedido do Gustavo: cartão +
+   testemunho à esquerda, botões de ação à direita, lado a lado. */
+.plan-gate-columns { display: flex; flex-direction: column; gap: 20px; }
+/* 28px, não 16 — o preço e o testemunho são dois tipos de conteúdo
+   diferentes; sem caixa a separá-los (tirámos as caixas de propósito), o
+   espaço tem de fazer esse trabalho sozinho. Regra da better-layout: o
+   espaço entre grupos tem de ser pelo menos 2x o espaço dentro de cada
+   grupo (12-14px cá dentro), senão lê-se tudo como um bloco só. */
+.plan-gate-col-left { display: flex; flex-direction: column; gap: 28px; min-width: 0; }
+.plan-gate-col-right { display: flex; flex-direction: column; gap: 12px; }
+@media (min-width: 640px) {
+  .plan-gate-columns { flex-direction: row; align-items: flex-start; gap: 28px; }
+  .plan-gate-col-left { flex: 1.1; }
+  /* flex-start, não center: os botões alinham com o topo do cartão à
+     esquerda (a faixa "DESBLOQUEIA JÁ COM O PLUS") em vez de flutuarem a
+     meio de uma coluna vazia — apontado pela revisão de layout depois do
+     Gustavo ter reagido mal a esta versão. */
+  .plan-gate-col-right { flex: 1; justify-content: flex-start; padding-top: 2px; }
+}

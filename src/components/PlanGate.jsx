@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { LockKeyholeIcon as Lock } from '@solar-icons/react/bold/lock-keyhole'
@@ -15,9 +15,14 @@ const FEATURE_TESTIMONIAL_NAME = {
   defenseTraining: 'Rita Sousa',
   exportPptx: 'Rita Sousa',
 }
-function pickTestimonial(feature) {
+// Ordena a lista toda a começar pelo testemunho mais relevante à feature —
+// os outros seguem-se, para o carrossel ter por onde rodar em vez de mostrar
+// sempre o mesmo. Nenhum é inventado, são os mesmos da Pricing/Home.
+function orderTestimonials(feature) {
   const wanted = FEATURE_TESTIMONIAL_NAME[feature]
-  return TESTIMONIALS.find(t => t.name === wanted) || TESTIMONIALS[0]
+  const i = TESTIMONIALS.findIndex(t => t.name === wanted)
+  if (i <= 0) return TESTIMONIALS
+  return [TESTIMONIALS[i], ...TESTIMONIALS.slice(0, i), ...TESTIMONIALS.slice(i + 1)]
 }
 
 // Marca do plano ao lado do nome — a marca Showo na cor do plano
@@ -38,75 +43,79 @@ const C = {
   modal: {
     position: 'relative', background: 'var(--color-surface)', border: '1px solid var(--color-border)',
     borderRadius: 'var(--radius-xl)', overflow: 'hidden',
-    maxWidth: '460px', width: '100%', display: 'flex', flexDirection: 'column',
+    width: '100%', display: 'flex', flexDirection: 'column',
     boxShadow: 'var(--shadow-xl)', margin: 'auto',
   },
   closeBtn: {
-    position: 'absolute', top: '16px', right: '16px', zIndex: 1,
+    position: 'absolute', top: '20px', right: '20px', zIndex: 1,
     display: 'flex', color: 'var(--color-text-secondary)',
     background: 'none', border: 'none', cursor: 'pointer', padding: '4px', lineHeight: 0,
   },
-  // Cabeçalho com o brilho da marca por trás do badge do plano — o mesmo gradiente
-  // reservado para a ação mais importante de cada ecrã (ver tokens.css).
+  // Cabeçalho simples, sem ícone nem gradiente — a versão anterior (badge
+  // a brilhar num gradiente) soava a genérico de IA, não à marca. Fica só o
+  // texto, com mais respiro, como o resto dos onboardings de referência.
   hero: {
-    position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center',
-    gap: '14px', padding: '44px 36px 28px', textAlign: 'center',
-    background: 'radial-gradient(120% 100% at 50% -10%, var(--color-primary-subtle) 0%, transparent 65%)',
+    display: 'flex', flexDirection: 'column', alignItems: 'center',
+    gap: '12px', padding: '48px 40px 8px', textAlign: 'center',
   },
-  badgeGlow: {
-    width: '76px', height: '76px', borderRadius: 'var(--radius-lg)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    background: 'var(--brand-gradient)', boxShadow: '0 10px 32px rgba(43,126,245,0.32)',
-  },
+  // Sem tracked-uppercase — é o "eyebrow em CAIXA ALTA" apontado pela skill
+  // de design como uma das marcas mais óbvias de UI genérica gerada por IA.
   eyebrow: {
-    fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase',
+    fontSize: '0.82rem', fontWeight: 700,
     color: 'var(--color-warning)', background: 'var(--color-warning-subtle)',
-    padding: '4px 10px', borderRadius: 'var(--radius-full)',
+    padding: '5px 12px', borderRadius: 'var(--radius-full)',
   },
-  title: { margin: 0, fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)', lineHeight: 1.28 },
-  msg:   { margin: 0, fontSize: '0.92rem', color: 'var(--color-text-secondary)', lineHeight: 1.55, maxWidth: '340px' },
-  body: { display: 'flex', flexDirection: 'column', gap: '18px', padding: '0 32px 32px' },
+  title: { margin: 0, fontSize: '1.6rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)', lineHeight: 1.25 },
+  msg:   { margin: 0, fontSize: '0.98rem', color: 'var(--color-text-secondary)', lineHeight: 1.6, maxWidth: '420px' },
+  body: { display: 'flex', flexDirection: 'column', gap: '20px', padding: '20px 40px 40px' },
+  // Sem faixa azul em CAIXA ALTA a anunciar o plano — outro tell da mesma
+  // família do eyebrow. O nome e o preço falam por si, só um traço fino a
+  // marcar o cartão, não uma bandeira.
   upsell: {
-    display: 'flex', flexDirection: 'column',
-    background: 'var(--color-bg)', border: '1.5px solid var(--color-primary)',
-    borderRadius: 'var(--radius-lg)', overflow: 'hidden',
+    display: 'flex', flexDirection: 'column', gap: '12px',
+    background: 'transparent', borderTop: '2px solid var(--color-primary)',
+    padding: '16px 0 0',
   },
-  upsellRibbon: {
-    fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.03em', textTransform: 'uppercase',
-    color: '#fff', background: 'var(--color-primary)', padding: '6px 18px', textAlign: 'center',
-  },
-  upsellInner: { display: 'flex', flexDirection: 'column', gap: '12px', padding: '16px 20px' },
-  upsellHead: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' },
-  upsellName: { fontSize: '1rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)' },
-  upsellPrice: { fontSize: '1.2rem', fontWeight: 700, color: 'var(--color-text)' },
+  upsellHead: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '8px' },
+  upsellName: { fontSize: '1.15rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)' },
+  upsellPrice: { fontSize: '1.3rem', fontWeight: 700, color: 'var(--color-text)' },
   upsellPeriod: { fontWeight: 500, fontSize: '0.8rem', color: 'var(--color-text-secondary)' },
   upsellGain: {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    fontSize: '0.86rem', color: 'var(--color-text-secondary)',
-    borderTop: '1px solid var(--color-border)', paddingTop: '12px',
+    fontSize: '0.88rem', color: 'var(--color-text-secondary)',
   },
   upsellGainValue: { color: 'var(--color-primary)', fontWeight: 700 },
   errorText: { margin: 0, fontSize: '0.78rem', color: 'var(--color-error)' },
-  // Cartão de prova social próprio, não uma linha ao lado — é o que faz o pop-up
-  // passar confiança, não só um preço a pedir dinheiro.
+  // Citação a solo, sem caixa nem fundo — um cartão igual ao de cima só
+  // repetia o mesmo bloco duas vezes. O traço à esquerda basta para separar
+  // do preço sem empilhar mais uma "caixa com sombra".
   testimonial: {
-    display: 'flex', flexDirection: 'column', gap: '10px',
-    background: 'var(--color-surface-alt, var(--color-bg))', border: '1px solid var(--color-border)',
-    borderRadius: 'var(--radius-lg)', padding: '18px 20px',
+    display: 'flex', flexDirection: 'column', gap: '14px',
+    borderLeft: '2px solid var(--color-border)', padding: '2px 0 2px 18px',
   },
-  testimonialQuote: { margin: 0, fontSize: '0.86rem', color: 'var(--color-text)', lineHeight: 1.5, fontStyle: 'italic' },
-  testimonialFooter: { display: 'flex', alignItems: 'center', gap: '10px' },
+  testimonialQuote: { margin: 0, fontSize: '1.02rem', color: 'var(--color-text)', lineHeight: 1.55, fontFamily: 'var(--font-heading)', fontWeight: 400, minHeight: '4.6em' },
+  testimonialFooter: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' },
+  testimonialPerson: { display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 },
   testimonialPhoto: { width: '36px', height: '36px', borderRadius: 'var(--radius-full)', objectFit: 'cover', flexShrink: 0 },
-  testimonialName: { fontSize: '0.82rem', fontWeight: 700, color: 'var(--color-text)' },
+  testimonialName: { fontSize: '0.84rem', fontWeight: 700, color: 'var(--color-text)' },
   testimonialRole: {
-    fontSize: '0.74rem', color: 'var(--color-text-secondary)',
-    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '280px',
+    fontSize: '0.75rem', color: 'var(--color-text-secondary)',
+    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '260px',
   },
+  testimonialDots: { display: 'flex', gap: '5px', flexShrink: 0 },
+  testimonialDot: (active) => ({
+    width: active ? '14px' : '5px', height: '5px', borderRadius: '3px',
+    background: active ? 'var(--color-primary)' : 'var(--color-border)',
+    transition: 'width 0.25s ease, background 0.25s ease',
+  }),
+  // Invertido (var(--color-text)/var(--color-bg)), não azul — o mesmo botão
+  // "cheio" que a Home, o Login e o Registo já usam. O azul fica reservado
+  // à faixa do plano em cima, não ao botão de ação.
   ctaPrimary: {
     width: '100%', padding: '15px 18px', borderRadius: 'var(--radius-full)', border: 'none',
-    background: 'var(--color-primary)', color: '#fff',
+    background: 'var(--color-text)', color: 'var(--color-bg)',
     fontWeight: 700, fontSize: '0.96rem', cursor: 'pointer', fontFamily: 'var(--font-body)',
-    transition: 'background var(--duration-fast) var(--ease-out)',
+    transition: 'opacity var(--duration-fast) var(--ease-out), transform 0.1s var(--ease-out)',
   },
   ctaSecondary: {
     width: '100%', padding: '15px 18px', borderRadius: 'var(--radius-full)',
@@ -144,6 +153,7 @@ export function PlanGateModal({ message, onClose }) {
   const location = useLocation()
   const { planId } = useAuth()
   const [loading, setLoading] = useState(false)
+  const [askingParents, setAskingParents] = useState(false)
   const [checkoutError, setCheckoutError] = useState('')
 
   const title = typeof message === 'object' ? message?.title : 'Limite do plano atingido'
@@ -155,7 +165,20 @@ export function PlanGateModal({ message, onClose }) {
   // pagamento nenhum, só a mensagem e fechar.
   const upgrade = nextPaidPlan(planId)
   const gain = upgrade && feature ? upgradeGain(feature, planId, upgrade) : null
-  const testimonial = upgrade ? pickTestimonial(feature) : null
+
+  // Carrossel de testemunhos, a começar no mais relevante à feature que
+  // bloqueou a pessoa — pedido do Gustavo depois de ver o pop-up do
+  // StudyFetch, onde os testemunhos mudam sozinhos em vez de ficar um só
+  // fixo a olhar para a pessoa.
+  const orderedTestimonials = orderTestimonials(feature)
+  const [tIdx, setTIdx] = useState(0)
+  useEffect(() => {
+    if (!upgrade || orderedTestimonials.length < 2) return
+    const id = setInterval(() => setTIdx(i => (i + 1) % orderedTestimonials.length), 5000)
+    return () => clearInterval(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [upgrade, orderedTestimonials.length])
+  const testimonial = upgrade ? orderedTestimonials[tIdx] : null
 
   async function handleUpgrade() {
     if (!upgrade) return
@@ -175,76 +198,126 @@ export function PlanGateModal({ message, onClose }) {
     }
   }
 
+  // Muita gente deste público (alunos PAP) não tem cartão próprio — em vez
+  // de bloquear a compra, dá um caminho para pedir a quem tem. Usa a mesma
+  // sessão de checkout do Stripe (o link funciona para quem o abrir, não
+  // precisa de sessão do Showo), só muda o canal: WhatsApp com mensagem
+  // pronta, em vez de redirecionar logo o próprio browser.
+  async function handleAskParents() {
+    if (!upgrade) return
+    // Aberto já, síncrono com o clique — se esperasse pelo fetch antes de
+    // abrir, o Safari (e por vezes o Chrome) trata a nova aba como popup
+    // não pedido pelo utilizador e bloqueia-a em silêncio, sem erro nenhum
+    // visível. Só se muda o destino depois de o link estar pronto.
+    const win = window.open('', '_blank')
+    setAskingParents(true)
+    setCheckoutError('')
+    try {
+      const returnPath = `${location.pathname}${location.search}`
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { plan: upgrade.id, returnPath },
+      })
+      if (error || !data?.url) {
+        win?.close()
+        setCheckoutError('Erro ao preparar o pedido. Tenta novamente.')
+        return
+      }
+      const msg = `Olá! Estou a usar o Showo para o meu portefólio e preciso de passar ao plano ${upgrade.name} (${upgrade.priceLabel}${upgrade.period}) para continuar. Podes ajudar-me a pagar? É só abrir este link: ${data.url}`
+      const waUrl = `https://wa.me/?text=${encodeURIComponent(msg)}`
+      if (win) win.location.href = waUrl
+      else window.open(waUrl, '_blank')
+    } catch {
+      win?.close()
+      setCheckoutError('Erro ao preparar o pedido. Tenta novamente.')
+    } finally {
+      setAskingParents(false)
+    }
+  }
+
   return (
     <div style={C.overlay} onClick={onClose}>
-      <div style={C.modal} onClick={e => e.stopPropagation()}>
+      <div style={C.modal} className="plan-gate-modal" onClick={e => e.stopPropagation()}>
         <button onClick={onClose} className="icon-btn-ghost" style={C.closeBtn} aria-label="Fechar">
           <X size={20} />
         </button>
 
         <div style={C.hero}>
-          {upgrade ? (
-            <div style={C.badgeGlow}>
-              <img src={PLAN_BADGES[upgrade.id]?.src} alt="" width={28} height={28} style={{ objectFit: 'contain' }} />
-            </div>
-          ) : (
-            <span style={C.eyebrow}>Limite atingido</span>
-          )}
+          {!upgrade && <span style={C.eyebrow}>Limite atingido</span>}
           <p style={C.title}>{title}</p>
-          <p style={C.msg}>{body}</p>
+          {/* O cartão do plano já mostra o número concreto ("1 → 10 por mês") —
+              repetir isso em texto corrido só engordava o ecrã sem dizer nada
+              de novo. Só aparece quando não há esse número para mostrar. */}
+          {(!upgrade || !gain) && <p style={C.msg}>{body}</p>}
         </div>
 
-        <div style={C.body}>
-          {/* Sem upgrade a oferecer (Pro, ou conta de escola/professor — nunca self-serve):
-              fica só a mensagem e fechar, sem qualquer CTA de pagamento. */}
-          {upgrade && (
-            <div style={C.upsell}>
-              <div style={C.upsellRibbon}>Desbloqueia já com o {upgrade.name}</div>
-              <div style={C.upsellInner}>
-                <div style={C.upsellHead}>
-                  <span style={C.upsellName}>{upgrade.name}</span>
-                  <span style={C.upsellPrice}>{upgrade.priceLabel}<span style={C.upsellPeriod}>{upgrade.period}</span></span>
+        {upgrade ? (
+          <div style={C.body}>
+            <div className="plan-gate-columns">
+              <div className="plan-gate-col-left">
+                <div style={C.upsell}>
+                  <div style={C.upsellHead}>
+                    <span style={C.upsellName}>{upgrade.name}</span>
+                    <span style={C.upsellPrice}>{upgrade.priceLabel}<span style={C.upsellPeriod}>{upgrade.period}</span></span>
+                  </div>
+                  {gain && (
+                    <div style={C.upsellGain}>
+                      <span>{gain.label}</span>
+                      <span style={C.upsellGainValue}>{gain.value}</span>
+                    </div>
+                  )}
                 </div>
-                {gain && (
-                  <div style={C.upsellGain}>
-                    <span>{gain.label}</span>
-                    <span style={C.upsellGainValue}>{gain.value}</span>
+
+                {testimonial && (
+                  <div style={C.testimonial}>
+                    <p style={C.testimonialQuote} key={tIdx} className="plan-gate-fade">“{testimonial.quote}”</p>
+                    <div style={C.testimonialFooter}>
+                      <div style={C.testimonialPerson}>
+                        <img src={testimonial.photo} alt="" style={C.testimonialPhoto} />
+                        <div style={{ minWidth: 0 }}>
+                          <div style={C.testimonialName}>{testimonial.name}</div>
+                          <div style={C.testimonialRole}>{testimonial.role}</div>
+                        </div>
+                      </div>
+                      {orderedTestimonials.length > 1 && (
+                        <div style={C.testimonialDots}>
+                          {orderedTestimonials.map((_, i) => <span key={i} style={C.testimonialDot(i === tIdx)} />)}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
-            </div>
-          )}
 
-          {testimonial && (
-            <div style={C.testimonial}>
-              <p style={C.testimonialQuote}>“{testimonial.quote}”</p>
-              <div style={C.testimonialFooter}>
-                <img src={testimonial.photo} alt="" style={C.testimonialPhoto} />
-                <div>
-                  <div style={C.testimonialName}>{testimonial.name}</div>
-                  <div style={C.testimonialRole}>{testimonial.role}</div>
+              <div className="plan-gate-col-right">
+                {checkoutError && <p style={C.errorText}>{checkoutError}</p>}
+                {/* Grupo de ação (botões) e grupo de reforço (confiança + sair)
+                    separados por espaço, não só pela ordem — 12px dentro de
+                    cada grupo, 20px entre os dois, para não lerem como um
+                    bloco só de texto solto a seguir aos botões. */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <button style={C.ctaPrimary} className="plan-gate-cta-primary" disabled={loading || askingParents} onClick={handleUpgrade}>
+                    {loading ? 'A abrir…' : `Passar a ${upgrade.name} agora`}
+                  </button>
+                  <button style={C.ctaSecondary} disabled={loading || askingParents} onClick={handleAskParents}>
+                    {askingParents ? 'A preparar…' : 'Pedir aos pais para pagar'}
+                  </button>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '20px', alignItems: 'center' }}>
+                  <p style={C.trust}><Lock size={11} />Pagamento seguro via Stripe. Cancela quando quiseres.</p>
+                  <button style={C.dismiss} onClick={onClose}>Agora não</button>
                 </div>
               </div>
             </div>
-          )}
-
-          {checkoutError && <p style={C.errorText}>{checkoutError}</p>}
-
-          {upgrade ? (
-            <>
-              <button style={C.ctaPrimary} disabled={loading} onClick={handleUpgrade}>
-                {loading ? 'A abrir…' : `Passar a ${upgrade.name} agora`}
-              </button>
-              <p style={C.trust}><Lock size={11} />Pagamento seguro via Stripe. Cancela quando quiseres.</p>
-              <button style={C.dismiss} onClick={onClose}>Agora não</button>
-            </>
-          ) : (
+          </div>
+        ) : (
+          <div style={C.body}>
+            {checkoutError && <p style={C.errorText}>{checkoutError}</p>}
             <div style={{ display: 'flex', gap: '10px' }}>
               <button style={{ ...C.ctaSecondary, width: 'auto', flex: 1 }} onClick={onClose}>Fechar</button>
-              <button style={{ ...C.ctaPrimary, width: 'auto', flex: 1 }} onClick={() => { onClose(); navigate('/pricing') }}>Ver planos</button>
+              <button style={{ ...C.ctaPrimary, width: 'auto', flex: 1 }} className="plan-gate-cta-primary" onClick={() => { onClose(); navigate('/pricing') }}>Ver planos</button>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   )
