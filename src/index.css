@@ -456,29 +456,30 @@ a { transition: color 0.15s, opacity 0.15s; }
 }
 .plan-gate-cta-primary:active:not(:disabled) { transform: scale(0.98); }
 
-/* Empilhado em mobile (cartão do plano, depois testemunho, depois botões —
-   ordem de leitura natural). Em desktop, pedido do Gustavo: cartão +
-   testemunho à esquerda, botões de ação à direita, lado a lado. */
-.plan-gate-columns { display: flex; flex-direction: column; gap: 20px; }
-/* Voltaram a ser dois cartões reais (.sdb-panel/.sdb-panel--tint do
-   Dashboard) — a própria borda de cada um já separa preço de testemunho,
-   não precisa de espaço extra a fazer esse trabalho sozinho. */
-.plan-gate-col-left { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
-.plan-gate-col-right { display: flex; flex-direction: column; gap: 12px; }
+/* Grid, não flex — o título precisa de mudar de posição visual consoante o
+   ecrã (em cima de tudo em mobile, em cima só dos botões em desktop) sem
+   duplicar JSX, e só grid-area consegue isso. Mobile: uma coluna, ordem de
+   leitura título → cartão do plano → botões. */
+.plan-gate-columns {
+  display: grid; gap: 20px;
+  grid-template-columns: 1fr;
+  grid-template-areas: "title" "left" "buttons";
+}
+.plan-gate-title-block { grid-area: title; }
+/* Cartões reais (.sdb-panel/.sdb-panel--tint do Dashboard) — a própria
+   borda de cada um já separa preço de testemunho. */
+.plan-gate-col-left { grid-area: left; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.plan-gate-col-right { grid-area: buttons; display: flex; flex-direction: column; gap: 12px; }
 @media (min-width: 640px) {
-  /* stretch, não flex-start — a coluna direita precisa da mesma altura da
-     esquerda para o margin-top:auto (no JSX) conseguir empurrar os botões
-     até ao fundo. Com flex-start cada coluna só tinha a altura do seu
-     próprio conteúdo, e não havia espaço nenhum para empurrar. */
-  .plan-gate-columns { flex-direction: row; align-items: stretch; gap: 28px; }
-  .plan-gate-col-left { flex: 1.1; }
-  /* flex-start, não center: os botões alinham com o topo do cartão à
-     esquerda (a faixa "DESBLOQUEIA JÁ COM O PLUS") em vez de flutuarem a
-     meio de uma coluna vazia — apontado pela revisão de layout depois do
-     Gustavo ter reagido mal a esta versão. */
-  /* flex-start, não flex-end nem center — o título fica preso ao topo (à
-     altura do cartão do preço) e só o grupo dos botões é empurrado para
-     baixo com margin-top:auto no JSX, para ficar à mesma altura do fundo
-     do testemunho à esquerda. */
-  .plan-gate-col-right { flex: 1; justify-content: flex-start; }
+  /* Desktop: duas colunas. "left" ocupa as duas linhas da coluna 1 (o
+     cartão do plano à esquerda, altura toda); a coluna 2 tem o título em
+     cima e os botões em baixo — a linha do meio (1fr) empurra os botões
+     para o fundo sem precisar de margin-top:auto. */
+  .plan-gate-columns {
+    grid-template-columns: 1.1fr 1fr;
+    grid-template-rows: auto 1fr;
+    grid-template-areas: "left title" "left buttons";
+    gap: 28px;
+  }
+  .plan-gate-col-right { justify-content: flex-end; }
 }

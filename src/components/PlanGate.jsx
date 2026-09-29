@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
-import { LockKeyholeIcon as Lock } from '@solar-icons/react/bold/lock-keyhole'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { getPlan, nextPaidPlan, upgradeGain } from '../lib/plans'
@@ -67,7 +66,13 @@ const C = {
   title: { margin: 0, fontSize: '1.6rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)', lineHeight: 1.25 },
   // Mesmo título, mas encostado à esquerda em cima dos botões — não centrado
   // como cabeçalho, é a versão que fica quando há upgrade a oferecer.
-  titleRight: { margin: '0 0 4px', fontSize: '1.3rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)', lineHeight: 1.25 },
+  // margin-top a condizer com o padding de dentro do cartão do preço ao
+  // lado — sem isto o título arrancava colado ao topo da coluna, mais
+  // acima do que o "Plus €4,99/mês" que tem o padding do cartão a empurrá-lo.
+  titleRight: { margin: 'var(--sp-2) 0 4px', fontSize: '1.3rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)', lineHeight: 1.25 },
+  // Frase curta a ligar o título às duas opções logo a seguir — só para não
+  // ficar espaço em branco entre o título e os botões, nada mais.
+  subtitleRight: { margin: '0 0 4px', fontSize: '0.85rem', color: 'var(--color-text-secondary)' },
   msg:   { margin: 0, fontSize: '0.98rem', color: 'var(--color-text-secondary)', lineHeight: 1.6, maxWidth: '420px' },
   body: { display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)', padding: 'var(--sp-8)' },
   // .sdb-panel--tint do Dashboard — o bloco de apoio à marca, tinta subtil,
@@ -97,14 +102,25 @@ const C = {
     background: 'var(--color-surface)', border: '1px solid var(--color-border)',
     borderRadius: 'var(--radius-lg)', padding: 'var(--sp-5)',
   },
-  testimonialQuote: { margin: 0, fontSize: '0.95rem', color: 'var(--color-text)', lineHeight: 1.55, minHeight: '4.6em' },
+  // Altura fixa (não minHeight) + corte a 4 linhas — os testemunhos têm
+  // tamanhos muito diferentes (de "Parabéns!" a um parágrafo inteiro), e sem
+  // isto o cartão (e o modal todo, por causa do stretch das colunas) mudava
+  // de tamanho a cada rotação. Irritante, apontado pelo Gustavo.
+  testimonialQuote: {
+    margin: 0, fontSize: '0.95rem', color: 'var(--color-text)', lineHeight: 1.55,
+    height: '5.9em', overflow: 'hidden',
+    display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical',
+  },
   testimonialFooter: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' },
   testimonialPerson: { display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 },
   testimonialPhoto: { width: '36px', height: '36px', borderRadius: 'var(--radius-full)', objectFit: 'cover', flexShrink: 0 },
   testimonialName: { fontSize: '0.84rem', fontWeight: 700, color: 'var(--color-text)' },
+  // Antes cortava a uma linha com "..." e ficava ilegível ("Estudante no
+  // Instituto Supe..."). Deixa embrulhar até 2 linhas, letra mais pequena,
+  // para dar para ler o cargo todo em vez de adivinhar o resto.
   testimonialRole: {
-    fontSize: '0.75rem', color: 'var(--color-text-secondary)',
-    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '260px',
+    fontSize: '0.7rem', color: 'var(--color-text-secondary)', lineHeight: 1.35,
+    display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
   },
   testimonialDots: { display: 'flex', gap: '5px', flexShrink: 0 },
   testimonialDot: (active) => ({
@@ -132,7 +148,8 @@ const C = {
   },
   trust: {
     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-    margin: 0, fontSize: '0.76rem', color: 'var(--color-text-tertiary)', textAlign: 'center',
+    margin: 0, fontSize: '0.68rem', color: 'var(--color-text-tertiary)', textAlign: 'center',
+    whiteSpace: 'nowrap',
   },
   // Usados só pelo ConfirmUseModal abaixo — modal simples e compacto, à parte do
   // tratamento maior do PlanGateModal (que tem hero/body com o próprio padding).
@@ -264,6 +281,15 @@ export function PlanGateModal({ message, onClose }) {
         {upgrade ? (
           <div style={C.body}>
             <div className="plan-gate-columns">
+              {/* Bloco próprio (não dentro da coluna de botões) para poder
+                  ficar em cima de tudo em mobile e, no desktop, mudar de
+                  posição via grid-area para o topo da coluna dos botões —
+                  sem duplicar JSX para cada tamanho de ecrã. */}
+              <div className="plan-gate-title-block">
+                <p style={C.titleRight}>{title}</p>
+                <p style={C.subtitleRight}>Escolhe como queres continuar.</p>
+              </div>
+
               <div className="plan-gate-col-left">
                 <div style={C.upsell}>
                   <div style={C.upsellHead}>
@@ -300,26 +326,18 @@ export function PlanGateModal({ message, onClose }) {
               </div>
 
               <div className="plan-gate-col-right">
-                <p style={C.titleRight}>{title}</p>
                 {checkoutError && <p style={C.errorText}>{checkoutError}</p>}
-                {/* margin-top:auto empurra só este grupo (botões + confiança +
-                    sair) para o fundo da coluna — o título fica preso ao
-                    topo, junto ao cartão do preço à esquerda. Pedido do
-                    Gustavo depois de ver os botões a meio da coluna. */}
-                <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <button style={C.ctaPrimary} className="plan-gate-cta-primary" disabled={loading || askingParents} onClick={handleUpgrade}>
-                      {loading ? 'A abrir…' : `Passar a ${upgrade.name} agora`}
-                    </button>
-                    <button style={C.ctaSecondary} disabled={loading || askingParents} onClick={handleAskParents}>
-                      {askingParents ? 'A preparar…' : 'Pedir aos pais para pagar'}
-                    </button>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '20px', alignItems: 'center' }}>
-                    <p style={C.trust}><Lock size={11} />Pagamento seguro via Stripe. Cancela quando quiseres.</p>
-                    <button style={C.dismiss} onClick={onClose}>Agora não</button>
-                  </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <button style={C.ctaPrimary} className="plan-gate-cta-primary" disabled={loading || askingParents} onClick={handleUpgrade}>
+                    {loading ? 'A abrir…' : `Passar a ${upgrade.name} agora`}
+                  </button>
+                  <button style={C.ctaSecondary} disabled={loading || askingParents} onClick={handleAskParents}>
+                    {askingParents ? 'A preparar…' : 'Pedir aos pais para pagar'}
+                  </button>
                 </div>
+                {/* "Agora não" a mais — já há o X a fechar o modal no canto
+                    superior, ter os dois é repetir a mesma ação duas vezes. */}
+                <p style={{ ...C.trust, marginTop: '20px' }}>Pagamento seguro via Stripe. Cancela quando quiseres.</p>
               </div>
             </div>
           </div>
