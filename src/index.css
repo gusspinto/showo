@@ -466,11 +466,19 @@ a { transition: color 0.15s, opacity 0.15s; }
 .plan-gate-col-left { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
 .plan-gate-col-right { display: flex; flex-direction: column; gap: 12px; }
 @media (min-width: 640px) {
-  .plan-gate-columns { flex-direction: row; align-items: flex-start; gap: 28px; }
+  /* stretch, não flex-start — a coluna direita precisa da mesma altura da
+     esquerda para o margin-top:auto (no JSX) conseguir empurrar os botões
+     até ao fundo. Com flex-start cada coluna só tinha a altura do seu
+     próprio conteúdo, e não havia espaço nenhum para empurrar. */
+  .plan-gate-columns { flex-direction: row; align-items: stretch; gap: 28px; }
   .plan-gate-col-left { flex: 1.1; }
   /* flex-start, não center: os botões alinham com o topo do cartão à
      esquerda (a faixa "DESBLOQUEIA JÁ COM O PLUS") em vez de flutuarem a
      meio de uma coluna vazia — apontado pela revisão de layout depois do
      Gustavo ter reagido mal a esta versão. */
-  .plan-gate-col-right { flex: 1; justify-content: flex-start; padding-top: 2px; }
+  /* flex-start, não flex-end nem center — o título fica preso ao topo (à
+     altura do cartão do preço) e só o grupo dos botões é empurrado para
+     baixo com margin-top:auto no JSX, para ficar à mesma altura do fundo
+     do testemunho à esquerda. */
+  .plan-gate-col-right { flex: 1; justify-content: flex-start; }
 }

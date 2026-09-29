@@ -65,8 +65,11 @@ const C = {
     padding: '5px 12px', borderRadius: 'var(--radius-full)',
   },
   title: { margin: 0, fontSize: '1.6rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)', lineHeight: 1.25 },
+  // Mesmo título, mas encostado à esquerda em cima dos botões — não centrado
+  // como cabeçalho, é a versão que fica quando há upgrade a oferecer.
+  titleRight: { margin: '0 0 4px', fontSize: '1.3rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)', lineHeight: 1.25 },
   msg:   { margin: 0, fontSize: '0.98rem', color: 'var(--color-text-secondary)', lineHeight: 1.6, maxWidth: '420px' },
-  body: { display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)', padding: 'var(--sp-5) var(--sp-8) var(--sp-8)' },
+  body: { display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)', padding: 'var(--sp-8)' },
   // .sdb-panel--tint do Dashboard — o bloco de apoio à marca, tinta subtil,
   // não uma faixa azul cheia. É o mesmo painel que o resto da app usa para
   // "isto é importante mas não é O botão principal".
@@ -223,7 +226,10 @@ export function PlanGateModal({ message, onClose }) {
         setCheckoutError('Erro ao preparar o pedido. Tenta novamente.')
         return
       }
-      const msg = `Olá! Estou a usar o Showo para o meu portefólio e preciso de passar ao plano ${upgrade.name} (${upgrade.priceLabel}${upgrade.period}) para continuar. Podes ajudar-me a pagar? É só abrir este link: ${data.url}`
+      // Segunda tentativa depois do Gustavo apontar que continuava a soar a
+      // burla — "ajudas-me a pagar?" e explicar que é "direto pelo Stripe"
+      // não é como ninguém fala mesmo. O mais curto e direto possível.
+      const msg = `Olá! Podes pagar isto por mim? É para o Showo, o portefólio que ando a fazer: ${data.url}`
       const waUrl = `https://wa.me/?text=${encodeURIComponent(msg)}`
       if (win) win.location.href = waUrl
       else window.open(waUrl, '_blank')
@@ -242,14 +248,18 @@ export function PlanGateModal({ message, onClose }) {
           <X size={20} />
         </button>
 
-        <div style={C.hero}>
-          {!upgrade && <span style={C.eyebrow}>Limite atingido</span>}
-          <p style={C.title}>{title}</p>
-          {/* O cartão do plano já mostra o número concreto ("1 → 10 por mês") —
-              repetir isso em texto corrido só engordava o ecrã sem dizer nada
-              de novo. Só aparece quando não há esse número para mostrar. */}
-          {(!upgrade || !gain) && <p style={C.msg}>{body}</p>}
-        </div>
+        {/* Com upgrade a oferecer, o título muda de sítio: em vez de cabeçalho
+            centrado a abrir o modal, fica logo em cima dos botões de ação, no
+            sítio onde a pessoa está mesmo a decidir o que fazer a seguir.
+            Ideia do Gustavo — faz mais sentido o "porquê" estar colado ao
+            "o que fazer", não separado no topo. */}
+        {!upgrade && (
+          <div style={C.hero}>
+            <span style={C.eyebrow}>Limite atingido</span>
+            <p style={C.title}>{title}</p>
+            <p style={C.msg}>{body}</p>
+          </div>
+        )}
 
         {upgrade ? (
           <div style={C.body}>
@@ -290,22 +300,25 @@ export function PlanGateModal({ message, onClose }) {
               </div>
 
               <div className="plan-gate-col-right">
+                <p style={C.titleRight}>{title}</p>
                 {checkoutError && <p style={C.errorText}>{checkoutError}</p>}
-                {/* Grupo de ação (botões) e grupo de reforço (confiança + sair)
-                    separados por espaço, não só pela ordem — 12px dentro de
-                    cada grupo, 20px entre os dois, para não lerem como um
-                    bloco só de texto solto a seguir aos botões. */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <button style={C.ctaPrimary} className="plan-gate-cta-primary" disabled={loading || askingParents} onClick={handleUpgrade}>
-                    {loading ? 'A abrir…' : `Passar a ${upgrade.name} agora`}
-                  </button>
-                  <button style={C.ctaSecondary} disabled={loading || askingParents} onClick={handleAskParents}>
-                    {askingParents ? 'A preparar…' : 'Pedir aos pais para pagar'}
-                  </button>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '20px', alignItems: 'center' }}>
-                  <p style={C.trust}><Lock size={11} />Pagamento seguro via Stripe. Cancela quando quiseres.</p>
-                  <button style={C.dismiss} onClick={onClose}>Agora não</button>
+                {/* margin-top:auto empurra só este grupo (botões + confiança +
+                    sair) para o fundo da coluna — o título fica preso ao
+                    topo, junto ao cartão do preço à esquerda. Pedido do
+                    Gustavo depois de ver os botões a meio da coluna. */}
+                <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <button style={C.ctaPrimary} className="plan-gate-cta-primary" disabled={loading || askingParents} onClick={handleUpgrade}>
+                      {loading ? 'A abrir…' : `Passar a ${upgrade.name} agora`}
+                    </button>
+                    <button style={C.ctaSecondary} disabled={loading || askingParents} onClick={handleAskParents}>
+                      {askingParents ? 'A preparar…' : 'Pedir aos pais para pagar'}
+                    </button>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '20px', alignItems: 'center' }}>
+                    <p style={C.trust}><Lock size={11} />Pagamento seguro via Stripe. Cancela quando quiseres.</p>
+                    <button style={C.dismiss} onClick={onClose}>Agora não</button>
+                  </div>
                 </div>
               </div>
             </div>
