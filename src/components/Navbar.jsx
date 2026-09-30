@@ -1,9 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { PlanGateModal } from './PlanGate'
+import { SearchPalette } from './SearchPalette'
 import { useTheme } from '../context/ThemeContext'
 import { useSidebar } from '../context/SidebarContext'
 import { supabase } from '../lib/supabase'
+import { getPlan } from '../lib/plans'
 import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
 import { ShareIcon as Share2 } from '@solar-icons/react/bold/share'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
@@ -17,6 +20,7 @@ import { CupStarIcon as Trophy } from '@solar-icons/react/bold/cup-star'
 import { Logout2Icon as LogOut } from '@solar-icons/react/bold/logout-2'
 import { DoubleAltArrowRightIcon as ArrowRightToLine } from '@solar-icons/react/bold/double-alt-arrow-right'
 import { BellIcon as Bell } from '@solar-icons/react/bold/bell'
+import { CrownIcon as Crown } from '@solar-icons/react/bold/crown'
 import { EyeIcon as Eye } from '@solar-icons/react/bold/eye'
 import { TargetIcon as Target } from '@solar-icons/react/bold/target'
 import { GraphNewUpIcon as TrendingUp } from '@solar-icons/react/bold/graph-new-up'
@@ -34,7 +38,7 @@ import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
 import { CaseIcon as Briefcase } from '@solar-icons/react/bold/case'
 import { UsersGroupTwoRoundedIcon as Users2 } from '@solar-icons/react/bold/users-group-two-rounded'
 import { Buildings2Icon as Building2 } from '@solar-icons/react/bold/buildings-2'
-import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
+import { MagnifierIcon as Search } from '@solar-icons/react/outline/magnifier'
 import { StarIcon as Star } from '@solar-icons/react/bold/star'
 import { ChatRoundLineIcon as MessageSquare } from '@solar-icons/react/bold/chat-round-line'
 import { Widget5Icon as Kanban } from '@solar-icons/react/bold/widget-5'
@@ -182,7 +186,7 @@ function timeAgo(ts) {
   return new Date(ts).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })
 }
 
-function InviteInbox({ userId, sidebar = false, collapsed = false }) {
+export function InviteInbox({ userId, sidebar = false, collapsed = false, flat = false, mobile = false }) {
   const navigate = useNavigate()
   const [open, setOpen]     = useState(false)
   const notifRef = useRef(null)
@@ -476,20 +480,23 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
     <div ref={notifRef} style={{ position: 'relative' }}>
       <button
         onClick={() => setOpen(o => !o)}
+        className={mobile ? 'mob-nav-icon-btn ghost' : undefined}
         style={{
           position: 'relative',
-          background: open ? 'color-mix(in srgb, var(--color-text) 13%, transparent)' : 'transparent',
-          border: 'none',
-          borderRadius: sidebar ? 8 : 8, width: sidebar ? 32 : 44, height: sidebar ? 32 : 44,
+          background: mobile ? undefined : (flat ? 'transparent' : (open ? 'color-mix(in srgb, var(--color-text) 13%, transparent)' : 'transparent')),
+          border: mobile ? undefined : 'none',
+          borderRadius: mobile ? undefined : 8,
+          ...(mobile ? {} : flat ? { padding: '0 6px', height: 34 } : { width: sidebar ? 32 : 44, height: sidebar ? 32 : 44 }),
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           cursor: 'pointer', color: open ? 'var(--color-text)' : 'var(--color-text-secondary)',
-          transition: 'background 0.13s, color 0.13s', flexShrink: 0,
+          opacity: flat && open ? 0.8 : 1,
+          transition: 'background 0.13s, color 0.13s, opacity 0.15s', flexShrink: 0,
         }}
-        onMouseEnter={e => { if (!open) { e.currentTarget.style.background = 'var(--color-surface-hover)'; e.currentTarget.style.color = 'var(--color-text)' } }}
-        onMouseLeave={e => { if (!open) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--color-text-secondary)' } }}
+        onMouseEnter={e => { if (mobile) return; if (flat) { e.currentTarget.style.opacity = '0.8' } else if (!open) { e.currentTarget.style.background = 'var(--color-surface-hover)'; e.currentTarget.style.color = 'var(--color-text)' } }}
+        onMouseLeave={e => { if (mobile) return; if (flat) { e.currentTarget.style.opacity = '1' } else if (!open) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--color-text-secondary)' } }}
         title="Notificações"
       >
-        <Bell size={sidebar ? 16 : 15} />
+        <Bell size={sidebar || mobile ? 16 : 15} />
         {count > 0 && (
           <span style={{
             position: 'absolute', top: -4, right: -4,
@@ -513,10 +520,10 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
                 ? { position: 'fixed', left: collapsed ? 80 : 248, bottom: 16, transition: 'left 0.25s cubic-bezier(0.22,1,0.36,1)' }
                 : { position: 'absolute', top: 'calc(100% + 8px)', right: 0 }
               ),
-              background: 'var(--color-surface)', border: `1px solid var(--color-border)`,
+              background: 'color-mix(in srgb, var(--color-bg) 82%, transparent)', border: `1px solid var(--color-border)`,
               borderRadius: 14, padding: '8px',
               boxShadow: '0 8px 40px rgba(0,0,0,0.45)',
-              backdropFilter: 'blur(16px)',
+              backdropFilter: 'blur(18px) saturate(1.4)', WebkitBackdropFilter: 'blur(18px) saturate(1.4)',
               zIndex: 199, width: 340,
               maxHeight: 'calc(100dvh - 80px)', overflowY: 'auto',
             }}>
@@ -851,7 +858,12 @@ const dropItemStyle = {
 export function Navbar({ children, showLinks = true, showCreateProject = false, previewEditingMobile = false, onExitWorkspace, onSaveWorkspace, wsSaving, wsSaved, wsSaveError, hideSidebar = false, mobileLeft = null }) {
   const navigate = useNavigate()
   const location = useLocation()
-  const { user, profile, signOut, isAdmin, isSchoolAccount } = useAuth()
+  const { user, profile, signOut, isAdmin, isSchoolAccount, planId } = useAuth()
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  // Só conta Individual (aluno sem organization_id) no plano Grátis — quem
+  // tem organization_id é aluno institucional (plano da escola, não
+  // self-serve), mesma condição do IntentGate/OccupationGate em App.jsx.
+  const showSidebarUpgrade = profile?.role === 'aluno' && !profile?.organization_id && planId === 'free'
   const { theme, toggleTheme } = useTheme()
   const { extras } = useSidebar()
   const [open, setOpen] = useState(false)
@@ -896,6 +908,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
   // "+" while viewing your own project (keeps those actions out of the drawer).
   const [projMenuOpen, setProjMenuOpen] = useState(false)
   useEffect(() => { setProjMenuOpen(false) }, [location.pathname])
+  useEffect(() => { setSbSearchOpen(false) }, [location.pathname])
   // O passo final do tour do projeto ("Menu do projeto") pede para este
   // menu abrir a sério, não só apontar para o botão fechado.
   // Ao ligar, força aberto; ao desligar (tour fechado/"Começar" clicado),
@@ -921,6 +934,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
   // resize every frame. This is what keeps the toggle butter-smooth.
   const [showLabels, setShowLabels] = useState(expanded)
   const labelTimer = useRef(null)
+  const [sbSearchOpen, setSbSearchOpen] = useState(false)
   const [sbProfileMenuOpen, setSbProfileMenuOpen] = useState(false)
   const profileMenuRef = useRef(null)
   useEffect(() => {
@@ -929,6 +943,40 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [sbProfileMenuOpen])
+
+  // Conta na barra de topo do aluno (nb-topbar) — dropdown Perfil/Definições/Tema/Sair.
+  const [topAccountOpen, setTopAccountOpen] = useState(false)
+  const topAccountRef = useRef(null)
+  useEffect(() => {
+    if (!topAccountOpen) return
+    const handler = (e) => { if (topAccountRef.current && !topAccountRef.current.contains(e.target)) setTopAccountOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [topAccountOpen])
+
+  // Mesma conta, versão mobile (mob-nav-actions) — estado próprio porque é um
+  // botão/dropdown diferente do da nb-topbar, não só escondido por CSS.
+  const [mobAccountOpen, setMobAccountOpen] = useState(false)
+  const mobAccountRef = useRef(null)
+  useEffect(() => {
+    if (!mobAccountOpen) return
+    const handler = (e) => { if (mobAccountRef.current && !mobAccountRef.current.contains(e.target)) setMobAccountOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [mobAccountOpen])
+
+  // Só um <InviteInbox> aluno pode estar montado de cada vez (nb-topbar
+  // desktop ou o cluster mobile) — montar os dois ao mesmo tempo duplicava
+  // subscrições realtime e queries a cada navegação, mesmo com um deles
+  // escondido só por CSS (ver comentário mais abaixo, no <InviteInbox> do
+  // top-nav antigo, sobre o mesmo problema).
+  const [isNarrow, setIsNarrow] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 600px)').matches)
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 600px)')
+    const handler = () => setIsNarrow(mq.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
 
   function toggleSidebar() {
     setExpanded(e => {
@@ -945,15 +993,29 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
   }, [expanded])
   useEffect(() => () => clearTimeout(labelTimer.current), [])
 
+  const isRecruiter = profile?.role === 'recrutador' || profile?.role === 'empresa'
+  const isTeacher = profile?.role === 'professor'
+  const recruiterAccent = 'var(--color-accent)'
+  // Aluno (individual ou de escola) — só este papel tem a barra de topo com
+  // pesquisa + perfil (pedido do Gustavo). Professor/escola/recrutador
+  // continuam com o perfil na sidebar, sem mexer no Navbar.jsx deles.
+  const isAlunoRole = !!user && !isTeacher && !isRecruiter && !isAdmin
+
   const showSidebar = !!user && !hideSidebar
+  // No editor de aparência (extras.previewEditing) a própria página já tem a
+  // sua barra flutuante (Conteúdo/Estilo/Blocos) na mesma zona — as duas ao
+  // mesmo tempo ficavam sobrepostas e ilegíveis. Bug apontado pelo Gustavo.
+  const showTopBar = showSidebar && isAlunoRole && !extras?.previewEditing
   useEffect(() => {
     document.body.classList.toggle('has-sidebar', showSidebar)
     document.body.classList.toggle('sidebar-collapsed', showSidebar && collapsed)
+    document.body.classList.toggle('has-topbar', showTopBar)
     return () => {
       document.body.classList.remove('has-sidebar')
       document.body.classList.remove('sidebar-collapsed')
+      document.body.classList.remove('has-topbar')
     }
-  }, [showSidebar, collapsed])
+  }, [showSidebar, collapsed, showTopBar])
 
   // O painel flutuante "Gerir projeto" (.proj-manage-float) é position:fixed,
   // fora do fluxo — nada reservava espaço para ele, por isso em larguras de
@@ -964,10 +1026,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
     document.body.classList.toggle('has-proj-manage-float', extras?.type === 'project')
     return () => document.body.classList.remove('has-proj-manage-float')
   }, [extras?.type])
-
-  const isRecruiter = profile?.role === 'recrutador' || profile?.role === 'empresa'
-  const isTeacher = profile?.role === 'professor'
-  const recruiterAccent = 'var(--color-accent)'
 
   // No próprio perfil o "+" de criar projeto passa para a secção Trabalho —
   // não fica no topo. Evita dois botões com gradiente no mesmo ecrã.
@@ -1352,6 +1410,43 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
             </div>
           )}
 
+          {/* Pesquisa + notificações + conta — versão mobile da barra flutuante
+              do desktop (nb-topbar). Antes só existiam dentro da gaveta;
+              pedido do Gustavo para ficarem sempre visíveis, sem abrir nada. */}
+          {showLinks && isAlunoRole && user && !previewEditingMobile && extras?.type !== 'project' && (
+            <div className="mob-nav-account-cluster">
+              <button className="mob-nav-icon-btn ghost" onClick={() => setSbSearchOpen(true)} aria-label="Pesquisar">
+                <Search size={16} />
+              </button>
+              {isNarrow && <InviteInbox userId={user.id} mobile />}
+              <div ref={mobAccountRef} style={{ position: 'relative' }}>
+                <button className="mob-nav-icon-btn ghost" onClick={() => setMobAccountOpen(o => !o)} aria-label="Conta">
+                  {profile?.avatar_url
+                    ? <img src={profile.avatar_url} alt="" style={{ width: 24, height: 24, borderRadius: '50%', objectFit: 'cover', display: 'block' }} />
+                    : <AvatarCircle avatarUrl={null} initial={getInitial(user)} size={24} fontSize={10} />}
+                </button>
+                {mobAccountOpen && (
+                  <div className="nb-topbar-menu" style={{ right: 0 }}>
+                    <button className="nb-topbar-menu-item" onClick={() => { navigate(profileUrl); setMobAccountOpen(false) }}>
+                      <User size={15} /> Meu perfil
+                    </button>
+                    <button className="nb-topbar-menu-item" onClick={() => { navigate('/settings'); setMobAccountOpen(false) }}>
+                      <SettingsIcon size={15} /> Definições
+                    </button>
+                    <button className="nb-topbar-menu-item" onClick={() => { toggleTheme(); setMobAccountOpen(false) }}>
+                      {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+                      {theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
+                    </button>
+                    <div className="nb-topbar-menu-sep" />
+                    <button className="nb-topbar-menu-item nb-topbar-menu-item--danger" onClick={() => { setMobAccountOpen(false); handleSignOut() }}>
+                      <LogOut size={15} /> Sair
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Theme toggle — mobile only, not logged in */}
           {!user && (
             <button
@@ -1536,6 +1631,19 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
             <button className="sb-logo" onClick={() => navigate(user ? '/dashboard' : '/')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1 }}>
               <img src={theme === 'light' ? '/lightmode_icon_logo.png' : '/darkmode_icon_logo.png'} alt="Showo" style={{ height: 28, width: 'auto', objectFit: 'contain' }} />
             </button>
+            {/* Pesquisa — ícone ao lado do logo, abre o popup estilo
+                Spotlight (SearchPalette) em vez de um campo na própria
+                sidebar. Pedido do Gustavo. */}
+            {isAlunoRole && (
+              <button
+                className="sb-search-toggle"
+                onClick={() => setSbSearchOpen(true)}
+                title="Pesquisar"
+                aria-label="Pesquisar"
+              >
+                <Search size={15} />
+              </button>
+            )}
           </div>
         )}
         {isSchoolAccount && showLabels && (
@@ -1672,9 +1780,12 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
 
         </div>
 
-        <div className="sb-divider" />
+        {!isAlunoRole && <div className="sb-divider" />}
 
-        {/* Bottom — user section */}
+        {/* Bottom — user section. Para aluno isto não renderiza (perfil,
+            notificações e definições vivem na barra de topo; o feedback
+            subiu para a lista de navegação, ver acima). */}
+        {!isAlunoRole && (
         <div className="sb-bottom">
           {user ? (
             <>
@@ -1700,7 +1811,24 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   <Bug size={16} />
                 </button>
 
-                {/* Notificações — stays visible when collapsed */}
+                {/* Upgrade — pequeno botão azul, ao lado do sino, só para
+                    conta Individual no plano Grátis. Pedido do Gustavo:
+                    versão desktop do cartão "Desbloquear Premium" mobile.
+                    Para aluno isto agora vive na barra de topo (nb-topbar),
+                    não aqui — showSidebarUpgrade implica isAlunoRole. */}
+                {showSidebarUpgrade && (
+                  <button
+                    className={`sb-upgrade-btn${collapsed ? ' is-collapsed' : ''}`}
+                    onClick={() => setShowUpgradeModal(true)}
+                    title="Experimenta o Plus" aria-label="Experimenta o Plus"
+                  >
+                    <Crown size={collapsed ? 16 : 14} />
+                    {!collapsed && <span>Plus</span>}
+                  </button>
+                )}
+
+                {/* Notificações — stays visible when collapsed. Para aluno vivem
+                    na barra de topo (nb-topbar), não aqui. */}
                 <InviteInbox userId={user.id} sidebar={true} collapsed={collapsed} />
                 {/* Avatar — collapsed: tap opens a small Perfil/Sair menu instead of
                     navigating straight away (no room here for a full nav row) */}
@@ -1805,8 +1933,74 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
             </>
           )}
         </div>
+        )}
       </div>
       )}
+
+      {/* ── Barra de topo do aluno — pesquisa + notificações + conta.
+          Substitui o perfil que antes vivia no rodapé da sidebar (para
+          professor/escola/recrutador o perfil continua lá). Pedido do
+          Gustavo. A pesquisa é só visual por agora, sem lógica ligada. ── */}
+      {showTopBar && (
+        <div className="nb-topbar">
+          <div className="nb-topbar-right">
+            {showSidebarUpgrade && (
+              <button className="nb-topbar-upgrade" onClick={() => setShowUpgradeModal(true)}>
+                <TrendingUp size={13} /> Experimenta o Plus
+              </button>
+            )}
+            <button className="nb-topbar-feedback" onClick={() => navigate(`/feedback?from=${encodeURIComponent(location.pathname)}`)} title="Reportar um problema">
+              <Bug size={14} /> Feedback
+            </button>
+            {!isNarrow && (
+              <div style={{ marginRight: 4 }}>
+                <InviteInbox userId={user.id} flat />
+              </div>
+            )}
+            <div className="nb-topbar-account" ref={topAccountRef}>
+              <button className="nb-topbar-account-btn" onClick={() => setTopAccountOpen(o => !o)}>
+                {profile?.avatar_url
+                  ? <img src={profile.avatar_url} alt="" className="nb-topbar-avatar" />
+                  : <div className="nb-topbar-avatar nb-topbar-avatar-fb">{getInitial(user)}</div>}
+                <span className="nb-topbar-account-info">
+                  <span className="nb-topbar-account-name">{getDisplayName(user)}</span>
+                  <span className="nb-topbar-account-plan">Plano {getPlan(planId).name}</span>
+                </span>
+                <svg width="10" height="6" viewBox="0 0 10 6" fill="none" style={{ transition: 'transform 0.2s', transform: topAccountOpen ? 'rotate(180deg)' : 'none', flexShrink: 0 }}>
+                  <path d="M1 1l4 4 4-4" stroke={C.muted} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+              {topAccountOpen && (
+                <div className="nb-topbar-menu">
+                  <button className="nb-topbar-menu-item" onClick={() => { navigate(profileUrl); setTopAccountOpen(false) }}>
+                    <User size={15} /> Meu perfil
+                  </button>
+                  <button className="nb-topbar-menu-item" onClick={() => { navigate('/settings'); setTopAccountOpen(false) }}>
+                    <SettingsIcon size={15} /> Definições
+                  </button>
+                  <button className="nb-topbar-menu-item" onClick={() => { toggleTheme(); setTopAccountOpen(false) }}>
+                    {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+                    {theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
+                  </button>
+                  <div className="nb-topbar-menu-sep" />
+                  <button className="nb-topbar-menu-item nb-topbar-menu-item--danger" onClick={() => { setTopAccountOpen(false); handleSignOut() }}>
+                    <LogOut size={15} /> Sair
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showUpgradeModal && (
+        <PlanGateModal
+          message={{ title: 'Experimenta o Plus', body: 'Mais análises de IA, mais defesa, mais espaço para o teu portefólio.' }}
+          onClose={() => setShowUpgradeModal(false)}
+        />
+      )}
+
+      {sbSearchOpen && <SearchPalette onClose={() => setSbSearchOpen(false)} />}
 
       {/* ── Floating "Gerir projeto" panel — desktop only ── */}
       {extras?.type === 'project' && (
@@ -2022,7 +2216,10 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
 
               <div className="mob-nav-divider" />
 
-              {/* Settings / admin / logout */}
+              {/* Settings / admin / logout — para aluno, Definições/Sair já
+                  vivem no dropdown do avatar na barra de topo (mob-nav-
+                  account-cluster); repeti-los aqui era a mesma coisa duas
+                  vezes na mesma gaveta. Admin fica sempre, não depende disso. */}
               {user && (
                 <>
                   {isAdmin && (
@@ -2030,34 +2227,45 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                       <Shield size={18} /> Administração
                     </button>
                   )}
-                  <button className={`mob-nav-btn${isActive('/settings') ? ' active' : ''}`} onClick={() => { navigate('/settings'); setMenuOpen(false) }}>
-                    <SettingsIcon size={18} /> Definições
-                  </button>
-                  <button className="mob-nav-btn danger" onClick={() => { handleSignOut(); setMenuOpen(false) }}>
-                    <LogOut size={18} /> Sair
-                  </button>
+                  {!isAlunoRole && (
+                    <>
+                      <button className={`mob-nav-btn${isActive('/settings') ? ' active' : ''}`} onClick={() => { navigate('/settings'); setMenuOpen(false) }}>
+                        <SettingsIcon size={18} /> Definições
+                      </button>
+                      <button className="mob-nav-btn danger" onClick={() => { handleSignOut(); setMenuOpen(false) }}>
+                        <LogOut size={18} /> Sair
+                      </button>
+                    </>
+                  )}
                 </>
               )}
 
-              {/* Profile pinned to the very bottom — the avatar card doubles as the
-                  "Meu perfil" entry (tap → profile), so no separate menu item needed. */}
+              {/* Rodapé — para aluno fica só o Feedback (perfil, tema,
+                  definições e sair já vivem no dropdown do avatar em cima).
+                  Para os outros papéis (sem barra de topo), mantém-se tudo. */}
               <div className="mob-drawer-foot">
                 {user ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <button className="mob-foot-profile" onClick={() => { profileUrl && navigate(profileUrl); setMenuOpen(false) }}>
-                      <AvatarCircle avatarUrl={profile?.avatar_url} initial={getInitial(user)} size={40} fontSize={15} />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getDisplayName(user)}</div>
-                        <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
-                      </div>
+                  isAlunoRole ? (
+                    <button className="mob-nav-btn" onClick={() => { setMenuOpen(false); navigate(`/feedback?from=${encodeURIComponent(location.pathname)}`) }}>
+                      <Bug size={18} /> Reportar um problema
                     </button>
-                    <button className="mob-foot-theme" onClick={() => { setMenuOpen(false); navigate(`/feedback?from=${encodeURIComponent(location.pathname)}`) }} aria-label="Reportar um problema" title="Feedback">
-                      <Bug size={18} />
-                    </button>
-                    <button className="mob-foot-theme" onClick={toggleTheme} aria-label="Alternar tema">
-                      {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-                    </button>
-                  </div>
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <button className="mob-foot-profile" onClick={() => { profileUrl && navigate(profileUrl); setMenuOpen(false) }}>
+                        <AvatarCircle avatarUrl={profile?.avatar_url} initial={getInitial(user)} size={40} fontSize={15} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getDisplayName(user)}</div>
+                          <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
+                        </div>
+                      </button>
+                      <button className="mob-foot-theme" onClick={() => { setMenuOpen(false); navigate(`/feedback?from=${encodeURIComponent(location.pathname)}`) }} aria-label="Reportar um problema" title="Feedback">
+                        <Bug size={18} />
+                      </button>
+                      <button className="mob-foot-theme" onClick={toggleTheme} aria-label="Alternar tema">
+                        {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                      </button>
+                    </div>
+                  )
                 ) : (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '2px 8px' }}>
                     <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-secondary)' }}>Aspeto</span>

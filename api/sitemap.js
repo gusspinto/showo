@@ -18,20 +18,43 @@ export default async function handler(req, res) {
   let projectUrls = []
   if (SUPABASE_URL && SUPABASE_KEY) {
     try {
+      // Mesmo filtro que o Explore.jsx usa nas suas queries — a RLS de
+      // `projects` deixa ler qualquer entry_kind='full' (migração 105), o
+      // filtro de visibilidade é responsabilidade de quem faz a query, não
+      // da base de dados. Sem isto, um projeto marcado como privado entrava
+      // no sitemap público na mesma.
+      //
+      // A tabela `projects` nunca teve `updated_at` (só `created_at`, ver
+      // migração 001) — a versão anterior deste ficheiro pedia essa coluna
+      // e ordenava por ela, o que fazia a query falhar sempre (confirmado
+      // com curl direto à API: "column projects.updated_at does not
+      // exist"). Com o catch{} vazio que havia antes, isto nunca apareceu
+      // em lado nenhum: o sitemap ficou meses a devolver só as 5 páginas
+      // estáticas, sem nenhum projeto, e ninguém deu por isso.
       const r = await fetch(
-        `${SUPABASE_URL}/rest/v1/projects?select=slug,updated_at&order=updated_at.desc&limit=1000`,
+        `${SUPABASE_URL}/rest/v1/projects?select=slug,created_at&entry_kind=eq.full&or=(visibility.eq.public,visibility.is.null)&order=created_at.desc&limit=1000`,
         { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
       )
-      const projects = await r.json()
-      if (Array.isArray(projects)) {
-        projectUrls = projects.map(p => ({
-          loc: `${BASE}/projeto/${p.slug}`,
-          lastmod: p.updated_at ? p.updated_at.split('T')[0] : undefined,
-          priority: '0.7',
-          changefreq: 'weekly',
-        }))
+      if (!r.ok) {
+        console.error('sitemap: Supabase respondeu', r.status, await r.text())
+      } else {
+        const projects = await r.json()
+        if (Array.isArray(projects)) {
+          projectUrls = projects.map(p => ({
+            loc: `${BASE}/projeto/${p.slug}`,
+            lastmod: p.created_at ? p.created_at.split('T')[0] : undefined,
+            priority: '0.7',
+            changefreq: 'weekly',
+          }))
+        }
       }
-    } catch {}
+    } catch (err) {
+      // Antes ficava em silêncio (catch vazio) — foi assim que o sitemap
+      // ficou meses sem nenhuma página de projeto sem ninguém dar por isso.
+      console.error('sitemap: falha ao buscar projetos', err)
+    }
+  } else {
+    console.error('sitemap: SUPABASE_URL/SUPABASE_ANON_KEY em falta nas env vars do Vercel')
   }
 
   const allUrls = [...staticUrls, ...projectUrls]

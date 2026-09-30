@@ -194,6 +194,18 @@ export function AuthProvider({ children }) {
       if (org) data = { ...data, organization_plan: org.plan, organization_name: org.name }
     }
 
+    // intended_use/pap_timing/heard_from não têm GRANT SELECT (migrações
+    // 178/181) — não são dados de perfil público como occupation/area, só
+    // sinais internos para os gates de onboarding (App.jsx) saberem se já
+    // perguntaram. Por isso via RPC SECURITY DEFINER (179), não um select
+    // direto: devolve só a linha do próprio, mesmo padrão do
+    // get_ai_usage(). Só para conta Individual — é a mesma condição do
+    // OccupationGate, escola/professor não precisam.
+    if (data && data.role === 'aluno' && !data.organization_id) {
+      const { data: intent } = await supabase.rpc('get_own_intent')
+      if (intent) data = { ...data, intended_use: intent.intended_use, pap_timing: intent.pap_timing, heard_from: intent.heard_from }
+    }
+
     setProfile(data ?? null)
     if (data) {
       identifyUser(userRes.data?.user, data)
@@ -280,19 +292,25 @@ export function AuthProvider({ children }) {
   const planId          = resolvePlanId(profile)
   const plan            = getPlan(planId)
 
+  // O `feature` vai dentro da própria mensagem — assim o PlanGateModal sabe para que
+  // feature mostrar o ganho de upgrade sem cada chamador ter de passar isso à parte.
+  function withFeature(feature, msg) {
+    return msg ? { ...msg, feature } : msg
+  }
+
   function checkGate(feature, projectCount) {
     if (feature === 'maxProjects') {
       const allowed = projectCount < plan.maxProjects
-      return { allowed, message: allowed ? null : PLAN_GATE_MESSAGES.maxProjects(planId) }
+      return { allowed, message: allowed ? null : withFeature(feature, PLAN_GATE_MESSAGES.maxProjects(planId)) }
     }
     if (feature === 'internshipPage' || feature === 'weeklyRecap') {
       const allowed = plan.career[feature] === true
-      return { allowed, message: allowed ? null : PLAN_GATE_MESSAGES[feature]?.() }
+      return { allowed, message: allowed ? null : withFeature(feature, PLAN_GATE_MESSAGES[feature]?.()) }
     }
     const limit = plan.ai[feature] ?? 0
     const remaining = remainingUses(planId, feature, aiUsage)
     const allowed = remaining > 0
-    return { allowed, remaining, limit, message: allowed ? null : PLAN_GATE_MESSAGES[feature]?.(planId) }
+    return { allowed, remaining, limit, message: allowed ? null : withFeature(feature, PLAN_GATE_MESSAGES[feature]?.(planId)) }
   }
 
   // narrative and exportPptx run entirely client-side — no edge function ever

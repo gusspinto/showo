@@ -63,7 +63,10 @@ export default function CalendarSyncModal({ userId, icsToken, onClose, onTokenRo
     try {
       const { data } = await supabase.rpc('rotate_ics_token')
       if (data) { setLocalToken(data); onTokenRotated?.(data) }
-    } catch {}
+      else console.error('rotate_ics_token: sem dados devolvidos')
+    } catch (err) {
+      console.error('rotate_ics_token falhou:', err)
+    }
     setRotating(false)
   }
 

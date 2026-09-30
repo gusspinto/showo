@@ -2,10 +2,6 @@
    HOME PAGE
    ══════════════════════════════════════════════════════════════════════════ */
 
-/* Usado pelo ícone do botão "Tentar outra vez" (herói mobile e desktop) —
-   fica aqui, fora de qualquer media query, porque os dois precisam dele. */
-@keyframes home-start-spin { to { transform: rotate(360deg); } }
-
 /* ── Reveal on scroll ── */
 .reveal-on-scroll {
   opacity: 0;
@@ -24,293 +20,156 @@
 .home-content { display: flex; flex-direction: column; }
 
 /* ══ HERO ══
-   Plano, no preto real da app (#000000, o mesmo de var(--color-sidebar-bg)
-   em tema escuro) — como já era só no telemóvel. A gradiente azul e o brilho
-   por baixo (aurora) eram uma cor bonita inventada só para aqui, sem ligação
-   ao resto da app; o herói é sempre escuro, mesmo em modo claro, mas passa a
-   usar o preto de sempre em vez de uma paleta à parte. */
+   30/09: deixou de ser sempre preto — o Gustavo pediu que a home fosse
+   fluida, sem a sensação de "step" entre secções. Usa o mesmo fundo/texto
+   do resto da página (var(--color-bg) / var(--color-text)), sem borda a
+   separar do que vem a seguir. */
+/* 30/09 (2ª ronda): o hero passa a preencher o ecrã todo até o utilizador
+   dar scroll — "O que é o Showo" já não espreita por baixo a disputar
+   atenção com o título/CTA. min-height compensa a altura da navbar (62px,
+   o mesmo valor já usado nos breakpoints de telemóvel). */
 .home-hero {
   position: relative;
   overflow: hidden;
-  background: #000000;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  color: #fff;
+  min-height: calc(100dvh - 62px);
+  display: flex;
+  align-items: center;
+  background: var(--color-bg);
+  color: var(--color-text);
 }
 
-/* Split cheio à largura, como os ecrãs de login/registo: frase à esquerda
-   sobre cinza, arranque de sessão à direita sobre preto. */
+/* Painel único: texto+botões à esquerda, ilustração à direita, mais perto
+   do texto do que antes. Os limites (max-width 1060 + padding 24px) são
+   os mesmos de .home-hw-inner, para o título alinhar com "O que é o
+   Showo" em vez de ter uma margem própria mais larga. */
 .home-hero-grid {
   position: relative;
   z-index: 1;
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
   width: 100%;
-  align-items: stretch;
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 0 24px;
 }
 
 .home-hero-copy {
-  flex: 1 1 50%;
+  flex: 1 1 auto;
   min-width: 0;
-  background: #141414;
-  border-right: 1px solid rgba(255, 255, 255, 0.09);
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  /* align-items:center centra o bloco (título + stats) no painel cinza —
-     o texto continua alinhado à esquerda dentro do bloco, mas o bloco em
-     si já não fica colado à margem esquerda do painel. */
-  align-items: center;
-  padding: 80px clamp(40px, 7vw, 150px);
+  align-items: flex-start;
 }
 
-/* Mesma frase em qualquer ecrã — sem destaque de cor, sem itálico, sem
-   ponto final. Simplicidade a preto e branco nos menus/ecrãs de entrada;
-   a cor fica para dentro da app. */
+/* Sem destaque de cor, sem itálico, sem ponto final — igual ao mockup. */
 .home-hero-h1 {
   font-size: clamp(38px, 6vw, 52px);
-  font-weight: 400;
-  line-height: 1.06;
-  margin: 0 0 20px;
+  font-weight: 700;
+  line-height: 1.1;
+  margin: 0 0 28px;
   letter-spacing: -1.3px;
   font-family: var(--font-heading);
 }
 
-/* ── Stats counter ──
-   Discreto — número e legenda no mesmo tom de cinza, sem o azul vibrante
-   que tinha antes; é um número de rodapé, não um segundo título. */
-.home-hero-stats {
-  display: inline-flex;
-  align-items: center;
-  gap: 14px;
-  border-left: 2px solid rgba(255,255,255,0.16);
-  padding-left: 16px;
-}
-.home-hero-stats-number {
-  font-family: var(--font-heading);
-  font-weight: 400;
-  font-size: clamp(20px, 2.4vw, 26px);
-  color: rgba(255,255,255,0.75);
-  letter-spacing: -0.8px;
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-}
-.home-hero-stats-label {
-  font-size: 12px;
-  color: rgba(255,255,255,0.4);
-  font-weight: 500;
-  line-height: 1.4;
-  max-width: 22ch;
-}
-
-/* ── Arranque (Google + email/password progressivo) ──
-   Um só bloco, para qualquer ecrã — vivia só dentro de uma media query de
-   telemóvel; o desktop tinha um formulário à parte, mais genérico (sem
-   "Continuar a explorar", sem confirmação/reenvio de email). Deixou de
-   haver dois caminhos: isto é a coluna direita do grid em qualquer
-   largura. */
+/* ── Arranque (Google + email/password progressivo) ── */
 .home-hero-start {
-  flex: 1 1 50%;
-  min-width: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px clamp(28px, 4vw, 56px);
+  align-items: flex-start;
   margin: 0;
-  max-width: none;
 }
-.home-hero-start > * {
+.home-hero-start-buttons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.home-start-login,
+.home-start-privacy {
+  text-align: left;
+}
+
+/* ── Ilustração ──
+   30/09 (3ª ronda): com o novo desenho (darkhome/lighthome, mais
+   detalhado — browser, notificação, etc.) o tamanho anterior (320px)
+   ficava pequeno de mais para se perceber o desenho. Maior no desktop. */
+.home-hero-illustration {
+  flex: 0 1 460px;
+  min-width: 0;
+  align-self: center;
+  display: flex;
+  justify-content: flex-end;
+}
+.home-hero-illustration img {
+  display: block;
   width: 100%;
-  max-width: 344px;
+  max-width: 460px;
+  height: auto;
+  user-select: none;
 }
 
-/* Google é o caminho principal do herói (um toque, sem digitar nada) —
-   por isso é o único botão com o branco cheio de alto contraste; era o
-   "Continuar com email" que tinha esse peso antes, o que dava dois botões
-   a competir pela mesma atenção (Hick's Law: menos decisão = menos fricção). */
-.home-hero-start .google-btn {
-  background: #fff !important;
-  color: #171717 !important;
-  border: none !important;
-}
-@media (hover: hover) {
-  .home-hero-start .google-btn:hover:not(:disabled) { background: #eee !important; }
-}
-
-.home-start-divider {
-  display: flex; align-items: center; gap: 12px;
-  margin: 16px 0;
-}
-.home-start-divider::before, .home-start-divider::after {
-  content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.12);
-}
-.home-start-divider span { font-size: 12px; color: rgba(255,255,255,0.35); font-weight: 500; }
-
-.home-start-form { display: flex; flex-direction: column; gap: 10px; }
-.home-start-input {
-  width: 100%; box-sizing: border-box;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.14);
+/* 28/09: o hero deixou de fazer login/registo — /register já cobre isso,
+   agora com prova social própria (AuthSidePanel). "Começar a criar" é a
+   ação principal (branco cheio, o mesmo peso que o Google tinha antes:
+   um toque, sem digitar nada, /novo só pede conta a sério no momento de
+   gerar algo). "Criar conta" é a alternativa para quem prefere entrar
+   logo com conta. "Entrar" fica como texto simples — é a exceção, não a
+   regra, para quem chega à Home já sendo utilizador. */
+.home-start-cta {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: auto; min-height: 52px; padding: 0 24px;
+  background: var(--color-text); color: var(--color-text-inverse); border: none;
   border-radius: var(--radius-md);
-  padding: 14px 16px;
-  color: #fff;
-  font-family: inherit; font-size: 16px;
-  outline: none;
-  transition: border-color 0.15s, background 0.15s;
-}
-.home-start-input::placeholder { color: rgba(255,255,255,0.4); }
-
-/* Campo de palavra-passe com botão de ver/esconder */
-.home-start-pw { position: relative; }
-.home-start-pw .home-start-input { padding-right: 48px; }
-.home-start-pw-toggle {
-  position: absolute; top: 50%; right: 2px; transform: translateY(-50%);
-  display: flex; align-items: center; justify-content: center;
-  width: 44px; height: 44px; padding: 0;
-  border: none; background: transparent; cursor: pointer;
-  color: rgba(255,255,255,0.5);
-  border-radius: var(--radius-sm, 8px);
-  transition: color 0.15s, background 0.15s;
-}
-.home-start-pw-toggle:hover { color: #fff; background: rgba(255,255,255,0.08); }
-.home-start-pw-toggle.is-active { color: var(--color-primary); }
-.home-start-pw-toggle.is-active:hover { color: var(--color-primary); background: rgba(255,255,255,0.08); }
-.home-start-pw-toggle:focus-visible { outline: 2px solid rgba(255,255,255,0.5); outline-offset: 1px; }
-.home-start-pw-icon-stack {
-  position: relative;
-  width: 18px;
-  height: 18px;
-}
-.home-start-pw-icon {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  transform: scale(0.25);
-  filter: blur(4px);
-  transition: opacity 0.2s cubic-bezier(0.2,0,0,1), transform 0.2s cubic-bezier(0.2,0,0,1), filter 0.2s cubic-bezier(0.2,0,0,1);
-}
-.home-start-pw-icon.is-visible {
-  opacity: 1;
-  transform: scale(1);
-  filter: blur(0px);
-}
-.home-start-input:focus { border-color: rgba(255,255,255,0.35); background: rgba(255,255,255,0.09); }
-.home-start-input:-webkit-autofill,
-.home-start-input:-webkit-autofill:hover,
-.home-start-input:-webkit-autofill:focus {
-  -webkit-text-fill-color: #fff !important;
-  -webkit-box-shadow: 0 0 0 1000px rgba(255,255,255,0.06) inset !important;
-  transition: background-color 9999s ease-in-out 0s;
-}
-
-.home-start-error { margin: 0; font-size: 13px; color: #ff8a8a; }
-.home-start-note {
-  margin: 0; font-size: 13px; line-height: 1.5;
-  color: rgba(255,255,255,0.65);
-}
-.home-start-note-link {
-  color: #fff; text-decoration: underline;
-  text-underline-offset: 2px;
-}
-.home-start-confirm {
-  display: flex; flex-direction: column; align-items: center;
-  gap: 6px; margin: 4px 0 2px; text-align: center;
-}
-.home-start-confirm .home-start-error { text-align: center; }
-
-/* Ícone + "tentar outra vez", não mais um botão de peso igual ao Entrar —
-   é uma ação de recurso, não a ação principal do ecrã. */
-.home-start-retry {
-  display: inline-flex; align-items: center; gap: 6px;
-  background: none; border: none; padding: 2px;
-  font-family: inherit; font-size: 12.5px; font-weight: 600;
-  color: rgba(255,255,255,0.6);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-.home-start-retry:disabled { opacity: 0.6; cursor: default; }
-.home-start-retry-spin { animation: home-start-spin 0.8s linear infinite; }
-
-/* Email confirmado no passo da password — não desaparece, fica visível
-   para quem está a escrever perceber a que conta se refere. */
-.home-start-email-echo {
-  margin: 0 0 2px; font-size: 13px; color: rgba(255,255,255,0.55);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-
-/* Segundo plano, de propósito — o Google acima é que é a ação principal.
-   Mesma família visual do "Começar a criar" mais abaixo: contorno
-   translúcido, não o branco cheio que só a ação de um toque merece. */
-.home-start-email-btn {
-  width: 100%; min-height: 50px;
-  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
-  border-radius: var(--radius-md);
-  color: #fff;
   font-family: inherit; font-size: 15px; font-weight: 700;
   cursor: pointer;
+  white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
-  transition: background 0.15s, border-color 0.15s, transform 0.1s var(--ease-out);
+  transition: background 0.15s, transform 0.1s var(--ease-out);
 }
-.home-start-email-btn:active { transform: scale(0.96); }
-.home-start-email-btn:disabled { opacity: 0.6; cursor: default; }
+.home-start-cta:active { transform: scale(0.97); }
 @media (hover: hover) {
-  .home-start-email-btn:hover:not(:disabled) { background: rgba(255,255,255,0.16); border-color: rgba(255,255,255,0.3); }
+  .home-start-cta:hover { background: var(--color-text-secondary); }
 }
 
-.home-start-form-links {
-  display: flex; align-items: center; justify-content: center; gap: 14px;
-  margin-top: 2px;
-}
-.home-start-back {
-  display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;
-  background: none; border: 1px solid transparent; border-radius: 6px;
-  padding: 6px 10px; min-height: 44px; line-height: 1.3;
-  font-family: inherit; font-size: 13px; font-weight: 600;
-  color: rgba(255,255,255,0.55);
-  cursor: pointer; text-decoration: none; white-space: nowrap;
-  transition: border-color 0.15s, color 0.15s;
+.home-start-cta-secondary {
+  width: auto; min-height: 50px; padding: 0 24px;
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font-family: inherit; font-size: 15px; font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s, border-color 0.15s;
 }
 @media (hover: hover) {
-  .home-start-back:hover {
-    border-color: rgba(255,255,255,0.25);
-    color: rgba(255,255,255,0.85);
-  }
+  .home-start-cta-secondary:hover { background: var(--color-surface-hover); border-color: var(--color-border-hover); }
+}
+
+.home-start-login {
+  margin: 18px 0 0;
+  font-size: 13px; text-align: left;
+  color: var(--color-text-secondary);
+}
+.home-start-login a {
+  color: var(--color-text); font-weight: 700; text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 /* ── Rodapé do bloco ── */
 .home-start-privacy {
   margin: 16px 2px 0;
   font-size: 12px; line-height: 1.5;
-  color: rgba(255,255,255,0.4);
-  text-align: center;
+  color: var(--color-text-tertiary);
+  text-align: left;
 }
 .home-start-privacy button {
   background: none; border: none; padding: 0;
   font-family: inherit; font-size: 12px;
-  color: rgba(255,255,255,0.65);
+  color: var(--color-text-secondary);
   text-decoration: underline; text-underline-offset: 2px;
   cursor: pointer;
-}
-
-/* "Começar a criar" — leva a /novo, que já aceita visitantes sem conta até
-   ao momento de gerar/guardar. Mas é a terceira opção do herói, não a
-   segunda: um link de texto, sem caixa, para não competir visualmente com
-   o Google (principal) nem com "Continuar com email" (alternativa). Só um
-   botão deve parecer um botão — o resto é escolha deliberadamente mais
-   silenciosa (Hick's Law: três caixas do mesmo tamanho é três decisões
-   com o mesmo peso). */
-.home-start-create-btn {
-  width: 100%; min-height: 44px; margin-top: 6px;
-  padding: 8px 0;
-  background: none; border: none;
-  color: rgba(255,255,255,0.55);
-  font-family: inherit; font-size: 13px; font-weight: 600;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: color 0.15s;
-}
-.home-start-create-btn:active { color: rgba(255,255,255,0.85); }
-@media (hover: hover) {
-  .home-start-create-btn:hover { color: rgba(255,255,255,0.85); }
 }
 
 /* ══ PROJECTS SECTION ══ */
@@ -763,35 +622,43 @@ body.light .home-card-cover img {
 
 /* ══ RESPONSIVE ══ */
 @media (max-width: 860px) {
-  /* Como no telemóvel: o herói ocupa o ecrã todo em vez de ficar um bloco
-     preto a meio da página com o resto do conteúdo logo a seguir. */
-  .home-hero {
-    min-height: calc(100dvh - 62px);
-    display: flex;
-    align-items: stretch;
-  }
+  /* 30/09 (4ª ronda): também preenche o ecrã todo no telemóvel, como no
+     desktop — "O que é o Showo" não deve espreitar por baixo aqui também.
+     Texto e botões primeiro, mais espaço por cima, ilustração por baixo. */
   .home-hero-grid {
     flex-direction: column;
-    align-items: stretch;
+    align-items: center;
     justify-content: center;
     text-align: center;
     width: 100%;
+    max-width: none;
+    padding: 96px clamp(24px, 6vw, 48px) 32px;
+    gap: 0;
+    min-height: inherit;
   }
   .home-hero-copy {
-    order: 1;
-    flex: none;
-    background: transparent;
-    border-right: none;
-    border-bottom: none;
     align-items: center;
-    padding: 72px clamp(24px, 6vw, 48px) 48px;
+    padding-bottom: 40px;
   }
   .home-hero-start {
-    order: 2;
-    flex: none;
-    padding: 44px clamp(24px, 6vw, 48px) 64px;
+    align-items: center;
   }
-  .home-hero-stats { justify-content: center; }
+  .home-hero-start-buttons {
+    justify-content: center;
+  }
+  .home-start-login,
+  .home-start-privacy {
+    text-align: center;
+  }
+  .home-hero-illustration {
+    flex: none;
+    width: 100%;
+    justify-content: center;
+    align-self: center;
+  }
+  .home-hero-illustration img {
+    max-width: 420px;
+  }
 }
 
 @media (max-width: 860px) and (min-width: 601px) {
@@ -799,37 +666,13 @@ body.light .home-card-cover img {
 }
 
 @media (max-width: 600px) {
-  /* Herói ocupa o ecrã todo aqui — no desktop já não precisa disto,
-     background/border já são os mesmos em qualquer largura. */
-  .home-hero {
-    min-height: calc(100dvh - 62px);
-    display: flex;
-    align-items: stretch;
-  }
-
-  /* justify-content:center aqui é o que falta para o bloco todo (título +
-     arranque) ficar centrado como uma unidade no ecrã, em vez de empurrado
-     para o topo com o espaço sobrante a acumular-se no fundo. */
-  .home-hero-grid { width: 100%; justify-content: center; }
-
-  /* O herói vira uma peça de anúncio, não um parágrafo: título e texto
-     centrados, a lê-los como se estivesse a apresentar-se, não a explicar-se
-     a partir de uma margem esquerda arbitrária. */
-  .home-hero-copy {
-    order: 1;
-    text-align: center;
-    align-items: center;
-    padding: 56px 24px 40px;
-  }
-  .home-hero-start {
-    order: 2;
-    padding: 36px 24px 56px;
-  }
+  .home-hero-grid { padding: 88px 24px 28px; }
+  .home-hero-copy { padding-bottom: 32px; }
   .home-hero-h1 {
-    font-size: clamp(38px, 12vw, 52px);
-    margin-bottom: 14px;
+    font-size: clamp(34px, 10vw, 44px);
+    margin-bottom: 20px;
   }
-  .home-hero-stats { display: none; }
+  .home-hero-illustration img { max-width: 320px; }
 
   /* Projects: horizontal scroll with snap */
   .home-section { padding: 40px 0 32px; }
