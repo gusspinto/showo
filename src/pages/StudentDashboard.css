@@ -241,10 +241,6 @@
    ══════════════════════════════════════════════════════════════════════════ */
 
 .sdb-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: end;
-  gap: var(--sp-8);
   padding-bottom: var(--sp-6);
   margin-bottom: var(--sp-6);
   border-bottom: 1px solid var(--color-border);
@@ -290,21 +286,6 @@
 }
 .sdb-hero-actions { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
 
-/* ── Lado do ritmo ── */
-.sdb-hero-side {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-4);
-  padding: var(--sp-4) var(--sp-5);
-  min-width: 216px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  background: var(--color-surface);
-}
-.sdb-hero-side--activity {
-  border-color: rgba(196,154,32,0.25);
-  background: rgba(196,154,32,0.06);
-}
 .sdb-streak-row {
   display: flex;
   align-items: center;
@@ -375,98 +356,6 @@
   border-color: var(--color-primary);
   color: #fff;
 }
-
-/* ── Missão única ── */
-.sdb-mission {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-2);
-}
-
-.sdb-mission-label {
-  position: relative;
-  background: none;
-  border: none;
-  padding: 0;
-  font-family: var(--font-heading);
-  font-size: var(--text-lg);
-  font-weight: 700;
-  line-height: 1.2;
-  color: var(--color-text);
-  cursor: pointer;
-  text-align: left;
-  transition: color var(--duration-fast);
-}
-.sdb-mission-label:hover { color: var(--color-primary); }
-
-/* Linha de risco */
-.sdb-mission-label::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  height: 1.5px;
-  background: var(--color-text-secondary);
-  width: 0;
-  border-radius: 2px;
-}
-
-/* Striking: linha cresce + texto fica a 35% de opacidade ao mesmo tempo */
-.sdb-mission--striking .sdb-mission-label::after {
-  animation: mission-strike 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.08s forwards;
-}
-.sdb-mission--striking .sdb-mission-label {
-  animation: mission-dim 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.08s forwards;
-}
-@keyframes mission-strike {
-  from { width: 0; }
-  to   { width: 100%; }
-}
-@keyframes mission-dim {
-  from { opacity: 1; }
-  to   { opacity: 0.35; }
-}
-
-/* Saída: slide up + fade */
-.sdb-mission--out .sdb-mission-label {
-  animation: mission-out 0.28s cubic-bezier(0.4, 0, 1, 1) forwards;
-}
-@keyframes mission-out {
-  from { opacity: 0.35; transform: translateY(0); }
-  to   { opacity: 0;    transform: translateY(-10px); }
-}
-
-/* Entrada: slide up from below + fade in */
-.sdb-mission--in .sdb-mission-label {
-  animation: mission-in 0.32s cubic-bezier(0, 0, 0.2, 1) both;
-}
-@keyframes mission-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.sdb-mission-desc {
-  margin: 0;
-  font-size: var(--text-xs);
-  color: var(--color-text-tertiary);
-  line-height: 1.5;
-  transition: opacity var(--duration-fast);
-}
-
-.sdb-mission-dots {
-  display: flex;
-  gap: 5px;
-  margin-top: var(--sp-1);
-}
-.sdb-mission-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: var(--radius-full);
-  background: var(--color-border-hover);
-  transition: background var(--duration-normal);
-}
-.sdb-mission-dot.is-done { background: var(--color-primary); }
-.sdb-mission-dot.is-current { background: var(--color-text-secondary); }
 
 /* ══════════════════════════════════════════════════════════════════════════
    GRELHA
@@ -1576,9 +1465,6 @@
   /* Hero: apertar o ritmo vertical */
   .sdb-hero { gap: var(--sp-3); margin-bottom: var(--sp-4); }
   .sdb-hero-main { padding-bottom: var(--sp-3); }
-
-  /* Hero-side (Próximos passos) escondido em mobile — info redundante no ecrã pequeno */
-  .sdb-hero-side { display: none; }
 
   .sdb-grid { grid-template-columns: minmax(0, 1fr); min-width: 0; }
   /* Os wrappers desaparecem da caixa para que a ordem seja definida item a
@@ -3478,64 +3364,6 @@
   .sdb-hero    { order: 1; }
   .sdb-grid    { order: 3; }
   .sdb-pom     { order: 4; margin-top: var(--sp-6); }
-}
-
-/* ══════════════════════════════════════════════════════════════════════════
-   Usage nudge banner
-   ══════════════════════════════════════════════════════════════════════════ */
-.sdb-usage-nudge {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 10px 9px 13px;
-  margin-bottom: var(--sp-4);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-}
-.sdb-usage-nudge.is-urgent {
-  background: var(--color-warning-subtle);
-  border-color: color-mix(in srgb, var(--color-warning) 40%, transparent);
-}
-.sdb-usage-nudge-icon {
-  flex-shrink: 0;
-  color: var(--color-primary);
-}
-.sdb-usage-nudge.is-urgent .sdb-usage-nudge-icon { color: var(--color-warning); }
-.sdb-usage-nudge-text {
-  flex: 1 1 auto;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: var(--text-sm);
-  color: var(--color-text-secondary);
-}
-.sdb-usage-nudge.is-urgent .sdb-usage-nudge-text { color: var(--color-text); font-weight: 500; }
-.sdb-usage-nudge-cta {
-  flex-shrink: 0;
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 6px 12px;
-  background: var(--color-text);
-  color: var(--color-bg);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--text-xs); font-weight: 700;
-  font-family: var(--font-body);
-  cursor: pointer; transition: opacity 0.15s;
-}
-.sdb-usage-nudge-cta:hover { opacity: 0.88; }
-.sdb-usage-nudge-close {
-  flex-shrink: 0;
-  display: inline-flex;
-  background: none; border: none; cursor: pointer;
-  color: var(--color-text-tertiary);
-  padding: 2px; border-radius: 4px;
-  transition: color 0.15s, background 0.15s;
-}
-.sdb-usage-nudge-close:hover { color: var(--color-text); background: var(--color-surface-hover); }
-@media (max-width: 600px) {
-  .sdb-usage-nudge { order: 2; }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════

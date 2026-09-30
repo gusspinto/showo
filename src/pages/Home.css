@@ -20,103 +20,93 @@
 .home-content { display: flex; flex-direction: column; }
 
 /* ══ HERO ══
-   Plano, no preto real da app (#000000, o mesmo de var(--color-sidebar-bg)
-   em tema escuro) — como já era só no telemóvel. A gradiente azul e o brilho
-   por baixo (aurora) eram uma cor bonita inventada só para aqui, sem ligação
-   ao resto da app; o herói é sempre escuro, mesmo em modo claro, mas passa a
-   usar o preto de sempre em vez de uma paleta à parte. */
+   30/09: deixou de ser sempre preto — o Gustavo pediu que a home fosse
+   fluida, sem a sensação de "step" entre secções. Usa o mesmo fundo/texto
+   do resto da página (var(--color-bg) / var(--color-text)), sem borda a
+   separar do que vem a seguir. */
+/* 30/09 (2ª ronda): o hero passa a preencher o ecrã todo até o utilizador
+   dar scroll — "O que é o Showo" já não espreita por baixo a disputar
+   atenção com o título/CTA. min-height compensa a altura da navbar (62px,
+   o mesmo valor já usado nos breakpoints de telemóvel). */
 .home-hero {
   position: relative;
   overflow: hidden;
-  background: #000000;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  color: #fff;
+  min-height: calc(100dvh - 62px);
+  display: flex;
+  align-items: center;
+  background: var(--color-bg);
+  color: var(--color-text);
 }
 
-/* Split cheio à largura, como os ecrãs de login/registo: frase à esquerda
-   sobre cinza, arranque de sessão à direita sobre preto. */
+/* Painel único: texto+botões à esquerda, ilustração à direita, mais perto
+   do texto do que antes. Os limites (max-width 1060 + padding 24px) são
+   os mesmos de .home-hw-inner, para o título alinhar com "O que é o
+   Showo" em vez de ter uma margem própria mais larga. */
 .home-hero-grid {
   position: relative;
   z-index: 1;
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
   width: 100%;
-  align-items: stretch;
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 0 24px;
 }
 
 .home-hero-copy {
-  flex: 1 1 50%;
+  flex: 1 1 auto;
   min-width: 0;
-  background: #141414;
-  border-right: 1px solid rgba(255, 255, 255, 0.09);
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  /* align-items:center centra o bloco (título + stats) no painel cinza —
-     o texto continua alinhado à esquerda dentro do bloco, mas o bloco em
-     si já não fica colado à margem esquerda do painel. */
-  align-items: center;
-  padding: 80px clamp(40px, 7vw, 150px);
+  align-items: flex-start;
 }
 
-/* Mesma frase em qualquer ecrã — sem destaque de cor, sem itálico, sem
-   ponto final. Simplicidade a preto e branco nos menus/ecrãs de entrada;
-   a cor fica para dentro da app. */
+/* Sem destaque de cor, sem itálico, sem ponto final — igual ao mockup. */
 .home-hero-h1 {
   font-size: clamp(38px, 6vw, 52px);
-  font-weight: 400;
-  line-height: 1.06;
-  margin: 0 0 20px;
+  font-weight: 700;
+  line-height: 1.1;
+  margin: 0 0 28px;
   letter-spacing: -1.3px;
   font-family: var(--font-heading);
 }
 
-/* ── Stats counter ──
-   Discreto — número e legenda no mesmo tom de cinza, sem o azul vibrante
-   que tinha antes; é um número de rodapé, não um segundo título. */
-.home-hero-stats {
-  display: inline-flex;
-  align-items: center;
-  gap: 14px;
-  border-left: 2px solid rgba(255,255,255,0.16);
-  padding-left: 16px;
-}
-.home-hero-stats-number {
-  font-family: var(--font-heading);
-  font-weight: 400;
-  font-size: clamp(20px, 2.4vw, 26px);
-  color: rgba(255,255,255,0.75);
-  letter-spacing: -0.8px;
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-}
-.home-hero-stats-label {
-  font-size: 12px;
-  color: rgba(255,255,255,0.4);
-  font-weight: 500;
-  line-height: 1.4;
-  max-width: 22ch;
-}
-
-/* ── Arranque (Google + email/password progressivo) ──
-   Um só bloco, para qualquer ecrã — vivia só dentro de uma media query de
-   telemóvel; o desktop tinha um formulário à parte, mais genérico (sem
-   "Continuar a explorar", sem confirmação/reenvio de email). Deixou de
-   haver dois caminhos: isto é a coluna direita do grid em qualquer
-   largura. */
+/* ── Arranque (Google + email/password progressivo) ── */
 .home-hero-start {
-  flex: 1 1 50%;
-  min-width: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px clamp(28px, 4vw, 56px);
+  align-items: flex-start;
   margin: 0;
-  max-width: none;
 }
-.home-hero-start > * {
+.home-hero-start-buttons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.home-start-login,
+.home-start-privacy {
+  text-align: left;
+}
+
+/* ── Ilustração ──
+   30/09 (3ª ronda): com o novo desenho (darkhome/lighthome, mais
+   detalhado — browser, notificação, etc.) o tamanho anterior (320px)
+   ficava pequeno de mais para se perceber o desenho. Maior no desktop. */
+.home-hero-illustration {
+  flex: 0 1 460px;
+  min-width: 0;
+  align-self: center;
+  display: flex;
+  justify-content: flex-end;
+}
+.home-hero-illustration img {
+  display: block;
   width: 100%;
-  max-width: 344px;
+  max-width: 460px;
+  height: auto;
+  user-select: none;
 }
 
 /* 28/09: o hero deixou de fazer login/registo — /register já cobre isso,
@@ -128,40 +118,42 @@
    regra, para quem chega à Home já sendo utilizador. */
 .home-start-cta {
   display: flex; align-items: center; justify-content: center; gap: 8px;
-  width: 100%; min-height: 52px;
-  background: #fff; color: #171717; border: none;
+  width: auto; min-height: 52px; padding: 0 24px;
+  background: var(--color-text); color: var(--color-text-inverse); border: none;
   border-radius: var(--radius-md);
   font-family: inherit; font-size: 15px; font-weight: 700;
   cursor: pointer;
+  white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
   transition: background 0.15s, transform 0.1s var(--ease-out);
 }
 .home-start-cta:active { transform: scale(0.97); }
 @media (hover: hover) {
-  .home-start-cta:hover { background: #eee; }
+  .home-start-cta:hover { background: var(--color-text-secondary); }
 }
 
 .home-start-cta-secondary {
-  width: 100%; min-height: 50px; margin-top: 10px;
-  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18);
+  width: auto; min-height: 50px; padding: 0 24px;
+  background: var(--color-surface); border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  color: #fff;
+  color: var(--color-text);
   font-family: inherit; font-size: 15px; font-weight: 700;
   cursor: pointer;
+  white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
   transition: background 0.15s, border-color 0.15s;
 }
 @media (hover: hover) {
-  .home-start-cta-secondary:hover { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.28); }
+  .home-start-cta-secondary:hover { background: var(--color-surface-hover); border-color: var(--color-border-hover); }
 }
 
 .home-start-login {
   margin: 18px 0 0;
-  font-size: 13px; text-align: center;
-  color: rgba(255,255,255,0.5);
+  font-size: 13px; text-align: left;
+  color: var(--color-text-secondary);
 }
 .home-start-login a {
-  color: #fff; font-weight: 700; text-decoration: underline;
+  color: var(--color-text); font-weight: 700; text-decoration: underline;
   text-underline-offset: 2px;
 }
 
@@ -169,13 +161,13 @@
 .home-start-privacy {
   margin: 16px 2px 0;
   font-size: 12px; line-height: 1.5;
-  color: rgba(255,255,255,0.4);
-  text-align: center;
+  color: var(--color-text-tertiary);
+  text-align: left;
 }
 .home-start-privacy button {
   background: none; border: none; padding: 0;
   font-family: inherit; font-size: 12px;
-  color: rgba(255,255,255,0.65);
+  color: var(--color-text-secondary);
   text-decoration: underline; text-underline-offset: 2px;
   cursor: pointer;
 }
@@ -630,35 +622,43 @@ body.light .home-card-cover img {
 
 /* ══ RESPONSIVE ══ */
 @media (max-width: 860px) {
-  /* Como no telemóvel: o herói ocupa o ecrã todo em vez de ficar um bloco
-     preto a meio da página com o resto do conteúdo logo a seguir. */
-  .home-hero {
-    min-height: calc(100dvh - 62px);
-    display: flex;
-    align-items: stretch;
-  }
+  /* 30/09 (4ª ronda): também preenche o ecrã todo no telemóvel, como no
+     desktop — "O que é o Showo" não deve espreitar por baixo aqui também.
+     Texto e botões primeiro, mais espaço por cima, ilustração por baixo. */
   .home-hero-grid {
     flex-direction: column;
-    align-items: stretch;
+    align-items: center;
     justify-content: center;
     text-align: center;
     width: 100%;
+    max-width: none;
+    padding: 96px clamp(24px, 6vw, 48px) 32px;
+    gap: 0;
+    min-height: inherit;
   }
   .home-hero-copy {
-    order: 1;
-    flex: none;
-    background: transparent;
-    border-right: none;
-    border-bottom: none;
     align-items: center;
-    padding: 72px clamp(24px, 6vw, 48px) 48px;
+    padding-bottom: 40px;
   }
   .home-hero-start {
-    order: 2;
-    flex: none;
-    padding: 44px clamp(24px, 6vw, 48px) 64px;
+    align-items: center;
   }
-  .home-hero-stats { justify-content: center; }
+  .home-hero-start-buttons {
+    justify-content: center;
+  }
+  .home-start-login,
+  .home-start-privacy {
+    text-align: center;
+  }
+  .home-hero-illustration {
+    flex: none;
+    width: 100%;
+    justify-content: center;
+    align-self: center;
+  }
+  .home-hero-illustration img {
+    max-width: 420px;
+  }
 }
 
 @media (max-width: 860px) and (min-width: 601px) {
@@ -666,37 +666,13 @@ body.light .home-card-cover img {
 }
 
 @media (max-width: 600px) {
-  /* Herói ocupa o ecrã todo aqui — no desktop já não precisa disto,
-     background/border já são os mesmos em qualquer largura. */
-  .home-hero {
-    min-height: calc(100dvh - 62px);
-    display: flex;
-    align-items: stretch;
-  }
-
-  /* justify-content:center aqui é o que falta para o bloco todo (título +
-     arranque) ficar centrado como uma unidade no ecrã, em vez de empurrado
-     para o topo com o espaço sobrante a acumular-se no fundo. */
-  .home-hero-grid { width: 100%; justify-content: center; }
-
-  /* O herói vira uma peça de anúncio, não um parágrafo: título e texto
-     centrados, a lê-los como se estivesse a apresentar-se, não a explicar-se
-     a partir de uma margem esquerda arbitrária. */
-  .home-hero-copy {
-    order: 1;
-    text-align: center;
-    align-items: center;
-    padding: 56px 24px 40px;
-  }
-  .home-hero-start {
-    order: 2;
-    padding: 36px 24px 56px;
-  }
+  .home-hero-grid { padding: 88px 24px 28px; }
+  .home-hero-copy { padding-bottom: 32px; }
   .home-hero-h1 {
-    font-size: clamp(38px, 12vw, 52px);
-    margin-bottom: 14px;
+    font-size: clamp(34px, 10vw, 44px);
+    margin-bottom: 20px;
   }
-  .home-hero-stats { display: none; }
+  .home-hero-illustration img { max-width: 320px; }
 
   /* Projects: horizontal scroll with snap */
   .home-section { padding: 40px 0 32px; }

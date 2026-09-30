@@ -9,6 +9,7 @@ import { supabase } from '../lib/supabase'
 import HomeHow from '../components/HomeHow'
 import TestimonialsMarquee from '../components/TestimonialsMarquee'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
 import { getAreaColor } from '../lib/areaColor'
 import { trackEvent } from '../lib/analytics'
 import './Home.css'
@@ -73,10 +74,10 @@ export default function Home() {
   const navigate = useNavigate()
   const location = useLocation()
   const { user } = useAuth()
+  const { theme } = useTheme()
   const [projects, setProjects] = useState([])
   const [projectsLoading, setProjectsLoading] = useState(true)
   const [projectCount, setProjectCount] = useState(null)
-  const [animatedCount, setAnimatedCount] = useState(0)
   const [projectOfMonth, setProjectOfMonth] = useState(null)
 
   useEffect(() => {
@@ -116,20 +117,6 @@ export default function Home() {
     load()
   }, [])
 
-  useEffect(() => {
-    if (projectCount == null) return
-    let raf
-    const duration = 1100
-    const start = performance.now()
-    function tick(now) {
-      const progress = Math.min((now - start) / duration, 1)
-      const eased = 1 - Math.pow(1 - progress, 3)
-      setAnimatedCount(Math.round(eased * projectCount))
-      if (progress < 1) raf = requestAnimationFrame(tick)
-    }
-    raf = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf)
-  }, [projectCount])
 
   /* Suporte genérico para /#id — o hambúrguer já não aponta para cá (passou
      a linkar /aprende, a página a sério, não este scroll), mas a secção
@@ -154,58 +141,63 @@ export default function Home() {
           da media query de mobile. ── */}
       <div className="home-content">
 
-      {/* ══ Hero ══ */}
+      {/* ══ Hero ══
+          Um só painel preto, sem o split copy/arranque de antes — título,
+          botões e a ilustração do estudante a trabalhar, como no mockup do
+          Gustavo. A ilustração troca de ficheiro consoante o tema (linha
+          branca no escuro, silhueta preta no claro), não é só uma imagem
+          fixa. O contador de projetos saiu daqui (fica para decidir onde
+          volta a aparecer mais tarde). */}
       <div className="home-hero">
-
         <div className="home-hero-grid">
-          {/* Left — copy */}
           <div className="home-hero-copy">
             <h1 className="home-hero-h1">
-              Do projeto<br />à oportunidade.
+              Do projeto à<br />Oportunidade
             </h1>
 
-            <div className="home-hero-stats">
-              <span className="home-hero-stats-number">
-                {projectCount == null ? '—' : animatedCount}
-              </span>
-              <span className="home-hero-stats-label">
-                projetos criados<br />por estudantes portugueses
-              </span>
+            {/* ── Arranque ── 28/09: já não faz login/registo aqui dentro (ver
+                histórico do ficheiro). 28/09 (2ª ronda, feedback do Gustavo):
+                o segundo botão ia direto para /register — mas ir primeiro
+                para /login (mesmo para quem ainda não tem conta) é mais
+                natural: a pessoa vê o ecrã de entrar, percebe "ah, ainda não
+                tenho conta" e só aí segue para criar uma — Login.jsx já tem
+                o link "Regista-te". "Criar conta" fica como texto pequeno
+                por baixo, para quem já sabe que quer registar-se direto. */}
+            <div className="home-hero-start">
+              <div className="home-hero-start-buttons">
+                <button
+                  type="button"
+                  className="home-start-cta"
+                  onClick={() => { trackEvent('home_create_clicked'); navigate('/novo') }}
+                >
+                  Começar a criar <ArrowRight size={18} />
+                </button>
+                <button
+                  type="button"
+                  className="home-start-cta-secondary"
+                  onClick={() => { trackEvent('home_login_clicked'); navigate('/login') }}
+                >
+                  Entrar
+                </button>
+              </div>
+
+              <p className="home-start-login">
+                Ainda não tens conta? <Link to="/register">Criar conta</Link>
+              </p>
+
+              <p className="home-start-privacy">
+                Ao continuares, aceitas a{' '}
+                <button type="button" onClick={() => navigate('/privacidade')}>Política de Privacidade</button>.
+              </p>
             </div>
           </div>
 
-          {/* ── Arranque ── 28/09: já não faz login/registo aqui dentro (ver
-              histórico do ficheiro). 28/09 (2ª ronda, feedback do Gustavo):
-              o segundo botão ia direto para /register — mas ir primeiro
-              para /login (mesmo para quem ainda não tem conta) é mais
-              natural: a pessoa vê o ecrã de entrar, percebe "ah, ainda não
-              tenho conta" e só aí segue para criar uma — Login.jsx já tem
-              o link "Regista-te". "Criar conta" fica como texto pequeno
-              por baixo, para quem já sabe que quer registar-se direto. */}
-          <div className="home-hero-start">
-            <button
-              type="button"
-              className="home-start-cta"
-              onClick={() => { trackEvent('home_create_clicked'); navigate('/novo') }}
-            >
-              Começar a criar <ArrowRight size={18} />
-            </button>
-            <button
-              type="button"
-              className="home-start-cta-secondary"
-              onClick={() => { trackEvent('home_login_clicked'); navigate('/login') }}
-            >
-              Entrar
-            </button>
-
-            <p className="home-start-login">
-              Ainda não tens conta? <Link to="/register">Criar conta</Link>
-            </p>
-
-            <p className="home-start-privacy">
-              Ao continuares, aceitas a{' '}
-              <button type="button" onClick={() => navigate('/privacidade')}>Política de Privacidade</button>.
-            </p>
+          <div className="home-hero-illustration">
+            <img
+              src={theme === 'light' ? '/lighthome.png' : '/darkhome.png'}
+              alt=""
+              draggable={false}
+            />
           </div>
         </div>
       </div>

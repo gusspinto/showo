@@ -36,6 +36,7 @@ const PLAN_BADGES = {
 const C = {
   overlay: {
     position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)',
+    backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     zIndex: 9999, padding: '24px', overflowY: 'auto',
   },
@@ -115,12 +116,11 @@ const C = {
   testimonialPerson: { display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 },
   testimonialPhoto: { width: '36px', height: '36px', borderRadius: 'var(--radius-full)', objectFit: 'cover', flexShrink: 0 },
   testimonialName: { fontSize: '0.84rem', fontWeight: 700, color: 'var(--color-text)' },
-  // Antes cortava a uma linha com "..." e ficava ilegível ("Estudante no
-  // Instituto Supe..."). Deixa embrulhar até 2 linhas, letra mais pequena,
-  // para dar para ler o cargo todo em vez de adivinhar o resto.
+  // Antes cortava com "..." (1 linha, depois 2) e ainda ficava ilegível
+  // ("Universidade da Maia e..."). Sem clamp nenhum agora — o cargo embrulha
+  // por inteiro, por mais linhas que precisar.
   testimonialRole: {
     fontSize: '0.7rem', color: 'var(--color-text-secondary)', lineHeight: 1.35,
-    display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
   },
   testimonialDots: { display: 'flex', gap: '5px', flexShrink: 0 },
   testimonialDot: (active) => ({
