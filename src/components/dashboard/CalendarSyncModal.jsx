@@ -126,7 +126,7 @@ export default function CalendarSyncModal({ userId, icsToken, onClose, onTokenRo
   }
 
   return (
-    <Modal onClose={onClose} title="Sincronizar calendário" subtitle="Os teus prazos e lembretes, sempre atualizados no calendário que já usas.">
+    <Modal onClose={onClose} title="Sincronizar calendário">
       <div className="cal-sync">
 
         {/* Google Calendar — a opção principal, com destaque real */}

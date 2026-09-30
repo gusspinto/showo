@@ -9,6 +9,7 @@ import { AltArrowRightIcon as ChevronRight } from '@solar-icons/react/bold/alt-a
 import { PlusIcon as Plus } from './icons/PlusIcon'
 import { CompassIcon as Compass } from '@solar-icons/react/bold/compass'
 import { LibraryIcon } from '@solar-icons/react/bold/library'
+import { ChatRoundLineIcon as MessageSquare } from '@solar-icons/react/bold/chat-round-line'
 import './SearchPalette.css'
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -73,7 +74,10 @@ export function SearchPalette({ onClose }) {
           ? supabase.from('profiles')
               .select('id, username, full_name, avatar_url, role')
               .is('banned_at', null)
-              .not('username', 'is', null)
+              // Sem exigir username: muita gente nunca escolheu um, e antes
+              // isso bastava para ficarem invisíveis na pesquisa mesmo
+              // aparecendo pelo nome. UserProfile.jsx já sabe abrir por id
+              // quando não há username (ver go() abaixo).
               .or(`full_name.ilike.%${query}%,username.ilike.%${query}%`)
               .limit(6)
           : Promise.resolve({ data: [] }),
@@ -180,16 +184,24 @@ export function SearchPalette({ onClose }) {
             <div className="search-palette-section">
               <span className="search-palette-label">Pessoas</span>
               {people.map(p => (
-                <button key={p.id} className="search-palette-row" onClick={() => go(`/u/${p.username}`)}>
+                <div key={p.id} className="search-palette-row search-palette-row--person" onClick={() => go(`/u/${p.username || p.id}`)}>
                   {p.avatar_url
                     ? <img src={p.avatar_url} alt="" className="search-palette-avatar" />
                     : <div className="search-palette-avatar search-palette-avatar-fb">{(p.full_name || p.username || '?')[0].toUpperCase()}</div>}
                   <span className="search-palette-row-text">
-                    <span className="search-palette-row-title">{p.full_name || p.username}</span>
-                    <span className="search-palette-row-sub">@{p.username}</span>
+                    <span className="search-palette-row-title">{p.full_name || p.username || 'Sem nome'}</span>
+                    {p.username && <span className="search-palette-row-sub">@{p.username}</span>}
                   </span>
+                  <button
+                    className="search-palette-row-msg"
+                    title={`Enviar mensagem a ${p.full_name || p.username}`}
+                    aria-label={`Enviar mensagem a ${p.full_name || p.username}`}
+                    onClick={e => { e.stopPropagation(); go(`/mensagens?to=${p.id}`) }}
+                  >
+                    <MessageSquare size={14} />
+                  </button>
                   <ChevronRight size={15} className="search-palette-row-chevron" />
-                </button>
+                </div>
               ))}
             </div>
           )}

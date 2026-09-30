@@ -1003,19 +1003,29 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
 
   const showSidebar = !!user && !hideSidebar
   // No editor de aparência (extras.previewEditing) a própria página já tem a
-  // sua barra flutuante (Conteúdo/Estilo/Blocos) na mesma zona — as duas ao
-  // mesmo tempo ficavam sobrepostas e ilegíveis. Bug apontado pelo Gustavo.
+  // sua barra flutuante (Conteúdo/Estilo/Blocos) na mesma zona — as duas
+  // sobrepunham-se. Fora disso, a barra aparece em qualquer página do
+  // aluno, incluindo a página de projeto.
   const showTopBar = showSidebar && isAlunoRole && !extras?.previewEditing
+  // A CAUSA REAL do vão que aparecia por baixo da barra na página de
+  // projeto: essa página reserva o próprio padding-top no body
+  // (`has-topbar`) para "empurrar" o conteúdo das páginas normais para
+  // baixo da barra. Mas a página de projeto usa um wrapper de fluxo normal
+  // (.proj-wrap) que também herdava esse padding — e ela NÃO quer ser
+  // empurrada, quer que a barra flutue por cima da capa sem reservar nada.
+  // Por isso: a barra continua a aparecer lá (showTopBar), mas o body só
+  // ganha a classe que reserva espaço fora da página de projeto.
+  const reserveTopBarSpace = showTopBar && extras?.type !== 'project'
   useEffect(() => {
     document.body.classList.toggle('has-sidebar', showSidebar)
     document.body.classList.toggle('sidebar-collapsed', showSidebar && collapsed)
-    document.body.classList.toggle('has-topbar', showTopBar)
+    document.body.classList.toggle('has-topbar', reserveTopBarSpace)
     return () => {
       document.body.classList.remove('has-sidebar')
       document.body.classList.remove('sidebar-collapsed')
       document.body.classList.remove('has-topbar')
     }
-  }, [showSidebar, collapsed, showTopBar])
+  }, [showSidebar, collapsed, reserveTopBarSpace])
 
   // O painel flutuante "Gerir projeto" (.proj-manage-float) é position:fixed,
   // fora do fluxo — nada reservava espaço para ele, por isso em larguras de

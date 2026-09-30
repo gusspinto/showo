@@ -2009,10 +2009,14 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
         /* Arrastada até ao fim: preenche o ecrã, do topo até à barra de
            navegação — o "normal" (48vh) continua a ser o que abre por
            omissão, isto é só quando o utilizador puxa mais. */
+        /* top: 62px (não 0) — a altura da .top-nav do telemóvel. Ia até ao
+           topo mesmo por baixo da navbar antes, e a navbar (que fica por
+           cima, sticky) cortava o cabeçalho do editor. Agora coexistem:
+           a folha começa mesmo abaixo dela. */
         .pv-ws-sheet.ws-full {
-          top: 0 !important;
+          top: calc(62px + env(safe-area-inset-top, 0px)) !important;
           height: auto !important;
-          border-radius: 0 !important;
+          border-radius: 16px 16px 0 0 !important;
         }
         /* Overlay behind bottom sheet */
         .pv-ws-overlay {
@@ -2443,11 +2447,6 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
               }}
             >
               <div style={{ width: 36, height: 4, borderRadius: 99, background: 'var(--color-border-hover)' }} />
-              {!wsExpanded && (
-                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <ChevronRight size={11} style={{ transform: 'rotate(-90deg)' }} /> Editar aparência
-                </span>
-              )}
             </div>
           )}
 

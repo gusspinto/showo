@@ -517,7 +517,10 @@ body.sidebar-collapsed .proj-manage-float { left: 84px; }
     display: flex; align-items: center; justify-content: flex-end; gap: 12px;
     position: fixed; top: 8px; left: 248px; right: 20px; height: 56px;
     padding: 0 8px;
-    z-index: 90;
+    /* Acima de tudo o que é conteúdo de página (sidebars sticky, cartões
+       fixos, etc.) — nunca deve ficar tapada ao fazer scroll. Só abaixo de
+       modais a sério (2000+). Pedido do Gustavo. */
+    z-index: 500;
     transition: left 0.22s cubic-bezier(0.4,0,0.2,1);
   }
   body.sidebar-collapsed .nb-topbar { left: 80px; }
@@ -573,6 +576,10 @@ body.sidebar-collapsed .proj-manage-float { left: 84px; }
     left: 16px !important;
     width: auto !important;
     max-width: none !important;
+    /* Ecrã pequeno = mais coisa a passar por trás no mesmo campo de visão —
+       a transparência que funciona no desktop fica confusa aqui. Mais opaco
+       só no mobile. Apontado pelo Gustavo. */
+    background: color-mix(in srgb, var(--color-bg) 96%, transparent) !important;
   }
 }
 

@@ -5,7 +5,6 @@ export default function Privacidade() {
     <LegalLayout
       title="Política de Privacidade"
       updated="17 de setembro de 2026"
-      intro="Aqui explicamos, em português simples, que dados guardamos sobre ti, para que servem e o que podes fazer com eles. Sem juridiquês desnecessário."
     >
       <h2>Quem somos</h2>
       <p>

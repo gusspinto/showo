@@ -36,7 +36,7 @@ export default function AddReminderModal({ userId, initialDate, onClose, onCreat
   }
 
   return (
-    <Modal onClose={onClose} title="Novo lembrete" subtitle="Aparece no teu calendário e sincroniza para o Google/Apple.">
+    <Modal onClose={onClose} title="Novo lembrete">
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
         <div>
           <SectionLabel>Título</SectionLabel>
@@ -45,7 +45,8 @@ export default function AddReminderModal({ userId, initialDate, onClose, onCreat
         </div>
         <div>
           <SectionLabel>Data</SectionLabel>
-          <input type="date" value={date} onChange={e => setDate(e.target.value)} required style={inputStyle} />
+          <input type="date" value={date} onChange={e => setDate(e.target.value)} required
+            style={{ ...inputStyle, height: 44, WebkitAppearance: 'none', appearance: 'none', colorScheme: 'dark' }} />
         </div>
         <div>
           <SectionLabel>Notas (opcional)</SectionLabel>
