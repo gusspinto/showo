@@ -41,15 +41,14 @@
 
 /* Marca ao lado do hambúrguer, telemóvel — escondida no desktop, onde o
    logótipo centrado (.nav-mid) já faz esse trabalho. */
-/* Absoluta, não flex — o hambúrguer à esquerda e os ícones à direita não têm
-   o mesmo peso, por isso centrar por distribuição de flex (flex:1 dos dois
-   lados) desequilibra-se sempre que um dos lados muda. Isto centra a
-   qualquer largura, independentemente do que estiver de cada lado. .top-nav
-   já é position:sticky, que serve de contexto de posicionamento na mesma. */
+/* Fica logo a seguir ao hambúrguer, não centrada — com o cluster de conta
+   (pesquisa + sino + avatar) do lado direito, um logótipo centrado ficava a
+   competir visualmente com esses ícones. Pedido do Gustavo.
+   margin-left negativo porque .top-nav já tem gap:12px entre filhos — sem
+   isto o logo ficava a 12px do hambúrguer mais o próprio espaço do ícone,
+   longe demais (também reportado pelo Gustavo). */
 .nav-mob-logo {
-  display: none; position: absolute; left: 50%; top: 50%;
-  transform: translate(-50%, -50%);
-  align-items: center; padding: 0;
+  display: none; align-items: center; padding: 0; margin-left: -6px;
   background: none; border: none; cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
@@ -77,6 +76,10 @@
 .mob-nav-icon-btn.ghost:active { background: var(--color-surface-hover); color: var(--color-text); }
 .mob-nav-icon-btn.primary { background: var(--color-text); border: none; color: var(--color-bg); box-shadow: 0 4px 12px rgba(26,138,122,0.35); }
 .mob-nav-icon-btn.primary:active { transform: scale(0.92); }
+.mob-nav-account-cluster { display: none; align-items: center; gap: 6px; }
+@media (max-width: 600px) {
+  .mob-nav-account-cluster { display: flex !important; }
+}
 .nav-mob-theme {
   display: none; align-items: center; justify-content: center;
   width: 38px; height: 38px; background: transparent; border: none;
@@ -92,6 +95,86 @@
 /* ═══════════════════════════════════
    SIDEBAR — desktop (>600px)
    ═══════════════════════════════════ */
+.nb-topbar { display: none; }
+/* Pequena "mini-barra" atrás só do grupo de botões — o resto da página
+   continua a flutuar sem fundo, mas quando há conteúdo a passar por trás
+   destes ícones ao fazer scroll, sem nada aqui ficava tudo indistinto.
+   Larga só o suficiente para o conteúdo (não a página toda), com cantos
+   arredondados. Pedido do Gustavo. */
+.nb-topbar-right {
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+  height: 46px; padding: 0 8px;
+  background: color-mix(in srgb, var(--color-bg) 78%, transparent);
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full, 999px);
+}
+.nb-topbar-upgrade {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 34px; padding: 0 14px;
+  background: var(--color-primary);
+  color: #fff; border: none; border-radius: var(--radius-full, 999px);
+  font-size: 13px; font-weight: 700; font-family: inherit;
+  cursor: pointer; transition: opacity 0.15s; white-space: nowrap;
+}
+.nb-topbar-upgrade:hover { opacity: 0.88; }
+/* Feedback — mesma linguagem "flutuante" sem fundo do resto do grupo
+   (Plus é a única cor sólida de propósito, o resto é neutro). */
+.nb-topbar-feedback {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 34px; padding: 0 6px;
+  background: transparent; border: none;
+  border-radius: var(--radius-full, 999px);
+  color: var(--color-text-secondary);
+  font-size: 13px; font-weight: 600; font-family: inherit;
+  cursor: pointer; transition: opacity 0.15s, color 0.15s; white-space: nowrap;
+}
+.nb-topbar-feedback:hover { opacity: 0.85; color: var(--color-text); }
+.nb-topbar-account { position: relative; }
+.nb-topbar-account-btn {
+  display: flex; align-items: center; gap: 8px;
+  background: transparent; border: none;
+  border-radius: var(--radius-full, 999px);
+  padding: 2px 4px;
+  cursor: pointer; font-family: inherit;
+  transition: opacity 0.15s;
+}
+.nb-topbar-account-btn:hover { opacity: 0.8; }
+.nb-topbar-avatar {
+  width: 30px; height: 30px; border-radius: 50%; object-fit: cover; flex-shrink: 0; display: block;
+}
+.nb-topbar-avatar-fb {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--color-text); color: var(--color-bg);
+  font-size: 12px; font-weight: 700;
+}
+.nb-topbar-account-info { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; line-height: 1.25; }
+.nb-topbar-account-name {
+  font-size: 13px; font-weight: 700; color: var(--color-text);
+  max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.nb-topbar-account-plan { font-size: 10.5px; color: var(--color-text-tertiary); }
+.nb-topbar-menu {
+  position: absolute; top: calc(100% + 8px); right: 0;
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: 12px; padding: 6px; min-width: 180px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  backdrop-filter: blur(16px);
+  z-index: 99;
+}
+.nb-topbar-menu-item {
+  display: flex; align-items: center; gap: 8px; width: 100%; text-align: left;
+  background: transparent; border: none; border-radius: 8px;
+  padding: 9px 10px; font-size: 14px; font-weight: 500;
+  color: var(--color-text); cursor: pointer; font-family: inherit;
+  transition: background 0.12s;
+}
+.nb-topbar-menu-item:hover { background: var(--color-surface-hover); }
+.nb-topbar-menu-item--danger { color: var(--color-error); }
+.nb-topbar-menu-item--danger:hover { background: rgba(239,68,68,0.08); }
+.nb-topbar-menu-sep { height: 1px; background: var(--color-border); margin: 4px 6px; }
+
 .sidebar {
   display: none;
   position: fixed;
@@ -157,6 +240,16 @@ body.light .sb-collapse-toggle:hover { border-color: rgba(0,0,0,0.75); }
   background: linear-gradient(90deg, transparent, var(--color-border), transparent);
   margin: 0 0 8px; opacity: 0.8;
 }
+
+/* Pesquisa da sidebar — ícone ao lado do logo, abre o SearchPalette. */
+.sb-search-toggle {
+  display: flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; flex-shrink: 0;
+  border-radius: 8px; border: none; background: transparent;
+  color: var(--color-text-secondary); cursor: pointer;
+  transition: background 0.13s, color 0.13s;
+}
+.sb-search-toggle:hover { background: var(--color-surface-hover); color: var(--color-text); }
 .sb-section {
   padding: 0 10px;
   flex: 1; overflow-y: auto; overflow-x: hidden; min-height: 0;
@@ -224,6 +317,22 @@ body.light .sb-collapse-toggle:hover { border-color: rgba(0,0,0,0.75); }
   .sb-section > * { animation: none; }
 }
 .sb-item:hover { background: var(--color-surface-hover); color: var(--color-text); }
+/* Feedback — pill discreta, não uma linha de navegação a mais. Largura ao
+   conteúdo (não 100%), para não parecer mais um item da lista. */
+.sb-feedback-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  width: fit-content; margin: 2px 0 0;
+  padding: 6px 12px;
+  border-radius: var(--radius-full, 999px);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: 12px; font-weight: 600; font-family: inherit;
+  cursor: pointer; white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.sidebar.collapsed .sb-feedback-pill { width: 32px; height: 32px; padding: 0; justify-content: center; border-radius: 8px; }
+.sb-feedback-pill:hover { background: var(--color-surface-hover); border-color: var(--color-border-hover); color: var(--color-text); }
 .sb-item:active { transform: scale(0.97); }
 .sb-item.active { color: var(--color-text); font-weight: 600; }
 .sb-item.active::before {
@@ -314,6 +423,23 @@ body.light .sb-collapse-toggle:hover { border-color: rgba(0,0,0,0.75); }
 .sb-action-btn:active { transform: scale(0.9); }
 .sb-action-btn.danger:hover { background: var(--color-error-subtle); color: var(--color-error); }
 
+/* ── Botão de upgrade na sidebar (Experimenta o Plus) ──
+   Pequeno e azul, "ressaltado" como pedido — só o botão de ação a sério
+   fica cheio de cor nesta barra lateral, tudo o resto é neutro. */
+.sb-upgrade-btn {
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  flex: 0 0 auto; height: 32px; padding: 0 10px;
+  border-radius: 8px; border: none; cursor: pointer;
+  background: var(--color-primary); color: #fff;
+  font-size: 12px; font-weight: 700; font-family: var(--font-body);
+  transition: opacity 0.13s, transform 0.1s;
+}
+.sb-upgrade-btn:hover { opacity: 0.88; }
+.sb-upgrade-btn:active { transform: scale(0.94); }
+/* Colapsada: quadrado 32px igual aos ícones ao lado, sem texto nem
+   padding extra — a versão com "Plus" só cabe com a sidebar aberta. */
+.sb-upgrade-btn.is-collapsed { width: 32px; padding: 0; }
+
 /* ── Floating "Gerir projeto" panel ── */
 .proj-manage-float {
   position: fixed;
@@ -378,6 +504,23 @@ body.sidebar-collapsed .proj-manage-float { left: 84px; }
   .page-content { max-width: 1068px !important; }
   .page-content-wide { max-width: 1168px !important; }
   .msg-inner { max-width: 1088px !important; }
+
+  /* Barra de topo do aluno — Plus + feedback + notificações + conta, todos
+     ancorados ao canto superior direito. Sem cartão nem fundo — os
+     elementos flutuam sobre a página, pedido do Gustavo. Fixos ali em
+     qualquer página — tentar alinhá-los com a largura do conteúdo de cada
+     página (que varia de página para página) fazia o grupo saltar de
+     posição ao navegar, o que parecia mais errado do que ficar simplesmente
+     fixo no canto. */
+  body.has-topbar { padding-top: 76px !important; transition: padding-top 0.15s; }
+  .nb-topbar {
+    display: flex; align-items: center; justify-content: flex-end; gap: 12px;
+    position: fixed; top: 8px; left: 248px; right: 20px; height: 56px;
+    padding: 0 8px;
+    z-index: 90;
+    transition: left 0.22s cubic-bezier(0.4,0,0.2,1);
+  }
+  body.sidebar-collapsed .nb-topbar { left: 80px; }
 }
 
 /* .proj-manage-float é position:fixed, fora do fluxo — nada reservava

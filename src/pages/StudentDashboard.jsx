@@ -31,8 +31,9 @@ import { UploadIcon as Upload } from '@solar-icons/react/bold/upload'
 import { ClipboardTextIcon as ClipboardCheck } from '@solar-icons/react/bold/clipboard-text'
 import { BookBookmarkIcon as BookMarked } from '@solar-icons/react/bold/book-bookmark'
 import { Button, Card, SectionLabel, Modal, Select } from '../components/ui'
+import { PlanGateModal } from '../components/PlanGate'
 import { useAuth } from '../context/AuthContext'
-import { remainingUses, featureUsed, AI_FEATURE_LABELS, getPlan } from '../lib/plans'
+import { featureUsed, getPlan } from '../lib/plans'
 import ExportProjectsModal from '../components/ExportProjectsModal'
 import { ShareStoryModal } from '../components/ShareStoryModal'
 
@@ -73,6 +74,7 @@ function getDisplayName(user) {
   if (name) return name.split(' ')[0]
   return user?.email?.split('@')[0] ?? ''
 }
+
 
 function toISO(d) {
   const p = n => (n < 10 ? '0' + n : String(n))
@@ -166,10 +168,6 @@ export default function StudentDashboard({ user, profile }) {
   const [schoolClasses, setSchoolClasses] = useState([])
   const [showExportModal, setShowExportModal] = useState(false)
   const [shareProject, setShareProject] = useState(null)
-  const nudgeKey = `showo_nudge_dismissed_${user.id}_${new Date().toISOString().slice(0, 7)}`
-  const [nudgeDismissed, setNudgeDismissed] = useState(() => {
-    try { return !!localStorage.getItem(nudgeKey) } catch { return false }
-  })
 
   // Logged once per month, purely for the admin funnel view — not tied to
   // the dismiss state, so it fires even if the banner was already dismissed
@@ -206,6 +204,7 @@ export default function StudentDashboard({ user, profile }) {
   const [composerProject, setComposerProject] = useState(null)
   const [showJournal, setShowJournal] = useState(false)
   const [showJoinTurma, setShowJoinTurma] = useState(false)
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [diaryReminderDismissed, setDiaryReminderDismissed] = useState(
     () => localStorage.getItem(`showo_diary_remind_${new Date().toISOString().slice(0,10)}`) === '1'
   )
@@ -590,12 +589,6 @@ export default function StudentDashboard({ user, profile }) {
   const isEmptyState = !loadingProjects && projects.length === 0
   const showPotentialTutorial = !tutorialPotentialSeen && !loadingProjects && projects.length >= 1
 
-  const setupSteps = [
-    { done: !!(profile?.username && profile?.bio), label: 'Perfil preenchido', action: () => navigate('/settings') },
-    { done: projects.length > 0, label: 'Primeiro projeto', action: () => navigate('/novo') },
-    { done: entries.length > 0, label: 'Primeiro registo', action: () => { if (focusProject) { setComposerProject(focusFull); setComposerKind('progresso') } } },
-  ]
-
   function handleEventClick(e) {
     if (e.type === 'defense' && e.slug) navigate(`/projeto/${e.slug}`)
   }
@@ -754,6 +747,13 @@ export default function StudentDashboard({ user, profile }) {
         <ExportProjectsModal onClose={() => setShowExportModal(false)} />
       )}
 
+      {showUpgradeModal && (
+        <PlanGateModal
+          message={{ title: 'Experimenta o Plus', body: 'Mais análises de IA, mais defesa, mais espaço para o teu portefólio.' }}
+          onClose={() => setShowUpgradeModal(false)}
+        />
+      )}
+
       {shareProject && (
         <ShareStoryModal project={shareProject} onClose={() => setShareProject(null)} />
       )}
@@ -805,17 +805,22 @@ export default function StudentDashboard({ user, profile }) {
             </span>
             <h1 className="sdb-hero-greeting">{greeting}</h1>
           </div>
-
-          {/* O streak/atividade já vive no cartão "Atividade" logo abaixo do
-              projeto em foco — repeti-lo aqui era o mesmo número duas vezes
-              na mesma tela. Este espaço fica só para o próximo passo de
-              quem ainda não tem nada registado. */}
-          {!loadingProjects && !loadingEntries && activityEntries.length === 0 && (
-            <aside className="sdb-hero-side">
-              <NextMissionCard steps={setupSteps} userId={user.id} />
-            </aside>
-          )}
         </header>
+
+        {/* ══════════════ CARTÃO DE UPGRADE (só mobile) ══════════════
+            Em desktop o CTA vive na sidebar (Navbar.jsx, junto ao sino) —
+            aqui é só mobile, onde a sidebar não aparece. Pedido do Gustavo,
+            à imagem do cartão "Desbloquear Premium" do StudyFetch. Só para
+            quem está no plano Grátis. */}
+        {planId === 'free' && (
+          <div className="sdb-upgrade-card sdb-panel sdb-panel--brand">
+            <div>
+              <p className="sdb-upgrade-card-title">Experimenta o Plus</p>
+              <p className="sdb-upgrade-card-sub">Mais análises de IA, mais defesa, mais espaço para o teu portefólio.</p>
+            </div>
+            <button className="sdb-upgrade-card-btn" onClick={() => setShowUpgradeModal(true)}>Atualizar</button>
+          </div>
+        )}
 
         {/* ══════════════ BANNER ESCOLA ══════════════ */}
         {isSchoolAccount && (
@@ -828,41 +833,6 @@ export default function StudentDashboard({ user, profile }) {
             </button>
           </div>
         )}
-
-        {/* ══════════════ NUDGE DE LIMITES ══════════════ */}
-        {(() => {
-          if (planId !== 'free' || nudgeDismissed) return null
-          const NUDGE_FEATURES = ['coach', 'createProject', 'defense', 'narrative', 'exportPptx']
-          const stats = NUDGE_FEATURES.map(f => ({
-            feature: f,
-            remaining: remainingUses(planId, f, aiUsage),
-            limit: getPlan(planId).ai[f],
-          }))
-          const warnings = stats.filter(w => w.limit > 0 && w.remaining > 0 && w.remaining <= Math.max(1, Math.ceil(w.limit * 0.3)))
-          const exhausted = stats.filter(w => w.limit > 0 && w.remaining === 0)
-          if (warnings.length === 0 && exhausted.length === 0) return null
-          const urgent = exhausted.length > 0
-          const nameJoin = arr => {
-            const l = arr.map(w => AI_FEATURE_LABELS[w.feature])
-            return l.length <= 1 ? (l[0] || '') : `${l.slice(0, -1).join(', ')} e ${l[l.length - 1]}`
-          }
-          const minLeft = warnings.length ? Math.min(...warnings.map(w => w.remaining)) : 0
-          const text = urgent
-            ? `${nameJoin(exhausted)} ${exhausted.length === 1 ? 'esgotou' : 'esgotaram'} este mês`
-            : `${nameJoin(warnings)}: ${minLeft} restante${minLeft !== 1 ? 's' : ''} este mês`
-          return (
-            <div className={`sdb-usage-nudge${urgent ? ' is-urgent' : ''}`}>
-              <Sparkles size={15} className="sdb-usage-nudge-icon" />
-              <span className="sdb-usage-nudge-text" title={text}>{text}</span>
-              <button className="sdb-usage-nudge-cta" onClick={() => { logFunnelEvent('nudge_clicked'); navigate('/pricing') }}>
-                Experimenta o Plus <ArrowRight size={12} />
-              </button>
-              <button className="sdb-usage-nudge-close" onClick={() => { try { localStorage.setItem(nudgeKey, '1') } catch { /* ignore */ } setNudgeDismissed(true) }} aria-label="Dispensar">
-                <X size={14} />
-              </button>
-            </div>
-          )
-        })()}
 
         {/* ══════════════ PROJETO DO MÊS ══════════════ */}
         {projectOfMonth && (() => {
@@ -1251,51 +1221,6 @@ export default function StudentDashboard({ user, profile }) {
 
 
 /* ── Missão única: próximo passo do utilizador novo ──────────────────────── */
-
-function NextMissionCard({ steps, userId }) {
-  const storageKey = `showo_steps_done_${userId}`
-
-  const firstUncompleted = steps.findIndex(s => !s.done)
-  const allDone = firstUncompleted === -1
-
-  const [animIdx, setAnimIdx] = useState(null)   // índice a animar (strikethrough)
-  const [phase, setPhase] = useState('idle')     // 'idle' | 'striking' | 'out' | 'in'
-
-  useEffect(() => {
-    const prevDone = JSON.parse(localStorage.getItem(storageKey) || '[false,false,false]')
-    const currDone = steps.map(s => s.done)
-
-    // Guardar estado atual imediatamente para evitar re-animação em refresh
-    localStorage.setItem(storageKey, JSON.stringify(currDone))
-
-    // Detetar qual step foi concluído desde a última visita
-    const justCompleted = prevDone.findIndex((was, i) => !was && currDone[i])
-    if (justCompleted < 0) return
-
-    setAnimIdx(justCompleted)
-    setPhase('striking')
-
-    const t1 = setTimeout(() => setPhase('out'), 700)
-    const t2 = setTimeout(() => { setAnimIdx(null); setPhase('in') }, 1050)
-    const t3 = setTimeout(() => setPhase('idle'), 1400)
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  if (allDone) return null
-
-  const displayIdx = animIdx !== null ? animIdx : firstUncompleted
-  const step = steps[displayIdx]
-  if (!step) return null
-
-  return (
-    <div className={`sdb-mission sdb-mission--${phase}`}>
-      <span className="sdb-eyebrow">Próximos passos</span>
-      <button className="sdb-mission-label" onClick={step.action}>
-        {step.label}
-      </button>
-    </div>
-  )
-}
 
 /* ── Tutorial: Potencial ──────────────────────────────────────────────────── */
 

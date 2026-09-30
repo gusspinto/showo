@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react'
 
+// 28/09: teve por pouco tempo um número de projetos + uma frase de "o que
+// acontece a seguir" (inspirado no ecrã de registo do StudyFetch). Feedback
+// do Gustavo ao ver: texto a mais, a repetir o que a Home já diz mesmo antes
+// de se chegar aqui. Volta a ser só a frase de marca a rodar — simples.
 export default function AuthSidePanel({ phrases }) {
   const [idx, setIdx] = useState(0)
 
@@ -24,7 +28,7 @@ export default function AuthSidePanel({ phrases }) {
                 className="auth-side-letter"
                 style={{ animationDelay: `${i * 0.035}s`, whiteSpace: ch === ' ' ? 'pre' : 'normal' }}
               >
-                {ch === ' ' ? ' ' : ch}
+                {ch === ' ' ? ' ' : ch}
               </span>
             ))}
           </span>

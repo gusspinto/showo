@@ -4,15 +4,12 @@ import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-righ
 import { CupStarIcon as Trophy } from '@solar-icons/react/bold/cup-star'
 import { EyeIcon as Eye } from '@solar-icons/react/bold/eye'
 import { FireIcon as Fire } from '@solar-icons/react/bold/fire'
-import { EyeClosedIcon as EyeOff } from '@solar-icons/react/bold/eye-closed'
-import { RefreshCircleIcon as RefreshCw } from '@solar-icons/react/bold/refresh-circle'
 import { Navbar } from '../components/Navbar'
 import { supabase } from '../lib/supabase'
-import { claimAnonymousProjects } from '../lib/claimAnonymousProjects'
-import GoogleButton from '../components/GoogleButton'
 import HomeHow from '../components/HomeHow'
 import TestimonialsMarquee from '../components/TestimonialsMarquee'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
 import { getAreaColor } from '../lib/areaColor'
 import { trackEvent } from '../lib/analytics'
 import './Home.css'
@@ -77,23 +74,10 @@ export default function Home() {
   const navigate = useNavigate()
   const location = useLocation()
   const { user } = useAuth()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [authLoading, setAuthLoading] = useState(false)
-  const [authError, setAuthError] = useState('')
-  // "Email não confirmado" precisa de mais do que uma frase — precisa de um
-  // botão para reenviar, senão quem clicou num link expirado fica preso sem
-  // saída nenhuma. Mesmo padrão já usado em Login.jsx e Register.jsx.
-  const [notConfirmed, setNotConfirmed] = useState(false)
-  const [resendState, setResendState] = useState('idle') // idle | sending | sent
+  const { theme } = useTheme()
   const [projects, setProjects] = useState([])
   const [projectsLoading, setProjectsLoading] = useState(true)
   const [projectCount, setProjectCount] = useState(null)
-  const [animatedCount, setAnimatedCount] = useState(0)
-  // Email primeiro, como o Claude — só pede a password depois de sabermos
-  // que a conta já existe (handleContinueWithEmail).
-  const [heroAuthStep, setHeroAuthStep] = useState('email')
   const [projectOfMonth, setProjectOfMonth] = useState(null)
 
   useEffect(() => {
@@ -133,20 +117,6 @@ export default function Home() {
     load()
   }, [])
 
-  useEffect(() => {
-    if (projectCount == null) return
-    let raf
-    const duration = 1100
-    const start = performance.now()
-    function tick(now) {
-      const progress = Math.min((now - start) / duration, 1)
-      const eased = 1 - Math.pow(1 - progress, 3)
-      setAnimatedCount(Math.round(eased * projectCount))
-      if (progress < 1) raf = requestAnimationFrame(tick)
-    }
-    raf = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf)
-  }, [projectCount])
 
   /* Suporte genérico para /#id — o hambúrguer já não aponta para cá (passou
      a linkar /aprende, a página a sério, não este scroll), mas a secção
@@ -160,78 +130,6 @@ export default function Home() {
     if (el) requestAnimationFrame(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }))
   }, [location.hash])
 
-  /* Passo 1 do herói mobile: só o email. Verificamos se a conta já existe
-     para decidir o resto — se sim, pedimos a password aqui mesmo (sem sair
-     da página); se não, o registo em si precisa de mais do que um email
-     (nome, papel, termos), por isso segue para /register já com o email
-     preenchido, em vez de fingir que dava para fazer tudo num campo só. */
-  async function handleContinueWithEmail(e) {
-    e.preventDefault()
-    if (!email.trim() || authLoading) return
-    setAuthError('')
-    setAuthLoading(true)
-    const { data: methods, error: checkErr } = await supabase.rpc('check_email_auth_methods', { p_email: email.trim() })
-    setAuthLoading(false)
-    if (checkErr || !methods) {
-      // A verificação é só para escolher o próximo ecrã (registo vs
-      // password). Se falhar — rate-limit do oráculo de emails, RPC em
-      // baixo, rede — não podemos deixar a pessoa presa: seguimos para o
-      // registo, que é o caminho seguro (se o email já existir, o signUp
-      // diz "já registado" e a pessoa vai para o login).
-      trackEvent('home_email_signup_started')
-      navigate(`/register?email=${encodeURIComponent(email.trim())}`)
-      return
-    }
-    if (!methods?.exists) {
-      trackEvent('home_email_signup_started')
-      navigate(`/register?email=${encodeURIComponent(email.trim())}`)
-    } else if (!methods.has_password && methods.has_google) {
-      // Conta só-Google: não tem palavra-passe, o signInWithPassword ia
-      // falhar sempre. Mandamos para o botão do Google.
-      setHeroAuthStep('google-only')
-    } else {
-      setHeroAuthStep('password')
-    }
-  }
-
-  async function handleLogin(e) {
-    e.preventDefault()
-    setAuthError('')
-    setNotConfirmed(false)
-    setAuthLoading(true)
-
-    const methodsPromise = supabase.rpc('check_email_auth_methods', { p_email: email.trim() })
-    const { error: err } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
-    setAuthLoading(false)
-
-    if (!err) {
-      const { data: { user: loggedUser } } = await supabase.auth.getUser()
-      if (loggedUser) claimAnonymousProjects(loggedUser.id)
-      navigate('/dashboard')
-      return
-    }
-
-    if (err.message?.toLowerCase().includes('email not confirmed')) {
-      setNotConfirmed(true)
-      return
-    }
-
-    const { data: methods } = await methodsPromise
-    if (!methods?.exists) {
-      setAuthError('Esta conta não existe.')
-    } else if (!methods.has_password && methods.has_google) {
-      setHeroAuthStep('google-only')
-    } else {
-      setAuthError('Palavra-passe incorreta.')
-    }
-  }
-
-  async function resendConfirmation() {
-    setResendState('sending')
-    await supabase.auth.resend({ type: 'signup', email: email.trim() })
-    setResendState('sent')
-  }
-
   return (
     <div className="min-h-screen bg-page font-body">
       <Navbar hideSidebar />
@@ -243,140 +141,63 @@ export default function Home() {
           da media query de mobile. ── */}
       <div className="home-content">
 
-      {/* ══ Hero ══ */}
+      {/* ══ Hero ══
+          Um só painel preto, sem o split copy/arranque de antes — título,
+          botões e a ilustração do estudante a trabalhar, como no mockup do
+          Gustavo. A ilustração troca de ficheiro consoante o tema (linha
+          branca no escuro, silhueta preta no claro), não é só uma imagem
+          fixa. O contador de projetos saiu daqui (fica para decidir onde
+          volta a aparecer mais tarde). */}
       <div className="home-hero">
-
         <div className="home-hero-grid">
-          {/* Left — copy */}
           <div className="home-hero-copy">
-            {/* Mesma frase em qualquer ecrã agora — sem cor nem pontuação a
-                fechar, em duas linhas simples. Era só assim no telemóvel;
-                o desktop mantinha o "." e o azul em itálico, tirados agora
-                por pedido, para bater com a simplicidade pretendida para
-                menus/ecrãs de entrada (preto e branco; cor fica para dentro
-                da app, sobretudo a dashboard). O subtítulo também saiu — a
-                explicação já está no "Como funciona", logo a seguir. */}
             <h1 className="home-hero-h1">
-              Mostra o que<br />construíste
+              Do projeto à<br />Oportunidade
             </h1>
 
-            <div className="home-hero-stats">
-              <span className="home-hero-stats-number">
-                {projectCount == null ? '—' : animatedCount}
-              </span>
-              <span className="home-hero-stats-label">
-                projetos criados<br />por estudantes portugueses
-              </span>
+            {/* ── Arranque ── 28/09: já não faz login/registo aqui dentro (ver
+                histórico do ficheiro). 28/09 (2ª ronda, feedback do Gustavo):
+                o segundo botão ia direto para /register — mas ir primeiro
+                para /login (mesmo para quem ainda não tem conta) é mais
+                natural: a pessoa vê o ecrã de entrar, percebe "ah, ainda não
+                tenho conta" e só aí segue para criar uma — Login.jsx já tem
+                o link "Regista-te". "Criar conta" fica como texto pequeno
+                por baixo, para quem já sabe que quer registar-se direto. */}
+            <div className="home-hero-start">
+              <div className="home-hero-start-buttons">
+                <button
+                  type="button"
+                  className="home-start-cta"
+                  onClick={() => { trackEvent('home_create_clicked'); navigate('/novo') }}
+                >
+                  Começar a criar <ArrowRight size={18} />
+                </button>
+                <button
+                  type="button"
+                  className="home-start-cta-secondary"
+                  onClick={() => { trackEvent('home_login_clicked'); navigate('/login') }}
+                >
+                  Entrar
+                </button>
+              </div>
+
+              <p className="home-start-login">
+                Ainda não tens conta? <Link to="/register">Criar conta</Link>
+              </p>
+
+              <p className="home-start-privacy">
+                Ao continuares, aceitas a{' '}
+                <button type="button" onClick={() => navigate('/privacidade')}>Política de Privacidade</button>.
+              </p>
             </div>
           </div>
 
-          {/* ── Arranque ── Mesmo bloco em qualquer ecrã, já não só no
-              telemóvel: auth em primeiro plano, como o Claude — mas com uma
-              saída que o Claude não tem, "Continuar a explorar", sempre
-              visível para quem não quer entrar já. Email primeiro, password
-              só depois de sabermos que a conta existe
-              (handleContinueWithEmail); sem conta, segue para /register com
-              o email já preenchido. Ocupa a coluna direita do grid onde
-              antes vivia um formulário à parte, só para desktop. */}
-          <div className="home-hero-start">
-            <GoogleButton />
-
-            <div className="home-start-divider"><span>ou</span></div>
-
-            {heroAuthStep === 'google-only' ? (
-              <div className="home-start-form">
-                <p className="home-start-email-echo">{email}</p>
-                <p className="home-start-note">
-                  Esta conta foi criada com o Google. Entra com o Google acima, ou{' '}
-                  <Link to="/login?forgot=1" className="home-start-note-link">define uma palavra-passe</Link>{' '}
-                  para também poderes entrar por aqui.
-                </p>
-                <button
-                  type="button"
-                  className="home-start-back"
-                  onClick={() => { setHeroAuthStep('email'); setAuthError(''); setPassword('') }}
-                >
-                  Usar outro email
-                </button>
-              </div>
-            ) : heroAuthStep === 'email' ? (
-              <form onSubmit={handleContinueWithEmail} className="home-start-form">
-                <input
-                  type="email"
-                  className="home-start-input"
-                  placeholder="O teu email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  required
-                  autoComplete="email"
-                />
-                {authError && <p className="home-start-error">{authError}</p>}
-                <button type="submit" className="home-start-email-btn" disabled={authLoading}>
-                  {authLoading ? 'A verificar…' : 'Continuar com email'}
-                </button>
-                <button type="button" className="home-start-create-btn" onClick={() => { trackEvent('home_create_clicked'); navigate('/novo') }}>
-                  Começar a criar
-                </button>
-              </form>
-            ) : (
-              <form onSubmit={handleLogin} className="home-start-form">
-                <p className="home-start-email-echo">{email}</p>
-                <div className="home-start-pw">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    className="home-start-input"
-                    placeholder="Palavra-passe"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    required
-                    autoFocus
-                    autoComplete="current-password"
-                  />
-                  <button
-                    type="button"
-                    className={`home-start-pw-toggle${showPassword ? " is-active" : ""}`}
-                    onClick={() => setShowPassword(v => !v)}
-                    aria-label={showPassword ? 'Esconder palavra-passe' : 'Mostrar palavra-passe'}
-                    aria-pressed={showPassword}
-                    tabIndex={-1}
-                  >
-                    <span className="home-start-pw-icon-stack">
-                      <Eye size={18} className={showPassword ? "home-start-pw-icon" : "home-start-pw-icon is-visible"} />
-                      <EyeOff size={18} className={showPassword ? "home-start-pw-icon is-visible" : "home-start-pw-icon"} />
-                    </span>
-                  </button>
-                </div>
-                {authError && <p className="home-start-error">{authError}</p>}
-                {notConfirmed && (
-                  <div className="home-start-confirm">
-                    <p className="home-start-error">Email não confirmado. Verifica a tua caixa de entrada.</p>
-                    <button
-                      type="button"
-                      className="home-start-retry"
-                      onClick={resendConfirmation}
-                      disabled={resendState === 'sending'}
-                    >
-                      <RefreshCw size={13} className={resendState === 'sending' ? 'home-start-retry-spin' : ''} />
-                      {resendState === 'sent' ? 'Reenviado' : 'Tentar outra vez'}
-                    </button>
-                  </div>
-                )}
-                <button type="submit" className="home-start-email-btn" disabled={authLoading}>
-                  {authLoading ? 'A entrar…' : 'Entrar'}
-                </button>
-                <div className="home-start-form-links">
-                  <button type="button" className="home-start-back" onClick={() => { setHeroAuthStep('email'); setAuthError(''); setNotConfirmed(false) }}>
-                    Usar outro email
-                  </button>
-                  <Link to="/login?forgot=1" className="home-start-back">Esqueceste-te da password?</Link>
-                </div>
-              </form>
-            )}
-
-            <p className="home-start-privacy">
-              Ao continuares, aceitas a{' '}
-              <button type="button" onClick={() => navigate('/privacidade')}>Política de Privacidade</button>.
-            </p>
+          <div className="home-hero-illustration">
+            <img
+              src={theme === 'light' ? '/lighthome.png' : '/darkhome.png'}
+              alt=""
+              draggable={false}
+            />
           </div>
         </div>
       </div>

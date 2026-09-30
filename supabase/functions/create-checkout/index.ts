@@ -14,7 +14,26 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { plan } = await req.json()
+    const { plan, returnPath } = await req.json()
+
+    // O pop-up de upgrade (PlanGate) abre o checkout a partir de onde a pessoa estava
+    // (um projeto, o Coach, etc.), não só a partir de /pricing — sem isto, pagar dentro
+    // do pop-up mandava sempre para /settings e perdia o sítio onde se estava a trabalhar.
+    // Só aceita um path interno relativo: nada de protocolo/host (bloqueia open redirect
+    // via "//evil.com" ou "https://evil.com" vindos de um cliente adulterado).
+    const isSafeReturnPath = typeof returnPath === 'string'
+      && returnPath.startsWith('/')
+      && !returnPath.startsWith('//')
+      && !/[\\\s]/.test(returnPath)
+      && returnPath.length < 200
+
+    // Sem returnPath (fluxo antigo, a partir de /pricing): mantém o destino de sempre.
+    // Com returnPath (pop-up de upgrade dentro da app): volta ao mesmo sítio tanto ao
+    // completar como ao cancelar, para não perder o projeto/ecrã onde a pessoa estava.
+    const successUrl = isSafeReturnPath
+      ? `https://showo.pt${returnPath}${returnPath.includes('?') ? '&' : '?'}stripe=success`
+      : 'https://showo.pt/settings?tab=plano&stripe=success'
+    const cancelUrl = isSafeReturnPath ? `https://showo.pt${returnPath}` : 'https://showo.pt/pricing'
 
     const PRICE_IDS: Record<string, string> = {
       build: Deno.env.get('STRIPE_PRICE_BUILD')!,
@@ -61,8 +80,8 @@ Deno.serve(async (req) => {
       mode: 'subscription',
       allow_promotion_codes: true,
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: 'https://showo.pt/settings?tab=plano&stripe=success',
-      cancel_url: 'https://showo.pt/pricing',
+      success_url: successUrl,
+      cancel_url: cancelUrl,
       subscription_data: {
         metadata: { supabase_uid: user.id, plan },
       },
