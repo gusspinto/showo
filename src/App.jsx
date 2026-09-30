@@ -651,6 +651,17 @@ function PageViewTracker() {
   return null
 }
 
+// React Router não repõe o scroll ao mudar de página — o browser mantinha a
+// posição da página anterior, por isso ao ir da Home (scrollada até ao
+// fundo) para /termos aparecia-se a meio da página nova, não no topo.
+// Só no pathname (não em query/hash), para não interferir com scroll para
+// uma secção específica via #âncora.
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(() => { window.scrollTo(0, 0) }, [pathname])
+  return null
+}
+
 // Forces anyone arriving via a password-recovery link onto /recuperar-password
 // before they can touch the rest of the app — a recovery link shouldn't be
 // able to silently sign someone in without them actually setting a new
@@ -782,6 +793,7 @@ export default function App() {
                 etc.) — por isso mora dentro do Router, não fora. */}
             <RestReminder />
             <PageViewTracker />
+            <ScrollToTop />
             <ErrorBoundary>
             <RecoveryGate pwRecovery={pwRecovery}>
             <AuthGate>

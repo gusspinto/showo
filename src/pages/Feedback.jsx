@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { PlaneIcon as Send } from '@solar-icons/react/bold/plane'
@@ -43,6 +43,14 @@ export default function Feedback() {
   const [imagePreview, setImagePreview] = useState(null)
   const [status, setStatus] = useState('idle') // idle | sending | launching | done | error
   const fileRef = useRef(null)
+
+  // Página curta e centrada — não é suposto fazer scroll nenhum, mas
+  // min-height:100vh + o padding-top do body (barra do aluno) somavam mais
+  // de um ecrã de altura. Pedido do Gustavo.
+  useEffect(() => {
+    document.body.classList.add('fbp-lock-scroll')
+    return () => document.body.classList.remove('fbp-lock-scroll')
+  }, [])
 
   function handleImageChange(e) {
     const file = e.target.files?.[0]

@@ -5,7 +5,6 @@ export default function Termos() {
     <LegalLayout
       title="Termos de Utilização"
       updated="28 de julho de 2026"
-      intro="Estas são as regras de uso da Showo, escritas de forma simples. Ao criares conta ou usares a app, ficas a concordar com elas."
     >
       <h2>1. Aceitação</h2>
       <p>
