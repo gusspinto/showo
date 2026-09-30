@@ -622,9 +622,14 @@ body.light .home-card-cover img {
 
 /* ══ RESPONSIVE ══ */
 @media (max-width: 860px) {
-  /* 30/09 (4ª ronda): também preenche o ecrã todo no telemóvel, como no
-     desktop — "O que é o Showo" não deve espreitar por baixo aqui também.
-     Texto e botões primeiro, mais espaço por cima, ilustração por baixo. */
+  /* 30/09 (8ª ronda): o hero preenche o ecrã todo (como no desktop — "O que
+     é o Showo" não espreita por baixo) e o bloco texto+ilustração fica
+     centrado nele, como UM grupo. Padding vertical simétrico (o de cima
+     era 96px vs 32px em baixo, o que empurrava o grupo para cima/baixo do
+     centro real), e o espaço entre texto e ilustração é o gap do grupo em
+     vez de padding-bottom no texto. As imagens (lighthome/darkhome.png)
+     foram aparadas da margem transparente que tinham — era isso que fazia
+     o desenho parecer longe do texto mesmo com pouco espaço no CSS. */
   .home-hero-grid {
     flex-direction: column;
     align-items: center;
@@ -632,13 +637,17 @@ body.light .home-card-cover img {
     text-align: center;
     width: 100%;
     max-width: none;
-    padding: 96px clamp(24px, 6vw, 48px) 32px;
-    gap: 0;
+    padding: 32px clamp(24px, 6vw, 48px);
+    gap: 32px;
     min-height: inherit;
   }
+  /* A regra base tem flex: 1 1 auto (para o desktop, em linha). Em coluna
+     isso faz o texto crescer na vertical e empurrar a ilustração para o
+     fundo do ecrã — foi esta a verdadeira causa do "vão gigante" e de o
+     texto não ficar centrado. */
   .home-hero-copy {
+    flex: none;
     align-items: center;
-    padding-bottom: 40px;
   }
   .home-hero-start {
     align-items: center;
@@ -666,8 +675,7 @@ body.light .home-card-cover img {
 }
 
 @media (max-width: 600px) {
-  .home-hero-grid { padding: 88px 24px 28px; }
-  .home-hero-copy { padding-bottom: 32px; }
+  .home-hero-grid { padding: 24px; gap: 28px; }
   .home-hero-h1 {
     font-size: clamp(34px, 10vw, 44px);
     margin-bottom: 20px;
