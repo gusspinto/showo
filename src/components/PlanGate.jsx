@@ -125,7 +125,10 @@ const C = {
   testimonialDots: { display: 'flex', gap: '5px', flexShrink: 0 },
   testimonialDot: (active) => ({
     width: active ? '14px' : '5px', height: '5px', borderRadius: '3px',
-    background: active ? 'var(--color-primary)' : 'var(--color-border)',
+    /* Preto no modo claro, branco no escuro (var(--color-text)). A
+       diferença entre ativo e inativo fica na largura, não na cor. */
+    background: 'var(--color-text)',
+    opacity: active ? 1 : 0.3,
     transition: 'width 0.25s ease, background 0.25s ease',
   }),
   // Invertido (var(--color-text)/var(--color-bg)), não azul — o mesmo botão
