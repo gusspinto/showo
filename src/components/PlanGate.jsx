@@ -315,12 +315,12 @@ export function PlanGateModal({ message, onClose }) {
                           <div style={C.testimonialRole}>{testimonial.role}</div>
                         </div>
                       </div>
-                      {orderedTestimonials.length > 1 && (
-                        <div style={C.testimonialDots}>
-                          {orderedTestimonials.map((_, i) => <span key={i} style={C.testimonialDot(i === tIdx)} />)}
-                        </div>
-                      )}
                     </div>
+                    {orderedTestimonials.length > 1 && (
+                      <div style={{ ...C.testimonialDots, justifyContent: 'center', marginTop: '12px' }}>
+                        {orderedTestimonials.map((_, i) => <span key={i} style={C.testimonialDot(i === tIdx)} />)}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
