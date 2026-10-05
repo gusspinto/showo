@@ -404,6 +404,18 @@ body.light .sb-collapse-toggle:hover { border-color: rgba(0,0,0,0.75); }
   }
 }
 
+/* Sidebar aberta: o mesmo gradiente de marca, mas dessaturado (mistura de
+   cada cor com 22% de cinzento-azulado #1C2333). Assim o texto branco lê-se
+   bem e o botão fica menos pesado ao lado dos itens do menu. O colapsado
+   mantém o gradiente completo, que é o que se gosta. */
+.sidebar:not(.collapsed) .sb-create.gradient-cta {
+  background-image: linear-gradient(115deg,
+    color-mix(in srgb, #2478f0 78%, #1C2333) 0%,
+    color-mix(in srgb, #2478f0 78%, #1C2333) 10%,
+    color-mix(in srgb, #db4a3d 78%, #1C2333) 62%,
+    color-mix(in srgb, #cc9a1e 78%, #1C2333) 100%) !important;
+}
+
 /* Botões-ícone (topbar mobile) — quadrado, mas do tamanho do sino ao
    lado (44px) para não desequilibrar a barra; sem o !important no
    tamanho, o flex do cluster pode esticar a caixa. */
