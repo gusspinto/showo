@@ -19,7 +19,7 @@ const AUDIENCES = [
       },
       {
         problem: 'Validar um projeto só no fim, quando já não há tempo para corrigir.',
-        solution: 'Check-ins semanais ao longo do projeto, com o teu parecer em cada etapa.',
+        solution: 'Acompanhas o projeto semana a semana e corriges a tempo, antes da entrega.',
       },
       {
         problem: 'Avaliar sem critérios comuns, com cada aluno a entregar num formato diferente.',
