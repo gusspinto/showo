@@ -3112,6 +3112,8 @@
   font-family: inherit;
   cursor: pointer;
   text-align: left;
+  /* Mesmo raio que no mobile (10px) — no desktop estava quadrado. */
+  border-radius: 10px;
   transition: background 0.14s;
 }
 

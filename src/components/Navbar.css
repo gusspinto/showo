@@ -180,9 +180,10 @@
   position: fixed;
   left: 8px; top: 8px; bottom: 8px;
   width: 232px;
-  background: var(--color-sidebar-bg);
-  backdrop-filter: blur(20px) saturate(1.4);
-  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  /* Fundo e blur vão para ::before, com o mesmo raio. Assim o blur fica
+     recortado pelos cantos arredondados; no próprio elemento, em modo claro,
+     o fundo do blur vazava para fora dos cantos como um canto branco. */
+  background: transparent;
   border: 1px solid var(--color-border);
   border-radius: 16px;
   flex-direction: column;
@@ -196,6 +197,14 @@
 .sidebar:not(.collapsed) .sb-item > span,
 .sidebar:not(.collapsed) .sb-label {
   animation: sb-fade-slide-in 0.18s ease both;
+}
+.sidebar::before {
+  content: ''; position: absolute; inset: 0; z-index: -1;
+  border-radius: inherit;
+  background: var(--color-sidebar-bg);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  pointer-events: none;
 }
 .sidebar::after {
   content: ''; position: absolute; inset: 0; pointer-events: none;
