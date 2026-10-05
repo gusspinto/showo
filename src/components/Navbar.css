@@ -212,11 +212,11 @@ body.light .sidebar::before {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
-/* Modo claro: cantos retos, para não sobrar a faixa clara do fundo da página
-   nos cantos arredondados. */
-body.light .sidebar,
+/* Modo claro: a sidebar usa a cor da página (--color-bg), por isso nos cantos
+   arredondados já não sobra a faixa de cor diferente. Fica delimitada pela
+   borda, com os cantos de 16px como estavam. */
 body.light .sidebar::before {
-  border-radius: 0;
+  background: var(--color-bg);
 }
 .sidebar::after {
   content: ''; position: absolute; inset: 0; pointer-events: none;
