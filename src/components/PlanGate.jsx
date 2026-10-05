@@ -103,14 +103,13 @@ const C = {
     background: 'var(--color-surface)', border: '1px solid var(--color-border)',
     borderRadius: 'var(--radius-lg)', padding: 'var(--sp-5)',
   },
-  // Altura fixa (não minHeight) + corte a 4 linhas — os testemunhos têm
-  // tamanhos muito diferentes (de "Parabéns!" a um parágrafo inteiro), e sem
-  // isto o cartão (e o modal todo, por causa do stretch das colunas) mudava
-  // de tamanho a cada rotação. Irritante, apontado pelo Gustavo.
+  // Sem corte: o testemunho inteiro aparece. Para o modal não saltar a cada
+  // rotação, todos os testemunhos ficam empilhados na mesma célula da grelha
+  // (testimonialStack) e só o ativo é visível — a altura é a do mais longo.
+  testimonialStack: { display: 'grid' },
   testimonialQuote: {
     margin: 0, fontSize: '0.95rem', color: 'var(--color-text)', lineHeight: 1.55,
-    height: '5.9em', overflow: 'hidden',
-    display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical',
+    gridArea: '1 / 1',
   },
   testimonialFooter: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' },
   testimonialPerson: { display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 },
@@ -309,7 +308,16 @@ export function PlanGateModal({ message, onClose }) {
 
                 {testimonial && (
                   <div style={C.testimonial}>
-                    <p style={C.testimonialQuote} key={tIdx} className="plan-gate-fade">“{testimonial.quote}”</p>
+                    <div style={C.testimonialStack}>
+                      {orderedTestimonials.map((t, i) => (
+                        <p
+                          key={i}
+                          style={{ ...C.testimonialQuote, visibility: i === tIdx ? 'visible' : 'hidden' }}
+                          className={i === tIdx ? 'plan-gate-fade' : undefined}
+                          aria-hidden={i !== tIdx}
+                        >“{t.quote}”</p>
+                      ))}
+                    </div>
                     <div style={C.testimonialFooter}>
                       <div style={C.testimonialPerson}>
                         <img src={testimonial.photo} alt="" style={C.testimonialPhoto} />
