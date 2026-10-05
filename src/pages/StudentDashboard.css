@@ -147,6 +147,8 @@
 }
 .sdb-panel--brand .sdb-btn--onbrand-ghost:hover { background: rgba(255,255,255,0.14); color: #fff; }
 .sdb-btn--sm { height: 30px; padding: 0 10px; font-size: 12px; gap: 5px; }
+/* Ícones dentro de botões não encolhem com o flex (o "+" ficava deformado). */
+.sdb-btn svg { flex-shrink: 0; }
 .sdb-btn:active { transform: translateY(0); }
 
 .sdb-icon-btn {
@@ -1108,7 +1110,7 @@
   border-top: 1px solid var(--color-border);
   transition: background var(--duration-fast);
 }
-.sdb-projrow:hover { background: var(--color-surface-hover); }
+.sdb-projrow:hover { background: var(--color-surface-hover); border-radius: 12px; }
 .sdb-projrow-main:active { transform: scale(0.98); }
 .sdb-projrow-main {
   display: flex;
@@ -1185,7 +1187,7 @@
   background: var(--color-surface);
   color: var(--color-text);
 }
-.sdb-projrow-actions .sdb-icon-btn:hover { background: var(--color-surface-hover); }
+.sdb-projrow-actions .sdb-icon-btn:hover { background: var(--color-surface-hover); border-color: var(--color-border-hover); }
 .sdb-projrow-actions .sdb-icon-btn:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 .sdb-projrow-actions .sdb-icon-btn svg { width: 13px; height: 13px; }
 /* Card Potencial não estica para a altura da coluna ao lado. */
