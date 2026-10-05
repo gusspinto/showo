@@ -1291,17 +1291,6 @@ function ProjectRow({ project, shared, onOpen, onEdit, onCopy, copied, onDelete,
                 <Pin size={13} />
               </button>
             )}
-            {onToggleFeatured && !shared && (
-              <button
-                className={`sdb-icon-btn sdb-icon-btn--quiet sdb-icon-btn--star${project.featured ? ' is-featured' : ''}`}
-                onClick={() => onToggleFeatured(project.id)}
-                title={project.featured ? 'Remover destaque do perfil' : canFeature ? 'Destacar no perfil' : 'Máximo de 3 destaques atingido'}
-                aria-label="Destacar no perfil"
-                disabled={!project.featured && !canFeature}
-              >
-                <Star size={13} />
-              </button>
-            )}
             <button className="sdb-icon-btn sdb-icon-btn--quiet" onClick={onEdit} title="Editar" aria-label="Editar projeto">
               <Pencil size={13} />
             </button>
