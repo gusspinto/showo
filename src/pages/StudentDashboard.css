@@ -3338,11 +3338,13 @@
   .sdb-panel-head--inset ~ ul .sdb-projrow:first-child { border-top: none; }
 
   /* ── Portfolio row: layout limpo mobile ── */
+  /* Ações numa linha própria, por baixo do nome: o título ocupa a largura toda
+     e deixa de ser cortado. Os botões ficam separados (8px) e com alvo de 36px. */
   .sdb-projrow {
-    grid-template-columns: 1fr auto;
+    grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto;
-    padding: 10px 14px;
-    gap: 0 8px;
+    padding: 12px 14px;
+    gap: 10px;
   }
   .sdb-projrow-score { display: none; }
   .sdb-projrow-main {
@@ -3351,16 +3353,16 @@
     padding: 0;
     gap: 3px;
   }
-  .sdb-projrow-name { font-size: 15px; }
+  .sdb-projrow-name { font-size: 15px; white-space: normal; }
   .sdb-projrow-area { font-size: 12px; }
   .sdb-projrow-actions {
-    grid-column: 2;
-    grid-row: 1;
+    grid-column: 1;
+    grid-row: 2;
     opacity: 1;
-    align-self: center;
-    justify-content: flex-end;
-    gap: 0;
+    justify-content: flex-start;
+    gap: 8px;
   }
+  .sdb-projrow-actions .sdb-icon-btn { width: 36px; height: 36px; }
   /* no mobile só mostra pin e delete, esconde o resto */
   .sdb-projrow-actions .sdb-icon-btn--star,
   .sdb-projrow-actions a.sdb-icon-btn,
