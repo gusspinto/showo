@@ -113,7 +113,12 @@ const C = {
   },
   testimonialFooter: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' },
   testimonialPerson: { display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 },
-  testimonialPhoto: { width: '36px', height: '36px', borderRadius: 'var(--radius-full)', objectFit: 'cover', flexShrink: 0 },
+  // Contorno de 1px neutro (preto no claro, branco no escuro, via --color-text),
+  // para a foto não se fundir com o cartão nem apanhar a cor da superfície.
+  testimonialPhoto: {
+    width: '36px', height: '36px', borderRadius: 'var(--radius-full)', objectFit: 'cover', flexShrink: 0,
+    outline: '1px solid color-mix(in srgb, var(--color-text) 10%, transparent)', outlineOffset: '-1px',
+  },
   testimonialName: { fontSize: '0.84rem', fontWeight: 700, color: 'var(--color-text)' },
   // Antes cortava com "..." (1 linha, depois 2) e ainda ficava ilegível
   // ("Universidade da Maia e..."). Sem clamp nenhum agora — o cargo embrulha
@@ -328,7 +333,7 @@ export function PlanGateModal({ message, onClose }) {
                       </div>
                     </div>
                     {orderedTestimonials.length > 1 && (
-                      <div style={{ ...C.testimonialDots, justifyContent: 'center', marginTop: '12px' }}>
+                      <div style={{ ...C.testimonialDots, justifyContent: 'center' }}>
                         {orderedTestimonials.map((_, i) => <span key={i} style={C.testimonialDot(i === tIdx)} />)}
                       </div>
                     )}
