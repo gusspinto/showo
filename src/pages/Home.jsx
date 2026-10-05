@@ -7,6 +7,7 @@ import { FireIcon as Fire } from '@solar-icons/react/bold/fire'
 import { Navbar } from '../components/Navbar'
 import { supabase } from '../lib/supabase'
 import HomeHow from '../components/HomeHow'
+import HomeProblems from '../components/HomeProblems'
 import TestimonialsMarquee from '../components/TestimonialsMarquee'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
@@ -207,6 +208,11 @@ export default function Home() {
           ver projetos ou testemunhos) ══ */}
       <Reveal className="home-how-reveal">
         <HomeHow />
+      </Reveal>
+
+      {/* ══ Problemas que resolvemos — por público, o problema desfaz-se em solução ══ */}
+      <Reveal className="home-problems-reveal">
+        <HomeProblems />
       </Reveal>
 
       {/* ══ Testemunhos (a seguir ao "como funciona", antes dos projetos) ══ */}
