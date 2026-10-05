@@ -58,11 +58,11 @@ export default function HomeHow() {
     <section className="hw2" id="como-funciona" aria-labelledby="hw2-title">
       <div className="hw2-inner">
         <div className="hw2-copy">
-          <p className="hw2-eyebrow">Funcionalidades</p>
+          <p className="hw2-eyebrow">Diário de projeto</p>
           <h2 id="hw2-title" className="hw2-title">
-            Do primeiro projeto ao <span className="home-gradient-word">portfólio</span>
+            Cada projeto tem o seu <span className="home-gradient-word">diário</span>
           </h2>
-          <p className="hw2-lead">Organizas, acompanhas e mostras o teu trabalho num só sítio.</p>
+          <p className="hw2-lead">Registas o avanço enquanto trabalhas, e o portfólio constrói-se a partir daí.</p>
 
           <ul className="hw2-features">
             {FEATURES.map(f => (
