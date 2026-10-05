@@ -1347,9 +1347,6 @@ function PinnedProjectCard({ project, auto, coverage, onOpenReport, onUnpin, onE
                   <Pin size={14} />
                 </button>
               )}
-              <button className="sdb-icon-btn" onClick={onEdit} title="Editar projeto">
-                <Pencil size={14} />
-              </button>
             </>
           )}
         </div>
@@ -1438,8 +1435,8 @@ function PinnedProjectCard({ project, auto, coverage, onOpenReport, onUnpin, onE
           <button className="sdb-btn sdb-btn--quiet sdb-btn--sm" onClick={onOpenDiary}>
             <BookOpen size={13} /> Diário
           </button>
-          <button className="sdb-btn sdb-btn--quiet sdb-btn--sm" onClick={onOpen}>
-            <ArrowUpRight size={13} /> Ver
+          <button className="sdb-btn sdb-btn--quiet sdb-btn--sm" onClick={onEdit}>
+            <Pencil size={13} /> Editar
           </button>
           {onShare && (
             <button className="sdb-btn sdb-btn--quiet sdb-btn--sm sdb-pinned-share" onClick={onShare} title="Partilhar" aria-label="Partilhar">
