@@ -20,7 +20,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const FROM = 'Showo <hello@showo.pt>'
 const APP = 'https://showo.pt'
-const RENOTIFY_COOLDOWN_DAYS = 7
+const RENOTIFY_COOLDOWN_DAYS = 6
 
 function esc(v: unknown) {
   return String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!))
