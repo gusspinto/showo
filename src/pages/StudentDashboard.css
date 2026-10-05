@@ -1178,8 +1178,12 @@
 /* Ações sempre visíveis: antes ficavam em opacity 0 até ao hover, por isso
    ninguém sabia que o botão de copiar existia. Alvo de 34px, ícones de 16px. */
 .sdb-projrow-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
-.sdb-projrow-actions .sdb-icon-btn { width: 34px; height: 34px; border: 1px solid var(--color-border); }
+.sdb-projrow-actions .sdb-icon-btn { width: 34px; height: 34px; border-radius: 9px; color: var(--color-text-secondary); }
+.sdb-projrow-actions .sdb-icon-btn:hover { background: var(--color-surface-hover); color: var(--color-text); }
+.sdb-projrow-actions .sdb-icon-btn:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 .sdb-projrow-actions .sdb-icon-btn svg { width: 16px; height: 16px; }
+/* Card Potencial não estica para a altura da coluna ao lado. */
+.sdb-o-potential { align-self: start; }
 .sdb-projrow-danger {
   padding: 4px 10px;
   border: none;

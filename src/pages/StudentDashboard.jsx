@@ -614,28 +614,11 @@ export default function StudentDashboard({ user, profile }) {
     return (
       <section className="sdb-panel sdb-o-potential">
         <header className="sdb-panel-head">
-          <span className="sdb-eyebrow sdb-eyebrow--brand">Potencial do portfólio</span>
-          <span style={{ fontSize: 11, fontWeight: 700, color: scoreColor }}>{potential}/100</span>
+          <span className="sdb-eyebrow sdb-eyebrow--brand">Potencial</span>
         </header>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ position: 'relative', width: 68, height: 68, flexShrink: 0 }}>
-            <svg width={68} height={68} style={{ transform: 'rotate(-90deg)', display: 'block' }}>
-              <circle cx={34} cy={34} r={r} fill="none" stroke="var(--color-border)" strokeWidth={6} />
-              <circle cx={34} cy={34} r={r} fill="none"
-                stroke={scoreColor} strokeWidth={6}
-                strokeDasharray={`${filled} ${circ}`}
-                strokeLinecap="round"
-                style={{ transition: 'stroke-dasharray 0.6s ease' }}
-              />
-            </svg>
-            <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 800, color: scoreColor, lineHeight: 1 }}>
-              {potential}
-            </span>
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'var(--color-text)' }}>{scoreLabel}</p>
-            <p style={{ margin: '4px 0 0', fontSize: 11, color: 'var(--color-text-tertiary)', lineHeight: 1.5 }}>{scoreHint}</p>
-          </div>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+          <span style={{ fontSize: 36, fontWeight: 800, color: scoreColor, lineHeight: 1 }}>{potential}</span>
+          <span style={{ fontSize: 13, color: 'var(--color-text-tertiary)' }}>/100</span>
         </div>
         {slug ? (
           <button className="sdb-profile-link" onClick={() => {
@@ -1280,9 +1263,6 @@ function ProjectRow({ project, shared, onOpen, onEdit, onCopy, copied, onDelete,
     <li className={`sdb-projrow${project.featured ? ' sdb-projrow--featured' : ''}`}>
       <span className="sdb-projrow-score">
         <span className="sdb-projrow-num">{project.score ?? '—'}</span>
-        <span className="sdb-projrow-track">
-          <span className="sdb-projrow-fill" style={{ width: `${project.score ?? 0}%` }} />
-        </span>
       </span>
 
       <button className="sdb-projrow-main" onClick={onOpen}>
