@@ -1080,17 +1080,7 @@ export default function StudentDashboard({ user, profile }) {
                   </div>
                 )}
                 <div className="sdb-stat-tile">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: 26 }}>
-                    <span className="sdb-eyebrow sdb-eyebrow--brand">Potencial</span>
-                    <svg width={26} height={26} style={{ flexShrink: 0, transform: 'rotate(-90deg)' }}>
-                      <circle cx={13} cy={13} r={9} fill="none" stroke="var(--color-border)" strokeWidth={2.5} />
-                      <circle cx={13} cy={13} r={9} fill="none"
-                        stroke={getScoreColor(potential)} strokeWidth={2.5}
-                        strokeDasharray={`${(potential / 100) * 2 * Math.PI * 9} ${2 * Math.PI * 9}`}
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                  </div>
+                  <span className="sdb-eyebrow sdb-eyebrow--brand">Potencial</span>
                   <div className="sdb-stat-tile-num" style={{ color: getScoreColor(potential) }}>{potential}</div>
                   <span className="sdb-stat-tile-label">/100</span>
                 </div>
@@ -1337,7 +1327,7 @@ function ProjectRow({ project, shared, onOpen, onEdit, onCopy, copied, onDelete,
             </button>
             <button className="sdb-icon-btn sdb-icon-btn--quiet" onClick={onCopy}
               title={copied ? 'Copiado' : 'Copiar link'} aria-label="Copiar link do projeto">
-              {copied ? <Check size={13} /> : <ExternalLink size={13} />}
+              {copied ? <Check size={16} /> : <Link size={16} />}
             </button>
             {!shared && (
               <button className="sdb-icon-btn sdb-icon-btn--quiet sdb-icon-btn--danger"
