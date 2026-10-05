@@ -77,12 +77,18 @@ function ProblemCard({ item, index }) {
   useEffect(() => {
     const el = ref.current
     if (!el) return
+    // Só conta quando o cartão está na faixa central do ecrã, e só depois de
+    // ficar lá um momento: o problema tem de se ler antes de se desfazer.
+    let timer = null
     const obs = new IntersectionObserver(
-      ([entry]) => setSolved(entry.isIntersecting),
-      { threshold: 0.6 }
+      ([entry]) => {
+        clearTimeout(timer)
+        if (entry.isIntersecting) timer = setTimeout(() => setSolved(true), 900)
+      },
+      { threshold: 0, rootMargin: '-35% 0px -35% 0px' }
     )
     obs.observe(el)
-    return () => obs.disconnect()
+    return () => { clearTimeout(timer); obs.disconnect() }
   }, [])
 
   // Toque/teclado: alterna. Depois de um toque manual, a visibilidade deixa de mandar.
