@@ -218,6 +218,11 @@ body.light .sidebar::before {
 body.light .sidebar::before {
   background: var(--color-bg);
 }
+/* A sombra lateral (deslocada 6px para a direita) deixava uma faixa sem sombra
+   junto aos cantos do lado direito. Em modo claro a borda já separa a sidebar. */
+body.light .sidebar::after {
+  box-shadow: none;
+}
 .sidebar::after {
   content: ''; position: absolute; inset: 0; pointer-events: none;
   box-shadow: 6px 0 28px rgba(0,0,0,0.22);
