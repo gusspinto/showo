@@ -123,20 +123,22 @@
 }
 .pc-banner-position input[type="range"] {
   flex: 1; appearance: none; -webkit-appearance: none;
-  height: 3px; border-radius: 2px;
-  background: var(--color-border); cursor: pointer;
+  height: 4px; border-radius: 2px;
+  background: color-mix(in srgb, var(--color-text-tertiary) 35%, transparent); cursor: pointer;
   touch-action: none;
 }
+/* Polegar em azul primário e a barra visível: antes era um ponto preto sem
+   barra, que parecia um seletor de cor aleatório. */
 .pc-banner-position input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none; appearance: none;
-  width: 14px; height: 14px; border-radius: 50%;
-  background: var(--color-text); cursor: pointer;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--color-primary); cursor: pointer;
   border: 2px solid var(--color-surface);
   box-shadow: 0 0 0 1px var(--color-border);
 }
 .pc-banner-position input[type="range"]::-moz-range-thumb {
-  width: 14px; height: 14px; border-radius: 50%; border: none;
-  background: var(--color-text); cursor: pointer;
+  width: 16px; height: 16px; border-radius: 50%; border: none;
+  background: var(--color-primary); cursor: pointer;
 }
 .pc-banner-change {
   display: inline-flex; align-items: center; gap: 7px;

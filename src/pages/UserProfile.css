@@ -238,7 +238,15 @@
   margin-bottom: 28px;
   background: var(--color-bg-alt);
 }
+.up-skills-review-summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  cursor: pointer; list-style: none;
+}
+.up-skills-review-summary::-webkit-details-marker { display: none; }
 .up-skills-review-title { margin: 0; font-size: 13px; font-weight: 700; color: var(--color-text); }
+.up-skills-review-hint { font-size: 12px; font-weight: 600; color: var(--color-primary); }
+.up-skills-review[open] .up-skills-review-hint { color: var(--color-text-tertiary); }
+.up-skills-review[open] .up-skills-review-summary { margin-bottom: 3px; }
 .up-skills-review-sub { margin: 3px 0 12px; font-size: 12px; color: var(--color-text-tertiary); }
 
 .up-chip--pending {
@@ -579,11 +587,15 @@
 .up-pf-row-api { display: flex; margin-top: 2px; }
 
 /* ── Heatmap de atividade agregado (todos os projetos) ── */
-.up-heatmap { margin: 4px 0 28px; }
+.up-heatmap { margin: 12px 0 28px; }
+/* Título e os 3 botões (3 meses / 6 meses / 1 ano) na mesma linha, também
+   em mobile — antes os botões desciam para uma linha própria. */
 .up-heatmap-head {
   display: flex; align-items: center; justify-content: space-between;
-  flex-wrap: wrap; gap: 8px; margin-bottom: 8px;
+  flex-wrap: nowrap; gap: 8px; margin-bottom: 8px;
 }
+.up-heatmap-head > .up-heatmap-title { min-width: 0; }
+.up-heatmap-range { flex-shrink: 0; }
 .up-heatmap-title {
   margin: 0; font-size: 12px; font-weight: 600;
   color: var(--color-text-secondary);

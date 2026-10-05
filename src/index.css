@@ -483,3 +483,25 @@ a { transition: color 0.15s, opacity 0.15s; }
   }
   .plan-gate-col-right { justify-content: flex-end; }
 }
+
+/* ── Pop-ups em mobile: sem botão X, fecha-se tocando fora (pedido do
+   Gustavo). Não se aplica ao recorte de imagem nem ao menu lateral, que
+   precisam de botão próprio. ── */
+@media (max-width: 600px) {
+  .ui-modal-close,
+  .msg-nova-close,
+  .up-qr-close,
+  .recap-close,
+  .checkin-close,
+  .score-hero-tooltip-close { display: none !important; }
+}
+
+/* Página de mensagens: sem scroll da página inteira (ver Mensagens.jsx). */
+body.msg-chat-lock {
+  overflow: hidden;
+  overscroll-behavior: none;
+  position: fixed;
+  inset: 0;
+  width: 100%;
+}
+html:has(body.msg-chat-lock) { overscroll-behavior: none; }

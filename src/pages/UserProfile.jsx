@@ -862,8 +862,11 @@ export default function UserProfile() {
 
             {/* Review: sugestões da IA (só o dono) */}
             {isOwnProfile && (pendingSkills.length > 0 || pendingTech.length > 0) && (
-              <div className="up-skills-review">
-                <p className="up-skills-review-title">A IA encontrou isto nos teus projetos</p>
+              <details className="up-skills-review">
+                <summary className="up-skills-review-summary">
+                  <span className="up-skills-review-title">A IA encontrou {pendingSkills.length + pendingTech.length} sugestões</span>
+                  <span className="up-skills-review-hint">Ver</span>
+                </summary>
                 <p className="up-skills-review-sub">Confirma o que faz sentido. Só aparece no perfil depois de confirmares.</p>
                 <div className="up-chips-row">
                   {[...pendingSkills.map(s => ({ ...s, kind: 'skill' })), ...pendingTech.map(t => ({ ...t, kind: 'tech' }))].map(item => (
@@ -874,7 +877,7 @@ export default function UserProfile() {
                     </span>
                   ))}
                 </div>
-              </div>
+              </details>
             )}
 
             {(manualSkills.length > 0 || suggestedSkills.length > 0) && (
