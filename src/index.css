@@ -492,8 +492,7 @@ a { transition: color 0.15s, opacity 0.15s; }
   .msg-nova-close,
   .up-qr-close,
   .recap-close,
-  .checkin-close,
-  .score-hero-tooltip-close { display: none !important; }
+  .checkin-close { display: none !important; }
 }
 
 /* Página de mensagens: sem scroll da página inteira (ver Mensagens.jsx). */

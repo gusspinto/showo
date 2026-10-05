@@ -594,17 +594,18 @@
   display: flex; align-items: center; justify-content: space-between;
   flex-wrap: nowrap; gap: 8px; margin-bottom: 8px;
 }
-.up-heatmap-head > .up-heatmap-title { min-width: 0; }
-.up-heatmap-range { flex-shrink: 0; }
 .up-heatmap-title {
   margin: 0; font-size: 12px; font-weight: 600;
   color: var(--color-text-secondary);
+  flex: 1; min-width: 0;
 }
-.up-heatmap-range { display: flex; gap: 4px; }
+/* Botões com largura fixa: trocar o período não mexe no tamanho da linha. */
+.up-heatmap-range { display: flex; gap: 4px; flex-shrink: 0; }
 .up-heatmap-range-btn {
   font-size: 11px; font-weight: 600; color: var(--color-text-tertiary);
   background: none; border: 1px solid var(--color-border); border-radius: 6px;
-  padding: 3px 9px; cursor: pointer;
+  padding: 3px 0; width: 62px; text-align: center; cursor: pointer;
+  white-space: nowrap;
 }
 .up-heatmap-range-btn.is-active {
   color: var(--color-text); border-color: var(--color-primary);
