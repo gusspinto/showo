@@ -203,16 +203,14 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ══ Como funciona (logo a seguir ao hero, antes de qualquer prova social —
-          quem chega do vídeo/anúncio precisa de perceber o que é isto antes de
-          ver projetos ou testemunhos) ══ */}
-      <Reveal className="home-how-reveal">
-        <HomeHow />
-      </Reveal>
-
       {/* ══ Problemas que resolvemos — por público, o problema desfaz-se em solução ══ */}
       <Reveal className="home-problems-reveal">
         <HomeProblems />
+      </Reveal>
+
+      {/* ══ Funcionalidades (a seguir aos problemas; o diário é só uma delas) ══ */}
+      <Reveal className="home-how-reveal">
+        <HomeHow />
       </Reveal>
 
       {/* ══ Testemunhos (a seguir ao "como funciona", antes dos projetos) ══ */}
