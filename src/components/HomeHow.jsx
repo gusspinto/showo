@@ -29,9 +29,9 @@ const FEATURES = [
 ]
 
 const TIMELINE = [
-  { kind: 'gh', tone: 'gh', title: 'fix: mapa não centrava no evento', meta: 'GitHub · há 2 dias', code: true },
+  { kind: 'gh', tone: 'gh', title: 'feat: lista de canteiros por bairro', meta: 'GitHub · há 2 dias', code: true },
   { kind: 'ai', tone: 'ai', title: 'Falta mostrar os resultados do teste.', meta: 'IA · há 3 dias' },
-  { kind: 'note', tone: 'note', title: 'Testei com 5 utilizadores. Onboarding longo.', meta: 'Nota · há 1 semana' },
+  { kind: 'note', tone: 'note', title: 'Testei com 5 vizinhos. Registo demasiado longo.', meta: 'Nota · há 1 semana' },
   { kind: 'done', tone: 'done', title: 'Secção de resultados publicada', meta: 'Portfólio · hoje' },
 ]
 
@@ -82,11 +82,9 @@ export default function HomeHow() {
             <div className="hw2-diary-head">
               <div>
                 <span className="hw2-diary-kicker">Diário</span>
-                <span className="hw2-diary-name">Vroom.pt</span>
+                <span className="hw2-diary-name">Horta Urbana</span>
               </div>
-              <div className="hw2-ring" style={{ '--p': 74 }}>
-                <span className="hw2-ring-num">74</span>
-              </div>
+              <span className="hw2-score">74</span>
             </div>
 
             <ol className="hw2-timeline">
@@ -104,7 +102,7 @@ export default function HomeHow() {
 
           <div className="hw2-portfolio">
             <span className="hw2-portfolio-tag">Portfólio</span>
-            <span className="hw2-portfolio-name">Vroom.pt</span>
+            <span className="hw2-portfolio-name">Horta Urbana</span>
             <span className="hw2-portfolio-bar"><span /></span>
             <span className="hw2-portfolio-meta">4 secções · publicado</span>
           </div>

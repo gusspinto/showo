@@ -43,13 +43,13 @@
   width: 36px; height: 36px;
   display: flex; align-items: center; justify-content: center;
   border-radius: 10px;
-  background: var(--color-primary-subtle);
-  color: var(--color-primary);
+  background: var(--color-primary);
+  color: #fff;
 }
 .hw2-feature-icon svg { width: 17px; height: 17px; }
 .hw2-feature-body { display: flex; flex-direction: column; gap: 2px; }
 .hw2-feature-title { font-size: 15px; font-weight: 700; color: var(--color-text); }
-.hw2-feature-desc { font-size: 14px; color: var(--color-text-tertiary); line-height: 1.45; }
+.hw2-feature-desc { font-size: 14px; color: var(--color-text-secondary); line-height: 1.45; }
 
 /* ── Visual ── */
 .hw2-visual { position: relative; padding-bottom: 48px; }
@@ -59,7 +59,6 @@
   border: 1px solid var(--color-border);
   border-radius: 20px;
   padding: 20px;
-  box-shadow: 0 24px 48px -28px color-mix(in srgb, var(--color-text) 25%, transparent);
 }
 .hw2-diary-head {
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
@@ -70,24 +69,16 @@
 .hw2-diary-kicker {
   display: block;
   font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-  color: var(--color-text-tertiary);
+  color: var(--color-text-secondary);
+}
+/* Score como o número do dashboard: grande, na cor do tom, sem arco. */
+.hw2-score {
+  font-family: var(--font-heading);
+  font-size: 34px; font-weight: 800; line-height: 1;
+  color: var(--color-primary);
 }
 .hw2-diary-name { display: block; margin-top: 2px; font-family: var(--font-heading); font-size: 18px; font-weight: 800; color: var(--color-text); }
 
-/* Anel de score: arco com conic-gradient, número no centro. */
-.hw2-ring {
-  --p: 0;
-  position: relative;
-  width: 58px; height: 58px; flex-shrink: 0;
-  border-radius: 50%;
-  background: conic-gradient(var(--color-primary) calc(var(--p) * 1%), var(--color-border) 0);
-  display: flex; align-items: center; justify-content: center;
-}
-.hw2-ring::before {
-  content: ''; position: absolute; inset: 6px; border-radius: 50%;
-  background: var(--color-surface);
-}
-.hw2-ring-num { position: relative; font-size: 17px; font-weight: 800; color: var(--color-text); }
 
 /* Linha do tempo: a linha desenha-se de cima para baixo, cada passo entra. */
 .hw2-timeline { list-style: none; margin: 0; padding: 0; position: relative; }
@@ -108,25 +99,25 @@
 }
 .hw2-visual.is-in .hw2-step { opacity: 1; transform: none; }
 
+/* Pontos sólidos: a linha não aparece por trás. Ícone sempre branco. */
 .hw2-dot {
   flex-shrink: 0;
   width: 32px; height: 32px;
   display: flex; align-items: center; justify-content: center;
   border-radius: 50%;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  color: var(--color-text);
+  background: #1C2333;
+  color: #fff;
   position: relative; z-index: 1;
 }
 .hw2-dot svg { width: 14px; height: 14px; }
-.hw2-step--ai .hw2-dot { background: var(--color-primary-subtle); border-color: transparent; color: var(--color-primary); }
-.hw2-step--note .hw2-dot { background: var(--color-warning-subtle); border-color: transparent; color: var(--color-warning); }
-.hw2-step--done .hw2-dot { background: var(--color-success); border-color: transparent; color: #fff; }
+.hw2-step--ai .hw2-dot { background: var(--color-primary); }
+.hw2-step--note .hw2-dot { background: #D97706; }
+.hw2-step--done .hw2-dot { background: var(--color-success); }
 
 .hw2-step-body { display: flex; flex-direction: column; gap: 2px; padding-top: 6px; min-width: 0; }
-.hw2-step-title { font-size: 14px; line-height: 1.4; color: var(--color-text); }
-.hw2-step-title.is-code { font-family: var(--font-mono); font-size: 12.5px; color: var(--color-text-secondary); }
-.hw2-step-meta { font-size: 11.5px; color: var(--color-text-tertiary); }
+.hw2-step-title { font-size: 15px; line-height: 1.4; font-weight: 600; color: var(--color-text); }
+.hw2-step-title.is-code { font-family: var(--font-mono); font-size: 13px; font-weight: 500; color: var(--color-text); }
+.hw2-step-meta { font-size: 12px; color: var(--color-text-secondary); }
 
 /* Cartão de portfólio sobreposto, a mostrar o resultado. */
 .hw2-portfolio {
@@ -137,7 +128,6 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 16px;
-  box-shadow: 0 18px 36px -20px color-mix(in srgb, var(--color-text) 35%, transparent);
   opacity: 0; transform: translateY(14px) scale(0.98);
   transition: opacity 0.6s cubic-bezier(0.2, 0, 0, 1) 0.9s, transform 0.6s cubic-bezier(0.2, 0, 0, 1) 0.9s;
 }
@@ -150,7 +140,7 @@
   transition: width 1s cubic-bezier(0.2, 0, 0, 1) 1.1s;
 }
 .hw2-visual.is-in .hw2-portfolio-bar > span { width: 74%; }
-.hw2-portfolio-meta { font-size: 11.5px; color: var(--color-text-tertiary); }
+.hw2-portfolio-meta { font-size: 12px; color: var(--color-text-secondary); }
 
 /* Movimento reduzido: estado final, sem transições. */
 .hw2-visual.is-reduced .hw2-timeline::before,
