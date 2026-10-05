@@ -1079,3 +1079,7 @@
   font-weight: 800;
   letter-spacing: 0.03em;
 }
+
+/* Perfil com banner: a barra do aluno flutua por cima do banner, sem a faixa
+   escura por cima (ver Navbar.jsx, reserveTopBarSpace). */
+body.profile-top-bleed.has-topbar { padding-top: 0 !important; }

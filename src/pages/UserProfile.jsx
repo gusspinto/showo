@@ -534,6 +534,15 @@ export default function UserProfile() {
 
   // Preview ao vivo: o rascunho enquanto o painel está aberto, senão o guardado.
   const appearance = customizing ? draftAppearance : (profile?.profile_appearance || {})
+
+  // Com banner, a barra do aluno flutua por cima dele (como na página de
+  // projeto) em vez de reservar uma faixa escura por cima. Sem banner, o
+  // espaço continua reservado.
+  const hasBanner = !!appearance.bannerUrl
+  useEffect(() => {
+    document.body.classList.toggle('profile-top-bleed', hasBanner)
+    return () => document.body.classList.remove('profile-top-bleed')
+  }, [hasBanner])
   const headline   = customizing ? draftHeadline : (profile?.profile_headline || '')
   const displayName = (customizing ? draftFullName.trim() : profile?.full_name)
     || profile?.username || 'Utilizador'
