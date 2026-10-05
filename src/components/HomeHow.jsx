@@ -1,7 +1,5 @@
-/* Bloco da home que mostra o que a Showo é hoje: um diário por projeto, não
-   uma ficha que se preenche uma vez. À esquerda a ideia; à direita um diário
-   a sério com commits do GitHub lá dentro (a integração vista em uso, não um
-   logótipo numa parede). O visual é ilustrativo — aria-hidden. */
+/* Bloco da home que mostra o que a Showo é: um diário por projeto. Pouco texto:
+   uma frase de ideia, três tags e um diário ilustrativo (aria-hidden). */
 
 const GITHUB = (
   <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -16,16 +14,10 @@ const NOTE = (
   </svg>
 )
 
-const TAGS = [
-  'Diário automático do projeto',
-  'IA com contexto contínuo',
-  'Sincroniza o GitHub',
-  'Portfólio pronto a partilhar',
-]
+const TAGS = ['Diário do projeto', 'Sincroniza o GitHub', 'Portfólio pronto a partilhar']
 
 const ENTRIES = [
-  { kind: 'gh',   text: 'fix: mapa não centrava no evento selecionado', meta: 'GitHub · há 2 dias' },
-  { kind: 'gh',   text: 'feat: filtro de eventos por distrito', meta: 'GitHub · há 4 dias' },
+  { kind: 'gh', text: 'fix: mapa não centrava no evento selecionado', meta: 'GitHub · há 2 dias' },
   { kind: 'note', text: 'Testei com 5 utilizadores. O onboarding está longo demais.', meta: 'Nota · há 1 semana' },
 ]
 
@@ -34,18 +26,12 @@ export default function HomeHow() {
     <section className="home-hw" id="como-funciona" aria-labelledby="home-hw-title">
       <div className="home-hw-inner">
         <div className="home-hw-copy">
-          <p className="home-hw-eyebrow">
-            O que é o Showo
-          </p>
+          <p className="home-hw-eyebrow">O que é o Showo</p>
           <h2 id="home-hw-title" className="home-hw-title">
-            O projeto conta-se <span className="home-gradient-word">enquanto acontece</span>
+            Cada avanço fica <span className="home-gradient-word">registado</span>
           </h2>
           <p className="home-hw-lead">
-            O Showo organiza os teus projetos, escolares ou freelance, num
-            portfólio pronto a mostrar a recrutadores e a abrir oportunidades.
-            Cada avanço fica no diário, os commits do GitHub entram sozinhos,
-            e a IA acompanha tudo desde o início, ao contrário do ChatGPT,
-            que começa do zero em cada conversa.
+            O teu portfólio constrói-se sozinho, à medida que trabalhas.
           </p>
           <ul className="home-hw-tags">
             {TAGS.map(t => (
@@ -67,9 +53,7 @@ export default function HomeHow() {
                     {e.kind === 'gh' ? GITHUB : NOTE}
                   </span>
                   <span className="home-hw-entry-body">
-                    <span className={`home-hw-entry-text${e.kind === 'gh' ? ' is-code' : ''}`}>
-                      {e.text}
-                    </span>
+                    <span className={`home-hw-entry-text${e.kind === 'gh' ? ' is-code' : ''}`}>{e.text}</span>
                     <span className="home-hw-entry-meta">{e.meta}</span>
                   </span>
                 </li>
