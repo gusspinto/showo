@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import './HomeHow.css'
 
-/* "O que é o Showo" — um diário por projeto que se transforma em portfólio.
-   Lado esquerdo: ideia em poucas palavras e três funcionalidades. Lado direito:
-   uma linha do tempo do diário (commits, nota da IA, marco) com um anel de
-   score e um cartão de portfólio sobreposto. O visual é ilustrativo: aria-hidden.
-   Com prefers-reduced-motion aparece já no estado final. */
+/* Visão geral do Showo em quatro pilares: Registar (diário), Guardar (biblioteca),
+   Ligar (IA) e Mostrar (portfólio). Cada pilar tem um mockup ilustrativo, por isso
+   os visuais são aria-hidden; o texto de cada pilar é uma linha. Com
+   prefers-reduced-motion os mockups aparecem já no estado final. */
 
 const GITHUB = (
   <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -22,22 +21,14 @@ const CHECK = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
 )
 
-const FEATURES = [
-  { icon: GITHUB, title: 'Sincroniza o GitHub', desc: 'Os commits entram sozinhos no diário.' },
-  { icon: SPARK, title: 'A IA acompanha', desc: 'Lê o diário e sugere o que falta.' },
-  { icon: CHECK, title: 'Portfólio pronto', desc: 'Partilhas um link com o trabalho feito.' },
+const PILLARS = [
+  { id: 'registar', label: 'Registar', line: 'Cada avanço fica no diário do projeto.' },
+  { id: 'guardar', label: 'Guardar', line: 'Ficheiros, projetos e estados num só sítio.' },
+  { id: 'ligar', label: 'Ligar', line: 'A IA lê o que fizeste e diz o que falta.' },
+  { id: 'mostrar', label: 'Mostrar', line: 'Um portfólio pronto a partilhar com um link.' },
 ]
 
-const TIMELINE = [
-  { kind: 'gh', tone: 'gh', title: 'feat: cálculo de rotas entre escola e casa', meta: 'GitHub · há 2 dias', code: true },
-  { kind: 'ai', tone: 'ai', title: 'Falta mostrar os resultados do teste.', meta: 'IA · há 3 dias' },
-  { kind: 'note', tone: 'note', title: 'Testei com 5 alunos. Pedido de rota demasiado lento.', meta: 'Nota · há 1 semana' },
-  { kind: 'done', tone: 'done', title: 'Secção de resultados publicada', meta: 'Portfólio · hoje' },
-]
-
-const ICON_FOR = { gh: GITHUB, ai: SPARK, note: NOTE, done: CHECK }
-
-function useInView(threshold = 0.25) {
+function useInView(threshold = 0.2) {
   const ref = useRef(null)
   const [seen, setSeen] = useState(false)
   useEffect(() => {
@@ -50,62 +41,96 @@ function useInView(threshold = 0.25) {
   return [ref, seen]
 }
 
-export default function HomeHow() {
-  const [visRef, seen] = useInView()
-  const reduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-
+function Pillar({ p, index, children }) {
+  const [ref, seen] = useInView()
   return (
-    <section className="hw2" id="como-funciona" aria-labelledby="hw2-title">
-      <div className="hw2-inner">
-        <div className="hw2-copy">
-          <p className="hw2-eyebrow">Diário de projeto</p>
-          <h2 id="hw2-title" className="hw2-title">
-            Cada projeto tem o seu <span className="home-gradient-word">diário</span>
+    <article ref={ref} className={`hw3-card hw3-card--${p.id}${seen ? ' is-in' : ''}`} style={{ '--d': `${index * 120}ms` }}>
+      <div className="hw3-stage" aria-hidden="true">{children}</div>
+      <div className="hw3-caption">
+        <span className="hw3-label">{p.label}</span>
+        <p className="hw3-line">{p.line}</p>
+      </div>
+    </article>
+  )
+}
+
+export default function HomeHow() {
+  return (
+    <section className="hw3" id="como-funciona" aria-labelledby="hw3-title">
+      <div className="hw3-inner">
+        <header className="hw3-head">
+          <p className="hw3-eyebrow">O que é o Showo</p>
+          <h2 id="hw3-title" className="hw3-title">
+            Um sítio para <span className="home-gradient-word">tudo o que fazes</span>
           </h2>
-          <p className="hw2-lead">Registas o avanço enquanto trabalhas, e o portfólio constrói-se a partir daí.</p>
+        </header>
 
-          <ul className="hw2-features">
-            {FEATURES.map(f => (
-              <li key={f.title} className="hw2-feature">
-                <span className="hw2-feature-icon">{f.icon}</span>
-                <span className="hw2-feature-body">
-                  <span className="hw2-feature-title">{f.title}</span>
-                  <span className="hw2-feature-desc">{f.desc}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className={`hw2-visual${seen ? ' is-in' : ''}${reduced ? ' is-reduced' : ''}`} ref={visRef} aria-hidden="true">
-          <div className="hw2-diary">
-            <div className="hw2-diary-head">
-              <div>
-                <span className="hw2-diary-kicker">Diário</span>
-                <span className="hw2-diary-name">Mobilidade Escolar</span>
+        <div className="hw3-grid">
+          {/* Registar — diário do projeto, com entradas de GitHub e notas */}
+          <Pillar p={PILLARS[0]} index={0}>
+            <div className="hw3-mock hw3-mock--diary">
+              <div className="hw3-mock-head">
+                <span className="hw3-mock-kicker">Diário</span>
+                <span className="hw3-mock-title">Mobilidade Escolar</span>
               </div>
-              <span className="hw2-score">74</span>
+              <div className="hw3-entry">
+                <span className="hw3-dot hw3-dot--ink">{GITHUB}</span>
+                <span className="hw3-entry-body"><span className="hw3-code">feat: cálculo de rotas</span><span className="hw3-meta">GitHub · há 2 dias</span></span>
+              </div>
+              <div className="hw3-entry">
+                <span className="hw3-dot hw3-dot--amber">{NOTE}</span>
+                <span className="hw3-entry-body"><span className="hw3-text">Testei com 5 alunos.</span><span className="hw3-meta">Nota · há 1 semana</span></span>
+              </div>
             </div>
+          </Pillar>
 
-            <ol className="hw2-timeline">
-              {TIMELINE.map((e, i) => (
-                <li key={i} className={`hw2-step hw2-step--${e.tone}`} style={{ '--d': `${i * 140 + 120}ms` }}>
-                  <span className="hw2-dot">{ICON_FOR[e.kind]}</span>
-                  <span className="hw2-step-body">
-                    <span className={`hw2-step-title${e.code ? ' is-code' : ''}`}>{e.title}</span>
-                    <span className="hw2-step-meta">{e.meta}</span>
-                  </span>
-                </li>
-              ))}
-            </ol>
-          </div>
+          {/* Guardar — biblioteca em grelha, com estados */}
+          <Pillar p={PILLARS[1]} index={1}>
+            <div className="hw3-mock hw3-mock--library">
+              <div className="hw3-mock-head">
+                <span className="hw3-mock-kicker">Biblioteca</span>
+                <span className="hw3-mock-title">3 itens</span>
+              </div>
+              <div className="hw3-files">
+                <span className="hw3-file hw3-file--doc"><span className="hw3-file-type">DOC</span><span className="hw3-file-name">Relatório PAP</span></span>
+                <span className="hw3-file hw3-file--pdf"><span className="hw3-file-type">PDF</span><span className="hw3-file-name">Entrevista</span></span>
+                <span className="hw3-file hw3-file--proj"><span className="hw3-file-type">PROJ</span><span className="hw3-file-name">Mobilidade</span></span>
+              </div>
+              <div className="hw3-chips">
+                <span className="hw3-chip">No perfil</span>
+                <span className="hw3-chip">Privado</span>
+              </div>
+            </div>
+          </Pillar>
 
-          <div className="hw2-portfolio">
-            <span className="hw2-portfolio-tag">Portfólio</span>
-            <span className="hw2-portfolio-name">Mobilidade Escolar</span>
-            <span className="hw2-portfolio-bar"><span /></span>
-            <span className="hw2-portfolio-meta">4 secções · publicado</span>
-          </div>
+          {/* Ligar — sugestão da IA com confirmação */}
+          <Pillar p={PILLARS[2]} index={2}>
+            <div className="hw3-mock hw3-mock--ai">
+              <div className="hw3-ai-bubble">
+                <span className="hw3-ai-icon">{SPARK}</span>
+                <span className="hw3-ai-text">Falta mostrar os resultados do teste.</span>
+              </div>
+              <div className="hw3-ai-actions">
+                <span className="hw3-btn hw3-btn--solid">Adicionar ao perfil</span>
+                <span className="hw3-btn">Ignorar</span>
+              </div>
+              <div className="hw3-ai-bar"><span /></div>
+            </div>
+          </Pillar>
+
+          {/* Mostrar — portfólio com score e link */}
+          <Pillar p={PILLARS[3]} index={3}>
+            <div className="hw3-mock hw3-mock--portfolio">
+              <div className="hw3-cover" />
+              <div className="hw3-port-body">
+                <span className="hw3-port-name">Mobilidade Escolar</span>
+                <div className="hw3-port-row">
+                  <span className="hw3-score">74</span>
+                  <span className="hw3-link">{CHECK}showo.pt/u/bruno</span>
+                </div>
+              </div>
+            </div>
+          </Pillar>
         </div>
       </div>
     </section>
