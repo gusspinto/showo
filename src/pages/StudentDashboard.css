@@ -1157,7 +1157,6 @@
   flex-direction: column;
   gap: 4px;
   flex-shrink: 0;
-  width: 56px;
 }
 .sdb-projrow-track {
   width: 100%;
