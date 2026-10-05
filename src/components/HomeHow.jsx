@@ -29,9 +29,9 @@ const FEATURES = [
 ]
 
 const TIMELINE = [
-  { kind: 'gh', tone: 'gh', title: 'feat: lista de canteiros por bairro', meta: 'GitHub · há 2 dias', code: true },
+  { kind: 'gh', tone: 'gh', title: 'feat: cálculo de rotas entre escola e casa', meta: 'GitHub · há 2 dias', code: true },
   { kind: 'ai', tone: 'ai', title: 'Falta mostrar os resultados do teste.', meta: 'IA · há 3 dias' },
-  { kind: 'note', tone: 'note', title: 'Testei com 5 vizinhos. Registo demasiado longo.', meta: 'Nota · há 1 semana' },
+  { kind: 'note', tone: 'note', title: 'Testei com 5 alunos. Pedido de rota demasiado lento.', meta: 'Nota · há 1 semana' },
   { kind: 'done', tone: 'done', title: 'Secção de resultados publicada', meta: 'Portfólio · hoje' },
 ]
 
@@ -82,7 +82,7 @@ export default function HomeHow() {
             <div className="hw2-diary-head">
               <div>
                 <span className="hw2-diary-kicker">Diário</span>
-                <span className="hw2-diary-name">Horta Urbana</span>
+                <span className="hw2-diary-name">Mobilidade Escolar</span>
               </div>
               <span className="hw2-score">74</span>
             </div>
@@ -102,7 +102,7 @@ export default function HomeHow() {
 
           <div className="hw2-portfolio">
             <span className="hw2-portfolio-tag">Portfólio</span>
-            <span className="hw2-portfolio-name">Horta Urbana</span>
+            <span className="hw2-portfolio-name">Mobilidade Escolar</span>
             <span className="hw2-portfolio-bar"><span /></span>
             <span className="hw2-portfolio-meta">4 secções · publicado</span>
           </div>
