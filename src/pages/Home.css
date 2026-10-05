@@ -433,37 +433,46 @@ body.light .home-card-cover img {
 .home-hw {
   padding: 56px 24px 64px;
 }
+/* Centrado, como as outras secções da home: cabeçalho ao centro e o diário
+   por baixo, numa coluna estreita. */
 .home-hw-inner {
-  max-width: 1060px;
+  max-width: 560px;
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 56px;
+  display: flex;
+  flex-direction: column;
   align-items: center;
+  text-align: center;
+  gap: 28px;
+}
+.home-hw-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
 }
 .home-hw-eyebrow {
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--color-text-secondary);
-  margin: 0 0 10px;
+  color: var(--color-text-tertiary);
+  margin: 0 0 12px;
 }
 .home-hw-title {
-  font-size: clamp(24px, 3vw, 34px);
-  font-weight: 900;
-  letter-spacing: -1px;
+  font-size: clamp(26px, 4vw, 40px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
   line-height: 1.12;
-  margin: 0 0 18px;
+  margin: 0 0 14px;
   font-family: var(--font-heading);
   color: var(--color-text);
 }
 .home-hw-lead {
-  font-size: 15px;
-  line-height: 1.65;
+  font-size: 16px;
+  line-height: 1.6;
   color: var(--color-text-secondary);
-  margin: 0 0 24px;
-  max-width: 42ch;
+  margin: 0 0 20px;
+  max-width: 40ch;
 }
 .home-hw-tags {
   list-style: none;
@@ -471,15 +480,17 @@ body.light .home-card-cover img {
   padding: 0;
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 8px;
 }
+/* Pills como as abas da HomeProblems: contorno e texto, sem preenchimento. */
 .home-hw-tag {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--color-text-secondary);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-full);
-  padding: 6px 12px;
+  border-radius: 999px;
+  padding: 7px 14px;
 }
 
 /* ── diário ilustrativo ── */
