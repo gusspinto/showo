@@ -1472,8 +1472,8 @@ function PinnedProjectCard({ project, auto, coverage, onOpenReport, onUnpin, onE
             <ArrowUpRight size={13} /> Ver
           </button>
           {onShare && (
-            <button className="sdb-btn sdb-btn--quiet sdb-btn--sm" onClick={onShare}>
-              <Share2 size={13} /> Partilhar
+            <button className="sdb-btn sdb-btn--quiet sdb-btn--sm sdb-pinned-share" onClick={onShare} title="Partilhar" aria-label="Partilhar">
+              <Share2 size={13} />
             </button>
           )}
         </div>

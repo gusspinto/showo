@@ -1666,6 +1666,8 @@
   flex-wrap: wrap;
   padding-top: 2px;
 }
+/* Partilhar só com ícone, separado à direita das ações principais. */
+.sdb-pinned-foot .sdb-pinned-share { margin-left: auto; }
 
 @media (max-width: 600px) {
   .sdb-page { padding: var(--sp-3) var(--sp-3) var(--sp-12); }
