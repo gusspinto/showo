@@ -1329,15 +1329,6 @@ function PinnedProjectCard({ project, auto, coverage, onOpenReport, onUnpin, onE
       >
         <div className="sdb-pinned-head-left">
           <span className="sdb-pinned-type">{typeLabel}</span>
-          {!confirmDelete && (
-            <>
-              {!auto && (
-                <button className="sdb-icon-btn sdb-icon-btn--pin is-pinned" onClick={onUnpin} title="Retirar da dashboard">
-                  <Pin size={14} />
-                </button>
-              )}
-            </>
-          )}
         </div>
         <div className="sdb-pinned-head-right">
           {confirmDelete ? (
@@ -1353,8 +1344,8 @@ function PinnedProjectCard({ project, auto, coverage, onOpenReport, onUnpin, onE
                 </button>
               )}
               {!auto && (
-                <button className="sdb-icon-btn sdb-icon-btn--danger" onClick={() => setConfirmDelete(true)} title="Apagar projeto">
-                  <Trash2 size={14} />
+                <button className="sdb-icon-btn sdb-icon-btn--pin is-pinned" onClick={onUnpin} title="Desafixar da dashboard" aria-label="Desafixar da dashboard">
+                  <Pin size={14} />
                 </button>
               )}
             </>
