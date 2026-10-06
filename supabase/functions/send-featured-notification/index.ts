@@ -58,6 +58,27 @@ function buildHtml(opts: { firstName?: string; projectName: string; projectSlug:
 </table>`
 }
 
+function buildRotationHtml(opts: { firstName?: string; projectName: string; projectSlug: string; unsubscribeUrl: string }) {
+  const { firstName, projectName, projectSlug, unsubscribeUrl } = opts
+  return `
+<table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#080808" style="background:#080808;">
+  <tr>
+    <td align="center" bgcolor="#080808" style="background:#080808;padding:48px 24px;font-family:-apple-system,Helvetica,Arial,sans-serif;">
+      <table role="presentation" width="440" border="0" cellpadding="0" cellspacing="0" style="max-width:440px;width:100%;text-align:left;">
+        <tr><td style="padding:0 0 28px;"><img src="https://showo.pt/icon.png" alt="Showo" width="32" height="32" style="display:block;border:0;" /></td></tr>
+        ${firstName ? `<tr><td style="padding:0 0 16px;color:#888888;font-size:16px;line-height:1.4;">${esc(firstName)},</td></tr>` : ''}
+        <tr><td style="padding:0 0 24px;color:#f0f0f0;font-size:26px;line-height:1.25;font-weight:800;letter-spacing:-0.01em;">${esc(projectName)} sai do destaque desta semana.</td></tr>
+        <tr><td style="padding:0 0 10px;color:#888888;font-size:16px;line-height:1.5;">O destaque roda todas as semanas, para mais projetos terem a sua vez. Um projeto fica em destaque no máximo duas semanas seguidas, a não ser que não haja ninguém melhor nessa altura. Esta já foi a segunda.</td></tr>
+        <tr><td style="padding:0 0 10px;color:#888888;font-size:16px;line-height:1.5;">Para voltares, o que conta é o estado do projeto: uma capa, o diário atualizado, e resultados concretos. A cada segunda, o destaque é recalculado com quem está melhor naquele momento.</td></tr>
+        <tr><td style="padding:0 0 32px;color:#888888;font-size:16px;line-height:1.5;">Não é preciso fazer nada de especial. Continua a trabalhar no projeto e aparecerás quando estiver no topo.</td></tr>
+        <tr><td style="padding:0 0 40px;"><a href="${APP}/projeto/${projectSlug}" style="display:inline-block;background:#2B7EF5;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:12px 24px;border-radius:10px;">Melhorar o meu projeto</a></td></tr>
+        <tr><td style="font-size:11px;color:#555555;">Showo &middot; <a href="${APP}" style="color:#555555;">showo.pt</a> &middot; <a href="${esc(unsubscribeUrl)}" style="color:#555555;">cancelar estes avisos</a></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>`
+}
+
 Deno.serve(async (req) => {
   try {
     const cronSecret = Deno.env.get('CRON_SECRET')
@@ -171,6 +192,84 @@ Deno.serve(async (req) => {
       } catch (e) {
         console.error('[send-featured-notification] failed for', proj.id, e)
         errors.push(String(e))
+      }
+    }
+
+    if (!testProjectId && candidates.length) {
+      const prev = new Date()
+      prev.setUTCDate(prev.getUTCDate() - ((prev.getUTCDay() + 6) % 7) - 7)
+      const semanaAnterior = prev.toISOString().slice(0, 10)
+      const atuais = new Set(candidates.map((p: { id: string }) => p.id))
+      const { data: anteriores } = await supabase
+        .from('featured_weeks')
+        .select('project_id')
+        .eq('week_start', semanaAnterior)
+      for (const row of anteriores ?? []) {
+        if (atuais.has(row.project_id)) continue
+        try {
+          const { data: proj } = await supabase
+            .from('projects')
+            .select('name, slug, user_id')
+            .eq('id', row.project_id)
+            .single()
+          if (!proj?.user_id) continue
+
+          const { data: jaEnviado } = await supabase
+            .from('email_sends')
+            .select('id')
+            .eq('user_id', proj.user_id)
+            .eq('email_type', 'featured_rotation')
+            .gte('created_at', new Date(Date.now() - 6 * 86400000).toISOString())
+            .limit(1)
+          if (jaEnviado?.length) continue
+
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name, featured_notification_opted_out')
+            .eq('id', proj.user_id)
+            .single()
+          if (profile?.featured_notification_opted_out) continue
+
+          const { data: userData } = await supabase.auth.admin.getUserById(proj.user_id)
+          if (!userData?.user?.email) continue
+
+          const unsubSig = await signUserId(proj.user_id, cronSecret)
+          const unsubscribeUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/featured-unsubscribe?u=${proj.user_id}&sig=${unsubSig}`
+
+          const res = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              from: FROM,
+              to: userData.user.email,
+              subject: `O destaque da semana rodou. Como voltar a aparecer`,
+              html: buildRotationHtml({
+                firstName: profile?.full_name?.split(' ')[0],
+                projectName: proj.name,
+                projectSlug: proj.slug,
+                unsubscribeUrl,
+              }),
+              headers: {
+                'List-Unsubscribe': `<${unsubscribeUrl}>`,
+                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+              },
+            }),
+          })
+          if (!res.ok) { errors.push(await res.text()); continue }
+
+          const { id: resendId } = await res.json()
+          if (resendId) {
+            await supabase.from('email_sends').insert({
+              user_id: proj.user_id,
+              email_type: 'featured_rotation',
+              resend_id: resendId,
+              to_email: userData.user.email,
+            })
+          }
+        } catch (e) {
+          console.error('[send-featured-notification] rotation failed for', row.project_id, e)
+          errors.push(String(e))
+        }
       }
     }
 
