@@ -83,6 +83,79 @@
   color: color-mix(in srgb, var(--color-text) 80%, transparent);
 }
 
+/* Réplica do ecrã real "Cria o teu trabalho" (primeiro passo) */
+.hw3-mock--new { padding: 0; background: none; border: none; box-shadow: none; gap: 14px; }
+.hw3-new-title {
+  margin: 0; text-align: center;
+  font-family: var(--font-heading); font-size: 22px; font-weight: 800; letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+.hw3-new-card {
+  display: flex; flex-direction: column; gap: 12px;
+  padding: 14px; border-radius: 18px;
+  background: var(--color-surface); border: 1px solid var(--color-border);
+}
+.hw3-drop {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 22px 12px; border-radius: 12px;
+  border: 1px dashed var(--color-border);
+}
+.hw3-drop-icon {
+  width: 40px; height: 40px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: #0A0A0A; color: #fff; margin-bottom: 4px;
+}
+.hw3-drop-icon svg { width: 18px; height: 18px; }
+.hw3-drop-name { font-size: 15px; font-weight: 700; color: var(--color-text); }
+.hw3-drop-sub { font-size: 12.5px; color: var(--color-text-secondary); }
+.hw3-new-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 12px; border-radius: 12px;
+  background: var(--color-bg-alt); color: var(--color-text-tertiary);
+  font-size: 14px; font-weight: 700;
+}
+.hw3-new-btn svg { width: 14px; height: 14px; }
+.hw3-divider { display: flex; align-items: center; gap: 12px; color: var(--color-text-secondary); font-size: 12px; }
+.hw3-divider::before, .hw3-divider::after { content: ''; flex: 1; height: 1px; background: var(--color-border); }
+.hw3-new-alt {
+  padding: 12px; border-radius: 12px; text-align: center;
+  background: var(--color-text); color: var(--color-bg);
+  font-size: 14px; font-weight: 700;
+}
+
+/* Perfil fictício (quarto passo): mesma estrutura do perfil real */
+.hw3-mock--profile { padding: 0; overflow: hidden; gap: 0; }
+.hw3-pf-banner { height: 44px; background: #001A3D; }
+.hw3-pf-body { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 6px; position: relative; }
+.hw3-pf-avatar {
+  width: 52px; height: 52px; border-radius: 50%; margin-top: -26px;
+  display: flex; align-items: center; justify-content: center;
+  background: #2478f0; color: #fff; font-size: 16px; font-weight: 800;
+  border: 3px solid var(--color-surface);
+}
+.hw3-pf-name { font-size: 16px; font-weight: 800; color: var(--color-text); }
+.hw3-pf-role { font-size: 13px; font-weight: 600; color: var(--color-text-secondary); }
+.hw3-pf-headline { font-size: 13px; color: var(--color-text-secondary); }
+.hw3-pf-heat {
+  display: grid; grid-template-columns: repeat(14, 1fr); gap: 3px; margin-top: 4px;
+}
+.hw3-pf-cell { aspect-ratio: 1; border-radius: 3px; background: var(--color-bg-alt); }
+.hw3-pf-cell.l1 { background: color-mix(in srgb, #16A34A 30%, var(--color-bg-alt)); }
+.hw3-pf-cell.l2 { background: color-mix(in srgb, #16A34A 55%, var(--color-bg-alt)); }
+.hw3-pf-cell.l3 { background: #16A34A; }
+.hw3-pf-projects { display: grid; gap: 8px; margin-top: 6px; }
+.hw3-pf-project {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px; border-radius: 12px; border: 1px solid var(--color-border);
+}
+.hw3-pf-thumb { flex-shrink: 0; width: 36px; height: 36px; border-radius: 9px; }
+.hw3-pf-thumb--blue { background: linear-gradient(135deg, #2478f0, #1d4ed8); }
+.hw3-pf-thumb--red { background: linear-gradient(135deg, #db4a3d, #f59e0b); }
+.hw3-pf-ptext { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.hw3-pf-pname { font-size: 14px; font-weight: 700; color: var(--color-text); }
+.hw3-pf-pmeta { font-size: 12px; color: var(--color-text-secondary); }
+.hw3-pf-score { font-family: var(--font-heading); font-size: 20px; font-weight: 800; color: var(--color-primary); }
+
 /* Criar ou adicionar (mockup do primeiro passo) */
 .hw3-options { display: grid; gap: 10px; }
 .hw3-option {

@@ -18,6 +18,9 @@ const SPARK = (
 const NOTE = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
 )
+const UPLOAD = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 15V4"/><path d="m7 9 5-5 5 5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+)
 const CHECK = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
 )
@@ -52,22 +55,20 @@ const STEPS = [
 
 function Mockup({ id }) {
   if (id === 'criar') {
+    // Réplica do ecrã real de criação: enviar ficheiros ou descrever o trabalho.
     return (
-      <div className="hw3-mock hw3-mock--create">
-        <div className="hw3-mock-head">
-          <span className="hw3-mock-kicker">Novo projeto</span>
-          <span className="hw3-mock-title">Como começas?</span>
+      <div className="hw3-mock hw3-mock--new">
+        <p className="hw3-new-title">Cria o teu <span className="home-gradient-word">trabalho</span></p>
+        <div className="hw3-new-card">
+          <div className="hw3-drop">
+            <span className="hw3-drop-icon">{UPLOAD}</span>
+            <span className="hw3-drop-name">Escolher ficheiros</span>
+            <span className="hw3-drop-sub">PDF, Word, PowerPoint ou imagens</span>
+          </div>
+          <div className="hw3-new-btn">{SPARK}<span>Analisar e criar página</span></div>
         </div>
-        <div className="hw3-options">
-          <span className="hw3-option is-picked">
-            <span className="hw3-option-icon">+</span>
-            <span className="hw3-option-name">Criar do zero</span>
-          </span>
-          <span className="hw3-option">
-            <span className="hw3-option-icon">↑</span>
-            <span className="hw3-option-name">Adicionar um trabalho</span>
-          </span>
-        </div>
+        <div className="hw3-divider"><span>ou</span></div>
+        <div className="hw3-new-alt">Descrever o que estou a fazer</div>
       </div>
     )
   }
@@ -109,14 +110,25 @@ function Mockup({ id }) {
       </div>
     )
   }
+  // Perfil fictício, com a mesma estrutura do perfil real: banner, foto, nome,
+  // frase, atividade e projetos.
+  const heat = [0,1,0,2,0,0,3,1,0,0,2,0,1,0, 0,0,1,0,0,2,0,1,0,0,0,3,0,1]
   return (
-    <div className="hw3-mock hw3-mock--portfolio">
-      <div className="hw3-cover" />
-      <div className="hw3-port-body">
-        <span className="hw3-port-name">Mobilidade Escolar</span>
-        <div className="hw3-port-row">
-          <span className="hw3-score">74</span>
-          <span className="hw3-link">{CHECK}showo.pt/u/bruno</span>
+    <div className="hw3-mock hw3-mock--profile">
+      <div className="hw3-pf-banner" />
+      <div className="hw3-pf-body">
+        <div className="hw3-pf-avatar">IC</div>
+        <div className="hw3-pf-name">Inês Carvalho <span className="hw3-pf-role">Designer</span></div>
+        <div className="hw3-pf-headline">Estudante de Design, Porto</div>
+        <div className="hw3-pf-heat" aria-hidden="true">
+          {heat.map((lvl, i) => <span key={i} className={`hw3-pf-cell l${lvl}`} />)}
+        </div>
+        <div className="hw3-pf-projects">
+          <div className="hw3-pf-project">
+            <span className="hw3-pf-thumb hw3-pf-thumb--blue" />
+            <span className="hw3-pf-ptext"><span className="hw3-pf-pname">Mobilidade Escolar</span><span className="hw3-pf-pmeta">Projeto Final</span></span>
+            <span className="hw3-pf-score">74</span>
+          </div>
         </div>
       </div>
     </div>
