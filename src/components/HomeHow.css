@@ -30,7 +30,9 @@
   position: relative;
   aspect-ratio: 1 / 1;
   border-radius: 28px;
-  background: color-mix(in srgb, var(--color-primary) 14%, var(--color-bg-alt));
+  /* Fundo com a cor do pilar ativo (--frame), suave e sem ser saturado. */
+  background: color-mix(in srgb, var(--frame, var(--color-primary)) 16%, var(--color-bg-alt));
+  transition: background-color 400ms cubic-bezier(0.2, 0, 0, 1);
   display: flex; align-items: center; justify-content: center;
   padding: 48px;
   overflow: hidden;
@@ -59,7 +61,7 @@
   transition: border-color 150ms ease;
 }
 .hw3-item-btn:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; border-radius: 6px; }
-.hw3-item.is-active .hw3-item-btn { border-inline-start-color: var(--color-primary); }
+.hw3-item.is-active .hw3-item-btn { border-inline-start-color: var(--tone, var(--color-primary)); }
 .hw3-item-btn:hover .hw3-item-title { color: var(--color-text); }
 
 .hw3-item-title {
@@ -74,12 +76,36 @@
   color: color-mix(in srgb, var(--color-text) 80%, transparent);
   margin: 0; max-width: 46ch;
 }
-.hw3-item-link {
-  display: inline-flex; align-items: center; gap: 6px;
-  font-size: 15px; font-weight: 600; color: var(--color-primary);
+.hw3-lead {
+  margin: 14px 0 0;
+  max-width: 56ch;
+  font-size: 17px; line-height: 1.6;
+  color: color-mix(in srgb, var(--color-text) 80%, transparent);
 }
-.hw3-item-arrow { display: inline-flex; }
-.hw3-item-arrow svg { width: 15px; height: 15px; }
+
+/* Secções do projeto (mockup Desenvolver) */
+.hw3-sections { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.hw3-section {
+  font-size: 13px; font-weight: 700;
+  padding: 9px 12px; border-radius: 10px;
+  border: 1px solid var(--color-border); color: var(--color-text-secondary);
+}
+.hw3-section.is-done { background: var(--color-bg-alt); color: var(--color-text); }
+
+/* Validação do professor (mockup Validar) */
+.hw3-validator { display: flex; align-items: center; gap: 12px; }
+.hw3-avatar {
+  flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: #cc9a1e; color: #fff; font-size: 13px; font-weight: 800;
+}
+.hw3-check {
+  margin-inline-start: auto;
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: #16A34A; color: #fff;
+}
+.hw3-check svg { width: 14px; height: 14px; }
 
 /* ── Mockups ── */
 .hw3-mock {

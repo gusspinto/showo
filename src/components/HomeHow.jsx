@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import './HomeHow.css'
 
-/* O que é o Showo — quatro pilares num só painel. À esquerda, um quadro com o
-   mockup do pilar ativo; à direita, a lista. O pilar ativo mostra a descrição e
-   uma ligação; os outros ficam só com o título. Hover (com rato), clique e teclado
-   escolhem o pilar. Os visuais são ilustrativos: aria-hidden. */
+/* O que é o Showo: ajuda a desenvolver e apresentar projetos, com IA a guiar o
+   processo e um portefólio profissional no fim. Quatro momentos do percurso, cada
+   um com um mockup. O quadro muda de cor com o pilar (as cores do ícone da marca).
+   Visuais ilustrativos: aria-hidden. Hover (com rato), clique e teclado escolhem. */
 
 const GITHUB = (
   <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -20,38 +20,56 @@ const NOTE = (
 const CHECK = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
 )
-const ARROW = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>
-)
 
+// Cores do ícone da marca: azul, vermelho, amarelo e verde.
 const PILLARS = [
   {
+    id: 'desenvolver',
+    color: '#2478f0',
+    title: 'Desenvolver o projeto',
+    desc: 'A IA guia-te secção a secção: problema, solução, processo e resultados. Sabes sempre o que falta.',
+  },
+  {
     id: 'registar',
-    title: 'Registar o progresso',
-    desc: 'Cada avanço fica no diário do projeto, com os commits do GitHub e as tuas notas, sem esforço extra.',
-    link: 'Ver o diário',
+    color: '#db4a3d',
+    title: 'Registar o caminho',
+    desc: 'Cada avanço fica no diário do projeto, com os commits do GitHub e as tuas notas.',
   },
   {
-    id: 'guardar',
-    title: 'Guardar tudo num sítio',
-    desc: 'Ficheiros, projetos e estados numa biblioteca. Escolhes o que fica privado e o que aparece no perfil.',
-    link: 'Ver a biblioteca',
+    id: 'validar',
+    color: '#cc9a1e',
+    title: 'Validar com o professor',
+    desc: 'Quando o professor valida o projeto, a validação fica visível no teu portefólio.',
   },
   {
-    id: 'ligar',
-    title: 'A IA acompanha',
-    desc: 'A IA lê o que registaste e sugere o que falta. Tu decides o que entra no perfil.',
-    link: 'Ver como funciona',
-  },
-  {
-    id: 'mostrar',
-    title: 'Mostrar com um link',
-    desc: 'Um portfólio pronto a partilhar, com score e os projetos que queres destacar.',
-    link: 'Ver um exemplo',
+    id: 'apresentar',
+    color: '#16A34A',
+    title: 'Apresentar com um link',
+    desc: 'Um portefólio profissional, pronto a partilhar com quem te quer conhecer.',
   },
 ]
 
 function Mockup({ id }) {
+  if (id === 'desenvolver') {
+    return (
+      <div className="hw3-mock hw3-mock--library">
+        <div className="hw3-mock-head">
+          <span className="hw3-mock-kicker">Projeto</span>
+          <span className="hw3-mock-title">Mobilidade Escolar</span>
+        </div>
+        <div className="hw3-sections">
+          <span className="hw3-section is-done">Problema</span>
+          <span className="hw3-section is-done">Solução</span>
+          <span className="hw3-section">Processo</span>
+          <span className="hw3-section">Resultados</span>
+        </div>
+        <div className="hw3-ai-bubble">
+          <span className="hw3-ai-icon">{SPARK}</span>
+          <span className="hw3-ai-text">Faltam os resultados do teste com alunos.</span>
+        </div>
+      </div>
+    )
+  }
   if (id === 'registar') {
     return (
       <div className="hw3-mock hw3-mock--diary">
@@ -70,37 +88,25 @@ function Mockup({ id }) {
       </div>
     )
   }
-  if (id === 'guardar') {
+  if (id === 'validar') {
     return (
-      <div className="hw3-mock hw3-mock--library">
+      <div className="hw3-mock hw3-mock--validate">
         <div className="hw3-mock-head">
-          <span className="hw3-mock-kicker">Biblioteca</span>
-          <span className="hw3-mock-title">3 itens</span>
+          <span className="hw3-mock-kicker">Validação</span>
+          <span className="hw3-mock-title">Mobilidade Escolar</span>
         </div>
-        <div className="hw3-files">
-          <span className="hw3-file hw3-file--doc"><span className="hw3-file-type">DOC</span><span className="hw3-file-name">Relatório PAP</span></span>
-          <span className="hw3-file hw3-file--pdf"><span className="hw3-file-type">PDF</span><span className="hw3-file-name">Entrevista</span></span>
-          <span className="hw3-file hw3-file--proj"><span className="hw3-file-type">PROJ</span><span className="hw3-file-name">Mobilidade</span></span>
+        <div className="hw3-validator">
+          <span className="hw3-avatar">AR</span>
+          <span className="hw3-entry-body">
+            <span className="hw3-text">Prof.ª Ana Ribeiro</span>
+            <span className="hw3-meta">Validou o projeto</span>
+          </span>
+          <span className="hw3-check">{CHECK}</span>
         </div>
         <div className="hw3-chips">
-          <span className="hw3-chip">No perfil</span>
-          <span className="hw3-chip">Privado</span>
+          <span className="hw3-chip">Validado</span>
+          <span className="hw3-chip">Visível no portefólio</span>
         </div>
-      </div>
-    )
-  }
-  if (id === 'ligar') {
-    return (
-      <div className="hw3-mock hw3-mock--ai">
-        <div className="hw3-ai-bubble">
-          <span className="hw3-ai-icon">{SPARK}</span>
-          <span className="hw3-ai-text">Falta mostrar os resultados do teste.</span>
-        </div>
-        <div className="hw3-ai-actions">
-          <span className="hw3-btn hw3-btn--solid">Adicionar ao perfil</span>
-          <span className="hw3-btn">Ignorar</span>
-        </div>
-        <div className="hw3-ai-bar"><span /></div>
       </div>
     )
   }
@@ -128,12 +134,15 @@ export default function HomeHow() {
         <header className="hw3-head">
           <p className="hw3-eyebrow">O que é o Showo</p>
           <h2 id="hw3-title" className="hw3-title">
-            Um sítio para <span className="home-gradient-word">tudo o que fazes</span>
+            Projetos que se tornam <span className="home-gradient-word">portefólio</span>
           </h2>
+          <p className="hw3-lead">
+            O Showo ajuda-te a desenvolver e apresentar os teus projetos. A IA guia o processo e transforma o resultado num portefólio profissional.
+          </p>
         </header>
 
         <div className="hw3-panel">
-          <div className="hw3-frame" aria-hidden="true">
+          <div className="hw3-frame" aria-hidden="true" style={{ '--frame': current.color }}>
             <div className="hw3-canvas" key={current.id}>
               <Mockup id={current.id} />
             </div>
@@ -143,7 +152,7 @@ export default function HomeHow() {
             {PILLARS.map((p, i) => {
               const isActive = i === active
               return (
-                <li key={p.id} className={`hw3-item${isActive ? ' is-active' : ''}`}>
+                <li key={p.id} className={`hw3-item${isActive ? ' is-active' : ''}`} style={{ '--tone': p.color }}>
                   <button
                     type="button"
                     className="hw3-item-btn"
@@ -153,12 +162,6 @@ export default function HomeHow() {
                   >
                     <span className="hw3-item-title">{p.title}</span>
                     {isActive && <span className="hw3-item-desc">{p.desc}</span>}
-                    {isActive && (
-                      <span className="hw3-item-link">
-                        {p.link}
-                        <span className="hw3-item-arrow">{ARROW}</span>
-                      </span>
-                    )}
                   </button>
                 </li>
               )
