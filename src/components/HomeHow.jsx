@@ -36,10 +36,10 @@ const PILLARS = [
     desc: 'Cada avanço fica no diário do projeto, com os commits do GitHub e as tuas notas.',
   },
   {
-    id: 'validar',
+    id: 'guardar',
     color: '#cc9a1e',
-    title: 'Validar com o professor',
-    desc: 'Quando o professor valida o projeto, a validação fica visível no teu portefólio.',
+    title: 'Guardar tudo num sítio',
+    desc: 'Ficheiros, projetos e estados numa biblioteca. Escolhes o que fica privado e o que aparece no perfil.',
   },
   {
     id: 'apresentar',
@@ -88,24 +88,21 @@ function Mockup({ id }) {
       </div>
     )
   }
-  if (id === 'validar') {
+  if (id === 'guardar') {
     return (
-      <div className="hw3-mock hw3-mock--validate">
+      <div className="hw3-mock hw3-mock--library">
         <div className="hw3-mock-head">
-          <span className="hw3-mock-kicker">Validação</span>
-          <span className="hw3-mock-title">Mobilidade Escolar</span>
+          <span className="hw3-mock-kicker">Biblioteca</span>
+          <span className="hw3-mock-title">3 itens</span>
         </div>
-        <div className="hw3-validator">
-          <span className="hw3-avatar">AR</span>
-          <span className="hw3-entry-body">
-            <span className="hw3-text">Prof.ª Ana Ribeiro</span>
-            <span className="hw3-meta">Validou o projeto</span>
-          </span>
-          <span className="hw3-check">{CHECK}</span>
+        <div className="hw3-files">
+          <span className="hw3-file hw3-file--doc"><span className="hw3-file-type">DOC</span><span className="hw3-file-name">Relatório</span></span>
+          <span className="hw3-file hw3-file--pdf"><span className="hw3-file-type">PDF</span><span className="hw3-file-name">Entrevista</span></span>
+          <span className="hw3-file hw3-file--proj"><span className="hw3-file-type">PROJ</span><span className="hw3-file-name">Mobilidade</span></span>
         </div>
         <div className="hw3-chips">
-          <span className="hw3-chip">Validado</span>
-          <span className="hw3-chip">Visível no portefólio</span>
+          <span className="hw3-chip">No perfil</span>
+          <span className="hw3-chip">Privado</span>
         </div>
       </div>
     )
