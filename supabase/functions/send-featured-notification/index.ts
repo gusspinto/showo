@@ -89,6 +89,17 @@ Deno.serve(async (req) => {
       ? (featured ?? []).filter((p: { id: string }) => p.id === testProjectId)
       : (featured ?? [])
 
+    if (!testProjectId && candidates.length) {
+      const semanaAtual = new Date()
+      const dia = (semanaAtual.getUTCDay() + 6) % 7
+      semanaAtual.setUTCDate(semanaAtual.getUTCDate() - dia)
+      const weekStart = semanaAtual.toISOString().slice(0, 10)
+      await supabase.from('featured_weeks').upsert(
+        candidates.map((p: { id: string }) => ({ week_start: weekStart, project_id: p.id })),
+        { onConflict: 'week_start,project_id', ignoreDuplicates: true },
+      )
+    }
+
     let sent = 0
     let skipped = 0
     const errors: string[] = []
