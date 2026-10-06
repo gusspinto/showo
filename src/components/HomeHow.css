@@ -61,7 +61,6 @@
   transition: border-color 150ms ease;
 }
 .hw3-item-btn:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; border-radius: 6px; }
-.hw3-item.is-active .hw3-item-btn { border-inline-start-color: var(--tone, var(--color-primary)); }
 .hw3-item-btn:hover .hw3-item-title { color: var(--color-text); }
 
 .hw3-item-title {
@@ -76,6 +75,25 @@
   color: color-mix(in srgb, var(--color-text) 80%, transparent);
   margin: 0; max-width: 46ch;
 }
+/* Barra lateral do passo ativo: a cor do passo cresce de cima para baixo em STEP_MS,
+   por cima da barra cinzenta (a borda do item). Transform, para não relayoutar. */
+.hw3-item { position: relative; }
+.hw3-progress-fill {
+  position: absolute; top: 0; bottom: 0; left: 0;
+  width: 3px;
+  background: var(--tone, var(--color-primary));
+  transform-origin: top;
+  animation-name: hw3-fill;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+  pointer-events: none;
+}
+.hw3-progress-fill.is-paused { animation-play-state: paused; }
+@keyframes hw3-fill {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+
 .hw3-lead {
   margin: 14px 0 0;
   max-width: 56ch;

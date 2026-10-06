@@ -1,5 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './HomeHow.css'
+
+// Tempo de cada passo no modo automático (ms). A barra do passo ativo enche-se nesse tempo.
+const STEP_MS = 5000
 
 /* O que é o Showo, contado pelo percurso do utilizador: cria ou adiciona um
    projeto, a IA leva-o secção a secção, cada passo fica registado e tudo acaba
@@ -137,10 +140,32 @@ function Mockup({ id }) {
 
 export default function HomeHow() {
   const [active, setActive] = useState(0)
+  const [inView, setInView] = useState(false)
+  const [hovering, setHovering] = useState(false)
+  const sectionRef = useRef(null)
   const current = STEPS[active]
+  const reduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+  const playing = inView && !hovering && !reduced
+
+  // Só avança quando a secção está à vista.
+  useEffect(() => {
+    const el = sectionRef.current
+    if (!el || typeof IntersectionObserver === 'undefined') return
+    const obs = new IntersectionObserver(([e]) => setInView(e.isIntersecting), { threshold: 0.35 })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
+  // Passo automático: troca de passo ao fim de STEP_MS. Mudar de passo (clique ou
+  // automático) reinicia o temporizador, por isso a barra e o passo andam juntos.
+  useEffect(() => {
+    if (!playing) return
+    const t = setTimeout(() => setActive(a => (a + 1) % STEPS.length), STEP_MS)
+    return () => clearTimeout(t)
+  }, [active, playing])
 
   return (
-    <section className="hw3" id="como-funciona" aria-labelledby="hw3-title">
+    <section ref={sectionRef} className="hw3" id="como-funciona" aria-labelledby="hw3-title">
       <div className="hw3-inner">
         <header className="hw3-head">
           <p className="hw3-eyebrow">O que é o Showo</p>
@@ -152,7 +177,7 @@ export default function HomeHow() {
           </p>
         </header>
 
-        <div className="hw3-panel">
+        <div className="hw3-panel" onMouseEnter={() => setHovering(true)} onMouseLeave={() => setHovering(false)}>
           <div className="hw3-frame" aria-hidden="true" style={{ '--frame': current.color }}>
             <div className="hw3-canvas" key={current.id}>
               <Mockup id={current.id} />
@@ -169,11 +194,19 @@ export default function HomeHow() {
                     className="hw3-item-btn"
                     aria-pressed={isActive}
                     onClick={() => setActive(i)}
-                    onMouseEnter={() => { if (window.matchMedia?.('(hover: hover)').matches) setActive(i) }}
                   >
                     <span className="hw3-item-title">{s.title}</span>
                     {isActive && <span className="hw3-item-desc">{s.desc}</span>}
                   </button>
+                  {/* Preenchimento da própria barra lateral do passo ativo. */}
+                  {isActive && !reduced && (
+                    <span
+                      key={`${active}-${playing}`}
+                      className={`hw3-progress-fill${playing ? '' : ' is-paused'}`}
+                      style={{ animationDuration: `${STEP_MS}ms` }}
+                      aria-hidden="true"
+                    />
+                  )}
                 </li>
               )
             })}
