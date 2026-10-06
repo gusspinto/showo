@@ -32,24 +32,28 @@ const CHECK = (
 const STEPS = [
   {
     id: 'criar',
+    short: 'Criar',
     color: '#2478f0',
     title: 'Crias ou adicionas um projeto',
     desc: 'Começas do zero ou trazes um trabalho que já fizeste, escolar ou de trabalho.',
   },
   {
     id: 'desenvolver',
+    short: 'Desenvolver',
     color: '#db4a3d',
     title: 'A IA leva-te secção a secção',
     desc: 'Problema, solução, processo e resultados. Sabes sempre o que falta.',
   },
   {
     id: 'registar',
+    short: 'Registar',
     color: '#cc9a1e',
     title: 'Registas o caminho',
     desc: 'Cada avanço fica no diário, com os commits do GitHub e as tuas notas.',
   },
   {
     id: 'apresentar',
+    short: 'Partilhar',
     color: '#16A34A',
     title: 'Tudo fica num só sítio',
     desc: 'Guardado como num drive, mas pensado para mostrar: um portefólio pronto a partilhar com um link.',
@@ -211,6 +215,33 @@ export default function HomeHow() {
               )
             })}
           </ol>
+
+          {/* Telemóvel: os passos viram pills, com a barra a encher-se por baixo da ativa. */}
+          <div className="hw3-pills" role="group" aria-label="Passos">
+            {STEPS.map((s, i) => {
+              const isActive = i === active
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  className={`hw3-pill${isActive ? ' is-active' : ''}`}
+                  aria-pressed={isActive}
+                  onClick={() => setActive(i)}
+                >
+                  <span className="hw3-pill-label">{s.short}</span>
+                  {isActive && !reduced && (
+                    <span
+                      key={`${active}-${playing}`}
+                      className={`hw3-pill-fill${playing ? '' : ' is-paused'}`}
+                      style={{ animationDuration: `${STEP_MS}ms` }}
+                      aria-hidden="true"
+                    />
+                  )}
+                </button>
+              )
+            })}
+          </div>
+          <p className="hw3-pills-desc">{current.desc}</p>
         </div>
       </div>
     </section>

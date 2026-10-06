@@ -304,9 +304,42 @@
 }
 .hw3-link svg { width: 12px; height: 12px; color: #16A34A; }
 
+/* Em desktop, as pills e a descrição do telemóvel ficam escondidas. */
+.hw3-pills, .hw3-pills-desc { display: none; }
+
 @media (max-width: 860px) {
-  .hw3-panel { grid-template-columns: 1fr; gap: 32px; }
+  .hw3-panel { grid-template-columns: 1fr; gap: 28px; }
   .hw3-frame { aspect-ratio: auto; padding: 32px 20px; }
+  /* No telemóvel a lista dá lugar às pills. */
+  .hw3-list { display: none; }
+  .hw3-pills { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+  .hw3-pills::-webkit-scrollbar { display: none; }
+  .hw3-pills-desc { display: block; margin: 0; font-size: 15px; line-height: 1.55; color: color-mix(in srgb, var(--color-text) 80%, transparent); }
+}
+
+/* Pills dos passos (só no telemóvel). */
+.hw3-pill {
+  position: relative; flex: 0 0 auto; overflow: hidden;
+  padding: 10px 16px; border-radius: 999px;
+  border: 1px solid var(--color-border); background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+  transition: border-color 150ms ease, color 150ms ease;
+}
+.hw3-pill.is-active { border-color: var(--color-text); color: var(--color-text); }
+.hw3-pill:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.hw3-pill-fill {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 3px;
+  background: var(--color-text);
+  transform-origin: left;
+  animation-name: hw3-pill-grow;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+.hw3-pill-fill.is-paused { animation-play-state: paused; }
+@keyframes hw3-pill-grow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
 }
 
 /* Movimento reduzido: sem fade do mockup. */
