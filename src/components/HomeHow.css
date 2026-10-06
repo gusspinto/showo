@@ -83,6 +83,22 @@
   color: color-mix(in srgb, var(--color-text) 80%, transparent);
 }
 
+/* Criar ou adicionar (mockup do primeiro passo) */
+.hw3-options { display: grid; gap: 10px; }
+.hw3-option {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px; border-radius: 12px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-alt);
+  font-size: 15px; font-weight: 600; color: var(--color-text);
+}
+.hw3-option.is-picked { border-color: #2478f0; background: color-mix(in srgb, #2478f0 10%, var(--color-surface)); }
+.hw3-option-icon {
+  flex-shrink: 0; width: 30px; height: 30px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  background: #2478f0; color: #fff; font-size: 17px; font-weight: 700; line-height: 1;
+}
+
 /* Secções do projeto (mockup Desenvolver) */
 .hw3-sections { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .hw3-section {

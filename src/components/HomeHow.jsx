@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import './HomeHow.css'
 
-/* O que é o Showo: ajuda a desenvolver e apresentar projetos, com IA a guiar o
-   processo e um portefólio profissional no fim. Quatro momentos do percurso, cada
-   um com um mockup. O quadro muda de cor com o pilar (as cores do ícone da marca).
-   Visuais ilustrativos: aria-hidden. Hover (com rato), clique e teclado escolhem. */
+/* O que é o Showo, contado pelo percurso do utilizador: cria ou adiciona um
+   projeto, a IA leva-o secção a secção, cada passo fica registado e tudo acaba
+   num portefólio pronto a partilhar. Quatro passos, cada um com um mockup, e as
+   cores do ícone da marca. Visuais ilustrativos: aria-hidden. Hover (com rato),
+   clique e teclado escolhem o passo. */
 
 const GITHUB = (
   <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -21,35 +22,55 @@ const CHECK = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
 )
 
-// Cores do ícone da marca: azul, vermelho, amarelo e verde.
-const PILLARS = [
+// Percurso do utilizador. Cores do ícone da marca: azul, vermelho, amarelo e verde.
+const STEPS = [
+  {
+    id: 'criar',
+    color: '#2478f0',
+    title: 'Crias ou adicionas um projeto',
+    desc: 'Começas do zero ou trazes um trabalho que já fizeste, escolar ou de trabalho.',
+  },
   {
     id: 'desenvolver',
-    color: '#2478f0',
-    title: 'Desenvolver o projeto',
-    desc: 'A IA guia-te secção a secção: problema, solução, processo e resultados. Sabes sempre o que falta.',
+    color: '#db4a3d',
+    title: 'A IA leva-te secção a secção',
+    desc: 'Problema, solução, processo e resultados. Sabes sempre o que falta.',
   },
   {
     id: 'registar',
-    color: '#db4a3d',
-    title: 'Registar o caminho',
-    desc: 'Cada avanço fica no diário do projeto, com os commits do GitHub e as tuas notas.',
-  },
-  {
-    id: 'guardar',
     color: '#cc9a1e',
-    title: 'Guardar tudo num sítio',
-    desc: 'Ficheiros, projetos e estados numa biblioteca. Escolhes o que fica privado e o que aparece no perfil.',
+    title: 'Registas o caminho',
+    desc: 'Cada avanço fica no diário, com os commits do GitHub e as tuas notas.',
   },
   {
     id: 'apresentar',
     color: '#16A34A',
-    title: 'Apresentar com um link',
-    desc: 'Um portefólio profissional, pronto a partilhar com quem te quer conhecer.',
+    title: 'Tudo fica num só sítio',
+    desc: 'Guardado como num drive, mas pensado para mostrar: um portefólio pronto a partilhar com um link.',
   },
 ]
 
 function Mockup({ id }) {
+  if (id === 'criar') {
+    return (
+      <div className="hw3-mock hw3-mock--create">
+        <div className="hw3-mock-head">
+          <span className="hw3-mock-kicker">Novo projeto</span>
+          <span className="hw3-mock-title">Como começas?</span>
+        </div>
+        <div className="hw3-options">
+          <span className="hw3-option is-picked">
+            <span className="hw3-option-icon">+</span>
+            <span className="hw3-option-name">Criar do zero</span>
+          </span>
+          <span className="hw3-option">
+            <span className="hw3-option-icon">↑</span>
+            <span className="hw3-option-name">Adicionar um trabalho</span>
+          </span>
+        </div>
+      </div>
+    )
+  }
   if (id === 'desenvolver') {
     return (
       <div className="hw3-mock hw3-mock--library">
@@ -88,25 +109,6 @@ function Mockup({ id }) {
       </div>
     )
   }
-  if (id === 'guardar') {
-    return (
-      <div className="hw3-mock hw3-mock--library">
-        <div className="hw3-mock-head">
-          <span className="hw3-mock-kicker">Biblioteca</span>
-          <span className="hw3-mock-title">3 itens</span>
-        </div>
-        <div className="hw3-files">
-          <span className="hw3-file hw3-file--doc"><span className="hw3-file-type">DOC</span><span className="hw3-file-name">Relatório</span></span>
-          <span className="hw3-file hw3-file--pdf"><span className="hw3-file-type">PDF</span><span className="hw3-file-name">Entrevista</span></span>
-          <span className="hw3-file hw3-file--proj"><span className="hw3-file-type">PROJ</span><span className="hw3-file-name">Mobilidade</span></span>
-        </div>
-        <div className="hw3-chips">
-          <span className="hw3-chip">No perfil</span>
-          <span className="hw3-chip">Privado</span>
-        </div>
-      </div>
-    )
-  }
   return (
     <div className="hw3-mock hw3-mock--portfolio">
       <div className="hw3-cover" />
@@ -123,7 +125,7 @@ function Mockup({ id }) {
 
 export default function HomeHow() {
   const [active, setActive] = useState(0)
-  const current = PILLARS[active]
+  const current = STEPS[active]
 
   return (
     <section className="hw3" id="como-funciona" aria-labelledby="hw3-title">
@@ -131,10 +133,10 @@ export default function HomeHow() {
         <header className="hw3-head">
           <p className="hw3-eyebrow">O que é o Showo</p>
           <h2 id="hw3-title" className="hw3-title">
-            Projetos que se tornam <span className="home-gradient-word">portefólio</span>
+            Todos os teus trabalhos, <span className="home-gradient-word">num só portefólio</span>
           </h2>
           <p className="hw3-lead">
-            O Showo ajuda-te a desenvolver e apresentar os teus projetos. A IA guia o processo e transforma o resultado num portefólio profissional.
+            Um portefólio fácil para guardar tudo o que fazes, na escola ou no trabalho. Como um drive, mas pensado para mostrar.
           </p>
         </header>
 
@@ -146,10 +148,10 @@ export default function HomeHow() {
           </div>
 
           <ol className="hw3-list">
-            {PILLARS.map((p, i) => {
+            {STEPS.map((s, i) => {
               const isActive = i === active
               return (
-                <li key={p.id} className={`hw3-item${isActive ? ' is-active' : ''}`} style={{ '--tone': p.color }}>
+                <li key={s.id} className={`hw3-item${isActive ? ' is-active' : ''}`} style={{ '--tone': s.color }}>
                   <button
                     type="button"
                     className="hw3-item-btn"
@@ -157,8 +159,8 @@ export default function HomeHow() {
                     onClick={() => setActive(i)}
                     onMouseEnter={() => { if (window.matchMedia?.('(hover: hover)').matches) setActive(i) }}
                   >
-                    <span className="hw3-item-title">{p.title}</span>
-                    {isActive && <span className="hw3-item-desc">{p.desc}</span>}
+                    <span className="hw3-item-title">{s.title}</span>
+                    {isActive && <span className="hw3-item-desc">{s.desc}</span>}
                   </button>
                 </li>
               )
