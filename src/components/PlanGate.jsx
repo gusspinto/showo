@@ -18,10 +18,11 @@ const FEATURE_TESTIMONIAL_NAME = {
 // os outros seguem-se, para o carrossel ter por onde rodar em vez de mostrar
 // sempre o mesmo. Nenhum é inventado, são os mesmos da Pricing/Home.
 function orderTestimonials(feature) {
+  const list = TESTIMONIALS.filter(t => t.popup !== false)
   const wanted = FEATURE_TESTIMONIAL_NAME[feature]
-  const i = TESTIMONIALS.findIndex(t => t.name === wanted)
-  if (i <= 0) return TESTIMONIALS
-  return [TESTIMONIALS[i], ...TESTIMONIALS.slice(0, i), ...TESTIMONIALS.slice(i + 1)]
+  const i = list.findIndex(t => t.name === wanted)
+  if (i <= 0) return list
+  return [list[i], ...list.slice(0, i), ...list.slice(i + 1)]
 }
 
 // Marca do plano ao lado do nome — a marca Showo na cor do plano
@@ -100,6 +101,9 @@ const C = {
   // bloco do preço (que é o único a usar a tinta da marca).
   testimonial: {
     display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)',
+    // Não estica até à altura da coluna do preço: a caixa fica só do tamanho do
+    // conteúdo, sem espaço vazio entre o testemunho e a autoria.
+    alignSelf: 'start',
     background: 'var(--color-surface)', border: '1px solid var(--color-border)',
     borderRadius: 'var(--radius-lg)', padding: 'var(--sp-5)',
   },

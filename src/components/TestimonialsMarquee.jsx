@@ -24,34 +24,18 @@ export const TESTIMONIALS = [
     photo: '/testimonials/rafael-matos.jpg',
   },
   {
-    quote: 'Parabéns pela plataforma! Acho que é algo necessário e inovador.',
-    name: 'Martim Gonçalves',
-    role: 'Estudante de Multimédia da Universidade da Maia e Videógrafo/Fotógrafo',
-    photo: '/testimonials/martim-goncalves.jpg',
-  },
-  {
     quote: 'Na minha opinião, um dos pontos mais fortes da plataforma é a Defesa. A organização e preparação torna tudo mais interativo e envolvente.',
     name: 'Rita Sousa',
     role: 'Estudante na Escola Profissional Bento de Jesus Caraça',
     photo: '/testimonials/rita-sousa.jpg',
   },
   {
-    quote: 'Uma ideia bastante interessante e bem estruturada, que permite aos alunos criar portfólios e valorizar os seus projetos e competências.',
-    name: 'Duarte Leal',
-    role: 'Estudante na Escola Profissional Bento de Jesus Caraça',
-    photo: '/testimonials/duarte-leal.jpg',
-  },
-  {
-    quote: 'Gostei da ideia da plataforma. O design é apelativo e faz querer explorar mais. Acho que vai ajudar bastante a quem tem projetos e ideias, tanto a nível escolar como profissional.',
-    name: 'Rafael Carvalho',
-    role: 'Estudante no Instituto Superior Politécnico Gaya',
-    photo: '/testimonials/rafael-carvalho.jpg',
-  },
-  {
     quote: 'A plataforma Showo tem sido um apoio gigante no meu projeto. Acredito mesmo que resolve grande parte dos problemas de pessoas como eu que têm dificuldade em organizar as suas ideias, o que as leva a desistir das mesmas. É uma ótima ferramenta para quem estuda em cursos profissionais e quer sempre aprender mais, mesmo que por conta própria.',
     name: 'Maria Gonçalves',
     role: 'Escola Secundária/3 de Tondela',
     photo: '/testimonials/maria_goncalves.jpeg',
+    // Fica no carrossel da home e de preços, mas não no pop-up de upgrade.
+    popup: false,
   },
 ]
 
