@@ -30,7 +30,7 @@ export const TESTIMONIALS = [
     photo: '/testimonials/rita-sousa.jpg',
   },
   {
-    quote: 'A plataforma Showo tem sido um apoio gigante no meu projeto. Acredito mesmo que resolve grande parte dos problemas de pessoas como eu que têm dificuldade em organizar as suas ideias, o que as leva a desistir das mesmas. É uma ótima ferramenta para quem estuda em cursos profissionais e quer sempre aprender mais, mesmo que por conta própria.',
+    quote: 'A plataforma Showo tem sido um apoio gigante no meu projeto. Acredito mesmo que resolve grande parte dos problemas de pessoas como eu que têm dificuldade em organizar as suas ideias, o que as leva a desistir das mesmas.',
     name: 'Maria Gonçalves',
     role: 'Escola Secundária/3 de Tondela',
     photo: '/testimonials/maria_goncalves.jpeg',
