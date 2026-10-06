@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import './HomeHow.css'
 
-/* Visão geral do Showo em quatro pilares: Registar (diário), Guardar (biblioteca),
-   Ligar (IA) e Mostrar (portfólio). Cada pilar tem um mockup ilustrativo, por isso
-   os visuais são aria-hidden; o texto de cada pilar é uma linha. Com
-   prefers-reduced-motion os mockups aparecem já no estado final. */
+/* O que é o Showo — quatro pilares num só painel. À esquerda, um quadro com o
+   mockup do pilar ativo; à direita, a lista. O pilar ativo mostra a descrição e
+   uma ligação; os outros ficam só com o título. Hover (com rato), clique e teclado
+   escolhem o pilar. Os visuais são ilustrativos: aria-hidden. */
 
 const GITHUB = (
   <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -20,41 +20,108 @@ const NOTE = (
 const CHECK = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
 )
+const ARROW = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>
+)
 
 const PILLARS = [
-  { id: 'registar', label: 'Registar', line: 'Cada avanço fica no diário do projeto.' },
-  { id: 'guardar', label: 'Guardar', line: 'Ficheiros, projetos e estados num só sítio.' },
-  { id: 'ligar', label: 'Ligar', line: 'A IA lê o que fizeste e diz o que falta.' },
-  { id: 'mostrar', label: 'Mostrar', line: 'Um portfólio pronto a partilhar com um link.' },
+  {
+    id: 'registar',
+    title: 'Registar o progresso',
+    desc: 'Cada avanço fica no diário do projeto, com os commits do GitHub e as tuas notas, sem esforço extra.',
+    link: 'Ver o diário',
+  },
+  {
+    id: 'guardar',
+    title: 'Guardar tudo num sítio',
+    desc: 'Ficheiros, projetos e estados numa biblioteca. Escolhes o que fica privado e o que aparece no perfil.',
+    link: 'Ver a biblioteca',
+  },
+  {
+    id: 'ligar',
+    title: 'A IA acompanha',
+    desc: 'A IA lê o que registaste e sugere o que falta. Tu decides o que entra no perfil.',
+    link: 'Ver como funciona',
+  },
+  {
+    id: 'mostrar',
+    title: 'Mostrar com um link',
+    desc: 'Um portfólio pronto a partilhar, com score e os projetos que queres destacar.',
+    link: 'Ver um exemplo',
+  },
 ]
 
-function useInView(threshold = 0.2) {
-  const ref = useRef(null)
-  const [seen, setSeen] = useState(false)
-  useEffect(() => {
-    const el = ref.current
-    if (!el || typeof IntersectionObserver === 'undefined') { setSeen(true); return }
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setSeen(true); obs.disconnect() } }, { threshold })
-    obs.observe(el)
-    return () => obs.disconnect()
-  }, [threshold])
-  return [ref, seen]
-}
-
-function Pillar({ p, index, children }) {
-  const [ref, seen] = useInView()
-  return (
-    <article ref={ref} className={`hw3-card hw3-card--${p.id}${seen ? ' is-in' : ''}`} style={{ '--d': `${index * 120}ms` }}>
-      <div className="hw3-stage" aria-hidden="true">{children}</div>
-      <div className="hw3-caption">
-        <span className="hw3-label">{p.label}</span>
-        <p className="hw3-line">{p.line}</p>
+function Mockup({ id }) {
+  if (id === 'registar') {
+    return (
+      <div className="hw3-mock hw3-mock--diary">
+        <div className="hw3-mock-head">
+          <span className="hw3-mock-kicker">Diário</span>
+          <span className="hw3-mock-title">Mobilidade Escolar</span>
+        </div>
+        <div className="hw3-entry">
+          <span className="hw3-dot hw3-dot--ink">{GITHUB}</span>
+          <span className="hw3-entry-body"><span className="hw3-code">feat: cálculo de rotas</span><span className="hw3-meta">GitHub · há 2 dias</span></span>
+        </div>
+        <div className="hw3-entry">
+          <span className="hw3-dot hw3-dot--amber">{NOTE}</span>
+          <span className="hw3-entry-body"><span className="hw3-text">Testei com 5 alunos.</span><span className="hw3-meta">Nota · há 1 semana</span></span>
+        </div>
       </div>
-    </article>
+    )
+  }
+  if (id === 'guardar') {
+    return (
+      <div className="hw3-mock hw3-mock--library">
+        <div className="hw3-mock-head">
+          <span className="hw3-mock-kicker">Biblioteca</span>
+          <span className="hw3-mock-title">3 itens</span>
+        </div>
+        <div className="hw3-files">
+          <span className="hw3-file hw3-file--doc"><span className="hw3-file-type">DOC</span><span className="hw3-file-name">Relatório PAP</span></span>
+          <span className="hw3-file hw3-file--pdf"><span className="hw3-file-type">PDF</span><span className="hw3-file-name">Entrevista</span></span>
+          <span className="hw3-file hw3-file--proj"><span className="hw3-file-type">PROJ</span><span className="hw3-file-name">Mobilidade</span></span>
+        </div>
+        <div className="hw3-chips">
+          <span className="hw3-chip">No perfil</span>
+          <span className="hw3-chip">Privado</span>
+        </div>
+      </div>
+    )
+  }
+  if (id === 'ligar') {
+    return (
+      <div className="hw3-mock hw3-mock--ai">
+        <div className="hw3-ai-bubble">
+          <span className="hw3-ai-icon">{SPARK}</span>
+          <span className="hw3-ai-text">Falta mostrar os resultados do teste.</span>
+        </div>
+        <div className="hw3-ai-actions">
+          <span className="hw3-btn hw3-btn--solid">Adicionar ao perfil</span>
+          <span className="hw3-btn">Ignorar</span>
+        </div>
+        <div className="hw3-ai-bar"><span /></div>
+      </div>
+    )
+  }
+  return (
+    <div className="hw3-mock hw3-mock--portfolio">
+      <div className="hw3-cover" />
+      <div className="hw3-port-body">
+        <span className="hw3-port-name">Mobilidade Escolar</span>
+        <div className="hw3-port-row">
+          <span className="hw3-score">74</span>
+          <span className="hw3-link">{CHECK}showo.pt/u/bruno</span>
+        </div>
+      </div>
+    </div>
   )
 }
 
 export default function HomeHow() {
+  const [active, setActive] = useState(0)
+  const current = PILLARS[active]
+
   return (
     <section className="hw3" id="como-funciona" aria-labelledby="hw3-title">
       <div className="hw3-inner">
@@ -65,72 +132,38 @@ export default function HomeHow() {
           </h2>
         </header>
 
-        <div className="hw3-grid">
-          {/* Registar — diário do projeto, com entradas de GitHub e notas */}
-          <Pillar p={PILLARS[0]} index={0}>
-            <div className="hw3-mock hw3-mock--diary">
-              <div className="hw3-mock-head">
-                <span className="hw3-mock-kicker">Diário</span>
-                <span className="hw3-mock-title">Mobilidade Escolar</span>
-              </div>
-              <div className="hw3-entry">
-                <span className="hw3-dot hw3-dot--ink">{GITHUB}</span>
-                <span className="hw3-entry-body"><span className="hw3-code">feat: cálculo de rotas</span><span className="hw3-meta">GitHub · há 2 dias</span></span>
-              </div>
-              <div className="hw3-entry">
-                <span className="hw3-dot hw3-dot--amber">{NOTE}</span>
-                <span className="hw3-entry-body"><span className="hw3-text">Testei com 5 alunos.</span><span className="hw3-meta">Nota · há 1 semana</span></span>
-              </div>
+        <div className="hw3-panel">
+          <div className="hw3-frame" aria-hidden="true">
+            <div className="hw3-canvas" key={current.id}>
+              <Mockup id={current.id} />
             </div>
-          </Pillar>
+          </div>
 
-          {/* Guardar — biblioteca em grelha, com estados */}
-          <Pillar p={PILLARS[1]} index={1}>
-            <div className="hw3-mock hw3-mock--library">
-              <div className="hw3-mock-head">
-                <span className="hw3-mock-kicker">Biblioteca</span>
-                <span className="hw3-mock-title">3 itens</span>
-              </div>
-              <div className="hw3-files">
-                <span className="hw3-file hw3-file--doc"><span className="hw3-file-type">DOC</span><span className="hw3-file-name">Relatório PAP</span></span>
-                <span className="hw3-file hw3-file--pdf"><span className="hw3-file-type">PDF</span><span className="hw3-file-name">Entrevista</span></span>
-                <span className="hw3-file hw3-file--proj"><span className="hw3-file-type">PROJ</span><span className="hw3-file-name">Mobilidade</span></span>
-              </div>
-              <div className="hw3-chips">
-                <span className="hw3-chip">No perfil</span>
-                <span className="hw3-chip">Privado</span>
-              </div>
-            </div>
-          </Pillar>
-
-          {/* Ligar — sugestão da IA com confirmação */}
-          <Pillar p={PILLARS[2]} index={2}>
-            <div className="hw3-mock hw3-mock--ai">
-              <div className="hw3-ai-bubble">
-                <span className="hw3-ai-icon">{SPARK}</span>
-                <span className="hw3-ai-text">Falta mostrar os resultados do teste.</span>
-              </div>
-              <div className="hw3-ai-actions">
-                <span className="hw3-btn hw3-btn--solid">Adicionar ao perfil</span>
-                <span className="hw3-btn">Ignorar</span>
-              </div>
-              <div className="hw3-ai-bar"><span /></div>
-            </div>
-          </Pillar>
-
-          {/* Mostrar — portfólio com score e link */}
-          <Pillar p={PILLARS[3]} index={3}>
-            <div className="hw3-mock hw3-mock--portfolio">
-              <div className="hw3-cover" />
-              <div className="hw3-port-body">
-                <span className="hw3-port-name">Mobilidade Escolar</span>
-                <div className="hw3-port-row">
-                  <span className="hw3-score">74</span>
-                  <span className="hw3-link">{CHECK}showo.pt/u/bruno</span>
-                </div>
-              </div>
-            </div>
-          </Pillar>
+          <ol className="hw3-list">
+            {PILLARS.map((p, i) => {
+              const isActive = i === active
+              return (
+                <li key={p.id} className={`hw3-item${isActive ? ' is-active' : ''}`}>
+                  <button
+                    type="button"
+                    className="hw3-item-btn"
+                    aria-pressed={isActive}
+                    onClick={() => setActive(i)}
+                    onMouseEnter={() => { if (window.matchMedia?.('(hover: hover)').matches) setActive(i) }}
+                  >
+                    <span className="hw3-item-title">{p.title}</span>
+                    {isActive && <span className="hw3-item-desc">{p.desc}</span>}
+                    {isActive && (
+                      <span className="hw3-item-link">
+                        {p.link}
+                        <span className="hw3-item-arrow">{ARROW}</span>
+                      </span>
+                    )}
+                  </button>
+                </li>
+              )
+            })}
+          </ol>
         </div>
       </div>
     </section>

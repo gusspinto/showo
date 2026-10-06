@@ -1,4 +1,4 @@
-/* ══ HomeHow — visão geral do Showo: quatro pilares, cada um com mockup ══ */
+/* ══ HomeHow — O que é o Showo: quadro com mockup à esquerda, lista de pilares à direita ══ */
 
 .hw3 { padding: 72px 24px 80px; }
 .hw3-inner { max-width: 1080px; margin: 0 auto; }
@@ -17,58 +17,76 @@
   color: var(--color-text);
 }
 
-.hw3-grid {
+/* Painel em duas colunas: quadro (esquerda) e lista (direita). */
+.hw3-panel {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
-}
-@media (max-width: 760px) {
-  .hw3-grid { grid-template-columns: minmax(0, 1fr); }
-  .hw3-stage { height: auto; padding: 20px 16px; }
-  .hw3-caption { padding: 16px 18px 18px; }
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: 56px;
+  align-items: center;
 }
 
-/* Cartão de pilar: palco com o mockup em cima, legenda curta por baixo. */
-.hw3-card {
-  display: flex; flex-direction: column;
+/* Quadro: moldura suave da marca com o mockup ativo centrado. */
+.hw3-frame {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 28px;
+  background: color-mix(in srgb, var(--color-primary) 14%, var(--color-bg-alt));
+  display: flex; align-items: center; justify-content: center;
+  padding: 48px;
+  overflow: hidden;
+}
+.hw3-canvas {
+  width: 100%;
+  max-width: 380px;
+  animation: hw3-fade 0.45s cubic-bezier(0.2, 0, 0, 1) both;
+}
+@keyframes hw3-fade {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Lista: o ativo tem uma barra azul à esquerda e mostra a descrição. */
+.hw3-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.hw3-item { position: relative; }
+.hw3-item-btn {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
+  width: 100%;
+  padding: 18px 24px;
+  border: none; background: transparent;
+  border-inline-start: 3px solid var(--color-border);
+  border-radius: 0;
+  font-family: inherit; text-align: start; cursor: pointer;
+  transition: border-color 150ms ease;
+}
+.hw3-item-btn:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; border-radius: 6px; }
+.hw3-item.is-active .hw3-item-btn { border-inline-start-color: var(--color-primary); }
+.hw3-item-btn:hover .hw3-item-title { color: var(--color-text); }
+
+.hw3-item-title {
+  font-family: var(--font-heading);
+  font-size: 22px; font-weight: 700; line-height: 1.25; letter-spacing: -0.01em;
+  color: color-mix(in srgb, var(--color-text) 55%, transparent);
+  transition: color 150ms ease;
+}
+.hw3-item.is-active .hw3-item-title { color: var(--color-text); }
+.hw3-item-desc {
+  font-size: 16px; line-height: 1.55;
+  color: color-mix(in srgb, var(--color-text) 80%, transparent);
+  margin: 0; max-width: 46ch;
+}
+.hw3-item-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 15px; font-weight: 600; color: var(--color-primary);
+}
+.hw3-item-arrow { display: inline-flex; }
+.hw3-item-arrow svg { width: 15px; height: 15px; }
+
+/* ── Mockups ── */
+.hw3-mock {
+  width: 100%;
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 20px;
-  background: var(--color-surface);
-  overflow: hidden;
-  opacity: 0; transform: translateY(14px);
-  /* Entrada com atraso por cartão; a borda no hover reage em 150ms, sem atraso. */
-  transition:
-    opacity 0.6s cubic-bezier(0.2, 0, 0, 1) var(--d),
-    transform 0.6s cubic-bezier(0.2, 0, 0, 1) var(--d),
-    border-color 150ms ease;
-}
-.hw3-card.is-in { opacity: 1; transform: none; }
-.hw3-card:hover { border-color: var(--color-border-hover); }
-
-/* Palco com altura fixa (todos os cartões iguais) e um halo suave da marca. */
-.hw3-stage {
-  position: relative;
-  height: 300px;
-  padding: 28px;
-  background:
-    radial-gradient(120% 80% at 50% 0%, color-mix(in srgb, var(--color-primary) 10%, transparent), transparent 70%),
-    var(--color-bg-alt);
-  border-bottom: 1px solid var(--color-border);
-  display: flex; align-items: center; justify-content: center;
-}
-.hw3-caption { padding: 20px 24px 24px; display: flex; flex-direction: column; gap: 8px; min-height: 104px; }
-.hw3-label {
-  font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-  color: var(--color-primary);
-}
-.hw3-line { margin: 0; font-size: 16px; line-height: 1.5; color: var(--color-text); }
-
-/* ── Mockups comuns ── */
-.hw3-mock {
-  width: 100%; max-width: 440px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
   padding: 20px;
   display: flex; flex-direction: column; gap: 14px;
   box-shadow: 0 1px 2px color-mix(in srgb, var(--color-text) 6%, transparent), 0 16px 32px -24px color-mix(in srgb, var(--color-text) 40%, transparent);
@@ -77,23 +95,21 @@
 .hw3-mock-kicker { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text-secondary); }
 .hw3-mock-title { font-size: 16px; font-weight: 800; color: var(--color-text); }
 
-/* Registar: entradas com marca sólida */
-.hw3-entry { display: flex; align-items: center; gap: 12px; padding-top: 10px; border-top: 1px solid var(--color-border-subtle); }
+.hw3-entry { display: flex; align-items: center; gap: 12px; padding-top: 12px; border-top: 1px solid var(--color-border-subtle); }
 .hw3-entry-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .hw3-code { font-family: var(--font-mono); font-size: 14px; color: var(--color-text); }
 .hw3-text { font-size: 15px; color: var(--color-text); }
 .hw3-meta { font-size: 12.5px; color: var(--color-text-secondary); }
 .hw3-dot {
   flex-shrink: 0;
-  width: 30px; height: 30px; border-radius: 50%;
+  width: 32px; height: 32px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   color: #fff;
 }
-.hw3-dot svg { width: 14px; height: 14px; }
+.hw3-dot svg { width: 15px; height: 15px; }
 .hw3-dot--ink { background: #1C2333; }
 .hw3-dot--amber { background: #D97706; }
 
-/* Guardar: ficheiros em grelha */
 .hw3-files { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .hw3-file {
   display: flex; flex-direction: column; gap: 8px;
@@ -117,48 +133,49 @@
   border: 1px solid var(--color-border); color: var(--color-text);
 }
 
-/* Ligar: sugestão da IA com ações */
 .hw3-ai-bubble {
   display: flex; align-items: flex-start; gap: 10px;
-  padding: 12px; border-radius: 12px;
+  padding: 14px; border-radius: 14px;
   background: var(--color-primary-subtle);
   border: 1px solid var(--color-primary-muted);
 }
 .hw3-ai-icon {
-  flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+  flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   background: var(--color-primary); color: #fff;
 }
-.hw3-ai-icon svg { width: 13px; height: 13px; }
+.hw3-ai-icon svg { width: 14px; height: 14px; }
 .hw3-ai-text { font-size: 15px; line-height: 1.45; color: var(--color-text); }
 .hw3-ai-actions { display: flex; gap: 8px; }
 .hw3-btn {
   font-size: 13px; font-weight: 700;
-  padding: 7px 12px; border-radius: 9px;
+  padding: 8px 14px; border-radius: 10px;
   border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text);
 }
 .hw3-btn--solid { background: var(--color-text); border-color: var(--color-text); color: var(--color-bg); }
 .hw3-ai-bar { height: 4px; border-radius: 99px; background: var(--color-border); overflow: hidden; }
 .hw3-ai-bar > span { display: block; height: 100%; width: 40%; background: var(--color-primary); border-radius: 99px; }
 
-/* Mostrar: cartão de portfólio */
 .hw3-mock--portfolio { padding: 0; overflow: hidden; }
-.hw3-cover {
-  height: 140px;
-  background: linear-gradient(135deg, #2478f0 0%, #db4a3d 62%, #cc9a1e 100%);
-}
-.hw3-port-body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 10px; }
+.hw3-cover { height: 140px; background: linear-gradient(135deg, #2478f0 0%, #db4a3d 62%, #cc9a1e 100%); }
+.hw3-port-body { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 10px; }
 .hw3-port-name { font-size: 18px; font-weight: 800; color: var(--color-text); }
 .hw3-port-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .hw3-score { font-family: var(--font-heading); font-size: 30px; font-weight: 800; line-height: 1; color: var(--color-primary); }
 .hw3-link {
   display: inline-flex; align-items: center; gap: 6px;
-  font-size: 11.5px; font-weight: 600; color: var(--color-text);
+  font-size: 12px; font-weight: 600; color: var(--color-text);
   padding: 6px 10px; border-radius: 999px; border: 1px solid var(--color-border);
 }
 .hw3-link svg { width: 12px; height: 12px; color: #16A34A; }
 
-/* Movimento reduzido: estado final, sem transições. */
+@media (max-width: 860px) {
+  .hw3-panel { grid-template-columns: 1fr; gap: 32px; }
+  .hw3-frame { aspect-ratio: auto; padding: 32px 20px; }
+}
+
+/* Movimento reduzido: sem fade do mockup. */
 @media (prefers-reduced-motion: reduce) {
-  .hw3-card { opacity: 1; transform: none; transition: none; }
+  .hw3-canvas { animation: none; }
+  .hw3-item-btn, .hw3-item-title { transition: none; }
 }
