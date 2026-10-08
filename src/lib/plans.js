@@ -65,11 +65,9 @@ export const PLANS = {
   plus: {
     id: 'plus',
     name: 'Plus',
-    priceLabel: '€4,99',
+    priceLabel: '€8,99',
+    priceLabelAnnual: '€89,90',
     period: '/mês',
-    stripePriceId: typeof window !== 'undefined' && window.location?.hostname === 'localhost'
-      ? 'price_1U3YjERzbl5ql7IdG7Yf5MhC'
-      : 'price_1U3kJ92MED6Xa6YrWrLvrdXG',
     maxProjects: 15,
     ai: {
       createProject: 15,
@@ -91,11 +89,9 @@ export const PLANS = {
   pro: {
     id: 'pro',
     name: 'Pro',
-    priceLabel: '€9,99',
+    priceLabel: '€17,99',
+    priceLabelAnnual: '€179,90',
     period: '/mês',
-    stripePriceId: typeof window !== 'undefined' && window.location?.hostname === 'localhost'
-      ? 'price_1U3YjvRzbl5ql7Id7uUcwFFD'
-      : 'price_1U3kJA2MED6Xa6YrEQMfJ0q3',
     maxProjects: Infinity,
     ai: {
       createProject: 30,

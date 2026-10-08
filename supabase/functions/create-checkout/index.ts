@@ -14,7 +14,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { plan, returnPath } = await req.json()
+    const { plan, period = 'monthly', returnPath } = await req.json()
 
     // O pop-up de upgrade (PlanGate) abre o checkout a partir de onde a pessoa estava
     // (um projeto, o Coach, etc.), não só a partir de /pricing — sem isto, pagar dentro
@@ -35,14 +35,22 @@ Deno.serve(async (req) => {
       : 'https://showo.pt/settings?tab=plano&stripe=success'
     const cancelUrl = isSafeReturnPath ? `https://showo.pt${returnPath}` : 'https://showo.pt/pricing'
 
-    const PRICE_IDS: Record<string, string> = {
-      build: Deno.env.get('STRIPE_PRICE_BUILD')!,
-      launch: Deno.env.get('STRIPE_PRICE_LAUNCH')!,
-      plus: Deno.env.get('STRIPE_PRICE_BUILD')!,
-      pro: Deno.env.get('STRIPE_PRICE_LAUNCH')!,
+    // Um price ID por plano e periodicidade. Antes vivia metade aqui (env vars,
+    // usado no checkout real) e metade hardcoded em src/lib/plans.js (só UI,
+    // nunca lido pelo checkout) — os dois já tinham divergido silenciosamente.
+    // Isto agora é a única fonte de verdade.
+    const PRICE_IDS: Record<string, Record<string, string | undefined>> = {
+      plus: {
+        monthly: Deno.env.get('STRIPE_PRICE_PLUS_MONTHLY'),
+        annual: Deno.env.get('STRIPE_PRICE_PLUS_ANNUAL'),
+      },
+      pro: {
+        monthly: Deno.env.get('STRIPE_PRICE_PRO_MONTHLY'),
+        annual: Deno.env.get('STRIPE_PRICE_PRO_ANNUAL'),
+      },
     }
 
-    const priceId = PRICE_IDS[plan]
+    const priceId = PRICE_IDS[plan]?.[period]
     if (!priceId) {
       return new Response(JSON.stringify({ error: 'Plano inválido.' }), {
         status: 400, headers: { ...cors, 'Content-Type': 'application/json' },
@@ -83,7 +91,7 @@ Deno.serve(async (req) => {
       success_url: successUrl,
       cancel_url: cancelUrl,
       subscription_data: {
-        metadata: { supabase_uid: user.id, plan },
+        metadata: { supabase_uid: user.id, plan, period },
       },
     })
 
