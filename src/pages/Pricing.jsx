@@ -64,7 +64,9 @@ const PLANS = [
   {
     id: 'plus',
     name: 'Plus',
-    price: '€4,99',
+    priceMonthly: '€8,99',
+    priceAnnual: '€89,90',
+    annualEquivalent: '€7,49/mês',
     period: '/mês',
     tagline: 'Nunca fiques bloqueado a meio da PAP.',
     positioning: 'Para levares um projeto a sério até ao fim, seja PAP, estágio ou algo teu.',
@@ -103,7 +105,9 @@ const PLANS = [
   {
     id: 'pro',
     name: 'Pro',
-    price: '€9,99',
+    priceMonthly: '€17,99',
+    priceAnnual: '€179,90',
+    annualEquivalent: '€14,99/mês',
     period: '/mês',
     tagline: 'Sem limites, sem preocupações.',
     positioning: 'Para quem quer o máximo da plataforma e da carreira a seguir.',
@@ -214,6 +218,7 @@ export default function Pricing() {
   const navigate = useNavigate()
   const { user, planId, profile, isSchoolAccount, logFunnelEvent } = useAuth()
   const [loading, setLoading] = useState(null)
+  const [annual, setAnnual] = useState(false)
 
   const isTeacher = profile?.role === 'professor'
   if (user && (isTeacher || isSchoolAccount)) {
@@ -236,7 +241,7 @@ export default function Pricing() {
     setError('')
     try {
       const { data, error: fnErr } = await supabase.functions.invoke('create-checkout', {
-        body: { plan: plan.id },
+        body: { plan: plan.id, period: annual ? 'annual' : 'monthly' },
       })
       if (fnErr || !data?.url) { setError('Erro ao iniciar pagamento. Tenta novamente.'); return }
       window.location.href = data.url
@@ -262,6 +267,23 @@ export default function Pricing() {
           <span>Já usado por alunos e professores em escolas profissionais portuguesas.</span>
         </div>
 
+        <div className="pricing-period-toggle" role="group" aria-label="Periodicidade do pagamento">
+          <button
+            type="button"
+            className={`pricing-period-btn${!annual ? ' is-active' : ''}`}
+            onClick={() => setAnnual(false)}
+          >
+            Mensal
+          </button>
+          <button
+            type="button"
+            className={`pricing-period-btn${annual ? ' is-active' : ''}`}
+            onClick={() => setAnnual(true)}
+          >
+            Anual <span className="pricing-period-badge">2 meses grátis</span>
+          </button>
+        </div>
+
         <div className="pricing-grid">
           {PLANS.map(plan => {
             const isCurrent = user && plan.id === planId
@@ -277,9 +299,14 @@ export default function Pricing() {
                 </div>
 
                 <div className="pricing-price">
-                  <span className="pricing-amount">{plan.price}</span>
-                  {plan.period && <span className="pricing-period">{plan.period}</span>}
+                  <span className="pricing-amount">
+                    {annual && plan.priceAnnual ? plan.priceAnnual : plan.priceMonthly ?? plan.price}
+                  </span>
+                  {plan.period && <span className="pricing-period">{annual && plan.priceAnnual ? '/ano' : plan.period}</span>}
                 </div>
+                {annual && plan.annualEquivalent && (
+                  <p className="pricing-annual-note">equivale a {plan.annualEquivalent}</p>
+                )}
                 {isCurrent ? (
                   <div className="pricing-current"><Check size={14} /> Plano atual</div>
                 ) : isDowngrade ? (
