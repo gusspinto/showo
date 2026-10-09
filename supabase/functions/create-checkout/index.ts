@@ -83,10 +83,14 @@ Deno.serve(async (req) => {
         .eq('id', user.id)
     }
 
+    // Códigos de desconto (ex: SHOWO_LAUNCH) são só para o mensal — o Stripe só
+    // restringe coupons por produto, não por price, e mensal/anual partilham o
+    // mesmo produto. A única forma de impedir o código no anual é não o deixar
+    // sequer entrar no campo em Checkout.
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
-      allow_promotion_codes: true,
+      allow_promotion_codes: period === 'monthly',
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: successUrl,
       cancel_url: cancelUrl,
