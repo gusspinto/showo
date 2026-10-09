@@ -172,7 +172,7 @@ const C = {
 export function PlanGateModal({ message, onClose }) {
   const navigate = useNavigate()
   const location = useLocation()
-  const { planId } = useAuth()
+  const { planId, logFunnelEvent } = useAuth()
   const [loading, setLoading] = useState(false)
   const [askingParents, setAskingParents] = useState(false)
   const [checkoutError, setCheckoutError] = useState('')
@@ -200,6 +200,15 @@ export function PlanGateModal({ message, onClose }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [upgrade, orderedTestimonials.length])
   const testimonial = upgrade ? orderedTestimonials[tIdx] : null
+
+  // Registo do funil: quando alguém vê mesmo o pop-up de upgrade (não o nudge
+  // leve do Dashboard, que já tinha isto). Só regista quando há oferta de
+  // upgrade a mostrar — sem `upgrade` é só a mensagem de limite sem CTA.
+  useEffect(() => {
+    if (!upgrade) return
+    logFunnelEvent('gate_shown', feature)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   async function handleUpgrade() {
     if (!upgrade) return
