@@ -1288,6 +1288,24 @@ export const TITLE_FONT_OPTIONS = [
   { key: 'inter',    label: 'Inter',    css: 'Inter, sans-serif',                        sample: 'Aw' },
 ]
 
+// Fonte livre do Google Fonts — nome sanitizado (só letras/números/espaço)
+// antes de ir para o URL da API e para o CSS font-family, para não dar para
+// injetar nada ali. Carregamento com `Set` a nível de módulo: a mesma fonte
+// nunca é pedida duas vezes na mesma sessão, mesmo se o projeto reabrir.
+function sanitizeFontName(name) {
+  return String(name || '').replace(/[^a-zA-Z0-9 ]/g, '').trim().slice(0, 40)
+}
+const loadedGoogleFonts = new Set()
+function loadGoogleFont(name) {
+  const clean = sanitizeFontName(name)
+  if (!clean || loadedGoogleFonts.has(clean)) return
+  loadedGoogleFonts.add(clean)
+  const link = document.createElement('link')
+  link.rel = 'stylesheet'
+  link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(clean).replace(/%20/g, '+')}:wght@400;500;600;700;800&display=swap`
+  document.head.appendChild(link)
+}
+
 export const TITLE_STYLE_OPTIONS = [
   { key: 'normal',   label: 'Normal'    },
   { key: 'caps',     label: 'CAPS'      },
@@ -1922,8 +1940,32 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
       : typeHero
 
   const heroHeight        = (HERO_SIZES.find(s => s.key === previewStyle.heroSize) || HERO_SIZES[0]).height
-  const selectedFont      = FONT_OPTIONS.find(f => f.key === (previewStyle.font || 'default')) || FONT_OPTIONS[0]
-  const selectedTitleFont = TITLE_FONT_OPTIONS.find(f => f.key === (previewStyle.titleFont || 'croogla')) || TITLE_FONT_OPTIONS[0]
+
+  // Fonte livre — mesma lógica da cor personalizada: guardada à parte da
+  // chave da lista fixa, carregada do Google Fonts só quando está mesmo
+  // ativa (debounce para não pedir a fonte a cada letra escrita).
+  const customFontName      = sanitizeFontName(previewStyle.fontCustom)
+  const usingCustomFont     = previewStyle.font === 'custom' && !!customFontName
+  const customTitleFontName = sanitizeFontName(previewStyle.titleFontCustom)
+  const usingCustomTitleFont = previewStyle.titleFont === 'custom' && !!customTitleFontName
+
+  useEffect(() => {
+    if (!usingCustomFont) return
+    const t = setTimeout(() => loadGoogleFont(customFontName), 500)
+    return () => clearTimeout(t)
+  }, [usingCustomFont, customFontName])
+  useEffect(() => {
+    if (!usingCustomTitleFont) return
+    const t = setTimeout(() => loadGoogleFont(customTitleFontName), 500)
+    return () => clearTimeout(t)
+  }, [usingCustomTitleFont, customTitleFontName])
+
+  const selectedFont      = usingCustomFont
+    ? { key: 'custom', label: customFontName, css: `"${customFontName}", sans-serif`, sample: 'Aa' }
+    : (FONT_OPTIONS.find(f => f.key === (previewStyle.font || 'default')) || FONT_OPTIONS[0])
+  const selectedTitleFont = usingCustomTitleFont
+    ? { key: 'custom', label: customTitleFontName, css: `"${customTitleFontName}", sans-serif`, sample: 'Aw' }
+    : (TITLE_FONT_OPTIONS.find(f => f.key === (previewStyle.titleFont || 'croogla')) || TITLE_FONT_OPTIONS[0])
   const titleStyle        = previewStyle.titleStyle || 'normal'
   const selectedBg        = BG_OPTIONS.find(b => b.key === (previewStyle.bg || 'default')) || BG_OPTIONS[0]
   const resolvedBg        = usingCustomBg ? customBg : (selectedBg.bg || 'var(--color-bg)')
@@ -2921,6 +2963,24 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                       )
                     })}
                   </div>
+                  <div style={{ marginTop: 8 }}>
+                    <input
+                      value={previewStyle.titleFontCustom || ''}
+                      onChange={e => setPreviewStyle(ps => ({ ...ps, titleFont: 'custom', titleFontCustom: e.target.value }))}
+                      placeholder="Ou o nome de uma Google Font (ex: Poppins)"
+                      style={{ ...wsInputNew, fontSize: 11 }}
+                      maxLength={40}
+                    />
+                    {usingCustomTitleFont && (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 5 }}>
+                        <span style={{ fontSize: 11, color: 'var(--color-text-secondary)', fontFamily: selectedTitleFont.css }}>A usar: {customTitleFontName}</span>
+                        <button type="button"
+                          onClick={() => setPreviewStyle(ps => ({ ...ps, titleFont: 'croogla', titleFontCustom: '' }))}
+                          style={{ background: 'transparent', border: 'none', color: 'var(--color-text-secondary)', fontSize: 10, cursor: 'pointer', textDecoration: 'underline', fontFamily: 'var(--font-body)' }}
+                        >Repor</button>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div style={{ marginBottom: 12 }}>
                   <div style={wsControlLabel}>Alinhamento</div>
@@ -2959,6 +3019,24 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                         </button>
                       )
                     })}
+                  </div>
+                  <div style={{ marginTop: 8 }}>
+                    <input
+                      value={previewStyle.fontCustom || ''}
+                      onChange={e => setPreviewStyle(ps => ({ ...ps, font: 'custom', fontCustom: e.target.value }))}
+                      placeholder="Ou o nome de uma Google Font (ex: Poppins)"
+                      style={{ ...wsInputNew, fontSize: 11 }}
+                      maxLength={40}
+                    />
+                    {usingCustomFont && (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 5 }}>
+                        <span style={{ fontSize: 11, color: 'var(--color-text-secondary)', fontFamily: selectedFont.css }}>A usar: {customFontName}</span>
+                        <button type="button"
+                          onClick={() => setPreviewStyle(ps => ({ ...ps, font: 'default', fontCustom: '' }))}
+                          style={{ background: 'transparent', border: 'none', color: 'var(--color-text-secondary)', fontSize: 10, cursor: 'pointer', textDecoration: 'underline', fontFamily: 'var(--font-body)' }}
+                        >Repor</button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
