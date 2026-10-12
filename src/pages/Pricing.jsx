@@ -49,7 +49,7 @@ const PLANS = [
       {
         label: 'IA',
         ai: true,
-        note: 'A IA ajuda em cada etapa: criar o projeto, a entrevista guiada, a análise, o pitch, a banca de defesa e mais — com um limite mensal.',
+        note: 'A IA ajuda em cada etapa: criar o projeto, a entrevista guiada, a análise, o pitch, a banca de defesa e mais, com um limite mensal.',
       },
     ],
   },
@@ -111,7 +111,7 @@ const PLANS = [
       {
         label: 'IA',
         ai: true,
-        note: 'Muitos mais usos de IA do que no Plus — praticamente sem limite.',
+        note: 'Muitos mais usos de IA do que no Plus, praticamente sem limite.',
       },
     ],
   },
@@ -120,7 +120,7 @@ const PLANS = [
 /* Tabela comparativa — três cards lado a lado obrigam a decorar o que muda
    de um para o outro. Uma tabela deixa comparar linha a linha de relance.
    A conta escola fica fora: não é self-serve, é vendida à instituição. */
-/* Os números de utilizações de IA (msgs, x vezes) saíram daqui — viviam
+/* Os números de utilizações de IA (msgs, x vezes) saíram daqui. Viviam
    também em cada cartão, repetidos, e só confundiam numa página de vendas.
    Ficam só o que é capacidade real (armazenamento, projetos) e o que é
    uma funcionalidade a mais, não uma quantidade. */
