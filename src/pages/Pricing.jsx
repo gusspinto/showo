@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CheckCircleIcon as Check } from '@solar-icons/react/linear/check-circle'
 import { CloseCircleIcon as CloseCircle } from '@solar-icons/react/linear/close-circle'
@@ -71,10 +71,10 @@ const PLANS = [
       {
         label: 'Mais',
         items: [
-          { label: 'Provas do projeto', value: '250MB', tip: 'Anexa PDFs, Word, PowerPoint, imagens — qualquer ficheiro que prove o trabalho. Escolhes o que aparece na página pública.' },
+          { label: 'Provas do projeto', value: '250MB', tip: 'Anexa ficheiros que provem o trabalho. Escolhes o que aparece na página pública.' },
           { label: '15 projetos' },
           { label: 'Recap semanal' },
-          { label: 'Treino de defesa com IA', tip: 'A IA gera notas para cada parte da apresentação, perguntas prováveis do júri com respostas sugeridas, e uma dica para o dia.' },
+          { label: 'Treino de defesa com IA', tip: 'A IA prepara-te para a defesa: notas, perguntas do júri e uma dica para o dia.' },
           { label: 'Carta de apresentação com IA' },
         ],
       },
@@ -102,10 +102,10 @@ const PLANS = [
       {
         label: 'Mais',
         items: [
-          { label: 'Provas do projeto', value: '1GB', tip: 'Anexa PDFs, Word, PowerPoint, imagens — qualquer ficheiro que prove o trabalho. Escolhes o que aparece na página pública.' },
+          { label: 'Provas do projeto', value: '1GB', tip: 'Anexa ficheiros que provem o trabalho. Escolhes o que aparece na página pública.' },
           { label: 'Projetos ilimitados' },
-          { label: 'Link à tua medida', tip: 'Tira o código aleatório do link do teu projeto e escolhe o teu próprio texto.' },
-          { label: 'Vagas de estágio', tip: 'Vê e candidata-te a vagas publicadas por empresas parceiras, com o teu portfólio em vez de CV.' },
+          { label: 'Link à tua medida', tip: 'Escolhe o teu próprio link, em vez do código aleatório.' },
+          { label: 'Vagas de estágio', tip: 'Candidata-te a vagas de empresas parceiras com o teu portfólio.' },
         ],
       },
       {
@@ -187,6 +187,16 @@ export default function Pricing() {
   const [loading, setLoading] = useState(null)
   const [annual, setAnnual] = useState(false)
   const [openTip, setOpenTip] = useState(null) // "<planId>:<label>" do tooltip aberto, ou null
+
+  // Fecha o tooltip ao clicar fora dele (em qualquer sítio da página).
+  useEffect(() => {
+    if (!openTip) return
+    function onPointerDown(e) {
+      if (!e.target.closest('.pricing-tip-wrap')) setOpenTip(null)
+    }
+    document.addEventListener('mousedown', onPointerDown)
+    return () => document.removeEventListener('mousedown', onPointerDown)
+  }, [openTip])
 
   const isTeacher = profile?.role === 'professor'
   if (user && (isTeacher || isSchoolAccount)) {
