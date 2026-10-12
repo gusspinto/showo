@@ -478,7 +478,7 @@ export function LiveProof({ project, isOwner, onSave }) {
 
 export function GithubProof({ project }) {
   const stats = project?.github_stats
-  if (!stats?.commits) return null
+  if (!stats?.commits || project?.preview_style?.githubHidden) return null
   const compact = !!project?.preview_style?.githubCompact
 
   const langs = topLanguages(stats.languages, 3)
@@ -1855,6 +1855,10 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
   // page opts into 760 explicitly. Kept reactive so the panel switches sidebar ↔
   // bottom-sheet on resize/rotate. (See lib/useIsMobile.)
   const isDesktop = !useIsMobile(759)
+  // Sidebar de provas (GitHub + Ficheiros) — larga o suficiente para não
+  // espremer a coluna principal (860px) contra ela; abaixo disto o conteúdo
+  // volta a empilhar-se, como sempre foi.
+  const hasRoomForProofSidebar = !useIsMobile(960)
 
   // Measure banner height so the workspace panel always aligns flush below it
   useEffect(() => {
@@ -2023,6 +2027,14 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
     { id: 'mobile',   Icon: Smartphone, label: 'Mobile',    title: 'Vista mobile (390px)' },
   ]
   const deviceMaxWidth = previewDevice === 'mobile' ? 390 : previewDevice === 'tablet' ? 768 : undefined
+
+  // Sidebar de provas (GitHub + Ficheiros) — decidida só pelo espaço no
+  // ecrã (não pelo conteúdo em si, que só se sabe depois de um fetch
+  // assíncrono em ProjectAttachments — basear a grelha nisso trocava de
+  // coluna única para sidebar a meio do carregamento, voltando a montar o
+  // componente e a pedir os dados outra vez). Sem espaço (mobile, ou o
+  // editor a simular um ecrã estreito), tudo em coluna única, como sempre.
+  const showProofSidebar = hasRoomForProofSidebar && !deviceMaxWidth
 
   return (
     <div className="pv-outer" style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column', background: resolvedBg }}>
@@ -3753,15 +3765,30 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
       )}
 
       {/* ── Story sections ── */}
-      <div className="pv-story" style={{ maxWidth: deviceMaxWidth ? Math.min(860, deviceMaxWidth) : 860, margin: `${isDesktop ? 40 : bannerH + 16}px auto 0`, padding: `0 ${previewDevice === 'mobile' ? '16px' : '28px'} 80px`, display: 'flex', flexDirection: 'column', gap: 32, fontFamily: selectedFont.css }}>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: showProofSidebar ? 'minmax(0,1fr) 300px' : '1fr',
+        gap: 28, alignItems: 'start',
+        maxWidth: showProofSidebar ? 1180 : undefined,
+        margin: showProofSidebar ? `${isDesktop ? 40 : bannerH + 16}px auto 0` : undefined,
+        padding: showProofSidebar ? `0 ${previewDevice === 'mobile' ? '16px' : '28px'}` : undefined,
+      }}>
+      <div className="pv-story" style={{
+        maxWidth: showProofSidebar ? 860 : (deviceMaxWidth ? Math.min(860, deviceMaxWidth) : 860),
+        width: showProofSidebar ? '100%' : undefined,
+        margin: showProofSidebar ? 0 : `${isDesktop ? 40 : bannerH + 16}px auto 0`,
+        padding: showProofSidebar ? '0 0 80px' : `0 ${previewDevice === 'mobile' ? '16px' : '28px'} 80px`,
+        display: 'flex', flexDirection: 'column', gap: 32, fontFamily: selectedFont.css,
+      }}>
 
-        {/* Prova de trabalho do GitHub — logo no topo do conteúdo, antes de
-            qualquer bloco ou secção reordenável: é a primeira coisa que
-            quem visita a página vê a seguir ao cabeçalho. */}
+        {/* Prova de trabalho do GitHub e Ficheiros — sem sidebar (mobile,
+            ou projeto só com uma delas), ficam aqui no topo como sempre;
+            com sidebar (desktop, as duas ativas), mudam-se para lá, para
+            não empilhar tudo numa coluna só. */}
         <LiveProof project={project} isOwner={false} />
-        <GithubProof project={project} />
+        {!showProofSidebar && <GithubProof project={project} />}
         <ApiProof project={project} />
-        <ProjectAttachments project={project} />
+        {!showProofSidebar && <ProjectAttachments project={project} />}
 
         {/* Custom blocks — workspace blocks shown first */}
         {(() => {
@@ -4325,6 +4352,14 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
         )}
 
       </div>{/* end story-sections wrapper */}
+
+      {showProofSidebar && (
+        <aside style={{ display: 'flex', flexDirection: 'column', gap: 20, position: 'sticky', top: 20, alignSelf: 'start' }}>
+          <GithubProof project={project} />
+          <ProjectAttachments project={project} />
+        </aside>
+      )}
+      </div>{/* end proof-sidebar grid */}
       </div>{/* end device-frame / CSS scope */}
       </div>{/* end preview scroll area */}
     </div>
