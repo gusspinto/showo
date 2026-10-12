@@ -46,6 +46,7 @@ import { Chart2Icon as BarChart2 } from '@solar-icons/react/bold/chart-2'
 import { CheckCircleIcon as CheckCircle } from '@solar-icons/react/bold/check-circle'
 import { Book2Icon as BookOpen } from '@solar-icons/react/bold/book-2'
 import { AltArrowDownIcon as ChevronDown } from '@solar-icons/react/bold/alt-arrow-down'
+import { AltArrowUpIcon as ChevronUp } from '@solar-icons/react/bold/alt-arrow-up'
 import { EyeIcon as Eye } from '@solar-icons/react/bold/eye'
 import { EyeClosedIcon as EyeOff } from '@solar-icons/react/bold/eye-closed'
 import { UserPlusRoundedIcon as UserPlus } from '@solar-icons/react/bold/user-plus-rounded'
@@ -2000,6 +2001,45 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
   const orderedSections = previewStyle.sectionOrder?.length ? previewStyle.sectionOrder : DEFAULT_SECTION_ORDER
   const sectionMedia = previewStyle.sectionMedia || {}
 
+  // Clicar numa secção/bloco da própria página para o editar — em vez de o
+  // teres de encontrar primeiro na lista "Ordem da página". `selectedItem`
+  // é a chave do item selecionado ('section:problem' ou 'block:<id>'); só
+  // existe em modo de edição (isOwner && previewEditing), nunca para
+  // visitantes. As ações (mover, esconder/remover) reutilizam exatamente a
+  // mesma lógica que já existia nos botões da aba "Blocos" — isto é só uma
+  // segunda forma de lá chegar, não uma segunda fonte de verdade.
+  const [selectedItem, setSelectedItem] = useState(null)
+  const itemKey = (item) => item.kind === 'block' ? `block:${item.id}` : `section:${item.key}`
+  const defaultLayoutOrder = [
+    ...orderedSections.map(key => ({ kind: 'section', key })),
+    ...previewBlocks.map(b => ({ kind: 'block', id: b.id })),
+  ]
+  function moveLayoutItem(item, direction) {
+    setPreviewStyle(ps => {
+      const base = ps.layoutOrder?.length ? [...ps.layoutOrder] : [...defaultLayoutOrder]
+      const matches = li => li.kind === item.kind && (item.kind === 'block' ? li.id === item.id : li.key === item.key)
+      const idx = base.findIndex(matches)
+      const newIdx = idx + direction
+      if (idx === -1 || newIdx < 0 || newIdx >= base.length) return ps
+      const tmp = base[idx]; base[idx] = base[newIdx]; base[newIdx] = tmp
+      return { ...ps, layoutOrder: base }
+    })
+  }
+  function toggleSectionHidden(key) {
+    setPreviewStyle(ps => {
+      const next = new Set(ps.hiddenSections || [])
+      next.has(key) ? next.delete(key) : next.add(key)
+      return { ...ps, hiddenSections: [...next] }
+    })
+  }
+  function removeBlock(blockId) {
+    setPreviewBlocks(bs => bs.filter(b => b.id !== blockId))
+    setPreviewStyle(ps => ps.layoutOrder?.length
+      ? { ...ps, layoutOrder: ps.layoutOrder.filter(li => !(li.kind === 'block' && li.id === blockId)) }
+      : ps)
+    setSelectedItem(null)
+  }
+
   // Pairs a section card with an optional image/video on the side (set via the
   // Secções tab) — falls back to the plain full-width card when no media is set.
   function withSectionMedia(key, card) {
@@ -2176,6 +2216,34 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
         .pv-banner-btn:hover { opacity: 0.85; }
         .pv-device-btn { transition: all 0.15s; }
         .pv-device-btn:hover { opacity: 0.8; }
+
+        /* ── Clicar para editar — hover/seleção de secções e blocos ── */
+        .pv-sel-hover { cursor: pointer; transition: outline-color 0.12s, box-shadow 0.12s; }
+        .pv-sel-hover:hover { outline: 1.5px dashed var(--color-border-hover); outline-offset: 3px; }
+        .pv-sel-hover:hover .pv-sel-badge { opacity: 1; transform: translateY(0); }
+        .pv-sel-active { outline: 1.5px solid var(--color-primary); outline-offset: 3px; box-shadow: 0 0 0 5px var(--color-primary-subtle); }
+        .pv-sel-badge {
+          position: absolute; top: -12px; left: 14px; z-index: 5;
+          opacity: 0; transform: translateY(4px); pointer-events: none;
+          transition: opacity 0.12s, transform 0.12s;
+          background: var(--color-primary); color: #fff;
+          font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 6px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+          font-family: var(--font-heading);
+        }
+        .pv-sel-active .pv-sel-badge { display: none; }
+        .pv-sel-toolbar {
+          position: absolute; top: -44px; left: 50%; transform: translateX(-50%); z-index: 20;
+          display: flex; align-items: center; gap: 2px;
+          background: var(--color-surface); border: 1px solid var(--color-border);
+          border-radius: 10px; padding: 5px; box-shadow: var(--shadow-xl);
+        }
+        .pv-sel-toolbar button {
+          all: unset; display: flex; align-items: center; justify-content: center;
+          width: 30px; height: 30px; border-radius: 6px; color: var(--color-text-secondary); cursor: pointer;
+        }
+        .pv-sel-toolbar button:hover { background: var(--color-surface-hover); color: var(--color-text); }
+        .pv-sel-sep { width: 1px; height: 18px; background: var(--color-border); margin: 0 3px; }
 
         /* ── Mobile: banner ── */
         @media (max-width: 600px) {
@@ -3809,7 +3877,11 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
         margin: showProofSidebar ? 0 : `${isDesktop ? 40 : bannerH + 16}px auto 0`,
         padding: showProofSidebar ? '0 0 80px' : `0 ${previewDevice === 'mobile' ? '16px' : '28px'} 80px`,
         display: 'flex', flexDirection: 'column', gap: 32, fontFamily: selectedFont.css,
-      }}>
+      }}
+      // Clicar fora de qualquer secção/bloco (espaço vazio entre eles)
+      // fecha a edição atual — cada item já trava a sua própria propagação.
+      onClick={isOwner && previewEditing ? () => setSelectedItem(null) : undefined}
+      >
 
         {/* Prova de trabalho do GitHub e Ficheiros — sem sidebar (mobile,
             ou projeto só com uma delas), ficam aqui no topo como sempre;
@@ -4184,7 +4256,38 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
         }
 
         function renderItem(item) {
-          return item.kind === 'block' ? renderOneBlock(blocksById[item.id]) : renderOneSection(item.key)
+          const node = item.kind === 'block' ? renderOneBlock(blocksById[item.id]) : renderOneSection(item.key)
+          if (!node || !isOwner || !previewEditing) return node
+
+          const key = itemKey(item)
+          const isSel = selectedItem === key
+          const label = item.kind === 'block'
+            ? (BLOCK_TYPES.find(bt => bt.type === blocksById[item.id]?.type)?.label || 'Bloco')
+            : (SECTION_META[item.key]?.label || item.key)
+
+          return (
+            <div
+              key={key}
+              className={isSel ? 'pv-sel-active' : 'pv-sel-hover'}
+              style={{ position: 'relative', borderRadius: 14 }}
+              onClick={e => { e.stopPropagation(); setSelectedItem(s => s === key ? null : key) }}
+            >
+              {isSel && (
+                <div className="pv-sel-toolbar" onClick={e => e.stopPropagation()}>
+                  <button onClick={() => moveLayoutItem(item, -1)} title="Mover para cima"><ChevronUp size={15} /></button>
+                  <button onClick={() => moveLayoutItem(item, 1)} title="Mover para baixo"><ChevronDown size={15} /></button>
+                  <div className="pv-sel-sep" />
+                  {item.kind === 'section' ? (
+                    <button onClick={() => { toggleSectionHidden(item.key); setSelectedItem(null) }} title="Esconder"><EyeOff size={15} /></button>
+                  ) : (
+                    <button onClick={() => removeBlock(item.id)} title="Remover"><X size={15} /></button>
+                  )}
+                </div>
+              )}
+              <div className="pv-sel-badge">Editar · {label}</div>
+              {node}
+            </div>
+          )
         }
 
         const canvas = previewStyle.canvasMode && previewBlocks.length > 0 && (
