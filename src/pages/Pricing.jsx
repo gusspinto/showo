@@ -15,21 +15,20 @@ import './Pricing.css'
 /* ══════════════════════════════════════════════════════════════════════════
    PLANOS
    ──────────────────────────────────────────────────────────────────────────
-   Duas regras que esta página aprendeu à força:
+   Fui ver como o HighLevel e o Linear fazem a deles antes de mexer outra
+   vez. Os dois seguem a mesma disciplina, sem excepção: o card tem no
+   máximo 4-5 linhas, cada uma um substantivo e um número ("250 issues",
+   "Unlimited Sub-Accounts"), zero frases a vender o benefício por dentro
+   do card — isso fica para o título da página. Tudo o resto (o inventário
+   completo) vive numa tabela à parte, não no card.
 
-   1. O CARD NÃO É UM INVENTÁRIO. Listava 10 linhas de IA com uma contagem
-      ao lado ("Banca IA 10x") nos três planos — ninguém decide pagar nove
-      euros porque um número passou de 1 para 10, e o que distinguia mesmo
-      o Pro (carreira) ficava enterrado debaixo dessas dez linhas. As
-      contagens exatas vivem agora SÓ na tabela de comparação mais abaixo,
-      que é o sítio certo para detalhe. O card diz o que ganhas; a tabela
-      diz quanto.
+   Esta versão seguiu essa disciplina a sério: cada card mostra só as 4
+   linhas mais fortes desse plano, sem parágrafos de texto lá dentro. A
+   tabela de comparação, mais abaixo, é que tem a lista toda.
 
-   2. A SHOWO NÃO É SÓ PARA A ESCOLA. A copy anterior falava em "PAP" e
-      "sair da escola" nas frases principais — o que diz a um freelancer ou
-      a um profissional que isto não é para ele. As features de escola
-      continuam a existir (defesa, banca), mas não são a promessa de
-      nenhum plano; são mais uma coisa na lista.
+   E continua a valer a regra anterior: a Showo não é só para a escola —
+   "PAP"/"sair da escola" não aparece nas frases principais. As features
+   de escola continuam na lista, só não são a promessa de nenhum plano.
    ══════════════════════════════════════════════════════════════════════════ */
 
 const PLANS = [
@@ -53,12 +52,9 @@ const PLANS = [
       {
         label: 'IA',
         ai: true,
-        blurb: 'A IA faz o trabalho pesado contigo: tira-te o projeto da cabeça, aponta o que está fraco e prepara-te para o apresentares.',
         items: [
-          { label: 'Coach que responde enquanto trabalhas', value: '10 msgs' },
-          { label: 'Cria o projeto a partir de uma conversa', value: '3x' },
-          { label: 'Análise que diz o que está fraco', value: '1x' },
-          { label: 'Pitch, Banca e PowerPoint', value: 'para provar', tip: 'Pitch IA escreve o título e a história do projeto; Banca IA antecipa as perguntas do júri com respostas sugeridas; e exportas tudo para PowerPoint. Os números exatos estão na tabela de comparação, mais abaixo.' },
+          { label: 'Coach IA', value: '10 msgs' },
+          { label: 'Todas as outras ferramentas', value: 'para experimentar', tip: 'Criar projeto com IA, entrevista guiada, análise, relatório, Pitch IA, Banca IA e exportar para PowerPoint — todas incluídas, uma vez cada. Os números exatos estão na tabela de comparação, mais abaixo.' },
         ],
       },
     ],
@@ -83,18 +79,15 @@ const PLANS = [
         items: [
           { label: '15 projetos' },
           { label: 'Provas do projeto', value: '250MB', tip: 'Anexa PDFs, Word, PowerPoint, imagens — qualquer ficheiro que prove o trabalho. Escolhes o que aparece na página pública.' },
-          { label: 'Recap semanal por email', tip: 'Todas as semanas recebes o que avançaste, o que ficou parado e o que vem a seguir — sem teres de ir à procura.' },
+          { label: 'Recap semanal por email' },
         ],
       },
       {
         label: 'IA',
         ai: true,
-        blurb: 'Cinco vezes mais IA do que no Grátis — em todas as ferramentas, sem excepção. Chega para o ano inteiro sem parar a meio do mês.',
         items: [
-          { label: 'Coach sempre à mão', value: '100 msgs' },
-          { label: 'Cria projetos a partir de uma conversa', value: '15x' },
-          { label: 'Análises que apanham o que te escapou', value: '10x' },
-          { label: 'Treino de defesa e carta de apresentação', value: 'novo', tip: 'Duas ferramentas que o Grátis não tem: ensaias a apresentação com a IA a fazer de júri, e geras uma carta de apresentação a partir do teu trabalho. Os números exatos estão na tabela de comparação, mais abaixo.' },
+          { label: 'Toda a IA', value: '5x mais', tip: 'Em todas as ferramentas, sem excepção — coach, criar projeto, análise, relatório, Pitch IA e Banca IA. Os números exatos estão na tabela de comparação, mais abaixo.' },
+          { label: 'Treino de defesa e carta de apresentação', value: 'novo' },
         ],
       },
     ],
@@ -115,7 +108,6 @@ const PLANS = [
     groups: [
       {
         label: 'Mais',
-        blurb: 'O teu trabalho fica pronto para quem decide sobre ti — um cliente, um recrutador, um júri. Link teu, projetos sem limite, e candidaturas com trabalho em vez de CV.',
         items: [
           { label: 'Projetos ilimitados' },
           { label: 'Provas do projeto', value: '1GB', tip: 'Anexa PDFs, Word, PowerPoint, imagens — qualquer ficheiro que prove o trabalho. Escolhes o que aparece na página pública.' },
@@ -126,12 +118,9 @@ const PLANS = [
       {
         label: 'IA',
         ai: true,
-        blurb: 'No mínimo o dobro do Plus em todas as ferramentas, sem excepção — e PowerPoint sem limite nenhum.',
         items: [
-          { label: 'Coach sem andar a contar', value: '300 msgs' },
-          { label: 'Cria projetos a partir de uma conversa', value: '30x' },
-          { label: 'Análises e treino de defesa', value: '25x' },
-          { label: 'Exportar PowerPoint', value: 'sem limite', tip: 'Todas as ferramentas de IA sobem para pelo menos o dobro do Plus, e exportar para PowerPoint deixa de ter conta. Os números exatos estão na tabela de comparação, mais abaixo.' },
+          { label: 'Toda a IA', value: '2x+ o Plus', tip: 'Em todas as ferramentas, sem excepção. Os números exatos estão na tabela de comparação, mais abaixo.' },
+          { label: 'Exportar PowerPoint', value: 'sem limite' },
         ],
       },
     ],
@@ -347,7 +336,6 @@ export default function Pricing() {
                     ) : !plan.inherits && (
                       <span className="pricing-group-label">{group.label}</span>
                     )}
-                    {group.blurb && <p className="pricing-group-blurb">{group.blurb}</p>}
                     <ul className="pricing-list">
                       {group.items.map(item => {
                         const tipKey = `${plan.id}:${item.label}`
