@@ -98,6 +98,14 @@ function NovaConversa({ onSelect, onClose }) {
 export default function Mensagens() {
   const navigate = useNavigate()
   const location = useLocation()
+
+  // Mensagens é uma app de chat: a página não faz scroll (como WhatsApp e
+  // Instagram), só a lista e as mensagens têm scroll próprio. Sem isto o
+  // mobile arrastava o cabeçalho e a caixa de escrever para fora do ecrã.
+  useEffect(() => {
+    document.body.classList.add('msg-chat-lock')
+    return () => document.body.classList.remove('msg-chat-lock')
+  }, [])
   const returnTo = location.state?.returnTo
   const [searchParams] = useSearchParams()
   const { user } = useAuth()

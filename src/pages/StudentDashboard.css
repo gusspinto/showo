@@ -147,6 +147,8 @@
 }
 .sdb-panel--brand .sdb-btn--onbrand-ghost:hover { background: rgba(255,255,255,0.14); color: #fff; }
 .sdb-btn--sm { height: 30px; padding: 0 10px; font-size: 12px; gap: 5px; }
+/* Ícones dentro de botões não encolhem com o flex (o "+" ficava deformado). */
+.sdb-btn svg { flex-shrink: 0; }
 .sdb-btn:active { transform: translateY(0); }
 
 .sdb-icon-btn {
@@ -1101,14 +1103,14 @@
 .sdb-projlist { list-style: none; margin: 0; padding: 0; }
 .sdb-projrow {
   display: grid;
-  grid-template-columns: 56px minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--sp-3);
   padding: var(--sp-3) var(--sp-5);
   border-top: 1px solid var(--color-border);
   transition: background var(--duration-fast);
 }
-.sdb-projrow:hover { background: var(--color-surface-hover); }
+.sdb-projrow:hover { background: var(--color-surface-hover); border-radius: 12px; }
 .sdb-projrow-main:active { transform: scale(0.98); }
 .sdb-projrow-main {
   display: flex;
@@ -1157,7 +1159,6 @@
   flex-direction: column;
   gap: 4px;
   flex-shrink: 0;
-  width: 56px;
 }
 .sdb-projrow-track {
   width: 100%;
@@ -1175,9 +1176,22 @@
   text-align: left;
   line-height: 1;
 }
-.sdb-projrow-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; opacity: 0; transition: opacity var(--duration-fast); }
-.sdb-projrow:hover .sdb-projrow-actions,
-.sdb-projrow:focus-within .sdb-projrow-actions { opacity: 1; }
+/* Ações sempre visíveis: antes ficavam em opacity 0 até ao hover, por isso
+   ninguém sabia que o botão de copiar existia. Alvo de 34px, ícones de 16px. */
+/* Mesma caixa dos botões do rodapé do card em foco (sdb-btn--quiet): 38px,
+   borda, fundo da superfície, raio 10px, gap 8px. */
+.sdb-projrow-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.sdb-projrow-actions .sdb-icon-btn {
+  width: 38px; height: 38px; border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+.sdb-projrow-actions .sdb-icon-btn:hover { background: var(--color-surface-hover); border-color: var(--color-border-hover); }
+.sdb-projrow-actions .sdb-icon-btn:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.sdb-projrow-actions .sdb-icon-btn svg { width: 13px; height: 13px; }
+/* Card Potencial não estica para a altura da coluna ao lado. */
+.sdb-o-potential { align-self: start; }
 .sdb-projrow-danger {
   padding: 4px 10px;
   border: none;
@@ -1666,6 +1680,8 @@
   flex-wrap: wrap;
   padding-top: 2px;
 }
+/* Partilhar só com ícone, separado à direita das ações principais. */
+.sdb-pinned-foot .sdb-pinned-share { margin-left: auto; }
 
 @media (max-width: 600px) {
   .sdb-page { padding: var(--sp-3) var(--sp-3) var(--sp-12); }
@@ -3112,6 +3128,8 @@
   font-family: inherit;
   cursor: pointer;
   text-align: left;
+  /* Mesmo raio que no mobile (10px) — no desktop estava quadrado. */
+  border-radius: 10px;
   transition: background 0.14s;
 }
 
@@ -3322,11 +3340,14 @@
   .sdb-panel-head--inset ~ ul .sdb-projrow:first-child { border-top: none; }
 
   /* ── Portfolio row: layout limpo mobile ── */
+  /* Ações à direita, alinhadas com o topo do título. O título quebra em
+     linhas (sem corte) e ocupa o espaço que sobra. */
   .sdb-projrow {
-    grid-template-columns: 1fr auto;
+    grid-template-columns: minmax(0, 1fr) auto;
     grid-template-rows: auto;
-    padding: 10px 14px;
-    gap: 0 8px;
+    padding: 12px 14px;
+    gap: 0 10px;
+    align-items: start;
   }
   .sdb-projrow-score { display: none; }
   .sdb-projrow-main {
@@ -3335,16 +3356,17 @@
     padding: 0;
     gap: 3px;
   }
-  .sdb-projrow-name { font-size: 15px; }
+  .sdb-projrow-name { font-size: 15px; white-space: normal; }
   .sdb-projrow-area { font-size: 12px; }
   .sdb-projrow-actions {
     grid-column: 2;
     grid-row: 1;
     opacity: 1;
-    align-self: center;
+    align-self: start;
     justify-content: flex-end;
-    gap: 0;
+    gap: 6px;
   }
+  .sdb-projrow-actions .sdb-icon-btn { width: 34px; height: 34px; }
   /* no mobile só mostra pin e delete, esconde o resto */
   .sdb-projrow-actions .sdb-icon-btn--star,
   .sdb-projrow-actions a.sdb-icon-btn,
