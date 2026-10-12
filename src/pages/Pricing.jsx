@@ -32,8 +32,7 @@ const PLANS = [
     id: 'free',
     name: 'Grátis',
     price: '€0',
-    tagline: 'Vê como funciona.',
-    positioning: 'Para começar um projeto a sério e ver se a plataforma é para ti.',
+    positioning: 'Começa agora, sem cartão de crédito.',
     cta: 'Começar grátis',
     ctaVariant: 'ghost',
     groups: [
@@ -49,6 +48,7 @@ const PLANS = [
       {
         label: 'IA',
         ai: true,
+        blurb: 'Experimenta a IA em cada etapa do projeto — depois decides se precisas de mais.',
         items: [
           { label: 'Coach IA', value: '10 msgs' },
           { label: 'Criar projeto com IA', value: '3x' },
@@ -69,8 +69,7 @@ const PLANS = [
     priceAnnual: '€89,90',
     annualEquivalent: '€7,49/mês',
     period: '/mês',
-    tagline: 'Nunca fiques bloqueado a meio da PAP.',
-    positioning: 'Para levares um projeto a sério até ao fim, seja PAP, estágio ou algo teu.',
+    positioning: 'Nunca fiques bloqueado a meio da PAP.',
     cta: 'Começar com o Plus',
     ctaVariant: 'primary',
     popular: true,
@@ -88,6 +87,7 @@ const PLANS = [
       {
         label: 'IA',
         ai: true,
+        blurb: 'A IA deixa de ser só para experimentar: escreve contigo, treina-te para a defesa e ajuda a corrigir o que falta — as vezes que precisares num mês inteiro, não só uma.',
         items: [
           { label: 'Coach IA', value: '100 msgs' },
           { label: 'Criar com IA', value: '15x' },
@@ -110,8 +110,7 @@ const PLANS = [
     priceAnnual: '€179,90',
     annualEquivalent: '€14,99/mês',
     period: '/mês',
-    tagline: 'Sem limites, sem preocupações.',
-    positioning: 'Para quem quer o máximo da plataforma e da carreira a seguir.',
+    positioning: 'Chega à entrevista com prova, não só um CV.',
     cta: 'Ir para Pro',
     ctaVariant: 'primary',
     inherits: 'Plus',
@@ -119,6 +118,7 @@ const PLANS = [
     groups: [
       {
         label: 'Mais',
+        blurb: 'O teu portfólio fica pronto para quem está a contratar: candidata-te a vagas reais com os teus projetos, num link que escolheste tu.',
         items: [
           { label: 'Provas do projeto', value: '1GB', tip: 'Anexa PDFs, Word, PowerPoint, imagens — qualquer ficheiro que prove o trabalho. Escolhes o que aparece na página pública.' },
           { label: 'Projetos ilimitados' },
@@ -129,6 +129,7 @@ const PLANS = [
       {
         label: 'IA',
         ai: true,
+        blurb: 'Sem contar. Cria, pratica e refina até à entrega — aguenta o ritmo todo do último ano.',
         items: [
           { label: 'Coach IA', value: '300 msgs' },
           { label: 'Criar com IA', value: '30x' },
@@ -324,6 +325,12 @@ export default function Pricing() {
                     {loading === plan.id ? 'A redirecionar…' : <>{plan.cta} <ArrowRight size={14} /></>}
                   </button>
                 )}
+                {/* Reduz o atrito de decidir pagar — facto real (já está na
+                    FAQ), só posto onde é mais preciso: mesmo ao lado do
+                    botão. Grátis não precisa, não há nada para cancelar. */}
+                {plan.id !== 'free' && !isCurrent && !isDowngrade && (
+                  <p className="pricing-cta-note">Cancela quando quiseres, sem letras miúdas.</p>
+                )}
 
                 {/* "Tudo do X, mais…" em vez de repetir a mesma lista três
                     vezes: o que interessa é a diferença, não o inventário. */}
@@ -340,6 +347,7 @@ export default function Pricing() {
                     ) : !plan.inherits && (
                       <span className="pricing-group-label">{group.label}</span>
                     )}
+                    {group.blurb && <p className="pricing-group-blurb">{group.blurb}</p>}
                     <ul className="pricing-list">
                       {group.items.map(item => {
                         const tipKey = `${plan.id}:${item.label}`

@@ -228,6 +228,14 @@
 
 .pricing-cta, .pricing-current { margin-bottom: 4px; }
 
+.pricing-cta-note {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-tertiary);
+  text-align: center;
+}
+
 .pricing-inherits {
   margin: 20px 0 10px;
   font-size: var(--text-sm);
@@ -242,6 +250,16 @@
   font-size: 10px; font-weight: 800;
   letter-spacing: 0.1em; text-transform: uppercase;
   color: var(--color-text-tertiary);
+}
+
+/* A frase de benefício que antecede a lista — diz o que ganhas antes dos
+   números dizerem quantas vezes; os números ficam como letra miúda, não
+   como manchete. */
+.pricing-group-blurb {
+  margin: 0 0 12px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--color-text-secondary);
 }
 
 /* Só a palavra "IA" ganha destaque (pílula com o gradiente da marca,
