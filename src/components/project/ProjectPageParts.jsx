@@ -1551,22 +1551,44 @@ export function ProjectAttachments({ project }) {
         </a>
       )}
       {files.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.12em' }}>Ficheiros</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {files.map(f => (
-              <a
-                key={f.id} href={f.file_url} target="_blank" rel="noopener noreferrer"
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 7,
-                  padding: '8px 14px', borderRadius: 9, border: '1px solid var(--color-border)',
-                  background: 'var(--color-surface)', color: 'var(--color-text-secondary)',
-                  fontSize: 13, fontWeight: 600, textDecoration: 'none',
-                }}
-              >
-                <Download size={14} /> {f.file_name}
-              </a>
-            ))}
+        // Mesmo tratamento visual do GithubProof/ApiProof — eyebrow maiúsculo,
+        // cartão com borda, não uma fila de pills soltas. Cada ficheiro tem um
+        // selo com a extensão em vez de um ícone genérico de download repetido.
+        <div style={{
+          background: 'var(--color-surface)', border: '1px solid var(--color-border)',
+          borderRadius: 12, padding: '20px 24px',
+          fontFamily: 'var(--font-body, system-ui, sans-serif)',
+        }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 14 }}>
+            Ficheiros
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {files.map(f => {
+              const ext = (f.file_name.split('.').pop() || '?').toUpperCase().slice(0, 4)
+              return (
+                <a
+                  key={f.id} href={f.file_url} target="_blank" rel="noopener noreferrer"
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none',
+                    padding: '10px 12px', borderRadius: 9, border: '1px solid var(--color-border)',
+                    background: 'var(--color-bg-alt)',
+                  }}
+                >
+                  <span style={{
+                    flexShrink: 0, minWidth: 36, height: 36, borderRadius: 8, padding: '0 6px',
+                    background: 'var(--color-primary-subtle)', color: 'var(--color-primary)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 10, fontWeight: 800, letterSpacing: '-0.02em',
+                  }}>
+                    {ext}
+                  </span>
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 600, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {f.file_name}
+                  </span>
+                  <Download size={14} color="var(--color-text-tertiary)" style={{ flexShrink: 0 }} />
+                </a>
+              )
+            })}
           </div>
         </div>
       )}
@@ -3654,6 +3676,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
         <LiveProof project={project} isOwner={false} />
         <GithubProof project={project} />
         <ApiProof project={project} />
+        <ProjectAttachments project={project} />
 
         {/* Custom blocks — workspace blocks shown first */}
         {(() => {
@@ -4061,8 +4084,6 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
           )),
         ]
         })()}
-
-        <ProjectAttachments project={project} />
 
         {/* Creator card */}
         {displayName && (() => {
