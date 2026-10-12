@@ -663,28 +663,11 @@ export default function StudentDashboard({ user, profile }) {
     return (
       <section className="sdb-panel sdb-o-potential">
         <header className="sdb-panel-head">
-          <span className="sdb-eyebrow sdb-eyebrow--brand">Potencial do portfólio</span>
-          <span style={{ fontSize: 11, fontWeight: 700, color: scoreColor }}>{potential}/100</span>
+          <span className="sdb-eyebrow sdb-eyebrow--brand">Potencial</span>
         </header>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ position: 'relative', width: 68, height: 68, flexShrink: 0 }}>
-            <svg width={68} height={68} style={{ transform: 'rotate(-90deg)', display: 'block' }}>
-              <circle cx={34} cy={34} r={r} fill="none" stroke="var(--color-border)" strokeWidth={6} />
-              <circle cx={34} cy={34} r={r} fill="none"
-                stroke={scoreColor} strokeWidth={6}
-                strokeDasharray={`${filled} ${circ}`}
-                strokeLinecap="round"
-                style={{ transition: 'stroke-dasharray 0.6s ease' }}
-              />
-            </svg>
-            <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 800, color: scoreColor, lineHeight: 1 }}>
-              {potential}
-            </span>
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'var(--color-text)' }}>{scoreLabel}</p>
-            <p style={{ margin: '4px 0 0', fontSize: 11, color: 'var(--color-text-tertiary)', lineHeight: 1.5 }}>{scoreHint}</p>
-          </div>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+          <span style={{ fontSize: 36, fontWeight: 800, color: scoreColor, lineHeight: 1 }}>{potential}</span>
+          <span style={{ fontSize: 13, color: 'var(--color-text-tertiary)' }}>/100</span>
         </div>
         {slug ? (
           <button className="sdb-profile-link" onClick={() => {
@@ -1129,17 +1112,7 @@ export default function StudentDashboard({ user, profile }) {
                   </div>
                 )}
                 <div className="sdb-stat-tile">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: 26 }}>
-                    <span className="sdb-eyebrow sdb-eyebrow--brand">Potencial</span>
-                    <svg width={26} height={26} style={{ flexShrink: 0, transform: 'rotate(-90deg)' }}>
-                      <circle cx={13} cy={13} r={9} fill="none" stroke="var(--color-border)" strokeWidth={2.5} />
-                      <circle cx={13} cy={13} r={9} fill="none"
-                        stroke={getScoreColor(potential)} strokeWidth={2.5}
-                        strokeDasharray={`${(potential / 100) * 2 * Math.PI * 9} ${2 * Math.PI * 9}`}
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                  </div>
+                  <span className="sdb-eyebrow sdb-eyebrow--brand">Potencial</span>
                   <div className="sdb-stat-tile-num" style={{ color: getScoreColor(potential) }}>{potential}</div>
                   <span className="sdb-stat-tile-label">/100</span>
                 </div>
@@ -1341,9 +1314,6 @@ function ProjectRow({ project, shared, onOpen, onEdit, onCopy, copied, onDelete,
     <li className={`sdb-projrow${project.featured ? ' sdb-projrow--featured' : ''}`}>
       <span className="sdb-projrow-score">
         <span className="sdb-projrow-num">{project.score ?? '—'}</span>
-        <span className="sdb-projrow-track">
-          <span className="sdb-projrow-fill" style={{ width: `${project.score ?? 0}%` }} />
-        </span>
       </span>
 
       <button className="sdb-projrow-main" onClick={onOpen}>
@@ -1372,23 +1342,12 @@ function ProjectRow({ project, shared, onOpen, onEdit, onCopy, copied, onDelete,
                 <Pin size={13} />
               </button>
             )}
-            {onToggleFeatured && !shared && (
-              <button
-                className={`sdb-icon-btn sdb-icon-btn--quiet sdb-icon-btn--star${project.featured ? ' is-featured' : ''}`}
-                onClick={() => onToggleFeatured(project.id)}
-                title={project.featured ? 'Remover destaque do perfil' : canFeature ? 'Destacar no perfil' : 'Máximo de 3 destaques atingido'}
-                aria-label="Destacar no perfil"
-                disabled={!project.featured && !canFeature}
-              >
-                <Star size={13} />
-              </button>
-            )}
             <button className="sdb-icon-btn sdb-icon-btn--quiet" onClick={onEdit} title="Editar" aria-label="Editar projeto">
               <Pencil size={13} />
             </button>
             <button className="sdb-icon-btn sdb-icon-btn--quiet" onClick={onCopy}
               title={copied ? 'Copiado' : 'Copiar link'} aria-label="Copiar link do projeto">
-              {copied ? <Check size={13} /> : <ExternalLink size={13} />}
+              {copied ? <Check size={16} /> : <Link size={16} />}
             </button>
             {!shared && (
               <button className="sdb-icon-btn sdb-icon-btn--quiet sdb-icon-btn--danger"
@@ -1421,18 +1380,6 @@ function PinnedProjectCard({ project, auto, coverage, onOpenReport, onUnpin, onE
       >
         <div className="sdb-pinned-head-left">
           <span className="sdb-pinned-type">{typeLabel}</span>
-          {!confirmDelete && (
-            <>
-              {!auto && (
-                <button className="sdb-icon-btn sdb-icon-btn--pin is-pinned" onClick={onUnpin} title="Retirar da dashboard">
-                  <Pin size={14} />
-                </button>
-              )}
-              <button className="sdb-icon-btn" onClick={onEdit} title="Editar projeto">
-                <Pencil size={14} />
-              </button>
-            </>
-          )}
         </div>
         <div className="sdb-pinned-head-right">
           {confirmDelete ? (
@@ -1448,8 +1395,8 @@ function PinnedProjectCard({ project, auto, coverage, onOpenReport, onUnpin, onE
                 </button>
               )}
               {!auto && (
-                <button className="sdb-icon-btn sdb-icon-btn--danger" onClick={() => setConfirmDelete(true)} title="Apagar projeto">
-                  <Trash2 size={14} />
+                <button className="sdb-icon-btn sdb-icon-btn--pin is-pinned" onClick={onUnpin} title="Desafixar da dashboard" aria-label="Desafixar da dashboard">
+                  <Pin size={14} />
                 </button>
               )}
             </>
@@ -1519,12 +1466,12 @@ function PinnedProjectCard({ project, auto, coverage, onOpenReport, onUnpin, onE
           <button className="sdb-btn sdb-btn--quiet sdb-btn--sm" onClick={onOpenDiary}>
             <BookOpen size={13} /> Diário
           </button>
-          <button className="sdb-btn sdb-btn--quiet sdb-btn--sm" onClick={onOpen}>
-            <ArrowUpRight size={13} /> Ver
+          <button className="sdb-btn sdb-btn--quiet sdb-btn--sm" onClick={onEdit}>
+            <Pencil size={13} /> Editar
           </button>
           {onShare && (
-            <button className="sdb-btn sdb-btn--quiet sdb-btn--sm" onClick={onShare}>
-              <Share2 size={13} /> Partilhar
+            <button className="sdb-btn sdb-btn--quiet sdb-btn--sm sdb-pinned-share" onClick={onShare} title="Partilhar" aria-label="Partilhar">
+              <Share2 size={13} />
             </button>
           )}
         </div>

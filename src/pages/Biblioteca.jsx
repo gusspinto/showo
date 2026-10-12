@@ -12,7 +12,6 @@ import { FolderIcon as Folder } from '@solar-icons/react/bold/folder'
 import { TrashBinTrashIcon as Trash } from '@solar-icons/react/bold/trash-bin-trash'
 import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
 import { LibraryIcon } from '@solar-icons/react/bold/library'
-import { ArrowRightUpIcon as ExternalLink } from '@solar-icons/react/bold/arrow-right-up'
 import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
 import { fileTypeStyle, withSignedLibraryUrls } from '../lib/libraryFile'
 import { getProjectState } from '../lib/projectState'
@@ -250,33 +249,54 @@ function LibDoneTile({ item, onOpen, onDelete, removing, editing, onSetState, on
 
 /* Projeto "criado" (entry_kind='full') — ainda em construção, por isso
    sem o destaque todo: linha compacta, não tile. */
+/* Projeto em construção: card com capa grande e resumo, para se perceber o
+   trabalho sem abrir. Antes era uma linha com só nome e área. */
 function LibBuildingRow({ item, onOpen, onDelete, removing, editing, onSetState, onSetLayout }) {
+  const skills = Array.isArray(item.skills) ? item.skills : []
+  const tech = Array.isArray(item.tech_stack) ? item.tech_stack : []
+  const chips = [...skills, ...tech].slice(0, 4)
+  const extra = skills.length + tech.length - chips.length
+  const summary = item.ai_tagline || item.library_description
+
   return (
-    <div className={`lib-row-wrap${editing && item.profile_featured ? ' is-on' : ''}`}>
-      <button type="button" className="lib-row is-clickable" onClick={() => onOpen(item)}>
-        <span className={`lib-row-icon${item.cover_url ? ' has-thumb' : ''}`}>
-          {item.cover_url ? <img src={item.cover_url} alt="" loading="lazy" /> : <Folder size={16} />}
-        </span>
-        <div className="lib-row-body">
-          <span className="lib-row-name">
-            {item.name}
-            {item.visibility === 'private' && <span className="lib-badge-private lib-badge-private--inline">Privado</span>}
-            {item.visibility === 'unlisted' && <span className="lib-badge-unlisted lib-badge-unlisted--inline">Só com link</span>}
+    <div className={`lib-row-wrap lib-bcard-wrap${editing && item.profile_featured ? ' is-on' : ''}`}>
+      <button type="button" className="lib-bcard is-clickable" onClick={() => onOpen(item)}>
+        <span className="lib-bcard-cover" style={!item.cover_url ? { background: 'color-mix(in srgb, var(--color-warning) 14%, var(--color-bg-alt))' } : undefined}>
+          {item.cover_url
+            ? <img src={item.cover_url} alt="" loading="lazy" />
+            : <Folder size={28} color="var(--color-warning)" />}
+          {item.visibility === 'private' && <span className="lib-badge-private">Privado</span>}
+          {item.visibility === 'unlisted' && <span className="lib-badge-unlisted">Só com link</span>}
+          <span
+            role="button"
+            tabIndex={0}
+            className="lib-bcard-delete"
+            onClick={e => { e.stopPropagation(); if (removing !== item.id) onDelete(item.id) }}
+            onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && removing !== item.id) { e.stopPropagation(); onDelete(item.id) } }}
+            aria-label="Remover"
+            aria-disabled={removing === item.id}
+          >
+            <Trash size={14} />
           </span>
-          {item.area && <span className="lib-row-desc">{item.area}</span>}
-        </div>
-        {item.score > 0 && <span className="lib-row-date">{item.score}</span>}
-        <span className="lib-row-hint" aria-hidden="true"><ExternalLink size={14} /></span>
-        <span
-          role="button"
-          tabIndex={0}
-          className="lib-row-delete"
-          onClick={e => { e.stopPropagation(); if (removing !== item.id) onDelete(item.id) }}
-          onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && removing !== item.id) { e.stopPropagation(); onDelete(item.id) } }}
-          aria-label="Remover"
-          aria-disabled={removing === item.id}
-        >
-          <Trash size={14} />
+        </span>
+
+        <span className="lib-bcard-body">
+          <span className="lib-bcard-top">
+            <span className="lib-bcard-name">{item.name}</span>
+            {item.score > 0 && <span className="lib-bcard-score">{item.score}</span>}
+          </span>
+          {item.area && <span className="lib-bcard-area">{item.area}</span>}
+          {summary && <span className="lib-bcard-summary">{summary}</span>}
+          {chips.length > 0 && (
+            <span className="lib-bcard-chips">
+              {chips.map(c => <span key={c} className="lib-bcard-chip">{c}</span>)}
+              {extra > 0 && <span className="lib-bcard-chip lib-bcard-chip--more">+{extra}</span>}
+            </span>
+          )}
+          <span className="lib-bcard-meta">
+            <span className="lib-bcard-state">Em construção</span>
+            {item.created_at && <span>Criado {prettyDate(item.created_at)}</span>}
+          </span>
         </span>
       </button>
       {editing && <ProfileControls item={item} onSetState={onSetState} onSetLayout={onSetLayout} />}
