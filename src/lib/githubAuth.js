@@ -49,3 +49,13 @@ export async function disconnectGithub(userId) {
   const { error } = await supabase.from('github_connections').delete().eq('user_id', userId)
   if (error) throw error
 }
+
+export async function listGithubRepos() {
+  const { data, error } = await supabase.functions.invoke('github-list-repos')
+  if (error) {
+    let msg = ''
+    try { msg = (await error.context?.json?.())?.error } catch { /* corpo não era JSON */ }
+    throw new Error(msg || data?.error || 'Não foi possível ir buscar os repositórios.')
+  }
+  return data.repos
+}
