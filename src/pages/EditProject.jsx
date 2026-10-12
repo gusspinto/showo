@@ -1233,10 +1233,13 @@ function GithubAdvancedCard({ project }) {
   // coluna própria.
   const [compact, setCompact] = useState(!!project?.preview_style?.githubCompact)
 
+  const [hidden, setHiddenState] = useState(!!project?.preview_style?.githubHidden)
+
   useEffect(() => {
     setStats(project?.github_stats || null)
     setSyncedAt(project?.github_synced_at || null)
     setCompact(!!project?.preview_style?.githubCompact)
+    setHiddenState(!!project?.preview_style?.githubHidden)
     setResult(null); setError(null); setConfirmRemove(false); setRemoved(null)
   }, [project?.id])
 
@@ -1247,6 +1250,15 @@ function GithubAdvancedCard({ project }) {
       .update({ preview_style: { ...(project?.preview_style || {}), githubCompact: nextCompact } })
       .eq('id', project.id)
     if (error) console.error('[github-format]', error.message)
+  }
+
+  async function setHidden(nextHidden) {
+    setHiddenState(nextHidden) // otimista
+    const { error } = await supabase
+      .from('projects')
+      .update({ preview_style: { ...(project?.preview_style || {}), githubHidden: nextHidden } })
+      .eq('id', project.id)
+    if (error) console.error('[github-hidden]', error.message)
   }
 
   const repo = parseGithubRepo(githubUrlOverride ?? project?.github_url)
@@ -1362,6 +1374,29 @@ function GithubAdvancedCard({ project }) {
 
           {stats && (
             <>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 14 }}>
+                <span style={{ fontSize: 12.5, color: colors.text, fontWeight: 600 }}>Mostrar na página pública</span>
+                <button
+                  type="button"
+                  onClick={() => setHidden(!hidden)}
+                  aria-pressed={!hidden}
+                  style={{
+                    width: 38, height: 22, borderRadius: 11, border: 'none', cursor: 'pointer', position: 'relative', flexShrink: 0,
+                    background: hidden ? colors.border : colors.blue, transition: 'background 0.15s',
+                  }}
+                >
+                  <span style={{
+                    position: 'absolute', top: 3, left: hidden ? 3 : 19, width: 16, height: 16, borderRadius: '50%',
+                    background: '#fff', transition: 'left 0.15s',
+                  }} />
+                </button>
+              </div>
+              {hidden && (
+                <p style={{ margin: '-6px 0 14px', fontSize: 12, color: colors.subtle, lineHeight: 1.5 }}>
+                  Escondido da página pública — continuas a ver isto aqui, e o diário continua a sincronizar normalmente.
+                </p>
+              )}
+
               {/* Formato do painel na página pública — o painel fica sempre
                   no topo (não é arrastável); isto controla só se mostra
                   tudo ou só o essencial. */}
