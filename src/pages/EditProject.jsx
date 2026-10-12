@@ -29,7 +29,7 @@ import { logFieldsFilled } from '../lib/autoJournal'
 import { parseGithubRepo, syncGithub, removeGithubEntries, topLanguages, commitSpanMonths, repoAgeMonths, shareOnLinkedIn } from '../lib/social'
 import { PLAN_GATE_MESSAGES } from '../lib/plans'
 import { listProjectFiles, uploadProjectFile, deleteProjectFile, toggleFileVisibility, getAccountFilesUsage, formatFileSize } from '../lib/projectFiles'
-import { startGithubConnect, getGithubConnection, disconnectGithub } from '../lib/githubAuth'
+import { startGithubConnect, getGithubConnection, disconnectGithub, listGithubRepos } from '../lib/githubAuth'
 import { DatabaseIcon as Database } from '@solar-icons/react/bold/database'
 import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
 import { UploadMinimalisticIcon as Upload } from '@solar-icons/react/bold/upload-minimalistic'
@@ -1194,11 +1194,33 @@ function GithubAdvancedCard({ project }) {
   const [confirmRemove, setConfirmRemove] = useState(false)
   const [removing, setRemoving] = useState(false)
   const [removed, setRemoved] = useState(null)
+  const [githubUrlOverride, setGithubUrlOverride] = useState(null)
+  const [showRepoPicker, setShowRepoPicker] = useState(false)
+  const [repoList, setRepoList] = useState(null) // null = por carregar
+  const [loadingRepos, setLoadingRepos] = useState(false)
+  const [repoListError, setRepoListError] = useState(null)
 
   useEffect(() => {
     if (!user?.id) return
     getGithubConnection(user.id).then(setConnection).catch(() => setConnection(null))
   }, [user?.id])
+
+  async function openRepoPicker() {
+    setShowRepoPicker(true)
+    if (repoList) return
+    setLoadingRepos(true); setRepoListError(null)
+    try {
+      setRepoList(await listGithubRepos())
+    } catch (e) { setRepoListError(e.message) }
+    setLoadingRepos(false)
+  }
+
+  async function pickRepo(fullUrl) {
+    setShowRepoPicker(false)
+    const { error } = await supabase.from('projects').update({ github_url: fullUrl }).eq('id', project.id)
+    if (error) { setError('Não foi possível guardar o repositório escolhido.'); return }
+    setGithubUrlOverride(fullUrl)
+  }
   // Formato do painel na página pública — guardado em preview_style ao
   // lado das outras personalizações da página (cor, fonte...), não numa
   // coluna própria.
@@ -1220,7 +1242,7 @@ function GithubAdvancedCard({ project }) {
     if (error) console.error('[github-format]', error.message)
   }
 
-  const repo = parseGithubRepo(project?.github_url)
+  const repo = parseGithubRepo(githubUrlOverride ?? project?.github_url)
 
   async function handleSync() {
     setSyncing(true); setError(null); setResult(null)
@@ -1279,6 +1301,41 @@ function GithubAdvancedCard({ project }) {
           </>
         )}
       </div>
+
+      {connection && (
+        <div style={{ marginBottom: 16, position: 'relative' }}>
+          <button
+            type="button"
+            onClick={() => showRepoPicker ? setShowRepoPicker(false) : openRepoPicker()}
+            style={{ padding: '8px 14px', background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.text, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            {repo ? 'Trocar repositório' : 'Escolher repositório'}
+          </button>
+
+          {showRepoPicker && (
+            <div style={{ position: 'absolute', top: '110%', left: 0, zIndex: 10, width: 320, maxHeight: 280, overflowY: 'auto', background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.35)' }}>
+              {loadingRepos && <p style={{ margin: 0, padding: 14, fontSize: 12.5, color: colors.muted }}>A carregar…</p>}
+              {repoListError && <p style={{ margin: 0, padding: 14, fontSize: 12.5, color: '#ef4444' }}>{repoListError}</p>}
+              {repoList && !loadingRepos && repoList.length === 0 && (
+                <p style={{ margin: 0, padding: 14, fontSize: 12.5, color: colors.muted }}>Não encontrámos nenhum repositório teu.</p>
+              )}
+              {repoList && repoList.map(r => (
+                <button
+                  key={r.full_name}
+                  type="button"
+                  onClick={() => pickRepo(r.html_url)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left', padding: '10px 14px', background: 'transparent', border: 'none', borderBottom: `1px solid ${colors.border}`, color: colors.text, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}
+                >
+                  <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.full_name}</span>
+                  {r.private && (
+                    <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, color: colors.subtle, background: colors.bgAlt, borderRadius: 5, padding: '2px 6px' }}>privado</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {!repo ? (
         <p style={{ margin: 0, fontSize: 13.5, color: colors.muted, lineHeight: 1.6 }}>
