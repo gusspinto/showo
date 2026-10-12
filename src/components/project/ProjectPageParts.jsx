@@ -2028,13 +2028,15 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
   ]
   const deviceMaxWidth = previewDevice === 'mobile' ? 390 : previewDevice === 'tablet' ? 768 : undefined
 
-  // Sidebar de provas (GitHub + Ficheiros) — decidida só pelo espaço no
-  // ecrã (não pelo conteúdo em si, que só se sabe depois de um fetch
-  // assíncrono em ProjectAttachments — basear a grelha nisso trocava de
-  // coluna única para sidebar a meio do carregamento, voltando a montar o
-  // componente e a pedir os dados outra vez). Sem espaço (mobile, ou o
-  // editor a simular um ecrã estreito), tudo em coluna única, como sempre.
-  const showProofSidebar = hasRoomForProofSidebar && !deviceMaxWidth
+  // Sidebar de provas (GitHub + Ficheiros) — opção do dono (previewStyle.
+  // proofLayout), não automática: por omissão fica tudo em coluna única,
+  // exatamente como sempre foi, e só quem escolher "Com barra lateral" no
+  // painel "Estilo" é que passa a ver a sidebar. Mesmo escolhida, só aparece
+  // com espaço real no ecrã (não em mobile, nem quando o editor está a
+  // simular um ecrã estreito) — a decisão da grelha não depende do
+  // conteúdo em si (que só se sabe depois de um fetch assíncrono em
+  // ProjectAttachments), para não trocar de layout a meio do carregamento.
+  const showProofSidebar = (previewStyle.proofLayout === 'sidebar') && hasRoomForProofSidebar && !deviceMaxWidth
 
   return (
     <div className="pv-outer" style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column', background: resolvedBg }}>
@@ -3076,6 +3078,34 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                       </button>
                     )
                   })}
+                </div>
+              </div>
+
+              {/* Group: Organização da página */}
+              <div style={wsGroup}>
+                <div style={wsGroupLabel}>Organização</div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {[
+                    { key: 'stacked', label: 'Coluna única', desc: 'Tudo empilhado' },
+                    { key: 'sidebar', label: 'Com barra lateral', desc: 'GitHub e ficheiros ao lado' },
+                  ].map(o => {
+                    const isSel = (previewStyle.proofLayout || 'stacked') === o.key
+                    return (
+                      <button key={o.key} onClick={() => setPreviewStyle(ps => ({ ...ps, proofLayout: o.key }))}
+                        style={{
+                          flex: 1, padding: '10px 4px', borderRadius: 9, cursor: 'pointer', textAlign: 'center',
+                          ...wsOptStyle(isSel),
+                          fontFamily: 'inherit', transition: 'all 0.12s',
+                        }}
+                      >
+                        <div style={{ fontSize: 12, fontWeight: 700 }}>{o.label}</div>
+                        <div style={{ fontSize: 9, marginTop: 3, color: isSel ? 'var(--color-text-secondary)' : 'var(--color-text-tertiary)' }}>{o.desc}</div>
+                      </button>
+                    )
+                  })}
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', marginTop: 6 }}>
+                  Em ecrãs estreitos (telemóvel), fica sempre em coluna única, seja qual for a escolha.
                 </div>
               </div>
 
