@@ -417,7 +417,7 @@ function generateMeetingSummary(users, projects, activityStats, range) {
   return md
 }
 
-function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSummary }) {
+function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSummary, realSubscriberIds }) {
   const [userSearch, setUserSearch] = useState('')
   const [showLimitUsers, setShowLimitUsers] = useState(false)
   const [showSubscribers, setShowSubscribers] = useState(false)
@@ -469,10 +469,12 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
   // resolvePlanId dá o nível de ACESSO de cada utilizador, não se estão a
   // pagar — um professor tem 'pro' por ser professor, não por ter cartão de
   // crédito no Stripe. Contar isso como receita paga inflaciona o MRR com
-  // acessos oferecidos pela plataforma. Só stripe_customer_id prova que
-  // aquele utilizador passou pelo checkout — é o que distingue "paga" de
-  // "tem acesso Plus/Pro por outra via" (professor, oferta manual, escola).
-  const realSubscribers = users.filter(u => u.stripe_customer_id && (resolvePlanId(u) === 'plus' || resolvePlanId(u) === 'pro'))
+  // acessos oferecidos pela plataforma. stripe_customer_id sozinho NÃO prova
+  // pagamento — é escrito em create-checkout assim que se cria o Customer no
+  // Stripe, antes de qualquer pagamento, e fica lá mesmo que o checkout seja
+  // abandonado. A única prova real é billing_events, escrito só pelo webhook
+  // do Stripe quando a subscrição é mesmo confirmada (ver admin_get_real_subscriber_ids).
+  const realSubscribers = users.filter(u => realSubscriberIds.has(u.id) && (resolvePlanId(u) === 'plus' || resolvePlanId(u) === 'pro'))
   const realPlusCount = realSubscribers.filter(u => resolvePlanId(u) === 'plus').length
   const realProCount = realSubscribers.filter(u => resolvePlanId(u) === 'pro').length
   const paidUsers = realSubscribers.length
@@ -1807,6 +1809,7 @@ export default function Admin() {
   const [aiUsageSummary, setAiUsageSummary] = useState([])
   const [funnelSummary, setFunnelSummary] = useState([])
   const [billingSummary, setBillingSummary] = useState([])
+  const [realSubscriberIds, setRealSubscriberIds] = useState(new Set())
   const [codes, setCodes] = useState([])
   const [codesLoading, setCodesLoading] = useState(false)
   const [codesLoaded, setCodesLoaded] = useState(false)
@@ -1849,6 +1852,7 @@ export default function Admin() {
       setAiUsageSummary(aiUsageRes.data || [])
       setFunnelSummary(funnelRes.data || [])
       supabase.rpc('admin_get_billing_summary').then(({ data }) => setBillingSummary(data || []))
+      supabase.rpc('admin_get_real_subscriber_ids').then(({ data }) => setRealSubscriberIds(new Set((data || []).map(r => r.user_id))))
       if (profilesRes.error) showToast('Erro ao carregar utilizadores: ' + profilesRes.error.message)
       if (projectsRes.error) showToast('Erro ao carregar projetos: ' + projectsRes.error.message)
 
@@ -2163,7 +2167,7 @@ export default function Admin() {
           </div>
         ) : (
           <>
-            {tab === 'overview' && <OverviewTab users={users} projects={projects} aiUsageSummary={aiUsageSummary} funnelSummary={funnelSummary} billingSummary={billingSummary} />}
+            {tab === 'overview' && <OverviewTab users={users} projects={projects} aiUsageSummary={aiUsageSummary} funnelSummary={funnelSummary} billingSummary={billingSummary} realSubscriberIds={realSubscriberIds} />}
             {tab === 'users' && (
               <UsersTab
                 users={users}
