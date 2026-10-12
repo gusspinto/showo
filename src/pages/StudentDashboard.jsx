@@ -45,6 +45,7 @@ import AgendaPanel from '../components/dashboard/AgendaPanel'
 import { ActivityPanel } from '../components/dashboard/RhythmPanel'
 import WeeklyRecap, { shouldShowRecap, RecapsPanel } from '../components/dashboard/WeeklyRecap'
 import WeeklyPostCard from '../components/dashboard/WeeklyPostCard'
+import { getAccountFilesUsage, formatFileSize } from '../lib/projectFiles'
 import WeeklyCheckin, { shouldShowCheckin } from '../components/dashboard/WeeklyCheckin'
 import AddReminderModal from '../components/dashboard/AddReminderModal'
 import CalendarSyncModal from '../components/dashboard/CalendarSyncModal'
@@ -134,6 +135,37 @@ function JoinTurmaStudentModal({ onClose, onJoined }) {
       {error && <p style={{ color: 'var(--color-error)', fontSize: 13, marginTop: 8 }}>{error}</p>}
       <Button fullWidth onClick={handleJoin} loading={loading} style={{ marginTop: 16 }}>Entrar</Button>
     </Modal>
+  )
+}
+
+/* Quanto do espaço de ficheiros (soma de todos os projetos) já foi usado —
+   pedido explícito: ver na dashboard, não só dentro de cada projeto. */
+function FilesStorageCard({ userId, gate }) {
+  const [bytes, setBytes] = useState(0)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!userId) return
+    getAccountFilesUsage(userId).then(setBytes).catch(() => {}).finally(() => setLoading(false))
+  }, [userId])
+
+  if (loading || !gate.maxAccountMB) return null
+  const maxBytes = gate.maxAccountMB * 1024 * 1024
+  const pct = Math.min(100, Math.round((bytes / maxBytes) * 100))
+  const maxLabel = gate.maxAccountMB >= 1024 ? `${gate.maxAccountMB / 1024}GB` : `${gate.maxAccountMB}MB`
+
+  return (
+    <section className="sdb-panel">
+      <p style={{ margin: '0 0 8px', fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+        Ficheiros de projetos
+      </p>
+      <div style={{ height: 5, background: 'var(--color-bg-alt)', borderRadius: 3, overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: `${pct}%`, background: pct > 90 ? 'var(--color-error)' : 'var(--color-primary)', borderRadius: 3 }} />
+      </div>
+      <p style={{ margin: '6px 0 0', fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>
+        {formatFileSize(bytes)} de {maxLabel} usados em todos os projetos
+      </p>
+    </section>
   )
 }
 
@@ -1119,6 +1151,8 @@ export default function StudentDashboard({ user, profile }) {
                 {isSchoolAccount && checkGate('weeklyRecap').allowed && <RecapsPanel recaps={recaps} />}
               </div>
             )}
+
+            {checkGate('projectFiles').allowed && <FilesStorageCard userId={user.id} gate={checkGate('projectFiles')} />}
 
             {isSchoolAccount && checkGate('weeklyRecap').allowed && (
               <WeeklyPostCard project={focusFull} entries={entries} streak={streak} />

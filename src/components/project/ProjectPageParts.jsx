@@ -1469,6 +1469,7 @@ export function ProjectAttachments({ project }) {
   const navigate = useNavigate()
   const [children, setChildren] = useState([])
   const [srcUrl, setSrcUrl] = useState(null)
+  const [files, setFiles] = useState([])
 
   useEffect(() => {
     let cancelled = false
@@ -1490,7 +1491,17 @@ export function ProjectAttachments({ project }) {
     return () => { cancelled = true }
   }, [project.library_file_url])
 
-  if (!children.length && !srcUrl) return null
+  useEffect(() => {
+    let cancelled = false
+    supabase.from('project_files')
+      .select('id, file_url, file_name, size_bytes')
+      .eq('project_id', project.id)
+      .order('created_at', { ascending: false })
+      .then(({ data }) => { if (!cancelled) setFiles(data ?? []) })
+    return () => { cancelled = true }
+  }, [project.id])
+
+  if (!children.length && !srcUrl && !files.length) return null
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -1538,6 +1549,26 @@ export function ProjectAttachments({ project }) {
         >
           <Download size={14} /> {project.library_file_name || 'Documento original'}
         </a>
+      )}
+      {files.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.12em' }}>Ficheiros</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {files.map(f => (
+              <a
+                key={f.id} href={f.file_url} target="_blank" rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 7,
+                  padding: '8px 14px', borderRadius: 9, border: '1px solid var(--color-border)',
+                  background: 'var(--color-surface)', color: 'var(--color-text-secondary)',
+                  fontSize: 13, fontWeight: 600, textDecoration: 'none',
+                }}
+              >
+                <Download size={14} /> {f.file_name}
+              </a>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   )

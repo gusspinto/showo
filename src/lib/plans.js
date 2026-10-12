@@ -18,7 +18,9 @@ export const PLANS = {
     career: {
       internshipPage: false,
       weeklyRecap: true,
+      cleanLink: false,
     },
+    files: { maxProjectMB: 250, maxAccountMB: 2560 },
   },
   school_pro: {
     id: 'school_pro',
@@ -39,7 +41,9 @@ export const PLANS = {
     career: {
       internshipPage: true,
       weeklyRecap: true,
+      cleanLink: true,
     },
+    files: { maxProjectMB: 1024, maxAccountMB: 5120 },
   },
   free: {
     id: 'free',
@@ -60,16 +64,16 @@ export const PLANS = {
     career: {
       internshipPage: false,
       weeklyRecap: false,
+      cleanLink: false,
     },
+    files: { maxProjectMB: 0, maxAccountMB: 0 },
   },
   plus: {
     id: 'plus',
     name: 'Plus',
-    priceLabel: '€4,99',
+    priceLabel: '€8,99',
+    priceLabelAnnual: '€89,90',
     period: '/mês',
-    stripePriceId: typeof window !== 'undefined' && window.location?.hostname === 'localhost'
-      ? 'price_1U3YjERzbl5ql7IdG7Yf5MhC'
-      : 'price_1U3kJ92MED6Xa6YrWrLvrdXG',
     maxProjects: 15,
     ai: {
       createProject: 15,
@@ -86,16 +90,16 @@ export const PLANS = {
     career: {
       internshipPage: false,
       weeklyRecap: true,
+      cleanLink: false,
     },
+    files: { maxProjectMB: 250, maxAccountMB: 3840 },
   },
   pro: {
     id: 'pro',
     name: 'Pro',
-    priceLabel: '€9,99',
+    priceLabel: '€17,99',
+    priceLabelAnnual: '€179,90',
     period: '/mês',
-    stripePriceId: typeof window !== 'undefined' && window.location?.hostname === 'localhost'
-      ? 'price_1U3YjvRzbl5ql7Id7uUcwFFD'
-      : 'price_1U3kJA2MED6Xa6YrEQMfJ0q3',
     maxProjects: Infinity,
     ai: {
       createProject: 30,
@@ -112,7 +116,9 @@ export const PLANS = {
     career: {
       internshipPage: true,
       weeklyRecap: true,
+      cleanLink: true,
     },
+    files: { maxProjectMB: 1024, maxAccountMB: 5120 },
   },
 }
 
@@ -271,5 +277,13 @@ export const PLAN_GATE_MESSAGES = {
   internshipPage: () => ({
     title: 'Página de estágio',
     body: 'Uma página do teu portfólio organizada para recrutadores. Disponível no Pro.',
+  }),
+  cleanLink: () => ({
+    title: 'Link limpo',
+    body: 'Tira o código aleatório do link do projeto e escolhe o teu próprio. Disponível no Pro.',
+  }),
+  projectFiles: () => ({
+    title: 'Ficheiros do projeto',
+    body: 'Anexa PDFs, Word, PowerPoint ou imagens como prova do trabalho, visíveis na página pública. Disponível a partir do Plus.',
   }),
 }
