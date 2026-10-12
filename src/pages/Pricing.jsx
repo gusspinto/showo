@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CheckCircleIcon as Check } from '@solar-icons/react/linear/check-circle'
 import { CloseCircleIcon as CloseCircle } from '@solar-icons/react/linear/close-circle'
@@ -216,6 +216,16 @@ export default function Pricing() {
   const [loading, setLoading] = useState(null)
   const [annual, setAnnual] = useState(false)
   const [openTip, setOpenTip] = useState(null) // "<planId>:<label>" do tooltip aberto, ou null
+
+  // Fecha o tooltip ao clicar fora dele (em qualquer sítio da página).
+  useEffect(() => {
+    if (!openTip) return
+    function onPointerDown(e) {
+      if (!e.target.closest('.pricing-tip-wrap')) setOpenTip(null)
+    }
+    document.addEventListener('mousedown', onPointerDown)
+    return () => document.removeEventListener('mousedown', onPointerDown)
+  }, [openTip])
 
   const isTeacher = profile?.role === 'professor'
   if (user && (isTeacher || isSchoolAccount)) {
