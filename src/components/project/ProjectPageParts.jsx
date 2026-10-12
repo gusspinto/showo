@@ -2731,8 +2731,95 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
               }
             }) : undefined}
           >
+          {/* ── Painel contextual — substitui as 3 abas enquanto algo estiver
+              selecionado no canvas (clicar numa secção/bloco). Ações
+              reutilizam exatamente a mesma lógica da aba Blocos (moveLayoutItem,
+              toggleSectionHidden, removeBlock); "Editar texto"/"Editar bloco"
+              só muda de aba, não duplica os formulários que já existem lá. ── */}
+          {selectedItem && (() => {
+            const [selKind, ...selRest] = selectedItem.split(':')
+            const selId = selRest.join(':')
+            const selItemObj = selKind === 'block' ? { kind: 'block', id: selId } : { kind: 'section', key: selId }
+            const isBlock = selKind === 'block'
+            const block = isBlock ? previewBlocks.find(b => b.id === selId) : null
+            const label = isBlock
+              ? (BLOCK_TYPES.find(bt => bt.type === block?.type)?.label || 'Bloco')
+              : (SECTION_META[selId]?.label || selId)
+            const isHidden = !isBlock && hiddenSections.has(selId)
+
+            return (
+              <div style={{ flex: 1, overflowY: 'scroll', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={wsGroupLabel}>A editar</div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-text)' }}>{label}</div>
+                  </div>
+                  <button
+                    onClick={() => setSelectedItem(null)}
+                    title="Fechar edição"
+                    style={{ width: 28, height: 28, borderRadius: 7, background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                  ><X size={14} /></button>
+                </div>
+
+                {!isBlock && (
+                  <div style={wsGroup}>
+                    <div style={wsGroupLabel}>Visibilidade</div>
+                    <div style={{ display: 'flex', background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: 9, padding: 3 }}>
+                      <button
+                        onClick={() => isHidden && toggleSectionHidden(selId)}
+                        style={{
+                          flex: 1, textAlign: 'center', fontSize: 12, fontWeight: 700, padding: '7px', borderRadius: 7, cursor: 'pointer', fontFamily: 'inherit', border: 'none',
+                          background: !isHidden ? 'var(--color-surface-hover)' : 'transparent',
+                          color: !isHidden ? 'var(--color-text)' : 'var(--color-text-secondary)',
+                        }}
+                      >Visível</button>
+                      <button
+                        onClick={() => { if (!isHidden) toggleSectionHidden(selId); setSelectedItem(null) }}
+                        style={{
+                          flex: 1, textAlign: 'center', fontSize: 12, fontWeight: 700, padding: '7px', borderRadius: 7, cursor: 'pointer', fontFamily: 'inherit', border: 'none',
+                          background: isHidden ? 'var(--color-surface-hover)' : 'transparent',
+                          color: isHidden ? 'var(--color-text)' : 'var(--color-text-secondary)',
+                        }}
+                      >Escondida</button>
+                    </div>
+                  </div>
+                )}
+
+                <div style={wsGroup}>
+                  <div style={wsGroupLabel}>Posição na página</div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      onClick={() => moveLayoutItem(selItemObj, -1)}
+                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 12, fontWeight: 700, padding: 9, borderRadius: 8, background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)', cursor: 'pointer', fontFamily: 'inherit' }}
+                    ><ChevronUp size={13} /> Subir</button>
+                    <button
+                      onClick={() => moveLayoutItem(selItemObj, 1)}
+                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 12, fontWeight: 700, padding: 9, borderRadius: 8, background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)', cursor: 'pointer', fontFamily: 'inherit' }}
+                    ><ChevronDown size={13} /> Descer</button>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => { setPreviewTab(isBlock ? 'blocos' : 'conteudo'); setSelectedItem(null) }}
+                  style={{ textAlign: 'left', fontSize: 12.5, fontWeight: 700, padding: '10px 12px', borderRadius: 9, background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)', cursor: 'pointer', fontFamily: 'inherit' }}
+                >{isBlock ? 'Editar conteúdo do bloco →' : 'Editar texto desta secção →'}</button>
+
+                {isBlock && (
+                  <button
+                    onClick={() => removeBlock(block.id)}
+                    style={{ textAlign: 'left', fontSize: 12.5, fontWeight: 700, padding: '10px 12px', borderRadius: 9, background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', color: 'var(--color-error)', cursor: 'pointer', fontFamily: 'inherit' }}
+                  >Remover bloco</button>
+                )}
+
+                <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)', lineHeight: 1.6, padding: '2px 2px 0' }}>
+                  Clica noutra secção da página para mudar de edição, ou fora de qualquer uma para fechar.
+                </div>
+              </div>
+            )
+          })()}
+
           {/* ── TAB: CONTEÚDO — os 8 campos, a substituir o EditModal por secção ── */}
-          {previewTab === 'conteudo' && (
+          {!selectedItem && previewTab === 'conteudo' && (
             <div style={{ flex: 1, overflowY: 'scroll', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
               {PROJECT_FIELDS.map(f => {
                 const draft = contentDrafts[f.key] ?? (project[f.key] || '')
@@ -2798,7 +2885,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
           )}
 
           {/* ── TAB: ESTILO ── */}
-          {previewTab === 'estilo' && (
+          {!selectedItem && previewTab === 'estilo' && (
             <div style={{ flex: 1, overflowY: 'scroll', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8, textAlign: 'center' }}>
 
               {/* Group: Identidade visual */}
@@ -3221,7 +3308,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
               só lista reordenável: são a mesma decisão — "o que aparece e em
               que ordem" — vista de dois sítios diferentes só criava trabalho
               duplicado para dizer a mesma coisa) */}
-          {previewTab === 'blocos' && (() => {
+          {!selectedItem && previewTab === 'blocos' && (() => {
             const NATIVE_SECTIONS_MAP = {
               problem:         { label: 'Problema',        Icon: Search     },
               solution:        { label: 'Solução',         Icon: Lightbulb  },
