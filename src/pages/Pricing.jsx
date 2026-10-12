@@ -79,7 +79,6 @@ const PLANS = [
       {
         label: 'Mais',
         items: [
-          { label: 'Base de dados + API do projeto', value: '2 tabelas' },
           { label: 'Ficheiros do projeto', value: '250MB' },
           { label: '15 projetos' },
           { label: 'Recap semanal' },
@@ -120,7 +119,6 @@ const PLANS = [
       {
         label: 'Mais',
         items: [
-          { label: 'Base de dados + API do projeto', value: '8 tabelas' },
           { label: 'Ficheiros do projeto', value: '1GB' },
           { label: 'Projetos ilimitados' },
           { label: 'Portfólio pro com link limpo' },
@@ -151,7 +149,6 @@ const PLANS = [
    de um para o outro. Uma tabela deixa comparar linha a linha de relance.
    A conta escola fica fora: não é self-serve, é vendida à instituição. */
 const COMPARE_ROWS = [
-  { label: 'Base de dados + API do projeto', free: false, plus: '2 tabelas', pro: '8 tabelas' },
   { label: 'Ficheiros do projeto', free: false, plus: '250MB', pro: '1GB' },
   { label: 'Projetos', free: '3', plus: '15', pro: 'Ilimitados' },
   { label: 'Coach IA', free: '10 msgs', plus: '100 msgs', pro: '300 msgs' },
