@@ -18,6 +18,7 @@ export const PLANS = {
     career: {
       internshipPage: false,
       weeklyRecap: true,
+      cleanLink: false,
     },
   },
   school_pro: {
@@ -39,6 +40,7 @@ export const PLANS = {
     career: {
       internshipPage: true,
       weeklyRecap: true,
+      cleanLink: true,
     },
   },
   free: {
@@ -60,6 +62,7 @@ export const PLANS = {
     career: {
       internshipPage: false,
       weeklyRecap: false,
+      cleanLink: false,
     },
   },
   plus: {
@@ -84,6 +87,7 @@ export const PLANS = {
     career: {
       internshipPage: false,
       weeklyRecap: true,
+      cleanLink: false,
     },
   },
   pro: {
@@ -108,6 +112,7 @@ export const PLANS = {
     career: {
       internshipPage: true,
       weeklyRecap: true,
+      cleanLink: true,
     },
   },
 }
@@ -267,5 +272,9 @@ export const PLAN_GATE_MESSAGES = {
   internshipPage: () => ({
     title: 'Página de estágio',
     body: 'Uma página do teu portfólio organizada para recrutadores. Disponível no Pro.',
+  }),
+  cleanLink: () => ({
+    title: 'Link limpo',
+    body: 'Tira o código aleatório do link do projeto e escolhe o teu próprio. Disponível no Pro.',
   }),
 }

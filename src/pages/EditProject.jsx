@@ -27,6 +27,7 @@ import { Select } from '../components/ui'
 import { containsProfanity } from '../lib/profanity'
 import { logFieldsFilled } from '../lib/autoJournal'
 import { parseGithubRepo, syncGithub, removeGithubEntries, topLanguages, commitSpanMonths, repoAgeMonths, shareOnLinkedIn } from '../lib/social'
+import { PLAN_GATE_MESSAGES } from '../lib/plans'
 import { DatabaseIcon as Database } from '@solar-icons/react/bold/database'
 import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
 import { UploadMinimalisticIcon as Upload } from '@solar-icons/react/bold/upload-minimalistic'
@@ -903,15 +904,54 @@ export default function EditProject() {
    inacessível na prática. Em vez de arranjar essa entrada, o conteúdo que
    valia a pena veio para aqui, onde já se sabe chegar.
    ══════════════════════════════════════════════════════════════════════════ */
+function slugifySlugInput(text) {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+}
+
 function AdvancedSection({ project, isOwner, navigate }) {
+  const { checkGate } = useAuth()
   const [copied, setCopied] = useState(false)
+  const [editingSlug, setEditingSlug] = useState(false)
+  const [slugInput, setSlugInput] = useState(project?.slug || '')
+  const [savingSlug, setSavingSlug] = useState(false)
+  const [slugError, setSlugError] = useState(null)
   const publicUrl = `${window.location.origin}/projeto/${project?.slug}`
+  const cleanLinkGate = checkGate('cleanLink')
 
   function copyLink() {
     navigator.clipboard.writeText(publicUrl).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     })
+  }
+
+  function startEditSlug() {
+    setSlugInput(project?.slug || '')
+    setSlugError(null)
+    setEditingSlug(true)
+  }
+
+  async function saveSlug() {
+    const next = slugifySlugInput(slugInput)
+    if (!next) { setSlugError('O link não pode ficar vazio.'); return }
+    if (next === project.slug) { setEditingSlug(false); return }
+    setSavingSlug(true)
+    setSlugError(null)
+    const { error } = await supabase.from('projects').update({ slug: next }).eq('id', project.id)
+    setSavingSlug(false)
+    if (error) {
+      if (error.code === '23505') setSlugError('Esse link já está a ser usado. Escolhe outro.')
+      else if (error.message?.includes('clean_slug_requires_pro')) setSlugError('Link personalizado é uma funcionalidade Pro.')
+      else setSlugError('Não foi possível guardar. Tenta outra vez.')
+      return
+    }
+    project.slug = next
+    setEditingSlug(false)
   }
 
   return (
@@ -922,15 +962,56 @@ function AdvancedSection({ project, isOwner, navigate }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, color: colors.subtle, marginBottom: 14, textTransform: 'uppercase', letterSpacing: 0.6 }}>
           <ExternalLink size={12} /> Página pública
         </div>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-          <div style={{ flex: 1, background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 8, padding: '10px 12px', fontSize: 13, color: colors.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{publicUrl}</div>
-          <button type="button" onClick={copyLink} style={{ padding: '10px 16px', background: copied ? colors.green : colors.blue, border: 'none', borderRadius: 8, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, whiteSpace: 'nowrap' }}>
-            {copied ? <><Check size={13} /> Copiado</> : <><Copy size={13} /> Copiar</>}
+
+        {editingSlug ? (
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <span style={{ fontSize: 13, color: colors.subtle, whiteSpace: 'nowrap' }}>{window.location.origin}/projeto/</span>
+              <input
+                autoFocus
+                value={slugInput}
+                onChange={e => setSlugInput(e.target.value)}
+                style={{ flex: 1, background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 8, padding: '10px 12px', fontSize: 13, color: colors.text, fontFamily: 'inherit' }}
+              />
+            </div>
+            {slugError && <p style={{ color: '#ef4444', fontSize: 12, margin: '6px 0 0' }}>{slugError}</p>}
+            <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+              <button type="button" disabled={savingSlug} onClick={saveSlug} style={{ padding: '8px 16px', background: colors.blue, border: 'none', borderRadius: 8, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                {savingSlug ? 'A guardar…' : 'Guardar'}
+              </button>
+              <button type="button" onClick={() => setEditingSlug(false)} style={{ padding: '8px 16px', background: 'transparent', border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                Cancelar
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+            <div style={{ flex: 1, background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 8, padding: '10px 12px', fontSize: 13, color: colors.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{publicUrl}</div>
+            {cleanLinkGate.allowed && (
+              <button type="button" onClick={startEditSlug} title="Personalizar link" style={{ padding: '10px 12px', background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.muted, display: 'flex', alignItems: 'center', flexShrink: 0, cursor: 'pointer' }}>
+                <Pencil size={14} />
+              </button>
+            )}
+            <button type="button" onClick={copyLink} style={{ padding: '10px 16px', background: copied ? colors.green : colors.blue, border: 'none', borderRadius: 8, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, whiteSpace: 'nowrap' }}>
+              {copied ? <><Check size={13} /> Copiado</> : <><Copy size={13} /> Copiar</>}
+            </button>
+            <a href={publicUrl} target="_blank" rel="noopener noreferrer" style={{ padding: '10px 12px', background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.muted, display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+              <ExternalLink size={14} />
+            </a>
+          </div>
+        )}
+
+        {!cleanLinkGate.allowed && !editingSlug && (
+          <button
+            type="button"
+            onClick={() => navigate('/planos')}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', padding: 0, marginBottom: 10, cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            <Lock size={11} color={colors.subtle} />
+            <span style={{ fontSize: 12, color: colors.subtle }}>{cleanLinkGate.message?.body || PLAN_GATE_MESSAGES.cleanLink().body}</span>
           </button>
-          <a href={publicUrl} target="_blank" rel="noopener noreferrer" style={{ padding: '10px 12px', background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.muted, display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-            <ExternalLink size={14} />
-          </a>
-        </div>
+        )}
+
         <button type="button" onClick={() => shareOnLinkedIn(publicUrl)} style={{ padding: '10px 16px', background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 7 }}>
           <Send size={13} /> Publicar no LinkedIn
         </button>
