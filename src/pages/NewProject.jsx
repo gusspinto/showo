@@ -85,7 +85,11 @@ const ACCEPT = '.pdf,.docx,.pptx,.txt,.md,image/png,image/jpeg,image/webp'
 /* Dá para adicionar vários de uma vez — cada ficheiro vira o seu próprio
    item na Biblioteca (não um só projeto com vários anexos). */
 const MAX_FILES = 5
-const MAX_TOTAL_MB = 12
+// Tem de ficar alinhado com MAX_TOTAL_BYTES em supabase/functions/import-project
+// (o limite real é o da Claude API: 32MB em base64, por isso ficamos a uns 20MB
+// de ficheiro, que dá ~27MB depois de codificado). Era 12MB — "documento
+// demasiado grande" barrava quem queria trazer um trabalho a sério.
+const MAX_TOTAL_MB = 20
 
 /* Usado tanto por "Criar com IA" como por "Responder a perguntas guiadas"
    — nenhum dos dois lê um ficheiro (isso só acontece em "Adicionar", que
