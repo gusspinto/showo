@@ -5,6 +5,7 @@ import { CloseCircleIcon as CloseCircle } from '@solar-icons/react/linear/close-
 import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/linear/arrow-right'
 import { AltArrowDownIcon as ChevronDown } from '@solar-icons/react/linear/alt-arrow-down'
 import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/linear/square-academic-cap'
+import { InfoCircleIcon as InfoCircle } from '@solar-icons/react/linear/info-circle'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -54,8 +55,8 @@ const PLANS = [
           { label: 'Entrevista guiada', value: '3x' },
           { label: 'Análise IA', value: '1x' },
           { label: 'Relatório do projeto', value: '1x' },
-          { label: 'Narrativa IA', value: '1x' },
-          { label: 'Defesa IA', value: '1x' },
+          { label: 'Pitch do projeto (IA)', value: '1x', tip: 'A IA escreve o título, a história e os destaques do teu projeto a partir do que já escreveste — fica na tua página pública.' },
+          { label: 'Preparação da defesa (IA)', value: '1x', tip: 'A IA gera notas para cada parte da apresentação, perguntas prováveis do júri com respostas sugeridas, e uma dica para o dia.' },
           { label: 'Exportar PowerPoint', value: '3x' },
         ],
       },
@@ -79,7 +80,7 @@ const PLANS = [
       {
         label: 'Mais',
         items: [
-          { label: 'Ficheiros do projeto', value: '250MB' },
+          { label: 'Ficheiros do projeto', value: '250MB', tip: 'Anexa PDFs, Word, PowerPoint, imagens — qualquer ficheiro que prove o trabalho. Escolhes o que aparece na página pública.' },
           { label: '15 projetos' },
           { label: 'Recap semanal' },
         ],
@@ -93,8 +94,8 @@ const PLANS = [
           { label: 'Entrevista guiada', value: '15x' },
           { label: 'Análise IA', value: '10x' },
           { label: 'Relatório', value: '5x' },
-          { label: 'Narrativa IA', value: '10x' },
-          { label: 'Defesa IA', value: '10x' },
+          { label: 'Pitch do projeto (IA)', value: '10x', tip: 'A IA escreve o título, a história e os destaques do teu projeto a partir do que já escreveste — fica na tua página pública.' },
+          { label: 'Preparação da defesa (IA)', value: '10x', tip: 'A IA gera notas para cada parte da apresentação, perguntas prováveis do júri com respostas sugeridas, e uma dica para o dia.' },
           { label: 'Treino de defesa', value: '5x' },
           { label: 'Carta de apresentação', value: '5x' },
           { label: 'Exportar PowerPoint', value: '15x' },
@@ -119,10 +120,10 @@ const PLANS = [
       {
         label: 'Mais',
         items: [
-          { label: 'Ficheiros do projeto', value: '1GB' },
+          { label: 'Ficheiros do projeto', value: '1GB', tip: 'Anexa PDFs, Word, PowerPoint, imagens — qualquer ficheiro que prove o trabalho. Escolhes o que aparece na página pública.' },
           { label: 'Projetos ilimitados' },
-          { label: 'Portfólio pro com link limpo' },
-          { label: 'Página de estágio' },
+          { label: 'Link personalizado', tip: 'Tira o código aleatório do link do teu projeto e escolhe o teu próprio texto.' },
+          { label: 'Acesso a vagas de estágio', tip: 'Vê e candidata-te a vagas publicadas por empresas parceiras, com o teu portfólio em vez de CV.' },
         ],
       },
       {
@@ -134,8 +135,8 @@ const PLANS = [
           { label: 'Entrevista guiada', value: '30x' },
           { label: 'Análise IA', value: '25x' },
           { label: 'Relatório', value: '10x' },
-          { label: 'Narrativa IA', value: '25x' },
-          { label: 'Defesa IA', value: '25x' },
+          { label: 'Pitch do projeto (IA)', value: '25x', tip: 'A IA escreve o título, a história e os destaques do teu projeto a partir do que já escreveste — fica na tua página pública.' },
+          { label: 'Preparação da defesa (IA)', value: '25x', tip: 'A IA gera notas para cada parte da apresentação, perguntas prováveis do júri com respostas sugeridas, e uma dica para o dia.' },
           { label: 'Treino de defesa', value: '25x' },
           { label: 'Carta de apresentação', value: '25x' },
           { label: 'Exportar PowerPoint', value: 'ilimitado' },
@@ -156,13 +157,13 @@ const COMPARE_ROWS = [
   { label: 'Entrevista guiada', free: '3x', plus: '15x', pro: '30x' },
   { label: 'Análise de projeto', free: '1x', plus: '10x', pro: '25x' },
   { label: 'Relatório do projeto', free: '1x', plus: '5x', pro: '10x' },
-  { label: 'Narrativa IA', free: '1x', plus: '10x', pro: '25x' },
-  { label: 'Defesa IA', free: '1x', plus: '10x', pro: '25x' },
+  { label: 'Pitch do projeto (IA)', free: '1x', plus: '10x', pro: '25x' },
+  { label: 'Preparação da defesa (IA)', free: '1x', plus: '10x', pro: '25x' },
   { label: 'Treino de defesa', free: false, plus: '5x', pro: '25x' },
   { label: 'Carta de apresentação IA', free: false, plus: '5x', pro: '25x' },
   { label: 'Exportar PowerPoint', free: '3x', plus: '15x', pro: 'Ilimitado' },
   { label: 'Recap semanal por email', free: false, plus: true, pro: true },
-  { label: 'Página de estágio', free: false, plus: false, pro: true },
+  { label: 'Acesso a vagas de estágio', free: false, plus: false, pro: true },
   { label: 'Todo o mês renova os limites', free: true, plus: true, pro: true },
 ]
 
@@ -219,6 +220,7 @@ export default function Pricing() {
   const { user, planId, profile, isSchoolAccount, logFunnelEvent } = useAuth()
   const [loading, setLoading] = useState(null)
   const [annual, setAnnual] = useState(false)
+  const [openTip, setOpenTip] = useState(null) // "<planId>:<label>" do tooltip aberto, ou null
 
   const isTeacher = profile?.role === 'professor'
   if (user && (isTeacher || isSchoolAccount)) {
@@ -339,13 +341,36 @@ export default function Pricing() {
                       <span className="pricing-group-label">{group.label}</span>
                     )}
                     <ul className="pricing-list">
-                      {group.items.map(item => (
-                        <li key={item.label} className="pricing-item">
-                          <Check size={14} className="pricing-check" />
-                          <span className="pricing-item-label">{item.label}</span>
-                          {item.value && <span className="pricing-item-value">{item.value}</span>}
-                        </li>
-                      ))}
+                      {group.items.map(item => {
+                        const tipKey = `${plan.id}:${item.label}`
+                        const tipOpen = openTip === tipKey
+                        return (
+                          <li key={item.label} className="pricing-item">
+                            <Check size={14} className="pricing-check" />
+                            <span className="pricing-item-label-wrap">
+                              <span className="pricing-item-label">{item.label}</span>
+                              {item.tip && (
+                                <span className="pricing-tip-wrap">
+                                  <button
+                                    type="button"
+                                    className="pricing-tip-btn"
+                                    aria-label={`O que é: ${item.label}`}
+                                    onClick={() => setOpenTip(tipOpen ? null : tipKey)}
+                                  >
+                                    <InfoCircle size={13} />
+                                  </button>
+                                  {tipOpen && (
+                                    <span className="pricing-tip-pop" role="tooltip">
+                                      {item.tip}
+                                    </span>
+                                  )}
+                                </span>
+                              )}
+                            </span>
+                            {item.value && <span className="pricing-item-value">{item.value}</span>}
+                          </li>
+                        )
+                      })}
                     </ul>
                   </div>
                 ))}
