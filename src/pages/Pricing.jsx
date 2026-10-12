@@ -148,7 +148,6 @@ const COMPARE_ROWS = [
   { label: 'Assistente semanal por email', free: false, plus: true, pro: true },
   { label: 'Sincronização com o GitHub', free: false, plus: true, pro: true },
   { label: 'Vagas de estágio', free: false, plus: false, pro: true },
-  { label: 'Todo o mês renova os limites', free: true, plus: true, pro: true },
 ]
 
 const FAQ = [
