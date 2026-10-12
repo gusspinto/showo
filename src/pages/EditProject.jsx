@@ -1346,7 +1346,9 @@ function GithubAdvancedCard({ project }) {
 
       {!repo ? (
         <p style={{ margin: 0, fontSize: 13.5, color: colors.muted, lineHeight: 1.6 }}>
-          Cola o link do GitHub em "Redes", em cima. Depois lemos os commits e escrevemos no diário por ti.
+          {connection
+            ? 'Escolhe um repositório acima. Depois lemos os commits e escrevemos no diário por ti.'
+            : 'Cola o link do GitHub em "Redes", em cima — ou liga a tua conta acima para escolher da lista. Depois lemos os commits e escrevemos no diário por ti.'}
         </p>
       ) : (
         <>
