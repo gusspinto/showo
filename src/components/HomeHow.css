@@ -1,0 +1,349 @@
+/* ══ HomeHow — O que é o Showo: quadro com mockup à esquerda, lista de pilares à direita ══ */
+
+.hw3 { padding: 72px 24px 80px; }
+.hw3-inner { max-width: 1080px; margin: 0 auto; }
+
+.hw3-head { margin-bottom: 40px; }
+.hw3-eyebrow {
+  margin: 0 0 12px;
+  font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+.hw3-title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: clamp(28px, 3.8vw, 44px);
+  font-weight: 800; letter-spacing: -0.02em; line-height: 1.1;
+  color: var(--color-text);
+}
+
+/* Painel em duas colunas: quadro (esquerda) e lista (direita). */
+.hw3-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: 56px;
+  align-items: center;
+}
+
+/* Quadro: moldura suave da marca com o mockup ativo centrado. */
+.hw3-frame {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 28px;
+  /* Fundo com a cor do pilar ativo (--frame), suave e sem ser saturado. */
+  background: color-mix(in srgb, var(--frame, var(--color-primary)) 16%, var(--color-bg-alt));
+  transition: background-color 400ms cubic-bezier(0.2, 0, 0, 1);
+  display: flex; align-items: center; justify-content: center;
+  padding: 48px;
+  overflow: hidden;
+}
+.hw3-canvas {
+  width: 100%;
+  max-width: 380px;
+  animation: hw3-enter 600ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+/* Entrada do mockup: sobe um pouco, aparece e foca-se. Curva e duração fixas. */
+@keyframes hw3-enter {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); filter: blur(4px); }
+  to   { opacity: 1; transform: none; filter: blur(0); }
+}
+
+/* Lista: o ativo tem uma barra azul à esquerda e mostra a descrição. */
+.hw3-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.hw3-item { position: relative; }
+.hw3-item-btn {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
+  width: 100%;
+  padding: 18px 24px;
+  border: none; background: transparent;
+  border-inline-start: 3px solid var(--color-border);
+  border-radius: 0;
+  font-family: inherit; text-align: start; cursor: pointer;
+  transition: border-color 150ms ease;
+}
+.hw3-item-btn:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; border-radius: 6px; }
+.hw3-item-btn:hover .hw3-item-title { color: var(--color-text); }
+
+.hw3-item-title {
+  font-family: var(--font-heading);
+  font-size: 22px; font-weight: 700; line-height: 1.25; letter-spacing: -0.01em;
+  color: color-mix(in srgb, var(--color-text) 55%, transparent);
+  transition: color 150ms ease;
+}
+.hw3-item.is-active .hw3-item-title { color: var(--color-text); }
+.hw3-item-desc {
+  font-size: 16px; line-height: 1.55;
+  color: color-mix(in srgb, var(--color-text) 80%, transparent);
+  margin: 0; max-width: 46ch;
+}
+/* Barra lateral do passo ativo: a cor do passo cresce de cima para baixo em STEP_MS,
+   por cima da barra cinzenta (a borda do item). Transform, para não relayoutar. */
+.hw3-item { position: relative; }
+.hw3-progress-fill {
+  position: absolute; top: 0; bottom: 0; left: 0;
+  width: 3px;
+  background: var(--tone, var(--color-primary));
+  transform-origin: top;
+  animation-name: hw3-fill;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+  pointer-events: none;
+}
+.hw3-progress-fill.is-paused { animation-play-state: paused; }
+@keyframes hw3-fill {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+
+.hw3-lead {
+  margin: 14px 0 0;
+  max-width: 56ch;
+  font-size: 17px; line-height: 1.6;
+  color: color-mix(in srgb, var(--color-text) 80%, transparent);
+}
+
+/* Réplica do ecrã real "Cria o teu trabalho" (primeiro passo) */
+.hw3-mock--new { padding: 0; background: none; border: none; box-shadow: none; gap: 14px; }
+.hw3-new-title {
+  margin: 0; text-align: center;
+  font-family: var(--font-heading); font-size: 22px; font-weight: 800; letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+.hw3-new-card {
+  display: flex; flex-direction: column; gap: 12px;
+  padding: 14px; border-radius: 18px;
+  background: var(--color-surface); border: 1px solid var(--color-border);
+}
+.hw3-drop {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 22px 12px; border-radius: 12px;
+  border: 1px dashed var(--color-border);
+}
+.hw3-drop-icon {
+  width: 40px; height: 40px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: #0A0A0A; color: #fff; margin-bottom: 4px;
+}
+.hw3-drop-icon svg { width: 18px; height: 18px; }
+.hw3-drop-name { font-size: 15px; font-weight: 700; color: var(--color-text); }
+.hw3-drop-sub { font-size: 12.5px; color: var(--color-text-secondary); }
+.hw3-new-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 12px; border-radius: 12px;
+  background: var(--color-bg-alt); color: var(--color-text-tertiary);
+  font-size: 14px; font-weight: 700;
+}
+.hw3-new-btn svg { width: 14px; height: 14px; }
+.hw3-divider { display: flex; align-items: center; gap: 12px; color: var(--color-text-secondary); font-size: 12px; }
+.hw3-divider::before, .hw3-divider::after { content: ''; flex: 1; height: 1px; background: var(--color-border); }
+.hw3-new-alt {
+  padding: 12px; border-radius: 12px; text-align: center;
+  background: var(--color-text); color: var(--color-bg);
+  font-size: 14px; font-weight: 700;
+}
+
+/* Perfil fictício (quarto passo): mesma estrutura do perfil real, em tamanho maior */
+.hw3-canvas:has(.hw3-mock--profile) { max-width: 460px; }
+.hw3-mock--profile { padding: 0; overflow: hidden; gap: 0; }
+.hw3-pf-banner { height: 56px; background: #001A3D; }
+.hw3-pf-body { padding: 0 22px 22px; display: flex; flex-direction: column; gap: 8px; position: relative; }
+.hw3-pf-avatar {
+  width: 68px; height: 68px; border-radius: 50%; margin-top: -34px;
+  display: flex; align-items: center; justify-content: center;
+  background: #2478f0; color: #fff; font-size: 20px; font-weight: 800;
+  border: 4px solid var(--color-surface);
+}
+.hw3-pf-name { font-size: 20px; font-weight: 800; color: var(--color-text); }
+.hw3-pf-role { font-size: 14px; font-weight: 600; color: var(--color-text-secondary); }
+.hw3-pf-headline { font-size: 14px; color: var(--color-text-secondary); }
+.hw3-pf-heat {
+  display: grid; grid-template-columns: repeat(14, 1fr); gap: 4px; margin-top: 6px;
+}
+.hw3-pf-cell { aspect-ratio: 1; border-radius: 4px; background: var(--color-bg-alt); }
+.hw3-pf-cell.l1 { background: color-mix(in srgb, #16A34A 30%, var(--color-bg-alt)); }
+.hw3-pf-cell.l2 { background: color-mix(in srgb, #16A34A 55%, var(--color-bg-alt)); }
+.hw3-pf-cell.l3 { background: #16A34A; }
+.hw3-pf-projects { display: grid; gap: 10px; margin-top: 10px; }
+.hw3-pf-project {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px; border-radius: 14px; border: 1px solid var(--color-border);
+}
+.hw3-pf-thumb { flex-shrink: 0; width: 46px; height: 46px; border-radius: 11px; }
+.hw3-pf-thumb--blue { background: linear-gradient(135deg, #2478f0, #1d4ed8); }
+.hw3-pf-thumb--red { background: linear-gradient(135deg, #db4a3d, #f59e0b); }
+.hw3-pf-ptext { display: flex; flex-direction: column; min-width: 0; flex: 1; gap: 2px; }
+.hw3-pf-pname { font-size: 16px; font-weight: 700; color: var(--color-text); }
+.hw3-pf-pmeta { font-size: 13px; color: var(--color-text-secondary); }
+.hw3-pf-score { font-family: var(--font-heading); font-size: 24px; font-weight: 800; color: var(--color-primary); }
+
+/* Criar ou adicionar (mockup do primeiro passo) */
+.hw3-options { display: grid; gap: 10px; }
+.hw3-option {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px; border-radius: 12px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-alt);
+  font-size: 15px; font-weight: 600; color: var(--color-text);
+}
+.hw3-option.is-picked { border-color: #2478f0; background: color-mix(in srgb, #2478f0 10%, var(--color-surface)); }
+.hw3-option-icon {
+  flex-shrink: 0; width: 30px; height: 30px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  background: #2478f0; color: #fff; font-size: 17px; font-weight: 700; line-height: 1;
+}
+
+/* Secções do projeto (mockup Desenvolver) */
+.hw3-sections { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.hw3-section {
+  font-size: 13px; font-weight: 700;
+  padding: 9px 12px; border-radius: 10px;
+  border: 1px solid var(--color-border); color: var(--color-text-secondary);
+}
+.hw3-section.is-done { background: var(--color-bg-alt); color: var(--color-text); }
+
+/* Validação do professor (mockup Validar) */
+.hw3-validator { display: flex; align-items: center; gap: 12px; }
+.hw3-avatar {
+  flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: #cc9a1e; color: #fff; font-size: 13px; font-weight: 800;
+}
+.hw3-check {
+  margin-inline-start: auto;
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: #16A34A; color: #fff;
+}
+.hw3-check svg { width: 14px; height: 14px; }
+
+/* ── Mockups ── */
+.hw3-mock {
+  width: 100%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  padding: 20px;
+  display: flex; flex-direction: column; gap: 14px;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-text) 6%, transparent), 0 16px 32px -24px color-mix(in srgb, var(--color-text) 40%, transparent);
+}
+.hw3-mock-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.hw3-mock-kicker { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text-secondary); }
+.hw3-mock-title { font-size: 16px; font-weight: 800; color: var(--color-text); }
+
+.hw3-entry { display: flex; align-items: center; gap: 12px; padding-top: 12px; border-top: 1px solid var(--color-border-subtle); }
+.hw3-entry-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.hw3-code { font-family: var(--font-mono); font-size: 14px; color: var(--color-text); }
+.hw3-text { font-size: 15px; color: var(--color-text); }
+.hw3-meta { font-size: 12.5px; color: var(--color-text-secondary); }
+.hw3-dot {
+  flex-shrink: 0;
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+}
+.hw3-dot svg { width: 15px; height: 15px; }
+.hw3-dot--ink { background: #1C2333; }
+.hw3-dot--amber { background: #D97706; }
+
+.hw3-files { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.hw3-file {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 12px; border-radius: 12px;
+  background: var(--color-bg-alt);
+  border: 1px solid var(--color-border);
+}
+.hw3-file-type {
+  align-self: flex-start;
+  font-size: 10px; font-weight: 800; letter-spacing: 0.06em;
+  padding: 3px 6px; border-radius: 6px; color: #fff;
+}
+.hw3-file--doc .hw3-file-type { background: #2563EB; }
+.hw3-file--pdf .hw3-file-type { background: #DC2626; }
+.hw3-file--proj .hw3-file-type { background: #16A34A; }
+.hw3-file-name { font-size: 14px; font-weight: 600; line-height: 1.3; color: var(--color-text); }
+.hw3-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.hw3-chip {
+  font-size: 13px; font-weight: 700;
+  padding: 4px 10px; border-radius: 999px;
+  border: 1px solid var(--color-border); color: var(--color-text);
+}
+
+.hw3-ai-bubble {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 14px; border-radius: 14px;
+  background: var(--color-primary-subtle);
+  border: 1px solid var(--color-primary-muted);
+}
+.hw3-ai-icon {
+  flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--color-primary); color: #fff;
+}
+.hw3-ai-icon svg { width: 14px; height: 14px; }
+.hw3-ai-text { font-size: 15px; line-height: 1.45; color: var(--color-text); }
+.hw3-ai-actions { display: flex; gap: 8px; }
+.hw3-btn {
+  font-size: 13px; font-weight: 700;
+  padding: 8px 14px; border-radius: 10px;
+  border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text);
+}
+.hw3-btn--solid { background: var(--color-text); border-color: var(--color-text); color: var(--color-bg); }
+.hw3-ai-bar { height: 4px; border-radius: 99px; background: var(--color-border); overflow: hidden; }
+.hw3-ai-bar > span { display: block; height: 100%; width: 40%; background: var(--color-primary); border-radius: 99px; }
+
+.hw3-mock--portfolio { padding: 0; overflow: hidden; }
+.hw3-cover { height: 140px; background: linear-gradient(135deg, #2478f0 0%, #db4a3d 62%, #cc9a1e 100%); }
+.hw3-port-body { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 10px; }
+.hw3-port-name { font-size: 18px; font-weight: 800; color: var(--color-text); }
+.hw3-port-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.hw3-score { font-family: var(--font-heading); font-size: 30px; font-weight: 800; line-height: 1; color: var(--color-primary); }
+.hw3-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600; color: var(--color-text);
+  padding: 6px 10px; border-radius: 999px; border: 1px solid var(--color-border);
+}
+.hw3-link svg { width: 12px; height: 12px; color: #16A34A; }
+
+/* Em desktop, as pills e a descrição do telemóvel ficam escondidas. */
+.hw3-pills, .hw3-pills-desc { display: none; }
+
+@media (max-width: 860px) {
+  .hw3-panel { grid-template-columns: 1fr; gap: 28px; }
+  .hw3-frame { aspect-ratio: auto; padding: 32px 20px; }
+  /* No telemóvel a lista dá lugar às pills. */
+  .hw3-list { display: none; }
+  .hw3-pills { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+  .hw3-pills::-webkit-scrollbar { display: none; }
+  .hw3-pills-desc { display: block; margin: 0; font-size: 15px; line-height: 1.55; color: color-mix(in srgb, var(--color-text) 80%, transparent); }
+}
+
+/* Pills dos passos (só no telemóvel). */
+.hw3-pill {
+  position: relative; flex: 0 0 auto; overflow: hidden;
+  padding: 10px 16px; border-radius: 999px;
+  border: 1px solid var(--color-border); background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+  transition: border-color 150ms ease, color 150ms ease;
+}
+.hw3-pill.is-active { border-color: var(--color-text); color: var(--color-text); }
+.hw3-pill:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.hw3-pill-fill {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 3px;
+  background: var(--color-text);
+  transform-origin: left;
+  animation-name: hw3-pill-grow;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+.hw3-pill-fill.is-paused { animation-play-state: paused; }
+@keyframes hw3-pill-grow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+/* Movimento reduzido: sem fade do mockup. */
+@media (prefers-reduced-motion: reduce) {
+  .hw3-canvas { animation: none; }
+  .hw3-item-btn, .hw3-item-title { transition: none; }
+}

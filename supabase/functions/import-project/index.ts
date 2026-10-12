@@ -22,7 +22,13 @@ const TYPE_LABELS: Record<string, string> = {
   personal: 'Projeto Pessoal',
 }
 
-const MAX_TOTAL_BYTES = 12 * 1024 * 1024   // 12 MB somados
+// A Claude API aceita documentos até 32MB já em base64 (que pesa ~37% mais
+// que o ficheiro original). 20MB de ficheiros dá ~27MB codificados — fica
+// com margem para o resto do pedido (prompt, outros blocos). Subido de 12MB
+// porque "ficheiro demasiado grande" barrava quem trazia um trabalho a
+// sério (relatório de PAP com imagens, apresentação completa). Tem de ficar
+// alinhado com MAX_TOTAL_MB em src/pages/NewProject.jsx.
+const MAX_TOTAL_BYTES = 20 * 1024 * 1024
 const MAX_FILES = 5
 const MAX_TEXT_PER_FILE = 24_000           // caracteres, depois de extraído
 
@@ -236,7 +242,7 @@ Deno.serve(async (req) => {
     if (content.length === 0) {
       const reasons = skipped.map(s => s.reason)
       const msg = reasons.includes('demasiado grande')
-        ? 'O ficheiro é demasiado grande (máx. 12 MB). Comprime-o ou exporta como PDF.'
+        ? 'O ficheiro é demasiado grande (máx. 20 MB). Comprime-o ou exporta como PDF.'
         : reasons.includes('formato não suportado')
         ? 'Formato não suportado. Aceita PDF, Word, PowerPoint, imagens e texto.'
         : 'Não conseguimos ler o conteúdo deste ficheiro. Exporta como PDF e tenta outra vez.'

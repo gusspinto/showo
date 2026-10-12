@@ -186,3 +186,8 @@ body.fbp-lock-scroll { overflow: hidden; }
   .fbp-actions { flex-direction: column-reverse; }
   .fbp-cancel, .fbp-submit { width: 100%; }
 }
+
+/* Sem scroll na página de feedback, nem no desktop: a página tem de caber
+   no ecrã e o html também fica bloqueado (o body sozinho não chegava). */
+html:has(body.fbp-lock-scroll) { overflow: hidden; }
+.fbp-page { height: 100vh; height: 100dvh; min-height: 0; overflow: hidden; }

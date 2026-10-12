@@ -1,0 +1,142 @@
+/* ══ HomeProblems — "Problemas que resolvemos" ══ */
+
+.hp-section {
+  padding: clamp(56px, 8vw, 96px) 16px;
+}
+.hp-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+.hp-title {
+  margin: 0 0 20px;
+  font-family: var(--font-heading);
+  font-size: clamp(26px, 4vw, 40px);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+  text-align: center;
+}
+.hp-title-accent {
+  background: var(--brand-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Abas: pill, o ativo em texto invertido (como os botões cheios da app). */
+.hp-tabs {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+.hp-tab {
+  padding: 9px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+.hp-tab:hover { border-color: var(--color-border-hover); color: var(--color-text); }
+.hp-tab:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.hp-tab.is-active {
+  background: var(--color-text);
+  border-color: var(--color-text);
+  color: var(--color-bg);
+}
+
+.hp-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+@media (max-width: 800px) {
+  .hp-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ── Cartão: duas camadas no mesmo sítio; a visível troca com transição ── */
+.hp-card {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-surface);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.25s ease;
+}
+.hp-card:hover { border-color: var(--color-border-hover); }
+.hp-card:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+
+.hp-stage {
+  display: grid;
+  min-height: 176px;
+}
+.hp-problem,
+.hp-solution {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 22px 22px 24px;
+  transition:
+    opacity 0.55s cubic-bezier(0.2, 0, 0, 1) var(--hp-delay, 0ms),
+    transform 0.55s cubic-bezier(0.2, 0, 0, 1) var(--hp-delay, 0ms),
+    filter 0.55s cubic-bezier(0.2, 0, 0, 1) var(--hp-delay, 0ms);
+}
+
+/* Estado frio: o problema visível, a solução por baixo e desfocada. */
+.hp-problem { opacity: 1; transform: none; filter: none; }
+.hp-solution { opacity: 0; transform: translateY(8px); filter: blur(4px); }
+
+.hp-card.is-solved .hp-problem { opacity: 0; transform: translateY(-8px); filter: blur(4px); }
+.hp-card.is-solved .hp-solution { opacity: 1; transform: none; filter: none; }
+
+.hp-tag {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+.hp-tag--solution { color: var(--color-primary); }
+
+.hp-text {
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--color-text);
+}
+/* O problema fica riscado, como algo que deixa de existir. */
+.hp-problem .hp-text {
+  color: var(--color-text-secondary);
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in srgb, var(--color-text-tertiary) 70%, transparent);
+  text-decoration-thickness: 1px;
+}
+
+/* Movimento reduzido: sem transição, só o estado final. */
+@media (prefers-reduced-motion: reduce) {
+  .hp-problem,
+  .hp-solution,
+  .hp-card,
+  .hp-tab { transition: none !important; }
+}
+.hp-card.is-reduced .hp-problem,
+.hp-card.is-reduced .hp-solution {
+  transition: none !important;
+}
+
+@media (max-width: 600px) {
+  .hp-text { font-size: 16px; }
+  .hp-stage { min-height: 160px; }
+}

@@ -180,9 +180,10 @@
   position: fixed;
   left: 8px; top: 8px; bottom: 8px;
   width: 232px;
-  background: var(--color-sidebar-bg);
-  backdrop-filter: blur(20px) saturate(1.4);
-  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  /* Fundo e blur vão para ::before, com o mesmo raio. Assim o blur fica
+     recortado pelos cantos arredondados; no próprio elemento, em modo claro,
+     o fundo do blur vazava para fora dos cantos como um canto branco. */
+  background: transparent;
   border: 1px solid var(--color-border);
   border-radius: 16px;
   flex-direction: column;
@@ -196,6 +197,31 @@
 .sidebar:not(.collapsed) .sb-item > span,
 .sidebar:not(.collapsed) .sb-label {
   animation: sb-fade-slide-in 0.18s ease both;
+}
+.sidebar::before {
+  content: ''; position: absolute; inset: 0; z-index: -1;
+  border-radius: inherit;
+  background: var(--color-sidebar-bg);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  pointer-events: none;
+}
+/* Em modo claro não há blur: a superfície já é sólida (#eae7e2). O backdrop-filter
+   era a causa provável do canto branco, porque amostra fora do raio do cartão. */
+body.light .sidebar::before {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+/* Modo claro: a sidebar usa a cor da página (--color-bg), por isso nos cantos
+   arredondados já não sobra a faixa de cor diferente. Fica delimitada pela
+   borda, com os cantos de 16px como estavam. */
+body.light .sidebar::before {
+  background: var(--color-bg);
+}
+/* A sombra lateral (deslocada 6px para a direita) deixava uma faixa sem sombra
+   junto aos cantos do lado direito. Em modo claro a borda já separa a sidebar. */
+body.light .sidebar::after {
+  box-shadow: none;
 }
 .sidebar::after {
   content: ''; position: absolute; inset: 0; pointer-events: none;
@@ -393,6 +419,18 @@ body.light .sb-collapse-toggle:hover { border-color: rgba(0,0,0,0.75); }
     background-size: 180% 180% !important;
     background-position: var(--mx) var(--my) !important;
   }
+}
+
+/* Sidebar aberta: o mesmo gradiente de marca, mas dessaturado (mistura de
+   cada cor com 22% de cinzento-azulado #1C2333). Assim o texto branco lê-se
+   bem e o botão fica menos pesado ao lado dos itens do menu. O colapsado
+   mantém o gradiente completo, que é o que se gosta. */
+.sidebar:not(.collapsed) .sb-create.gradient-cta {
+  background-image: linear-gradient(115deg,
+    color-mix(in srgb, #2478f0 78%, #1C2333) 0%,
+    color-mix(in srgb, #2478f0 78%, #1C2333) 10%,
+    color-mix(in srgb, #db4a3d 78%, #1C2333) 62%,
+    color-mix(in srgb, #cc9a1e 78%, #1C2333) 100%) !important;
 }
 
 /* Botões-ícone (topbar mobile) — quadrado, mas do tamanho do sino ao

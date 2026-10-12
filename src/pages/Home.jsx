@@ -7,6 +7,7 @@ import { FireIcon as Fire } from '@solar-icons/react/bold/fire'
 import { Navbar } from '../components/Navbar'
 import { supabase } from '../lib/supabase'
 import HomeHow from '../components/HomeHow'
+import HomeProblems from '../components/HomeProblems'
 import TestimonialsMarquee from '../components/TestimonialsMarquee'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
@@ -202,9 +203,12 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ══ Como funciona (logo a seguir ao hero, antes de qualquer prova social —
-          quem chega do vídeo/anúncio precisa de perceber o que é isto antes de
-          ver projetos ou testemunhos) ══ */}
+      {/* ══ Problemas que resolvemos — por público, o problema desfaz-se em solução ══ */}
+      <Reveal className="home-problems-reveal">
+        <HomeProblems />
+      </Reveal>
+
+      {/* ══ Funcionalidades (a seguir aos problemas; o diário é só uma delas) ══ */}
       <Reveal className="home-how-reveal">
         <HomeHow />
       </Reveal>

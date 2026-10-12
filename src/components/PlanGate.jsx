@@ -18,10 +18,11 @@ const FEATURE_TESTIMONIAL_NAME = {
 // os outros seguem-se, para o carrossel ter por onde rodar em vez de mostrar
 // sempre o mesmo. Nenhum é inventado, são os mesmos da Pricing/Home.
 function orderTestimonials(feature) {
+  const list = TESTIMONIALS.filter(t => t.popup !== false)
   const wanted = FEATURE_TESTIMONIAL_NAME[feature]
-  const i = TESTIMONIALS.findIndex(t => t.name === wanted)
-  if (i <= 0) return TESTIMONIALS
-  return [TESTIMONIALS[i], ...TESTIMONIALS.slice(0, i), ...TESTIMONIALS.slice(i + 1)]
+  const i = list.findIndex(t => t.name === wanted)
+  if (i <= 0) return list
+  return [list[i], ...list.slice(0, i), ...list.slice(i + 1)]
 }
 
 // Marca do plano ao lado do nome — a marca Showo na cor do plano
@@ -100,21 +101,28 @@ const C = {
   // bloco do preço (que é o único a usar a tinta da marca).
   testimonial: {
     display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)',
+    // Não estica até à altura da coluna do preço: a caixa fica só do tamanho do
+    // conteúdo, sem espaço vazio entre o testemunho e a autoria.
+    alignSelf: 'start',
     background: 'var(--color-surface)', border: '1px solid var(--color-border)',
     borderRadius: 'var(--radius-lg)', padding: 'var(--sp-5)',
   },
-  // Altura fixa (não minHeight) + corte a 4 linhas — os testemunhos têm
-  // tamanhos muito diferentes (de "Parabéns!" a um parágrafo inteiro), e sem
-  // isto o cartão (e o modal todo, por causa do stretch das colunas) mudava
-  // de tamanho a cada rotação. Irritante, apontado pelo Gustavo.
+  // Sem corte: o testemunho inteiro aparece. Para o modal não saltar a cada
+  // rotação, todos os testemunhos ficam empilhados na mesma célula da grelha
+  // (testimonialStack) e só o ativo é visível — a altura é a do mais longo.
+  testimonialStack: { display: 'grid' },
   testimonialQuote: {
     margin: 0, fontSize: '0.95rem', color: 'var(--color-text)', lineHeight: 1.55,
-    height: '5.9em', overflow: 'hidden',
-    display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical',
+    gridArea: '1 / 1',
   },
   testimonialFooter: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' },
   testimonialPerson: { display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 },
-  testimonialPhoto: { width: '36px', height: '36px', borderRadius: 'var(--radius-full)', objectFit: 'cover', flexShrink: 0 },
+  // Contorno de 1px neutro (preto no claro, branco no escuro, via --color-text),
+  // para a foto não se fundir com o cartão nem apanhar a cor da superfície.
+  testimonialPhoto: {
+    width: '36px', height: '36px', borderRadius: 'var(--radius-full)', objectFit: 'cover', flexShrink: 0,
+    outline: '1px solid color-mix(in srgb, var(--color-text) 10%, transparent)', outlineOffset: '-1px',
+  },
   testimonialName: { fontSize: '0.84rem', fontWeight: 700, color: 'var(--color-text)' },
   // Antes cortava com "..." (1 linha, depois 2) e ainda ficava ilegível
   // ("Universidade da Maia e..."). Sem clamp nenhum agora — o cargo embrulha
@@ -125,7 +133,10 @@ const C = {
   testimonialDots: { display: 'flex', gap: '5px', flexShrink: 0 },
   testimonialDot: (active) => ({
     width: active ? '14px' : '5px', height: '5px', borderRadius: '3px',
-    background: active ? 'var(--color-primary)' : 'var(--color-border)',
+    /* Preto no modo claro, branco no escuro (var(--color-text)). A
+       diferença entre ativo e inativo fica na largura, não na cor. */
+    background: 'var(--color-text)',
+    opacity: active ? 1 : 0.3,
     transition: 'width 0.25s ease, background 0.25s ease',
   }),
   // Invertido (var(--color-text)/var(--color-bg)), não azul — o mesmo botão
@@ -315,7 +326,16 @@ export function PlanGateModal({ message, onClose }) {
 
                 {testimonial && (
                   <div style={C.testimonial}>
-                    <p style={C.testimonialQuote} key={tIdx} className="plan-gate-fade">“{testimonial.quote}”</p>
+                    <div style={C.testimonialStack}>
+                      {orderedTestimonials.map((t, i) => (
+                        <p
+                          key={i}
+                          style={{ ...C.testimonialQuote, visibility: i === tIdx ? 'visible' : 'hidden' }}
+                          className={i === tIdx ? 'plan-gate-fade' : undefined}
+                          aria-hidden={i !== tIdx}
+                        >“{t.quote}”</p>
+                      ))}
+                    </div>
                     <div style={C.testimonialFooter}>
                       <div style={C.testimonialPerson}>
                         <img src={testimonial.photo} alt="" style={C.testimonialPhoto} />
@@ -324,12 +344,12 @@ export function PlanGateModal({ message, onClose }) {
                           <div style={C.testimonialRole}>{testimonial.role}</div>
                         </div>
                       </div>
-                      {orderedTestimonials.length > 1 && (
-                        <div style={C.testimonialDots}>
-                          {orderedTestimonials.map((_, i) => <span key={i} style={C.testimonialDot(i === tIdx)} />)}
-                        </div>
-                      )}
                     </div>
+                    {orderedTestimonials.length > 1 && (
+                      <div style={{ ...C.testimonialDots, justifyContent: 'center' }}>
+                        {orderedTestimonials.map((_, i) => <span key={i} style={C.testimonialDot(i === tIdx)} />)}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
