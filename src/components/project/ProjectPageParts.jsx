@@ -2040,6 +2040,93 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
     setSelectedItem(null)
   }
 
+  // ── Desfazer/Refazer ──────────────────────────────────────────────────
+  // Em vez de intercetar as dezenas de sítios que já chamam
+  // setPreviewStyle/setPreviewBlocks, observa as duas em conjunto e grava um
+  // ponto de histórico sozinho, 700ms depois de pararem de mudar — assim uma
+  // rajada de alterações (arrastar, escrever texto) vira UM passo de
+  // desfazer, não um por tecla. Guardado em refs (não em estado) para não
+  // forçar um render a cada mudança; `histVersion` só serve para os botões
+  // saberem quando atualizar o estado ativado/desativado.
+  const prevSnapshotRef = useRef({ style: previewStyle, blocks: previewBlocks })
+  const pendingBeforeRef = useRef(null)
+  const undoStackRef = useRef([])
+  const redoStackRef = useRef([])
+  const skipHistoryRef = useRef(false)
+  const historyDebounceRef = useRef(null)
+  const [histVersion, setHistVersion] = useState(0)
+
+  useEffect(() => {
+    if (skipHistoryRef.current) {
+      skipHistoryRef.current = false
+      prevSnapshotRef.current = { style: previewStyle, blocks: previewBlocks }
+      return
+    }
+    if (!pendingBeforeRef.current) pendingBeforeRef.current = prevSnapshotRef.current
+    prevSnapshotRef.current = { style: previewStyle, blocks: previewBlocks }
+    if (redoStackRef.current.length) { redoStackRef.current = []; setHistVersion(v => v + 1) }
+    clearTimeout(historyDebounceRef.current)
+    historyDebounceRef.current = setTimeout(() => {
+      if (pendingBeforeRef.current) {
+        undoStackRef.current.push(pendingBeforeRef.current)
+        if (undoStackRef.current.length > 50) undoStackRef.current.shift()
+        pendingBeforeRef.current = null
+        setHistVersion(v => v + 1)
+      }
+    }, 700)
+    return () => clearTimeout(historyDebounceRef.current)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [previewStyle, previewBlocks])
+
+  function undoPreviewChange() {
+    clearTimeout(historyDebounceRef.current)
+    if (pendingBeforeRef.current) {
+      undoStackRef.current.push(pendingBeforeRef.current)
+      pendingBeforeRef.current = null
+    }
+    if (!undoStackRef.current.length) return
+    const target = undoStackRef.current.pop()
+    redoStackRef.current.push({ style: previewStyle, blocks: previewBlocks })
+    skipHistoryRef.current = true
+    prevSnapshotRef.current = target
+    setPreviewStyle(target.style)
+    setPreviewBlocks(target.blocks)
+    setSelectedItem(null)
+    setHistVersion(v => v + 1)
+  }
+  function redoPreviewChange() {
+    if (!redoStackRef.current.length) return
+    const target = redoStackRef.current.pop()
+    undoStackRef.current.push({ style: previewStyle, blocks: previewBlocks })
+    skipHistoryRef.current = true
+    prevSnapshotRef.current = target
+    setPreviewStyle(target.style)
+    setPreviewBlocks(target.blocks)
+    setSelectedItem(null)
+    setHistVersion(v => v + 1)
+  }
+  // eslint-disable-next-line no-unused-vars
+  const _histVersionTick = histVersion
+  const canUndo = undoStackRef.current.length > 0 || !!pendingBeforeRef.current
+  const canRedo = redoStackRef.current.length > 0
+
+  // Cmd/Ctrl+Z e Cmd/Ctrl+Shift+Z — só em modo de edição, nunca para quem
+  // está só a ver a página (evita capturar o atalho do browser por engano).
+  useEffect(() => {
+    if (!(isOwner && previewEditing)) return
+    function onKeyDown(e) {
+      if (!(e.metaKey || e.ctrlKey) || e.key.toLowerCase() !== 'z') return
+      const target = e.target
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return
+      e.preventDefault()
+      if (e.shiftKey) redoPreviewChange()
+      else undoPreviewChange()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOwner, previewEditing])
+
   // Pairs a section card with an optional image/video on the side (set via the
   // Secções tab) — falls back to the plain full-width card when no media is set.
   function withSectionMedia(key, card) {
@@ -2686,34 +2773,64 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                 />
               </div>
 
-              {/* Save icon — branco/monocromático, igual ao resto da app
-                  (era azul, destoava do preto/branco usado em todo o lado). */}
-              <button
-                onClick={async () => {
-                  const { error } = await supabase.from('projects')
-                    .update({ preview_blocks: previewBlocks, preview_style: previewStyle })
-                    .eq('id', project.id)
-                  if (!error) {
-                    setPreviewSaveError(false)
-                    setPreviewSaved(true)
-                    setTimeout(() => setPreviewSaved(false), 2000)
-                  } else {
-                    console.error('Save preview error:', error)
-                    setPreviewSaveError(true)
-                    setTimeout(() => setPreviewSaveError(false), 4000)
-                  }
-                }}
-                title={previewSaveError ? 'Erro ao guardar, tenta novamente' : 'Guardar'}
-                style={{
-                  width: 28, height: 28, borderRadius: 7, marginLeft: 'auto',
-                  background: previewSaveError ? 'var(--color-error-subtle)' : previewSaved ? 'var(--color-success-subtle)' : 'var(--color-text)',
-                  border: `1px solid ${previewSaveError ? 'var(--color-error-subtle)' : previewSaved ? 'var(--color-success-subtle)' : 'var(--color-text)'}`,
-                  color: previewSaveError ? 'var(--color-error)' : previewSaved ? 'var(--color-success)' : 'var(--color-bg)',
-                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s', flexShrink: 0,
-                }}
-              >
-                {previewSaveError ? <X size={13} strokeWidth={3} /> : previewSaved ? <Check size={13} strokeWidth={3} /> : <Save size={13} />}
-              </button>
+              {/* Desfazer/Refazer + Guardar — agrupados à direita. */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 'auto' }}>
+                <button
+                  onClick={undoPreviewChange}
+                  disabled={!canUndo}
+                  title="Desfazer"
+                  style={{
+                    width: 28, height: 28, borderRadius: 7, background: 'transparent', border: 'none',
+                    color: canUndo ? 'var(--color-text-secondary)' : 'var(--color-text-tertiary)',
+                    cursor: canUndo ? 'pointer' : 'default', opacity: canUndo ? 1 : 0.4,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"><path d="M3 10h10a5 5 0 0 1 0 10H8"/><path d="M8 6l-5 4 5 4"/></svg>
+                </button>
+                <button
+                  onClick={redoPreviewChange}
+                  disabled={!canRedo}
+                  title="Refazer"
+                  style={{
+                    width: 28, height: 28, borderRadius: 7, background: 'transparent', border: 'none',
+                    color: canRedo ? 'var(--color-text-secondary)' : 'var(--color-text-tertiary)',
+                    cursor: canRedo ? 'pointer' : 'default', opacity: canRedo ? 1 : 0.4,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" style={{ transform: 'scaleX(-1)' }}><path d="M3 10h10a5 5 0 0 1 0 10H8"/><path d="M8 6l-5 4 5 4"/></svg>
+                </button>
+                <div style={{ width: 1, height: 16, background: 'var(--color-border)', margin: '0 2px' }} />
+                {/* Save icon — branco/monocromático, igual ao resto da app
+                    (era azul, destoava do preto/branco usado em todo o lado). */}
+                <button
+                  onClick={async () => {
+                    const { error } = await supabase.from('projects')
+                      .update({ preview_blocks: previewBlocks, preview_style: previewStyle })
+                      .eq('id', project.id)
+                    if (!error) {
+                      setPreviewSaveError(false)
+                      setPreviewSaved(true)
+                      setTimeout(() => setPreviewSaved(false), 2000)
+                    } else {
+                      console.error('Save preview error:', error)
+                      setPreviewSaveError(true)
+                      setTimeout(() => setPreviewSaveError(false), 4000)
+                    }
+                  }}
+                  title={previewSaveError ? 'Erro ao guardar, tenta novamente' : 'Guardar'}
+                  style={{
+                    width: 28, height: 28, borderRadius: 7,
+                    background: previewSaveError ? 'var(--color-error-subtle)' : previewSaved ? 'var(--color-success-subtle)' : 'var(--color-text)',
+                    border: `1px solid ${previewSaveError ? 'var(--color-error-subtle)' : previewSaved ? 'var(--color-success-subtle)' : 'var(--color-text)'}`,
+                    color: previewSaveError ? 'var(--color-error)' : previewSaved ? 'var(--color-success)' : 'var(--color-bg)',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s', flexShrink: 0,
+                  }}
+                >
+                  {previewSaveError ? <X size={13} strokeWidth={3} /> : previewSaved ? <Check size={13} strokeWidth={3} /> : <Save size={13} />}
+                </button>
+              </div>
             </div>
           </div>}
 
