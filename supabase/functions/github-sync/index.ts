@@ -1,20 +1,21 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { checkRateLimit, getCorsHeaders, getAuthUser } from '../_shared/rateLimit.ts'
+import { getGithubToken } from '../_shared/githubAuth.ts'
 
 /* ══════════════════════════════════════════════════════════════════════════
    SINCRONIZAR COM O GITHUB
    ──────────────────────────────────────────────────────────────────────────
-   Lê um repositório PÚBLICO pela API pública do GitHub e traz para dentro do
-   projeto o que já lá está datado: commits, linguagens e as datas do
-   primeiro e último trabalho.
+   Lê um repositório pela API do GitHub e traz para dentro do projeto o que
+   já lá está datado: commits, linguagens e as datas do primeiro e último
+   trabalho.
 
    Três decisões que definem o que isto é (e o que não é):
 
-   1. Sem OAuth. Não pedimos acesso à conta de ninguém, e por isso nunca
-      vemos código privado. Tudo o que a app lê é o que qualquer pessoa vê
-      ao abrir o repositório no browser. Um token nosso (GITHUB_TOKEN), se
-      existir, serve só para subir o limite de pedidos de 60/h para 5000/h —
-      nunca para aceder a mais coisas.
+   1. OAuth é opcional. Sem conta ligada, só lê repositórios públicos (como
+      sempre foi). Com a conta GitHub ligada (github_connections), lê também
+      privados do próprio utilizador — nunca de outra pessoa, o GitHub só
+      deixa o token aceder ao que o dono autorizou. Sem token nenhum (nem
+      pessoal nem o GITHUB_TOKEN da app), cai no limite público de 60/h.
 
    2. Um dia = uma entrada, não um commit = uma entrada. Um dia de trabalho
       normal são 15 commits com mensagens como "fix" e "wip"; despejá-los no
@@ -45,12 +46,14 @@ function parseRepo(url: string): { owner: string; repo: string } | null {
   return { owner, repo }
 }
 
-function ghHeaders(): Record<string, string> {
+// Prioridade: token do próprio utilizador (OAuth, vê privados) > token
+// genérico da app (GITHUB_TOKEN, só sobe o limite de pedidos de públicos).
+function ghHeaders(userToken: string | null): Record<string, string> {
   const h: Record<string, string> = {
     Accept: 'application/vnd.github+json',
     'User-Agent': 'showo-app',
   }
-  const token = Deno.env.get('GITHUB_TOKEN')
+  const token = userToken || Deno.env.get('GITHUB_TOKEN')
   if (token) h.Authorization = `Bearer ${token}`
   return h
 }
@@ -126,6 +129,10 @@ Deno.serve(async (req) => {
       return json({ error: 'Só o dono do projeto pode sincronizar.' }, 403)
     }
 
+    // Com conta GitHub ligada (OAuth), lê também repositórios privados do
+    // próprio utilizador — sem ligação, mantém-se só públicos (userToken null).
+    const userToken = await getGithubToken(supabase, user.id)
+
     // ── Desfazer ──
     // Sincronizar o repositório errado deixava até 300 entradas para apagar
     // uma a uma. Isto tira todas as que vieram do GitHub (external_id
@@ -161,7 +168,7 @@ Deno.serve(async (req) => {
     const base = `${GITHUB_API}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`
 
     // ── Repositório ──
-    const repoRes = await fetch(base, { headers: ghHeaders() })
+    const repoRes = await fetch(base, { headers: ghHeaders(userToken) })
     if (repoRes.status === 404) {
       return json({ error: 'Repositório não encontrado. Tem de ser público e o link tem de estar certo.' }, 404)
     }
@@ -171,8 +178,10 @@ Deno.serve(async (req) => {
     if (!repoRes.ok) return json({ error: 'O GitHub não respondeu como esperado.' }, 502)
     const repoData = await repoRes.json()
 
-    if (repoData.private) {
-      return json({ error: 'O repositório é privado. Só conseguimos ler repositórios públicos.' }, 400)
+    // Privado só é aceite com conta GitHub ligada — sem OAuth, o pedido
+    // acima nem o teria encontrado (404), mas fica explícito por clareza.
+    if (repoData.private && !userToken) {
+      return json({ error: 'O repositório é privado. Liga a tua conta do GitHub para o sincronizar.' }, 400)
     }
 
     // Um fork devolve o histórico INTEIRO do original, com os commits de
@@ -192,7 +201,7 @@ Deno.serve(async (req) => {
     // ── Linguagens (bytes por linguagem) ──
     let languages: Record<string, number> = {}
     try {
-      const langRes = await fetch(`${base}/languages`, { headers: ghHeaders() })
+      const langRes = await fetch(`${base}/languages`, { headers: ghHeaders(userToken) })
       if (langRes.ok) languages = await langRes.json()
     } catch { /* linguagens são um extra, não valem falhar a sincronização */ }
 
@@ -200,7 +209,7 @@ Deno.serve(async (req) => {
     type Commit = { sha: string; date: string; message: string }
     const commits: Commit[] = []
     for (let page = 1; page <= MAX_COMMIT_PAGES; page++) {
-      const res = await fetch(`${base}/commits?per_page=${PER_PAGE}&page=${page}`, { headers: ghHeaders() })
+      const res = await fetch(`${base}/commits?per_page=${PER_PAGE}&page=${page}`, { headers: ghHeaders(userToken) })
       // 409 = repositório vazio, ainda sem commits.
       if (res.status === 409) break
       if (!res.ok) break
@@ -275,11 +284,11 @@ Deno.serve(async (req) => {
     let firstCommit = dates[0] ?? null
     if (commits.length >= MAX_COMMIT_PAGES * PER_PAGE) {
       try {
-        const head = await fetch(`${base}/commits?per_page=1`, { headers: ghHeaders() })
+        const head = await fetch(`${base}/commits?per_page=1`, { headers: ghHeaders(userToken) })
         const n = lastPage(head.headers.get('link'))
         if (n && n > commits.length) {
           totalCommits = n
-          const oldest = await fetch(`${base}/commits?per_page=1&page=${n}`, { headers: ghHeaders() })
+          const oldest = await fetch(`${base}/commits?per_page=1&page=${n}`, { headers: ghHeaders(userToken) })
           if (oldest.ok) {
             const [c] = await oldest.json()
             const d = c?.commit?.author?.date || c?.commit?.committer?.date

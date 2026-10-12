@@ -29,6 +29,7 @@ import { logFieldsFilled } from '../lib/autoJournal'
 import { parseGithubRepo, syncGithub, removeGithubEntries, topLanguages, commitSpanMonths, repoAgeMonths, shareOnLinkedIn } from '../lib/social'
 import { PLAN_GATE_MESSAGES } from '../lib/plans'
 import { listProjectFiles, uploadProjectFile, deleteProjectFile, toggleFileVisibility, getAccountFilesUsage, formatFileSize } from '../lib/projectFiles'
+import { startGithubConnect, getGithubConnection, disconnectGithub } from '../lib/githubAuth'
 import { DatabaseIcon as Database } from '@solar-icons/react/bold/database'
 import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
 import { UploadMinimalisticIcon as Upload } from '@solar-icons/react/bold/upload-minimalistic'
@@ -1183,6 +1184,8 @@ function ProjectFilesCard({ project }) {
    guardadas para a página pública mostrar prova de trabalho a sério.
    Só repositórios públicos, sem OAuth. */
 function GithubAdvancedCard({ project }) {
+  const { user } = useAuth()
+  const [connection, setConnection] = useState(null) // { github_login } | null | undefined(loading)
   const [syncing, setSyncing] = useState(false)
   const [error, setError] = useState(null)
   const [result, setResult] = useState(null)
@@ -1191,6 +1194,11 @@ function GithubAdvancedCard({ project }) {
   const [confirmRemove, setConfirmRemove] = useState(false)
   const [removing, setRemoving] = useState(false)
   const [removed, setRemoved] = useState(null)
+
+  useEffect(() => {
+    if (!user?.id) return
+    getGithubConnection(user.id).then(setConnection).catch(() => setConnection(null))
+  }, [user?.id])
   // Formato do painel na página pública — guardado em preview_style ao
   // lado das outras personalizações da página (cor, fonte...), não numa
   // coluna própria.
@@ -1244,6 +1252,34 @@ function GithubAdvancedCard({ project }) {
         <Code size={12} /> GitHub
       </div>
 
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 16, padding: '10px 12px', background: colors.bgAlt, borderRadius: 8, border: `1px solid ${colors.border}` }}>
+        {connection ? (
+          <>
+            <span style={{ fontSize: 12.5, color: colors.text }}>
+              Ligado como <strong>{connection.github_login}</strong> — já dá para sincronizar repos privados.
+            </span>
+            <button
+              type="button"
+              onClick={() => disconnectGithub(user.id).then(() => setConnection(null))}
+              style={{ background: 'transparent', border: 'none', color: colors.subtle, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+            >
+              Desligar
+            </button>
+          </>
+        ) : (
+          <>
+            <span style={{ fontSize: 12.5, color: colors.muted }}>Sem conta GitHub ligada — só lê repositórios públicos.</span>
+            <button
+              type="button"
+              onClick={() => startGithubConnect(window.location.pathname)}
+              style={{ background: colors.blue, border: 'none', borderRadius: 7, color: '#fff', fontSize: 12, fontWeight: 700, padding: '6px 12px', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+            >
+              Ligar GitHub
+            </button>
+          </>
+        )}
+      </div>
+
       {!repo ? (
         <p style={{ margin: 0, fontSize: 13.5, color: colors.muted, lineHeight: 1.6 }}>
           Cola o link do GitHub em "Redes", em cima. Depois lemos os commits e escrevemos no diário por ti.
@@ -1252,7 +1288,7 @@ function GithubAdvancedCard({ project }) {
         <>
           <p style={{ margin: '0 0 16px', fontSize: 13.5, color: colors.muted, lineHeight: 1.6 }}>
             Vamos ler <strong style={{ color: colors.text }}>{repo.owner}/{repo.repo}</strong>. Cada dia com
-            commits vira uma entrada no diário. Só funciona com repositórios públicos.
+            commits vira uma entrada no diário. {connection ? 'Com a conta ligada, também funciona com repositórios privados teus.' : 'Só funciona com repositórios públicos — liga a tua conta acima para privados.'}
           </p>
 
           {stats && (
