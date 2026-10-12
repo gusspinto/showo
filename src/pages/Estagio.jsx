@@ -5,46 +5,36 @@ import { QRCodeSVG } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
+import { PLAN_GATE_MESSAGES } from '../lib/plans'
 import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
 import { DownloadIcon as Download } from '@solar-icons/react/bold/download'
 import { LetterIcon as Mail } from '@solar-icons/react/bold/letter'
-import { BellIcon as Bell } from '@solar-icons/react/bold/bell'
 import { LinkIcon as Link2 } from '@solar-icons/react/bold/link'
 import { LockKeyholeIcon as Lock } from '@solar-icons/react/bold/lock-keyhole'
 import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
+import { CaseIcon as Briefcase } from '@solar-icons/react/bold/case'
 import './Estagio.css'
 
 /* ══════════════════════════════════════════════════════════════════════════
    ESTÁGIO
    ──────────────────────────────────────────────────────────────────────────
    Esta rota existia sem estar em lado nenhum da navegação: um "Kit de
-   Estágio" solto, alcançável só por URL. Passa a ser uma ÁREA identificável,
-   com duas camadas honestas:
-
-     · O produto Estágio ainda não existe → está marcado como Em breve, com
-       o que ele vai ser dito em três linhas e um sítio para deixar interesse.
-       Não inventamos ecrãs de uma funcionalidade que não construímos.
-     · O que já existe hoje (link, email de candidatura, QR) fica por baixo,
-       como "já podes usar", em vez de ser vendido como o produto final.
-
-   Não anunciar nada seria desperdiçar a expectativa; anunciar como pronto
-   seria mentir. Isto é o meio-termo.
+   Estágio" solto, alcançável só por URL. O /vagas (empresas a publicar
+   vagas, alunos a candidatar-se) já existe e está real — isto deixou de ser
+   "Em breve" e passou a apontar para lá, com o gate de plano real
+   (checkGate('internshipPage')) em vez de uma promessa estática.
+   O que já existe hoje (link, email de candidatura, QR) fica por baixo,
+   disponível a qualquer plano.
    ══════════════════════════════════════════════════════════════════════════ */
-
-const WHAT_IS_COMING = [
-  'Empresas parceiras a publicar vagas de estágio para alunos da Showo.',
-  'Candidatura com o teu portfólio, sem CV nem carta a começar do zero.',
-  'Acompanhamento do estágio dentro da app, como já fazes com os projetos.',
-]
 
 export default function Estagio() {
   const navigate = useNavigate()
-  const { user, profile } = useAuth()
+  const { user, profile, checkGate } = useAuth()
+  const gate = checkGate('internshipPage')
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [copiedField, setCopiedField] = useState(null)
   const [emailText, setEmailText] = useState('')
-  const [interest, setInterest] = useState('idle') // idle | saving | done
   const qrRef = useRef(null)
 
   useEffect(() => {
@@ -52,13 +42,6 @@ export default function Estagio() {
     supabase.from('projects').select('id, score').eq('user_id', user.id)
       .then(({ data }) => { setProjects(data || []); setLoading(false) })
   }, [user])
-
-  useEffect(() => {
-    if (!user?.id) return
-    try {
-      if (localStorage.getItem(`showo_estagio_interest_${user.id}`)) setInterest('done')
-    } catch { /* storage indisponível */ }
-  }, [user?.id])
 
   const displayName = profile?.full_name || profile?.username || 'O teu nome'
   const username = profile?.username || profile?.id || ''
@@ -82,22 +65,6 @@ ${displayName}`)
     navigator.clipboard.writeText(text)
     setCopiedField(key)
     setTimeout(() => setCopiedField(null), 2200)
-  }
-
-  /* Reaproveita a tabela de feedback que já existe em vez de criar um sistema
-     de waitlist paralelo para uma única funcionalidade. */
-  async function registerInterest() {
-    if (interest !== 'idle') return
-    setInterest('saving')
-    try {
-      await supabase.from('feedback').insert({
-        message: 'INTERESSE_ESTAGIO — quer ser avisado quando a área de Estágio abrir.',
-        page_url: '/estagio',
-        user_id: user?.id ?? null,
-      })
-    } catch { /* mesmo que falhe, não vale a pena bloquear o utilizador */ }
-    try { if (user?.id) localStorage.setItem(`showo_estagio_interest_${user.id}`, '1') } catch {}
-    setInterest('done')
   }
 
   function downloadQR() {
@@ -135,38 +102,30 @@ ${displayName}`)
 
       <div className="est-wrap">
 
-        {/* ── Em breve ── */}
+        {/* ── Vagas: real, com gate de plano (não é mais promessa) ── */}
         <section className="est-hero">
           <span className="est-eyebrow">
             <span className="est-eyebrow-dot" />
-            Em breve
+            {gate.allowed ? 'Disponível' : 'Pro'}
           </span>
           <h1 className="est-title">Estágio</h1>
           <p className="est-lead">
-            O passo a seguir aos teus projetos. Estamos a construir a ponte entre o que
-            já fizeste na escola e as empresas que procuram quem sabe fazer.
+            O passo a seguir aos teus projetos. Empresas publicam vagas, candidatas-te
+            com o teu portfólio — sem CV nem carta a começar do zero.
           </p>
 
-          <ul className="est-coming">
-            {WHAT_IS_COMING.map(line => (
-              <li key={line}><span className="est-coming-bullet" />{line}</li>
-            ))}
-          </ul>
-
-          <button
-            className={`est-notify${interest === 'done' ? ' is-done' : ''}`}
-            onClick={registerInterest}
-            disabled={interest !== 'idle'}
-          >
-            {interest === 'done'
-              ? <><Check size={16} /> Ficas a saber primeiro</>
-              : interest === 'saving'
-              ? 'A registar…'
-              : <><Bell size={16} /> Avisa-me quando abrir</>}
-          </button>
-          <p className="est-notify-note">
-            Sem spam. Um email quando a área abrir, mais nada.
-          </p>
+          {gate.allowed ? (
+            <button className="est-notify" onClick={() => navigate('/vagas')}>
+              <Briefcase size={16} /> Ver vagas
+            </button>
+          ) : (
+            <>
+              <button className="est-notify" onClick={() => navigate('/planos')}>
+                <Lock size={16} /> {PLAN_GATE_MESSAGES.internshipPage().title}
+              </button>
+              <p className="est-notify-note">{gate.message?.body || PLAN_GATE_MESSAGES.internshipPage().body}</p>
+            </>
+          )}
         </section>
 
         {/* ── O que já dá para fazer hoje ──

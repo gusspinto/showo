@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import { PLAN_GATE_MESSAGES } from '../lib/plans'
 import { Navbar } from '../components/Navbar'
 import SegmentedTabs from '../components/SegmentedTabs'
 import { CaseIcon as Briefcase } from '@solar-icons/react/bold/case'
@@ -429,7 +430,7 @@ function CandidatarModal({ vaga, recruiterProfile, onClose, onSubmit, sending })
 
 export default function Vagas() {
   const navigate = useNavigate()
-  const { user, profile, isSchoolAccount } = useAuth()
+  const { user, profile, isSchoolAccount, checkGate } = useAuth()
   const isRecruiter = profile?.role === 'recrutador' || profile?.role === 'empresa'
   const isAluno = profile?.role === 'aluno'
 
@@ -443,7 +444,12 @@ export default function Vagas() {
       .then(({ data }) => setGradeLevel(data?.grade_level ?? null))
       .catch(() => {})
   }, [user, isAluno])
-  const alunoBlocked = isAluno && !(isSchoolAccount && (gradeLevel === '11' || gradeLevel === '12'))
+  const schoolGradeOk = isSchoolAccount && (gradeLevel === '11' || gradeLevel === '12')
+  // Fora de escola (B2C individual), a entrada é a feature "internshipPage" do
+  // plano — só Pro. Dentro de escola mantém-se a regra do Hugo tal e qual,
+  // sem gate de plano em cima (a escola já paga à parte).
+  const individualProOk = !isSchoolAccount && checkGate('internshipPage').allowed
+  const alunoBlocked = isAluno && !(schoolGradeOk || individualProOk)
 
   const [vagas, setVagas] = useState([])
   const [myVagas, setMyVagas] = useState([])
@@ -641,15 +647,36 @@ export default function Vagas() {
   const accentColor = profile?.role === 'empresa' ? 'var(--color-warning)' : C.blue
 
   if (alunoBlocked) {
+    const gateMsg = !isSchoolAccount ? PLAN_GATE_MESSAGES.internshipPage() : null
     return (
       <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'inherit' }}>
         <Navbar />
         <div className="page-content" style={{ textAlign: 'center', padding: '96px 20px' }}>
           <Briefcase size={40} color={C.muted} style={{ marginBottom: 14, opacity: 0.5 }} />
-          <p style={{ color: C.text, fontSize: 17, fontWeight: 700, margin: '0 0 6px' }}>Estágios é para alunos do 11.º e 12.º ano</p>
-          <p style={{ color: C.muted, fontSize: 13, margin: 0, maxWidth: 380, marginLeft: 'auto', marginRight: 'auto' }}>
-            Esta secção fica disponível quando entrares numa turma com o ano definido como 11.º ou 12.º.
-          </p>
+          {gateMsg ? (
+            <>
+              <p style={{ color: C.text, fontSize: 17, fontWeight: 700, margin: '0 0 6px' }}>{gateMsg.title}</p>
+              <p style={{ color: C.muted, fontSize: 13, margin: '0 0 20px', maxWidth: 380, marginLeft: 'auto', marginRight: 'auto' }}>
+                {gateMsg.body}
+              </p>
+              <button
+                onClick={() => navigate('/planos')}
+                style={{
+                  fontSize: 13, fontWeight: 700, padding: '10px 20px', borderRadius: 9,
+                  border: 'none', background: C.blue, color: '#fff', cursor: 'pointer', fontFamily: 'inherit',
+                }}
+              >
+                Ver planos
+              </button>
+            </>
+          ) : (
+            <>
+              <p style={{ color: C.text, fontSize: 17, fontWeight: 700, margin: '0 0 6px' }}>Estágios é para alunos do 11.º e 12.º ano</p>
+              <p style={{ color: C.muted, fontSize: 13, margin: 0, maxWidth: 380, marginLeft: 'auto', marginRight: 'auto' }}>
+                Esta secção fica disponível quando entrares numa turma com o ano definido como 11.º ou 12.º.
+              </p>
+            </>
+          )}
         </div>
       </div>
     )

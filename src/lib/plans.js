@@ -18,7 +18,9 @@ export const PLANS = {
     career: {
       internshipPage: false,
       weeklyRecap: true,
+      cleanLink: false,
     },
+    files: { maxProjectMB: 250, maxAccountMB: 2560 },
   },
   school_pro: {
     id: 'school_pro',
@@ -39,7 +41,9 @@ export const PLANS = {
     career: {
       internshipPage: true,
       weeklyRecap: true,
+      cleanLink: true,
     },
+    files: { maxProjectMB: 1024, maxAccountMB: 5120 },
   },
   free: {
     id: 'free',
@@ -60,7 +64,9 @@ export const PLANS = {
     career: {
       internshipPage: false,
       weeklyRecap: false,
+      cleanLink: false,
     },
+    files: { maxProjectMB: 0, maxAccountMB: 0 },
   },
   plus: {
     id: 'plus',
@@ -84,7 +90,9 @@ export const PLANS = {
     career: {
       internshipPage: false,
       weeklyRecap: true,
+      cleanLink: false,
     },
+    files: { maxProjectMB: 250, maxAccountMB: 3840 },
   },
   pro: {
     id: 'pro',
@@ -108,7 +116,9 @@ export const PLANS = {
     career: {
       internshipPage: true,
       weeklyRecap: true,
+      cleanLink: true,
     },
+    files: { maxProjectMB: 1024, maxAccountMB: 5120 },
   },
 }
 
@@ -267,5 +277,13 @@ export const PLAN_GATE_MESSAGES = {
   internshipPage: () => ({
     title: 'Página de estágio',
     body: 'Uma página do teu portfólio organizada para recrutadores. Disponível no Pro.',
+  }),
+  cleanLink: () => ({
+    title: 'Link limpo',
+    body: 'Tira o código aleatório do link do projeto e escolhe o teu próprio. Disponível no Pro.',
+  }),
+  projectFiles: () => ({
+    title: 'Ficheiros do projeto',
+    body: 'Anexa PDFs, Word, PowerPoint ou imagens como prova do trabalho, visíveis na página pública. Disponível a partir do Plus.',
   }),
 }
