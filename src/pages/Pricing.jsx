@@ -53,9 +53,12 @@ const PLANS = [
       {
         label: 'IA',
         ai: true,
-        blurb: 'Todas as ferramentas de IA estão cá para experimentares — com conta suficiente para levar um projeto ao fim.',
+        blurb: 'A IA faz o trabalho pesado contigo: tira-te o projeto da cabeça, aponta o que está fraco e prepara-te para o apresentares.',
         items: [
-          { label: 'Todas as ferramentas, para experimentar', tip: 'Coach, criar projeto, entrevista guiada, análise, relatório, Pitch, Banca e exportar para PowerPoint. Os números exatos de cada uma estão na tabela de comparação, mais abaixo.' },
+          { label: 'Coach que responde enquanto trabalhas', value: '10 msgs' },
+          { label: 'Cria o projeto a partir de uma conversa', value: '3x' },
+          { label: 'Análise que diz o que está fraco', value: '1x' },
+          { label: 'Pitch, Banca e PowerPoint', value: 'para provar', tip: 'Pitch IA escreve o título e a história do projeto; Banca IA antecipa as perguntas do júri com respostas sugeridas; e exportas tudo para PowerPoint. Os números exatos estão na tabela de comparação, mais abaixo.' },
         ],
       },
     ],
@@ -68,7 +71,7 @@ const PLANS = [
     annualEquivalent: '€7,49/mês',
     period: '/mês',
     positioning: 'Não pares a meio.',
-    dailyNote: 'menos de 30 cêntimos por dia',
+    weeklyNote: 'pouco mais de €2 por semana',
     cta: 'Começar com o Plus',
     ctaVariant: 'primary',
     popular: true,
@@ -77,18 +80,21 @@ const PLANS = [
     groups: [
       {
         label: 'Mais',
-        blurb: 'A IA escreve contigo, treina-te para apresentares e diz-te o que ainda falta — todos os meses, não só da primeira vez.',
         items: [
           { label: '15 projetos' },
           { label: 'Provas do projeto', value: '250MB', tip: 'Anexa PDFs, Word, PowerPoint, imagens — qualquer ficheiro que prove o trabalho. Escolhes o que aparece na página pública.' },
-          { label: 'Recap semanal' },
+          { label: 'Recap semanal por email', tip: 'Todas as semanas recebes o que avançaste, o que ficou parado e o que vem a seguir — sem teres de ir à procura.' },
         ],
       },
       {
         label: 'IA',
         ai: true,
+        blurb: 'Cinco vezes mais IA do que no Grátis — em todas as ferramentas, sem excepção. Chega para o ano inteiro sem parar a meio do mês.',
         items: [
-          { label: 'Pelo menos 5x mais IA do que no Grátis', tip: 'Em todas as ferramentas sem excepção, e mais duas que o Grátis não tem: treino de defesa e carta de apresentação. Os números exatos estão na tabela de comparação, mais abaixo.' },
+          { label: 'Coach sempre à mão', value: '100 msgs' },
+          { label: 'Cria projetos a partir de uma conversa', value: '15x' },
+          { label: 'Análises que apanham o que te escapou', value: '10x' },
+          { label: 'Treino de defesa e carta de apresentação', value: 'novo', tip: 'Duas ferramentas que o Grátis não tem: ensaias a apresentação com a IA a fazer de júri, e geras uma carta de apresentação a partir do teu trabalho. Os números exatos estão na tabela de comparação, mais abaixo.' },
         ],
       },
     ],
@@ -101,7 +107,7 @@ const PLANS = [
     annualEquivalent: '€14,99/mês',
     period: '/mês',
     positioning: 'Chega à conversa com prova, não com promessas.',
-    dailyNote: 'menos de 60 cêntimos por dia',
+    weeklyNote: 'pouco mais de €4 por semana',
     cta: 'Ir para Pro',
     ctaVariant: 'primary',
     inherits: 'Plus',
@@ -120,8 +126,12 @@ const PLANS = [
       {
         label: 'IA',
         ai: true,
+        blurb: 'No mínimo o dobro do Plus em todas as ferramentas, sem excepção — e PowerPoint sem limite nenhum.',
         items: [
-          { label: 'No mínimo o dobro do Plus, em tudo', tip: 'Sem excepção: em cada ferramenta de IA tens pelo menos o dobro do Plus, e exportar para PowerPoint fica sem limite. Os números exatos estão na tabela de comparação, mais abaixo.' },
+          { label: 'Coach sem andar a contar', value: '300 msgs' },
+          { label: 'Cria projetos a partir de uma conversa', value: '30x' },
+          { label: 'Análises e treino de defesa', value: '25x' },
+          { label: 'Exportar PowerPoint', value: 'sem limite', tip: 'Todas as ferramentas de IA sobem para pelo menos o dobro do Plus, e exportar para PowerPoint deixa de ter conta. Os números exatos estão na tabela de comparação, mais abaixo.' },
         ],
       },
     ],
@@ -294,11 +304,11 @@ export default function Pricing() {
                 </div>
                 {annual && plan.annualEquivalent ? (
                   <p className="pricing-annual-note">equivale a {plan.annualEquivalent}</p>
-                ) : plan.dailyNote ? (
-                  /* O preço ao mês não tem escala nenhuma na cabeça de quem
-                     decide. Ao dia tem — e é a mesma conta, não uma promessa
-                     nova. */
-                  <p className="pricing-annual-note">{plan.dailyNote}</p>
+                ) : plan.weeklyNote ? (
+                  /* Ao dia os cêntimos não dizem nada a ninguém; à semana
+                     já se compara com alguma coisa real. É a mesma conta,
+                     não uma promessa nova. */
+                  <p className="pricing-annual-note">{plan.weeklyNote}</p>
                 ) : null}
                 {isCurrent ? (
                   <div className="pricing-current"><Check size={14} /> Plano atual</div>
