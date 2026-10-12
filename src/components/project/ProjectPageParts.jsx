@@ -1538,17 +1538,24 @@ export function ProjectAttachments({ project }) {
         </>
       )}
       {srcUrl && (
-        <a
-          href={srcUrl} target="_blank" rel="noopener noreferrer"
-          style={{
-            display: 'inline-flex', alignItems: 'center', gap: 7, alignSelf: 'flex-start',
-            padding: '8px 14px', borderRadius: 9, border: '1px solid var(--color-border)',
-            background: 'var(--color-surface)', color: 'var(--color-text-secondary)',
-            fontSize: 13, fontWeight: 600, textDecoration: 'none',
-          }}
-        >
-          <Download size={14} /> {project.library_file_name || 'Documento original'}
-        </a>
+        // O storage só deixa gerar este link assinado para o dono (RLS) — se
+        // chegou a resolver, é mesmo só ele a ver isto. O rótulo existe para
+        // não parecer, visualmente, que está ao lado do cartão "Ficheiros"
+        // (esse sim público) e dar a entender o mesmo nível de visibilidade.
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignSelf: 'flex-start' }}>
+          <a
+            href={srcUrl} target="_blank" rel="noopener noreferrer"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 7,
+              padding: '8px 14px', borderRadius: 9, border: '1px solid var(--color-border)',
+              background: 'var(--color-surface)', color: 'var(--color-text-secondary)',
+              fontSize: 13, fontWeight: 600, textDecoration: 'none',
+            }}
+          >
+            <Download size={14} /> {project.library_file_name || 'Documento original'}
+          </a>
+          <span style={{ fontSize: 11, color: 'var(--color-text-tertiary)' }}>Só visível para ti — nunca aparece a visitantes.</span>
+        </div>
       )}
       {files.length > 0 && (
         // Mesmo tratamento visual do GithubProof/ApiProof — eyebrow maiúsculo,
