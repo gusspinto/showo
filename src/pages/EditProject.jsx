@@ -28,7 +28,7 @@ import { containsProfanity } from '../lib/profanity'
 import { logFieldsFilled } from '../lib/autoJournal'
 import { parseGithubRepo, syncGithub, removeGithubEntries, topLanguages, commitSpanMonths, repoAgeMonths, shareOnLinkedIn } from '../lib/social'
 import { PLAN_GATE_MESSAGES } from '../lib/plans'
-import { listProjectFiles, uploadProjectFile, deleteProjectFile, formatFileSize, ACCEPTED_FILE_TYPES } from '../lib/projectFiles'
+import { listProjectFiles, uploadProjectFile, deleteProjectFile, toggleFileVisibility, getAccountFilesUsage, formatFileSize } from '../lib/projectFiles'
 import { DatabaseIcon as Database } from '@solar-icons/react/bold/database'
 import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
 import { UploadMinimalisticIcon as Upload } from '@solar-icons/react/bold/upload-minimalistic'
@@ -1036,19 +1036,29 @@ function ProjectFilesCard({ project }) {
   const { user, checkGate } = useAuth()
   const gate = checkGate('projectFiles')
   const [files, setFiles] = useState([])
+  const [accountBytes, setAccountBytes] = useState(0)
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState(null)
   const fileInputRef = useRef(null)
 
   useEffect(() => {
-    if (!project?.id || !gate.allowed) { setLoading(false); return }
-    listProjectFiles(project.id).then(setFiles).catch(() => {}).finally(() => setLoading(false))
-  }, [project?.id, gate.allowed])
+    if (!project?.id || !user?.id || !gate.allowed) { setLoading(false); return }
+    Promise.all([listProjectFiles(project.id), getAccountFilesUsage(user.id)])
+      .then(([f, acc]) => { setFiles(f); setAccountBytes(acc) })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [project?.id, user?.id, gate.allowed])
 
   const usedBytes = files.reduce((sum, f) => sum + (f.size_bytes || 0), 0)
   const maxBytes = gate.maxProjectMB * 1024 * 1024
   const usedPct = maxBytes ? Math.min(100, Math.round((usedBytes / maxBytes) * 100)) : 0
+  const maxAccountBytes = gate.maxAccountMB ? gate.maxAccountMB * 1024 * 1024 : null
+  const accountPct = maxAccountBytes ? Math.min(100, Math.round((accountBytes / maxAccountBytes) * 100)) : 0
+
+  function fmtQuota(mb) {
+    return mb >= 1024 ? `${mb / 1024}GB` : `${mb}MB`
+  }
 
   async function handleFilePick(e) {
     const picked = e.target.files?.[0]
@@ -1058,6 +1068,7 @@ function ProjectFilesCard({ project }) {
     try {
       const saved = await uploadProjectFile(project, user.id, picked)
       setFiles(prev => [saved, ...prev])
+      setAccountBytes(prev => prev + saved.size_bytes)
     } catch (err) {
       setError(err.message)
     }
@@ -1069,7 +1080,19 @@ function ProjectFilesCard({ project }) {
     try {
       await deleteProjectFile(file.id, file.file_url)
       setFiles(prev => prev.filter(f => f.id !== file.id))
+      setAccountBytes(prev => Math.max(0, prev - (file.size_bytes || 0)))
     } catch { setError('Não foi possível remover o ficheiro.') }
+  }
+
+  async function handleToggleVisible(file) {
+    const next = !file.visible
+    setFiles(prev => prev.map(f => f.id === file.id ? { ...f, visible: next } : f))
+    try {
+      await toggleFileVisibility(file.id, next)
+    } catch {
+      setFiles(prev => prev.map(f => f.id === file.id ? { ...f, visible: !next } : f))
+      setError('Não foi possível mudar a visibilidade.')
+    }
   }
 
   return (
@@ -1090,17 +1113,29 @@ function ProjectFilesCard({ project }) {
       ) : (
         <>
           <p style={{ margin: '0 0 14px', fontSize: 13.5, color: colors.muted, lineHeight: 1.6 }}>
-            PDFs, Word, PowerPoint ou imagens como prova do trabalho — aparecem na página pública do projeto.
+            Qualquer tipo de ficheiro como prova do trabalho. Escolhe quais aparecem na página pública — o resto fica só para ti.
           </p>
 
           {!loading && (
-            <div style={{ marginBottom: 14 }}>
-              <div style={{ height: 5, background: colors.bgAlt, borderRadius: 3, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${usedPct}%`, background: usedPct > 90 ? '#ef4444' : colors.blue, borderRadius: 3 }} />
+            <div style={{ marginBottom: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div>
+                <div style={{ height: 5, background: colors.bgAlt, borderRadius: 3, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${usedPct}%`, background: usedPct > 90 ? '#ef4444' : colors.blue, borderRadius: 3 }} />
+                </div>
+                <p style={{ margin: '6px 0 0', fontSize: 11.5, color: colors.subtle }}>
+                  {formatFileSize(usedBytes)} de {fmtQuota(gate.maxProjectMB)} usados neste projeto
+                </p>
               </div>
-              <p style={{ margin: '6px 0 0', fontSize: 11.5, color: colors.subtle }}>
-                {formatFileSize(usedBytes)} de {gate.maxProjectMB >= 1024 ? `${gate.maxProjectMB / 1024}GB` : `${gate.maxProjectMB}MB`} usados neste projeto
-              </p>
+              {maxAccountBytes && (
+                <div>
+                  <div style={{ height: 5, background: colors.bgAlt, borderRadius: 3, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${accountPct}%`, background: accountPct > 90 ? '#ef4444' : colors.subtle, borderRadius: 3 }} />
+                  </div>
+                  <p style={{ margin: '6px 0 0', fontSize: 11.5, color: colors.subtle }}>
+                    {formatFileSize(accountBytes)} de {fmtQuota(gate.maxAccountMB)} usados em toda a conta
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -1110,6 +1145,14 @@ function ProjectFilesCard({ project }) {
                 {f.file_name}
               </a>
               <span style={{ fontSize: 11, color: colors.subtle, flexShrink: 0 }}>{formatFileSize(f.size_bytes)}</span>
+              <button
+                type="button"
+                onClick={() => handleToggleVisible(f)}
+                title={f.visible ? 'Visível na página pública — clica para esconder' : 'Escondido da página pública — clica para mostrar'}
+                style={{ background: 'transparent', border: 'none', color: f.visible ? colors.blue : colors.subtle, cursor: 'pointer', padding: 4, flexShrink: 0, display: 'flex' }}
+              >
+                {f.visible ? <Eye size={14} /> : <EyeOff size={14} />}
+              </button>
               <button type="button" onClick={() => handleDelete(f)} style={{ background: 'transparent', border: 'none', color: colors.subtle, cursor: 'pointer', padding: 4, flexShrink: 0 }}>
                 <Trash2 size={13} />
               </button>
@@ -1118,7 +1161,7 @@ function ProjectFilesCard({ project }) {
 
           {error && <p style={{ color: '#ef4444', fontSize: 12, margin: '10px 0 0' }}>{error}</p>}
 
-          <input ref={fileInputRef} type="file" accept={ACCEPTED_FILE_TYPES} onChange={handleFilePick} style={{ display: 'none' }} />
+          <input ref={fileInputRef} type="file" onChange={handleFilePick} style={{ display: 'none' }} />
           <button
             type="button"
             disabled={uploading}

@@ -20,7 +20,7 @@ export const PLANS = {
       weeklyRecap: true,
       cleanLink: false,
     },
-    files: { maxProjectMB: 250, maxAccountMB: null },
+    files: { maxProjectMB: 250, maxAccountMB: 2560 },
   },
   school_pro: {
     id: 'school_pro',
@@ -92,7 +92,7 @@ export const PLANS = {
       weeklyRecap: true,
       cleanLink: false,
     },
-    files: { maxProjectMB: 250, maxAccountMB: null },
+    files: { maxProjectMB: 250, maxAccountMB: 3840 },
   },
   pro: {
     id: 'pro',
