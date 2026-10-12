@@ -20,6 +20,7 @@ export const PLANS = {
       weeklyRecap: true,
       cleanLink: false,
     },
+    files: { maxProjectMB: 250, maxAccountMB: null },
   },
   school_pro: {
     id: 'school_pro',
@@ -42,6 +43,7 @@ export const PLANS = {
       weeklyRecap: true,
       cleanLink: true,
     },
+    files: { maxProjectMB: 1024, maxAccountMB: 5120 },
   },
   free: {
     id: 'free',
@@ -64,6 +66,7 @@ export const PLANS = {
       weeklyRecap: false,
       cleanLink: false,
     },
+    files: { maxProjectMB: 0, maxAccountMB: 0 },
   },
   plus: {
     id: 'plus',
@@ -89,6 +92,7 @@ export const PLANS = {
       weeklyRecap: true,
       cleanLink: false,
     },
+    files: { maxProjectMB: 250, maxAccountMB: null },
   },
   pro: {
     id: 'pro',
@@ -114,6 +118,7 @@ export const PLANS = {
       weeklyRecap: true,
       cleanLink: true,
     },
+    files: { maxProjectMB: 1024, maxAccountMB: 5120 },
   },
 }
 
@@ -276,5 +281,9 @@ export const PLAN_GATE_MESSAGES = {
   cleanLink: () => ({
     title: 'Link limpo',
     body: 'Tira o código aleatório do link do projeto e escolhe o teu próprio. Disponível no Pro.',
+  }),
+  projectFiles: () => ({
+    title: 'Ficheiros do projeto',
+    body: 'Anexa PDFs, Word, PowerPoint ou imagens como prova do trabalho, visíveis na página pública. Disponível a partir do Plus.',
   }),
 }

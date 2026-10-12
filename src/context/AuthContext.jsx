@@ -307,6 +307,15 @@ export function AuthProvider({ children }) {
       const allowed = plan.career[feature] === true
       return { allowed, message: allowed ? null : withFeature(feature, PLAN_GATE_MESSAGES[feature]?.()) }
     }
+    if (feature === 'projectFiles') {
+      const allowed = (plan.files?.maxProjectMB ?? 0) > 0
+      return {
+        allowed,
+        maxProjectMB: plan.files?.maxProjectMB ?? 0,
+        maxAccountMB: plan.files?.maxAccountMB ?? null,
+        message: allowed ? null : withFeature(feature, PLAN_GATE_MESSAGES.projectFiles()),
+      }
+    }
     const limit = plan.ai[feature] ?? 0
     const remaining = remainingUses(planId, feature, aiUsage)
     const allowed = remaining > 0

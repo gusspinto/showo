@@ -28,6 +28,7 @@ import { containsProfanity } from '../lib/profanity'
 import { logFieldsFilled } from '../lib/autoJournal'
 import { parseGithubRepo, syncGithub, removeGithubEntries, topLanguages, commitSpanMonths, repoAgeMonths, shareOnLinkedIn } from '../lib/social'
 import { PLAN_GATE_MESSAGES } from '../lib/plans'
+import { listProjectFiles, uploadProjectFile, deleteProjectFile, formatFileSize, ACCEPTED_FILE_TYPES } from '../lib/projectFiles'
 import { DatabaseIcon as Database } from '@solar-icons/react/bold/database'
 import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
 import { UploadMinimalisticIcon as Upload } from '@solar-icons/react/bold/upload-minimalistic'
@@ -1017,9 +1018,117 @@ function AdvancedSection({ project, isOwner, navigate }) {
         </button>
       </div>
 
+      <ProjectFilesCard project={project} />
+
       <GithubAdvancedCard project={project} />
 
       {isOwner && <DangerZone project={project} navigate={navigate} />}
+    </div>
+  )
+}
+
+/* ── Ficheiros do projeto ─────────────────────────────────────────────────
+   Inventário de prova (PDFs, Word, PowerPoint, imagens) anexado ao projeto
+   e mostrado na página pública — ao contrário da Biblioteca pessoal, que
+   nunca aparece lá. Quota real é aplicada no servidor (trigger
+   enforce_project_files_quota); isto só dá feedback amigável. */
+function ProjectFilesCard({ project }) {
+  const { user, checkGate } = useAuth()
+  const gate = checkGate('projectFiles')
+  const [files, setFiles] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [uploading, setUploading] = useState(false)
+  const [error, setError] = useState(null)
+  const fileInputRef = useRef(null)
+
+  useEffect(() => {
+    if (!project?.id || !gate.allowed) { setLoading(false); return }
+    listProjectFiles(project.id).then(setFiles).catch(() => {}).finally(() => setLoading(false))
+  }, [project?.id, gate.allowed])
+
+  const usedBytes = files.reduce((sum, f) => sum + (f.size_bytes || 0), 0)
+  const maxBytes = gate.maxProjectMB * 1024 * 1024
+  const usedPct = maxBytes ? Math.min(100, Math.round((usedBytes / maxBytes) * 100)) : 0
+
+  async function handleFilePick(e) {
+    const picked = e.target.files?.[0]
+    if (!picked || !user) return
+    setUploading(true)
+    setError(null)
+    try {
+      const saved = await uploadProjectFile(project, user.id, picked)
+      setFiles(prev => [saved, ...prev])
+    } catch (err) {
+      setError(err.message)
+    }
+    setUploading(false)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  async function handleDelete(file) {
+    try {
+      await deleteProjectFile(file.id, file.file_url)
+      setFiles(prev => prev.filter(f => f.id !== file.id))
+    } catch { setError('Não foi possível remover o ficheiro.') }
+  }
+
+  return (
+    <div style={{ marginBottom: 28, paddingTop: 24, borderTop: `1px solid ${colors.border}` }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, color: colors.subtle, marginBottom: 14, textTransform: 'uppercase', letterSpacing: 0.6 }}>
+        <Upload size={12} /> Ficheiros do projeto
+      </div>
+
+      {!gate.allowed ? (
+        <button
+          type="button"
+          onClick={() => window.location.assign('/planos')}
+          style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit' }}
+        >
+          <Lock size={11} color={colors.subtle} />
+          <span style={{ fontSize: 12, color: colors.subtle }}>{gate.message?.body}</span>
+        </button>
+      ) : (
+        <>
+          <p style={{ margin: '0 0 14px', fontSize: 13.5, color: colors.muted, lineHeight: 1.6 }}>
+            PDFs, Word, PowerPoint ou imagens como prova do trabalho — aparecem na página pública do projeto.
+          </p>
+
+          {!loading && (
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ height: 5, background: colors.bgAlt, borderRadius: 3, overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${usedPct}%`, background: usedPct > 90 ? '#ef4444' : colors.blue, borderRadius: 3 }} />
+              </div>
+              <p style={{ margin: '6px 0 0', fontSize: 11.5, color: colors.subtle }}>
+                {formatFileSize(usedBytes)} de {gate.maxProjectMB >= 1024 ? `${gate.maxProjectMB / 1024}GB` : `${gate.maxProjectMB}MB`} usados neste projeto
+              </p>
+            </div>
+          )}
+
+          {files.map(f => (
+            <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', borderBottom: `1px solid ${colors.border}` }}>
+              <a href={f.file_url} target="_blank" rel="noopener noreferrer" style={{ flex: 1, minWidth: 0, fontSize: 13, color: colors.text, textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {f.file_name}
+              </a>
+              <span style={{ fontSize: 11, color: colors.subtle, flexShrink: 0 }}>{formatFileSize(f.size_bytes)}</span>
+              <button type="button" onClick={() => handleDelete(f)} style={{ background: 'transparent', border: 'none', color: colors.subtle, cursor: 'pointer', padding: 4, flexShrink: 0 }}>
+                <Trash2 size={13} />
+              </button>
+            </div>
+          ))}
+
+          {error && <p style={{ color: '#ef4444', fontSize: 12, margin: '10px 0 0' }}>{error}</p>}
+
+          <input ref={fileInputRef} type="file" accept={ACCEPTED_FILE_TYPES} onChange={handleFilePick} style={{ display: 'none' }} />
+          <button
+            type="button"
+            disabled={uploading}
+            onClick={() => fileInputRef.current?.click()}
+            style={{ marginTop: 14, padding: '10px 16px', background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 7 }}
+          >
+            <Upload size={13} /> {uploading ? 'A enviar…' : 'Adicionar ficheiro'}
+          </button>
+        </>
+      )}
     </div>
   )
 }
