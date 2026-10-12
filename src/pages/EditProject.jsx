@@ -29,7 +29,7 @@ import { logFieldsFilled } from '../lib/autoJournal'
 import { parseGithubRepo, syncGithub, removeGithubEntries, topLanguages, commitSpanMonths, repoAgeMonths, shareOnLinkedIn } from '../lib/social'
 import { PLAN_GATE_MESSAGES } from '../lib/plans'
 import { listProjectFiles, uploadProjectFile, deleteProjectFile, toggleFileVisibility, getAccountFilesUsage, formatFileSize } from '../lib/projectFiles'
-import { startGithubConnect, getGithubConnection, disconnectGithub, listGithubRepos } from '../lib/githubAuth'
+import { startGithubConnect, getGithubConnection, disconnectGithub, listGithubRepos, registerGithubWebhook, removeGithubWebhook } from '../lib/githubAuth'
 import { DatabaseIcon as Database } from '@solar-icons/react/bold/database'
 import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
 import { UploadMinimalisticIcon as Upload } from '@solar-icons/react/bold/upload-minimalistic'
@@ -1199,6 +1199,7 @@ function GithubAdvancedCard({ project }) {
   const [repoList, setRepoList] = useState(null) // null = por carregar
   const [loadingRepos, setLoadingRepos] = useState(false)
   const [repoListError, setRepoListError] = useState(null)
+  const [webhookNotice, setWebhookNotice] = useState(null) // aviso suave se o sync automático não ligou
 
   useEffect(() => {
     if (!user?.id) return
@@ -1217,9 +1218,15 @@ function GithubAdvancedCard({ project }) {
 
   async function pickRepo(fullUrl) {
     setShowRepoPicker(false)
+    setWebhookNotice(null)
+    // O webhook antigo aponta para o repo que estava guardado — remove-se
+    // antes de trocar o link, senão perde-se a referência para o apagar.
+    await removeGithubWebhook(project.id)
     const { error } = await supabase.from('projects').update({ github_url: fullUrl }).eq('id', project.id)
     if (error) { setError('Não foi possível guardar o repositório escolhido.'); return }
     setGithubUrlOverride(fullUrl)
+    const reg = await registerGithubWebhook(project.id)
+    if (!reg?.ok) setWebhookNotice(reg?.reason || 'Não foi possível ativar a sincronização automática — a manual continua a funcionar.')
   }
   // Formato do painel na página pública — guardado em preview_style ao
   // lado das outras personalizações da página (cor, fonte...), não numa
@@ -1282,7 +1289,7 @@ function GithubAdvancedCard({ project }) {
             </span>
             <button
               type="button"
-              onClick={() => disconnectGithub(user.id).then(() => setConnection(null))}
+              onClick={() => removeGithubWebhook(project.id).then(() => disconnectGithub(user.id)).then(() => setConnection(null))}
               style={{ background: 'transparent', border: 'none', color: colors.subtle, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
             >
               Desligar
@@ -1343,9 +1350,12 @@ function GithubAdvancedCard({ project }) {
         </p>
       ) : (
         <>
-          <p style={{ margin: '0 0 16px', fontSize: 13.5, color: colors.muted, lineHeight: 1.6 }}>
+          <p style={{ margin: '0 0 8px', fontSize: 13.5, color: colors.muted, lineHeight: 1.6 }}>
             Vamos ler <strong style={{ color: colors.text }}>{repo.owner}/{repo.repo}</strong>. Cada dia com
             commits vira uma entrada no diário. {connection ? 'Com a conta ligada, também funciona com repositórios privados teus.' : 'Só funciona com repositórios públicos — liga a tua conta acima para privados.'}
+          </p>
+          <p style={{ margin: '0 0 16px', fontSize: 12.5, color: webhookNotice ? '#f59e0b' : colors.subtle, lineHeight: 1.5 }}>
+            {webhookNotice || (project?.github_webhook_id ? 'Sincronização automática ativa — cada push atualiza o diário sozinho.' : 'Sincroniza também manualmente, com o botão abaixo.')}
           </p>
 
           {stats && (
