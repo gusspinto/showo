@@ -15,16 +15,21 @@ import './Pricing.css'
 /* ══════════════════════════════════════════════════════════════════════════
    PLANOS
    ──────────────────────────────────────────────────────────────────────────
-   A versão anterior listava as mesmas seis linhas de "Base" nos três planos e
-   punha carreira no Build. Resultado: três colunas quase idênticas, e nenhuma
-   razão legível para pagar mais nove euros em vez de cinco.
+   Duas regras que esta página aprendeu à força:
 
-   A distinção passa a ser uma frase, e a página inteira obedece-lhe:
-       Grátis → vê como funciona
-       Plus   → constrói e organiza o percurso escolar sem ficares bloqueado
-       Pro    → prepara e lança a carreira a seguir à escola
-   Por isso cada plano só mostra o que ACRESCENTA ao anterior, e a Carreira
-   tem um bloco próprio no Pro em vez de ser mais um visto numa lista.
+   1. O CARD NÃO É UM INVENTÁRIO. Listava 10 linhas de IA com uma contagem
+      ao lado ("Banca IA 10x") nos três planos — ninguém decide pagar nove
+      euros porque um número passou de 1 para 10, e o que distinguia mesmo
+      o Pro (carreira) ficava enterrado debaixo dessas dez linhas. As
+      contagens exatas vivem agora SÓ na tabela de comparação mais abaixo,
+      que é o sítio certo para detalhe. O card diz o que ganhas; a tabela
+      diz quanto.
+
+   2. A SHOWO NÃO É SÓ PARA A ESCOLA. A copy anterior falava em "PAP" e
+      "sair da escola" nas frases principais — o que diz a um freelancer ou
+      a um profissional que isto não é para ele. As features de escola
+      continuam a existir (defesa, banca), mas não são a promessa de
+      nenhum plano; são mais uma coisa na lista.
    ══════════════════════════════════════════════════════════════════════════ */
 
 const PLANS = [
@@ -32,7 +37,7 @@ const PLANS = [
     id: 'free',
     name: 'Grátis',
     price: '€0',
-    positioning: 'Começa agora, sem cartão de crédito.',
+    positioning: 'Põe um projeto de pé e mostra-o a alguém.',
     cta: 'Começar grátis',
     ctaVariant: 'ghost',
     groups: [
@@ -48,16 +53,9 @@ const PLANS = [
       {
         label: 'IA',
         ai: true,
-        blurb: 'Experimenta a IA em cada etapa do projeto — depois decides se precisas de mais.',
+        blurb: 'Todas as ferramentas de IA estão cá para experimentares — com conta suficiente para levar um projeto ao fim.',
         items: [
-          { label: 'Coach IA', value: '10 msgs' },
-          { label: 'Criar projeto com IA', value: '3x' },
-          { label: 'Entrevista guiada', value: '3x' },
-          { label: 'Análise IA', value: '1x' },
-          { label: 'Relatório do projeto', value: '1x' },
-          { label: 'Pitch IA', value: '1x', tip: 'A IA escreve o título, a história e os destaques do teu projeto a partir do que já escreveste — fica na tua página pública.' },
-          { label: 'Banca IA', value: '1x', tip: 'A IA gera notas para cada parte da apresentação, perguntas prováveis do júri com respostas sugeridas, e uma dica para o dia.' },
-          { label: 'Exportar PowerPoint', value: '3x' },
+          { label: 'Todas as ferramentas, para experimentar', tip: 'Coach, criar projeto, entrevista guiada, análise, relatório, Pitch, Banca e exportar para PowerPoint. Os números exatos de cada uma estão na tabela de comparação, mais abaixo.' },
         ],
       },
     ],
@@ -69,7 +67,8 @@ const PLANS = [
     priceAnnual: '€89,90',
     annualEquivalent: '€7,49/mês',
     period: '/mês',
-    positioning: 'Nunca fiques bloqueado a meio da PAP.',
+    positioning: 'Não pares a meio.',
+    dailyNote: 'menos de 30 cêntimos por dia',
     cta: 'Começar com o Plus',
     ctaVariant: 'primary',
     popular: true,
@@ -78,27 +77,18 @@ const PLANS = [
     groups: [
       {
         label: 'Mais',
+        blurb: 'A IA escreve contigo, treina-te para apresentares e diz-te o que ainda falta — todos os meses, não só da primeira vez.',
         items: [
-          { label: 'Provas do projeto', value: '250MB', tip: 'Anexa PDFs, Word, PowerPoint, imagens — qualquer ficheiro que prove o trabalho. Escolhes o que aparece na página pública.' },
           { label: '15 projetos' },
+          { label: 'Provas do projeto', value: '250MB', tip: 'Anexa PDFs, Word, PowerPoint, imagens — qualquer ficheiro que prove o trabalho. Escolhes o que aparece na página pública.' },
           { label: 'Recap semanal' },
         ],
       },
       {
         label: 'IA',
         ai: true,
-        blurb: 'A IA deixa de ser só para experimentar: escreve contigo, treina-te para a defesa e ajuda a corrigir o que falta — as vezes que precisares num mês inteiro, não só uma.',
         items: [
-          { label: 'Coach IA', value: '100 msgs' },
-          { label: 'Criar com IA', value: '15x' },
-          { label: 'Entrevista guiada', value: '15x' },
-          { label: 'Análise IA', value: '10x' },
-          { label: 'Relatório', value: '5x' },
-          { label: 'Pitch IA', value: '10x', tip: 'A IA escreve o título, a história e os destaques do teu projeto a partir do que já escreveste — fica na tua página pública.' },
-          { label: 'Banca IA', value: '10x', tip: 'A IA gera notas para cada parte da apresentação, perguntas prováveis do júri com respostas sugeridas, e uma dica para o dia.' },
-          { label: 'Treino de defesa', value: '5x' },
-          { label: 'Carta de apresentação', value: '5x' },
-          { label: 'Exportar PowerPoint', value: '15x' },
+          { label: 'Pelo menos 5x mais IA do que no Grátis', tip: 'Em todas as ferramentas sem excepção, e mais duas que o Grátis não tem: treino de defesa e carta de apresentação. Os números exatos estão na tabela de comparação, mais abaixo.' },
         ],
       },
     ],
@@ -110,7 +100,8 @@ const PLANS = [
     priceAnnual: '€179,90',
     annualEquivalent: '€14,99/mês',
     period: '/mês',
-    positioning: 'Chega à entrevista com prova, não só um CV.',
+    positioning: 'Chega à conversa com prova, não com promessas.',
+    dailyNote: 'menos de 60 cêntimos por dia',
     cta: 'Ir para Pro',
     ctaVariant: 'primary',
     inherits: 'Plus',
@@ -118,10 +109,10 @@ const PLANS = [
     groups: [
       {
         label: 'Mais',
-        blurb: 'O teu portfólio fica pronto para quem está a contratar: candidata-te a vagas reais com os teus projetos, num link que escolheste tu.',
+        blurb: 'O teu trabalho fica pronto para quem decide sobre ti — um cliente, um recrutador, um júri. Link teu, projetos sem limite, e candidaturas com trabalho em vez de CV.',
         items: [
-          { label: 'Provas do projeto', value: '1GB', tip: 'Anexa PDFs, Word, PowerPoint, imagens — qualquer ficheiro que prove o trabalho. Escolhes o que aparece na página pública.' },
           { label: 'Projetos ilimitados' },
+          { label: 'Provas do projeto', value: '1GB', tip: 'Anexa PDFs, Word, PowerPoint, imagens — qualquer ficheiro que prove o trabalho. Escolhes o que aparece na página pública.' },
           { label: 'Link à tua medida', tip: 'Tira o código aleatório do link do teu projeto e escolhe o teu próprio texto.' },
           { label: 'Vagas de estágio', tip: 'Vê e candidata-te a vagas publicadas por empresas parceiras, com o teu portfólio em vez de CV.' },
         ],
@@ -129,18 +120,8 @@ const PLANS = [
       {
         label: 'IA',
         ai: true,
-        blurb: 'Sem contar. Cria, pratica e refina até à entrega — aguenta o ritmo todo do último ano.',
         items: [
-          { label: 'Coach IA', value: '300 msgs' },
-          { label: 'Criar com IA', value: '30x' },
-          { label: 'Entrevista guiada', value: '30x' },
-          { label: 'Análise IA', value: '25x' },
-          { label: 'Relatório', value: '10x' },
-          { label: 'Pitch IA', value: '25x', tip: 'A IA escreve o título, a história e os destaques do teu projeto a partir do que já escreveste — fica na tua página pública.' },
-          { label: 'Banca IA', value: '25x', tip: 'A IA gera notas para cada parte da apresentação, perguntas prováveis do júri com respostas sugeridas, e uma dica para o dia.' },
-          { label: 'Treino de defesa', value: '25x' },
-          { label: 'Carta de apresentação', value: '25x' },
-          { label: 'Exportar PowerPoint', value: 'ilimitado' },
+          { label: 'No mínimo o dobro do Plus, em tudo', tip: 'Sem excepção: em cada ferramenta de IA tens pelo menos o dobro do Plus, e exportar para PowerPoint fica sem limite. Os números exatos estão na tabela de comparação, mais abaixo.' },
         ],
       },
     ],
@@ -267,7 +248,11 @@ export default function Pricing() {
 
         <div className="pricing-proof">
           <GraduationCap size={15} />
-          <span>Já usado por alunos e professores em escolas profissionais portuguesas.</span>
+          {/* "Escolas profissionais" sozinho dizia a quem não anda na escola
+              que isto não é para ele. Universidades entram porque há
+              testemunhos reais de lá (Coimbra, Aveiro) — não se alarga mais
+              do que isso sem haver quem o diga. */}
+          <span>Já usado por alunos e professores em escolas e universidades portuguesas.</span>
         </div>
 
         <div className="pricing-period-toggle" role="group" aria-label="Periodicidade do pagamento">
@@ -307,9 +292,14 @@ export default function Pricing() {
                   </span>
                   {plan.period && <span className="pricing-period">{annual && plan.priceAnnual ? '/ano' : plan.period}</span>}
                 </div>
-                {annual && plan.annualEquivalent && (
+                {annual && plan.annualEquivalent ? (
                   <p className="pricing-annual-note">equivale a {plan.annualEquivalent}</p>
-                )}
+                ) : plan.dailyNote ? (
+                  /* O preço ao mês não tem escala nenhuma na cabeça de quem
+                     decide. Ao dia tem — e é a mesma conta, não uma promessa
+                     nova. */
+                  <p className="pricing-annual-note">{plan.dailyNote}</p>
+                ) : null}
                 {isCurrent ? (
                   <div className="pricing-current"><Check size={14} /> Plano atual</div>
                 ) : isDowngrade ? (
@@ -388,8 +378,41 @@ export default function Pricing() {
         </div>
 
         <p className="pricing-foot">
+          Os números exatos de cada ferramenta estão na tabela mais abaixo.
           Muda ou cancela quando quiseres. Contas de escola têm acesso incluído para todos os alunos.
         </p>
+
+        {/* ══════════════ A OBJEÇÃO QUE NINGUÉM ESCREVIA ══════════════
+            "Porquê pagar se tenho IA grátis noutro lado?" é o primeiro
+            pensamento de quem chega aqui, e a página não lhe tocava.
+            A resposta não é dizer mal de ninguém — é dizer o que fica
+            quando a conversa acaba. */}
+        <section className="pricing-section">
+          <h2 className="pricing-section-title">E porquê isto, se há IA grátis em todo o lado?</h2>
+          <div className="pricing-why">
+            <div className="pricing-why-item">
+              <h3>Uma conversa desaparece. Um projeto fica.</h3>
+              <p>
+                Aqui o que escreveste há três semanas continua lá e informa o que a IA te
+                sugere hoje. Não começas do zero a explicar o teu projeto de cada vez.
+              </p>
+            </div>
+            <div className="pricing-why-item">
+              <h3>No fim não tens um chat, tens uma página.</h3>
+              <p>
+                Um link que mandas a um cliente, a um professor ou a um recrutador — com o
+                trabalho, as provas e a história lá dentro, sem ser preciso explicar nada.
+              </p>
+            </div>
+            <div className="pricing-why-item">
+              <h3>O percurso fica registado.</h3>
+              <p>
+                Diário, datas e evolução ao longo de meses. É isso que mostra que o trabalho é
+                mesmo teu — e é precisamente o que uma conversa com IA nunca vai provar.
+              </p>
+            </div>
+          </div>
+        </section>
 
         {/* ══════════════ TESTEMUNHOS ══════════════ */}
         <section className="pricing-section">
