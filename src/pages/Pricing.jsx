@@ -49,16 +49,7 @@ const PLANS = [
       {
         label: 'IA',
         ai: true,
-        items: [
-          { label: 'Coach IA', value: '10 msgs' },
-          { label: 'Criar projeto com IA', value: '3x' },
-          { label: 'Entrevista guiada', value: '3x' },
-          { label: 'Análise IA', value: '1x' },
-          { label: 'Relatório do projeto', value: '1x' },
-          { label: 'Pitch IA', value: '1x', tip: 'A IA escreve o título, a história e os destaques do teu projeto a partir do que já escreveste — fica na tua página pública.' },
-          { label: 'Banca IA', value: '1x', tip: 'A IA gera notas para cada parte da apresentação, perguntas prováveis do júri com respostas sugeridas, e uma dica para o dia.' },
-          { label: 'Exportar PowerPoint', value: '3x' },
-        ],
+        note: 'A IA ajuda em cada etapa: criar o projeto, a entrevista guiada, a análise, o pitch, a banca de defesa e mais — com um limite mensal.',
       },
     ],
   },
@@ -83,23 +74,14 @@ const PLANS = [
           { label: 'Provas do projeto', value: '250MB', tip: 'Anexa PDFs, Word, PowerPoint, imagens — qualquer ficheiro que prove o trabalho. Escolhes o que aparece na página pública.' },
           { label: '15 projetos' },
           { label: 'Recap semanal' },
+          { label: 'Treino de defesa com IA', tip: 'A IA gera notas para cada parte da apresentação, perguntas prováveis do júri com respostas sugeridas, e uma dica para o dia.' },
+          { label: 'Carta de apresentação com IA' },
         ],
       },
       {
         label: 'IA',
         ai: true,
-        items: [
-          { label: 'Coach IA', value: '100 msgs' },
-          { label: 'Criar com IA', value: '15x' },
-          { label: 'Entrevista guiada', value: '15x' },
-          { label: 'Análise IA', value: '10x' },
-          { label: 'Relatório', value: '5x' },
-          { label: 'Pitch IA', value: '10x', tip: 'A IA escreve o título, a história e os destaques do teu projeto a partir do que já escreveste — fica na tua página pública.' },
-          { label: 'Banca IA', value: '10x', tip: 'A IA gera notas para cada parte da apresentação, perguntas prováveis do júri com respostas sugeridas, e uma dica para o dia.' },
-          { label: 'Treino de defesa', value: '5x' },
-          { label: 'Carta de apresentação', value: '5x' },
-          { label: 'Exportar PowerPoint', value: '15x' },
-        ],
+        note: 'Muitos mais usos de IA do que no Grátis, em todas as ferramentas.',
       },
     ],
   },
@@ -129,18 +111,7 @@ const PLANS = [
       {
         label: 'IA',
         ai: true,
-        items: [
-          { label: 'Coach IA', value: '300 msgs' },
-          { label: 'Criar com IA', value: '30x' },
-          { label: 'Entrevista guiada', value: '30x' },
-          { label: 'Análise IA', value: '25x' },
-          { label: 'Relatório', value: '10x' },
-          { label: 'Pitch IA', value: '25x', tip: 'A IA escreve o título, a história e os destaques do teu projeto a partir do que já escreveste — fica na tua página pública.' },
-          { label: 'Banca IA', value: '25x', tip: 'A IA gera notas para cada parte da apresentação, perguntas prováveis do júri com respostas sugeridas, e uma dica para o dia.' },
-          { label: 'Treino de defesa', value: '25x' },
-          { label: 'Carta de apresentação', value: '25x' },
-          { label: 'Exportar PowerPoint', value: 'ilimitado' },
-        ],
+        note: 'Muitos mais usos de IA do que no Plus — praticamente sem limite.',
       },
     ],
   },
@@ -149,22 +120,17 @@ const PLANS = [
 /* Tabela comparativa — três cards lado a lado obrigam a decorar o que muda
    de um para o outro. Uma tabela deixa comparar linha a linha de relance.
    A conta escola fica fora: não é self-serve, é vendida à instituição. */
+/* Os números de utilizações de IA (msgs, x vezes) saíram daqui — viviam
+   também em cada cartão, repetidos, e só confundiam numa página de vendas.
+   Ficam só o que é capacidade real (armazenamento, projetos) e o que é
+   uma funcionalidade a mais, não uma quantidade. */
 const COMPARE_ROWS = [
   { label: 'Provas do projeto', free: false, plus: '250MB', pro: '1GB' },
   { label: 'Projetos', free: '3', plus: '15', pro: 'Ilimitados' },
-  { label: 'Coach IA', free: '10 msgs', plus: '100 msgs', pro: '300 msgs' },
-  { label: 'Criar projeto com IA', free: '3x', plus: '15x', pro: '30x' },
-  { label: 'Entrevista guiada', free: '3x', plus: '15x', pro: '30x' },
-  { label: 'Análise de projeto', free: '1x', plus: '10x', pro: '25x' },
-  { label: 'Relatório do projeto', free: '1x', plus: '5x', pro: '10x' },
-  { label: 'Pitch IA', free: '1x', plus: '10x', pro: '25x' },
-  { label: 'Banca IA', free: '1x', plus: '10x', pro: '25x' },
-  { label: 'Treino de defesa', free: false, plus: '5x', pro: '25x' },
-  { label: 'Carta de apresentação IA', free: false, plus: '5x', pro: '25x' },
-  { label: 'Exportar PowerPoint', free: '3x', plus: '15x', pro: 'Ilimitado' },
+  { label: 'Treino de defesa com IA', free: false, plus: true, pro: true },
+  { label: 'Carta de apresentação com IA', free: false, plus: true, pro: true },
   { label: 'Recap semanal por email', free: false, plus: true, pro: true },
   { label: 'Vagas de estágio', free: false, plus: false, pro: true },
-  { label: 'Todo o mês renova os limites', free: true, plus: true, pro: true },
 ]
 
 const FAQ = [
@@ -334,44 +300,52 @@ export default function Pricing() {
                 {plan.groups.map(group => (
                   <div key={group.label} className="pricing-group">
                     {group.ai ? (
-                      <span className="pricing-group-label">
-                        <span className="pricing-ai-badge">IA</span> limitada por mês
-                      </span>
-                    ) : !plan.inherits && (
-                      <span className="pricing-group-label">{group.label}</span>
-                    )}
-                    <ul className="pricing-list">
-                      {group.items.map(item => {
-                        const tipKey = `${plan.id}:${item.label}`
-                        const tipOpen = openTip === tipKey
-                        return (
-                          <li key={item.label} className="pricing-item">
-                            <Check size={14} className="pricing-check" />
-                            <span className="pricing-item-label-wrap">
-                              <span className="pricing-item-label">{item.label}</span>
-                              {item.tip && (
-                                <span className="pricing-tip-wrap">
-                                  <button
-                                    type="button"
-                                    className="pricing-tip-btn"
-                                    aria-label={`O que é: ${item.label}`}
-                                    onClick={() => setOpenTip(tipOpen ? null : tipKey)}
-                                  >
-                                    <InfoCircle size={13} />
-                                  </button>
-                                  {tipOpen && (
-                                    <span className="pricing-tip-pop" role="tooltip">
-                                      {item.tip}
+                      /* Sem lista nem números: os usos exatos de cada funcionalidade de
+                         IA só aparecem dentro da app, quando são relevantes (ao bloquear
+                         por limite mensal). Aqui fica só a comparação com o plano anterior. */
+                      <p className="pricing-ai-note">
+                        <span className="pricing-ai-badge">IA</span>
+                        {group.note}
+                      </p>
+                    ) : (
+                      <>
+                        {!plan.inherits && (
+                          <span className="pricing-group-label">{group.label}</span>
+                        )}
+                        <ul className="pricing-list">
+                          {group.items.map(item => {
+                            const tipKey = `${plan.id}:${item.label}`
+                            const tipOpen = openTip === tipKey
+                            return (
+                              <li key={item.label} className="pricing-item">
+                                <Check size={14} className="pricing-check" />
+                                <span className="pricing-item-label-wrap">
+                                  <span className="pricing-item-label">{item.label}</span>
+                                  {item.tip && (
+                                    <span className="pricing-tip-wrap">
+                                      <button
+                                        type="button"
+                                        className="pricing-tip-btn"
+                                        aria-label={`O que é: ${item.label}`}
+                                        onClick={() => setOpenTip(tipOpen ? null : tipKey)}
+                                      >
+                                        <InfoCircle size={13} />
+                                      </button>
+                                      {tipOpen && (
+                                        <span className="pricing-tip-pop" role="tooltip">
+                                          {item.tip}
+                                        </span>
+                                      )}
                                     </span>
                                   )}
                                 </span>
-                              )}
-                            </span>
-                            {item.value && <span className="pricing-item-value">{item.value}</span>}
-                          </li>
-                        )
-                      })}
-                    </ul>
+                                {item.value && <span className="pricing-item-value">{item.value}</span>}
+                              </li>
+                            )
+                          })}
+                        </ul>
+                      </>
+                    )}
                   </div>
                 ))}
               </div>
