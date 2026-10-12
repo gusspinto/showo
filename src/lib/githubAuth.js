@@ -59,3 +59,23 @@ export async function listGithubRepos() {
   }
   return data.repos
 }
+
+/** Liga sincronização automática (webhook) ao repositório atual do projeto.
+ *  Falha "suave" — devolve `{ ok:false, reason }` em vez de lançar erro,
+ *  porque a sincronização manual continua a funcionar sem isto. */
+export async function registerGithubWebhook(projectId) {
+  const { data, error } = await supabase.functions.invoke('github-register-webhook', { body: { projectId, action: 'register' } })
+  if (error) {
+    let msg = ''
+    try { msg = (await error.context?.json?.())?.error } catch { /* corpo não era JSON */ }
+    return { ok: false, reason: msg || data?.error || 'Não foi possível ativar a sincronização automática.' }
+  }
+  return data
+}
+
+/** Remove o webhook registado (antes de trocar de repositório ou desligar o GitHub). */
+export async function removeGithubWebhook(projectId) {
+  try {
+    await supabase.functions.invoke('github-register-webhook', { body: { projectId, action: 'remove' } })
+  } catch (e) { console.error('[removeGithubWebhook]', e) }
+}
