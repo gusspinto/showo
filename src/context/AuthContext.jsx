@@ -303,7 +303,7 @@ export function AuthProvider({ children }) {
       const allowed = projectCount < plan.maxProjects
       return { allowed, message: allowed ? null : withFeature(feature, PLAN_GATE_MESSAGES.maxProjects(planId)) }
     }
-    if (feature === 'internshipPage' || feature === 'weeklyRecap' || feature === 'cleanLink') {
+    if (feature === 'internshipPage' || feature === 'weeklyRecap' || feature === 'cleanLink' || feature === 'githubSync') {
       const allowed = plan.career[feature] === true
       return { allowed, message: allowed ? null : withFeature(feature, PLAN_GATE_MESSAGES[feature]?.()) }
     }

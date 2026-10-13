@@ -80,6 +80,7 @@ const PLANS = [
           { label: '15 projetos' },
           { label: 'Ficheiros de prova', value: '250MB', tip: 'Anexa PDFs, Word, PowerPoint ou imagens, qualquer ficheiro que prove o trabalho. Escolhes o que aparece na página pública.' },
           { label: 'Assistente semanal', tip: 'Todas as semanas recebes um email com o que avançaste, o que ficou parado e o que vem a seguir, sem teres de ir à procura.' },
+          { label: 'Sincronização com o GitHub', tip: 'O teu diário atualiza-se sozinho a cada push, sem teres de voltar cá para escrever nada.' },
         ],
       },
       {
@@ -145,6 +146,7 @@ const COMPARE_ROWS = [
   { label: 'Carta de apresentação IA', free: false, plus: '5x', pro: '25x' },
   { label: 'Exportar PowerPoint', free: '3x', plus: '15x', pro: 'Ilimitado' },
   { label: 'Assistente semanal por email', free: false, plus: true, pro: true },
+  { label: 'Sincronização com o GitHub', free: false, plus: true, pro: true },
   { label: 'Vagas de estágio', free: false, plus: false, pro: true },
   { label: 'Todo o mês renova os limites', free: true, plus: true, pro: true },
 ]

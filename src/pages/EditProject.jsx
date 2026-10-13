@@ -1213,7 +1213,9 @@ function ProjectFilesCard({ project }) {
    guardadas para a página pública mostrar prova de trabalho a sério.
    Só repositórios públicos, sem OAuth. */
 function GithubAdvancedCard({ project }) {
-  const { user } = useAuth()
+  const { user, checkGate } = useAuth()
+  const navigate = useNavigate()
+  const githubGate = checkGate('githubSync')
   const [connection, setConnection] = useState(null) // { github_login } | null | undefined(loading)
   const [syncing, setSyncing] = useState(false)
   const [error, setError] = useState(null)
@@ -1322,6 +1324,14 @@ function GithubAdvancedCard({ project }) {
         <Code size={12} /> GitHub
       </div>
 
+      {!githubGate.allowed ? (
+        <UpsellGate
+          title={githubGate.message?.title || 'Sincronização com o GitHub'}
+          body={githubGate.message?.body}
+          onUpgrade={() => navigate('/planos')}
+        />
+      ) : (
+      <>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 16, padding: '10px 12px', background: colors.bgAlt, borderRadius: 8, border: `1px solid ${colors.border}` }}>
         {connection ? (
           <>
@@ -1515,6 +1525,8 @@ function GithubAdvancedCard({ project }) {
             </div>
           )}
         </>
+      )}
+      </>
       )}
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>

@@ -48,6 +48,17 @@ Deno.serve(async (req) => {
     if (!project) return json({ error: 'Projeto não encontrado.' }, 404)
     if (String(project.user_id) !== String(user.id)) return json({ error: 'Só o dono do projeto pode fazer isto.' }, 403)
 
+    // A sincronização automática é Plus/Pro — nunca confiar só no gate do
+    // cliente para uma fronteira paga, mesma regra já usada no link limpo
+    // (migração 186). A manual continua disponível para todos, por isso só
+    // se bloqueia aqui, no registo do webhook, não no sync em si.
+    if (action === 'register') {
+      const { data: ownerPlan } = await supabase.rpc('resolve_owner_plan', { p_user_id: project.user_id })
+      if (ownerPlan === 'free') {
+        return json({ ok: false, reason: 'A sincronização automática por push está disponível a partir do Plus. Podes continuar a sincronizar manualmente.' })
+      }
+    }
+
     const token = await getGithubToken(supabase, user.id)
 
     if (action === 'remove') {
