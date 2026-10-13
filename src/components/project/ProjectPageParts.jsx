@@ -2755,8 +2755,14 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
             {/* Tabs + actions row — tabs centradas com a barra toda (não só
                 com o espaço que sobra ao lado do botão de guardar),
                 mesma receita da barra do mobile. */}
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', minHeight: 30, marginBottom: 10 }}>
-              <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', minHeight: 30, marginBottom: 10 }}>
+              {/* Espaçador à esquerda do mesmo peso do grupo da direita, para
+                  as abas ficarem mesmo centradas sem nunca sobrepor os
+                  botões (era position:absolute + left:50%, que a esta
+                  largura de painel ficava por baixo do grupo da direita —
+                  Desfazer/Refazer ficavam invisíveis e inclicáveis). */}
+              <div style={{ flex: 1 }} />
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
                 <SegmentedTabs
                   size="compact"
                   className="ws-segtabs"
@@ -2774,7 +2780,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
               </div>
 
               {/* Desfazer/Refazer + Guardar — agrupados à direita. */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 'auto' }}>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4 }}>
                 <button
                   onClick={undoPreviewChange}
                   disabled={!canUndo}
