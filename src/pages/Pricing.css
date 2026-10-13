@@ -228,6 +228,14 @@
 
 .pricing-cta, .pricing-current { margin-bottom: 4px; }
 
+.pricing-cta-note {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-tertiary);
+  text-align: center;
+}
+
 .pricing-inherits {
   margin: 20px 0 10px;
   font-size: var(--text-sm);
@@ -258,11 +266,33 @@
   letter-spacing: 0.06em;
 }
 
-.pricing-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
-.pricing-item { display: flex; align-items: flex-start; gap: 9px; font-size: var(--text-base); line-height: 1.45; }
+.pricing-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+/* Linha fina entre cada ponto — pedido direto: sem isto os pontos
+   corriam uns para os outros numa lista densa. Última linha sem
+   separador, para não fechar o grupo com um traço solto. */
+.pricing-item {
+  display: flex; align-items: flex-start; gap: 9px;
+  font-size: var(--text-base); line-height: 1.45;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.pricing-item:last-child { border-bottom: none; padding-bottom: 0; }
+.pricing-item:first-child { padding-top: 0; }
 .pricing-check { color: var(--color-text-tertiary); flex-shrink: 0; margin-top: 2px; }
+.pricing-item-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.pricing-item-main { display: flex; align-items: flex-start; gap: 9px; }
 .pricing-item-label-wrap { flex: 1; min-width: 0; display: inline-flex; align-items: center; gap: 5px; flex-wrap: wrap; }
 .pricing-item-label { min-width: 0; }
+/* Nomes das ferramentas escondidas atrás do item-resumo ("Toda a IA",
+   "Todas as outras ferramentas") — mostradas, não escondidas num
+   tooltip, porque ninguém conhece a marca ainda para confiar de olhos
+   fechados no que "toda a IA" quer dizer. */
+.pricing-subitems {
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
 .pricing-tip-wrap { position: relative; display: inline-flex; flex-shrink: 0; }
 .pricing-tip-btn {
   display: inline-flex; align-items: center; justify-content: center;
@@ -328,6 +358,32 @@
   font-weight: 700;
   letter-spacing: -0.4px;
   text-align: center;
+}
+
+/* ── "E porquê isto, se há IA grátis?" ──
+   Três colunas de texto, sem cartões nem ícones: é uma resposta a ler, não
+   mais uma grelha de features a varrer com os olhos. */
+.pricing-why {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+}
+.pricing-why-item h3 {
+  margin: 0 0 8px;
+  font-family: var(--font-heading);
+  font-size: var(--text-base);
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  line-height: 1.35;
+}
+.pricing-why-item p {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.65;
+  color: var(--color-text-secondary);
+}
+@media (max-width: 900px) {
+  .pricing-why { grid-template-columns: 1fr; gap: 22px; }
 }
 
 /* ── Tabela comparativa ── */

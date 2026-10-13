@@ -46,6 +46,7 @@ import { Chart2Icon as BarChart2 } from '@solar-icons/react/bold/chart-2'
 import { CheckCircleIcon as CheckCircle } from '@solar-icons/react/bold/check-circle'
 import { Book2Icon as BookOpen } from '@solar-icons/react/bold/book-2'
 import { AltArrowDownIcon as ChevronDown } from '@solar-icons/react/bold/alt-arrow-down'
+import { AltArrowUpIcon as ChevronUp } from '@solar-icons/react/bold/alt-arrow-up'
 import { EyeIcon as Eye } from '@solar-icons/react/bold/eye'
 import { EyeClosedIcon as EyeOff } from '@solar-icons/react/bold/eye-closed'
 import { UserPlusRoundedIcon as UserPlus } from '@solar-icons/react/bold/user-plus-rounded'
@@ -2000,6 +2001,132 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
   const orderedSections = previewStyle.sectionOrder?.length ? previewStyle.sectionOrder : DEFAULT_SECTION_ORDER
   const sectionMedia = previewStyle.sectionMedia || {}
 
+  // Clicar numa secção/bloco da própria página para o editar — em vez de o
+  // teres de encontrar primeiro na lista "Ordem da página". `selectedItem`
+  // é a chave do item selecionado ('section:problem' ou 'block:<id>'); só
+  // existe em modo de edição (isOwner && previewEditing), nunca para
+  // visitantes. As ações (mover, esconder/remover) reutilizam exatamente a
+  // mesma lógica que já existia nos botões da aba "Blocos" — isto é só uma
+  // segunda forma de lá chegar, não uma segunda fonte de verdade.
+  const [selectedItem, setSelectedItem] = useState(null)
+  const itemKey = (item) => item.kind === 'block' ? `block:${item.id}` : `section:${item.key}`
+  const defaultLayoutOrder = [
+    ...orderedSections.map(key => ({ kind: 'section', key })),
+    ...previewBlocks.map(b => ({ kind: 'block', id: b.id })),
+  ]
+  function moveLayoutItem(item, direction) {
+    setPreviewStyle(ps => {
+      const base = ps.layoutOrder?.length ? [...ps.layoutOrder] : [...defaultLayoutOrder]
+      const matches = li => li.kind === item.kind && (item.kind === 'block' ? li.id === item.id : li.key === item.key)
+      const idx = base.findIndex(matches)
+      const newIdx = idx + direction
+      if (idx === -1 || newIdx < 0 || newIdx >= base.length) return ps
+      const tmp = base[idx]; base[idx] = base[newIdx]; base[newIdx] = tmp
+      return { ...ps, layoutOrder: base }
+    })
+  }
+  function toggleSectionHidden(key) {
+    setPreviewStyle(ps => {
+      const next = new Set(ps.hiddenSections || [])
+      next.has(key) ? next.delete(key) : next.add(key)
+      return { ...ps, hiddenSections: [...next] }
+    })
+  }
+  function removeBlock(blockId) {
+    setPreviewBlocks(bs => bs.filter(b => b.id !== blockId))
+    setPreviewStyle(ps => ps.layoutOrder?.length
+      ? { ...ps, layoutOrder: ps.layoutOrder.filter(li => !(li.kind === 'block' && li.id === blockId)) }
+      : ps)
+    setSelectedItem(null)
+  }
+
+  // ── Desfazer/Refazer ──────────────────────────────────────────────────
+  // Em vez de intercetar as dezenas de sítios que já chamam
+  // setPreviewStyle/setPreviewBlocks, observa as duas em conjunto e grava um
+  // ponto de histórico sozinho, 700ms depois de pararem de mudar — assim uma
+  // rajada de alterações (arrastar, escrever texto) vira UM passo de
+  // desfazer, não um por tecla. Guardado em refs (não em estado) para não
+  // forçar um render a cada mudança; `histVersion` só serve para os botões
+  // saberem quando atualizar o estado ativado/desativado.
+  const prevSnapshotRef = useRef({ style: previewStyle, blocks: previewBlocks })
+  const pendingBeforeRef = useRef(null)
+  const undoStackRef = useRef([])
+  const redoStackRef = useRef([])
+  const skipHistoryRef = useRef(false)
+  const historyDebounceRef = useRef(null)
+  const [histVersion, setHistVersion] = useState(0)
+
+  useEffect(() => {
+    if (skipHistoryRef.current) {
+      skipHistoryRef.current = false
+      prevSnapshotRef.current = { style: previewStyle, blocks: previewBlocks }
+      return
+    }
+    if (!pendingBeforeRef.current) pendingBeforeRef.current = prevSnapshotRef.current
+    prevSnapshotRef.current = { style: previewStyle, blocks: previewBlocks }
+    if (redoStackRef.current.length) { redoStackRef.current = []; setHistVersion(v => v + 1) }
+    clearTimeout(historyDebounceRef.current)
+    historyDebounceRef.current = setTimeout(() => {
+      if (pendingBeforeRef.current) {
+        undoStackRef.current.push(pendingBeforeRef.current)
+        if (undoStackRef.current.length > 50) undoStackRef.current.shift()
+        pendingBeforeRef.current = null
+        setHistVersion(v => v + 1)
+      }
+    }, 700)
+    return () => clearTimeout(historyDebounceRef.current)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [previewStyle, previewBlocks])
+
+  function undoPreviewChange() {
+    clearTimeout(historyDebounceRef.current)
+    if (pendingBeforeRef.current) {
+      undoStackRef.current.push(pendingBeforeRef.current)
+      pendingBeforeRef.current = null
+    }
+    if (!undoStackRef.current.length) return
+    const target = undoStackRef.current.pop()
+    redoStackRef.current.push({ style: previewStyle, blocks: previewBlocks })
+    skipHistoryRef.current = true
+    prevSnapshotRef.current = target
+    setPreviewStyle(target.style)
+    setPreviewBlocks(target.blocks)
+    setSelectedItem(null)
+    setHistVersion(v => v + 1)
+  }
+  function redoPreviewChange() {
+    if (!redoStackRef.current.length) return
+    const target = redoStackRef.current.pop()
+    undoStackRef.current.push({ style: previewStyle, blocks: previewBlocks })
+    skipHistoryRef.current = true
+    prevSnapshotRef.current = target
+    setPreviewStyle(target.style)
+    setPreviewBlocks(target.blocks)
+    setSelectedItem(null)
+    setHistVersion(v => v + 1)
+  }
+  // eslint-disable-next-line no-unused-vars
+  const _histVersionTick = histVersion
+  const canUndo = undoStackRef.current.length > 0 || !!pendingBeforeRef.current
+  const canRedo = redoStackRef.current.length > 0
+
+  // Cmd/Ctrl+Z e Cmd/Ctrl+Shift+Z — só em modo de edição, nunca para quem
+  // está só a ver a página (evita capturar o atalho do browser por engano).
+  useEffect(() => {
+    if (!(isOwner && previewEditing)) return
+    function onKeyDown(e) {
+      if (!(e.metaKey || e.ctrlKey) || e.key.toLowerCase() !== 'z') return
+      const target = e.target
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return
+      e.preventDefault()
+      if (e.shiftKey) redoPreviewChange()
+      else undoPreviewChange()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOwner, previewEditing])
+
   // Pairs a section card with an optional image/video on the side (set via the
   // Secções tab) — falls back to the plain full-width card when no media is set.
   function withSectionMedia(key, card) {
@@ -2176,6 +2303,34 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
         .pv-banner-btn:hover { opacity: 0.85; }
         .pv-device-btn { transition: all 0.15s; }
         .pv-device-btn:hover { opacity: 0.8; }
+
+        /* ── Clicar para editar — hover/seleção de secções e blocos ── */
+        .pv-sel-hover { cursor: pointer; transition: outline-color 0.12s, box-shadow 0.12s; }
+        .pv-sel-hover:hover { outline: 1.5px dashed var(--color-border-hover); outline-offset: 3px; }
+        .pv-sel-hover:hover .pv-sel-badge { opacity: 1; transform: translateY(0); }
+        .pv-sel-active { outline: 1.5px solid var(--color-primary); outline-offset: 3px; box-shadow: 0 0 0 5px var(--color-primary-subtle); }
+        .pv-sel-badge {
+          position: absolute; top: -12px; left: 14px; z-index: 5;
+          opacity: 0; transform: translateY(4px); pointer-events: none;
+          transition: opacity 0.12s, transform 0.12s;
+          background: var(--color-primary); color: #fff;
+          font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 6px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+          font-family: var(--font-heading);
+        }
+        .pv-sel-active .pv-sel-badge { display: none; }
+        .pv-sel-toolbar {
+          position: absolute; top: -44px; left: 50%; transform: translateX(-50%); z-index: 20;
+          display: flex; align-items: center; gap: 2px;
+          background: var(--color-surface); border: 1px solid var(--color-border);
+          border-radius: 10px; padding: 5px; box-shadow: var(--shadow-xl);
+        }
+        .pv-sel-toolbar button {
+          all: unset; display: flex; align-items: center; justify-content: center;
+          width: 30px; height: 30px; border-radius: 6px; color: var(--color-text-secondary); cursor: pointer;
+        }
+        .pv-sel-toolbar button:hover { background: var(--color-surface-hover); color: var(--color-text); }
+        .pv-sel-sep { width: 1px; height: 18px; background: var(--color-border); margin: 0 3px; }
 
         /* ── Mobile: banner ── */
         @media (max-width: 600px) {
@@ -2618,34 +2773,64 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                 />
               </div>
 
-              {/* Save icon — branco/monocromático, igual ao resto da app
-                  (era azul, destoava do preto/branco usado em todo o lado). */}
-              <button
-                onClick={async () => {
-                  const { error } = await supabase.from('projects')
-                    .update({ preview_blocks: previewBlocks, preview_style: previewStyle })
-                    .eq('id', project.id)
-                  if (!error) {
-                    setPreviewSaveError(false)
-                    setPreviewSaved(true)
-                    setTimeout(() => setPreviewSaved(false), 2000)
-                  } else {
-                    console.error('Save preview error:', error)
-                    setPreviewSaveError(true)
-                    setTimeout(() => setPreviewSaveError(false), 4000)
-                  }
-                }}
-                title={previewSaveError ? 'Erro ao guardar, tenta novamente' : 'Guardar'}
-                style={{
-                  width: 28, height: 28, borderRadius: 7, marginLeft: 'auto',
-                  background: previewSaveError ? 'var(--color-error-subtle)' : previewSaved ? 'var(--color-success-subtle)' : 'var(--color-text)',
-                  border: `1px solid ${previewSaveError ? 'var(--color-error-subtle)' : previewSaved ? 'var(--color-success-subtle)' : 'var(--color-text)'}`,
-                  color: previewSaveError ? 'var(--color-error)' : previewSaved ? 'var(--color-success)' : 'var(--color-bg)',
-                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s', flexShrink: 0,
-                }}
-              >
-                {previewSaveError ? <X size={13} strokeWidth={3} /> : previewSaved ? <Check size={13} strokeWidth={3} /> : <Save size={13} />}
-              </button>
+              {/* Desfazer/Refazer + Guardar — agrupados à direita. */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 'auto' }}>
+                <button
+                  onClick={undoPreviewChange}
+                  disabled={!canUndo}
+                  title="Desfazer"
+                  style={{
+                    width: 28, height: 28, borderRadius: 7, background: 'transparent', border: 'none',
+                    color: canUndo ? 'var(--color-text-secondary)' : 'var(--color-text-tertiary)',
+                    cursor: canUndo ? 'pointer' : 'default', opacity: canUndo ? 1 : 0.4,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"><path d="M3 10h10a5 5 0 0 1 0 10H8"/><path d="M8 6l-5 4 5 4"/></svg>
+                </button>
+                <button
+                  onClick={redoPreviewChange}
+                  disabled={!canRedo}
+                  title="Refazer"
+                  style={{
+                    width: 28, height: 28, borderRadius: 7, background: 'transparent', border: 'none',
+                    color: canRedo ? 'var(--color-text-secondary)' : 'var(--color-text-tertiary)',
+                    cursor: canRedo ? 'pointer' : 'default', opacity: canRedo ? 1 : 0.4,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" style={{ transform: 'scaleX(-1)' }}><path d="M3 10h10a5 5 0 0 1 0 10H8"/><path d="M8 6l-5 4 5 4"/></svg>
+                </button>
+                <div style={{ width: 1, height: 16, background: 'var(--color-border)', margin: '0 2px' }} />
+                {/* Save icon — branco/monocromático, igual ao resto da app
+                    (era azul, destoava do preto/branco usado em todo o lado). */}
+                <button
+                  onClick={async () => {
+                    const { error } = await supabase.from('projects')
+                      .update({ preview_blocks: previewBlocks, preview_style: previewStyle })
+                      .eq('id', project.id)
+                    if (!error) {
+                      setPreviewSaveError(false)
+                      setPreviewSaved(true)
+                      setTimeout(() => setPreviewSaved(false), 2000)
+                    } else {
+                      console.error('Save preview error:', error)
+                      setPreviewSaveError(true)
+                      setTimeout(() => setPreviewSaveError(false), 4000)
+                    }
+                  }}
+                  title={previewSaveError ? 'Erro ao guardar, tenta novamente' : 'Guardar'}
+                  style={{
+                    width: 28, height: 28, borderRadius: 7,
+                    background: previewSaveError ? 'var(--color-error-subtle)' : previewSaved ? 'var(--color-success-subtle)' : 'var(--color-text)',
+                    border: `1px solid ${previewSaveError ? 'var(--color-error-subtle)' : previewSaved ? 'var(--color-success-subtle)' : 'var(--color-text)'}`,
+                    color: previewSaveError ? 'var(--color-error)' : previewSaved ? 'var(--color-success)' : 'var(--color-bg)',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s', flexShrink: 0,
+                  }}
+                >
+                  {previewSaveError ? <X size={13} strokeWidth={3} /> : previewSaved ? <Check size={13} strokeWidth={3} /> : <Save size={13} />}
+                </button>
+              </div>
             </div>
           </div>}
 
@@ -2663,8 +2848,95 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
               }
             }) : undefined}
           >
+          {/* ── Painel contextual — substitui as 3 abas enquanto algo estiver
+              selecionado no canvas (clicar numa secção/bloco). Ações
+              reutilizam exatamente a mesma lógica da aba Blocos (moveLayoutItem,
+              toggleSectionHidden, removeBlock); "Editar texto"/"Editar bloco"
+              só muda de aba, não duplica os formulários que já existem lá. ── */}
+          {selectedItem && (() => {
+            const [selKind, ...selRest] = selectedItem.split(':')
+            const selId = selRest.join(':')
+            const selItemObj = selKind === 'block' ? { kind: 'block', id: selId } : { kind: 'section', key: selId }
+            const isBlock = selKind === 'block'
+            const block = isBlock ? previewBlocks.find(b => b.id === selId) : null
+            const label = isBlock
+              ? (BLOCK_TYPES.find(bt => bt.type === block?.type)?.label || 'Bloco')
+              : (SECTION_META[selId]?.label || selId)
+            const isHidden = !isBlock && hiddenSections.has(selId)
+
+            return (
+              <div style={{ flex: 1, overflowY: 'scroll', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={wsGroupLabel}>A editar</div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-text)' }}>{label}</div>
+                  </div>
+                  <button
+                    onClick={() => setSelectedItem(null)}
+                    title="Fechar edição"
+                    style={{ width: 28, height: 28, borderRadius: 7, background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                  ><X size={14} /></button>
+                </div>
+
+                {!isBlock && (
+                  <div style={wsGroup}>
+                    <div style={wsGroupLabel}>Visibilidade</div>
+                    <div style={{ display: 'flex', background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: 9, padding: 3 }}>
+                      <button
+                        onClick={() => isHidden && toggleSectionHidden(selId)}
+                        style={{
+                          flex: 1, textAlign: 'center', fontSize: 12, fontWeight: 700, padding: '7px', borderRadius: 7, cursor: 'pointer', fontFamily: 'inherit', border: 'none',
+                          background: !isHidden ? 'var(--color-surface-hover)' : 'transparent',
+                          color: !isHidden ? 'var(--color-text)' : 'var(--color-text-secondary)',
+                        }}
+                      >Visível</button>
+                      <button
+                        onClick={() => { if (!isHidden) toggleSectionHidden(selId); setSelectedItem(null) }}
+                        style={{
+                          flex: 1, textAlign: 'center', fontSize: 12, fontWeight: 700, padding: '7px', borderRadius: 7, cursor: 'pointer', fontFamily: 'inherit', border: 'none',
+                          background: isHidden ? 'var(--color-surface-hover)' : 'transparent',
+                          color: isHidden ? 'var(--color-text)' : 'var(--color-text-secondary)',
+                        }}
+                      >Escondida</button>
+                    </div>
+                  </div>
+                )}
+
+                <div style={wsGroup}>
+                  <div style={wsGroupLabel}>Posição na página</div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      onClick={() => moveLayoutItem(selItemObj, -1)}
+                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 12, fontWeight: 700, padding: 9, borderRadius: 8, background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)', cursor: 'pointer', fontFamily: 'inherit' }}
+                    ><ChevronUp size={13} /> Subir</button>
+                    <button
+                      onClick={() => moveLayoutItem(selItemObj, 1)}
+                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 12, fontWeight: 700, padding: 9, borderRadius: 8, background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)', cursor: 'pointer', fontFamily: 'inherit' }}
+                    ><ChevronDown size={13} /> Descer</button>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => { setPreviewTab(isBlock ? 'blocos' : 'conteudo'); setSelectedItem(null) }}
+                  style={{ textAlign: 'left', fontSize: 12.5, fontWeight: 700, padding: '10px 12px', borderRadius: 9, background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)', cursor: 'pointer', fontFamily: 'inherit' }}
+                >{isBlock ? 'Editar conteúdo do bloco →' : 'Editar texto desta secção →'}</button>
+
+                {isBlock && (
+                  <button
+                    onClick={() => removeBlock(block.id)}
+                    style={{ textAlign: 'left', fontSize: 12.5, fontWeight: 700, padding: '10px 12px', borderRadius: 9, background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', color: 'var(--color-error)', cursor: 'pointer', fontFamily: 'inherit' }}
+                  >Remover bloco</button>
+                )}
+
+                <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)', lineHeight: 1.6, padding: '2px 2px 0' }}>
+                  Clica noutra secção da página para mudar de edição, ou fora de qualquer uma para fechar.
+                </div>
+              </div>
+            )
+          })()}
+
           {/* ── TAB: CONTEÚDO — os 8 campos, a substituir o EditModal por secção ── */}
-          {previewTab === 'conteudo' && (
+          {!selectedItem && previewTab === 'conteudo' && (
             <div style={{ flex: 1, overflowY: 'scroll', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
               {PROJECT_FIELDS.map(f => {
                 const draft = contentDrafts[f.key] ?? (project[f.key] || '')
@@ -2730,7 +3002,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
           )}
 
           {/* ── TAB: ESTILO ── */}
-          {previewTab === 'estilo' && (
+          {!selectedItem && previewTab === 'estilo' && (
             <div style={{ flex: 1, overflowY: 'scroll', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8, textAlign: 'center' }}>
 
               {/* Group: Identidade visual */}
@@ -3153,7 +3425,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
               só lista reordenável: são a mesma decisão — "o que aparece e em
               que ordem" — vista de dois sítios diferentes só criava trabalho
               duplicado para dizer a mesma coisa) */}
-          {previewTab === 'blocos' && (() => {
+          {!selectedItem && previewTab === 'blocos' && (() => {
             const NATIVE_SECTIONS_MAP = {
               problem:         { label: 'Problema',        Icon: Search     },
               solution:        { label: 'Solução',         Icon: Lightbulb  },
@@ -3809,7 +4081,11 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
         margin: showProofSidebar ? 0 : `${isDesktop ? 40 : bannerH + 16}px auto 0`,
         padding: showProofSidebar ? '0 0 80px' : `0 ${previewDevice === 'mobile' ? '16px' : '28px'} 80px`,
         display: 'flex', flexDirection: 'column', gap: 32, fontFamily: selectedFont.css,
-      }}>
+      }}
+      // Clicar fora de qualquer secção/bloco (espaço vazio entre eles)
+      // fecha a edição atual — cada item já trava a sua própria propagação.
+      onClick={isOwner && previewEditing ? () => setSelectedItem(null) : undefined}
+      >
 
         {/* Prova de trabalho do GitHub e Ficheiros — sem sidebar (mobile,
             ou projeto só com uma delas), ficam aqui no topo como sempre;
@@ -4184,7 +4460,38 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
         }
 
         function renderItem(item) {
-          return item.kind === 'block' ? renderOneBlock(blocksById[item.id]) : renderOneSection(item.key)
+          const node = item.kind === 'block' ? renderOneBlock(blocksById[item.id]) : renderOneSection(item.key)
+          if (!node || !isOwner || !previewEditing) return node
+
+          const key = itemKey(item)
+          const isSel = selectedItem === key
+          const label = item.kind === 'block'
+            ? (BLOCK_TYPES.find(bt => bt.type === blocksById[item.id]?.type)?.label || 'Bloco')
+            : (SECTION_META[item.key]?.label || item.key)
+
+          return (
+            <div
+              key={key}
+              className={isSel ? 'pv-sel-active' : 'pv-sel-hover'}
+              style={{ position: 'relative', borderRadius: 14 }}
+              onClick={e => { e.stopPropagation(); setSelectedItem(s => s === key ? null : key) }}
+            >
+              {isSel && (
+                <div className="pv-sel-toolbar" onClick={e => e.stopPropagation()}>
+                  <button onClick={() => moveLayoutItem(item, -1)} title="Mover para cima"><ChevronUp size={15} /></button>
+                  <button onClick={() => moveLayoutItem(item, 1)} title="Mover para baixo"><ChevronDown size={15} /></button>
+                  <div className="pv-sel-sep" />
+                  {item.kind === 'section' ? (
+                    <button onClick={() => { toggleSectionHidden(item.key); setSelectedItem(null) }} title="Esconder"><EyeOff size={15} /></button>
+                  ) : (
+                    <button onClick={() => removeBlock(item.id)} title="Remover"><X size={15} /></button>
+                  )}
+                </div>
+              )}
+              <div className="pv-sel-badge">Editar · {label}</div>
+              {node}
+            </div>
+          )
         }
 
         const canvas = previewStyle.canvasMode && previewBlocks.length > 0 && (

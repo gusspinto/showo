@@ -1270,7 +1270,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
 
   function tryLoadAI() {
     const gate = checkGate('defense')
-    if (!gate.allowed) { setAiError(true); return }
+    if (!gate.allowed) { setGateModal(gate.message); return }
     if (gate.remaining <= 2 && gate.remaining !== Infinity) {
       setConfirmUse({ remaining: gate.remaining, limit: gate.limit })
       return
