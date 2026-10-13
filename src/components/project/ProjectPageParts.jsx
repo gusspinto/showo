@@ -625,7 +625,7 @@ export const PROFILE_SCORE_FIELDS = [
   { key: 'technologies',    label: getProjectField('technologies').label,    minLen: getProjectField('technologies').minLen,    tip: 'Lista linguagens, frameworks, bases de dados, APIs e ferramentas. Quanto mais completo, melhor.' },
   { key: 'target_audience', label: getProjectField('target_audience').label, minLen: getProjectField('target_audience').minLen, tip: 'Sê específico: perfil, faixa etária, contexto profissional, necessidades concretas.' },
   { key: 'features',        label: getProjectField('features').label,        minLen: getProjectField('features').minLen,        tip: 'Descreve cada funcionalidade com uma frase sobre o que faz e porquê é relevante.' },
-  { key: 'challenges',      label: getProjectField('challenges').label,      minLen: getProjectField('challenges').minLen,      tip: 'Conta um obstáculo real e como o resolveste — é o que mostra que enfrentaste o problema, não só que o descreveste.' },
+  { key: 'challenges',      label: getProjectField('challenges').label,      minLen: getProjectField('challenges').minLen,      tip: 'Conta um obstáculo real e como o resolveste; é o que mostra que enfrentaste o problema, não só que o descreveste.' },
   { key: 'cover_url',       label: 'Foto de capa',   minLen: 1,           tip: 'Uma boa imagem de capa aumenta muito a impressão do projeto.' },
 ]
 

@@ -78,7 +78,7 @@ const PLANS = [
         label: 'Mais',
         items: [
           { label: '15 projetos' },
-          { label: 'Provas do projeto', value: '250MB', tip: 'Anexa PDFs, Word, PowerPoint, imagens — qualquer ficheiro que prove o trabalho. Escolhes o que aparece na página pública.' },
+          { label: 'Provas do projeto', value: '250MB', tip: 'Anexa PDFs, Word, PowerPoint ou imagens, qualquer ficheiro que prove o trabalho. Escolhes o que aparece na página pública.' },
           { label: 'Recap semanal por email' },
         ],
       },
@@ -110,7 +110,7 @@ const PLANS = [
         label: 'Mais',
         items: [
           { label: 'Projetos ilimitados' },
-          { label: 'Provas do projeto', value: '1GB', tip: 'Anexa PDFs, Word, PowerPoint, imagens — qualquer ficheiro que prove o trabalho. Escolhes o que aparece na página pública.' },
+          { label: 'Provas do projeto', value: '1GB', tip: 'Anexa PDFs, Word, PowerPoint ou imagens, qualquer ficheiro que prove o trabalho. Escolhes o que aparece na página pública.' },
           { label: 'Link à tua medida', tip: 'Tira o código aleatório do link do teu projeto e escolhe o teu próprio texto.' },
           { label: 'Vagas de estágio', tip: 'Vê e candidata-te a vagas publicadas por empresas parceiras, com o teu portfólio em vez de CV.' },
         ],
@@ -394,17 +394,22 @@ export default function Pricing() {
 
         {/* ══════════════ A OBJEÇÃO QUE NINGUÉM ESCREVIA ══════════════
             "Porquê pagar se tenho IA grátis noutro lado?" é o primeiro
-            pensamento de quem chega aqui. Resposta direta, um parágrafo
-            normal — nada de três frases em espelho a dizer a mesma coisa
-            de três maneiras diferentes, isso lê-se a léguas a texto de IA. */}
+            pensamento de quem chega aqui. Dois parágrafos curtos, frases
+            normais, sem travessão nenhum — nem para separar ideias a meio
+            da frase, nem para ligar duas frases com o mesmo peso. Isso lê-se
+            a léguas a texto de IA, tal como três frases em espelho a dizer
+            a mesma coisa de três maneiras diferentes. */}
         <section className="pricing-section pricing-section--narrow">
           <h2 className="pricing-section-title">E porquê isto, se há IA grátis em todo o lado?</h2>
           <p className="pricing-why-text">
-            Um chat esquece tudo assim que fechas a aba. Aqui o que escreveste sobre o
-            projeto há três semanas continua lá, e a IA usa isso para te ajudar hoje — não
-            começas do zero de cada vez. E no fim não ficas com uma conversa para mostrar a
-            ninguém: ficas com uma página, com o trabalho, as provas e a evolução ao longo do
-            tempo. O link que mandas a um cliente, a um professor ou a um recrutador.
+            Um chat esquece tudo assim que fechas a aba. Aqui não: o que escreveste sobre o
+            projeto há três semanas continua lá, e a IA usa isso para te ajudar hoje. Não
+            precisas de explicar tudo outra vez.
+          </p>
+          <p className="pricing-why-text">
+            No fim também não ficas só com uma conversa. Ficas com uma página, com o
+            trabalho, as provas e a evolução ao longo do tempo. É esse o link que mandas a
+            um cliente, a um professor ou a um recrutador.
           </p>
         </section>
 

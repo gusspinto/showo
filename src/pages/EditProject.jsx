@@ -1149,7 +1149,7 @@ function ProjectFilesCard({ project }) {
               <button
                 type="button"
                 onClick={() => handleToggleVisible(f)}
-                title={f.visible ? 'Visível na página pública — clica para esconder' : 'Escondido da página pública — clica para mostrar'}
+                title={f.visible ? 'Visível na página pública, clica para esconder' : 'Escondido da página pública, clica para mostrar'}
                 style={{ background: 'transparent', border: 'none', color: f.visible ? colors.blue : colors.subtle, cursor: 'pointer', padding: 4, flexShrink: 0, display: 'flex' }}
               >
                 {f.visible ? <Eye size={14} /> : <EyeOff size={14} />}
@@ -1226,7 +1226,7 @@ function GithubAdvancedCard({ project }) {
     if (error) { setError('Não foi possível guardar o repositório escolhido.'); return }
     setGithubUrlOverride(fullUrl)
     const reg = await registerGithubWebhook(project.id)
-    if (!reg?.ok) setWebhookNotice(reg?.reason || 'Não foi possível ativar a sincronização automática — a manual continua a funcionar.')
+    if (!reg?.ok) setWebhookNotice(reg?.reason || 'Não foi possível ativar a sincronização automática, mas a manual continua a funcionar.')
   }
   // Formato do painel na página pública — guardado em preview_style ao
   // lado das outras personalizações da página (cor, fonte...), não numa
@@ -1360,16 +1360,16 @@ function GithubAdvancedCard({ project }) {
         <p style={{ margin: 0, fontSize: 13.5, color: colors.muted, lineHeight: 1.6 }}>
           {connection
             ? 'Escolhe um repositório acima. Depois lemos os commits e escrevemos no diário por ti.'
-            : 'Cola o link do GitHub em "Redes", em cima — ou liga a tua conta acima para escolher da lista. Depois lemos os commits e escrevemos no diário por ti.'}
+            : 'Cola o link do GitHub em "Redes", em cima, ou liga a tua conta acima para escolher da lista. Depois lemos os commits e escrevemos no diário por ti.'}
         </p>
       ) : (
         <>
           <p style={{ margin: '0 0 8px', fontSize: 13.5, color: colors.muted, lineHeight: 1.6 }}>
             Vamos ler <strong style={{ color: colors.text }}>{repo.owner}/{repo.repo}</strong>. Cada dia com
-            commits vira uma entrada no diário. {connection ? 'Com a conta ligada, também funciona com repositórios privados teus.' : 'Só funciona com repositórios públicos — liga a tua conta acima para privados.'}
+            commits vira uma entrada no diário. {connection ? 'Com a conta ligada, também funciona com repositórios privados teus.' : 'Só funciona com repositórios públicos; liga a tua conta acima para privados.'}
           </p>
           <p style={{ margin: '0 0 16px', fontSize: 12.5, color: webhookNotice ? '#f59e0b' : colors.subtle, lineHeight: 1.5 }}>
-            {webhookNotice || (project?.github_webhook_id ? 'Sincronização automática ativa — cada push atualiza o diário sozinho.' : 'Sincroniza também manualmente, com o botão abaixo.')}
+            {webhookNotice || (project?.github_webhook_id ? 'Sincronização automática ativa: cada push atualiza o diário sozinho.' : 'Sincroniza também manualmente, com o botão abaixo.')}
           </p>
 
           {stats && (
@@ -1435,7 +1435,7 @@ function GithubAdvancedCard({ project }) {
 
           {result != null && !error && (
             <div style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', borderRadius: 10, padding: '11px 14px', color: colors.green, fontSize: 13, marginBottom: 12, fontWeight: 600 }}>
-              {result === 0 ? 'Já estava tudo sincronizado — nada de novo desde a última vez.' : `${result} ${result === 1 ? 'dia adicionado' : 'dias adicionados'} ao diário.`}
+              {result === 0 ? 'Já estava tudo sincronizado, nada de novo desde a última vez.' : `${result} ${result === 1 ? 'dia adicionado' : 'dias adicionados'} ao diário.`}
             </div>
           )}
 
@@ -2141,7 +2141,7 @@ function ApiKeyCard({ project, apiKey, firstTable, onKeyChanged }) {
           {(docAction === 'update_row' || docAction === 'delete_row') && (
             <p style={{ margin: '0 0 10px', fontSize: 11.5, color: colors.subtle, lineHeight: 1.5 }}>
               Substitui <code>ID_DA_LINHA</code> pelo <code>id</code> que "Ler" devolve para cada linha.
-              {docAction === 'update_row' && ' Podes mandar só os campos que queres mudar — os outros mantêm-se.'}
+              {docAction === 'update_row' && ' Podes mandar só os campos que queres mudar; os outros mantêm-se.'}
             </p>
           )}
 
