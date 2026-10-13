@@ -288,9 +288,10 @@
    tooltip, porque ninguém conhece a marca ainda para confiar de olhos
    fechados no que "toda a IA" quer dizer. */
 .pricing-subitems {
-  font-size: 11.5px;
+  font-size: 12.5px;
+  font-weight: 500;
   line-height: 1.5;
-  color: var(--color-text-tertiary);
+  color: var(--color-text-secondary);
 }
 .pricing-tip-wrap { position: relative; display: inline-flex; flex-shrink: 0; }
 .pricing-tip-btn {
