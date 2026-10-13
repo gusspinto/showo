@@ -364,12 +364,13 @@
    Um parágrafo normal, centrado, largura de leitura — não uma grelha de
    cartões com frases em espelho. */
 .pricing-why-text {
-  margin: 0;
+  margin: 0 0 16px;
   font-size: var(--text-base);
   line-height: 1.75;
   color: var(--color-text-secondary);
   text-align: left;
 }
+.pricing-why-text:last-child { margin-bottom: 0; }
 
 /* ── Tabela comparativa ── */
 .pricing-cmp-wrap {
