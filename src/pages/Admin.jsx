@@ -1820,6 +1820,7 @@ export default function Admin() {
   const [newAmbUser, setNewAmbUser] = useState('')
   const [newAmbRate, setNewAmbRate] = useState('0.20')
   const [creatingAmb, setCreatingAmb] = useState(false)
+  const [provisioningAmbId, setProvisioningAmbId] = useState(null)
   const [schoolDomains, setSchoolDomains] = useState([])
   const [schoolDomainsLoaded, setSchoolDomainsLoaded] = useState(false)
   const [newSchoolName, setNewSchoolName] = useState('')
@@ -2002,6 +2003,17 @@ export default function Admin() {
 
   async function handleToggleAmbassador(id, active) {
     await supabase.from('ambassadors').update({ active: !active }).eq('id', id)
+    loadAmbassadors()
+  }
+
+  async function handleProvisionStripeCode(id) {
+    setProvisioningAmbId(id)
+    const { data, error } = await supabase.functions.invoke('admin-provision-ambassador-code', {
+      body: { ambassador_id: id, percent_off: 10 },
+    })
+    setProvisioningAmbId(null)
+    if (error || data?.error) { showToast('Erro: ' + (data?.error || error.message)); return }
+    showToast(`Código Stripe criado: ${data.promotion_code}`)
     loadAmbassadors()
   }
 
@@ -2283,7 +2295,7 @@ export default function Admin() {
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
                     <thead>
                       <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
-                        {['Utilizador', 'Código', 'Comissão', 'Connect', 'Estado', ''].map(h => (
+                        {['Utilizador', 'Código', 'Código Stripe', 'Comissão', 'Connect', 'Estado', ''].map(h => (
                           <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600 }}>{h}</th>
                         ))}
                       </tr>
@@ -2293,6 +2305,20 @@ export default function Admin() {
                         <tr key={a.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
                           <td style={{ padding: '10px 14px' }}>{a.profiles?.username || a.profiles?.full_name || a.user_id.slice(0, 8)}</td>
                           <td style={{ padding: '10px 14px', fontFamily: 'monospace' }}>{a.referral_code}</td>
+                          <td style={{ padding: '10px 14px' }}>
+                            {a.stripe_coupon_id ? (
+                              <span style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--color-success)' }}>{a.referral_code.toUpperCase()}</span>
+                            ) : (
+                              <button
+                                disabled={provisioningAmbId === a.id}
+                                onClick={() => handleProvisionStripeCode(a.id)}
+                                title="Cria um código Stripe (10% desconto) com este referral_code, para a pessoa usar diretamente no checkout"
+                                style={{ fontSize: 12, color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
+                              >
+                                {provisioningAmbId === a.id ? 'A criar...' : 'Criar código Stripe'}
+                              </button>
+                            )}
+                          </td>
                           <td style={{ padding: '10px 14px' }}>{Math.round(a.commission_rate * 100)}%</td>
                           <td style={{ padding: '10px 14px' }}>{a.stripe_connect_onboarded ? <Check size={14} style={{ color: 'var(--color-success)' }} /> : <X size={14} style={{ color: 'var(--color-text-tertiary)' }} />}</td>
                           <td style={{ padding: '10px 14px' }}>
@@ -2306,7 +2332,7 @@ export default function Admin() {
                         </tr>
                       ))}
                       {ambassadors.length === 0 && (
-                        <tr><td colSpan={6} style={{ padding: 20, textAlign: 'center', color: 'var(--color-text-secondary)' }}>Nenhum embaixador criado</td></tr>
+                        <tr><td colSpan={7} style={{ padding: 20, textAlign: 'center', color: 'var(--color-text-secondary)' }}>Nenhum embaixador criado</td></tr>
                       )}
                     </tbody>
                   </table>

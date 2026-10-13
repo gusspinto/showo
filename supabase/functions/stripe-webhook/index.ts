@@ -31,6 +31,50 @@ async function logBillingEvent(customerId: string, event: string, plan: string |
   if (error) console.error('[stripe-webhook] logBillingEvent error:', error.message)
 }
 
+// Segunda porta de entrada para a atribuição de embaixadora, a par do link
+// ?ref= (claim_referral, chamado no registo). Esta cobre quem entrou direto
+// no checkout e escreveu o código da embaixadora lá (ex: ouviu-o num vídeo,
+// em vez de clicar num link) — sem isto, esses pagamentos nunca ficavam
+// ligados a ninguém. Mesma regra de "primeiro toque vale": nunca sobrescreve
+// um referred_by que já exista (ex: a pessoa já tinha entrado pelo link de
+// outra embaixadora antes de pagar).
+async function attributeAmbassadorFromCheckoutCode(session: Stripe.Checkout.Session) {
+  try {
+    const full = await stripe.checkout.sessions.retrieve(session.id, {
+      expand: ['discounts.promotion_code'],
+    })
+    const promo = full.discounts?.[0]?.promotion_code
+    const code = typeof promo === 'string' ? null : promo?.code
+    if (!code) return
+
+    const sb = supabase()
+    const { data: ambassador } = await sb
+      .from('ambassadors')
+      .select('id, user_id')
+      .eq('referral_code', code.toLowerCase())
+      .eq('active', true)
+      .single()
+    if (!ambassador) return
+
+    const { data: profile } = await sb
+      .from('profiles')
+      .select('id, referred_by')
+      .eq('stripe_customer_id', session.customer as string)
+      .single()
+    if (!profile || profile.referred_by || profile.id === ambassador.user_id) return
+
+    await sb.from('profiles').update({ referred_by: ambassador.id }).eq('id', profile.id)
+    await sb.from('referrals').insert({ ambassador_id: ambassador.id, referred_user_id: profile.id })
+      .select().single().then(({ error }) => {
+        // ON CONFLICT (referred_user_id) não está disponível via insert simples do client;
+        // um conflito aqui significa que já havia um registo (corrida com claim_referral) — ignora.
+        if (error && error.code !== '23505') console.error('[stripe-webhook] referral insert error:', error.message)
+      })
+  } catch (err) {
+    console.error('[stripe-webhook] attributeAmbassadorFromCheckoutCode error:', err)
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { status: 200 })
@@ -56,6 +100,7 @@ Deno.serve(async (req) => {
         const period = sub.metadata?.period || 'monthly'
         await updatePlan(session.customer as string, plan, period)
         await logBillingEvent(session.customer as string, 'subscription_started', plan, session.amount_total ?? null, period)
+        await attributeAmbassadorFromCheckoutCode(session)
       }
       break
     }
