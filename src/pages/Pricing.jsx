@@ -54,7 +54,7 @@ const PLANS = [
         ai: true,
         items: [
           { label: 'Coach IA', value: '10 msgs' },
-          { label: 'Todas as outras ferramentas', value: 'para experimentar', tip: 'Criar projeto com IA, entrevista guiada, análise, relatório, Pitch IA, Banca IA e exportar para PowerPoint — todas incluídas, uma vez cada. Os números exatos estão na tabela de comparação, mais abaixo.' },
+          { label: 'Todas as outras ferramentas', value: 'para experimentar', subitems: ['Criar projeto', 'Entrevista guiada', 'Análise', 'Relatório', 'Pitch IA', 'Banca IA', 'Exportar PowerPoint'] },
         ],
       },
     ],
@@ -86,7 +86,7 @@ const PLANS = [
         label: 'IA',
         ai: true,
         items: [
-          { label: 'Toda a IA', value: '5x mais', tip: 'Em todas as ferramentas, sem excepção — coach, criar projeto, análise, relatório, Pitch IA e Banca IA. Os números exatos estão na tabela de comparação, mais abaixo.' },
+          { label: 'Toda a IA', value: '5x mais', subitems: ['Coach', 'Criar projeto', 'Análise', 'Relatório', 'Pitch IA', 'Banca IA'] },
           { label: 'Treino de defesa e carta de apresentação', value: 'novo' },
         ],
       },
@@ -119,7 +119,7 @@ const PLANS = [
         label: 'IA',
         ai: true,
         items: [
-          { label: 'Toda a IA', value: '2x+ o Plus', tip: 'Em todas as ferramentas, sem excepção. Os números exatos estão na tabela de comparação, mais abaixo.' },
+          { label: 'Toda a IA', value: '2x+ o Plus', subitems: ['Coach', 'Criar projeto', 'Análise', 'Relatório', 'Pitch IA', 'Banca IA', 'Treino de defesa', 'Carta de apresentação'] },
           { label: 'Exportar PowerPoint', value: 'sem limite' },
         ],
       },
@@ -343,27 +343,39 @@ export default function Pricing() {
                         return (
                           <li key={item.label} className="pricing-item">
                             <Check size={14} className="pricing-check" />
-                            <span className="pricing-item-label-wrap">
-                              <span className="pricing-item-label">{item.label}</span>
-                              {item.tip && (
-                                <span className="pricing-tip-wrap">
-                                  <button
-                                    type="button"
-                                    className="pricing-tip-btn"
-                                    aria-label={`O que é: ${item.label}`}
-                                    onClick={() => setOpenTip(tipOpen ? null : tipKey)}
-                                  >
-                                    <InfoCircle size={13} />
-                                  </button>
-                                  {tipOpen && (
-                                    <span className="pricing-tip-pop" role="tooltip">
-                                      {item.tip}
+                            <span className="pricing-item-body">
+                              <span className="pricing-item-main">
+                                <span className="pricing-item-label-wrap">
+                                  <span className="pricing-item-label">{item.label}</span>
+                                  {item.tip && !item.subitems && (
+                                    <span className="pricing-tip-wrap">
+                                      <button
+                                        type="button"
+                                        className="pricing-tip-btn"
+                                        aria-label={`O que é: ${item.label}`}
+                                        onClick={() => setOpenTip(tipOpen ? null : tipKey)}
+                                      >
+                                        <InfoCircle size={13} />
+                                      </button>
+                                      {tipOpen && (
+                                        <span className="pricing-tip-pop" role="tooltip">
+                                          {item.tip}
+                                        </span>
+                                      )}
                                     </span>
                                   )}
                                 </span>
+                                {item.value && <span className="pricing-item-value">{item.value}</span>}
+                              </span>
+                              {/* Em vez de esconder a lista de ferramentas atrás de um
+                                  tooltip, mostra-a logo — uma marca que ninguém conhece
+                                  ainda ganha mais em mostrar do que em resumir. */}
+                              {item.subitems && (
+                                <span className="pricing-subitems">
+                                  {item.subitems.join(' · ')}
+                                </span>
                               )}
                             </span>
-                            {item.value && <span className="pricing-item-value">{item.value}</span>}
                           </li>
                         )
                       })}
