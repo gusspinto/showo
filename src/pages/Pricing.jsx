@@ -44,7 +44,7 @@ const PLANS = [
         label: 'Inclui',
         items: [
           { label: '3 projetos' },
-          { label: 'Editor completo e página pública' },
+          { label: 'Mesa de trabalho completa', tip: 'Editor completo e página pública, sem versão reduzida nem bloqueada.' },
           { label: 'Diário, agenda e lembretes' },
           { label: 'Certificado de projeto' },
         ],
@@ -78,16 +78,17 @@ const PLANS = [
         label: 'Mais',
         items: [
           { label: '15 projetos' },
-          { label: 'Provas do projeto', value: '250MB', tip: 'Anexa PDFs, Word, PowerPoint ou imagens, qualquer ficheiro que prove o trabalho. Escolhes o que aparece na página pública.' },
-          { label: 'Recap semanal por email' },
+          { label: 'Ficheiros de prova', value: '250MB', tip: 'Anexa PDFs, Word, PowerPoint ou imagens, qualquer ficheiro que prove o trabalho. Escolhes o que aparece na página pública.' },
+          { label: 'Assistente semanal', tip: 'Todas as semanas recebes um email com o que avançaste, o que ficou parado e o que vem a seguir, sem teres de ir à procura.' },
         ],
       },
       {
         label: 'IA',
         ai: true,
         items: [
-          { label: 'Toda a IA', value: '5x mais', subitems: ['Coach', 'Criar projeto', 'Análise', 'Relatório', 'Pitch IA', 'Banca IA'] },
-          { label: 'Treino de defesa e carta de apresentação', value: 'novo' },
+          { label: 'Coach IA', value: '100 msgs' },
+          { label: 'Toda a IA', value: '5x mais que o Grátis', subitems: ['Criar projeto', 'Análise', 'Relatório', 'Pitch IA', 'Banca IA'] },
+          { label: 'Treino para entrevistas', value: 'novo', tip: 'A IA simula a banca ou o entrevistador, antecipa as perguntas difíceis e sugere respostas. Inclui também uma carta de apresentação gerada a partir do teu trabalho.' },
         ],
       },
     ],
@@ -110,7 +111,8 @@ const PLANS = [
         label: 'Mais',
         items: [
           { label: 'Projetos ilimitados' },
-          { label: 'Provas do projeto', value: '1GB', tip: 'Anexa PDFs, Word, PowerPoint ou imagens, qualquer ficheiro que prove o trabalho. Escolhes o que aparece na página pública.' },
+          { label: 'Exportar PowerPoint', value: 'sem limite' },
+          { label: 'Ficheiros de prova', value: '1GB', tip: 'Anexa PDFs, Word, PowerPoint ou imagens, qualquer ficheiro que prove o trabalho. Escolhes o que aparece na página pública.' },
           { label: 'Link à tua medida', tip: 'Tira o código aleatório do link do teu projeto e escolhe o teu próprio texto.' },
           { label: 'Vagas de estágio', tip: 'Vê e candidata-te a vagas publicadas por empresas parceiras, com o teu portfólio em vez de CV.' },
         ],
@@ -119,8 +121,8 @@ const PLANS = [
         label: 'IA',
         ai: true,
         items: [
-          { label: 'Toda a IA', value: '2x+ o Plus', subitems: ['Coach', 'Criar projeto', 'Análise', 'Relatório', 'Pitch IA', 'Banca IA', 'Treino de defesa', 'Carta de apresentação'] },
-          { label: 'Exportar PowerPoint', value: 'sem limite' },
+          { label: 'Coach IA', value: '300 msgs' },
+          { label: 'Toda a IA', value: 'dobro do Plus', subitems: ['Criar projeto', 'Análise', 'Relatório', 'Pitch IA', 'Banca IA', 'Treino para entrevistas', 'Carta de apresentação'] },
         ],
       },
     ],
@@ -131,7 +133,7 @@ const PLANS = [
    de um para o outro. Uma tabela deixa comparar linha a linha de relance.
    A conta escola fica fora: não é self-serve, é vendida à instituição. */
 const COMPARE_ROWS = [
-  { label: 'Provas do projeto', free: false, plus: '250MB', pro: '1GB' },
+  { label: 'Ficheiros de prova', free: false, plus: '250MB', pro: '1GB' },
   { label: 'Projetos', free: '3', plus: '15', pro: 'Ilimitados' },
   { label: 'Coach IA', free: '10 msgs', plus: '100 msgs', pro: '300 msgs' },
   { label: 'Criar projeto com IA', free: '3x', plus: '15x', pro: '30x' },
@@ -140,10 +142,10 @@ const COMPARE_ROWS = [
   { label: 'Relatório do projeto', free: '1x', plus: '5x', pro: '10x' },
   { label: 'Pitch IA', free: '1x', plus: '10x', pro: '25x' },
   { label: 'Banca IA', free: '1x', plus: '10x', pro: '25x' },
-  { label: 'Treino de defesa', free: false, plus: '5x', pro: '25x' },
+  { label: 'Treino para entrevistas', free: false, plus: '5x', pro: '25x' },
   { label: 'Carta de apresentação IA', free: false, plus: '5x', pro: '25x' },
   { label: 'Exportar PowerPoint', free: '3x', plus: '15x', pro: 'Ilimitado' },
-  { label: 'Recap semanal por email', free: false, plus: true, pro: true },
+  { label: 'Assistente semanal por email', free: false, plus: true, pro: true },
   { label: 'Vagas de estágio', free: false, plus: false, pro: true },
   { label: 'Todo o mês renova os limites', free: true, plus: true, pro: true },
 ]
