@@ -77,8 +77,8 @@ const PLANS = [
       {
         label: 'Mais',
         items: [
-          { label: 'Sincronização com o GitHub', icon: 'github', tip: 'O teu diário atualiza-se sozinho a cada push, sem teres de voltar cá para escrever nada.' },
           { label: '15 projetos' },
+          { label: 'Sincronização com o GitHub', icon: 'github', tip: 'O teu diário atualiza-se sozinho a cada push, sem teres de voltar cá para escrever nada.' },
           { label: 'Ficheiros de prova', value: '250MB', tip: 'Anexa PDFs, Word, PowerPoint ou imagens, qualquer ficheiro que prove o trabalho. Escolhes o que aparece na página pública.' },
           { label: 'Assistente semanal', tip: 'Todas as semanas recebes um email com o que avançaste, o que ficou parado e o que vem a seguir, sem teres de ir à procura.' },
         ],
@@ -357,7 +357,7 @@ export default function Pricing() {
                         return (
                           <li key={item.label} className="pricing-item">
                             {item.icon === 'github'
-                              ? <GithubMark size={14} className="pricing-check" />
+                              ? <GithubMark size={17} className="pricing-check pricing-check-github" />
                               : <Check size={14} className="pricing-check" />}
                             <span className="pricing-item-body">
                               <span className="pricing-item-main">

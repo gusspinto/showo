@@ -279,6 +279,7 @@
 .pricing-item:last-child { border-bottom: none; padding-bottom: 0; }
 .pricing-item:first-child { padding-top: 0; }
 .pricing-check { color: var(--color-text-tertiary); flex-shrink: 0; margin-top: 2px; }
+.pricing-check-github { color: var(--color-text); margin-top: 1px; }
 .pricing-item-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .pricing-item-main { display: flex; align-items: flex-start; gap: 9px; }
 .pricing-item-label-wrap { flex: 1; min-width: 0; display: inline-flex; align-items: center; gap: 5px; flex-wrap: wrap; }
