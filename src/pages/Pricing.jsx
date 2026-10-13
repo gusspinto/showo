@@ -87,7 +87,7 @@ const PLANS = [
         ai: true,
         items: [
           { label: 'Coach IA', value: '100 msgs' },
-          { label: 'Toda a IA', value: '5x mais que o Grátis', subitems: ['Criar projeto', 'Análise', 'Relatório', 'Pitch IA', 'Banca IA'] },
+          { label: 'Toda a IA', value: '5x mais que o Grátis', subitems: ['Criar projeto', 'Entrevista guiada', 'Análise', 'Relatório', 'Pitch IA', 'Banca IA'] },
           { label: 'Treino para entrevistas', value: 'novo', tip: 'A IA simula a banca ou o entrevistador, antecipa as perguntas difíceis e sugere respostas. Inclui também uma carta de apresentação gerada a partir do teu trabalho.' },
         ],
       },
@@ -122,7 +122,7 @@ const PLANS = [
         ai: true,
         items: [
           { label: 'Coach IA', value: '300 msgs' },
-          { label: 'Toda a IA', value: 'dobro do Plus', subitems: ['Criar projeto', 'Análise', 'Relatório', 'Pitch IA', 'Banca IA', 'Treino para entrevistas', 'Carta de apresentação'] },
+          { label: 'Toda a IA', value: 'dobro do Plus', subitems: ['Criar projeto', 'Entrevista guiada', 'Análise', 'Relatório', 'Pitch IA', 'Banca IA', 'Treino para entrevistas', 'Carta de apresentação'] },
         ],
       },
     ],
