@@ -361,29 +361,14 @@
 }
 
 /* ── "E porquê isto, se há IA grátis?" ──
-   Três colunas de texto, sem cartões nem ícones: é uma resposta a ler, não
-   mais uma grelha de features a varrer com os olhos. */
-.pricing-why {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 28px;
-}
-.pricing-why-item h3 {
-  margin: 0 0 8px;
-  font-family: var(--font-heading);
-  font-size: var(--text-base);
-  font-weight: 700;
-  letter-spacing: -0.2px;
-  line-height: 1.35;
-}
-.pricing-why-item p {
+   Um parágrafo normal, centrado, largura de leitura — não uma grelha de
+   cartões com frases em espelho. */
+.pricing-why-text {
   margin: 0;
-  font-size: var(--text-sm);
-  line-height: 1.65;
+  font-size: var(--text-base);
+  line-height: 1.75;
   color: var(--color-text-secondary);
-}
-@media (max-width: 900px) {
-  .pricing-why { grid-template-columns: 1fr; gap: 22px; }
+  text-align: left;
 }
 
 /* ── Tabela comparativa ── */
