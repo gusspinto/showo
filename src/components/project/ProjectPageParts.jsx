@@ -2832,6 +2832,28 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                 </button>
               </div>
             </div>
+
+            {/* Simulador de ecrã — só faz sentido com o ecrã real em desktop
+                (é aqui que se vê a diferença); troca deviceMaxWidth, que
+                encolhe a própria moldura da preview. */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, paddingBottom: 10 }}>
+              {DEVICES.map(d => (
+                <button
+                  key={d.id}
+                  onClick={() => setPreviewDevice(d.id)}
+                  title={d.title}
+                  style={{
+                    width: 28, height: 24, borderRadius: 6, border: 'none', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: previewDevice === d.id ? 'var(--color-primary-subtle)' : 'transparent',
+                    color: previewDevice === d.id ? 'var(--color-primary)' : 'var(--color-text-tertiary)',
+                    transition: 'background 0.13s, color 0.13s',
+                  }}
+                >
+                  <d.Icon size={14} />
+                </button>
+              ))}
+            </div>
           </div>}
 
           {wsExpanded && <div
