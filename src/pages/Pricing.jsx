@@ -54,7 +54,7 @@ const PLANS = [
         ai: true,
         items: [
           { label: 'Coach IA', value: '10 msgs' },
-          { label: 'Todas as outras ferramentas', value: 'para experimentar', subitems: ['Criar projeto', 'Entrevista guiada', 'Análise', 'Relatório', 'Pitch IA', 'Banca IA', 'Exportar PowerPoint'] },
+          { label: 'Todas as outras ferramentas', value: 'para experimentar', subitems: ['Criar projeto', 'Entrevista guiada', 'Análise', 'Relatório', 'Perguntas do júri', 'Exportar PowerPoint'] },
         ],
       },
     ],
@@ -87,7 +87,7 @@ const PLANS = [
         ai: true,
         items: [
           { label: 'Coach IA', value: '100 msgs' },
-          { label: 'Toda a IA', value: '5x mais que o Grátis', subitems: ['Criar projeto', 'Entrevista guiada', 'Análise', 'Relatório', 'Pitch IA', 'Banca IA'] },
+          { label: 'Toda a IA', value: '5x mais que o Grátis', subitems: ['Criar projeto', 'Entrevista guiada', 'Análise', 'Relatório', 'Perguntas do júri'] },
           { label: 'Treino para entrevistas', value: 'novo', tip: 'A IA simula a banca ou o entrevistador, antecipa as perguntas difíceis e sugere respostas. Inclui também uma carta de apresentação gerada a partir do teu trabalho.' },
         ],
       },
@@ -122,7 +122,7 @@ const PLANS = [
         ai: true,
         items: [
           { label: 'Coach IA', value: '300 msgs' },
-          { label: 'Toda a IA', value: 'dobro do Plus', subitems: ['Criar projeto', 'Entrevista guiada', 'Análise', 'Relatório', 'Pitch IA', 'Banca IA', 'Treino para entrevistas', 'Carta de apresentação'] },
+          { label: 'Toda a IA', value: 'dobro do Plus', subitems: ['Criar projeto', 'Entrevista guiada', 'Análise', 'Relatório', 'Perguntas do júri', 'Treino para entrevistas', 'Carta de apresentação'] },
         ],
       },
     ],
@@ -140,8 +140,7 @@ const COMPARE_ROWS = [
   { label: 'Entrevista guiada', free: '3x', plus: '15x', pro: '30x' },
   { label: 'Análise de projeto', free: '1x', plus: '10x', pro: '25x' },
   { label: 'Relatório do projeto', free: '1x', plus: '5x', pro: '10x' },
-  { label: 'Pitch IA', free: '1x', plus: '10x', pro: '25x' },
-  { label: 'Banca IA', free: '1x', plus: '10x', pro: '25x' },
+  { label: 'Perguntas do júri', free: '1x', plus: '10x', pro: '25x' },
   { label: 'Treino para entrevistas', free: false, plus: '5x', pro: '25x' },
   { label: 'Carta de apresentação IA', free: false, plus: '5x', pro: '25x' },
   { label: 'Exportar PowerPoint', free: '3x', plus: '15x', pro: 'Ilimitado' },
