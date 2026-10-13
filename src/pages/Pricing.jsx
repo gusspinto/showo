@@ -394,34 +394,18 @@ export default function Pricing() {
 
         {/* ══════════════ A OBJEÇÃO QUE NINGUÉM ESCREVIA ══════════════
             "Porquê pagar se tenho IA grátis noutro lado?" é o primeiro
-            pensamento de quem chega aqui, e a página não lhe tocava.
-            A resposta não é dizer mal de ninguém — é dizer o que fica
-            quando a conversa acaba. */}
-        <section className="pricing-section">
+            pensamento de quem chega aqui. Resposta direta, um parágrafo
+            normal — nada de três frases em espelho a dizer a mesma coisa
+            de três maneiras diferentes, isso lê-se a léguas a texto de IA. */}
+        <section className="pricing-section pricing-section--narrow">
           <h2 className="pricing-section-title">E porquê isto, se há IA grátis em todo o lado?</h2>
-          <div className="pricing-why">
-            <div className="pricing-why-item">
-              <h3>Uma conversa desaparece. Um projeto fica.</h3>
-              <p>
-                Aqui o que escreveste há três semanas continua lá e informa o que a IA te
-                sugere hoje. Não começas do zero a explicar o teu projeto de cada vez.
-              </p>
-            </div>
-            <div className="pricing-why-item">
-              <h3>No fim não tens um chat, tens uma página.</h3>
-              <p>
-                Um link que mandas a um cliente, a um professor ou a um recrutador — com o
-                trabalho, as provas e a história lá dentro, sem ser preciso explicar nada.
-              </p>
-            </div>
-            <div className="pricing-why-item">
-              <h3>O percurso fica registado.</h3>
-              <p>
-                Diário, datas e evolução ao longo de meses. É isso que mostra que o trabalho é
-                mesmo teu — e é precisamente o que uma conversa com IA nunca vai provar.
-              </p>
-            </div>
-          </div>
+          <p className="pricing-why-text">
+            Um chat esquece tudo assim que fechas a aba. Aqui o que escreveste sobre o
+            projeto há três semanas continua lá, e a IA usa isso para te ajudar hoje — não
+            começas do zero de cada vez. E no fim não ficas com uma conversa para mostrar a
+            ninguém: ficas com uma página, com o trabalho, as provas e a evolução ao longo do
+            tempo. O link que mandas a um cliente, a um professor ou a um recrutador.
+          </p>
         </section>
 
         {/* ══════════════ TESTEMUNHOS ══════════════ */}
