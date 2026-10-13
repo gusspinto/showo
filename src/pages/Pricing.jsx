@@ -36,7 +36,7 @@ const PLANS = [
     id: 'free',
     name: 'Grátis',
     price: '€0',
-    positioning: 'Põe um projeto de pé e mostra-o a alguém.',
+    positioning: 'Começa a provar que sabes fazer.',
     cta: 'Começar grátis',
     ctaVariant: 'ghost',
     groups: [
@@ -66,7 +66,7 @@ const PLANS = [
     priceAnnual: '€89,90',
     annualEquivalent: '€7,49/mês',
     period: '/mês',
-    positioning: 'Não pares a meio.',
+    positioning: 'Não pares a meio do caminho.',
     weeklyNote: 'pouco mais de €2 por semana',
     cta: 'Começar com o Plus',
     ctaVariant: 'primary',
@@ -242,7 +242,7 @@ export default function Pricing() {
         {error && <div className="pricing-toast">{error}</div>}
 
         <header className="pricing-header">
-          <h1>Constrói agora. Lança quando estiveres pronto.</h1>
+          <h1>Mostra o trabalho. Não contes sobre ele.</h1>
         </header>
 
         <div className="pricing-proof">
