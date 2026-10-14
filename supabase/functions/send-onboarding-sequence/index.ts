@@ -99,7 +99,26 @@ function cta(href: string, label: string) {
   return `<tr><td style="padding:0 0 40px;"><a href="${href}" style="display:inline-block;background:#2B7EF5;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:12px 24px;border-radius:10px;">${esc(label)}</a></td></tr>`
 }
 
-function buildDay1(firstName: string | undefined, unsubscribeUrl: string) {
+// Cada dia tem duas versões — quem já tem projeto e quem ainda não.
+// Antes disto, o dia 1-3 falava sempre como se já existisse projeto
+// ("o meu projeto", "Já deste o primeiro passo") para TODA a gente,
+// mesmo para quem nunca tinha criado nada (81% dos registos, confirmado
+// em produção) — a mensagem não batia certo com a realidade de quem a
+// lia, e isso explica os 0-1 cliques em 121 emails.
+function buildDay1(firstName: string | undefined, unsubscribeUrl: string, hasProject: boolean) {
+  if (!hasProject) {
+    const subject = 'O teu primeiro projeto demora 2 minutos a criar'
+    const html = wrapEmail(
+      greeting(firstName) +
+      headline('Ainda não criaste o teu primeiro projeto') +
+      paragraph('Não precisa de estar pronto nem perfeito. Sobe um PDF, um PowerPoint, ou descreve em duas frases o que já fizeste — a IA trata do resto.') +
+      paragraph('A partir daí, a IA já lê o diário do projeto antes de responder, sem teres de explicar tudo outra vez sempre que perguntas algo.', true) +
+      cta(`${APP}/novo`, 'Criar o meu primeiro projeto'),
+      'Dia 1 de 5',
+      unsubscribeUrl,
+    )
+    return { subject, html }
+  }
   const subject = 'A diferença entre isto e abrir o ChatGPT outra vez'
   const html = wrapEmail(
     greeting(firstName) +
@@ -113,7 +132,20 @@ function buildDay1(firstName: string | undefined, unsubscribeUrl: string) {
   return { subject, html }
 }
 
-function buildDay2(firstName: string | undefined, unsubscribeUrl: string) {
+function buildDay2(firstName: string | undefined, unsubscribeUrl: string, hasProject: boolean) {
+  if (!hasProject) {
+    const subject = 'Já tens o GitHub? Isso já chega para começar'
+    const html = wrapEmail(
+      greeting(firstName) +
+      headline('Tens repositórios no GitHub? Isso já é meio caminho andado') +
+      paragraph('Liga o teu GitHub ao criar o projeto e os commits entram sozinhos no diário — não precisas de escrever nada à mão.') +
+      paragraph('Sem GitHub também funciona: um PDF ou só texto já chega para começar.', true) +
+      cta(`${APP}/novo`, 'Começar agora'),
+      'Dia 2 de 5',
+      unsubscribeUrl,
+    )
+    return { subject, html }
+  }
   const subject = 'O teu GitHub também pode contar a história'
   const html = wrapEmail(
     greeting(firstName) +
@@ -127,7 +159,7 @@ function buildDay2(firstName: string | undefined, unsubscribeUrl: string) {
   return { subject, html }
 }
 
-function buildDay3(firstName: string | undefined, unsubscribeUrl: string) {
+function buildDay3(firstName: string | undefined, unsubscribeUrl: string, hasProject: boolean) {
   const subject = 'Não inventamos números só para parecer impressionante'
   const quote = (text: string, author: string) =>
     `<tr><td style="padding:0 0 20px;"><table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0"><tr><td style="border-left:2px solid #2B7EF5;padding-left:16px;color:#cccccc;font-size:15px;line-height:1.6;font-style:italic;">"${text}"<div style="margin-top:8px;color:#888888;font-size:13px;font-style:normal;">${author}</div></td></tr></table></td></tr>`
@@ -137,7 +169,7 @@ function buildDay3(firstName: string | undefined, unsubscribeUrl: string) {
     paragraph('Preferimos mostrar o que quem já usa o Showo disse, com o nome deles:') +
     quote('Para alguém que fez PAP e queria usá-la para exposição, esta app é um gamechanger para estudantes na mesma situação.', 'Rafael Matos, Estudante de Engenharia Informática da Universidade de Aveiro') +
     quote('Na minha opinião, um dos pontos mais fortes da plataforma é a Defesa. A organização e preparação torna tudo mais interativo e envolvente.', 'Rita Sousa, Estudante na Escola Profissional Bento de Jesus Caraça') +
-    cta(`${APP}/dashboard`, 'Ver o meu dashboard'),
+    (hasProject ? cta(`${APP}/dashboard`, 'Ver o meu dashboard') : cta(`${APP}/novo`, 'Criar o meu projeto agora')),
     'Dia 3 de 5',
     unsubscribeUrl,
   )
@@ -227,9 +259,18 @@ Deno.serve(async (req) => {
         let built: { subject: string; html: string } | null = null
         let emailType = ''
 
-        if (step === 0) { built = buildDay1(firstName, unsubscribeUrl); emailType = 'onboarding_day1' }
-        else if (step === 1) { built = buildDay2(firstName, unsubscribeUrl); emailType = 'onboarding_day2' }
-        else if (step === 2) { built = buildDay3(firstName, unsubscribeUrl); emailType = 'onboarding_day3' }
+        // hasProject é usado em todos os passos — dia 1-3 escolhem a
+        // variante de copy certa, dia 4/5 decide se envia de todo.
+        const { count: projectCount } = await supabase
+          .from('projects')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', p.id)
+          .eq('entry_kind', 'full')
+        const hasProject = (projectCount ?? 0) > 0
+
+        if (step === 0) { built = buildDay1(firstName, unsubscribeUrl, hasProject); emailType = 'onboarding_day1' }
+        else if (step === 1) { built = buildDay2(firstName, unsubscribeUrl, hasProject); emailType = 'onboarding_day2' }
+        else if (step === 2) { built = buildDay3(firstName, unsubscribeUrl, hasProject); emailType = 'onboarding_day3' }
         else if (step === 3) {
           let organizationPlan: string | undefined
           if (p.organization_id) {
@@ -241,12 +282,6 @@ Deno.serve(async (req) => {
             organizationPlan = org?.plan
           }
           const planId = resolvePlanId(p, organizationPlan)
-          const { count: projectCount } = await supabase
-            .from('projects')
-            .select('id', { count: 'exact', head: true })
-            .eq('user_id', p.id)
-            .eq('entry_kind', 'full')
-          const hasProject = (projectCount ?? 0) > 0
           if (hasProject && planId === 'free') {
             built = buildDay45(firstName, unsubscribeUrl)
             emailType = 'onboarding_day4_5'
