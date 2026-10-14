@@ -30,7 +30,6 @@ import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/
 import { UploadIcon as Upload } from '@solar-icons/react/bold/upload'
 import { ClipboardTextIcon as ClipboardCheck } from '@solar-icons/react/bold/clipboard-text'
 import { BookBookmarkIcon as BookMarked } from '@solar-icons/react/bold/book-bookmark'
-import { DangerTriangleIcon as AlertTriangle } from '@solar-icons/react/bold/danger-triangle'
 import { Button, Card, SectionLabel, Modal, Select } from '../components/ui'
 import { PlanGateModal } from '../components/PlanGate'
 import { useAuth } from '../context/AuthContext'
@@ -46,8 +45,6 @@ import AgendaPanel from '../components/dashboard/AgendaPanel'
 import { ActivityPanel } from '../components/dashboard/RhythmPanel'
 import WeeklyRecap, { shouldShowRecap, RecapsPanel } from '../components/dashboard/WeeklyRecap'
 import WeeklyPostCard from '../components/dashboard/WeeklyPostCard'
-import { getAccountFilesUsage, formatFileSize } from '../lib/projectFiles'
-import { FolderWithFilesIcon } from '@solar-icons/react/bold/folder-with-files'
 import WeeklyCheckin, { shouldShowCheckin } from '../components/dashboard/WeeklyCheckin'
 import AddReminderModal from '../components/dashboard/AddReminderModal'
 import CalendarSyncModal from '../components/dashboard/CalendarSyncModal'
@@ -137,56 +134,6 @@ function JoinTurmaStudentModal({ onClose, onJoined }) {
       {error && <p style={{ color: 'var(--color-error)', fontSize: 13, marginTop: 8 }}>{error}</p>}
       <Button fullWidth onClick={handleJoin} loading={loading} style={{ marginTop: 16 }}>Entrar</Button>
     </Modal>
-  )
-}
-
-/* Quanto do espaço de ficheiros (soma de todos os projetos) já foi usado —
-   pedido explícito: ver na dashboard, não só dentro de cada projeto. */
-function FilesStorageCard({ userId, gate }) {
-  const [bytes, setBytes] = useState(0)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    if (!userId) return
-    getAccountFilesUsage(userId).then(setBytes).catch(() => {}).finally(() => setLoading(false))
-  }, [userId])
-
-  if (loading || !gate.maxAccountMB) return null
-  const maxBytes = gate.maxAccountMB * 1024 * 1024
-  const pct = Math.min(100, Math.round((bytes / maxBytes) * 100))
-  const maxLabel = gate.maxAccountMB >= 1024 ? `${gate.maxAccountMB / 1024}GB` : `${gate.maxAccountMB}MB`
-  const nearFull = pct >= 90
-
-  return (
-    <section className={`sdb-panel sdb-o-storage sdb-storage${nearFull ? ' is-full' : ''}`}>
-      <div className="sdb-storage-row">
-        <span className="sdb-storage-icon">
-          <FolderWithFilesIcon size={17} />
-        </span>
-        <div className="sdb-storage-body">
-          <div className="sdb-storage-head">
-            <p className="sdb-storage-title">Ficheiros de projetos</p>
-            <span className="sdb-storage-pct">{pct}%</span>
-          </div>
-          <div
-            className="sdb-storage-track"
-            role="progressbar"
-            aria-valuenow={pct}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label={`Espaço usado: ${formatFileSize(bytes)} de ${maxLabel}`}
-          >
-            <span className="sdb-storage-fill" style={{ width: `${pct}%` }} />
-          </div>
-          <p className="sdb-storage-note">
-            {nearFull && <AlertTriangle size={11} aria-hidden="true" />}
-            <span>
-              <strong>{formatFileSize(bytes)}</strong> de {maxLabel} usados em todos os projetos
-            </span>
-          </p>
-        </div>
-      </div>
-    </section>
   )
 }
 
@@ -1172,8 +1119,6 @@ export default function StudentDashboard({ user, profile }) {
                 {isSchoolAccount && checkGate('weeklyRecap').allowed && <RecapsPanel recaps={recaps} />}
               </div>
             )}
-
-            {checkGate('projectFiles').allowed && <FilesStorageCard userId={user.id} gate={checkGate('projectFiles')} />}
 
             {isSchoolAccount && checkGate('weeklyRecap').allowed && (
               <WeeklyPostCard project={focusFull} entries={entries} streak={streak} />

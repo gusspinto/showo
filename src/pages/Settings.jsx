@@ -35,6 +35,7 @@ import { containsProfanity } from '../lib/profanity'
 import { Select } from '../components/ui'
 import { OCCUPATIONS } from '../lib/occupations'
 import ExportProjectsModal from '../components/ExportProjectsModal'
+import { getAccountFilesUsage, formatFileSize } from '../lib/projectFiles'
 import './Settings.css'
 
 function Input({ label, value, onChange, placeholder, hint, type = 'text', prefix }) {
@@ -142,6 +143,50 @@ function PlanSection({ planId, navigate }) {
             <p className="settings-hint">Altera o método de pagamento, vê faturas ou cancela.</p>
           </div>
         )}
+      </div>
+    </SectionCard>
+  )
+}
+
+/* Quanto do espaço de ficheiros (soma de todos os projetos) já foi usado.
+   Vivia na dashboard como cartão próprio, mas é um limite do plano, não uma
+   métrica de progresso do aluno — mudou-se para aqui, ao lado do plano. */
+function StorageSection({ userId, gate }) {
+  const [bytes, setBytes] = useState(0)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!userId) return
+    getAccountFilesUsage(userId).then(setBytes).catch(() => {}).finally(() => setLoading(false))
+  }, [userId])
+
+  if (loading || !gate?.maxAccountMB) return null
+  const maxBytes = gate.maxAccountMB * 1024 * 1024
+  const pct = Math.min(100, Math.round((bytes / maxBytes) * 100))
+  const maxLabel = gate.maxAccountMB >= 1024 ? `${gate.maxAccountMB / 1024}GB` : `${gate.maxAccountMB}MB`
+  const nearFull = pct >= 90
+
+  return (
+    <SectionCard title="Armazenamento">
+      <div className={`settings-storage${nearFull ? ' is-full' : ''}`}>
+        <div className="settings-storage-head">
+          <span className="settings-storage-label">Ficheiros de projetos</span>
+          <span className="settings-storage-pct">{pct}%</span>
+        </div>
+        <div
+          className="settings-storage-track"
+          role="progressbar"
+          aria-valuenow={pct}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label={`Espaço usado: ${formatFileSize(bytes)} de ${maxLabel}`}
+        >
+          <span className="settings-storage-fill" style={{ width: `${pct}%` }} />
+        </div>
+        <p className="settings-hint settings-storage-note">
+          {nearFull && <AlertTriangle size={11} aria-hidden="true" />}
+          <span><strong>{formatFileSize(bytes)}</strong> de {maxLabel} usados em todos os projetos</span>
+        </p>
       </div>
     </SectionCard>
   )
@@ -802,6 +847,10 @@ export default function Settings() {
 
             {activeTab === 'plano' && role !== 'professor' && (
               <PlanSection planId={planId} navigate={navigate} />
+            )}
+
+            {activeTab === 'plano' && role !== 'professor' && checkGate('projectFiles').allowed && (
+              <StorageSection userId={user.id} gate={checkGate('projectFiles')} />
             )}
 
             {activeTab === 'embaixador' && ambassadorStats && (
