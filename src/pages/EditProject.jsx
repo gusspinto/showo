@@ -27,7 +27,8 @@ import { Select } from '../components/ui'
 import { containsProfanity } from '../lib/profanity'
 import { logFieldsFilled } from '../lib/autoJournal'
 import { parseGithubRepo, syncGithub, removeGithubEntries, topLanguages, commitSpanMonths, repoAgeMonths, shareOnLinkedIn } from '../lib/social'
-import { PLAN_GATE_MESSAGES } from '../lib/plans'
+import { PLAN_GATE_MESSAGES, nextPaidPlan, planThatUnlocks } from '../lib/plans'
+import { PlanGateModal } from '../components/PlanGate'
 import { listProjectFiles, uploadProjectFile, deleteProjectFile, toggleFileVisibility, getAccountFilesUsage, formatFileSize } from '../lib/projectFiles'
 import { startGithubConnect, getGithubConnection, disconnectGithub, listGithubRepos, registerGithubWebhook, removeGithubWebhook } from '../lib/githubAuth'
 import { DatabaseIcon as Database } from '@solar-icons/react/bold/database'
@@ -109,7 +110,7 @@ function socialUrlState(value, host) {
   return { empty: false, valid: hostOk && pathOk, normalized: u.toString() }
 }
 
-function Field({ label, children, required, filled, error }) {
+function Field({ label, children, required, error }) {
   return (
     <div style={{ marginBottom: 18 }}>
       <label style={{
@@ -118,7 +119,6 @@ function Field({ label, children, required, filled, error }) {
         textTransform: 'uppercase', letterSpacing: 0.6,
       }}>
         {label}{required && <span style={{ color: colors.red, marginLeft: 2 }}>*</span>}
-        {filled && <Check size={12} color={colors.blue} strokeWidth={3} style={{ marginLeft: 'auto' }} />}
       </label>
       {children}
       {error && <p style={{ margin: '6px 0 0', fontSize: 12, color: colors.red }}>{error}</p>}
@@ -154,32 +154,35 @@ function ReadOnlyField({ label, value }) {
 // era um botão transparente com texto a 12px cor "subtle", quase invisível.
 // Isto é um motivo real de upgrade, não uma nota de rodapé: precisa de peso
 // visual e de um botão a sério, não só texto clicável.
-function UpsellGate({ title, body, onUpgrade }) {
+function UpsellGate({ title, body, feature, onUpgrade }) {
+  const { planId } = useAuth()
+  const upgrade = (feature && planThatUnlocks(feature, planId)) || nextPaidPlan(planId)
+  const ctaLabel = upgrade ? upgrade.name : 'Ver planos'
   return (
     <button
       type="button"
       onClick={onUpgrade}
       style={{
-        display: 'flex', alignItems: 'center', gap: 12, width: '100%', textAlign: 'left',
-        background: 'var(--color-primary-subtle)', border: `1px solid ${colors.blue}`, borderRadius: 10,
-        padding: '14px 16px', marginBottom: 10, cursor: 'pointer', fontFamily: 'inherit',
+        display: 'flex', alignItems: 'center', gap: 14, width: '100%', textAlign: 'left',
+        background: 'var(--color-primary-subtle)', border: `1px solid ${colors.blue}`, borderRadius: 12,
+        padding: '12px 14px', marginBottom: 10, cursor: 'pointer', fontFamily: 'inherit',
       }}
     >
       <div style={{
-        width: 32, height: 32, borderRadius: 8, background: colors.blue,
+        width: 30, height: 30, borderRadius: 8, background: colors.blue,
         display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
       }}>
-        <Sparkles size={16} color="#fff" />
+        <Sparkles size={15} color="#fff" />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <p style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: colors.text }}>{title}</p>
-        <p style={{ margin: '2px 0 0', fontSize: 12.5, color: colors.muted, lineHeight: 1.4 }}>{body}</p>
+        {body && <p style={{ margin: '1px 0 0', fontSize: 12, color: colors.muted, lineHeight: 1.35 }}>{body}</p>}
       </div>
       <span style={{
-        flexShrink: 0, padding: '8px 14px', background: colors.blue, borderRadius: 8,
+        flexShrink: 0, padding: '7px 14px', background: colors.blue, borderRadius: 100,
         color: '#fff', fontSize: 12.5, fontWeight: 700, whiteSpace: 'nowrap',
       }}>
-        Ver planos
+        {ctaLabel}
       </span>
     </button>
   )
@@ -444,6 +447,21 @@ export default function EditProject() {
   const canSave  = !saving && !!form.name?.trim() && !!form.area?.trim() && linkedin.valid && github.valid
   const linksFilled = (!linkedin.empty && linkedin.valid ? 1 : 0) + (!github.empty && github.valid ? 1 : 0)
 
+  // Lista só o que falta mesmo, nunca uma frase fixa — se só o link do
+  // LinkedIn é inválido, dizer "falta o nome e a área" é mentira e confunde
+  // mais do que ajuda.
+  const missingParts = [
+    !form.name?.trim() && 'o nome',
+    !form.area?.trim() && 'a área',
+    !linkedin.valid && 'um link válido no LinkedIn',
+    !github.valid && 'um link válido no GitHub',
+  ].filter(Boolean)
+  const missingMessage = missingParts.length
+    ? `Falta ${missingParts.length === 1
+        ? missingParts[0]
+        : `${missingParts.slice(0, -1).join(', ')} e ${missingParts[missingParts.length - 1]}`}`
+    : ''
+
   // "Base de dados" (tabelas + API) só faz sentido para projetos com
   // componente de software a sério — não aparece para áreas como Moda,
   // Design Gráfico, Marketing, etc.
@@ -678,14 +696,12 @@ export default function EditProject() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     <Field
                       label="LinkedIn"
-                      filled={!linkedin.empty && linkedin.valid}
                       error={!linkedin.valid ? 'Tem de ser um link do linkedin.com/…' : null}
                     >
                       <input type="url" value={form.linkedin_url} onChange={e => set('linkedin_url', e.target.value)} style={inputStyle} placeholder="https://linkedin.com/in/..." {...inputHandlers} />
                     </Field>
                     <Field
                       label="GitHub"
-                      filled={!github.empty && github.valid}
                       error={!github.valid ? 'Tem de ser um link do github.com/…' : null}
                     >
                       <input type="url" value={form.github_url} onChange={e => set('github_url', e.target.value)} style={inputStyle} placeholder="https://github.com/..." {...inputHandlers} />
@@ -708,13 +724,13 @@ export default function EditProject() {
                       <ReadOnlyField label="Escola" value={form.school} />
                     </div>
                   )}
-                  <Field label="Nome do projeto" filled={isFilled('name')}>
+                  <Field label="Nome do projeto">
                     <input type="text" value={form.name} onChange={e => set('name', e.target.value)} style={inputStyle} placeholder="Ex: TaskFlow, EduApp..." {...inputHandlers} />
                   </Field>
-                  <Field label="Tipo" filled={!!form.project_type}>
+                  <Field label="Tipo">
                     <Select value={form.project_type} onChange={v => set('project_type', v)} options={PROJECT_TYPES} inputStyle={inputStyle} />
                   </Field>
-                  <Field label="Visibilidade" filled={true}>
+                  <Field label="Visibilidade">
                     <div style={{ display: 'flex', gap: 8 }}>
                       {[
                         { value: 'public',   label: 'Público' },
@@ -739,16 +755,16 @@ export default function EditProject() {
                   </Field>
                   {isPap && (
                     <div className="ep-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 4 }}>
-                      <Field label="Orientador" filled={isFilled('pap_supervisor')}>
+                      <Field label="Orientador">
                         <input type="text" value={form.pap_supervisor} onChange={e => set('pap_supervisor', e.target.value)} style={inputStyle} placeholder="Nome do orientador" {...inputHandlers} />
                       </Field>
-                      <Field label="Data de apresentação" filled={isFilled('pap_date')}>
+                      <Field label="Data de apresentação">
                         <input type="text" value={form.pap_date} onChange={e => set('pap_date', e.target.value)} style={inputStyle} placeholder="Ex: Junho 2025" {...inputHandlers} />
                       </Field>
                     </div>
                   )}
                   {isPap && (
-                    <Field label="Como és avaliado" filled={!!form.evaluation_mode}>
+                    <Field label="Como és avaliado">
                       <div style={{ display: 'flex', gap: 8 }}>
                         {[
                           { id: 'jury', label: 'Júri' },
@@ -912,8 +928,8 @@ export default function EditProject() {
           um estado persistente de "tudo guardado" não é preciso aqui — quem
           termina de editar sai da página logo a seguir a guardar. */}
       <div className="ep-save-bar">
-        {!canSave && !saving && (
-          <div className="ep-save-status" style={{ color: colors.red }}>Falta o nome e a área</div>
+        {!canSave && !saving && missingMessage && (
+          <div className="ep-save-status" style={{ color: colors.red }}>{missingMessage}</div>
         )}
         <button
           onClick={handleSubmit}
@@ -957,8 +973,10 @@ function AdvancedSection({ project, isOwner, navigate }) {
   const [slugInput, setSlugInput] = useState(project?.slug || '')
   const [savingSlug, setSavingSlug] = useState(false)
   const [slugError, setSlugError] = useState(null)
+  const { planId } = useAuth()
   const publicUrl = `${window.location.origin}/projeto/${project?.slug}`
   const cleanLinkGate = checkGate('cleanLink')
+  const [gateMsg, setGateMsg] = useState(null)
 
   function copyLink() {
     navigator.clipboard.writeText(publicUrl).then(() => {
@@ -1040,9 +1058,17 @@ function AdvancedSection({ project, isOwner, navigate }) {
 
         {!cleanLinkGate.allowed && !editingSlug && (
           <UpsellGate
+            feature="cleanLink"
             title={cleanLinkGate.message?.title || PLAN_GATE_MESSAGES.cleanLink().title}
             body={cleanLinkGate.message?.body || PLAN_GATE_MESSAGES.cleanLink().body}
-            onUpgrade={() => navigate('/planos')}
+            onUpgrade={() => setGateMsg(cleanLinkGate.message || PLAN_GATE_MESSAGES.cleanLink())}
+          />
+        )}
+        {gateMsg && (
+          <PlanGateModal
+            message={gateMsg}
+            forcedPlan={planThatUnlocks('cleanLink', planId)}
+            onClose={() => setGateMsg(null)}
           />
         )}
 
@@ -1066,8 +1092,9 @@ function AdvancedSection({ project, isOwner, navigate }) {
    nunca aparece lá. Quota real é aplicada no servidor (trigger
    enforce_project_files_quota); isto só dá feedback amigável. */
 function ProjectFilesCard({ project }) {
-  const { user, checkGate } = useAuth()
+  const { user, planId, checkGate } = useAuth()
   const gate = checkGate('projectFiles')
+  const [gateMsg, setGateMsg] = useState(null)
   const [files, setFiles] = useState([])
   const [accountBytes, setAccountBytes] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -1135,11 +1162,21 @@ function ProjectFilesCard({ project }) {
       </div>
 
       {!gate.allowed ? (
-        <UpsellGate
-          title={gate.message?.title || 'Ficheiros do projeto'}
-          body={gate.message?.body}
-          onUpgrade={() => window.location.assign('/planos')}
-        />
+        <>
+          <UpsellGate
+            feature="projectFiles"
+            title={gate.message?.title || 'Ficheiros do projeto'}
+            body={gate.message?.body}
+            onUpgrade={() => setGateMsg(gate.message)}
+          />
+          {gateMsg && (
+            <PlanGateModal
+              message={gateMsg}
+              forcedPlan={planThatUnlocks('projectFiles', planId)}
+              onClose={() => setGateMsg(null)}
+            />
+          )}
+        </>
       ) : (
         <>
           <p style={{ margin: '0 0 14px', fontSize: 13.5, color: colors.muted, lineHeight: 1.6 }}>
@@ -1213,9 +1250,10 @@ function ProjectFilesCard({ project }) {
    guardadas para a página pública mostrar prova de trabalho a sério.
    Só repositórios públicos, sem OAuth. */
 function GithubAdvancedCard({ project }) {
-  const { user, checkGate } = useAuth()
+  const { user, planId, checkGate } = useAuth()
   const navigate = useNavigate()
   const githubGate = checkGate('githubSync')
+  const [gateMsg, setGateMsg] = useState(null)
   const [connection, setConnection] = useState(null) // { github_login } | null | undefined(loading)
   const [syncing, setSyncing] = useState(false)
   const [error, setError] = useState(null)
@@ -1325,11 +1363,21 @@ function GithubAdvancedCard({ project }) {
       </div>
 
       {!githubGate.allowed ? (
-        <UpsellGate
-          title={githubGate.message?.title || 'Sincronização com o GitHub'}
-          body={githubGate.message?.body}
-          onUpgrade={() => navigate('/planos')}
-        />
+        <>
+          <UpsellGate
+            feature="githubSync"
+            title={githubGate.message?.title || 'Sincronização com o GitHub'}
+            body={githubGate.message?.body}
+            onUpgrade={() => setGateMsg(githubGate.message)}
+          />
+          {gateMsg && (
+            <PlanGateModal
+              message={gateMsg}
+              forcedPlan={planThatUnlocks('githubSync', planId)}
+              onClose={() => setGateMsg(null)}
+            />
+          )}
+        </>
       ) : (
       <>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 16, padding: '10px 12px', background: colors.bgAlt, borderRadius: 8, border: `1px solid ${colors.border}` }}>

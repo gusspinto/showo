@@ -446,6 +446,12 @@ a { transition: color 0.15s, opacity 0.15s; }
 @media (min-width: 640px) {
   .plan-gate-modal { max-width: 760px; }
 }
+/* No mobile o X fica perto de mais do botão "Mensal/Anual" e do X ↔ dedo do
+   polegar já nem chega lá sem esforço — tocar fora do cartão (o overlay)
+   fecha na mesma, por isso o botão só repete essa ação pior. */
+@media (max-width: 639px) {
+  .plan-gate-close { display: none; }
+}
 @keyframes plan-gate-fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 .plan-gate-fade { animation: plan-gate-fade-in 0.35s ease-out both; }
 @media (prefers-reduced-motion: reduce) {

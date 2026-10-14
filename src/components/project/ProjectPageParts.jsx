@@ -456,23 +456,25 @@ export function LiveProof({ project, isOwner, onSave }) {
 
   return (
     <form onSubmit={submit} style={{
-      display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
+      display: 'flex', flexDirection: 'column', gap: 12,
       background: 'var(--color-surface)', border: '1px dashed var(--color-border)',
-      borderRadius: 10, padding: '10px 16px', marginBottom: 16,
+      borderRadius: 12, padding: '14px 16px', marginBottom: 16,
       fontFamily: 'var(--font-body, system-ui, sans-serif)',
     }}>
-      <span style={{ fontSize: 12.5, color: 'var(--color-text-secondary)', flex: '1 1 220px' }}>
+      <span style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
         Tens os resultados escritos. Falta a prova: cola o link de algo que já funciona (site, demo, vídeo).
       </span>
-      <input
-        type="text" value={draft} onChange={e => setDraft(e.target.value)}
-        placeholder="https://..." aria-label="Link da prova"
-        style={{ flex: '1 1 180px', minWidth: 0, padding: '7px 10px', fontSize: 13, borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-bg)', color: 'var(--color-text)', fontFamily: 'inherit' }}
-      />
-      <button type="submit" disabled={saving || !draft.trim()} style={{ padding: '7px 14px', fontSize: 12.5, fontWeight: 700, borderRadius: 8, border: 'none', background: 'var(--color-primary)', color: '#fff', cursor: saving ? 'default' : 'pointer', opacity: saving || !draft.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
-        {saving ? 'A guardar…' : 'Guardar'}
-      </button>
-      {error && <span style={{ flexBasis: '100%', fontSize: 12, color: 'var(--color-error, #f43f5e)' }}>{error}</span>}
+      <div style={{ display: 'flex', gap: 8 }}>
+        <input
+          type="text" value={draft} onChange={e => setDraft(e.target.value)}
+          placeholder="https://..." aria-label="Link da prova"
+          style={{ flex: '1 1 auto', minWidth: 0, padding: '10px 12px', fontSize: 13, borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-bg)', color: 'var(--color-text)', fontFamily: 'inherit' }}
+        />
+        <button type="submit" disabled={saving || !draft.trim()} style={{ flexShrink: 0, padding: '10px 16px', fontSize: 13, fontWeight: 700, borderRadius: 8, border: 'none', background: 'var(--color-primary)', color: '#fff', cursor: saving ? 'default' : 'pointer', opacity: saving || !draft.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
+          {saving ? 'A guardar…' : 'Guardar'}
+        </button>
+      </div>
+      {error && <span style={{ fontSize: 12, color: 'var(--color-error, #f43f5e)' }}>{error}</span>}
     </form>
   )
 }
@@ -1561,7 +1563,7 @@ export function ProjectAttachments({ project }) {
         // chegou a resolver, é mesmo só ele a ver isto. O rótulo existe para
         // não parecer, visualmente, que está ao lado do cartão "Ficheiros"
         // (esse sim público) e dar a entender o mesmo nível de visibilidade.
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignSelf: 'flex-start' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, alignSelf: 'center' }}>
           <a
             href={srcUrl} target="_blank" rel="noopener noreferrer"
             style={{
@@ -1573,7 +1575,7 @@ export function ProjectAttachments({ project }) {
           >
             <Download size={14} /> {project.library_file_name || 'Documento original'}
           </a>
-          <span style={{ fontSize: 11, color: 'var(--color-text-tertiary)' }}>Só visível para ti — nunca aparece a visitantes.</span>
+          <span style={{ fontSize: 11, color: 'var(--color-text-tertiary)', textAlign: 'center' }}>Só visível para ti — nunca aparece a visitantes.</span>
         </div>
       )}
       {files.length > 0 && (
