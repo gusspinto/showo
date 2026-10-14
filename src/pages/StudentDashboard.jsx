@@ -792,6 +792,21 @@ export default function StudentDashboard({ user, profile }) {
             </span>
             <h1 className="sdb-hero-greeting">{greeting}</h1>
           </div>
+          {/* Em mobile a pílula fica ao lado da saudação, não numa linha
+              própria lá em baixo — pedido do Gustavo. Em desktop continua
+              centrada por cima da grelha (sdb-tabs-row mais abaixo). */}
+          {isSchoolAccount && (
+            <div className="sdb-hero-tabs">
+              <SegmentedTabs
+                value={dashTab}
+                onChange={setDashTab}
+                options={[
+                  { id: 'projetos', label: 'Projetos', icon: <Layers size={14} /> },
+                  { id: 'turma', label: 'Turma', icon: <GraduationCap size={14} /> },
+                ]}
+              />
+            </div>
+          )}
         </header>
 
         {/* ══════════════ CARTÃO DE UPGRADE (só mobile) ══════════════
@@ -821,9 +836,11 @@ export default function StudentDashboard({ user, profile }) {
           </div>
         )}
 
-        {/* ══════════════ PÍLULA PROJETOS / TURMA ══════════════ */}
+        {/* ══════════════ PÍLULA PROJETOS / TURMA (desktop) ══════════════
+            Versão de mobile vive no sdb-hero, ao lado da saudação — esta
+            fica escondida por CSS abaixo de 900px (ver sdb-tabs-row). */}
         {isSchoolAccount && (
-          <div style={{ display: 'flex', justifyContent: 'center', margin: '0 0 var(--sp-5)' }}>
+          <div className="sdb-tabs-row">
             <SegmentedTabs
               value={dashTab}
               onChange={setDashTab}
@@ -1213,15 +1230,22 @@ export default function StudentDashboard({ user, profile }) {
           {/* ── Coluna de contexto ── */}
           <div className="sdb-col">
 
-            <div className="sdb-o-agenda">
-              <AgendaPanel
-                events={calendarEvents}
-                googleConnected={googleConnected}
-                onAddReminder={date => setShowAddReminder(date instanceof Date ? date : new Date())}
-                onSync={() => setShowCalendarSync(true)}
-                onEventClick={handleEventClick}
-              />
-            </div>
+            {/* Só mostramos a Agenda nas duas tabs para contas B2C, que não
+                têm pílula nenhuma (dashTab fica sempre 'projetos'). Nas
+                contas de escola, a Agenda aparece só na tab Turma — tê-la
+                sempre visível nas duas tornava a troca de tab inútil para
+                metade do ecrã, o Gustavo notou isto. */}
+            {(!isSchoolAccount || dashTab === 'turma') && (
+              <div className="sdb-o-agenda">
+                <AgendaPanel
+                  events={calendarEvents}
+                  googleConnected={googleConnected}
+                  onAddReminder={date => setShowAddReminder(date instanceof Date ? date : new Date())}
+                  onSync={() => setShowCalendarSync(true)}
+                  onEventClick={handleEventClick}
+                />
+              </div>
+            )}
 
             {!isEmptyState && potentialPanel}
 
@@ -1361,8 +1385,12 @@ function PinnedProjectCard({ project, auto, coverage, onOpenReport, onUnpin, onE
   return (
     <section
       className="sdb-pinned-card"
-      style={project.cover_url ? { '--cover-bg': `url(${project.cover_url})` } : {}}
+      style={{ cursor: onOpen ? 'pointer' : undefined, ...(project.cover_url ? { '--cover-bg': `url(${project.cover_url})` } : {}) }}
       data-has-cover={!!project.cover_url}
+      onClick={onOpen}
+      role={onOpen ? 'button' : undefined}
+      tabIndex={onOpen ? 0 : undefined}
+      onKeyDown={onOpen ? (e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen() } }) : undefined}
     >
       <div
         className="sdb-pinned-head"
@@ -1370,7 +1398,11 @@ function PinnedProjectCard({ project, auto, coverage, onOpenReport, onUnpin, onE
         <div className="sdb-pinned-head-left">
           <span className="sdb-pinned-type">{typeLabel}</span>
         </div>
-        <div className="sdb-pinned-head-right">
+        {/* O cartão todo abre o projeto agora (pedido do Gustavo — no mobile
+            só os botões eram clicáveis, o resto do cartão não fazia nada).
+            Os botões aqui dentro continuam com a sua própria ação, por isso
+            têm de parar a propagação antes de chegar ao onClick do cartão. */}
+        <div className="sdb-pinned-head-right" onClick={e => e.stopPropagation()}>
           {confirmDelete ? (
             <>
               <button className="sdb-pulse-danger-confirm" onClick={() => { onDelete(); setConfirmDelete(false) }}>Apagar</button>
@@ -1434,21 +1466,21 @@ function PinnedProjectCard({ project, auto, coverage, onOpenReport, onUnpin, onE
             <div className="sdb-pinned-pap-foot">
               <span>Projeto Final · {coverage.covered}/{coverage.total} secções</span>
               {onOpenReport && (
-                <button className="sdb-linkbtn" onClick={onOpenReport}>Ver rascunho</button>
+                <button className="sdb-linkbtn" onClick={e => { e.stopPropagation(); onOpenReport() }}>Ver rascunho</button>
               )}
             </div>
           </div>
         )}
 
         {!activeThisWeek && (
-          <button className="sdb-diary-nudge" onClick={() => onLog?.('update')}>
+          <button className="sdb-diary-nudge" onClick={e => { e.stopPropagation(); onLog?.('update') }}>
             <Sparkles size={11} />
             {streak > 0
               ? `Ainda não registaste nada esta semana — ${daysLeftInWeek === 1 ? 'falta 1 dia' : `faltam ${daysLeftInWeek} dias`} para manteres a sequência`
               : 'Regista o teu progresso esta semana para começares uma sequência'}
           </button>
         )}
-        <div className="sdb-pinned-foot">
+        <div className="sdb-pinned-foot" onClick={e => e.stopPropagation()}>
           <button className="sdb-btn sdb-btn--solid sdb-btn--sm" onClick={() => onLog?.('progresso')}>
             <Plus size={13} /> Registar
           </button>
