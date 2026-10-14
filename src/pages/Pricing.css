@@ -237,16 +237,16 @@
 }
 
 .pricing-inherits {
-  margin: 20px 0 10px;
+  margin: 24px 0 14px;
   font-size: var(--text-sm);
   color: var(--color-text-secondary);
 }
 .pricing-inherits strong { color: var(--color-text); }
 
-.pricing-group { margin-top: 18px; }
-.pricing-group:first-of-type { margin-top: 20px; }
+.pricing-group { margin-top: 32px; }
+.pricing-group:first-of-type { margin-top: 24px; }
 .pricing-group-label {
-  display: block; margin-bottom: 10px;
+  display: block; margin-bottom: 14px;
   font-size: 10px; font-weight: 800;
   letter-spacing: 0.1em; text-transform: uppercase;
   color: var(--color-text-tertiary);
@@ -280,7 +280,7 @@
 .pricing-item:first-child { padding-top: 0; }
 .pricing-check { color: var(--color-text-tertiary); flex-shrink: 0; margin-top: 2px; }
 .pricing-check-github { color: var(--color-text); margin-top: 1px; }
-.pricing-item-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.pricing-item-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
 .pricing-item-main { display: flex; align-items: flex-start; gap: 9px; }
 .pricing-item-label-wrap { flex: 1; min-width: 0; display: inline-flex; align-items: center; gap: 5px; flex-wrap: wrap; }
 .pricing-item-label { min-width: 0; }
@@ -356,6 +356,11 @@
   /* No telemóvel a decisão faz-se de cima para baixo: o botão sobe para
      junto do preço e a lista fica para quem quiser confirmar. */
   .pricing-cta { padding: 15px 16px; font-size: 15px; }
+  /* Preço centrado no mobile — o cartão fica mais estreito e um bloco de
+     preço encostado à esquerda parece desalinhado do nome/CTA, que já são
+     largura toda. */
+  .pricing-price { justify-content: center; }
+  .pricing-annual-note { text-align: center; }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════

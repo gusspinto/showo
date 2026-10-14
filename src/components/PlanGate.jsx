@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { useAuth } from '../context/AuthContext'
@@ -199,7 +200,7 @@ const C = {
   }),
 }
 
-export function PlanGateModal({ message, onClose }) {
+export function PlanGateModal({ message, onClose, forcedPlan }) {
   const navigate = useNavigate()
   const location = useLocation()
   const { planId, logFunnelEvent } = useAuth()
@@ -208,14 +209,23 @@ export function PlanGateModal({ message, onClose }) {
   const [checkoutError, setCheckoutError] = useState('')
   const [annual, setAnnual] = useState(false)
 
+  // Mesma regra dos outros pop-ups (Modal.jsx, ShareStoryModal) — sem isto o
+  // body continua a fazer scroll por trás no mobile enquanto o modal parece
+  // fixo, dando a sensação de estar bugado.
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [])
+
   const title = typeof message === 'object' ? message?.title : 'Limite do plano atingido'
   const body  = typeof message === 'object' ? message?.body  : message
   const feature = typeof message === 'object' ? message?.feature : null
 
   // Próximo tier pago a partir do plano atual. Vem null para quem já está no Pro e para
   // contas de escola/professor (essas nunca são self-serve) — nesses casos não há CTA de
-  // pagamento nenhum, só a mensagem e fechar.
-  const upgrade = nextPaidPlan(planId)
+  // pagamento nenhum, só a mensagem e fechar. `forcedPlan` sobrepõe-se quando o chamador já
+  // sabe que o "próximo tier" não chega (ex: link limpo só existe no Pro, não no Plus).
+  const upgrade = forcedPlan || nextPaidPlan(planId)
   const gain = upgrade && feature ? upgradeGain(feature, planId, upgrade) : null
 
   // Carrossel de testemunhos, a começar no mais relevante à feature que
@@ -298,10 +308,10 @@ export function PlanGateModal({ message, onClose }) {
     }
   }
 
-  return (
+  return createPortal(
     <div style={C.overlay} onClick={onClose}>
       <div style={C.modal} className="plan-gate-modal" onClick={e => e.stopPropagation()}>
-        <button onClick={onClose} className="icon-btn-ghost" style={C.closeBtn} aria-label="Fechar">
+        <button onClick={onClose} className="icon-btn-ghost plan-gate-close" style={C.closeBtn} aria-label="Fechar">
           <X size={20} />
         </button>
 
@@ -331,15 +341,15 @@ export function PlanGateModal({ message, onClose }) {
               </div>
 
               <div className="plan-gate-col-left">
+                {upgrade.priceLabelAnnual && (
+                  <div style={{ ...C.periodToggle, margin: '0 auto 12px' }} role="group" aria-label="Periodicidade do pagamento">
+                    <button type="button" style={C.periodBtn(!annual)} onClick={() => setAnnual(false)}>Mensal</button>
+                    <button type="button" style={C.periodBtn(annual)} onClick={() => setAnnual(true)}>
+                      Anual <span style={C.periodBadge}>2 meses grátis</span>
+                    </button>
+                  </div>
+                )}
                 <div style={C.upsell}>
-                  {upgrade.priceLabelAnnual && (
-                    <div style={C.periodToggle} role="group" aria-label="Periodicidade do pagamento">
-                      <button type="button" style={C.periodBtn(!annual)} onClick={() => setAnnual(false)}>Mensal</button>
-                      <button type="button" style={C.periodBtn(annual)} onClick={() => setAnnual(true)}>
-                        Anual <span style={C.periodBadge}>2 meses grátis</span>
-                      </button>
-                    </div>
-                  )}
                   <div style={C.upsellHead}>
                     <span style={C.upsellName}>{upgrade.name}</span>
                     <span style={C.upsellPrice}>
@@ -411,7 +421,8 @@ export function PlanGateModal({ message, onClose }) {
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 

@@ -1563,7 +1563,7 @@ export function ProjectAttachments({ project }) {
         // chegou a resolver, é mesmo só ele a ver isto. O rótulo existe para
         // não parecer, visualmente, que está ao lado do cartão "Ficheiros"
         // (esse sim público) e dar a entender o mesmo nível de visibilidade.
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignSelf: 'flex-start' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, alignSelf: 'center' }}>
           <a
             href={srcUrl} target="_blank" rel="noopener noreferrer"
             style={{
@@ -1575,7 +1575,7 @@ export function ProjectAttachments({ project }) {
           >
             <Download size={14} /> {project.library_file_name || 'Documento original'}
           </a>
-          <span style={{ fontSize: 11, color: 'var(--color-text-tertiary)' }}>Só visível para ti — nunca aparece a visitantes.</span>
+          <span style={{ fontSize: 11, color: 'var(--color-text-tertiary)', textAlign: 'center' }}>Só visível para ti — nunca aparece a visitantes.</span>
         </div>
       )}
       {files.length > 0 && (
