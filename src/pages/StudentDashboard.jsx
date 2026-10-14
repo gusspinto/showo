@@ -30,6 +30,7 @@ import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/
 import { UploadIcon as Upload } from '@solar-icons/react/bold/upload'
 import { ClipboardTextIcon as ClipboardCheck } from '@solar-icons/react/bold/clipboard-text'
 import { BookBookmarkIcon as BookMarked } from '@solar-icons/react/bold/book-bookmark'
+import { DangerTriangleIcon as AlertTriangle } from '@solar-icons/react/bold/danger-triangle'
 import { Button, Card, SectionLabel, Modal, Select } from '../components/ui'
 import { PlanGateModal } from '../components/PlanGate'
 import { useAuth } from '../context/AuthContext'
@@ -154,31 +155,34 @@ function FilesStorageCard({ userId, gate }) {
   const maxBytes = gate.maxAccountMB * 1024 * 1024
   const pct = Math.min(100, Math.round((bytes / maxBytes) * 100))
   const maxLabel = gate.maxAccountMB >= 1024 ? `${gate.maxAccountMB / 1024}GB` : `${gate.maxAccountMB}MB`
+  const nearFull = pct >= 90
 
   return (
-    <section className="sdb-panel">
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-        <span style={{
-          flexShrink: 0, width: 34, height: 34, borderRadius: 'var(--radius-md)',
-          background: 'var(--color-primary-subtle)', color: 'var(--color-primary)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
+    <section className={`sdb-panel sdb-o-storage sdb-storage${nearFull ? ' is-full' : ''}`}>
+      <div className="sdb-storage-row">
+        <span className="sdb-storage-icon">
           <FolderWithFilesIcon size={17} />
         </span>
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
-            <p style={{ margin: 0, fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
-              Ficheiros de projetos
-            </p>
-            <span style={{ fontSize: 'var(--text-lg)', fontWeight: 800, color: 'var(--color-primary)', fontFamily: 'var(--font-heading)', flexShrink: 0 }}>
-              {pct}%
+        <div className="sdb-storage-body">
+          <div className="sdb-storage-head">
+            <p className="sdb-storage-title">Ficheiros de projetos</p>
+            <span className="sdb-storage-pct">{pct}%</span>
+          </div>
+          <div
+            className="sdb-storage-track"
+            role="progressbar"
+            aria-valuenow={pct}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={`Espaço usado: ${formatFileSize(bytes)} de ${maxLabel}`}
+          >
+            <span className="sdb-storage-fill" style={{ width: `${pct}%` }} />
+          </div>
+          <p className="sdb-storage-note">
+            {nearFull && <AlertTriangle size={11} aria-hidden="true" />}
+            <span>
+              <strong>{formatFileSize(bytes)}</strong> de {maxLabel} usados em todos os projetos
             </span>
-          </div>
-          <div style={{ height: 6, background: 'var(--color-bg-alt)', borderRadius: 4, overflow: 'hidden', marginTop: 8 }}>
-            <div style={{ height: '100%', width: `${pct}%`, background: pct > 90 ? 'var(--color-error)' : 'var(--color-primary)', borderRadius: 4, transition: 'width 0.3s' }} />
-          </div>
-          <p style={{ margin: '6px 0 0', fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>
-            {formatFileSize(bytes)} de {maxLabel} usados em todos os projetos
           </p>
         </div>
       </div>
