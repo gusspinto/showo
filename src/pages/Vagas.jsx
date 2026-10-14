@@ -111,7 +111,7 @@ function RecruiterCard({ vaga, cands, onEdit, onToggle, onDelete, expanded, onTo
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            {vaga.localizacao && <span style={{ fontSize: 12, color: C.muted, display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={12} />{vaga.localizacao}</span>}
+            {vaga.localizacao && vaga.localizacao.trim().toLowerCase() !== 'remoto' && <span style={{ fontSize: 12, color: C.muted, display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={12} />{vaga.localizacao}</span>}
             {vaga.is_remote && <span style={{ fontSize: 12, color: C.muted, display: 'flex', alignItems: 'center', gap: 4 }}><Globe size={12} />Remoto</span>}
             <DeadlineBadge deadline={vaga.deadline} />
           </div>
@@ -220,7 +220,7 @@ function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, isAluno, u
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          {vaga.localizacao && <span style={{ fontSize: 12, color: C.muted, display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={11} />{vaga.localizacao}</span>}
+          {vaga.localizacao && vaga.localizacao.trim().toLowerCase() !== 'remoto' && <span style={{ fontSize: 12, color: C.muted, display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={11} />{vaga.localizacao}</span>}
           {vaga.is_remote && <span style={{ fontSize: 12, color: C.muted, display: 'flex', alignItems: 'center', gap: 4 }}><Globe size={11} />Remoto</span>}
           <DeadlineBadge deadline={vaga.deadline} />
         </div>

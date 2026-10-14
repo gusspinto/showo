@@ -616,7 +616,11 @@ export default function NewProject() {
       console.error(err)
       const raw = err?.message || ''
       if (raw.includes('max_projects_reached')) {
-        setGateMsg('Atingiste o limite de projetos do teu plano. Faz upgrade para criar mais — ou adiciona este como anexo de um projeto que já tens.')
+        setGateMsg({
+          title: 'Limite de projetos atingido',
+          body: 'Atingiste o limite de projetos do teu plano. Faz upgrade para criar mais — ou adiciona este como anexo de um projeto que já tens.',
+          feature: 'maxProjects',
+        })
       } else {
         showToast(raw.includes('duplicate') || raw.includes('23505')
           ? 'Já tens um projeto com esse nome. Muda o nome e tenta outra vez.'
