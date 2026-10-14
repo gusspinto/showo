@@ -288,6 +288,12 @@
 }
 .sdb-hero-actions { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
 
+/* Pílula Projetos/Turma ao lado da saudação — só em mobile (ver media
+   query abaixo). Em desktop a versão que conta é a .sdb-tabs-row,
+   centrada por cima da grelha. */
+.sdb-hero-tabs { display: none; }
+.sdb-tabs-row { display: flex; justify-content: center; margin: 0 0 var(--sp-5); }
+
 .sdb-streak-row {
   display: flex;
   align-items: center;
@@ -1465,9 +1471,10 @@
      logo a seguir ao greeting, e o hero-side fica visualmente fora do hero em
      vez de se ler como uma segunda linha da saudação. */
   .sdb-hero {
-    grid-template-columns: 1fr;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     gap: var(--sp-5);
-    align-items: start;
     padding-bottom: 0;
     margin-bottom: var(--sp-5);   /* igual ao gap da grelha, para um ritmo único */
     border-bottom: none;
@@ -1479,6 +1486,11 @@
   /* Hero: apertar o ritmo vertical */
   .sdb-hero { gap: var(--sp-3); margin-bottom: var(--sp-4); }
   .sdb-hero-main { padding-bottom: var(--sp-3); }
+
+  /* Pílula ao lado da saudação em mobile — a versão centrada (.sdb-tabs-row)
+     passa a ser só de desktop. */
+  .sdb-hero-tabs { display: flex; flex-shrink: 0; }
+  .sdb-tabs-row { display: none; }
 
   .sdb-grid { grid-template-columns: minmax(0, 1fr); min-width: 0; }
   /* Os wrappers desaparecem da caixa para que a ordem seja definida item a
