@@ -784,3 +784,53 @@
   color: var(--color-muted);
   flex-shrink: 0;
 }
+
+/* ── Armazenamento (dentro do separador Plano) ── */
+.settings-storage-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.settings-storage-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+.settings-storage-pct {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 700;
+  /* tabular para o número não saltar de largura quando passa de 9% para 10% */
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+  transition: color 0.15s ease;
+}
+.settings-storage-track {
+  height: 6px;
+  margin-top: 10px;
+  border-radius: 100px;
+  background: var(--color-bg-alt);
+  overflow: hidden;
+}
+.settings-storage-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-text);
+  transition: width 0.3s ease, background 0.15s ease;
+}
+.settings-storage-note {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.settings-storage-note svg { flex-shrink: 0; color: var(--color-error); }
+
+/* Quase cheio: cor de aviso na percentagem, na barra e no ícone — nunca só a cor. */
+.settings-storage.is-full .settings-storage-pct { color: var(--color-error); }
+.settings-storage.is-full .settings-storage-fill { background: var(--color-error); }
+
+@media (prefers-reduced-motion: reduce) {
+  .settings-storage-fill { transition: none; }
+}

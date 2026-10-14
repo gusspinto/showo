@@ -54,7 +54,7 @@ const PLANS = [
         ai: true,
         items: [
           { label: 'Coach IA', value: '10 msgs' },
-          { label: 'Todas as outras ferramentas', value: 'para experimentar', subitems: ['Criar projeto', 'Entrevista guiada', 'Análise', 'Relatório', 'Pitch IA', 'Banca IA', 'Exportar PowerPoint'] },
+          { label: 'Todas as outras ferramentas', value: 'para experimentar', subitems: ['Criar projeto', 'Entrevista guiada', 'Análise', 'Relatório', 'Blindagem IA', 'Exportar PowerPoint'] },
         ],
       },
     ],
@@ -78,6 +78,7 @@ const PLANS = [
         label: 'Mais',
         items: [
           { label: '15 projetos' },
+          { label: 'Sincronização com o GitHub', icon: 'github', tip: 'O teu diário atualiza-se sozinho a cada push, sem teres de voltar cá para escrever nada.' },
           { label: 'Ficheiros de prova', value: '250MB', tip: 'Anexa PDFs, Word, PowerPoint ou imagens, qualquer ficheiro que prove o trabalho. Escolhes o que aparece na página pública.' },
           { label: 'Assistente semanal', tip: 'Todas as semanas recebes um email com o que avançaste, o que ficou parado e o que vem a seguir, sem teres de ir à procura.' },
         ],
@@ -87,7 +88,7 @@ const PLANS = [
         ai: true,
         items: [
           { label: 'Coach IA', value: '100 msgs' },
-          { label: 'Toda a IA', value: '5x mais que o Grátis', subitems: ['Criar projeto', 'Análise', 'Relatório', 'Pitch IA', 'Banca IA'] },
+          { label: 'Toda a IA', value: '5x mais que o Grátis', subitems: ['Criar projeto', 'Entrevista guiada', 'Análise', 'Relatório', 'Blindagem IA'] },
           { label: 'Treino para entrevistas', value: 'novo', tip: 'A IA simula a banca ou o entrevistador, antecipa as perguntas difíceis e sugere respostas. Inclui também uma carta de apresentação gerada a partir do teu trabalho.' },
         ],
       },
@@ -122,7 +123,7 @@ const PLANS = [
         ai: true,
         items: [
           { label: 'Coach IA', value: '300 msgs' },
-          { label: 'Toda a IA', value: 'dobro do Plus', subitems: ['Criar projeto', 'Análise', 'Relatório', 'Pitch IA', 'Banca IA', 'Treino para entrevistas', 'Carta de apresentação'] },
+          { label: 'Toda a IA', value: 'dobro do Plus', subitems: ['Criar projeto', 'Entrevista guiada', 'Análise', 'Relatório', 'Blindagem IA', 'Treino para entrevistas', 'Carta de apresentação'] },
         ],
       },
     ],
@@ -140,12 +141,12 @@ const COMPARE_ROWS = [
   { label: 'Entrevista guiada', free: '3x', plus: '15x', pro: '30x' },
   { label: 'Análise de projeto', free: '1x', plus: '10x', pro: '25x' },
   { label: 'Relatório do projeto', free: '1x', plus: '5x', pro: '10x' },
-  { label: 'Pitch IA', free: '1x', plus: '10x', pro: '25x' },
-  { label: 'Banca IA', free: '1x', plus: '10x', pro: '25x' },
+  { label: 'Blindagem IA', free: '1x', plus: '10x', pro: '25x' },
   { label: 'Treino para entrevistas', free: false, plus: '5x', pro: '25x' },
   { label: 'Carta de apresentação IA', free: false, plus: '5x', pro: '25x' },
   { label: 'Exportar PowerPoint', free: '3x', plus: '15x', pro: 'Ilimitado' },
   { label: 'Assistente semanal por email', free: false, plus: true, pro: true },
+  { label: 'Sincronização com o GitHub', free: false, plus: true, pro: true },
   { label: 'Vagas de estágio', free: false, plus: false, pro: true },
   { label: 'Todo o mês renova os limites', free: true, plus: true, pro: true },
 ]
@@ -172,6 +173,17 @@ const FAQ = [
     a: 'Cada projeto tem a sua própria página pública, com um link que só partilhas se quiseres, seja a recrutadores, professores ou ao júri de defesa. Nunca aparece em motores de busca a não ser que sejas tu a partilhar o link.',
   },
 ]
+
+// Marca oficial do GitHub (Octicon mark-github) — usada em vez do check
+// genérico só neste item, porque a marca reconhecível vende mais confiança
+// do que um ✓ qualquer ("integra mesmo com o GitHub a sério").
+function GithubMark({ size = 14, className }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="currentColor" className={className} aria-hidden="true">
+      <path fillRule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+    </svg>
+  )
+}
 
 function ComparisonCell({ value }) {
   if (value === false) return <CloseCircle size={16} className="pricing-cmp-no" />
@@ -344,7 +356,9 @@ export default function Pricing() {
                         const tipOpen = openTip === tipKey
                         return (
                           <li key={item.label} className="pricing-item">
-                            <Check size={14} className="pricing-check" />
+                            {item.icon === 'github'
+                              ? <GithubMark size={17} className="pricing-check pricing-check-github" />
+                              : <Check size={14} className="pricing-check" />}
                             <span className="pricing-item-body">
                               <span className="pricing-item-main">
                                 <span className="pricing-item-label-wrap">

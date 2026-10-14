@@ -150,6 +150,41 @@ function ReadOnlyField({ label, value }) {
   )
 }
 
+// Cartão de upsell para funcionalidades bloqueadas pelo plano — antes disto
+// era um botão transparente com texto a 12px cor "subtle", quase invisível.
+// Isto é um motivo real de upgrade, não uma nota de rodapé: precisa de peso
+// visual e de um botão a sério, não só texto clicável.
+function UpsellGate({ title, body, onUpgrade }) {
+  return (
+    <button
+      type="button"
+      onClick={onUpgrade}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 12, width: '100%', textAlign: 'left',
+        background: 'var(--color-primary-subtle)', border: `1px solid ${colors.blue}`, borderRadius: 10,
+        padding: '14px 16px', marginBottom: 10, cursor: 'pointer', fontFamily: 'inherit',
+      }}
+    >
+      <div style={{
+        width: 32, height: 32, borderRadius: 8, background: colors.blue,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+      }}>
+        <Sparkles size={16} color="#fff" />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: colors.text }}>{title}</p>
+        <p style={{ margin: '2px 0 0', fontSize: 12.5, color: colors.muted, lineHeight: 1.4 }}>{body}</p>
+      </div>
+      <span style={{
+        flexShrink: 0, padding: '8px 14px', background: colors.blue, borderRadius: 8,
+        color: '#fff', fontSize: 12.5, fontWeight: 700, whiteSpace: 'nowrap',
+      }}>
+        Ver planos
+      </span>
+    </button>
+  )
+}
+
 export default function EditProject() {
   const { slug } = useParams()
   const navigate = useNavigate()
@@ -1004,14 +1039,11 @@ function AdvancedSection({ project, isOwner, navigate }) {
         )}
 
         {!cleanLinkGate.allowed && !editingSlug && (
-          <button
-            type="button"
-            onClick={() => navigate('/planos')}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', padding: 0, marginBottom: 10, cursor: 'pointer', fontFamily: 'inherit' }}
-          >
-            <Lock size={11} color={colors.subtle} />
-            <span style={{ fontSize: 12, color: colors.subtle }}>{cleanLinkGate.message?.body || PLAN_GATE_MESSAGES.cleanLink().body}</span>
-          </button>
+          <UpsellGate
+            title={cleanLinkGate.message?.title || PLAN_GATE_MESSAGES.cleanLink().title}
+            body={cleanLinkGate.message?.body || PLAN_GATE_MESSAGES.cleanLink().body}
+            onUpgrade={() => navigate('/planos')}
+          />
         )}
 
         <button type="button" onClick={() => shareOnLinkedIn(publicUrl)} style={{ padding: '10px 16px', background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 7 }}>
@@ -1103,14 +1135,11 @@ function ProjectFilesCard({ project }) {
       </div>
 
       {!gate.allowed ? (
-        <button
-          type="button"
-          onClick={() => window.location.assign('/planos')}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit' }}
-        >
-          <Lock size={11} color={colors.subtle} />
-          <span style={{ fontSize: 12, color: colors.subtle }}>{gate.message?.body}</span>
-        </button>
+        <UpsellGate
+          title={gate.message?.title || 'Ficheiros do projeto'}
+          body={gate.message?.body}
+          onUpgrade={() => window.location.assign('/planos')}
+        />
       ) : (
         <>
           <p style={{ margin: '0 0 14px', fontSize: 13.5, color: colors.muted, lineHeight: 1.6 }}>
@@ -1184,7 +1213,9 @@ function ProjectFilesCard({ project }) {
    guardadas para a página pública mostrar prova de trabalho a sério.
    Só repositórios públicos, sem OAuth. */
 function GithubAdvancedCard({ project }) {
-  const { user } = useAuth()
+  const { user, checkGate } = useAuth()
+  const navigate = useNavigate()
+  const githubGate = checkGate('githubSync')
   const [connection, setConnection] = useState(null) // { github_login } | null | undefined(loading)
   const [syncing, setSyncing] = useState(false)
   const [error, setError] = useState(null)
@@ -1293,6 +1324,14 @@ function GithubAdvancedCard({ project }) {
         <Code size={12} /> GitHub
       </div>
 
+      {!githubGate.allowed ? (
+        <UpsellGate
+          title={githubGate.message?.title || 'Sincronização com o GitHub'}
+          body={githubGate.message?.body}
+          onUpgrade={() => navigate('/planos')}
+        />
+      ) : (
+      <>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 16, padding: '10px 12px', background: colors.bgAlt, borderRadius: 8, border: `1px solid ${colors.border}` }}>
         {connection ? (
           <>
@@ -1486,6 +1525,8 @@ function GithubAdvancedCard({ project }) {
             </div>
           )}
         </>
+      )}
+      </>
       )}
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
