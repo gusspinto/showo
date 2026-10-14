@@ -45,6 +45,7 @@ import AgendaPanel from '../components/dashboard/AgendaPanel'
 import { ActivityPanel } from '../components/dashboard/RhythmPanel'
 import WeeklyRecap, { shouldShowRecap, RecapsPanel } from '../components/dashboard/WeeklyRecap'
 import WeeklyPostCard from '../components/dashboard/WeeklyPostCard'
+import SegmentedTabs from '../components/SegmentedTabs'
 import WeeklyCheckin, { shouldShowCheckin } from '../components/dashboard/WeeklyCheckin'
 import AddReminderModal from '../components/dashboard/AddReminderModal'
 import CalendarSyncModal from '../components/dashboard/CalendarSyncModal'
@@ -204,6 +205,9 @@ export default function StudentDashboard({ user, profile }) {
   const [composerProject, setComposerProject] = useState(null)
   const [showJournal, setShowJournal] = useState(false)
   const [showJoinTurma, setShowJoinTurma] = useState(false)
+  // Pílula Projetos/Turma só existe para contas de escola — no B2C não há
+  // turma nenhuma para mostrar, por isso o dashboard fica como sempre foi.
+  const [dashTab, setDashTab] = useState('projetos')
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [diaryReminderDismissed, setDiaryReminderDismissed] = useState(
     () => localStorage.getItem(`showo_diary_remind_${new Date().toISOString().slice(0,10)}`) === '1'
@@ -817,6 +821,20 @@ export default function StudentDashboard({ user, profile }) {
           </div>
         )}
 
+        {/* ══════════════ PÍLULA PROJETOS / TURMA ══════════════ */}
+        {isSchoolAccount && (
+          <div style={{ display: 'flex', justifyContent: 'center', margin: '0 0 var(--sp-5)' }}>
+            <SegmentedTabs
+              value={dashTab}
+              onChange={setDashTab}
+              options={[
+                { id: 'projetos', label: 'Projetos', icon: <Layers size={14} /> },
+                { id: 'turma', label: 'Turma', icon: <GraduationCap size={14} /> },
+              ]}
+            />
+          </div>
+        )}
+
         {/* ══════════════ PROJETO DO MÊS ══════════════ */}
         {projectOfMonth && (() => {
           const p = projectOfMonth.project
@@ -875,7 +893,7 @@ export default function StudentDashboard({ user, profile }) {
           <div className="sdb-col">
 
             {/* ── Painel escola ── */}
-            {isSchoolAccount && (schoolClasses.length > 0 || profNotifs.length > 0 || pendingTasks.length > 0) && (
+            {dashTab === 'turma' && isSchoolAccount && (schoolClasses.length > 0 || profNotifs.length > 0 || pendingTasks.length > 0) && (
               <section className="sdb-panel sdb-school-panel sdb-o-school">
 
                 <header className="sdb-panel-head">
@@ -949,6 +967,31 @@ export default function StudentDashboard({ user, profile }) {
               </section>
             )}
 
+            {dashTab === 'turma' && isSchoolAccount && focusProject && checkGate('weeklyRecap').allowed && (
+              <RecapsPanel recaps={recaps} />
+            )}
+
+            {dashTab === 'turma' && isSchoolAccount && checkGate('weeklyRecap').allowed && (
+              <WeeklyPostCard project={focusFull} entries={entries} streak={streak} />
+            )}
+
+            {/* Nada de turma para mostrar: nenhuma turma, feedback, tarefa
+                nem recap — convida a entrar numa turma em vez de ficar vazio. */}
+            {dashTab === 'turma' && isSchoolAccount
+              && schoolClasses.length === 0 && profNotifs.length === 0 && pendingTasks.length === 0
+              && !(checkGate('weeklyRecap').allowed && focusProject) && (
+              <section className="sdb-panel" style={{ textAlign: 'center' }}>
+                <span className="sdb-eyebrow"><GraduationCap size={11} /> Turma</span>
+                <p style={{ margin: '10px 0 16px', fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>
+                  Ainda não estás em nenhuma turma.
+                </p>
+                <Button size="sm" onClick={() => setShowJoinTurma(true)}>
+                  <GraduationCap size={14} /> Entrar numa turma
+                </Button>
+              </section>
+            )}
+
+            {dashTab === 'projetos' && <>
 
             {myInterests.length > 0 && (
               <section className="sdb-panel sdb-panel--tint sdb-o-recruiter sdb-opportunity">
@@ -1116,12 +1159,7 @@ export default function StudentDashboard({ user, profile }) {
             {focusProject && (
               <div className="sdb-duo sdb-o-rhythm">
                 <ActivityPanel buckets={activityBuckets} streak={streak} />
-                {isSchoolAccount && checkGate('weeklyRecap').allowed && <RecapsPanel recaps={recaps} />}
               </div>
-            )}
-
-            {isSchoolAccount && checkGate('weeklyRecap').allowed && (
-              <WeeklyPostCard project={focusFull} entries={entries} streak={streak} />
             )}
 
             {(otherProjects.length > 0 || collabProjects.length > 0) && (() => {
@@ -1167,6 +1205,8 @@ export default function StudentDashboard({ user, profile }) {
               </section>
               )
             })()}
+
+            </>}
 
           </div>
 
