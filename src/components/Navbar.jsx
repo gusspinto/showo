@@ -1766,6 +1766,8 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               )}
 
 
+              <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
+
               {!isSchoolAccount && (
                 <button className={`sb-item${isActive('/pricing') ? ' active' : ''}`} onClick={() => navigate('/pricing')} title="Planos">
                   <Sparkles size={16} />{!collapsed && showLabels && <span>Planos</span>}

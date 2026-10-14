@@ -199,9 +199,11 @@ function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, isAluno, u
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {recruiterProfile?.company || recruiterProfile?.full_name || 'Empresa'}
+            {vaga.employer_name || recruiterProfile?.company || recruiterProfile?.full_name || 'Empresa'}
           </div>
-          {recruiterProfile?.company_role && <div style={{ fontSize: 11, color: C.muted }}>{recruiterProfile.company_role}</div>}
+          {vaga.source === 'eures' ? (
+            <div style={{ fontSize: 11, color: C.muted }}>via EURES</div>
+          ) : recruiterProfile?.company_role && <div style={{ fontSize: 11, color: C.muted }}>{recruiterProfile.company_role}</div>}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
           <span style={{ fontSize: 11, fontWeight: 700, color: tipo.color }}>{tipo.label}</span>
