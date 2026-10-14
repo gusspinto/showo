@@ -1080,7 +1080,16 @@ export default function TurmaPage() {
     <div className={isTeacher ? 'theme-teacher' : undefined} style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'inherit' }}>
       <style>{`
 @media (max-width: 480px) { .turmapage-grid { grid-template-columns: 1fr !important; } }
-        @media (max-width: 600px) { .turmapage-hd { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; } }
+        @media (max-width: 600px) {
+          /* Em mobile tudo ficava à esquerda, espremido e sem hierarquia —
+             passa a uma coluna centrada: nome+ano, disciplina, professor+
+             projetos, botões, cada bloco já centrado dentro de si. */
+          .turmapage-hd { flex-direction: column !important; align-items: center !important; text-align: center; gap: 16px !important; }
+          .turmapage-hd-info { align-items: center !important; }
+          .turmapage-hd-name-row { justify-content: center !important; }
+          .turmapage-hd-meta-row { justify-content: center !important; }
+          .turmapage-hd-actions { justify-content: center !important; width: 100%; }
+        }
         @media (max-width: 520px) { .turmapage-modal { padding: 20px 16px !important; } }
       `}</style>
       <Navbar />
@@ -1228,9 +1237,9 @@ export default function TurmaPage() {
             {isTeacher ? 'A tua turma' : 'Turma'}
           </span>
           <div className="turmapage-hd" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
-            <div>
+            <div className="turmapage-hd-info" style={{ display: 'flex', flexDirection: 'column' }}>
               <div style={{ marginBottom: 8 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div className="turmapage-hd-name-row" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <h1 style={{ margin: 0, fontSize: 'clamp(26px, 4vw, 36px)', fontWeight: 400, letterSpacing: '-0.6px', fontFamily: 'var(--font-heading)', lineHeight: 1.1 }}>{turma.name}</h1>
                   {turma.academic_year && (
                     <span style={{ fontSize: 12, fontWeight: 700, color: C.muted, background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 6, padding: '3px 9px', marginTop: 4 }}>{turma.academic_year}</span>
@@ -1244,12 +1253,12 @@ export default function TurmaPage() {
                 </div>
                 {turma.subject && <p style={{ margin: '2px 0 0', fontSize: 14, color: C.muted }}>{turma.subject}</p>}
               </div>
-              <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 13, color: C.subtle }}>
+              <div className="turmapage-hd-meta-row" style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 13, color: C.subtle }}>
                 {turma.teacher_name && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><User size={13} />{turma.teacher_name}</span>}
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Folder size={13} />{projects.length} projeto{projects.length !== 1 ? 's' : ''}</span>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+            <div className="turmapage-hd-actions" style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
               {/* Code badge — same Button component as "Copiar link" so the two sit at identical height/padding/radius */}
               <Button variant="secondary" size="sm" onClick={copyCode}>
                 <span style={{ fontSize: 10, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Código</span>

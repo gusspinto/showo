@@ -60,6 +60,8 @@
     gap: 2px;
     padding: 6px;
     -webkit-overflow-scrolling: touch;
+    mask-image: linear-gradient(to right, transparent, black 16px, black calc(100% - 16px), transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 16px, black calc(100% - 16px), transparent);
   }
   .settings-sidebar-item {
     white-space: nowrap;

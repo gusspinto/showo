@@ -2211,6 +2211,16 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   {user && (
                     <>
                       <span className="mob-nav-section-label">Comunidade</span>
+                      {/* Faltava aqui — o ramo "aluno" deste menu nunca
+                          verificava isSchoolAccount, só o ramo "professor"
+                          lá em cima tinha Turmas. Contas de escola ficavam
+                          sem nenhuma forma de lá chegar a partir do menu
+                          mobile. */}
+                      {isSchoolAccount && (
+                        <button className={`mob-nav-btn${isActive('/turmas') ? ' active' : ''}`} onClick={() => { navigate('/turmas'); setMenuOpen(false) }}>
+                          <Users2 size={18} /> Turmas
+                        </button>
+                      )}
                       <button className={`mob-nav-btn${isActive('/mensagens') ? ' active' : ''}`} onClick={() => { navigate('/mensagens'); setMenuOpen(false) }}>
                         <MessageSquare size={18} /> Mensagens
                         {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-text)', color: 'var(--color-bg)', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}

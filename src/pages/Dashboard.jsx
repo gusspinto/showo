@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
 
 import ConvidarVagaModal from '../components/ConvidarVagaModal'
-import { getCurrentAcademicYear, academicYearOptions } from '../lib/academicYear'
+import CreateTurmaModal from '../components/CreateTurmaModal'
 import { joinClassByCode } from '../lib/joinClass'
 import { projectCompletude } from '../lib/projectCompletude'
 import { calculatePotential } from '../lib/score'
@@ -98,12 +98,6 @@ function timeAgoLabel(ts) {
   return new Date(ts).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })
 }
 
-function generateCode() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-  return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
-}
-
-
 /* ══════════════════════════════════════════════════════════════════════════
    Sub-components — Feed Item (teacher lists)
    ══════════════════════════════════════════════════════════════════════════ */
@@ -155,55 +149,6 @@ function TurmaCard({ turma, navigate }) {
 /* ══════════════════════════════════════════════════════════════════════════
    Sub-components — Modals
    ══════════════════════════════════════════════════════════════════════════ */
-
-function CreateTurmaModal({ onClose, onCreated }) {
-  const { user, profile } = useAuth()
-  const [name, setName] = useState('')
-  const [subject, setSubject] = useState('')
-  const [academicYear, setAcademicYear] = useState(getCurrentAcademicYear())
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
-
-  async function handleCreate(e) {
-    e.preventDefault()
-    if (!name.trim()) return
-    setSaving(true); setError('')
-    const code = generateCode()
-    const teacherName = profile?.full_name || user?.user_metadata?.full_name || ''
-    const { data, error: err } = await supabase
-      .from('classes')
-      .insert({ name: name.trim(), subject: subject.trim() || null, code, teacher_id: user.id, teacher_name: teacherName, academic_year: academicYear })
-      .select('id, name, subject, code, teacher_id, teacher_name, academic_year, created_at').single()
-    setSaving(false)
-    if (err) { setError(err.message); return }
-    onCreated(data); onClose()
-  }
-
-  return (
-    <Modal onClose={onClose} title="Nova turma">
-      <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
-        <div>
-          <SectionLabel>Nome da turma *</SectionLabel>
-          <input value={name} onChange={e => setName(e.target.value)} required placeholder="ex: Turma A, 11º ano"
-            style={{ width: '100%', background: 'var(--color-input-bg)', border: '1px solid var(--color-input-border)', borderRadius: 'var(--radius-md)', padding: '10px 12px', color: 'var(--color-text)', fontSize: 'var(--text-base)', fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }} />
-        </div>
-        <div>
-          <SectionLabel>Disciplina</SectionLabel>
-          <input value={subject} onChange={e => setSubject(e.target.value)} placeholder="ex: Programação e Sistemas de Informação"
-            style={{ width: '100%', background: 'var(--color-input-bg)', border: '1px solid var(--color-input-border)', borderRadius: 'var(--radius-md)', padding: '10px 12px', color: 'var(--color-text)', fontSize: 'var(--text-base)', fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }} />
-        </div>
-        <div>
-          <SectionLabel>Ano letivo</SectionLabel>
-          <Select value={academicYear} onChange={setAcademicYear} options={academicYearOptions().map(y => ({ value: y, label: y }))} />
-        </div>
-        {error && <p style={{ color: 'var(--color-error)', fontSize: 'var(--text-base)', margin: 0 }}>{error}</p>}
-        <Button type="submit" disabled={saving || !name.trim()} loading={saving} fullWidth style={{ marginTop: 'var(--sp-1)' }}>
-          {saving ? 'A criar…' : 'Criar turma'}
-        </Button>
-      </form>
-    </Modal>
-  )
-}
 
 function JoinTurmaModal({ onClose, navigate, onJoined }) {
   const [code, setCode] = useState('')
@@ -1307,7 +1252,7 @@ export default function Dashboard() {
         zIndex: 3000, pointerEvents: 'none', whiteSpace: 'nowrap', boxShadow: 'var(--shadow-lg)',
       }}>{toast}</div>
 
-      {showCreateTurma && <CreateTurmaModal onClose={() => setShowCreateTurma(false)} onCreated={turma => setTurmas(prev => [{ ...turma, project_count: 0 }, ...prev])} />}
+      {showCreateTurma && <CreateTurmaModal user={user} profile={profile} onClose={() => setShowCreateTurma(false)} onCreated={turma => setTurmas(prev => [{ ...turma, project_count: 0 }, ...prev])} />}
       {showJoinModal && <JoinTurmaModal onClose={() => setShowJoinModal(false)} navigate={navigate} onJoined={(turma) => {
         setStudentTurmas(prev => prev.find(t => t.id === turma.id) ? prev : [...prev, turma])
         try { const lsKey = `showo_turmas_${user.id}`; const existing = JSON.parse(localStorage.getItem(lsKey) || '[]'); if (!existing.find(t => t.id === turma.id)) localStorage.setItem(lsKey, JSON.stringify([...existing, turma])) } catch {}
