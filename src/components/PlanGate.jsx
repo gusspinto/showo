@@ -85,6 +85,25 @@ const C = {
     background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-muted)',
     borderRadius: 'var(--radius-lg)', padding: 'var(--sp-5)',
   },
+  periodToggle: {
+    display: 'flex', gap: '3px', width: 'fit-content',
+    padding: '3px', marginBottom: 'var(--sp-3)',
+    background: 'var(--color-bg)', border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius-full)',
+  },
+  periodBtn: (active) => ({
+    display: 'flex', alignItems: 'center', gap: '5px',
+    padding: '5px 10px', border: 'none', borderRadius: 'var(--radius-full)',
+    background: active ? 'var(--color-surface)' : 'transparent',
+    color: active ? 'var(--color-text)' : 'var(--color-text-secondary)',
+    fontWeight: 700, fontSize: '0.72rem', cursor: 'pointer', fontFamily: 'var(--font-body)',
+    boxShadow: active ? 'var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.06))' : 'none',
+  }),
+  periodBadge: {
+    padding: '1px 6px', borderRadius: 'var(--radius-full)',
+    backgroundImage: 'var(--brand-gradient)', color: '#fff',
+    fontSize: '9px', fontWeight: 800, letterSpacing: '0.01em',
+  },
   upsellHead: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '8px' },
   upsellName: { fontSize: '1.15rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)' },
   upsellPrice: { fontSize: '1.3rem', fontWeight: 700, color: 'var(--color-text)' },
@@ -187,6 +206,7 @@ export function PlanGateModal({ message, onClose }) {
   const [loading, setLoading] = useState(false)
   const [askingParents, setAskingParents] = useState(false)
   const [checkoutError, setCheckoutError] = useState('')
+  const [annual, setAnnual] = useState(false)
 
   const title = typeof message === 'object' ? message?.title : 'Limite do plano atingido'
   const body  = typeof message === 'object' ? message?.body  : message
@@ -228,7 +248,7 @@ export function PlanGateModal({ message, onClose }) {
     try {
       const returnPath = `${location.pathname}${location.search}`
       const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { plan: upgrade.id, returnPath },
+        body: { plan: upgrade.id, period: annual ? 'annual' : 'monthly', returnPath },
       })
       if (error || !data?.url) { setCheckoutError('Erro ao iniciar pagamento. Tenta novamente.'); return }
       window.location.href = data.url
@@ -256,7 +276,7 @@ export function PlanGateModal({ message, onClose }) {
     try {
       const returnPath = `${location.pathname}${location.search}`
       const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { plan: upgrade.id, returnPath },
+        body: { plan: upgrade.id, period: annual ? 'annual' : 'monthly', returnPath },
       })
       if (error || !data?.url) {
         win?.close()
@@ -312,9 +332,20 @@ export function PlanGateModal({ message, onClose }) {
 
               <div className="plan-gate-col-left">
                 <div style={C.upsell}>
+                  {upgrade.priceLabelAnnual && (
+                    <div style={C.periodToggle} role="group" aria-label="Periodicidade do pagamento">
+                      <button type="button" style={C.periodBtn(!annual)} onClick={() => setAnnual(false)}>Mensal</button>
+                      <button type="button" style={C.periodBtn(annual)} onClick={() => setAnnual(true)}>
+                        Anual <span style={C.periodBadge}>2 meses grátis</span>
+                      </button>
+                    </div>
+                  )}
                   <div style={C.upsellHead}>
                     <span style={C.upsellName}>{upgrade.name}</span>
-                    <span style={C.upsellPrice}>{upgrade.priceLabel}<span style={C.upsellPeriod}>{upgrade.period}</span></span>
+                    <span style={C.upsellPrice}>
+                      {annual && upgrade.priceLabelAnnual ? upgrade.priceLabelAnnual : upgrade.priceLabel}
+                      <span style={C.upsellPeriod}>{annual && upgrade.priceLabelAnnual ? '/ano' : upgrade.period}</span>
+                    </span>
                   </div>
                   {gain && (
                     <div style={C.upsellGain}>
