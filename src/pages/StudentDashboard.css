@@ -775,99 +775,6 @@
 }
 @keyframes sdb-grow { from { transform: scaleY(0); transform-origin: bottom; } to { transform: scaleY(1); } }
 
-/* ══════════════════════════════════════════════════════════════════════════
-   ARMAZENAMENTO DE FICHEIROS
-   Era tudo estilo inline com números soltos (34, 12, 6, 4). Agora é o mesmo
-   painel de sempre: tokens, uma só barra, e o estado cheio marcado por cor
-   E por ícone, nunca só por cor.
-   ══════════════════════════════════════════════════════════════════════════ */
-
-.sdb-storage-row {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--sp-3);
-}
-.sdb-storage-icon {
-  flex-shrink: 0;
-  width: 34px;
-  height: 34px;
-  border-radius: var(--radius-md);
-  background: var(--color-primary-subtle);
-  color: var(--color-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
-}
-.sdb-storage-body { flex: 1; min-width: 0; }
-.sdb-storage-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--sp-2);
-}
-.sdb-storage-title {
-  margin: 0;
-  font-family: var(--font-heading);
-  font-size: var(--text-sm);
-  font-weight: 700;
-  color: var(--color-text);
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.sdb-storage-pct {
-  flex-shrink: 0;
-  font-family: var(--font-heading);
-  font-size: var(--text-lg);
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: -0.02em;
-  /* tabular para a percentagem não dançar quando sobe de 9% para 10% */
-  font-variant-numeric: tabular-nums;
-  color: var(--color-primary);
-  transition: color var(--duration-fast) var(--ease-out);
-}
-.sdb-storage-track {
-  height: 6px;
-  margin-top: var(--sp-2);
-  border-radius: var(--radius-full);
-  background: var(--color-bg-alt);
-  overflow: hidden;
-}
-.sdb-storage-fill {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--color-primary);
-  transform-origin: left;
-  animation: sdb-storage-in 0.5s var(--ease-out) both;
-  transition: width 0.3s var(--ease-out), background var(--duration-fast) var(--ease-out);
-}
-@keyframes sdb-storage-in { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-.sdb-storage-note {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin: var(--sp-2) 0 0;
-  font-size: var(--text-xs);
-  color: var(--color-text-secondary);
-}
-.sdb-storage-note svg { flex-shrink: 0; }
-.sdb-storage-note strong { font-weight: 700; color: var(--color-text); }
-
-/* Quase cheio: cor + ícone de aviso, nunca só a cor. */
-.sdb-storage.is-full .sdb-storage-icon {
-  background: var(--color-error-subtle);
-  color: var(--color-error);
-}
-.sdb-storage.is-full .sdb-storage-pct { color: var(--color-error); }
-/* No aviso só o sinal e o número ficam vermelhos, a frase continua secundária. */
-.sdb-storage.is-full .sdb-storage-note svg,
-.sdb-storage.is-full .sdb-storage-note strong { color: var(--color-error); }
-.sdb-storage.is-full .sdb-storage-fill { background: var(--color-error); }
-
 .sdb-legend {
   display: flex;
   gap: var(--sp-4);
@@ -1587,7 +1494,6 @@
   .sdb-o-diary-reminder { order: 2; }
   .sdb-o-pulse          { order: 3; }
   .sdb-mobile-stats     { order: 4; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--sp-4); min-width: 0; overflow: hidden; }
-  .sdb-o-storage        { order: 4; }  /* logo a seguir aos tiles Projetos/Potencial */
   .sdb-o-portfolio      { order: 5; }
   .sdb-o-recruiter      { order: 6; }
   .sdb-o-tasks          { order: 7; }
@@ -1825,16 +1731,14 @@
 /* ── Respeitar quem prefere menos movimento ── */
 @media (prefers-reduced-motion: reduce) {
   .sdb-page,
-  .sdb-bar-fill,
-  .sdb-storage-fill { animation: none; }
+  .sdb-bar-fill { animation: none; }
   .sdb-btn:hover,
   .sdb-btn--onbrand:hover { transform: none; }
   .sdb-coverage-seg,
   .sdb-potential-fill,
   .sdb-scorerow-fill,
   .sdb-daydot,
-  .sdb-task,
-  .sdb-storage-fill { transition: none; }
+  .sdb-task { transition: none; }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
