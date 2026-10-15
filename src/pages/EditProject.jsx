@@ -29,6 +29,7 @@ import { parseGithubRepo, syncGithub, removeGithubEntries, topLanguages, commitS
 import { PLAN_GATE_MESSAGES, nextPaidPlan, planThatUnlocks } from '../lib/plans'
 import { PlanGateModal } from '../components/PlanGate'
 import { listProjectFiles, uploadProjectFile, deleteProjectFile, toggleFileVisibility, getAccountFilesUsage, formatFileSize } from '../lib/projectFiles'
+import { fileTypeStyle } from '../lib/libraryFile'
 import { startGithubConnect, getGithubConnection, disconnectGithub, listGithubRepos, registerGithubWebhook, removeGithubWebhook } from '../lib/githubAuth'
 import { DatabaseIcon as Database } from '@solar-icons/react/bold/database'
 import { KeyMinimalisticIcon as Key } from '@solar-icons/react/bold/key-minimalistic'
@@ -1240,12 +1241,12 @@ function ProjectFilesCard({ project }) {
               <div style={{ background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 10, padding: '10px 12px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 7 }}>
                   <span style={{ fontSize: 12.5, fontWeight: 700, color: colors.text }}>Este projeto</span>
-                  <span style={{ fontSize: 11.5, fontWeight: 600, color: usedPct > 90 ? '#ef4444' : colors.subtle }}>{usedPct}% usado</span>
+                  <span style={{ fontSize: 11.5, fontWeight: 600, color: usedPct > 90 ? '#ef4444' : colors.muted }}>{usedPct}% usado</span>
                 </div>
                 <div style={{ height: 5, background: colors.border, borderRadius: 3, overflow: 'hidden' }}>
                   <div style={{ height: '100%', width: `${usedPct}%`, background: usedPct > 90 ? '#ef4444' : colors.blue, borderRadius: 3 }} />
                 </div>
-                <p style={{ margin: '7px 0 0', fontSize: 11, color: colors.subtle }}>
+                <p style={{ margin: '7px 0 0', fontSize: 11, color: colors.muted }}>
                   {formatFileSize(usedBytes)} de {fmtQuota(gate.maxProjectMB)}
                 </p>
               </div>
@@ -1253,12 +1254,12 @@ function ProjectFilesCard({ project }) {
                 <div style={{ background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 10, padding: '10px 12px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 7 }}>
                     <span style={{ fontSize: 12.5, fontWeight: 700, color: colors.text }}>Toda a conta</span>
-                    <span style={{ fontSize: 11.5, fontWeight: 600, color: accountPct > 90 ? '#ef4444' : colors.subtle }}>{accountPct}% usado</span>
+                    <span style={{ fontSize: 11.5, fontWeight: 600, color: accountPct > 90 ? '#ef4444' : colors.muted }}>{accountPct}% usado</span>
                   </div>
                   <div style={{ height: 5, background: colors.border, borderRadius: 3, overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${accountPct}%`, background: accountPct > 90 ? '#ef4444' : colors.subtle, borderRadius: 3 }} />
                   </div>
-                  <p style={{ margin: '7px 0 0', fontSize: 11, color: colors.subtle }}>
+                  <p style={{ margin: '7px 0 0', fontSize: 11, color: colors.muted }}>
                     {formatFileSize(accountBytes)} de {fmtQuota(gate.maxAccountMB)}
                   </p>
                 </div>
@@ -1266,12 +1267,20 @@ function ProjectFilesCard({ project }) {
             </div>
           )}
 
-          {files.map(f => (
+          {files.map(f => {
+            const ft = fileTypeStyle(f.file_type)
+            return (
             <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', borderBottom: `1px solid ${colors.border}` }}>
+              <span style={{
+                flexShrink: 0, width: 26, height: 26, borderRadius: 6,
+                background: `${ft.color}22`, color: ft.color,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 8.5, fontWeight: 800, letterSpacing: 0.2,
+              }}>{ft.label.slice(0, 4)}</span>
               <a href={f.file_url} target="_blank" rel="noopener noreferrer" style={{ flex: 1, minWidth: 0, fontSize: 13, color: colors.text, textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {f.file_name}
               </a>
-              <span style={{ fontSize: 11, color: colors.subtle, flexShrink: 0 }}>{formatFileSize(f.size_bytes)}</span>
+              <span style={{ fontSize: 11, color: colors.muted, flexShrink: 0 }}>{formatFileSize(f.size_bytes)}</span>
               <button
                 type="button"
                 onClick={() => handleToggleVisible(f)}
@@ -1284,7 +1293,8 @@ function ProjectFilesCard({ project }) {
                 <Trash2 size={13} />
               </button>
             </div>
-          ))}
+            )
+          })}
 
           {error && <p style={{ color: '#ef4444', fontSize: 12, margin: '10px 0 0' }}>{error}</p>}
 
@@ -1462,8 +1472,9 @@ function GithubAdvancedCard({ project }) {
             <button
               type="button"
               onClick={() => startGithubConnect(window.location.pathname)}
-              style={{ background: colors.blue, border: 'none', borderRadius: 7, color: '#fff', fontSize: 12.5, fontWeight: 700, padding: '8px 16px', cursor: 'pointer', fontFamily: 'inherit' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 7, background: colors.blue, border: 'none', borderRadius: 7, color: '#fff', fontSize: 12.5, fontWeight: 700, padding: '8px 16px', cursor: 'pointer', fontFamily: 'inherit' }}
             >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" /></svg>
               Ligar GitHub
             </button>
           </div>
