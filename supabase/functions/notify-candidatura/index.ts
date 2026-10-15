@@ -41,12 +41,13 @@ async function checkRateLimit(req: Request, fnName: string, limit = 20): Promise
 const FROM = 'Showo <hello@showo.pt>'
 const GUSTAVO_EMAIL = 'guspintobusiness@gmail.com'
 
-function buildHtml(vagaTitulo: string, candidateName: string, message: string | null) {
+function buildHtml(vagaTitulo: string, candidateName: string, candidateEmail: string | null, message: string | null) {
   return `
   <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:40px 20px;">
     <img src="https://showo.pt/icon.png" alt="Showo" width="80" style="display:block;margin:0 auto 28px;" />
     <h2 style="text-align:center;font-size:18px;font-weight:600;color:#1a1a1a;margin:0 0 8px;">Nova candidatura</h2>
-    <p style="text-align:center;font-size:14px;color:#666;line-height:1.6;margin:0 0 20px;">${candidateName} candidatou-se à vaga <strong>${vagaTitulo}</strong>.</p>
+    <p style="text-align:center;font-size:14px;color:#666;line-height:1.6;margin:0 0 4px;">${candidateName} candidatou-se à vaga <strong>${vagaTitulo}</strong>.</p>
+    ${candidateEmail ? `<p style="text-align:center;font-size:13px;color:#4a93f9;margin:0 0 20px;"><a href="mailto:${candidateEmail}" style="color:#4a93f9;text-decoration:none;">${candidateEmail}</a></p>` : '<div style="margin:0 0 16px;"></div>'}
     ${message ? `<div style="background:#f6f6f8;border-radius:8px;padding:16px 18px;margin:0 0 24px;font-size:13px;color:#333;line-height:1.6;white-space:pre-wrap;">${message}</div>` : ''}
     <table border="0" cellspacing="0" cellpadding="0" align="center" style="margin:0 auto;">
       <tr>
@@ -55,6 +56,7 @@ function buildHtml(vagaTitulo: string, candidateName: string, message: string | 
         </td>
       </tr>
     </table>
+    ${candidateEmail ? `<p style="text-align:center;font-size:11px;color:#aaa;margin:20px 0 0;">Responde a este email para falares diretamente com ${candidateName}.</p>` : ''}
   </div>`
 }
 
@@ -120,6 +122,9 @@ Deno.serve(async (req) => {
       .single()
     const candidateName = candidateProfile?.full_name || candidateProfile?.username || 'Alguém no Showo'
 
+    const { data: candidateAuth } = await supabase.auth.admin.getUserById(candidatura.student_id)
+    const candidateEmail = candidateAuth?.user?.email ?? null
+
     const { data: recruiterAuth } = await supabase.auth.admin.getUserById(vaga.recruiter_id)
     const recruiterEmail = recruiterAuth?.user?.email
 
@@ -140,8 +145,9 @@ Deno.serve(async (req) => {
         from: FROM,
         to,
         cc,
+        reply_to: candidateEmail ?? undefined,
         subject: `Nova candidatura: ${vaga.titulo}`,
-        html: buildHtml(vaga.titulo, candidateName, candidatura.message),
+        html: buildHtml(vaga.titulo, candidateName, candidateEmail, candidatura.message),
       }),
     })
 
