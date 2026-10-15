@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
-import { PLAN_GATE_MESSAGES } from '../lib/plans'
 import { Navbar } from '../components/Navbar'
 import SegmentedTabs from '../components/SegmentedTabs'
 import { CaseIcon as Briefcase } from '@solar-icons/react/bold/case'
@@ -183,6 +182,7 @@ function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, isAluno, u
   const navigate = useNavigate()
   const tipo = TIPO_INFO[vaga.tipo] ?? TIPO_INFO.estagio
   const days = daysDiff(vaga.deadline)
+  const [expanded, setExpanded] = useState(false)
   if (vaga.deadline && days < 0) return null
 
   const st = myStatus ? STATUS_INFO[myStatus] : null
@@ -216,7 +216,23 @@ function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, isAluno, u
         {vaga.area && <p style={{ margin: 0, fontSize: 13, color: C.blue, fontWeight: 600 }}>{vaga.area}</p>}
       </div>
 
-      {vaga.descricao && <p style={{ margin: 0, fontSize: 13, color: C.muted, lineHeight: 1.6, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{vaga.descricao}</p>}
+      {vaga.descricao && (
+        <div>
+          <p style={{
+            margin: 0, fontSize: 13, color: C.muted, lineHeight: 1.6, whiteSpace: 'pre-wrap',
+            ...(expanded ? {} : { display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }),
+          }}>{vaga.descricao}</p>
+          {vaga.requisitos && expanded && (
+            <p style={{ margin: '10px 0 0', fontSize: 13, color: C.muted, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+              <strong style={{ color: C.text }}>Requisitos: </strong>{vaga.requisitos}
+            </p>
+          )}
+          <button type="button" onClick={() => setExpanded(e => !e)}
+            style={{ marginTop: 6, background: 'transparent', border: 'none', padding: 0, color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+            {expanded ? 'Ver menos' : 'Ver mais'}
+          </button>
+        </div>
+      )}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -394,7 +410,18 @@ function CandidatarModal({ vaga, recruiterProfile, onClose, onSubmit, sending })
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }} onClick={onClose} />
       <div style={{ position: 'relative', background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 28, width: '100%', maxWidth: 460, maxHeight: '90vh', overflowY: 'auto', zIndex: 1 }}>
         <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px', color: C.text }}>Candidatar a esta vaga</h2>
-        <p style={{ margin: '0 0 20px', fontSize: 13, color: C.muted }}>{vaga.titulo} · {recruiterProfile?.company || recruiterProfile?.full_name}</p>
+        <p style={{ margin: '0 0 16px', fontSize: 13, color: C.muted }}>{vaga.titulo} · {vaga.employer_name || recruiterProfile?.company || recruiterProfile?.full_name}</p>
+
+        {(vaga.descricao || vaga.requisitos) && (
+          <div style={{ background: 'var(--color-bg)', border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 14px', marginBottom: 20, maxHeight: 180, overflowY: 'auto' }}>
+            {vaga.descricao && <p style={{ margin: 0, fontSize: 13, color: C.text, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{vaga.descricao}</p>}
+            {vaga.requisitos && (
+              <p style={{ margin: vaga.descricao ? '10px 0 0' : 0, fontSize: 13, color: C.text, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                <strong>Requisitos: </strong>{vaga.requisitos}
+              </p>
+            )}
+          </div>
+        )}
 
         {questions.map(q => (
           <div key={q.id} style={{ marginBottom: 16 }}>
@@ -451,7 +478,10 @@ export default function Vagas() {
   // plano — só Pro. Dentro de escola mantém-se a regra do Hugo tal e qual,
   // sem gate de plano em cima (a escola já paga à parte).
   const individualProOk = !isSchoolAccount && checkGate('internshipPage').allowed
-  const alunoBlocked = isAluno && !(schoolGradeOk || individualProOk)
+  // A vaga da própria Showo (free_for_all) fica sempre visível a toda a
+  // gente — só as vagas de empresas reais, à medida que forem entrando,
+  // ficam reservadas a quem tem acesso completo.
+  const hasFullVagasAccess = !isAluno || schoolGradeOk || individualProOk
 
   const [vagas, setVagas] = useState([])
   const [myVagas, setMyVagas] = useState([])
@@ -647,42 +677,8 @@ export default function Vagas() {
   }
 
   const accentColor = profile?.role === 'empresa' ? 'var(--color-warning)' : C.blue
-
-  if (alunoBlocked) {
-    const gateMsg = !isSchoolAccount ? PLAN_GATE_MESSAGES.internshipPage() : null
-    return (
-      <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'inherit' }}>
-        <Navbar />
-        <div className="page-content" style={{ textAlign: 'center', padding: '96px 20px' }}>
-          <Briefcase size={40} color={C.muted} style={{ marginBottom: 14, opacity: 0.5 }} />
-          {gateMsg ? (
-            <>
-              <p style={{ color: C.text, fontSize: 17, fontWeight: 700, margin: '0 0 6px' }}>{gateMsg.title}</p>
-              <p style={{ color: C.muted, fontSize: 13, margin: '0 0 20px', maxWidth: 380, marginLeft: 'auto', marginRight: 'auto' }}>
-                {gateMsg.body}
-              </p>
-              <button
-                onClick={() => navigate('/planos')}
-                style={{
-                  fontSize: 13, fontWeight: 700, padding: '10px 20px', borderRadius: 9,
-                  border: 'none', background: C.blue, color: '#fff', cursor: 'pointer', fontFamily: 'inherit',
-                }}
-              >
-                Ver planos
-              </button>
-            </>
-          ) : (
-            <>
-              <p style={{ color: C.text, fontSize: 17, fontWeight: 700, margin: '0 0 6px' }}>Estágios é para alunos do 11.º e 12.º ano</p>
-              <p style={{ color: C.muted, fontSize: 13, margin: 0, maxWidth: 380, marginLeft: 'auto', marginRight: 'auto' }}>
-                Esta secção fica disponível quando entrares numa turma com o ano definido como 11.º ou 12.º.
-              </p>
-            </>
-          )}
-        </div>
-      </div>
-    )
-  }
+  const visibleVagas = hasFullVagasAccess ? vagas : vagas.filter(v => v.free_for_all)
+  const lockedVagasCount = vagas.length - visibleVagas.length
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'inherit' }}>
@@ -870,23 +866,40 @@ export default function Vagas() {
               ))}
             </div>
           )
-        ) : vagas.length === 0 ? (
+        ) : visibleVagas.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '64px 0' }}>
             <Briefcase size={40} color={C.muted} style={{ marginBottom: 12, opacity: 0.5 }} />
             <p style={{ color: C.muted, fontSize: 16, fontWeight: 700, margin: '0 0 6px' }}>Sem vagas de momento</p>
             <p style={{ color: C.subtle, fontSize: 13, margin: 0 }}>Quando empresas publicarem ofertas aparecem aqui</p>
           </div>
         ) : (
-          <div className="vagas-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
-            {vagas.map(v => (
-              <PublicCard key={v.id} vaga={v} recruiterProfile={profiles[v.recruiter_id]}
-                myStatus={myCandidaturas[v.id]?.status}
-                isAluno={isAluno}
-                onCandidatar={setCandidatarVaga}
-                userSkills={profile?.skills}
-              />
-            ))}
-          </div>
+          <>
+            <div className="vagas-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
+              {visibleVagas.map(v => (
+                <PublicCard key={v.id} vaga={v} recruiterProfile={profiles[v.recruiter_id]}
+                  myStatus={myCandidaturas[v.id]?.status}
+                  isAluno={isAluno}
+                  onCandidatar={setCandidatarVaga}
+                  userSkills={profile?.skills}
+                />
+              ))}
+            </div>
+            {!hasFullVagasAccess && isAluno && (
+              lockedVagasCount > 0 ? (
+                <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '14px 18px' }}>
+                  <p style={{ margin: 0, fontSize: 13, color: C.muted }}>
+                    <strong style={{ color: C.text }}>+{lockedVagasCount} vaga{lockedVagasCount !== 1 ? 's' : ''}</strong> {lockedVagasCount !== 1 ? 'disponíveis' : 'disponível'} no Pro.
+                  </p>
+                  <button onClick={() => navigate('/planos')}
+                    style={{ fontSize: 13, fontWeight: 700, padding: '8px 16px', borderRadius: 8, border: 'none', background: C.blue, color: '#fff', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>
+                    Ver planos
+                  </button>
+                </div>
+              ) : (
+                <p style={{ marginTop: 16, fontSize: 13, color: C.subtle, textAlign: 'center' }}>Mais vagas por vir.</p>
+              )
+            )}
+          </>
         )}
       </div>
 
