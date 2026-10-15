@@ -1043,17 +1043,9 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
     location.pathname.toLowerCase() === `/u/${profile.username.toLowerCase()}`
   const showCreateCta = !isTeacher && !isAdmin && !onOwnProfile
 
-  // Ano de escolaridade (11.º/12.º) destrava a secção de Estágios. Carregado
-  // à parte porque a coluna só existe depois da migração 127 — falha em
-  // silêncio se ainda não estiver aplicada.
-  const [gradeLevel, setGradeLevel] = useState(null)
-  useEffect(() => {
-    if (!user) { setGradeLevel(null); return }
-    supabase.from('profiles').select('grade_level').eq('id', user.id).maybeSingle()
-      .then(({ data }) => setGradeLevel(data?.grade_level ?? null))
-      .catch(() => {})
-  }, [user])
-  const showEstagios = isSchoolAccount && (gradeLevel === '11' || gradeLevel === '12')
+  // Estágios aparece para toda a gente logada — o próprio /vagas é que decide
+  // se entra direto (escola 11º/12º ou Pro) ou leva com o upsell do Pro.
+  const showEstagios = !!user
 
   const [unreadMsgs, setUnreadMsgs] = useState(0)
   useEffect(() => {
