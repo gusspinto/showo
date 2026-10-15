@@ -456,23 +456,25 @@ export function LiveProof({ project, isOwner, onSave }) {
 
   return (
     <form onSubmit={submit} style={{
-      display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
+      display: 'flex', flexDirection: 'column', gap: 12,
       background: 'var(--color-surface)', border: '1px dashed var(--color-border)',
-      borderRadius: 10, padding: '10px 16px', marginBottom: 16,
+      borderRadius: 12, padding: '14px 16px', marginBottom: 16,
       fontFamily: 'var(--font-body, system-ui, sans-serif)',
     }}>
-      <span style={{ fontSize: 12.5, color: 'var(--color-text-secondary)', flex: '1 1 220px' }}>
+      <span style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
         Tens os resultados escritos. Falta a prova: cola o link de algo que já funciona (site, demo, vídeo).
       </span>
-      <input
-        type="text" value={draft} onChange={e => setDraft(e.target.value)}
-        placeholder="https://..." aria-label="Link da prova"
-        style={{ flex: '1 1 180px', minWidth: 0, padding: '7px 10px', fontSize: 13, borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-bg)', color: 'var(--color-text)', fontFamily: 'inherit' }}
-      />
-      <button type="submit" disabled={saving || !draft.trim()} style={{ padding: '7px 14px', fontSize: 12.5, fontWeight: 700, borderRadius: 8, border: 'none', background: 'var(--color-primary)', color: '#fff', cursor: saving ? 'default' : 'pointer', opacity: saving || !draft.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
-        {saving ? 'A guardar…' : 'Guardar'}
-      </button>
-      {error && <span style={{ flexBasis: '100%', fontSize: 12, color: 'var(--color-error, #f43f5e)' }}>{error}</span>}
+      <div style={{ display: 'flex', gap: 8 }}>
+        <input
+          type="text" value={draft} onChange={e => setDraft(e.target.value)}
+          placeholder="https://..." aria-label="Link da prova"
+          style={{ flex: '1 1 auto', minWidth: 0, padding: '10px 12px', fontSize: 13, borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-bg)', color: 'var(--color-text)', fontFamily: 'inherit' }}
+        />
+        <button type="submit" disabled={saving || !draft.trim()} style={{ flexShrink: 0, padding: '10px 16px', fontSize: 13, fontWeight: 700, borderRadius: 8, border: 'none', background: 'var(--color-primary)', color: '#fff', cursor: saving ? 'default' : 'pointer', opacity: saving || !draft.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
+          {saving ? 'A guardar…' : 'Guardar'}
+        </button>
+      </div>
+      {error && <span style={{ fontSize: 12, color: 'var(--color-error, #f43f5e)' }}>{error}</span>}
     </form>
   )
 }
@@ -1561,7 +1563,7 @@ export function ProjectAttachments({ project }) {
         // chegou a resolver, é mesmo só ele a ver isto. O rótulo existe para
         // não parecer, visualmente, que está ao lado do cartão "Ficheiros"
         // (esse sim público) e dar a entender o mesmo nível de visibilidade.
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignSelf: 'flex-start' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, alignSelf: 'center' }}>
           <a
             href={srcUrl} target="_blank" rel="noopener noreferrer"
             style={{
@@ -1573,7 +1575,7 @@ export function ProjectAttachments({ project }) {
           >
             <Download size={14} /> {project.library_file_name || 'Documento original'}
           </a>
-          <span style={{ fontSize: 11, color: 'var(--color-text-tertiary)' }}>Só visível para ti — nunca aparece a visitantes.</span>
+          <span style={{ fontSize: 11, color: 'var(--color-text-tertiary)', textAlign: 'center' }}>Só visível para ti — nunca aparece a visitantes.</span>
         </div>
       )}
       {files.length > 0 && (
@@ -1980,7 +1982,16 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
   // o fundo escuro por omissão). Só o título usa esta versão clareada; os
   // brilhos/badges que usam hero.c1/c2 continuam com a cor original.
   const heroBgHex  = usingCustomBg ? customBg : (selectedBg.preview || '#060c18')
-  const titleColor = { c1: ensureReadable(hero.c1, heroBgHex), c2: ensureReadable(hero.c2, heroBgHex) }
+  // Com foto de capa como fundo do hero, o contraste tinha de ser calculado
+  // contra o fundo da página escolhido, não contra a foto que está mesmo
+  // atrás do título — por isso a cor "corrigida" podia sair sem nada a ver
+  // com o que se via (ex: âmbar da paleta a ficar quase cinzento). Com foto,
+  // o título ignora a cor da paleta e usa branco translúcido: o scrim escuro
+  // por cima da imagem (ver <Hero>) já garante leitura em qualquer foto.
+  const coverAsHeroForTitle = !!(previewStyle.coverAsHero && project.cover_url)
+  const titleColor = coverAsHeroForTitle
+    ? { c1: 'rgba(255,255,255,0.94)', c2: 'rgba(255,255,255,0.94)' }
+    : { c1: ensureReadable(hero.c1, heroBgHex), c2: ensureReadable(hero.c2, heroBgHex) }
   // pvTheme: force dark/light CSS vars inside preview regardless of app theme.
   // Num fundo escolhido à mão isso passa a depender da luminância do hex, senão
   // um fundo claro ficava com texto branco por cima.
@@ -2337,16 +2348,26 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
           .pv-banner-inner { flex-wrap: wrap; gap: 6px !important; padding: 8px 12px !important; }
           .pv-banner-sep { display: none !important; }
         }
-        /* ── Mobile: content ── */
+        /* ── Mobile: content ──
+           Repetido como seletor de atributo (sem @media) para o simulador de
+           ecrã do editor: a frame aí encolhe por CSS (max-width), mas a
+           JANELA do browser continua larga, por isso a media query nunca
+           disparava — o título ficava com o tamanho de desktop dentro de uma
+           moldura de 390px e saía cortado. Mesmas regras, duas portas de
+           entrada: a largura real (visitante a sério num telemóvel) ou a
+           largura simulada (data-pv-device, só dentro do editor). */}
         @media (max-width: 600px) {
           .pv-story { padding: 0 14px 80px !important; gap: 20px !important; }
           .pv-hero-title { font-size: clamp(24px, 7vw, 40px) !important; letter-spacing: -0.5px !important; line-height: 1.1 !important; }
           .pv-section-card { padding: 16px 16px !important; border-radius: 12px !important; }
-          /* Title block — reduce horizontal padding on mobile */
           .pv-title-block { padding: 0 16px !important; }
-          /* Creator pill — smaller on mobile */
           .pv-creator-pill { font-size: 12px !important; padding: 5px 12px !important; }
         }
+        [data-pv-device="mobile"] .pv-story { padding: 0 14px 80px !important; gap: 20px !important; }
+        [data-pv-device="mobile"] .pv-hero-title { font-size: clamp(24px, 7vw, 40px) !important; letter-spacing: -0.5px !important; line-height: 1.1 !important; }
+        [data-pv-device="mobile"] .pv-section-card { padding: 16px 16px !important; border-radius: 12px !important; }
+        [data-pv-device="mobile"] .pv-title-block { padding: 0 16px !important; }
+        [data-pv-device="mobile"] .pv-creator-pill { font-size: 12px !important; padding: 5px 12px !important; }
       `}</style>
 
       {/* ── Preview banner — só para o professor. O dono já tem a navbar
@@ -2466,8 +2487,8 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
           : undefined,
       }}>
 
-      {/* ── Device frame + CSS scope (data-pv-cs, data-pv-theme) ── */}
-      <div data-pv-cs={cardStyleVal} data-pv-theme={pvTheme || undefined} style={{
+      {/* ── Device frame + CSS scope (data-pv-cs, data-pv-theme, data-pv-device) ── */}
+      <div data-pv-cs={cardStyleVal} data-pv-theme={pvTheme || undefined} data-pv-device={previewDevice} style={{
         margin: previewDevice !== 'desktop' ? `${isOwner ? 16 : 40}px auto 0` : '0 auto',
         maxWidth: deviceMaxWidth,
         width: '100%',
@@ -2575,6 +2596,11 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
             fontFamily: selectedTitleFont.css,
             textTransform: titleStyle === 'caps' ? 'uppercase' : 'none',
             textAlign: titleAlign,
+            // Uma palavra sozinha mais larga que a moldura (ex: "Comfortable"
+            // num ecrã de 390px) não tinha onde quebrar e saía cortada pelo
+            // overflow:hidden do frame — isto deixa-a partir a meio antes de
+            // transbordar.
+            overflowWrap: 'break-word', wordBreak: 'break-word',
             ...(titleStyle === 'gradient' ? {
               // backgroundImage, não o shorthand "background" — o shorthand
               // reinicia background-clip para border-box sempre que o valor
@@ -2617,9 +2643,14 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
 
           {!isOwner && <ProjectTimelineBadge project={project} />}
 
-          {/* Creator pill */}
+          {/* Creator pill — maxWidth + flexWrap: um nome com curso comprido
+              (ex: "Bruno Silva · Design e Multimédia") num ecrã estreito não
+              tinha onde encolher (flex item não parte texto por omissão) e
+              saía da moldura, cortado pelo overflow:hidden do simulador —
+              e do mesmo jeito num telemóvel a sério. Agora quebra para uma
+              segunda linha dentro da própria pílula em vez de transbordar. */}
           {displayName && (
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 999, padding: '6px 16px 6px 6px' }}>
+            <div style={{ display: 'inline-flex', flexWrap: 'wrap', alignItems: 'center', gap: 10, maxWidth: '100%', boxSizing: 'border-box', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 999, padding: '6px 16px 6px 6px' }}>
               {avatarUrl ? (
                 <img src={avatarUrl} alt="" style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
               ) : (
@@ -2627,8 +2658,10 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                   {displayName[0]?.toUpperCase()}
                 </div>
               )}
-              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)' }}>{displayName}</span>
-              {course && <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>· {course}</span>}
+              <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '0 6px', minWidth: 0 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)' }}>{displayName}</span>
+                {course && <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>· {course}</span>}
+              </span>
             </div>
           )}
 
@@ -2779,35 +2812,12 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                 />
               </div>
 
-              {/* Desfazer/Refazer + Guardar — agrupados à direita. */}
+              {/* Guardar — sozinho, continua em cima. Desfazer/Refazer
+                  desceram para a linha do simulador de ecrã, pedido do
+                  Gustavo: são ações de histórico, não de gravação, não
+                  faz sentido os três ficarem agrupados como se fossem a
+                  mesma coisa. */}
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4 }}>
-                <button
-                  onClick={undoPreviewChange}
-                  disabled={!canUndo}
-                  title="Desfazer"
-                  style={{
-                    width: 28, height: 28, borderRadius: 7, background: 'transparent', border: 'none',
-                    color: canUndo ? 'var(--color-text-secondary)' : 'var(--color-text-tertiary)',
-                    cursor: canUndo ? 'pointer' : 'default', opacity: canUndo ? 1 : 0.4,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                  }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"><path d="M3 10h10a5 5 0 0 1 0 10H8"/><path d="M8 6l-5 4 5 4"/></svg>
-                </button>
-                <button
-                  onClick={redoPreviewChange}
-                  disabled={!canRedo}
-                  title="Refazer"
-                  style={{
-                    width: 28, height: 28, borderRadius: 7, background: 'transparent', border: 'none',
-                    color: canRedo ? 'var(--color-text-secondary)' : 'var(--color-text-tertiary)',
-                    cursor: canRedo ? 'pointer' : 'default', opacity: canRedo ? 1 : 0.4,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                  }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" style={{ transform: 'scaleX(-1)' }}><path d="M3 10h10a5 5 0 0 1 0 10H8"/><path d="M8 6l-5 4 5 4"/></svg>
-                </button>
-                <div style={{ width: 1, height: 16, background: 'var(--color-border)', margin: '0 2px' }} />
                 {/* Save icon — branco/monocromático, igual ao resto da app
                     (era azul, destoava do preto/branco usado em todo o lado). */}
                 <button
@@ -2841,7 +2851,9 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
 
             {/* Simulador de ecrã — só faz sentido com o ecrã real em desktop
                 (é aqui que se vê a diferença); troca deviceMaxWidth, que
-                encolhe a própria moldura da preview. */}
+                encolhe a própria moldura da preview. Desfazer/Refazer vivem
+                aqui ao lado, mas num grupo visualmente à parte (traço a
+                separar) — são ações de histórico, o simulador é só vista. */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, paddingBottom: 10 }}>
               {DEVICES.map(d => (
                 <button
@@ -2859,6 +2871,33 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                   <d.Icon size={14} />
                 </button>
               ))}
+              <div style={{ width: 1, height: 16, background: 'var(--color-border)', margin: '0 4px' }} />
+              <button
+                onClick={undoPreviewChange}
+                disabled={!canUndo}
+                title="Desfazer"
+                style={{
+                  width: 28, height: 24, borderRadius: 6, background: 'transparent', border: 'none',
+                  color: canUndo ? 'var(--color-text-secondary)' : 'var(--color-text-tertiary)',
+                  cursor: canUndo ? 'pointer' : 'default', opacity: canUndo ? 1 : 0.4,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"><path d="M3 10h10a5 5 0 0 1 0 10H8"/><path d="M8 6l-5 4 5 4"/></svg>
+              </button>
+              <button
+                onClick={redoPreviewChange}
+                disabled={!canRedo}
+                title="Refazer"
+                style={{
+                  width: 28, height: 24, borderRadius: 6, background: 'transparent', border: 'none',
+                  color: canRedo ? 'var(--color-text-secondary)' : 'var(--color-text-tertiary)',
+                  cursor: canRedo ? 'pointer' : 'default', opacity: canRedo ? 1 : 0.4,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" style={{ transform: 'scaleX(-1)' }}><path d="M3 10h10a5 5 0 0 1 0 10H8"/><path d="M8 6l-5 4 5 4"/></svg>
+              </button>
             </div>
           </div>}
 
@@ -4549,16 +4588,30 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
           </div>
         )
 
+        // Uma secção sem conteúdo (ex: Resultados nunca preenchido, nunca
+        // escondido manualmente) renderiza null — mas sem este filtro ficava
+        // na mesma dentro do flex column, e o "gap" do pv-story contava duas
+        // vezes à volta de um item com altura zero, abrindo um vazio enorme
+        // entre as duas secções vizinhas. Pré-renderizar e tirar os null
+        // antes de devolver o array resolve isso de vez.
         return [
           canvas,
-          ...groups.map((g, gi) => g.length === 2 ? (
-            <div key={gi} style={{ display: 'flex', flexWrap: 'wrap', gap: 20 }}>
-              <div style={{ flex: '1 1 280px', minWidth: 0 }}>{renderItem(g[0])}</div>
-              <div style={{ flex: '1 1 280px', minWidth: 0 }}>{renderItem(g[1])}</div>
-            </div>
-          ) : (
-            <div key={gi}>{renderItem(g[0])}</div>
-          )),
+          ...groups.map((g, gi) => {
+            if (g.length === 2) {
+              const a = renderItem(g[0])
+              const b = renderItem(g[1])
+              if (!a && !b) return null
+              if (!a || !b) return <div key={gi}>{a || b}</div>
+              return (
+                <div key={gi} style={{ display: 'flex', flexWrap: 'wrap', gap: 20 }}>
+                  <div style={{ flex: '1 1 280px', minWidth: 0 }}>{a}</div>
+                  <div style={{ flex: '1 1 280px', minWidth: 0 }}>{b}</div>
+                </div>
+              )
+            }
+            const node = renderItem(g[0])
+            return node ? <div key={gi}>{node}</div> : null
+          }).filter(Boolean),
         ]
         })()}
 

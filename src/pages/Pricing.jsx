@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CheckCircleIcon as Check } from '@solar-icons/react/linear/check-circle'
 import { CloseCircleIcon as CloseCircle } from '@solar-icons/react/linear/close-circle'
@@ -54,7 +54,7 @@ const PLANS = [
         ai: true,
         items: [
           { label: 'Coach IA', value: '10 msgs' },
-          { label: 'Todas as outras ferramentas', value: 'para experimentar', subitems: ['Criar projeto', 'Entrevista guiada', 'Análise', 'Relatório', 'Blindagem IA', 'Exportar PowerPoint'] },
+          { label: 'Todas as outras ferramentas', value: 'para experimentar', subitems: ['Criar projeto', 'Entrevista guiada', 'Análise', 'Relatório', 'Narrativa IA', 'Exportar PowerPoint'] },
         ],
       },
     ],
@@ -88,7 +88,7 @@ const PLANS = [
         ai: true,
         items: [
           { label: 'Coach IA', value: '100 msgs' },
-          { label: 'Toda a IA', value: '5x mais que o Grátis', subitems: ['Criar projeto', 'Entrevista guiada', 'Análise', 'Relatório', 'Blindagem IA'] },
+          { label: 'Toda a IA', value: '5x mais que o Grátis', subitems: ['Criar projeto', 'Entrevista guiada', 'Análise', 'Relatório', 'Narrativa IA'] },
           { label: 'Treino para entrevistas', value: 'novo', tip: 'A IA simula a banca ou o entrevistador, antecipa as perguntas difíceis e sugere respostas. Inclui também uma carta de apresentação gerada a partir do teu trabalho.' },
         ],
       },
@@ -123,7 +123,7 @@ const PLANS = [
         ai: true,
         items: [
           { label: 'Coach IA', value: '300 msgs' },
-          { label: 'Toda a IA', value: 'dobro do Plus', subitems: ['Criar projeto', 'Entrevista guiada', 'Análise', 'Relatório', 'Blindagem IA', 'Treino para entrevistas', 'Carta de apresentação'] },
+          { label: 'Toda a IA', value: 'dobro do Plus', subitems: ['Criar projeto', 'Entrevista guiada', 'Análise', 'Relatório', 'Narrativa IA', 'Treino para entrevistas', 'Carta de apresentação'] },
         ],
       },
     ],
@@ -141,14 +141,13 @@ const COMPARE_ROWS = [
   { label: 'Entrevista guiada', free: '3x', plus: '15x', pro: '30x' },
   { label: 'Análise de projeto', free: '1x', plus: '10x', pro: '25x' },
   { label: 'Relatório do projeto', free: '1x', plus: '5x', pro: '10x' },
-  { label: 'Blindagem IA', free: '1x', plus: '10x', pro: '25x' },
+  { label: 'Narrativa IA', free: '1x', plus: '10x', pro: '25x' },
   { label: 'Treino para entrevistas', free: false, plus: '5x', pro: '25x' },
   { label: 'Carta de apresentação IA', free: false, plus: '5x', pro: '25x' },
   { label: 'Exportar PowerPoint', free: '3x', plus: '15x', pro: 'Ilimitado' },
   { label: 'Assistente semanal por email', free: false, plus: true, pro: true },
   { label: 'Sincronização com o GitHub', free: false, plus: true, pro: true },
   { label: 'Vagas de estágio', free: false, plus: false, pro: true },
-  { label: 'Todo o mês renova os limites', free: true, plus: true, pro: true },
 ]
 
 const FAQ = [
@@ -216,6 +215,16 @@ export default function Pricing() {
   const [loading, setLoading] = useState(null)
   const [annual, setAnnual] = useState(false)
   const [openTip, setOpenTip] = useState(null) // "<planId>:<label>" do tooltip aberto, ou null
+
+  // Fecha o tooltip ao clicar fora dele (em qualquer sítio da página).
+  useEffect(() => {
+    if (!openTip) return
+    function onPointerDown(e) {
+      if (!e.target.closest('.pricing-tip-wrap')) setOpenTip(null)
+    }
+    document.addEventListener('mousedown', onPointerDown)
+    return () => document.removeEventListener('mousedown', onPointerDown)
+  }, [openTip])
 
   const isTeacher = profile?.role === 'professor'
   if (user && (isTeacher || isSchoolAccount)) {
@@ -423,9 +432,9 @@ export default function Pricing() {
             precisas de explicar tudo outra vez.
           </p>
           <p className="pricing-why-text">
-            No fim também não ficas só com uma conversa. Ficas com uma página, com o
-            trabalho, as provas e a evolução ao longo do tempo. É esse o link que mandas a
-            um cliente, a um professor ou a um recrutador.
+            No fim também não ficas só com uma conversa. Ficas com uma página publicada: o
+            trabalho, as provas e a evolução ao longo do tempo, tudo num link que podes
+            mandar a um cliente, a um professor ou a um recrutador.
           </p>
         </section>
 

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { useAuth } from '../context/AuthContext'
@@ -84,6 +85,25 @@ const C = {
     display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)',
     background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-muted)',
     borderRadius: 'var(--radius-lg)', padding: 'var(--sp-5)',
+  },
+  periodToggle: {
+    display: 'flex', gap: '3px', width: 'fit-content',
+    padding: '3px', marginBottom: 'var(--sp-3)',
+    background: 'var(--color-bg)', border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius-full)',
+  },
+  periodBtn: (active) => ({
+    display: 'flex', alignItems: 'center', gap: '5px',
+    padding: '5px 10px', border: 'none', borderRadius: 'var(--radius-full)',
+    background: active ? 'var(--color-surface)' : 'transparent',
+    color: active ? 'var(--color-text)' : 'var(--color-text-secondary)',
+    fontWeight: 700, fontSize: '0.72rem', cursor: 'pointer', fontFamily: 'var(--font-body)',
+    boxShadow: active ? 'var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.06))' : 'none',
+  }),
+  periodBadge: {
+    padding: '1px 6px', borderRadius: 'var(--radius-full)',
+    backgroundImage: 'var(--brand-gradient)', color: '#fff',
+    fontSize: '9px', fontWeight: 800, letterSpacing: '0.01em',
   },
   upsellHead: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '8px' },
   upsellName: { fontSize: '1.15rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)' },
@@ -180,13 +200,22 @@ const C = {
   }),
 }
 
-export function PlanGateModal({ message, onClose }) {
+export function PlanGateModal({ message, onClose, forcedPlan }) {
   const navigate = useNavigate()
   const location = useLocation()
   const { planId, logFunnelEvent } = useAuth()
   const [loading, setLoading] = useState(false)
   const [askingParents, setAskingParents] = useState(false)
   const [checkoutError, setCheckoutError] = useState('')
+  const [annual, setAnnual] = useState(false)
+
+  // Mesma regra dos outros pop-ups (Modal.jsx, ShareStoryModal) — sem isto o
+  // body continua a fazer scroll por trás no mobile enquanto o modal parece
+  // fixo, dando a sensação de estar bugado.
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [])
 
   const title = typeof message === 'object' ? message?.title : 'Limite do plano atingido'
   const body  = typeof message === 'object' ? message?.body  : message
@@ -194,8 +223,9 @@ export function PlanGateModal({ message, onClose }) {
 
   // Próximo tier pago a partir do plano atual. Vem null para quem já está no Pro e para
   // contas de escola/professor (essas nunca são self-serve) — nesses casos não há CTA de
-  // pagamento nenhum, só a mensagem e fechar.
-  const upgrade = nextPaidPlan(planId)
+  // pagamento nenhum, só a mensagem e fechar. `forcedPlan` sobrepõe-se quando o chamador já
+  // sabe que o "próximo tier" não chega (ex: link limpo só existe no Pro, não no Plus).
+  const upgrade = forcedPlan || nextPaidPlan(planId)
   const gain = upgrade && feature ? upgradeGain(feature, planId, upgrade) : null
 
   // Carrossel de testemunhos, a começar no mais relevante à feature que
@@ -228,7 +258,7 @@ export function PlanGateModal({ message, onClose }) {
     try {
       const returnPath = `${location.pathname}${location.search}`
       const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { plan: upgrade.id, returnPath },
+        body: { plan: upgrade.id, period: annual ? 'annual' : 'monthly', returnPath },
       })
       if (error || !data?.url) { setCheckoutError('Erro ao iniciar pagamento. Tenta novamente.'); return }
       window.location.href = data.url
@@ -256,7 +286,7 @@ export function PlanGateModal({ message, onClose }) {
     try {
       const returnPath = `${location.pathname}${location.search}`
       const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { plan: upgrade.id, returnPath },
+        body: { plan: upgrade.id, period: annual ? 'annual' : 'monthly', returnPath },
       })
       if (error || !data?.url) {
         win?.close()
@@ -278,10 +308,10 @@ export function PlanGateModal({ message, onClose }) {
     }
   }
 
-  return (
+  return createPortal(
     <div style={C.overlay} onClick={onClose}>
       <div style={C.modal} className="plan-gate-modal" onClick={e => e.stopPropagation()}>
-        <button onClick={onClose} className="icon-btn-ghost" style={C.closeBtn} aria-label="Fechar">
+        <button onClick={onClose} className="icon-btn-ghost plan-gate-close" style={C.closeBtn} aria-label="Fechar">
           <X size={20} />
         </button>
 
@@ -311,10 +341,21 @@ export function PlanGateModal({ message, onClose }) {
               </div>
 
               <div className="plan-gate-col-left">
+                {upgrade.priceLabelAnnual && (
+                  <div style={{ ...C.periodToggle, margin: '0 auto 12px' }} role="group" aria-label="Periodicidade do pagamento">
+                    <button type="button" style={C.periodBtn(!annual)} onClick={() => setAnnual(false)}>Mensal</button>
+                    <button type="button" style={C.periodBtn(annual)} onClick={() => setAnnual(true)}>
+                      Anual <span style={C.periodBadge}>2 meses grátis</span>
+                    </button>
+                  </div>
+                )}
                 <div style={C.upsell}>
                   <div style={C.upsellHead}>
                     <span style={C.upsellName}>{upgrade.name}</span>
-                    <span style={C.upsellPrice}>{upgrade.priceLabel}<span style={C.upsellPeriod}>{upgrade.period}</span></span>
+                    <span style={C.upsellPrice}>
+                      {annual && upgrade.priceLabelAnnual ? upgrade.priceLabelAnnual : upgrade.priceLabel}
+                      <span style={C.upsellPeriod}>{annual && upgrade.priceLabelAnnual ? '/ano' : upgrade.period}</span>
+                    </span>
                   </div>
                   {gain && (
                     <div style={C.upsellGain}>
@@ -380,7 +421,8 @@ export function PlanGateModal({ message, onClose }) {
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 

@@ -1043,17 +1043,9 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
     location.pathname.toLowerCase() === `/u/${profile.username.toLowerCase()}`
   const showCreateCta = !isTeacher && !isAdmin && !onOwnProfile
 
-  // Ano de escolaridade (11.º/12.º) destrava a secção de Estágios. Carregado
-  // à parte porque a coluna só existe depois da migração 127 — falha em
-  // silêncio se ainda não estiver aplicada.
-  const [gradeLevel, setGradeLevel] = useState(null)
-  useEffect(() => {
-    if (!user) { setGradeLevel(null); return }
-    supabase.from('profiles').select('grade_level').eq('id', user.id).maybeSingle()
-      .then(({ data }) => setGradeLevel(data?.grade_level ?? null))
-      .catch(() => {})
-  }, [user])
-  const showEstagios = isSchoolAccount && (gradeLevel === '11' || gradeLevel === '12')
+  // Estágios aparece para toda a gente logada — o próprio /vagas é que decide
+  // se entra direto (escola 11º/12º ou Pro) ou leva com o upsell do Pro.
+  const showEstagios = !!user
 
   const [unreadMsgs, setUnreadMsgs] = useState(0)
   useEffect(() => {
@@ -1766,6 +1758,8 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               )}
 
 
+              <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
+
               {!isSchoolAccount && (
                 <button className={`sb-item${isActive('/pricing') ? ' active' : ''}`} onClick={() => navigate('/pricing')} title="Planos">
                   <Sparkles size={16} />{!collapsed && showLabels && <span>Planos</span>}
@@ -2005,7 +1999,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
 
       {showUpgradeModal && (
         <PlanGateModal
-          message={{ title: 'Experimenta o Plus', body: 'Mais análises de IA, mais defesa, mais espaço para o teu portefólio.' }}
+          message={{ title: 'Experimenta o Plus', body: 'Mais análises de IA, mais defesa, mais espaço para o teu portefólio.', feature: 'genericUpgrade' }}
           onClose={() => setShowUpgradeModal(false)}
         />
       )}
@@ -2209,6 +2203,16 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   {user && (
                     <>
                       <span className="mob-nav-section-label">Comunidade</span>
+                      {/* Faltava aqui — o ramo "aluno" deste menu nunca
+                          verificava isSchoolAccount, só o ramo "professor"
+                          lá em cima tinha Turmas. Contas de escola ficavam
+                          sem nenhuma forma de lá chegar a partir do menu
+                          mobile. */}
+                      {isSchoolAccount && (
+                        <button className={`mob-nav-btn${isActive('/turmas') ? ' active' : ''}`} onClick={() => { navigate('/turmas'); setMenuOpen(false) }}>
+                          <Users2 size={18} /> Turmas
+                        </button>
+                      )}
                       <button className={`mob-nav-btn${isActive('/mensagens') ? ' active' : ''}`} onClick={() => { navigate('/mensagens'); setMenuOpen(false) }}>
                         <MessageSquare size={18} /> Mensagens
                         {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-text)', color: 'var(--color-bg)', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
