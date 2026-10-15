@@ -24,14 +24,30 @@ export default function SegmentedTabs({ value, onChange, options, className = ''
   useLayoutEffect(() => {
     const wrap = wrapRef.current
     if (!wrap) return
+    // offsetLeft/offsetWidth (relativos ao .seg-wrap, que é position:relative
+    // e por isso o offsetParent do botão) — não getBoundingClientRect. O
+    // rect dá a posição visível, já descontado o scroll atual; mas o "left"
+    // de position:absolute é relativo à tela toda da zona com scroll, não à
+    // parte visível. Num separador scrollado, isso subtraía o scroll a
+    // mais: a pílula branca saía desalinhada do próprio texto do botão
+    // ativo (ficava a léguas de onde devia, não só "não perfeitamente
+    // centrada"). offsetLeft é sempre relativo ao conteúdo todo, nunca à
+    // posição do scroll — por isso não tem este problema.
     function measure() {
       const btn = btnRefs.current[value]
-      if (!wrap || !btn) return
-      const wrapBox = wrap.getBoundingClientRect()
-      const btnBox = btn.getBoundingClientRect()
-      setPillRect({ left: btnBox.left - wrapBox.left, width: btnBox.width })
+      if (!btn) return
+      setPillRect({ left: btn.offsetLeft, width: btn.offsetWidth })
     }
     measure()
+    // Nas variantes com scroll horizontal (--compact, quando os labels não
+    // cabem todos), isto contava com o browser desviar a barra sozinho ao
+    // focar o botão clicado — funciona com teclado/rato no desktop, mas um
+    // toque no telemóvel não dá o mesmo "scroll into view" (focus-visible
+    // só por teclado em muitos browsers móveis). O separador ativo podia
+    // ficar escolhido mas fora da vista, a meio ou cortado na borda.
+    // scrollIntoView explícito funciona nos dois casos.
+    const btn = btnRefs.current[value]
+    if (btn) btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
     // Um listener só de "resize" da window não apanha o painel a mudar de
     // tamanho por si (abrir/fechar, sidebar a recolher, animação de
     // entrada a assentar) — nesses casos a pill ficava presa numa medição
@@ -40,11 +56,8 @@ export default function SegmentedTabs({ value, onChange, options, className = ''
     // elemento, seja qual for a causa.
     const ro = new ResizeObserver(measure)
     ro.observe(wrap)
-    // Nas variantes com scroll horizontal (--compact, quando os labels não
-    // cabem todos), clicar num botão foca-o e o browser desloca a barra
-    // sozinho para o mostrar — depois da pill já ter sido medida na
-    // posição antiga, ficando presa fora do sítio. Remedir também no
-    // scroll apanha esse deslocamento.
+    // Remedir também no scroll (seja do scrollIntoView acima ou de um
+    // arrasto manual) para a pill nunca ficar presa numa posição antiga.
     wrap.addEventListener('scroll', measure, { passive: true })
     return () => { ro.disconnect(); wrap.removeEventListener('scroll', measure) }
   }, [value, options.length, size])
