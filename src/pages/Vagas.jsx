@@ -930,26 +930,31 @@ export default function Vagas() {
                   userSkills={profile?.skills}
                 />
               ))}
+              {isAluno && (
+                !hasFullVagasAccess && lockedVagasCount > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 10, background: C.glass, border: `1px dashed ${C.glassBorder}`, borderRadius: 12, padding: '24px 20px' }}>
+                    <Briefcase size={22} color={C.muted} style={{ opacity: 0.6 }} />
+                    <p style={{ margin: 0, fontSize: 13, color: C.muted }}>
+                      <strong style={{ color: C.text }}>+{lockedVagasCount} vaga{lockedVagasCount !== 1 ? 's' : ''}</strong> {lockedVagasCount !== 1 ? 'disponíveis' : 'disponível'} no Pro
+                    </p>
+                    <button onClick={() => navigate('/planos')}
+                      style={{ fontSize: 13, fontWeight: 700, padding: '8px 16px', borderRadius: 8, border: 'none', background: C.blue, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>
+                      Ver planos
+                    </button>
+                  </div>
+                ) : vagas.length <= 2 ? (
+                  // Pouco conteúdo ainda, independentemente do plano — quem já
+                  // tem Pro não tem nada bloqueado, mas também não há mais
+                  // nada para mostrar, então a mensagem certa é "vem aí", não
+                  // silêncio nenhum. Fica como cartão dentro do grid, ao lado
+                  // das vagas reais, não como linha de texto perdida por baixo.
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 10, background: C.glass, border: `1px dashed ${C.glassBorder}`, borderRadius: 12, padding: '24px 20px' }}>
+                    <Briefcase size={22} color={C.muted} style={{ opacity: 0.6 }} />
+                    <p style={{ margin: 0, fontSize: 13, color: C.subtle, fontWeight: 600 }}>Mais vagas por vir</p>
+                  </div>
+                ) : null
+              )}
             </div>
-            {isAluno && (
-              !hasFullVagasAccess && lockedVagasCount > 0 ? (
-                <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '14px 18px' }}>
-                  <p style={{ margin: 0, fontSize: 13, color: C.muted }}>
-                    <strong style={{ color: C.text }}>+{lockedVagasCount} vaga{lockedVagasCount !== 1 ? 's' : ''}</strong> {lockedVagasCount !== 1 ? 'disponíveis' : 'disponível'} no Pro.
-                  </p>
-                  <button onClick={() => navigate('/planos')}
-                    style={{ fontSize: 13, fontWeight: 700, padding: '8px 16px', borderRadius: 8, border: 'none', background: C.blue, color: '#fff', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>
-                    Ver planos
-                  </button>
-                </div>
-              ) : vagas.length <= 2 ? (
-                // Pouco conteúdo ainda, independentemente do plano — quem já
-                // tem Pro não tem nada bloqueado, mas também não há mais
-                // nada para mostrar, então a mensagem certa é "vem aí", não
-                // silêncio nenhum.
-                <p style={{ marginTop: 16, fontSize: 13, color: C.subtle, textAlign: 'center' }}>Mais vagas por vir.</p>
-              ) : null
-            )}
           </>
         )}
       </div>
