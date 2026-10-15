@@ -636,16 +636,20 @@ export default function Vagas() {
   async function submitCandidatura(msg, screeningAnswers) {
     if (!user || !candidatarVaga) return
     setSendingCandidatura(true)
-    await supabase.from('candidaturas').upsert({
+    const { data: inserted } = await supabase.from('candidaturas').upsert({
       vaga_id: candidatarVaga.id,
       student_id: user.id,
       message: msg.trim() || null,
       status: 'pendente',
       screening_answers: screeningAnswers || [],
-    }, { onConflict: 'vaga_id,student_id' })
+    }, { onConflict: 'vaga_id,student_id' }).select('id').single()
     setMyCandidaturas(prev => ({ ...prev, [candidatarVaga.id]: { status: 'pendente' } }))
     setSendingCandidatura(false)
     setCandidatarVaga(null)
+    // Best-effort — nunca bloqueia a candidatura se o email falhar.
+    if (inserted?.id) {
+      supabase.functions.invoke('notify-candidatura', { body: { candidatura_id: inserted.id } }).catch(() => {})
+    }
   }
 
   async function updateCandidaturaStatus(candidaturaId, vagaId, status) {
