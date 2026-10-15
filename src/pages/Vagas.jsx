@@ -931,8 +931,8 @@ export default function Vagas() {
                 />
               ))}
             </div>
-            {!hasFullVagasAccess && isAluno && (
-              lockedVagasCount > 0 ? (
+            {isAluno && (
+              !hasFullVagasAccess && lockedVagasCount > 0 ? (
                 <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '14px 18px' }}>
                   <p style={{ margin: 0, fontSize: 13, color: C.muted }}>
                     <strong style={{ color: C.text }}>+{lockedVagasCount} vaga{lockedVagasCount !== 1 ? 's' : ''}</strong> {lockedVagasCount !== 1 ? 'disponíveis' : 'disponível'} no Pro.
@@ -942,9 +942,13 @@ export default function Vagas() {
                     Ver planos
                   </button>
                 </div>
-              ) : (
+              ) : vagas.length <= 2 ? (
+                // Pouco conteúdo ainda, independentemente do plano — quem já
+                // tem Pro não tem nada bloqueado, mas também não há mais
+                // nada para mostrar, então a mensagem certa é "vem aí", não
+                // silêncio nenhum.
                 <p style={{ marginTop: 16, fontSize: 13, color: C.subtle, textAlign: 'center' }}>Mais vagas por vir.</p>
-              )
+              ) : null
             )}
           </>
         )}
