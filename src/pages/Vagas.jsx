@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { Toast, useToast } from '../components/Toast'
+import { ShareIcon as Share2 } from '@solar-icons/react/bold/share'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
 import SegmentedTabs from '../components/SegmentedTabs'
@@ -85,7 +87,7 @@ function DeadlineBadge({ deadline }) {
   )
 }
 
-function RecruiterCard({ vaga, cands, onEdit, onToggle, onDelete, expanded, onToggleExpand, onStatusChange, navigate }) {
+function RecruiterCard({ vaga, cands, onEdit, onToggle, onDelete, onShare, expanded, onToggleExpand, onStatusChange, navigate }) {
   const tipo = TIPO_INFO[vaga.tipo] ?? TIPO_INFO.estagio
   const candList = cands || []
   return (
@@ -101,6 +103,7 @@ function RecruiterCard({ vaga, cands, onEdit, onToggle, onDelete, expanded, onTo
             {vaga.area && <p style={{ margin: '4px 0 0', fontSize: 13, color: C.muted }}>{vaga.area}</p>}
           </div>
           <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+            <button onClick={() => onShare(vaga)} style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 7, padding: '5px 8px', cursor: 'pointer', color: C.muted, display: 'flex', alignItems: 'center' }} title="Partilhar"><Share2 size={13} /></button>
             <button onClick={() => onEdit(vaga)} style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 7, padding: '5px 8px', cursor: 'pointer', color: C.muted, display: 'flex', alignItems: 'center' }} title="Editar"><Pencil size={13} /></button>
             <button onClick={() => onToggle(vaga)} style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 7, padding: '5px 8px', cursor: 'pointer', color: vaga.is_active ? C.amber : C.green, display: 'flex', alignItems: 'center' }} title={vaga.is_active ? 'Pausar' : 'Ativar'}>
               {vaga.is_active ? <X size={13} /> : <Check size={13} />}
@@ -178,7 +181,7 @@ function RecruiterCard({ vaga, cands, onEdit, onToggle, onDelete, expanded, onTo
   )
 }
 
-function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, isAluno, userSkills }) {
+function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, onShare, isAluno, userSkills, highlighted }) {
   const navigate = useNavigate()
   const tipo = TIPO_INFO[vaga.tipo] ?? TIPO_INFO.estagio
   const days = daysDiff(vaga.deadline)
@@ -189,9 +192,9 @@ function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, isAluno, u
   const score = matchScore(userSkills, vaga.skills)
 
   return (
-    <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '20px 22px', transition: 'border-color 0.15s', display: 'flex', flexDirection: 'column', gap: 12 }}
+    <div id={`vaga-${vaga.id}`} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${highlighted ? C.blue : C.glassBorder}`, borderRadius: 12, padding: '20px 22px', transition: 'border-color 0.15s', display: 'flex', flexDirection: 'column', gap: 12 }}
       onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-glass-border-bright)'}
-      onMouseLeave={e => e.currentTarget.style.borderColor = C.glassBorder}>
+      onMouseLeave={e => e.currentTarget.style.borderColor = highlighted ? C.blue : C.glassBorder}>
       {/* Company header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <div style={{ width: 36, height: 36, borderRadius: 8, background: `${tipo.color}22`, border: `1px solid ${tipo.color}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -241,6 +244,10 @@ function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, isAluno, u
           <DeadlineBadge deadline={vaga.deadline} />
         </div>
         <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+          <button onClick={() => onShare(vaga)} title="Partilhar vaga"
+            style={{ color: C.muted, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 7, padding: '5px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+            <Share2 size={13} />
+          </button>
           {recruiterProfile?.username && (
             <button onClick={() => navigate(`/u/${recruiterProfile.username}`)}
               style={{ fontSize: 12, color: C.muted, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 7, padding: '5px 10px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -459,6 +466,9 @@ function CandidatarModal({ vaga, recruiterProfile, onClose, onSubmit, sending })
 
 export default function Vagas() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const sharedVagaId = searchParams.get('v')
+  const { toast, show: showToast } = useToast()
   const { user, profile, isSchoolAccount, checkGate } = useAuth()
   const isRecruiter = profile?.role === 'recrutador' || profile?.role === 'empresa'
   const isAluno = profile?.role === 'aluno'
@@ -676,6 +686,40 @@ export default function Vagas() {
     load()
   }
 
+  // Partilhar liga sempre a um id concreto (?v=), para quem recebe o link
+  // (de dentro ou de fora da Showo) cair direto nesta vaga, não na lista
+  // genérica. navigator.share cobre o ecrã nativo de partilha (WhatsApp,
+  // Instagram, Mensagens...); sem isso, copia o link para a área de
+  // transferência.
+  async function shareVaga(vaga) {
+    const url = `${window.location.origin}/vagas?v=${vaga.id}`
+    const empresa = vaga.employer_name || profiles[vaga.recruiter_id]?.company || profiles[vaga.recruiter_id]?.full_name
+    const text = empresa ? `${vaga.titulo} · ${empresa}` : vaga.titulo
+    if (navigator.share) {
+      try { await navigator.share({ title: vaga.titulo, text, url }) } catch { /* utilizador cancelou */ }
+      return
+    }
+    try {
+      await navigator.clipboard.writeText(url)
+      showToast('Link da vaga copiado')
+    } catch {
+      showToast('Não foi possível copiar o link', 'error')
+    }
+  }
+
+  // Link direto a uma vaga (?v=<id>) — faz scroll até ao card e destaca-o
+  // por uns segundos, para quem recebeu uma vaga partilhada saber logo
+  // onde olhar em vez de ter de procurar na lista toda.
+  const [highlightedVagaId, setHighlightedVagaId] = useState(sharedVagaId)
+  useEffect(() => {
+    if (!sharedVagaId || loading) return
+    const el = document.getElementById(`vaga-${sharedVagaId}`)
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    const t = setTimeout(() => setHighlightedVagaId(null), 4000)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sharedVagaId, loading])
+
   const accentColor = profile?.role === 'empresa' ? 'var(--color-warning)' : C.blue
   const visibleVagas = hasFullVagasAccess ? vagas : vagas.filter(v => v.free_for_all)
   const lockedVagasCount = vagas.length - visibleVagas.length
@@ -860,6 +904,7 @@ export default function Vagas() {
                   onEdit={v => { setEditVaga(v); setShowModal(true) }}
                   onToggle={toggleVaga}
                   onDelete={deleteVaga}
+                  onShare={shareVaga}
                   onStatusChange={updateCandidaturaStatus}
                   navigate={navigate}
                 />
@@ -880,6 +925,8 @@ export default function Vagas() {
                   myStatus={myCandidaturas[v.id]?.status}
                   isAluno={isAluno}
                   onCandidatar={setCandidatarVaga}
+                  onShare={shareVaga}
+                  highlighted={highlightedVagaId === v.id}
                   userSkills={profile?.skills}
                 />
               ))}
@@ -921,6 +968,8 @@ export default function Vagas() {
           saving={saving}
         />
       )}
+
+      <Toast message={toast.message} type={toast.type} visible={toast.visible} />
     </div>
   )
 }
