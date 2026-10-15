@@ -437,6 +437,13 @@ a { transition: color 0.15s, opacity 0.15s; }
   .onboard-screen, .onboard-card, .onboard-card-check { animation: none !important; }
 }
 
+/* ── WheelDatePicker (rolos de dia/mês/ano, estilo iOS) ── */
+.wheel-date-col::-webkit-scrollbar { display: none; }
+.wheel-date-col {
+  mask-image: linear-gradient(to bottom, transparent, black 30%, black 70%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 30%, black 70%, transparent);
+}
+
 /* ── PlanGateModal (pop-up de limite/upgrade) ──
    Mais espaçoso em desktop, pedido do Gustavo à imagem do pop-up do
    StudyFetch — em mobile fica como estava (a largura vem do overlay).
