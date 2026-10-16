@@ -442,26 +442,30 @@ export function AiUsageBadge({ feature, style, compact }) {
   const color = remaining === 0 ? 'var(--color-error)' : isLow ? 'var(--color-warning)' : 'var(--color-text-secondary)'
   const bg = remaining === 0 ? 'rgba(239,68,68,0.1)' : isLow ? 'rgba(251,191,36,0.1)' : 'rgba(148,163,184,0.1)'
   const border = remaining === 0 ? 'rgba(239,68,68,0.25)' : isLow ? 'rgba(251,191,36,0.25)' : 'rgba(148,163,184,0.15)'
+  // Sem isto, ninguém percebe que o número volta a subir sozinho no mês
+  // seguinte — parecia um limite para sempre, só o email de esgotamento
+  // (que muita gente nunca lê) dizia "este mês".
+  const title = 'Renova no dia 1 de cada mês'
   if (compact) {
     return (
-      <span style={{
+      <span title={title} style={{
         display: 'inline-flex', alignItems: 'center', gap: 4,
         fontSize: '0.72rem', fontWeight: 600, color,
         ...style,
       }}>
-        {remaining}/{limit} restantes
+        {remaining}/{limit} este mês
       </span>
     )
   }
   return (
-    <span style={{
+    <span title={title} style={{
       display: 'inline-flex', alignItems: 'center', gap: 5,
       fontSize: '0.8rem', fontWeight: 700,
       color, background: bg, border: `1px solid ${border}`,
       padding: '5px 12px', borderRadius: '100px',
       ...style,
     }}>
-      {remaining}/{limit} restantes
+      {remaining}/{limit} restantes este mês
     </span>
   )
 }
