@@ -2272,24 +2272,28 @@ function RowsPanel({ project, table, onChanged }) {
 
   if (rows === null) return <p style={{ fontSize: 12.5, color: colors.subtle, margin: 0 }}>A carregar linhas…</p>
 
-  const cellStyle = { padding: '6px 8px', fontSize: 12.5, color: colors.text, borderBottom: `1px solid ${colors.border}`, verticalAlign: 'middle' }
-  const cellInputStyle = { width: '100%', border: 'none', background: 'transparent', color: colors.text, fontSize: 12.5, fontFamily: 'inherit', padding: '4px 2px', outline: 'none' }
+  const cellStyle = { padding: '8px 10px', fontSize: 12.5, color: colors.text, borderBottom: `1px solid ${colors.border}`, borderRight: `1px solid ${colors.border}`, verticalAlign: 'middle' }
+  const cellInputStyle = { width: '100%', border: 'none', background: 'transparent', color: colors.text, fontSize: 12.5, fontFamily: 'inherit', padding: '4px 5px', borderRadius: 5, outline: 'none' }
 
-  // Grelha estilo Excel: cabeçalho fixo com os nomes das colunas, cada
-  // célula é um input que grava ao perder o foco — mais perto de uma
-  // folha de cálculo real do que o antigo formulário linha a linha.
+  // Grelha estilo Excel: cabeçalho destacado, linhas com divisórias verticais
+  // e horizontais (sem isso parecia uma lista corrida, difícil de ler célula
+  // a célula), e a célula em edição ganha fundo e contorno ao ganhar foco.
   return (
     <div>
-      <div style={{ overflowX: 'auto', border: `1px solid ${colors.border}`, borderRadius: 8, marginBottom: 10 }}>
+      <style>{`
+        .db-grid input:focus { background: var(--color-glass-hover); box-shadow: inset 0 0 0 1.5px ${colors.blue}; }
+        .db-grid tbody tr:not(.db-grid-draft):hover { background: var(--color-glass); }
+      `}</style>
+      <div className="db-grid" style={{ overflowX: 'auto', border: `1px solid ${colors.border}`, borderRadius: 8, marginBottom: 10 }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: table.columns.length * 130 + 40 }}>
           <thead>
-            <tr style={{ background: colors.bgAlt }}>
+            <tr style={{ background: colors.card }}>
               {table.columns.map(c => (
-                <th key={c.name} style={{ padding: '7px 8px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: colors.subtle, textTransform: 'uppercase', letterSpacing: 0.4, borderBottom: `1px solid ${colors.border}`, whiteSpace: 'nowrap' }}>
+                <th key={c.name} style={{ padding: '9px 10px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: colors.text, textTransform: 'uppercase', letterSpacing: 0.4, borderBottom: `1px solid ${colors.borderBright}`, borderRight: `1px solid ${colors.border}`, whiteSpace: 'nowrap' }}>
                   {c.name}{c.required && ' *'}
                 </th>
               ))}
-              <th style={{ width: 32, borderBottom: `1px solid ${colors.border}` }} />
+              <th style={{ width: 32, borderBottom: `1px solid ${colors.borderBright}` }} />
             </tr>
           </thead>
           <tbody>
@@ -2311,15 +2315,16 @@ function RowsPanel({ project, table, onChanged }) {
                     )}
                   </td>
                 ))}
-                <td style={{ ...cellStyle, textAlign: 'center' }}>
+                <td style={{ ...cellStyle, borderRight: 'none', textAlign: 'center' }}>
                   <button type="button" onClick={() => handleDeleteRow(r.id)} style={{ background: 'none', border: 'none', color: colors.subtle, cursor: 'pointer', padding: 2 }}><Trash2 size={13} /></button>
                 </td>
               </tr>
             ))}
-            {/* Linha de rascunho sempre visível no fim — escreve-se nela
-                como numa folha de cálculo e só vai para o servidor quando
-                tiver pelo menos um valor. */}
-            <tr>
+            {/* Linha de rascunho sempre visível no fim, com fundo próprio
+                para se distinguir claramente das linhas já guardadas —
+                escreve-se nela como numa folha de cálculo e só vai para o
+                servidor quando tiver pelo menos um valor. */}
+            <tr className="db-grid-draft" style={{ background: 'var(--color-glass)' }}>
               {table.columns.map((c, idx) => (
                 <td key={c.name} style={{ ...cellStyle, borderBottom: 'none' }}>
                   {c.type === 'boolean' ? (
@@ -2337,7 +2342,7 @@ function RowsPanel({ project, table, onChanged }) {
                   )}
                 </td>
               ))}
-              <td style={{ ...cellStyle, borderBottom: 'none', textAlign: 'center' }}>
+              <td style={{ ...cellStyle, borderBottom: 'none', borderRight: 'none', textAlign: 'center' }}>
                 {savingRowId === 'draft' && <span style={{ fontSize: 10, color: colors.subtle }}>…</span>}
               </td>
             </tr>
