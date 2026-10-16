@@ -228,17 +228,25 @@
 
 .pricing-cta, .pricing-current { margin-bottom: 4px; }
 
+.pricing-cta-note {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-tertiary);
+  text-align: center;
+}
+
 .pricing-inherits {
-  margin: 20px 0 10px;
+  margin: 24px 0 14px;
   font-size: var(--text-sm);
   color: var(--color-text-secondary);
 }
 .pricing-inherits strong { color: var(--color-text); }
 
-.pricing-group { margin-top: 18px; }
-.pricing-group:first-of-type { margin-top: 20px; }
+.pricing-group { margin-top: 32px; }
+.pricing-group:first-of-type { margin-top: 24px; }
 .pricing-group-label {
-  display: block; margin-bottom: 10px;
+  display: block; margin-bottom: 14px;
   font-size: 10px; font-weight: 800;
   letter-spacing: 0.1em; text-transform: uppercase;
   color: var(--color-text-tertiary);
@@ -258,22 +266,34 @@
   letter-spacing: 0.06em;
 }
 
-/* Frase única do grupo de IA: substitui a lista de funcionalidades com
-   contagem ("Pitch IA 10x" etc.), que só fazia sentido depois de já se usar
-   a app. Aqui fica só a comparação com o plano anterior. */
-.pricing-ai-note {
-  margin: 0;
-  font-size: var(--text-sm);
-  line-height: 1.55;
-  color: var(--color-text-secondary);
+.pricing-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+/* Linha fina entre cada ponto — pedido direto: sem isto os pontos
+   corriam uns para os outros numa lista densa. Última linha sem
+   separador, para não fechar o grupo com um traço solto. */
+.pricing-item {
+  display: flex; align-items: flex-start; gap: 9px;
+  font-size: var(--text-base); line-height: 1.45;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--color-border);
 }
-.pricing-ai-note .pricing-ai-badge { vertical-align: middle; }
-
-.pricing-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
-.pricing-item { display: flex; align-items: flex-start; gap: 9px; font-size: var(--text-base); line-height: 1.45; }
+.pricing-item:last-child { border-bottom: none; padding-bottom: 0; }
+.pricing-item:first-child { padding-top: 0; }
 .pricing-check { color: var(--color-text-tertiary); flex-shrink: 0; margin-top: 2px; }
+.pricing-check-github { color: var(--color-text); margin-top: 1px; }
+.pricing-item-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.pricing-item-main { display: flex; align-items: flex-start; gap: 9px; }
 .pricing-item-label-wrap { flex: 1; min-width: 0; display: inline-flex; align-items: center; gap: 5px; flex-wrap: wrap; }
 .pricing-item-label { min-width: 0; }
+/* Nomes das ferramentas escondidas atrás do item-resumo ("Toda a IA",
+   "Todas as outras ferramentas") — mostradas, não escondidas num
+   tooltip, porque ninguém conhece a marca ainda para confiar de olhos
+   fechados no que "toda a IA" quer dizer. */
+.pricing-subitems {
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
 .pricing-tip-wrap { position: relative; display: inline-flex; flex-shrink: 0; }
 .pricing-tip-btn {
   /* O botão herdava o min-height:44px global de toque mínimo (regra em
@@ -336,6 +356,11 @@
   /* No telemóvel a decisão faz-se de cima para baixo: o botão sobe para
      junto do preço e a lista fica para quem quiser confirmar. */
   .pricing-cta { padding: 15px 16px; font-size: 15px; }
+  /* Preço centrado no mobile — o cartão fica mais estreito e um bloco de
+     preço encostado à esquerda parece desalinhado do nome/CTA, que já são
+     largura toda. */
+  .pricing-price { justify-content: center; }
+  .pricing-annual-note { text-align: center; }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -352,6 +377,18 @@
   letter-spacing: -0.4px;
   text-align: center;
 }
+
+/* ── "E porquê isto, se há IA grátis?" ──
+   Um parágrafo normal, centrado, largura de leitura — não uma grelha de
+   cartões com frases em espelho. */
+.pricing-why-text {
+  margin: 0 0 16px;
+  font-size: var(--text-base);
+  line-height: 1.75;
+  color: var(--color-text-secondary);
+  text-align: left;
+}
+.pricing-why-text:last-child { margin-bottom: 0; }
 
 /* ── Tabela comparativa ── */
 .pricing-cmp-wrap {

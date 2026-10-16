@@ -13,7 +13,6 @@ import { LightbulbIcon as Lightbulb } from '@solar-icons/react/bold/lightbulb'
 import { CheckCircleIcon as CheckCircle } from '@solar-icons/react/bold/check-circle'
 import { ChatRoundDotsIcon as ChatDots } from '@solar-icons/react/bold/chat-round-dots'
 import { QuestionCircleIcon as QuestionCircle } from '@solar-icons/react/bold/question-circle'
-import { ShowoMark } from './components/icons/ShowoMark'
 import { PhoneIcon as Phone } from '@solar-icons/react/bold/phone'
 import { HelmetProvider } from 'react-helmet-async'
 import { AuthProvider, useAuth } from './context/AuthContext'
@@ -531,15 +530,7 @@ function ErrorFallback({ error, onReset }) {
       display: 'flex', flexDirection: 'column', alignItems: 'center',
       justifyContent: 'center', padding: 32, fontFamily: 'var(--font-body)', gap: 20,
     }}>
-      <ShowoMark size={30} style={{ color: 'var(--color-text-tertiary)' }} />
-      <div style={{ textAlign: 'center', maxWidth: 400 }}>
-        <h2 style={{ margin: '0 0 8px', fontSize: 19, fontWeight: 800, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px' }}>
-          Algo correu mal
-        </h2>
-        <p style={{ margin: 0, fontSize: 14, color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
-          Ocorreu um erro inesperado. Tenta recarregar a página.
-        </p>
-      </div>
+      <AlertTriangle size={30} color="var(--color-error)" />
       <div style={{ display: 'flex', gap: 10 }}>
         <button
           onClick={() => { onReset(); window.location.href = '/' }}

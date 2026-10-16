@@ -21,16 +21,20 @@ import { DangerTriangleIcon as AlertTriangle } from '@solar-icons/react/bold/dan
 import { TrashBinMinimalisticIcon as Trash2 } from '@solar-icons/react/bold/trash-bin-minimalistic'
 import { RefreshCircleIcon as RefreshCw } from '@solar-icons/react/bold/refresh-circle'
 import { Code2Icon as Code } from '@solar-icons/react/bold/code-2'
-import { PlaneIcon as Send } from '@solar-icons/react/bold/plane'
 import { looksLikeSpam } from '../lib/score'
 import { Select } from '../components/ui'
 import { containsProfanity } from '../lib/profanity'
 import { logFieldsFilled } from '../lib/autoJournal'
 import { parseGithubRepo, syncGithub, removeGithubEntries, topLanguages, commitSpanMonths, repoAgeMonths, shareOnLinkedIn } from '../lib/social'
-import { PLAN_GATE_MESSAGES } from '../lib/plans'
+import { PLAN_GATE_MESSAGES, nextPaidPlan, planThatUnlocks } from '../lib/plans'
+import { PlanGateModal } from '../components/PlanGate'
 import { listProjectFiles, uploadProjectFile, deleteProjectFile, toggleFileVisibility, getAccountFilesUsage, formatFileSize } from '../lib/projectFiles'
+import { fileTypeStyle } from '../lib/libraryFile'
 import { startGithubConnect, getGithubConnection, disconnectGithub, listGithubRepos, registerGithubWebhook, removeGithubWebhook } from '../lib/githubAuth'
 import { DatabaseIcon as Database } from '@solar-icons/react/bold/database'
+import { KeyMinimalisticIcon as Key } from '@solar-icons/react/bold/key-minimalistic'
+import { AltArrowUpIcon as ChevronUp } from '@solar-icons/react/bold/alt-arrow-up'
+import { AltArrowDownIcon as ChevronDown } from '@solar-icons/react/bold/alt-arrow-down'
 import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
 import { UploadMinimalisticIcon as Upload } from '@solar-icons/react/bold/upload-minimalistic'
 import { DownloadMinimalisticIcon as Download } from '@solar-icons/react/bold/download-minimalistic'
@@ -61,6 +65,25 @@ const colors = {
   red: 'var(--color-error)',
   inputBg: 'var(--color-input-bg)',
   glass: 'var(--color-glass)', glassBorder: 'var(--color-glass-border)',
+}
+
+// Vidro translúcido — Base de dados e Avançado partilham esta constante de
+// propósito: mudar aqui muda os dois sítios ao mesmo tempo, nunca desalinha.
+// v2, depois do Gustavo achar a primeira versão pouco "vidro": gradiente
+// subtil em vez de cor plana (dá profundidade), blur mais forte com
+// saturação a realçar o que está por trás, sombra para destacar do fundo,
+// e uma linha clara fina no topo por dentro — o reflexo que lê como vidro a
+// sério, não só uma caixa semi-transparente.
+const glassPanel = {
+  // Mais escuro que os tokens --color-glass (brancos translúcidos, que
+  // clareiam o que está por trás) — mistura com preto em vez de branco,
+  // escurece o fundo como vidro fumado a sério, pedido do Gustavo depois de
+  // ver a primeira versão.
+  background: 'linear-gradient(165deg, rgba(0,0,0,0.16), rgba(0,0,0,0.1))',
+  backdropFilter: 'blur(20px) saturate(150%)', WebkitBackdropFilter: 'blur(20px) saturate(150%)',
+  border: '1px solid var(--color-glass-border)',
+  borderRadius: 18,
+  boxShadow: 'inset 0 1px 0 0 var(--color-glass-border-bright), 0 16px 40px -20px rgba(0,0,0,0.45)',
 }
 
 const PROJECT_TYPES = [
@@ -109,7 +132,7 @@ function socialUrlState(value, host) {
   return { empty: false, valid: hostOk && pathOk, normalized: u.toString() }
 }
 
-function Field({ label, children, required, filled, error }) {
+function Field({ label, children, required, error }) {
   return (
     <div style={{ marginBottom: 18 }}>
       <label style={{
@@ -118,7 +141,6 @@ function Field({ label, children, required, filled, error }) {
         textTransform: 'uppercase', letterSpacing: 0.6,
       }}>
         {label}{required && <span style={{ color: colors.red, marginLeft: 2 }}>*</span>}
-        {filled && <Check size={12} color={colors.blue} strokeWidth={3} style={{ marginLeft: 'auto' }} />}
       </label>
       {children}
       {error && <p style={{ margin: '6px 0 0', fontSize: 12, color: colors.red }}>{error}</p>}
@@ -147,6 +169,44 @@ function ReadOnlyField({ label, value }) {
         {value || '—'}
       </div>
     </div>
+  )
+}
+
+// Cartão de upsell para funcionalidades bloqueadas pelo plano — antes disto
+// era um botão transparente com texto a 12px cor "subtle", quase invisível.
+// Isto é um motivo real de upgrade, não uma nota de rodapé: precisa de peso
+// visual e de um botão a sério, não só texto clicável.
+function UpsellGate({ title, body, feature, onUpgrade }) {
+  const { planId } = useAuth()
+  const upgrade = (feature && planThatUnlocks(feature, planId)) || nextPaidPlan(planId)
+  const ctaLabel = upgrade ? upgrade.name : 'Ver planos'
+  return (
+    <button
+      type="button"
+      onClick={onUpgrade}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 14, width: '100%', textAlign: 'left',
+        background: 'var(--color-primary-subtle)', border: `1px solid ${colors.blue}`, borderRadius: 12,
+        padding: '12px 14px', marginBottom: 10, cursor: 'pointer', fontFamily: 'inherit',
+      }}
+    >
+      <div style={{
+        width: 30, height: 30, borderRadius: 8, background: colors.blue,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+      }}>
+        <Sparkles size={15} color="#fff" />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: colors.text }}>{title}</p>
+        {body && <p style={{ margin: '1px 0 0', fontSize: 12, color: colors.muted, lineHeight: 1.35 }}>{body}</p>}
+      </div>
+      <span style={{
+        flexShrink: 0, padding: '7px 14px', background: colors.blue, borderRadius: 100,
+        color: '#fff', fontSize: 12.5, fontWeight: 700, whiteSpace: 'nowrap',
+      }}>
+        {ctaLabel}
+      </span>
+    </button>
   )
 }
 
@@ -409,6 +469,21 @@ export default function EditProject() {
   const canSave  = !saving && !!form.name?.trim() && !!form.area?.trim() && linkedin.valid && github.valid
   const linksFilled = (!linkedin.empty && linkedin.valid ? 1 : 0) + (!github.empty && github.valid ? 1 : 0)
 
+  // Lista só o que falta mesmo, nunca uma frase fixa — se só o link do
+  // LinkedIn é inválido, dizer "falta o nome e a área" é mentira e confunde
+  // mais do que ajuda.
+  const missingParts = [
+    !form.name?.trim() && 'o nome',
+    !form.area?.trim() && 'a área',
+    !linkedin.valid && 'um link válido no LinkedIn',
+    !github.valid && 'um link válido no GitHub',
+  ].filter(Boolean)
+  const missingMessage = missingParts.length
+    ? `Falta ${missingParts.length === 1
+        ? missingParts[0]
+        : `${missingParts.slice(0, -1).join(', ')} e ${missingParts[missingParts.length - 1]}`}`
+    : ''
+
   // "Base de dados" (tabelas + API) só faz sentido para projetos com
   // componente de software a sério — não aparece para áreas como Moda,
   // Design Gráfico, Marketing, etc.
@@ -439,8 +514,13 @@ export default function EditProject() {
         .ep-layout { display: flex; flex-direction: column; gap: 18px; align-items: stretch; }
         /* Preenche a barra toda, como as pílulas do resto da app (página do
            projeto, painel de workspace) — não uma pílula pequena a boiar
-           centrada com fundo vazio dos dois lados. */
-        .ep-segtabs { width: 100%; justify-content: space-between; }
+           centrada com fundo vazio dos dois lados. "justify-content:
+           space-between" fazia isso quando os separadores cabiam todos,
+           mas partia o scroll por completo quando não cabiam (ex: telemóvel,
+           5 separadores): o browser não conseguia voltar ao início, o
+           separador ativo ficava preso fora de vista. Um gap fixo dá o
+           mesmo respiro visual sem depender de sobrar espaço nenhum. */
+        .ep-segtabs { width: 100%; gap: 4px; }
         .ep-segtabs .seg-btn { flex: 0 0 auto; min-width: max-content; }
         .ep-tab-badge { font-size: 10px; font-weight: 700; color: var(--color-text-secondary); background: var(--color-bg-alt); padding: 1px 6px; border-radius: 99px; font-variant-numeric: tabular-nums; flex-shrink: 0; }
         .ep-tab-badge.done { color: var(--color-primary); background: var(--color-primary-muted); }
@@ -643,14 +723,12 @@ export default function EditProject() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     <Field
                       label="LinkedIn"
-                      filled={!linkedin.empty && linkedin.valid}
                       error={!linkedin.valid ? 'Tem de ser um link do linkedin.com/…' : null}
                     >
                       <input type="url" value={form.linkedin_url} onChange={e => set('linkedin_url', e.target.value)} style={inputStyle} placeholder="https://linkedin.com/in/..." {...inputHandlers} />
                     </Field>
                     <Field
                       label="GitHub"
-                      filled={!github.empty && github.valid}
                       error={!github.valid ? 'Tem de ser um link do github.com/…' : null}
                     >
                       <input type="url" value={form.github_url} onChange={e => set('github_url', e.target.value)} style={inputStyle} placeholder="https://github.com/..." {...inputHandlers} />
@@ -673,13 +751,13 @@ export default function EditProject() {
                       <ReadOnlyField label="Escola" value={form.school} />
                     </div>
                   )}
-                  <Field label="Nome do projeto" filled={isFilled('name')}>
+                  <Field label="Nome do projeto">
                     <input type="text" value={form.name} onChange={e => set('name', e.target.value)} style={inputStyle} placeholder="Ex: TaskFlow, EduApp..." {...inputHandlers} />
                   </Field>
-                  <Field label="Tipo" filled={!!form.project_type}>
+                  <Field label="Tipo">
                     <Select value={form.project_type} onChange={v => set('project_type', v)} options={PROJECT_TYPES} inputStyle={inputStyle} />
                   </Field>
-                  <Field label="Visibilidade" filled={true}>
+                  <Field label="Visibilidade">
                     <div style={{ display: 'flex', gap: 8 }}>
                       {[
                         { value: 'public',   label: 'Público' },
@@ -704,16 +782,16 @@ export default function EditProject() {
                   </Field>
                   {isPap && (
                     <div className="ep-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 4 }}>
-                      <Field label="Orientador" filled={isFilled('pap_supervisor')}>
+                      <Field label="Orientador">
                         <input type="text" value={form.pap_supervisor} onChange={e => set('pap_supervisor', e.target.value)} style={inputStyle} placeholder="Nome do orientador" {...inputHandlers} />
                       </Field>
-                      <Field label="Data de apresentação" filled={isFilled('pap_date')}>
+                      <Field label="Data de apresentação">
                         <input type="text" value={form.pap_date} onChange={e => set('pap_date', e.target.value)} style={inputStyle} placeholder="Ex: Junho 2025" {...inputHandlers} />
                       </Field>
                     </div>
                   )}
                   {isPap && (
-                    <Field label="Como és avaliado" filled={!!form.evaluation_mode}>
+                    <Field label="Como és avaliado">
                       <div style={{ display: 'flex', gap: 8 }}>
                         {[
                           { id: 'jury', label: 'Júri' },
@@ -877,8 +955,8 @@ export default function EditProject() {
           um estado persistente de "tudo guardado" não é preciso aqui — quem
           termina de editar sai da página logo a seguir a guardar. */}
       <div className="ep-save-bar">
-        {!canSave && !saving && (
-          <div className="ep-save-status" style={{ color: colors.red }}>Falta o nome e a área</div>
+        {!canSave && !saving && missingMessage && (
+          <div className="ep-save-status" style={{ color: colors.red }}>{missingMessage}</div>
         )}
         <button
           onClick={handleSubmit}
@@ -922,8 +1000,10 @@ function AdvancedSection({ project, isOwner, navigate }) {
   const [slugInput, setSlugInput] = useState(project?.slug || '')
   const [savingSlug, setSavingSlug] = useState(false)
   const [slugError, setSlugError] = useState(null)
+  const { planId } = useAuth()
   const publicUrl = `${window.location.origin}/projeto/${project?.slug}`
   const cleanLinkGate = checkGate('cleanLink')
+  const [gateMsg, setGateMsg] = useState(null)
 
   function copyLink() {
     navigator.clipboard.writeText(publicUrl).then(() => {
@@ -958,9 +1038,14 @@ function AdvancedSection({ project, isOwner, navigate }) {
 
   return (
     <div className="ep-sec-card">
-      <h2 className="ep-sec-heading">Avançado</h2>
+      <h2 className="ep-sec-heading" style={{ marginBottom: 18 }}>Avançado</h2>
 
-      <div style={{ marginBottom: 28 }}>
+      {/* Cada grupo (link público, ficheiros, GitHub, zona de perigo) é o
+          seu próprio cartão de vidro, separado por espaço — antes era tudo
+          uma lista só, cortada por linhas finas, e ficava difícil ver onde
+          um assunto acabava e o outro começava. */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ ...glassPanel, padding: '18px 20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, color: colors.subtle, marginBottom: 14, textTransform: 'uppercase', letterSpacing: 0.6 }}>
           <ExternalLink size={12} /> Página pública
         </div>
@@ -987,35 +1072,57 @@ function AdvancedSection({ project, isOwner, navigate }) {
             </div>
           </div>
         ) : (
-          <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-            <div style={{ flex: 1, background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 8, padding: '10px 12px', fontSize: 13, color: colors.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{publicUrl}</div>
-            {cleanLinkGate.allowed && (
-              <button type="button" onClick={startEditSlug} title="Personalizar link" style={{ padding: '10px 12px', background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.muted, display: 'flex', alignItems: 'center', flexShrink: 0, cursor: 'pointer' }}>
-                <Pencil size={14} />
+          // Hierarquia clara: o link em cima, "Copiar" como ação principal
+          // (larga, a cores) por baixo, editar/abrir como secundárias
+          // pequenas ao lado — antes os três botões competiam pelo mesmo
+          // peso visual, lado a lado com o campo do link.
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 8, padding: '10px 12px', fontSize: 13, color: colors.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 8 }}>{publicUrl}</div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button type="button" onClick={copyLink} style={{ flex: 1, padding: '10px 16px', background: copied ? colors.green : colors.blue, border: 'none', borderRadius: 8, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, whiteSpace: 'nowrap' }}>
+                {copied ? <><Check size={14} /> Copiado</> : <><Copy size={14} /> Copiar link</>}
               </button>
-            )}
-            <button type="button" onClick={copyLink} style={{ padding: '10px 16px', background: copied ? colors.green : colors.blue, border: 'none', borderRadius: 8, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, whiteSpace: 'nowrap' }}>
-              {copied ? <><Check size={13} /> Copiado</> : <><Copy size={13} /> Copiar</>}
-            </button>
-            <a href={publicUrl} target="_blank" rel="noopener noreferrer" style={{ padding: '10px 12px', background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.muted, display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-              <ExternalLink size={14} />
-            </a>
+              {cleanLinkGate.allowed && (
+                <button type="button" onClick={startEditSlug} title="Personalizar link" style={{ width: 40, padding: 0, background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}>
+                  <Pencil size={14} />
+                </button>
+              )}
+              <a href={publicUrl} target="_blank" rel="noopener noreferrer" style={{ width: 40, background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <ExternalLink size={14} />
+              </a>
+            </div>
           </div>
         )}
 
         {!cleanLinkGate.allowed && !editingSlug && (
-          <button
-            type="button"
-            onClick={() => navigate('/planos')}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', padding: 0, marginBottom: 10, cursor: 'pointer', fontFamily: 'inherit' }}
-          >
-            <Lock size={11} color={colors.subtle} />
-            <span style={{ fontSize: 12, color: colors.subtle }}>{cleanLinkGate.message?.body || PLAN_GATE_MESSAGES.cleanLink().body}</span>
-          </button>
+          <UpsellGate
+            feature="cleanLink"
+            title={cleanLinkGate.message?.title || PLAN_GATE_MESSAGES.cleanLink().title}
+            body={cleanLinkGate.message?.body || PLAN_GATE_MESSAGES.cleanLink().body}
+            onUpgrade={() => setGateMsg(cleanLinkGate.message || PLAN_GATE_MESSAGES.cleanLink())}
+          />
+        )}
+        {gateMsg && (
+          <PlanGateModal
+            message={gateMsg}
+            forcedPlan={planThatUnlocks('cleanLink', planId)}
+            onClose={() => setGateMsg(null)}
+          />
         )}
 
-        <button type="button" onClick={() => shareOnLinkedIn(publicUrl)} style={{ padding: '10px 16px', background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 7 }}>
-          <Send size={13} /> Publicar no LinkedIn
+      </div>
+
+      {/* Partilhar — separado do cartão do link, não mais um botão a mais
+          na mesma pilha. É a única ação aqui, por isso fica centrada em
+          vez de encostada à esquerda, e usa o ícone real do LinkedIn em
+          vez de um avião de papel genérico. */}
+      <div style={{ ...glassPanel, padding: '16px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: colors.subtle, textTransform: 'uppercase', letterSpacing: 0.6 }}>
+          Partilhar
+        </div>
+        <button type="button" onClick={() => shareOnLinkedIn(publicUrl)} style={{ padding: '10px 18px', background: colors.blue, border: 'none', borderRadius: 8, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="#fff"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+          Publicar no LinkedIn
         </button>
       </div>
 
@@ -1024,6 +1131,7 @@ function AdvancedSection({ project, isOwner, navigate }) {
       <GithubAdvancedCard project={project} />
 
       {isOwner && <DangerZone project={project} navigate={navigate} />}
+      </div>
     </div>
   )
 }
@@ -1034,8 +1142,9 @@ function AdvancedSection({ project, isOwner, navigate }) {
    nunca aparece lá. Quota real é aplicada no servidor (trigger
    enforce_project_files_quota); isto só dá feedback amigável. */
 function ProjectFilesCard({ project }) {
-  const { user, checkGate } = useAuth()
+  const { user, planId, checkGate } = useAuth()
   const gate = checkGate('projectFiles')
+  const [gateMsg, setGateMsg] = useState(null)
   const [files, setFiles] = useState([])
   const [accountBytes, setAccountBytes] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -1097,59 +1206,85 @@ function ProjectFilesCard({ project }) {
   }
 
   return (
-    <div style={{ marginBottom: 28, paddingTop: 24, borderTop: `1px solid ${colors.border}` }}>
+    <div style={{ ...glassPanel, padding: '18px 20px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, color: colors.subtle, marginBottom: 14, textTransform: 'uppercase', letterSpacing: 0.6 }}>
         <Upload size={12} /> Ficheiros do projeto
       </div>
 
       {!gate.allowed ? (
-        <button
-          type="button"
-          onClick={() => window.location.assign('/planos')}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit' }}
-        >
-          <Lock size={11} color={colors.subtle} />
-          <span style={{ fontSize: 12, color: colors.subtle }}>{gate.message?.body}</span>
-        </button>
+        <>
+          <UpsellGate
+            feature="projectFiles"
+            title={gate.message?.title || 'Ficheiros do projeto'}
+            body={gate.message?.body}
+            onUpgrade={() => setGateMsg(gate.message)}
+          />
+          {gateMsg && (
+            <PlanGateModal
+              message={gateMsg}
+              forcedPlan={planThatUnlocks('projectFiles', planId)}
+              onClose={() => setGateMsg(null)}
+            />
+          )}
+        </>
       ) : (
         <>
           <p style={{ margin: '0 0 14px', fontSize: 13.5, color: colors.muted, lineHeight: 1.6 }}>
-            Qualquer tipo de ficheiro como prova do trabalho. Escolhe quais aparecem na página pública — o resto fica só para ti.
+            Prova do trabalho. Escolhe quais ficam visíveis na página pública; o resto fica só para ti.
           </p>
 
           {!loading && (
+            // Cada métrica na sua caixa, label + percentagem na mesma
+            // linha, barra por baixo — mesma receita do "Uso" do Claude,
+            // em vez de duas barras soltas com uma legenda pequena.
             <div style={{ marginBottom: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div>
-                <div style={{ height: 5, background: colors.bgAlt, borderRadius: 3, overflow: 'hidden' }}>
+              <div style={{ background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 10, padding: '10px 12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 7 }}>
+                  <span style={{ fontSize: 12.5, fontWeight: 700, color: colors.text }}>Este projeto</span>
+                  <span style={{ fontSize: 11.5, fontWeight: 600, color: usedPct > 90 ? '#ef4444' : colors.muted }}>{usedPct}% usado</span>
+                </div>
+                <div style={{ height: 5, background: colors.border, borderRadius: 3, overflow: 'hidden' }}>
                   <div style={{ height: '100%', width: `${usedPct}%`, background: usedPct > 90 ? '#ef4444' : colors.blue, borderRadius: 3 }} />
                 </div>
-                <p style={{ margin: '6px 0 0', fontSize: 11.5, color: colors.subtle }}>
-                  {formatFileSize(usedBytes)} de {fmtQuota(gate.maxProjectMB)} usados neste projeto
+                <p style={{ margin: '7px 0 0', fontSize: 11, color: colors.muted }}>
+                  {formatFileSize(usedBytes)} de {fmtQuota(gate.maxProjectMB)}
                 </p>
               </div>
               {maxAccountBytes && (
-                <div>
-                  <div style={{ height: 5, background: colors.bgAlt, borderRadius: 3, overflow: 'hidden' }}>
+                <div style={{ background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 10, padding: '10px 12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 7 }}>
+                    <span style={{ fontSize: 12.5, fontWeight: 700, color: colors.text }}>Toda a conta</span>
+                    <span style={{ fontSize: 11.5, fontWeight: 600, color: accountPct > 90 ? '#ef4444' : colors.muted }}>{accountPct}% usado</span>
+                  </div>
+                  <div style={{ height: 5, background: colors.border, borderRadius: 3, overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${accountPct}%`, background: accountPct > 90 ? '#ef4444' : colors.subtle, borderRadius: 3 }} />
                   </div>
-                  <p style={{ margin: '6px 0 0', fontSize: 11.5, color: colors.subtle }}>
-                    {formatFileSize(accountBytes)} de {fmtQuota(gate.maxAccountMB)} usados em toda a conta
+                  <p style={{ margin: '7px 0 0', fontSize: 11, color: colors.muted }}>
+                    {formatFileSize(accountBytes)} de {fmtQuota(gate.maxAccountMB)}
                   </p>
                 </div>
               )}
             </div>
           )}
 
-          {files.map(f => (
+          {files.map(f => {
+            const ft = fileTypeStyle(f.file_type)
+            return (
             <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', borderBottom: `1px solid ${colors.border}` }}>
+              <span style={{
+                flexShrink: 0, width: 26, height: 26, borderRadius: 6,
+                background: `${ft.color}22`, color: ft.color,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 8.5, fontWeight: 800, letterSpacing: 0.2,
+              }}>{ft.label.slice(0, 4)}</span>
               <a href={f.file_url} target="_blank" rel="noopener noreferrer" style={{ flex: 1, minWidth: 0, fontSize: 13, color: colors.text, textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {f.file_name}
               </a>
-              <span style={{ fontSize: 11, color: colors.subtle, flexShrink: 0 }}>{formatFileSize(f.size_bytes)}</span>
+              <span style={{ fontSize: 11, color: colors.muted, flexShrink: 0 }}>{formatFileSize(f.size_bytes)}</span>
               <button
                 type="button"
                 onClick={() => handleToggleVisible(f)}
-                title={f.visible ? 'Visível na página pública — clica para esconder' : 'Escondido da página pública — clica para mostrar'}
+                title={f.visible ? 'Visível na página pública, clica para esconder' : 'Escondido da página pública, clica para mostrar'}
                 style={{ background: 'transparent', border: 'none', color: f.visible ? colors.blue : colors.subtle, cursor: 'pointer', padding: 4, flexShrink: 0, display: 'flex' }}
               >
                 {f.visible ? <Eye size={14} /> : <EyeOff size={14} />}
@@ -1158,7 +1293,8 @@ function ProjectFilesCard({ project }) {
                 <Trash2 size={13} />
               </button>
             </div>
-          ))}
+            )
+          })}
 
           {error && <p style={{ color: '#ef4444', fontSize: 12, margin: '10px 0 0' }}>{error}</p>}
 
@@ -1167,9 +1303,9 @@ function ProjectFilesCard({ project }) {
             type="button"
             disabled={uploading}
             onClick={() => fileInputRef.current?.click()}
-            style={{ marginTop: 14, padding: '10px 16px', background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 7 }}
+            style={{ marginTop: 14, padding: '10px 16px', background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, width: '100%' }}
           >
-            <Upload size={13} /> {uploading ? 'A enviar…' : 'Adicionar ficheiro'}
+            <Upload size={13} /> {uploading ? 'A enviar…' : 'Adicionar ficheiros'}
           </button>
         </>
       )}
@@ -1184,7 +1320,10 @@ function ProjectFilesCard({ project }) {
    guardadas para a página pública mostrar prova de trabalho a sério.
    Só repositórios públicos, sem OAuth. */
 function GithubAdvancedCard({ project }) {
-  const { user } = useAuth()
+  const { user, planId, checkGate } = useAuth()
+  const navigate = useNavigate()
+  const githubGate = checkGate('githubSync')
+  const [gateMsg, setGateMsg] = useState(null)
   const [connection, setConnection] = useState(null) // { github_login } | null | undefined(loading)
   const [syncing, setSyncing] = useState(false)
   const [error, setError] = useState(null)
@@ -1226,17 +1365,20 @@ function GithubAdvancedCard({ project }) {
     if (error) { setError('Não foi possível guardar o repositório escolhido.'); return }
     setGithubUrlOverride(fullUrl)
     const reg = await registerGithubWebhook(project.id)
-    if (!reg?.ok) setWebhookNotice(reg?.reason || 'Não foi possível ativar a sincronização automática — a manual continua a funcionar.')
+    if (!reg?.ok) setWebhookNotice(reg?.reason || 'Não foi possível ativar a sincronização automática, mas a manual continua a funcionar.')
   }
   // Formato do painel na página pública — guardado em preview_style ao
   // lado das outras personalizações da página (cor, fonte...), não numa
   // coluna própria.
   const [compact, setCompact] = useState(!!project?.preview_style?.githubCompact)
 
+  const [hidden, setHiddenState] = useState(!!project?.preview_style?.githubHidden)
+
   useEffect(() => {
     setStats(project?.github_stats || null)
     setSyncedAt(project?.github_synced_at || null)
     setCompact(!!project?.preview_style?.githubCompact)
+    setHiddenState(!!project?.preview_style?.githubHidden)
     setResult(null); setError(null); setConfirmRemove(false); setRemoved(null)
   }, [project?.id])
 
@@ -1247,6 +1389,15 @@ function GithubAdvancedCard({ project }) {
       .update({ preview_style: { ...(project?.preview_style || {}), githubCompact: nextCompact } })
       .eq('id', project.id)
     if (error) console.error('[github-format]', error.message)
+  }
+
+  async function setHidden(nextHidden) {
+    setHiddenState(nextHidden) // otimista
+    const { error } = await supabase
+      .from('projects')
+      .update({ preview_style: { ...(project?.preview_style || {}), githubHidden: nextHidden } })
+      .eq('id', project.id)
+    if (error) console.error('[github-hidden]', error.message)
   }
 
   const repo = parseGithubRepo(githubUrlOverride ?? project?.github_url)
@@ -1276,36 +1427,57 @@ function GithubAdvancedCard({ project }) {
   const months = commitSpanMonths(stats)
 
   return (
-    <div style={{ marginBottom: 28, paddingTop: 24, borderTop: `1px solid ${colors.border}` }}>
+    <div style={{ ...glassPanel, padding: '18px 20px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, color: colors.subtle, marginBottom: 14, textTransform: 'uppercase', letterSpacing: 0.6 }}>
         <Code size={12} /> GitHub
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 16, padding: '10px 12px', background: colors.bgAlt, borderRadius: 8, border: `1px solid ${colors.border}` }}>
+      {!githubGate.allowed ? (
+        <>
+          <UpsellGate
+            feature="githubSync"
+            title={githubGate.message?.title || 'Sincronização com o GitHub'}
+            body={githubGate.message?.body}
+            onUpgrade={() => setGateMsg(githubGate.message)}
+          />
+          {gateMsg && (
+            <PlanGateModal
+              message={gateMsg}
+              forcedPlan={planThatUnlocks('githubSync', planId)}
+              onClose={() => setGateMsg(null)}
+            />
+          )}
+        </>
+      ) : (
+      <>
+      {/* Texto e botão em cima um do outro, com espaço a sério — espalmados
+          lado a lado num card pequeno não tinham onde respirar. */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16, padding: '14px 16px', background: colors.bgAlt, borderRadius: 10, border: `1px solid ${colors.border}` }}>
         {connection ? (
           <>
-            <span style={{ fontSize: 12.5, color: colors.text }}>
-              Ligado como <strong>{connection.github_login}</strong> — já dá para sincronizar repos privados.
+            <span style={{ fontSize: 12.5, color: colors.text, lineHeight: 1.5 }}>
+              Ligado como <strong>{connection.github_login}</strong>. Já dá para sincronizar repos privados.
             </span>
             <button
               type="button"
               onClick={() => removeGithubWebhook(project.id).then(() => disconnectGithub(user.id)).then(() => setConnection(null))}
-              style={{ background: 'transparent', border: 'none', color: colors.subtle, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+              style={{ alignSelf: 'flex-start', background: 'transparent', border: 'none', padding: 0, color: colors.subtle, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
             >
               Desligar
             </button>
           </>
         ) : (
-          <>
-            <span style={{ fontSize: 12.5, color: colors.muted }}>Sem conta GitHub ligada — só lê repositórios públicos.</span>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, textAlign: 'center' }}>
+            <span style={{ fontSize: 12.5, color: colors.muted, lineHeight: 1.5 }}>Sem conta GitHub ligada. Só lê repositórios públicos.</span>
             <button
               type="button"
               onClick={() => startGithubConnect(window.location.pathname)}
-              style={{ background: colors.blue, border: 'none', borderRadius: 7, color: '#fff', fontSize: 12, fontWeight: 700, padding: '6px 12px', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+              style={{ display: 'flex', alignItems: 'center', gap: 7, background: colors.blue, border: 'none', borderRadius: 7, color: '#fff', fontSize: 12.5, fontWeight: 700, padding: '8px 16px', cursor: 'pointer', fontFamily: 'inherit' }}
             >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" /></svg>
               Ligar GitHub
             </button>
-          </>
+          </div>
         )}
       </div>
 
@@ -1346,20 +1518,45 @@ function GithubAdvancedCard({ project }) {
 
       {!repo ? (
         <p style={{ margin: 0, fontSize: 13.5, color: colors.muted, lineHeight: 1.6 }}>
-          Cola o link do GitHub em "Redes", em cima. Depois lemos os commits e escrevemos no diário por ti.
+          {connection
+            ? 'Escolhe um repositório acima. Depois lemos os commits e escrevemos no diário por ti.'
+            : 'Cola o link do GitHub em "Redes", em cima, ou liga a tua conta para escolher da lista.'}
         </p>
       ) : (
         <>
           <p style={{ margin: '0 0 8px', fontSize: 13.5, color: colors.muted, lineHeight: 1.6 }}>
             Vamos ler <strong style={{ color: colors.text }}>{repo.owner}/{repo.repo}</strong>. Cada dia com
-            commits vira uma entrada no diário. {connection ? 'Com a conta ligada, também funciona com repositórios privados teus.' : 'Só funciona com repositórios públicos — liga a tua conta acima para privados.'}
+            commits vira uma entrada no diário. {connection ? 'Com a conta ligada, também funciona com repositórios privados teus.' : 'Só funciona com repositórios públicos; liga a tua conta acima para privados.'}
           </p>
           <p style={{ margin: '0 0 16px', fontSize: 12.5, color: webhookNotice ? '#f59e0b' : colors.subtle, lineHeight: 1.5 }}>
-            {webhookNotice || (project?.github_webhook_id ? 'Sincronização automática ativa — cada push atualiza o diário sozinho.' : 'Sincroniza também manualmente, com o botão abaixo.')}
+            {webhookNotice || (project?.github_webhook_id ? 'Sincronização automática ativa: cada push atualiza o diário sozinho.' : 'Sincroniza também manualmente, com o botão abaixo.')}
           </p>
 
           {stats && (
             <>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 14 }}>
+                <span style={{ fontSize: 12.5, color: colors.text, fontWeight: 600 }}>Mostrar na página pública</span>
+                <button
+                  type="button"
+                  onClick={() => setHidden(!hidden)}
+                  aria-pressed={!hidden}
+                  style={{
+                    width: 38, height: 22, borderRadius: 11, border: 'none', cursor: 'pointer', position: 'relative', flexShrink: 0,
+                    background: hidden ? colors.border : colors.blue, transition: 'background 0.15s',
+                  }}
+                >
+                  <span style={{
+                    position: 'absolute', top: 3, left: hidden ? 3 : 19, width: 16, height: 16, borderRadius: '50%',
+                    background: '#fff', transition: 'left 0.15s',
+                  }} />
+                </button>
+              </div>
+              {hidden && (
+                <p style={{ margin: '-6px 0 14px', fontSize: 12, color: colors.subtle, lineHeight: 1.5 }}>
+                  Escondido da página pública. Continuas a ver isto aqui, e o diário continua a sincronizar normalmente.
+                </p>
+              )}
+
               {/* Formato do painel na página pública — o painel fica sempre
                   no topo (não é arrastável); isto controla só se mostra
                   tudo ou só o essencial. */}
@@ -1398,7 +1595,7 @@ function GithubAdvancedCard({ project }) {
 
           {result != null && !error && (
             <div style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', borderRadius: 10, padding: '11px 14px', color: colors.green, fontSize: 13, marginBottom: 12, fontWeight: 600 }}>
-              {result === 0 ? 'Já estava tudo sincronizado — nada de novo desde a última vez.' : `${result} ${result === 1 ? 'dia adicionado' : 'dias adicionados'} ao diário.`}
+              {result === 0 ? 'Já estava tudo sincronizado, nada de novo desde a última vez.' : `${result} ${result === 1 ? 'dia adicionado' : 'dias adicionados'} ao diário.`}
             </div>
           )}
 
@@ -1450,6 +1647,8 @@ function GithubAdvancedCard({ project }) {
           )}
         </>
       )}
+      </>
+      )}
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   )
@@ -1477,7 +1676,10 @@ function DangerZone({ project, navigate }) {
   }
 
   return (
-    <div style={{ paddingTop: 24, borderTop: `1px solid ${colors.border}` }}>
+    <div style={{
+      background: 'rgba(244,63,94,0.04)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
+      border: '1px solid rgba(244,63,94,0.18)', borderRadius: 16, padding: '18px 20px',
+    }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, color: colors.red, marginBottom: 14, textTransform: 'uppercase', letterSpacing: 0.6 }}>
         <AlertTriangle size={12} /> Zona de perigo
       </div>
@@ -1549,43 +1751,55 @@ function DatabaseSection({ project }) {
 
   return (
     <div className="ep-sec-card">
-      <h2 className="ep-sec-heading">Base de dados</h2>
-      <p style={{ margin: '0 0 20px', fontSize: 13.5, color: colors.muted, lineHeight: 1.6 }}>
-        Desenha tabelas de dados a sério para o teu projeto. Cada tabela ganha uma API própria —
-        dá para chamar de fora da Showo, tal como uma aplicação real.
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+        <div style={{
+          width: 34, height: 34, borderRadius: 10, flexShrink: 0,
+          background: 'color-mix(in srgb, var(--color-primary) 16%, transparent)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <Database size={16} color={colors.blue} />
+        </div>
+        <h2 className="ep-sec-heading" style={{ margin: 0 }}>Base de dados</h2>
+      </div>
+      <p style={{ margin: '0 0 16px', fontSize: 12.5, color: colors.subtle, lineHeight: 1.5 }}>
+        Tabelas com API própria, prontas a chamar de fora da Showo.
       </p>
 
       {noAccess ? (
-        <div style={{ background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-muted)', borderRadius: 12, padding: '18px 20px' }}>
+        <div style={{ ...glassPanel, padding: '18px 20px' }}>
           <p style={{ margin: '0 0 12px', fontSize: 14, color: colors.text, fontWeight: 600 }}>Funcionalidade Plus/Pro</p>
           <p style={{ margin: '0 0 14px', fontSize: 13.5, color: colors.muted, lineHeight: 1.6 }}>
-            Com um plano pago, o teu projeto ganha uma base de dados própria com API — o que o transforma
-            de um projeto teórico num produto que funciona a sério.
+            Com um plano pago, o teu projeto ganha base de dados própria com API: deixa de ser só teoria e passa a funcionar a sério.
           </p>
           <a href="/pricing" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: colors.blue, color: '#fff', borderRadius: 8, padding: '9px 16px', fontSize: 13.5, fontWeight: 700, textDecoration: 'none' }}>
             Ver planos
           </a>
         </div>
       ) : (
-        <>
-          <div style={{ display: 'flex', gap: 10, marginBottom: 18 }}>
+        <div style={{ ...glassPanel, padding: 18, display: 'flex', flexDirection: 'column', gap: 18 }}>
+          {/* Uma faixa só, três números separados por traços finos — antes
+              eram 3 caixas iguais lado a lado, mais uma coisa a decorar
+              num ecrã já cheio. */}
+          <div style={{ display: 'flex' }}>
             <DbStat label="Tabelas" value={`${tables.length}/${limits.max_tables}`} />
-            <DbStat label="Linhas por tabela" value={`até ${limits.max_rows_per_table}`} />
-            <DbStat label="Linhas no total" value={`até ${limits.max_rows_total}`} />
+            <DbStat label="Linhas por tabela" value={`até ${limits.max_rows_per_table}`} divider />
+            <DbStat label="Linhas no total" value={`até ${limits.max_rows_total}`} divider />
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
-            {tables.map(t => (
-              <DataTableCard
-                key={t.id}
-                project={project}
-                table={t}
-                expanded={expandedId === t.id}
-                onToggleExpand={() => setExpandedId(id => id === t.id ? null : t.id)}
-                onChanged={load}
-              />
-            ))}
-          </div>
+          {tables.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {tables.map(t => (
+                <DataTableCard
+                  key={t.id}
+                  project={project}
+                  table={t}
+                  expanded={expandedId === t.id}
+                  onToggleExpand={() => setExpandedId(id => id === t.id ? null : t.id)}
+                  onChanged={load}
+                />
+              ))}
+            </div>
+          )}
 
           {tables.length < limits.max_tables && (
             showNewTable ? (
@@ -1596,32 +1810,37 @@ function DatabaseSection({ project }) {
                 onCancel={() => { setShowNewTable(false); setTemplatePick(null) }}
               />
             ) : (
-              <>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <TableTemplates onPick={t => { setTemplatePick(t); setShowNewTable(true) }} />
                 <button type="button" onClick={() => setShowNewTable(true)} style={{
-                  display: 'flex', alignItems: 'center', gap: 8, background: 'none',
-                  border: `1.5px dashed ${colors.border}`, borderRadius: 10, padding: '12px 16px',
-                  color: colors.muted, fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', width: '100%', justifyContent: 'center',
+                  display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center',
+                  background: 'var(--color-glass)',
+                  border: '1.5px dashed var(--color-glass-border)',
+                  borderRadius: 10, padding: '12px 16px', width: '100%',
+                  color: colors.muted, fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
                 }}>
                   <PlusCircle size={16} /> Começar do zero
                 </button>
-              </>
+              </div>
             )
           )}
 
           {tables.length > 0 && (
             <ApiKeyCard project={project} apiKey={apiKey} firstTable={tables[0]} onKeyChanged={setApiKey} />
           )}
-        </>
+        </div>
       )}
     </div>
   )
 }
 
-function DbStat({ label, value }) {
+function DbStat({ label, value, divider }) {
   return (
-    <div style={{ flex: 1, background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 10, padding: '10px 12px' }}>
-      <div style={{ fontSize: 15, fontWeight: 700, color: colors.text, lineHeight: 1.2 }}>{value}</div>
+    <div style={{
+      flex: 1, padding: divider ? '0 14px' : '0 14px 0 0', textAlign: divider ? 'center' : 'left',
+      borderLeft: divider ? '1px solid var(--color-glass-border)' : 'none',
+    }}>
+      <div style={{ fontSize: 16, fontWeight: 700, color: colors.text, lineHeight: 1.2 }}>{value}</div>
       <div style={{ fontSize: 10.5, color: colors.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 3 }}>{label}</div>
     </div>
   )
@@ -1676,11 +1895,13 @@ function TableTemplates({ onPick }) {
             title={t.desc}
             style={{
               display: 'flex', flexDirection: 'column', gap: 2, textAlign: 'left',
-              background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 10,
+              background: 'var(--color-glass)',
+              border: '1px solid var(--color-glass-border)', borderRadius: 10,
               padding: '10px 14px', cursor: 'pointer', fontFamily: 'inherit', flex: '1 1 160px', minWidth: 150,
+              transition: 'border-color 0.15s, background 0.15s',
             }}
-            onMouseEnter={e => e.currentTarget.style.borderColor = colors.borderBright}
-            onMouseLeave={e => e.currentTarget.style.borderColor = colors.border}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-glass-border-bright)'; e.currentTarget.style.background = 'var(--color-glass-hover)' }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-glass-border)'; e.currentTarget.style.background = 'var(--color-glass)' }}
           >
             <span style={{ fontSize: 13.5, fontWeight: 700, color: colors.text }}>{t.label}</span>
             <span style={{ fontSize: 11.5, color: colors.subtle, lineHeight: 1.4 }}>{t.desc}</span>
@@ -1723,7 +1944,7 @@ function NewTableForm({ project, onCreated, onCancel, initial }) {
   }
 
   return (
-    <div style={{ border: `1.5px solid ${colors.border}`, borderRadius: 12, padding: '16px 18px', marginBottom: 16 }}>
+    <div style={{ ...glassPanel, padding: '16px 18px', marginBottom: 16 }}>
       <Field label="Nome da tabela">
         <input type="text" value={label} onChange={e => setLabel(e.target.value)} style={inputStyle} placeholder="Ex: Reservas" {...inputHandlers} />
         {label.trim() && <p style={{ margin: '6px 0 0', fontSize: 11.5, color: colors.subtle }}>Na API: <code>{name}</code></p>}
@@ -1731,18 +1952,27 @@ function NewTableForm({ project, onCreated, onCancel, initial }) {
 
       <div style={{ marginTop: 14 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: colors.subtle, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 }}>Colunas</div>
+        {/* Nome/tipo/obrigatório numa linha só não cabia em ecrã estreito —
+            "nome_da_coluna" e o tipo apareciam cortados a 2-3 letras. Cada
+            coluna ganha o seu próprio mini-cartão, com o nome na linha de
+            cima (largura toda) e tipo + obrigatório na de baixo, onde há
+            espaço para os dois respirarem. */}
         {columns.map((col, idx) => (
-          <div key={idx} style={{ display: 'flex', gap: 6, marginBottom: 8, alignItems: 'center' }}>
-            <input type="text" value={col.name} onChange={e => setCol(idx, { name: e.target.value })} placeholder="nome_da_coluna" style={{ ...inputStyle, flex: 2, padding: '8px 10px', fontSize: 13.5 }} {...inputHandlers} />
-            <select value={col.type} onChange={e => setCol(idx, { type: e.target.value })} style={{ ...inputStyle, flex: 1, padding: '8px 10px', fontSize: 13.5 }}>
-              {ProjectDb.COLUMN_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-            </select>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: colors.muted, flexShrink: 0, whiteSpace: 'nowrap' }}>
-              <input type="checkbox" checked={!!col.required} onChange={e => setCol(idx, { required: e.target.checked })} /> obrigatório
-            </label>
-            {columns.length > 1 && (
-              <button type="button" onClick={() => removeCol(idx)} style={{ background: 'none', border: 'none', color: colors.subtle, cursor: 'pointer', padding: 4, flexShrink: 0 }}><X size={15} /></button>
-            )}
+          <div key={idx} style={{ background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 10, padding: 10, marginBottom: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+              <input type="text" value={col.name} onChange={e => setCol(idx, { name: e.target.value })} placeholder="nome_da_coluna" style={{ ...inputStyle, flex: 1, padding: '8px 10px', fontSize: 13.5 }} {...inputHandlers} />
+              {columns.length > 1 && (
+                <button type="button" onClick={() => removeCol(idx)} style={{ background: 'none', border: 'none', color: colors.subtle, cursor: 'pointer', padding: 4, flexShrink: 0 }}><X size={15} /></button>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+              <select value={col.type} onChange={e => setCol(idx, { type: e.target.value })} style={{ ...inputStyle, flex: '1 1 110px', padding: '8px 10px', fontSize: 13.5 }}>
+                {ProjectDb.COLUMN_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+              </select>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: colors.muted, flexShrink: 0, whiteSpace: 'nowrap' }}>
+                <input type="checkbox" checked={!!col.required} onChange={e => setCol(idx, { required: e.target.checked })} /> obrigatório
+              </label>
+            </div>
           </div>
         ))}
         <button type="button" onClick={addCol} style={{ background: 'none', border: 'none', color: colors.blue, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}>
@@ -1753,10 +1983,10 @@ function NewTableForm({ project, onCreated, onCancel, initial }) {
       {err && <p style={{ margin: '12px 0 0', fontSize: 12.5, color: colors.red }}>{err}</p>}
 
       <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-        <button type="button" onClick={handleCreate} disabled={saving} style={{ background: colors.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 13.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: saving ? 0.7 : 1 }}>
+        <button type="button" onClick={handleCreate} disabled={saving} style={{ flex: 1, background: colors.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '10px 18px', fontSize: 13.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: saving ? 0.7 : 1 }}>
           {saving ? 'A criar…' : 'Criar tabela'}
         </button>
-        <button type="button" onClick={onCancel} style={{ background: 'none', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 8, padding: '9px 18px', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+        <button type="button" onClick={onCancel} style={{ background: 'none', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 8, padding: '10px 18px', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
           Cancelar
         </button>
       </div>
@@ -1807,7 +2037,38 @@ function DataTableCard({ project, table, expanded, onToggleExpand, onChanged }) 
             {table.is_public ? <><EyeOff size={13} /> Tornar privada</> : <><Globe size={13} /> Tornar pública</>}
           </button>
 
+          {/* Colunas — o cabeçalho só dizia "1 coluna", nunca qual. Pedido
+              do Gustavo depois de criar uma tabela e não conseguir ver o
+              que lá tinha posto sem abrir o formulário de novo. */}
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: colors.subtle, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 }}>Colunas</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {table.columns.map(c => (
+                <span key={c.name} style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 5,
+                  background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 7,
+                  padding: '4px 9px', fontSize: 12,
+                }}>
+                  <code style={{ color: colors.text, fontWeight: 600 }}>{c.name}</code>
+                  <span style={{ color: colors.subtle }}>{ProjectDb.COLUMN_TYPES.find(t => t.value === c.type)?.label || c.type}</span>
+                  {c.required && <span style={{ color: colors.blue, fontWeight: 700 }}>*</span>}
+                </span>
+              ))}
+            </div>
+          </div>
+
           <RowsPanel project={project} table={table} onChanged={onChanged} />
+
+          {/* Atalho para a chave de API — vive só uma vez lá em baixo
+              (ApiKeyCard), fora de cada tabela; sem isto, com várias
+              tabelas, era preciso percorrer o ecrã todo para a encontrar. */}
+          <button
+            type="button"
+            onClick={() => document.getElementById('db-api-key-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', padding: 0, marginTop: 14, color: colors.blue, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            <Key size={13} /> Ver chave de API
+          </button>
 
           <div style={{ marginTop: 16, paddingTop: 14, borderTop: `1px solid ${colors.border}` }}>
             {!confirmDelete ? (
@@ -2043,6 +2304,9 @@ function ApiKeyCard({ project, apiKey, firstTable, onKeyChanged }) {
   }
 
   const [docAction, setDocAction] = useState('list_rows')
+  // Exemplos de código escondidos por omissão — curl/JSON é informação a
+  // mais logo a seguir à chave, sobretudo no telemóvel; quem precisa abre.
+  const [showExamples, setShowExamples] = useState(false)
 
   // Dados de exemplo a partir das colunas reais da tabela — a documentação
   // mostra exatamente a forma que a API deste projeto espera, não um
@@ -2060,12 +2324,12 @@ function ApiKeyCard({ project, apiKey, firstTable, onKeyChanged }) {
   const example = apiKey ? ProjectDb.curlExample(apiKey, firstTable.name, docAction, sampleData) : ''
 
   return (
-    <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${colors.border}` }}>
+    <div id="db-api-key-card" style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${colors.border}` }}>
       <div style={{ fontSize: 11, fontWeight: 700, color: colors.subtle, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10 }}>
         Chave de API
       </div>
       <p style={{ margin: '0 0 12px', fontSize: 12.5, color: colors.muted, lineHeight: 1.6 }}>
-        Usa esta chave para chamar a API do teu projeto de fora da Showo — de outro código, do Postman, ou de um site que construas.
+        Usa esta chave para chamar a API do teu projeto de fora da Showo: de outro código, do Postman, ou de um site que construas.
         Todos os pedidos são <code>POST</code> para o mesmo endereço; é o campo <code>action</code> no corpo que diz o que fazer.
       </p>
       {!apiKey && (
@@ -2082,31 +2346,46 @@ function ApiKeyCard({ project, apiKey, firstTable, onKeyChanged }) {
             </button>
           </div>
 
-          <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
-            {DOC_TABS.map(([val, label]) => (
-              <button key={val} type="button" onClick={() => setDocAction(val)} style={{
-                fontSize: 11.5, fontWeight: 600, padding: '4px 10px', borderRadius: 6,
-                border: `1px solid ${docAction === val ? colors.blue : colors.border}`,
-                background: docAction === val ? 'var(--color-primary-subtle)' : 'transparent',
-                color: docAction === val ? colors.blue : colors.muted,
-                cursor: 'pointer', fontFamily: 'inherit',
-              }}>{label}</button>
-            ))}
-          </div>
+          <button
+            type="button"
+            onClick={() => setShowExamples(s => !s)}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', padding: 0, marginBottom: showExamples ? 10 : 0, color: colors.blue, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            {showExamples ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+            {showExamples ? 'Esconder exemplos de código' : 'Ver exemplos de código'}
+          </button>
 
-          <div style={{ position: 'relative', marginBottom: 10 }}>
-            <pre style={{ margin: 0, background: '#0d0d10', color: '#d8d8de', borderRadius: 8, padding: '12px 14px', fontSize: 11.5, lineHeight: 1.6, overflowX: 'auto', fontFamily: 'monospace' }}>{example}</pre>
-            <button type="button" onClick={() => copy(example, 'curl')} style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 6, color: '#fff', padding: '4px 8px', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-              {copied === 'curl' ? 'Copiado' : <Copy size={12} />}
-            </button>
-          </div>
+          {showExamples && (
+            <>
+              <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
+                {DOC_TABS.map(([val, label]) => (
+                  <button key={val} type="button" onClick={() => setDocAction(val)} style={{
+                    fontSize: 11.5, fontWeight: 600, padding: '4px 10px', borderRadius: 6,
+                    border: `1px solid ${docAction === val ? colors.blue : colors.border}`,
+                    background: docAction === val ? 'var(--color-primary-subtle)' : 'transparent',
+                    color: docAction === val ? colors.blue : colors.muted,
+                    cursor: 'pointer', fontFamily: 'inherit',
+                  }}>{label}</button>
+                ))}
+              </div>
 
-          {(docAction === 'update_row' || docAction === 'delete_row') && (
-            <p style={{ margin: '0 0 10px', fontSize: 11.5, color: colors.subtle, lineHeight: 1.5 }}>
-              Substitui <code>ID_DA_LINHA</code> pelo <code>id</code> que "Ler" devolve para cada linha.
-              {docAction === 'update_row' && ' Podes mandar só os campos que queres mudar — os outros mantêm-se.'}
-            </p>
+              <div style={{ position: 'relative', marginBottom: 10 }}>
+                <pre style={{ margin: 0, background: '#0d0d10', color: '#d8d8de', borderRadius: 8, padding: '12px 14px', fontSize: 11.5, lineHeight: 1.6, overflowX: 'auto', fontFamily: 'monospace' }}>{example}</pre>
+                <button type="button" onClick={() => copy(example, 'curl')} style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 6, color: '#fff', padding: '4px 8px', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  {copied === 'curl' ? 'Copiado' : <Copy size={12} />}
+                </button>
+              </div>
+
+              {(docAction === 'update_row' || docAction === 'delete_row') && (
+                <p style={{ margin: '0 0 10px', fontSize: 11.5, color: colors.subtle, lineHeight: 1.5 }}>
+                  Substitui <code>ID_DA_LINHA</code> pelo <code>id</code> que "Ler" devolve para cada linha.
+                  {docAction === 'update_row' && ' Podes mandar só os campos que queres mudar; os outros mantêm-se.'}
+                </p>
+              )}
+            </>
           )}
+
+          <div style={{ marginTop: showExamples ? 0 : 14 }} />
 
           {!confirmRegen ? (
             <button type="button" onClick={() => setConfirmRegen(true)} style={{ background: 'none', border: 'none', color: colors.subtle, fontSize: 11.5, fontWeight: 600, cursor: 'pointer', padding: 0, fontFamily: 'inherit', textDecoration: 'underline', textUnderlineOffset: 3 }}>

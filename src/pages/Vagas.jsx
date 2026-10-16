@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { Toast, useToast } from '../components/Toast'
+import { ShareIcon as Share2 } from '@solar-icons/react/bold/share'
 import { useAuth } from '../context/AuthContext'
-import { PLAN_GATE_MESSAGES } from '../lib/plans'
 import { Navbar } from '../components/Navbar'
 import SegmentedTabs from '../components/SegmentedTabs'
 import { CaseIcon as Briefcase } from '@solar-icons/react/bold/case'
@@ -86,7 +87,7 @@ function DeadlineBadge({ deadline }) {
   )
 }
 
-function RecruiterCard({ vaga, cands, onEdit, onToggle, onDelete, expanded, onToggleExpand, onStatusChange, navigate }) {
+function RecruiterCard({ vaga, cands, onEdit, onToggle, onDelete, onShare, expanded, onToggleExpand, onStatusChange, navigate }) {
   const tipo = TIPO_INFO[vaga.tipo] ?? TIPO_INFO.estagio
   const candList = cands || []
   return (
@@ -102,6 +103,7 @@ function RecruiterCard({ vaga, cands, onEdit, onToggle, onDelete, expanded, onTo
             {vaga.area && <p style={{ margin: '4px 0 0', fontSize: 13, color: C.muted }}>{vaga.area}</p>}
           </div>
           <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+            <button onClick={() => onShare(vaga)} style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 7, padding: '5px 8px', cursor: 'pointer', color: C.muted, display: 'flex', alignItems: 'center' }} title="Partilhar"><Share2 size={13} /></button>
             <button onClick={() => onEdit(vaga)} style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 7, padding: '5px 8px', cursor: 'pointer', color: C.muted, display: 'flex', alignItems: 'center' }} title="Editar"><Pencil size={13} /></button>
             <button onClick={() => onToggle(vaga)} style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 7, padding: '5px 8px', cursor: 'pointer', color: vaga.is_active ? C.amber : C.green, display: 'flex', alignItems: 'center' }} title={vaga.is_active ? 'Pausar' : 'Ativar'}>
               {vaga.is_active ? <X size={13} /> : <Check size={13} />}
@@ -111,7 +113,7 @@ function RecruiterCard({ vaga, cands, onEdit, onToggle, onDelete, expanded, onTo
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            {vaga.localizacao && <span style={{ fontSize: 12, color: C.muted, display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={12} />{vaga.localizacao}</span>}
+            {vaga.localizacao && vaga.localizacao.trim().toLowerCase() !== 'remoto' && <span style={{ fontSize: 12, color: C.muted, display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={12} />{vaga.localizacao}</span>}
             {vaga.is_remote && <span style={{ fontSize: 12, color: C.muted, display: 'flex', alignItems: 'center', gap: 4 }}><Globe size={12} />Remoto</span>}
             <DeadlineBadge deadline={vaga.deadline} />
           </div>
@@ -179,19 +181,20 @@ function RecruiterCard({ vaga, cands, onEdit, onToggle, onDelete, expanded, onTo
   )
 }
 
-function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, isAluno, userSkills }) {
+function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, onShare, isAluno, userSkills, highlighted }) {
   const navigate = useNavigate()
   const tipo = TIPO_INFO[vaga.tipo] ?? TIPO_INFO.estagio
   const days = daysDiff(vaga.deadline)
+  const [expanded, setExpanded] = useState(false)
   if (vaga.deadline && days < 0) return null
 
   const st = myStatus ? STATUS_INFO[myStatus] : null
   const score = matchScore(userSkills, vaga.skills)
 
   return (
-    <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '20px 22px', transition: 'border-color 0.15s', display: 'flex', flexDirection: 'column', gap: 12 }}
+    <div id={`vaga-${vaga.id}`} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${highlighted ? C.blue : C.glassBorder}`, borderRadius: 12, padding: '20px 22px', transition: 'border-color 0.15s', display: 'flex', flexDirection: 'column', gap: 12 }}
       onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-glass-border-bright)'}
-      onMouseLeave={e => e.currentTarget.style.borderColor = C.glassBorder}>
+      onMouseLeave={e => e.currentTarget.style.borderColor = highlighted ? C.blue : C.glassBorder}>
       {/* Company header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <div style={{ width: 36, height: 36, borderRadius: 8, background: `${tipo.color}22`, border: `1px solid ${tipo.color}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -199,9 +202,11 @@ function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, isAluno, u
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {recruiterProfile?.company || recruiterProfile?.full_name || 'Empresa'}
+            {vaga.employer_name || recruiterProfile?.company || recruiterProfile?.full_name || 'Empresa'}
           </div>
-          {recruiterProfile?.company_role && <div style={{ fontSize: 11, color: C.muted }}>{recruiterProfile.company_role}</div>}
+          {vaga.source === 'eures' ? (
+            <div style={{ fontSize: 11, color: C.muted }}>via EURES</div>
+          ) : recruiterProfile?.company_role && <div style={{ fontSize: 11, color: C.muted }}>{recruiterProfile.company_role}</div>}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
           <span style={{ fontSize: 11, fontWeight: 700, color: tipo.color }}>{tipo.label}</span>
@@ -214,15 +219,35 @@ function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, isAluno, u
         {vaga.area && <p style={{ margin: 0, fontSize: 13, color: C.blue, fontWeight: 600 }}>{vaga.area}</p>}
       </div>
 
-      {vaga.descricao && <p style={{ margin: 0, fontSize: 13, color: C.muted, lineHeight: 1.6, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{vaga.descricao}</p>}
+      {vaga.descricao && (
+        <div>
+          <p style={{
+            margin: 0, fontSize: 13, color: C.muted, lineHeight: 1.6, whiteSpace: 'pre-wrap',
+            ...(expanded ? {} : { display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }),
+          }}>{vaga.descricao}</p>
+          {vaga.requisitos && expanded && (
+            <p style={{ margin: '10px 0 0', fontSize: 13, color: C.muted, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+              <strong style={{ color: C.text }}>Requisitos: </strong>{vaga.requisitos}
+            </p>
+          )}
+          <button type="button" onClick={() => setExpanded(e => !e)}
+            style={{ marginTop: 6, background: 'transparent', border: 'none', padding: 0, color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+            {expanded ? 'Ver menos' : 'Ver mais'}
+          </button>
+        </div>
+      )}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          {vaga.localizacao && <span style={{ fontSize: 12, color: C.muted, display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={11} />{vaga.localizacao}</span>}
+          {vaga.localizacao && vaga.localizacao.trim().toLowerCase() !== 'remoto' && <span style={{ fontSize: 12, color: C.muted, display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={11} />{vaga.localizacao}</span>}
           {vaga.is_remote && <span style={{ fontSize: 12, color: C.muted, display: 'flex', alignItems: 'center', gap: 4 }}><Globe size={11} />Remoto</span>}
           <DeadlineBadge deadline={vaga.deadline} />
         </div>
         <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+          <button onClick={() => onShare(vaga)} title="Partilhar vaga"
+            style={{ color: C.muted, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 7, padding: '5px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+            <Share2 size={13} />
+          </button>
           {recruiterProfile?.username && (
             <button onClick={() => navigate(`/u/${recruiterProfile.username}`)}
               style={{ fontSize: 12, color: C.muted, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 7, padding: '5px 10px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -392,7 +417,18 @@ function CandidatarModal({ vaga, recruiterProfile, onClose, onSubmit, sending })
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }} onClick={onClose} />
       <div style={{ position: 'relative', background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 28, width: '100%', maxWidth: 460, maxHeight: '90vh', overflowY: 'auto', zIndex: 1 }}>
         <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px', color: C.text }}>Candidatar a esta vaga</h2>
-        <p style={{ margin: '0 0 20px', fontSize: 13, color: C.muted }}>{vaga.titulo} · {recruiterProfile?.company || recruiterProfile?.full_name}</p>
+        <p style={{ margin: '0 0 16px', fontSize: 13, color: C.muted }}>{vaga.titulo} · {vaga.employer_name || recruiterProfile?.company || recruiterProfile?.full_name}</p>
+
+        {(vaga.descricao || vaga.requisitos) && (
+          <div style={{ background: 'var(--color-bg)', border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 14px', marginBottom: 20, maxHeight: 180, overflowY: 'auto' }}>
+            {vaga.descricao && <p style={{ margin: 0, fontSize: 13, color: C.text, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{vaga.descricao}</p>}
+            {vaga.requisitos && (
+              <p style={{ margin: vaga.descricao ? '10px 0 0' : 0, fontSize: 13, color: C.text, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                <strong>Requisitos: </strong>{vaga.requisitos}
+              </p>
+            )}
+          </div>
+        )}
 
         {questions.map(q => (
           <div key={q.id} style={{ marginBottom: 16 }}>
@@ -430,6 +466,9 @@ function CandidatarModal({ vaga, recruiterProfile, onClose, onSubmit, sending })
 
 export default function Vagas() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const sharedVagaId = searchParams.get('v')
+  const { toast, show: showToast } = useToast()
   const { user, profile, isSchoolAccount, checkGate } = useAuth()
   const isRecruiter = profile?.role === 'recrutador' || profile?.role === 'empresa'
   const isAluno = profile?.role === 'aluno'
@@ -449,7 +488,10 @@ export default function Vagas() {
   // plano — só Pro. Dentro de escola mantém-se a regra do Hugo tal e qual,
   // sem gate de plano em cima (a escola já paga à parte).
   const individualProOk = !isSchoolAccount && checkGate('internshipPage').allowed
-  const alunoBlocked = isAluno && !(schoolGradeOk || individualProOk)
+  // A vaga da própria Showo (free_for_all) fica sempre visível a toda a
+  // gente — só as vagas de empresas reais, à medida que forem entrando,
+  // ficam reservadas a quem tem acesso completo.
+  const hasFullVagasAccess = !isAluno || schoolGradeOk || individualProOk
 
   const [vagas, setVagas] = useState([])
   const [myVagas, setMyVagas] = useState([])
@@ -594,16 +636,20 @@ export default function Vagas() {
   async function submitCandidatura(msg, screeningAnswers) {
     if (!user || !candidatarVaga) return
     setSendingCandidatura(true)
-    await supabase.from('candidaturas').upsert({
+    const { data: inserted } = await supabase.from('candidaturas').upsert({
       vaga_id: candidatarVaga.id,
       student_id: user.id,
       message: msg.trim() || null,
       status: 'pendente',
       screening_answers: screeningAnswers || [],
-    }, { onConflict: 'vaga_id,student_id' })
+    }, { onConflict: 'vaga_id,student_id' }).select('id').single()
     setMyCandidaturas(prev => ({ ...prev, [candidatarVaga.id]: { status: 'pendente' } }))
     setSendingCandidatura(false)
     setCandidatarVaga(null)
+    // Best-effort — nunca bloqueia a candidatura se o email falhar.
+    if (inserted?.id) {
+      supabase.functions.invoke('notify-candidatura', { body: { candidatura_id: inserted.id } }).catch(() => {})
+    }
   }
 
   async function updateCandidaturaStatus(candidaturaId, vagaId, status) {
@@ -644,43 +690,43 @@ export default function Vagas() {
     load()
   }
 
-  const accentColor = profile?.role === 'empresa' ? 'var(--color-warning)' : C.blue
-
-  if (alunoBlocked) {
-    const gateMsg = !isSchoolAccount ? PLAN_GATE_MESSAGES.internshipPage() : null
-    return (
-      <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'inherit' }}>
-        <Navbar />
-        <div className="page-content" style={{ textAlign: 'center', padding: '96px 20px' }}>
-          <Briefcase size={40} color={C.muted} style={{ marginBottom: 14, opacity: 0.5 }} />
-          {gateMsg ? (
-            <>
-              <p style={{ color: C.text, fontSize: 17, fontWeight: 700, margin: '0 0 6px' }}>{gateMsg.title}</p>
-              <p style={{ color: C.muted, fontSize: 13, margin: '0 0 20px', maxWidth: 380, marginLeft: 'auto', marginRight: 'auto' }}>
-                {gateMsg.body}
-              </p>
-              <button
-                onClick={() => navigate('/planos')}
-                style={{
-                  fontSize: 13, fontWeight: 700, padding: '10px 20px', borderRadius: 9,
-                  border: 'none', background: C.blue, color: '#fff', cursor: 'pointer', fontFamily: 'inherit',
-                }}
-              >
-                Ver planos
-              </button>
-            </>
-          ) : (
-            <>
-              <p style={{ color: C.text, fontSize: 17, fontWeight: 700, margin: '0 0 6px' }}>Estágios é para alunos do 11.º e 12.º ano</p>
-              <p style={{ color: C.muted, fontSize: 13, margin: 0, maxWidth: 380, marginLeft: 'auto', marginRight: 'auto' }}>
-                Esta secção fica disponível quando entrares numa turma com o ano definido como 11.º ou 12.º.
-              </p>
-            </>
-          )}
-        </div>
-      </div>
-    )
+  // Partilhar liga sempre a um id concreto (?v=), para quem recebe o link
+  // (de dentro ou de fora da Showo) cair direto nesta vaga, não na lista
+  // genérica. navigator.share cobre o ecrã nativo de partilha (WhatsApp,
+  // Instagram, Mensagens...); sem isso, copia o link para a área de
+  // transferência.
+  async function shareVaga(vaga) {
+    const url = `${window.location.origin}/vagas?v=${vaga.id}`
+    const empresa = vaga.employer_name || profiles[vaga.recruiter_id]?.company || profiles[vaga.recruiter_id]?.full_name
+    const text = empresa ? `${vaga.titulo} · ${empresa}` : vaga.titulo
+    if (navigator.share) {
+      try { await navigator.share({ title: vaga.titulo, text, url }) } catch { /* utilizador cancelou */ }
+      return
+    }
+    try {
+      await navigator.clipboard.writeText(url)
+      showToast('Link da vaga copiado')
+    } catch {
+      showToast('Não foi possível copiar o link', 'error')
+    }
   }
+
+  // Link direto a uma vaga (?v=<id>) — faz scroll até ao card e destaca-o
+  // por uns segundos, para quem recebeu uma vaga partilhada saber logo
+  // onde olhar em vez de ter de procurar na lista toda.
+  const [highlightedVagaId, setHighlightedVagaId] = useState(sharedVagaId)
+  useEffect(() => {
+    if (!sharedVagaId || loading) return
+    const el = document.getElementById(`vaga-${sharedVagaId}`)
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    const t = setTimeout(() => setHighlightedVagaId(null), 4000)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sharedVagaId, loading])
+
+  const accentColor = profile?.role === 'empresa' ? 'var(--color-warning)' : C.blue
+  const visibleVagas = hasFullVagasAccess ? vagas : vagas.filter(v => v.free_for_all)
+  const lockedVagasCount = vagas.length - visibleVagas.length
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'inherit' }}>
@@ -862,29 +908,58 @@ export default function Vagas() {
                   onEdit={v => { setEditVaga(v); setShowModal(true) }}
                   onToggle={toggleVaga}
                   onDelete={deleteVaga}
+                  onShare={shareVaga}
                   onStatusChange={updateCandidaturaStatus}
                   navigate={navigate}
                 />
               ))}
             </div>
           )
-        ) : vagas.length === 0 ? (
+        ) : visibleVagas.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '64px 0' }}>
             <Briefcase size={40} color={C.muted} style={{ marginBottom: 12, opacity: 0.5 }} />
             <p style={{ color: C.muted, fontSize: 16, fontWeight: 700, margin: '0 0 6px' }}>Sem vagas de momento</p>
             <p style={{ color: C.subtle, fontSize: 13, margin: 0 }}>Quando empresas publicarem ofertas aparecem aqui</p>
           </div>
         ) : (
-          <div className="vagas-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
-            {vagas.map(v => (
-              <PublicCard key={v.id} vaga={v} recruiterProfile={profiles[v.recruiter_id]}
-                myStatus={myCandidaturas[v.id]?.status}
-                isAluno={isAluno}
-                onCandidatar={setCandidatarVaga}
-                userSkills={profile?.skills}
-              />
-            ))}
-          </div>
+          <>
+            <div className="vagas-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
+              {visibleVagas.map(v => (
+                <PublicCard key={v.id} vaga={v} recruiterProfile={profiles[v.recruiter_id]}
+                  myStatus={myCandidaturas[v.id]?.status}
+                  isAluno={isAluno}
+                  onCandidatar={setCandidatarVaga}
+                  onShare={shareVaga}
+                  highlighted={highlightedVagaId === v.id}
+                  userSkills={profile?.skills}
+                />
+              ))}
+              {isAluno && (
+                !hasFullVagasAccess && lockedVagasCount > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 10, background: C.glass, border: `1px dashed ${C.glassBorder}`, borderRadius: 12, padding: '24px 20px' }}>
+                    <Briefcase size={22} color={C.muted} style={{ opacity: 0.6 }} />
+                    <p style={{ margin: 0, fontSize: 13, color: C.muted }}>
+                      <strong style={{ color: C.text }}>+{lockedVagasCount} vaga{lockedVagasCount !== 1 ? 's' : ''}</strong> {lockedVagasCount !== 1 ? 'disponíveis' : 'disponível'} no Pro
+                    </p>
+                    <button onClick={() => navigate('/planos')}
+                      style={{ fontSize: 13, fontWeight: 700, padding: '8px 16px', borderRadius: 8, border: 'none', background: C.blue, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>
+                      Ver planos
+                    </button>
+                  </div>
+                ) : vagas.length <= 2 ? (
+                  // Pouco conteúdo ainda, independentemente do plano — quem já
+                  // tem Pro não tem nada bloqueado, mas também não há mais
+                  // nada para mostrar, então a mensagem certa é "vem aí", não
+                  // silêncio nenhum. Fica como cartão dentro do grid, ao lado
+                  // das vagas reais, não como linha de texto perdida por baixo.
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 10, background: C.glass, border: `1px dashed ${C.glassBorder}`, borderRadius: 12, padding: '24px 20px' }}>
+                    <Briefcase size={22} color={C.muted} style={{ opacity: 0.6 }} />
+                    <p style={{ margin: 0, fontSize: 13, color: C.subtle, fontWeight: 600 }}>Mais vagas por vir</p>
+                  </div>
+                ) : null
+              )}
+            </div>
+          </>
         )}
       </div>
 
@@ -906,6 +981,8 @@ export default function Vagas() {
           saving={saving}
         />
       )}
+
+      <Toast message={toast.message} type={toast.type} visible={toast.visible} />
     </div>
   )
 }

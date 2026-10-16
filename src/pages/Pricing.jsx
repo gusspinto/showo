@@ -15,16 +15,20 @@ import './Pricing.css'
 /* ══════════════════════════════════════════════════════════════════════════
    PLANOS
    ──────────────────────────────────────────────────────────────────────────
-   A versão anterior listava as mesmas seis linhas de "Base" nos três planos e
-   punha carreira no Build. Resultado: três colunas quase idênticas, e nenhuma
-   razão legível para pagar mais nove euros em vez de cinco.
+   Fui ver como o HighLevel e o Linear fazem a deles antes de mexer outra
+   vez. Os dois seguem a mesma disciplina, sem excepção: o card tem no
+   máximo 4-5 linhas, cada uma um substantivo e um número ("250 issues",
+   "Unlimited Sub-Accounts"), zero frases a vender o benefício por dentro
+   do card — isso fica para o título da página. Tudo o resto (o inventário
+   completo) vive numa tabela à parte, não no card.
 
-   A distinção passa a ser uma frase, e a página inteira obedece-lhe:
-       Grátis → vê como funciona
-       Plus   → constrói e organiza o percurso escolar sem ficares bloqueado
-       Pro    → prepara e lança a carreira a seguir à escola
-   Por isso cada plano só mostra o que ACRESCENTA ao anterior, e a Carreira
-   tem um bloco próprio no Pro em vez de ser mais um visto numa lista.
+   Esta versão seguiu essa disciplina a sério: cada card mostra só as 4
+   linhas mais fortes desse plano, sem parágrafos de texto lá dentro. A
+   tabela de comparação, mais abaixo, é que tem a lista toda.
+
+   E continua a valer a regra anterior: a Showo não é só para a escola —
+   "PAP"/"sair da escola" não aparece nas frases principais. As features
+   de escola continuam na lista, só não são a promessa de nenhum plano.
    ══════════════════════════════════════════════════════════════════════════ */
 
 const PLANS = [
@@ -32,8 +36,7 @@ const PLANS = [
     id: 'free',
     name: 'Grátis',
     price: '€0',
-    tagline: 'Vê como funciona.',
-    positioning: 'Para começar um projeto a sério e ver se a plataforma é para ti.',
+    positioning: 'Começa a provar que sabes fazer.',
     cta: 'Começar grátis',
     ctaVariant: 'ghost',
     groups: [
@@ -41,7 +44,7 @@ const PLANS = [
         label: 'Inclui',
         items: [
           { label: '3 projetos' },
-          { label: 'Editor completo e página pública' },
+          { label: 'Mesa de trabalho completa', tip: 'Editor completo e página pública, sem versão reduzida nem bloqueada.' },
           { label: 'Diário, agenda e lembretes' },
           { label: 'Certificado de projeto' },
         ],
@@ -49,7 +52,10 @@ const PLANS = [
       {
         label: 'IA',
         ai: true,
-        note: 'A IA ajuda em cada etapa: criar o projeto, a entrevista guiada, a análise, o pitch, a banca de defesa e mais, com um limite mensal.',
+        items: [
+          { label: 'Coach IA', value: '10 msgs' },
+          { label: 'Todas as outras ferramentas', value: 'para experimentar', subitems: ['Criar projeto', 'Entrevista guiada', 'Análise', 'Relatório', 'Narrativa IA', 'Exportar PowerPoint'] },
+        ],
       },
     ],
   },
@@ -60,8 +66,8 @@ const PLANS = [
     priceAnnual: '€89,90',
     annualEquivalent: '€7,49/mês',
     period: '/mês',
-    tagline: 'Nunca fiques bloqueado a meio da PAP.',
-    positioning: 'Para levares um projeto a sério até ao fim, seja PAP, estágio ou algo teu.',
+    positioning: 'Não pares a meio do caminho.',
+    weeklyNote: 'pouco mais de €2 por semana',
     cta: 'Começar com o Plus',
     ctaVariant: 'primary',
     popular: true,
@@ -71,17 +77,20 @@ const PLANS = [
       {
         label: 'Mais',
         items: [
-          { label: 'Provas do projeto', value: '250MB', tip: 'Anexa ficheiros que provem o trabalho. Escolhes o que aparece na página pública.' },
           { label: '15 projetos' },
-          { label: 'Recap semanal' },
-          { label: 'Treino de defesa com IA', tip: 'A IA prepara-te para a defesa: notas, perguntas do júri e uma dica para o dia.' },
-          { label: 'Carta de apresentação com IA' },
+          { label: 'Sincronização com o GitHub', icon: 'github', tip: 'O teu diário atualiza-se sozinho a cada push, sem teres de voltar cá para escrever nada.' },
+          { label: 'Ficheiros de prova', value: '250MB', tip: 'Anexa PDFs, Word, PowerPoint ou imagens, qualquer ficheiro que prove o trabalho. Escolhes o que aparece na página pública.' },
+          { label: 'Assistente semanal', tip: 'Todas as semanas recebes um email com o que avançaste, o que ficou parado e o que vem a seguir, sem teres de ir à procura.' },
         ],
       },
       {
         label: 'IA',
         ai: true,
-        note: 'Muitos mais usos de IA do que no Grátis, em todas as ferramentas.',
+        items: [
+          { label: 'Coach IA', value: '100 msgs' },
+          { label: 'Toda a IA', value: '5x mais que o Grátis', subitems: ['Criar projeto', 'Entrevista guiada', 'Análise', 'Relatório', 'Narrativa IA'] },
+          { label: 'Treino para entrevistas', value: 'novo', tip: 'A IA simula a banca ou o entrevistador, antecipa as perguntas difíceis e sugere respostas. Inclui também uma carta de apresentação gerada a partir do teu trabalho.' },
+        ],
       },
     ],
   },
@@ -92,8 +101,8 @@ const PLANS = [
     priceAnnual: '€179,90',
     annualEquivalent: '€14,99/mês',
     period: '/mês',
-    tagline: 'Sem limites, sem preocupações.',
-    positioning: 'Para quem quer o máximo da plataforma e da carreira a seguir.',
+    positioning: 'Chega à conversa com prova, não com promessas.',
+    weeklyNote: 'pouco mais de €4 por semana',
     cta: 'Ir para Pro',
     ctaVariant: 'primary',
     inherits: 'Plus',
@@ -102,16 +111,20 @@ const PLANS = [
       {
         label: 'Mais',
         items: [
-          { label: 'Provas do projeto', value: '1GB', tip: 'Anexa ficheiros que provem o trabalho. Escolhes o que aparece na página pública.' },
           { label: 'Projetos ilimitados' },
-          { label: 'Link à tua medida', tip: 'Escolhe o teu próprio link, em vez do código aleatório.' },
-          { label: 'Vagas de estágio', tip: 'Candidata-te a vagas de empresas parceiras com o teu portfólio.' },
+          { label: 'Exportar PowerPoint', value: 'sem limite' },
+          { label: 'Ficheiros de prova', value: '1GB', tip: 'Anexa PDFs, Word, PowerPoint ou imagens, qualquer ficheiro que prove o trabalho. Escolhes o que aparece na página pública.' },
+          { label: 'Link à tua medida', tip: 'Tira o código aleatório do link do teu projeto e escolhe o teu próprio texto.' },
+          { label: 'Vagas de estágio', tip: 'Vê e candidata-te a vagas publicadas por empresas parceiras, com o teu portfólio em vez de CV.' },
         ],
       },
       {
         label: 'IA',
         ai: true,
-        note: 'Muitos mais usos de IA do que no Plus, praticamente sem limite.',
+        items: [
+          { label: 'Coach IA', value: '300 msgs' },
+          { label: 'Toda a IA', value: 'dobro do Plus', subitems: ['Criar projeto', 'Entrevista guiada', 'Análise', 'Relatório', 'Narrativa IA', 'Treino para entrevistas', 'Carta de apresentação'] },
+        ],
       },
     ],
   },
@@ -125,11 +138,19 @@ const PLANS = [
    Ficam só o que é capacidade real (armazenamento, projetos) e o que é
    uma funcionalidade a mais, não uma quantidade. */
 const COMPARE_ROWS = [
-  { label: 'Provas do projeto', free: false, plus: '250MB', pro: '1GB' },
+  { label: 'Ficheiros de prova', free: false, plus: '250MB', pro: '1GB' },
   { label: 'Projetos', free: '3', plus: '15', pro: 'Ilimitados' },
-  { label: 'Treino de defesa com IA', free: false, plus: true, pro: true },
-  { label: 'Carta de apresentação com IA', free: false, plus: true, pro: true },
-  { label: 'Recap semanal por email', free: false, plus: true, pro: true },
+  { label: 'Coach IA', free: '10 msgs', plus: '100 msgs', pro: '300 msgs' },
+  { label: 'Criar projeto com IA', free: '3x', plus: '15x', pro: '30x' },
+  { label: 'Entrevista guiada', free: '3x', plus: '15x', pro: '30x' },
+  { label: 'Análise de projeto', free: '1x', plus: '10x', pro: '25x' },
+  { label: 'Relatório do projeto', free: '1x', plus: '5x', pro: '10x' },
+  { label: 'Narrativa IA', free: '1x', plus: '10x', pro: '25x' },
+  { label: 'Treino para entrevistas', free: false, plus: '5x', pro: '25x' },
+  { label: 'Carta de apresentação IA', free: false, plus: '5x', pro: '25x' },
+  { label: 'Exportar PowerPoint', free: '3x', plus: '15x', pro: 'Ilimitado' },
+  { label: 'Assistente semanal por email', free: false, plus: true, pro: true },
+  { label: 'Sincronização com o GitHub', free: false, plus: true, pro: true },
   { label: 'Vagas de estágio', free: false, plus: false, pro: true },
 ]
 
@@ -155,6 +176,17 @@ const FAQ = [
     a: 'Cada projeto tem a sua própria página pública, com um link que só partilhas se quiseres, seja a recrutadores, professores ou ao júri de defesa. Nunca aparece em motores de busca a não ser que sejas tu a partilhar o link.',
   },
 ]
+
+// Marca oficial do GitHub (Octicon mark-github) — usada em vez do check
+// genérico só neste item, porque a marca reconhecível vende mais confiança
+// do que um ✓ qualquer ("integra mesmo com o GitHub a sério").
+function GithubMark({ size = 14, className }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="currentColor" className={className} aria-hidden="true">
+      <path fillRule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+    </svg>
+  )
+}
 
 function ComparisonCell({ value }) {
   if (value === false) return <CloseCircle size={16} className="pricing-cmp-no" />
@@ -237,12 +269,16 @@ export default function Pricing() {
         {error && <div className="pricing-toast">{error}</div>}
 
         <header className="pricing-header">
-          <h1>Constrói agora. Lança quando estiveres pronto.</h1>
+          <h1>Mostra o trabalho. Não contes sobre ele.</h1>
         </header>
 
         <div className="pricing-proof">
           <GraduationCap size={15} />
-          <span>Já usado por alunos e professores em escolas profissionais portuguesas.</span>
+          {/* "Escolas profissionais" sozinho dizia a quem não anda na escola
+              que isto não é para ele. Universidades entram porque há
+              testemunhos reais de lá (Coimbra, Aveiro) — não se alarga mais
+              do que isso sem haver quem o diga. */}
+          <span>Já usado por alunos e professores em escolas e universidades portuguesas.</span>
         </div>
 
         <div className="pricing-period-toggle" role="group" aria-label="Periodicidade do pagamento">
@@ -282,9 +318,14 @@ export default function Pricing() {
                   </span>
                   {plan.period && <span className="pricing-period">{annual && plan.priceAnnual ? '/ano' : plan.period}</span>}
                 </div>
-                {annual && plan.annualEquivalent && (
+                {annual && plan.annualEquivalent ? (
                   <p className="pricing-annual-note">equivale a {plan.annualEquivalent}</p>
-                )}
+                ) : plan.weeklyNote ? (
+                  /* Ao dia os cêntimos não dizem nada a ninguém; à semana
+                     já se compara com alguma coisa real. É a mesma conta,
+                     não uma promessa nova. */
+                  <p className="pricing-annual-note">{plan.weeklyNote}</p>
+                ) : null}
                 {isCurrent ? (
                   <div className="pricing-current"><Check size={14} /> Plano atual</div>
                 ) : isDowngrade ? (
@@ -300,6 +341,12 @@ export default function Pricing() {
                     {loading === plan.id ? 'A redirecionar…' : <>{plan.cta} <ArrowRight size={14} /></>}
                   </button>
                 )}
+                {/* Reduz o atrito de decidir pagar — facto real (já está na
+                    FAQ), só posto onde é mais preciso: mesmo ao lado do
+                    botão. Grátis não precisa, não há nada para cancelar. */}
+                {plan.id !== 'free' && !isCurrent && !isDowngrade && (
+                  <p className="pricing-cta-note">Cancela quando quiseres, sem letras miúdas.</p>
+                )}
 
                 {/* "Tudo do X, mais…" em vez de repetir a mesma lista três
                     vezes: o que interessa é a diferença, não o inventário. */}
@@ -310,28 +357,26 @@ export default function Pricing() {
                 {plan.groups.map(group => (
                   <div key={group.label} className="pricing-group">
                     {group.ai ? (
-                      /* Sem lista nem números: os usos exatos de cada funcionalidade de
-                         IA só aparecem dentro da app, quando são relevantes (ao bloquear
-                         por limite mensal). Aqui fica só a comparação com o plano anterior. */
-                      <p className="pricing-ai-note">
-                        <span className="pricing-ai-badge">IA</span>
-                        {group.note}
-                      </p>
-                    ) : (
-                      <>
-                        {!plan.inherits && (
-                          <span className="pricing-group-label">{group.label}</span>
-                        )}
-                        <ul className="pricing-list">
-                          {group.items.map(item => {
-                            const tipKey = `${plan.id}:${item.label}`
-                            const tipOpen = openTip === tipKey
-                            return (
-                              <li key={item.label} className="pricing-item">
-                                <Check size={14} className="pricing-check" />
+                      <span className="pricing-group-label">
+                        <span className="pricing-ai-badge">IA</span> limitada por mês
+                      </span>
+                    ) : !plan.inherits && (
+                      <span className="pricing-group-label">{group.label}</span>
+                    )}
+                    <ul className="pricing-list">
+                      {group.items.map(item => {
+                        const tipKey = `${plan.id}:${item.label}`
+                        const tipOpen = openTip === tipKey
+                        return (
+                          <li key={item.label} className="pricing-item">
+                            {item.icon === 'github'
+                              ? <GithubMark size={17} className="pricing-check pricing-check-github" />
+                              : <Check size={14} className="pricing-check" />}
+                            <span className="pricing-item-body">
+                              <span className="pricing-item-main">
                                 <span className="pricing-item-label-wrap">
                                   <span className="pricing-item-label">{item.label}</span>
-                                  {item.tip && (
+                                  {item.tip && !item.subitems && (
                                     <span className="pricing-tip-wrap">
                                       <button
                                         type="button"
@@ -350,12 +395,20 @@ export default function Pricing() {
                                   )}
                                 </span>
                                 {item.value && <span className="pricing-item-value">{item.value}</span>}
-                              </li>
-                            )
-                          })}
-                        </ul>
-                      </>
-                    )}
+                              </span>
+                              {/* Em vez de esconder a lista de ferramentas atrás de um
+                                  tooltip, mostra-a logo — uma marca que ninguém conhece
+                                  ainda ganha mais em mostrar do que em resumir. */}
+                              {item.subitems && (
+                                <span className="pricing-subitems">
+                                  {item.subitems.join(' · ')}
+                                </span>
+                              )}
+                            </span>
+                          </li>
+                        )
+                      })}
+                    </ul>
                   </div>
                 ))}
               </div>
@@ -364,8 +417,30 @@ export default function Pricing() {
         </div>
 
         <p className="pricing-foot">
+          Os números exatos de cada ferramenta estão na tabela mais abaixo.
           Muda ou cancela quando quiseres. Contas de escola têm acesso incluído para todos os alunos.
         </p>
+
+        {/* ══════════════ A OBJEÇÃO QUE NINGUÉM ESCREVIA ══════════════
+            "Porquê pagar se tenho IA grátis noutro lado?" é o primeiro
+            pensamento de quem chega aqui. Dois parágrafos curtos, frases
+            normais, sem travessão nenhum — nem para separar ideias a meio
+            da frase, nem para ligar duas frases com o mesmo peso. Isso lê-se
+            a léguas a texto de IA, tal como três frases em espelho a dizer
+            a mesma coisa de três maneiras diferentes. */}
+        <section className="pricing-section pricing-section--narrow">
+          <h2 className="pricing-section-title">E porquê isto, se há IA grátis em todo o lado?</h2>
+          <p className="pricing-why-text">
+            Um chat esquece tudo assim que fechas a aba. Aqui não: o que escreveste sobre o
+            projeto há três semanas continua lá, e a IA usa isso para te ajudar hoje. Não
+            precisas de explicar tudo outra vez.
+          </p>
+          <p className="pricing-why-text">
+            No fim também não ficas só com uma conversa. Ficas com uma página publicada: o
+            trabalho, as provas e a evolução ao longo do tempo, tudo num link que podes
+            mandar a um cliente, a um professor ou a um recrutador.
+          </p>
+        </section>
 
         {/* ══════════════ TESTEMUNHOS ══════════════ */}
         <section className="pricing-section">

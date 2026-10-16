@@ -46,6 +46,7 @@ import { Chart2Icon as BarChart2 } from '@solar-icons/react/bold/chart-2'
 import { CheckCircleIcon as CheckCircle } from '@solar-icons/react/bold/check-circle'
 import { Book2Icon as BookOpen } from '@solar-icons/react/bold/book-2'
 import { AltArrowDownIcon as ChevronDown } from '@solar-icons/react/bold/alt-arrow-down'
+import { AltArrowUpIcon as ChevronUp } from '@solar-icons/react/bold/alt-arrow-up'
 import { EyeIcon as Eye } from '@solar-icons/react/bold/eye'
 import { EyeClosedIcon as EyeOff } from '@solar-icons/react/bold/eye-closed'
 import { UserPlusRoundedIcon as UserPlus } from '@solar-icons/react/bold/user-plus-rounded'
@@ -455,30 +456,32 @@ export function LiveProof({ project, isOwner, onSave }) {
 
   return (
     <form onSubmit={submit} style={{
-      display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
+      display: 'flex', flexDirection: 'column', gap: 12,
       background: 'var(--color-surface)', border: '1px dashed var(--color-border)',
-      borderRadius: 10, padding: '10px 16px', marginBottom: 16,
+      borderRadius: 12, padding: '14px 16px', marginBottom: 16,
       fontFamily: 'var(--font-body, system-ui, sans-serif)',
     }}>
-      <span style={{ fontSize: 12.5, color: 'var(--color-text-secondary)', flex: '1 1 220px' }}>
+      <span style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
         Tens os resultados escritos. Falta a prova: cola o link de algo que já funciona (site, demo, vídeo).
       </span>
-      <input
-        type="text" value={draft} onChange={e => setDraft(e.target.value)}
-        placeholder="https://..." aria-label="Link da prova"
-        style={{ flex: '1 1 180px', minWidth: 0, padding: '7px 10px', fontSize: 13, borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-bg)', color: 'var(--color-text)', fontFamily: 'inherit' }}
-      />
-      <button type="submit" disabled={saving || !draft.trim()} style={{ padding: '7px 14px', fontSize: 12.5, fontWeight: 700, borderRadius: 8, border: 'none', background: 'var(--color-primary)', color: '#fff', cursor: saving ? 'default' : 'pointer', opacity: saving || !draft.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
-        {saving ? 'A guardar…' : 'Guardar'}
-      </button>
-      {error && <span style={{ flexBasis: '100%', fontSize: 12, color: 'var(--color-error, #f43f5e)' }}>{error}</span>}
+      <div style={{ display: 'flex', gap: 8 }}>
+        <input
+          type="text" value={draft} onChange={e => setDraft(e.target.value)}
+          placeholder="https://..." aria-label="Link da prova"
+          style={{ flex: '1 1 auto', minWidth: 0, padding: '10px 12px', fontSize: 13, borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-bg)', color: 'var(--color-text)', fontFamily: 'inherit' }}
+        />
+        <button type="submit" disabled={saving || !draft.trim()} style={{ flexShrink: 0, padding: '10px 16px', fontSize: 13, fontWeight: 700, borderRadius: 8, border: 'none', background: 'var(--color-primary)', color: '#fff', cursor: saving ? 'default' : 'pointer', opacity: saving || !draft.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
+          {saving ? 'A guardar…' : 'Guardar'}
+        </button>
+      </div>
+      {error && <span style={{ fontSize: 12, color: 'var(--color-error, #f43f5e)' }}>{error}</span>}
     </form>
   )
 }
 
 export function GithubProof({ project }) {
   const stats = project?.github_stats
-  if (!stats?.commits) return null
+  if (!stats?.commits || project?.preview_style?.githubHidden) return null
   const compact = !!project?.preview_style?.githubCompact
 
   const langs = topLanguages(stats.languages, 3)
@@ -624,7 +627,7 @@ export const PROFILE_SCORE_FIELDS = [
   { key: 'technologies',    label: getProjectField('technologies').label,    minLen: getProjectField('technologies').minLen,    tip: 'Lista linguagens, frameworks, bases de dados, APIs e ferramentas. Quanto mais completo, melhor.' },
   { key: 'target_audience', label: getProjectField('target_audience').label, minLen: getProjectField('target_audience').minLen, tip: 'Sê específico: perfil, faixa etária, contexto profissional, necessidades concretas.' },
   { key: 'features',        label: getProjectField('features').label,        minLen: getProjectField('features').minLen,        tip: 'Descreve cada funcionalidade com uma frase sobre o que faz e porquê é relevante.' },
-  { key: 'challenges',      label: getProjectField('challenges').label,      minLen: getProjectField('challenges').minLen,      tip: 'Conta um obstáculo real e como o resolveste — é o que mostra que enfrentaste o problema, não só que o descreveste.' },
+  { key: 'challenges',      label: getProjectField('challenges').label,      minLen: getProjectField('challenges').minLen,      tip: 'Conta um obstáculo real e como o resolveste; é o que mostra que enfrentaste o problema, não só que o descreveste.' },
   { key: 'cover_url',       label: 'Foto de capa',   minLen: 1,           tip: 'Uma boa imagem de capa aumenta muito a impressão do projeto.' },
 ]
 
@@ -1288,6 +1291,24 @@ export const TITLE_FONT_OPTIONS = [
   { key: 'inter',    label: 'Inter',    css: 'Inter, sans-serif',                        sample: 'Aw' },
 ]
 
+// Fonte livre do Google Fonts — nome sanitizado (só letras/números/espaço)
+// antes de ir para o URL da API e para o CSS font-family, para não dar para
+// injetar nada ali. Carregamento com `Set` a nível de módulo: a mesma fonte
+// nunca é pedida duas vezes na mesma sessão, mesmo se o projeto reabrir.
+function sanitizeFontName(name) {
+  return String(name || '').replace(/[^a-zA-Z0-9 ]/g, '').trim().slice(0, 40)
+}
+const loadedGoogleFonts = new Set()
+function loadGoogleFont(name) {
+  const clean = sanitizeFontName(name)
+  if (!clean || loadedGoogleFonts.has(clean)) return
+  loadedGoogleFonts.add(clean)
+  const link = document.createElement('link')
+  link.rel = 'stylesheet'
+  link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(clean).replace(/%20/g, '+')}:wght@400;500;600;700;800&display=swap`
+  document.head.appendChild(link)
+}
+
 export const TITLE_STYLE_OPTIONS = [
   { key: 'normal',   label: 'Normal'    },
   { key: 'caps',     label: 'CAPS'      },
@@ -1542,7 +1563,7 @@ export function ProjectAttachments({ project }) {
         // chegou a resolver, é mesmo só ele a ver isto. O rótulo existe para
         // não parecer, visualmente, que está ao lado do cartão "Ficheiros"
         // (esse sim público) e dar a entender o mesmo nível de visibilidade.
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignSelf: 'flex-start' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, alignSelf: 'center' }}>
           <a
             href={srcUrl} target="_blank" rel="noopener noreferrer"
             style={{
@@ -1554,7 +1575,7 @@ export function ProjectAttachments({ project }) {
           >
             <Download size={14} /> {project.library_file_name || 'Documento original'}
           </a>
-          <span style={{ fontSize: 11, color: 'var(--color-text-tertiary)' }}>Só visível para ti — nunca aparece a visitantes.</span>
+          <span style={{ fontSize: 11, color: 'var(--color-text-tertiary)', textAlign: 'center' }}>Só visível para ti — nunca aparece a visitantes.</span>
         </div>
       )}
       {files.length > 0 && (
@@ -1837,6 +1858,10 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
   // page opts into 760 explicitly. Kept reactive so the panel switches sidebar ↔
   // bottom-sheet on resize/rotate. (See lib/useIsMobile.)
   const isDesktop = !useIsMobile(759)
+  // Sidebar de provas (GitHub + Ficheiros) — larga o suficiente para não
+  // espremer a coluna principal (860px) contra ela; abaixo disto o conteúdo
+  // volta a empilhar-se, como sempre foi.
+  const hasRoomForProofSidebar = !useIsMobile(960)
 
   // Measure banner height so the workspace panel always aligns flush below it
   useEffect(() => {
@@ -1922,8 +1947,32 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
       : typeHero
 
   const heroHeight        = (HERO_SIZES.find(s => s.key === previewStyle.heroSize) || HERO_SIZES[0]).height
-  const selectedFont      = FONT_OPTIONS.find(f => f.key === (previewStyle.font || 'default')) || FONT_OPTIONS[0]
-  const selectedTitleFont = TITLE_FONT_OPTIONS.find(f => f.key === (previewStyle.titleFont || 'croogla')) || TITLE_FONT_OPTIONS[0]
+
+  // Fonte livre — mesma lógica da cor personalizada: guardada à parte da
+  // chave da lista fixa, carregada do Google Fonts só quando está mesmo
+  // ativa (debounce para não pedir a fonte a cada letra escrita).
+  const customFontName      = sanitizeFontName(previewStyle.fontCustom)
+  const usingCustomFont     = previewStyle.font === 'custom' && !!customFontName
+  const customTitleFontName = sanitizeFontName(previewStyle.titleFontCustom)
+  const usingCustomTitleFont = previewStyle.titleFont === 'custom' && !!customTitleFontName
+
+  useEffect(() => {
+    if (!usingCustomFont) return
+    const t = setTimeout(() => loadGoogleFont(customFontName), 500)
+    return () => clearTimeout(t)
+  }, [usingCustomFont, customFontName])
+  useEffect(() => {
+    if (!usingCustomTitleFont) return
+    const t = setTimeout(() => loadGoogleFont(customTitleFontName), 500)
+    return () => clearTimeout(t)
+  }, [usingCustomTitleFont, customTitleFontName])
+
+  const selectedFont      = usingCustomFont
+    ? { key: 'custom', label: customFontName, css: `"${customFontName}", sans-serif`, sample: 'Aa' }
+    : (FONT_OPTIONS.find(f => f.key === (previewStyle.font || 'default')) || FONT_OPTIONS[0])
+  const selectedTitleFont = usingCustomTitleFont
+    ? { key: 'custom', label: customTitleFontName, css: `"${customTitleFontName}", sans-serif`, sample: 'Aw' }
+    : (TITLE_FONT_OPTIONS.find(f => f.key === (previewStyle.titleFont || 'croogla')) || TITLE_FONT_OPTIONS[0])
   const titleStyle        = previewStyle.titleStyle || 'normal'
   const selectedBg        = BG_OPTIONS.find(b => b.key === (previewStyle.bg || 'default')) || BG_OPTIONS[0]
   const resolvedBg        = usingCustomBg ? customBg : (selectedBg.bg || 'var(--color-bg)')
@@ -1933,7 +1982,16 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
   // o fundo escuro por omissão). Só o título usa esta versão clareada; os
   // brilhos/badges que usam hero.c1/c2 continuam com a cor original.
   const heroBgHex  = usingCustomBg ? customBg : (selectedBg.preview || '#060c18')
-  const titleColor = { c1: ensureReadable(hero.c1, heroBgHex), c2: ensureReadable(hero.c2, heroBgHex) }
+  // Com foto de capa como fundo do hero, o contraste tinha de ser calculado
+  // contra o fundo da página escolhido, não contra a foto que está mesmo
+  // atrás do título — por isso a cor "corrigida" podia sair sem nada a ver
+  // com o que se via (ex: âmbar da paleta a ficar quase cinzento). Com foto,
+  // o título ignora a cor da paleta e usa branco translúcido: o scrim escuro
+  // por cima da imagem (ver <Hero>) já garante leitura em qualquer foto.
+  const coverAsHeroForTitle = !!(previewStyle.coverAsHero && project.cover_url)
+  const titleColor = coverAsHeroForTitle
+    ? { c1: 'rgba(255,255,255,0.94)', c2: 'rgba(255,255,255,0.94)' }
+    : { c1: ensureReadable(hero.c1, heroBgHex), c2: ensureReadable(hero.c2, heroBgHex) }
   // pvTheme: force dark/light CSS vars inside preview regardless of app theme.
   // Num fundo escolhido à mão isso passa a depender da luminância do hex, senão
   // um fundo claro ficava com texto branco por cima.
@@ -1953,6 +2011,132 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
   const DEFAULT_SECTION_ORDER = ['problem','solution','target_audience','features','technologies','challenges','results','learnings','pap_supervisor']
   const orderedSections = previewStyle.sectionOrder?.length ? previewStyle.sectionOrder : DEFAULT_SECTION_ORDER
   const sectionMedia = previewStyle.sectionMedia || {}
+
+  // Clicar numa secção/bloco da própria página para o editar — em vez de o
+  // teres de encontrar primeiro na lista "Ordem da página". `selectedItem`
+  // é a chave do item selecionado ('section:problem' ou 'block:<id>'); só
+  // existe em modo de edição (isOwner && previewEditing), nunca para
+  // visitantes. As ações (mover, esconder/remover) reutilizam exatamente a
+  // mesma lógica que já existia nos botões da aba "Blocos" — isto é só uma
+  // segunda forma de lá chegar, não uma segunda fonte de verdade.
+  const [selectedItem, setSelectedItem] = useState(null)
+  const itemKey = (item) => item.kind === 'block' ? `block:${item.id}` : `section:${item.key}`
+  const defaultLayoutOrder = [
+    ...orderedSections.map(key => ({ kind: 'section', key })),
+    ...previewBlocks.map(b => ({ kind: 'block', id: b.id })),
+  ]
+  function moveLayoutItem(item, direction) {
+    setPreviewStyle(ps => {
+      const base = ps.layoutOrder?.length ? [...ps.layoutOrder] : [...defaultLayoutOrder]
+      const matches = li => li.kind === item.kind && (item.kind === 'block' ? li.id === item.id : li.key === item.key)
+      const idx = base.findIndex(matches)
+      const newIdx = idx + direction
+      if (idx === -1 || newIdx < 0 || newIdx >= base.length) return ps
+      const tmp = base[idx]; base[idx] = base[newIdx]; base[newIdx] = tmp
+      return { ...ps, layoutOrder: base }
+    })
+  }
+  function toggleSectionHidden(key) {
+    setPreviewStyle(ps => {
+      const next = new Set(ps.hiddenSections || [])
+      next.has(key) ? next.delete(key) : next.add(key)
+      return { ...ps, hiddenSections: [...next] }
+    })
+  }
+  function removeBlock(blockId) {
+    setPreviewBlocks(bs => bs.filter(b => b.id !== blockId))
+    setPreviewStyle(ps => ps.layoutOrder?.length
+      ? { ...ps, layoutOrder: ps.layoutOrder.filter(li => !(li.kind === 'block' && li.id === blockId)) }
+      : ps)
+    setSelectedItem(null)
+  }
+
+  // ── Desfazer/Refazer ──────────────────────────────────────────────────
+  // Em vez de intercetar as dezenas de sítios que já chamam
+  // setPreviewStyle/setPreviewBlocks, observa as duas em conjunto e grava um
+  // ponto de histórico sozinho, 700ms depois de pararem de mudar — assim uma
+  // rajada de alterações (arrastar, escrever texto) vira UM passo de
+  // desfazer, não um por tecla. Guardado em refs (não em estado) para não
+  // forçar um render a cada mudança; `histVersion` só serve para os botões
+  // saberem quando atualizar o estado ativado/desativado.
+  const prevSnapshotRef = useRef({ style: previewStyle, blocks: previewBlocks })
+  const pendingBeforeRef = useRef(null)
+  const undoStackRef = useRef([])
+  const redoStackRef = useRef([])
+  const skipHistoryRef = useRef(false)
+  const historyDebounceRef = useRef(null)
+  const [histVersion, setHistVersion] = useState(0)
+
+  useEffect(() => {
+    if (skipHistoryRef.current) {
+      skipHistoryRef.current = false
+      prevSnapshotRef.current = { style: previewStyle, blocks: previewBlocks }
+      return
+    }
+    if (!pendingBeforeRef.current) pendingBeforeRef.current = prevSnapshotRef.current
+    prevSnapshotRef.current = { style: previewStyle, blocks: previewBlocks }
+    if (redoStackRef.current.length) { redoStackRef.current = []; setHistVersion(v => v + 1) }
+    clearTimeout(historyDebounceRef.current)
+    historyDebounceRef.current = setTimeout(() => {
+      if (pendingBeforeRef.current) {
+        undoStackRef.current.push(pendingBeforeRef.current)
+        if (undoStackRef.current.length > 50) undoStackRef.current.shift()
+        pendingBeforeRef.current = null
+        setHistVersion(v => v + 1)
+      }
+    }, 700)
+    return () => clearTimeout(historyDebounceRef.current)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [previewStyle, previewBlocks])
+
+  function undoPreviewChange() {
+    clearTimeout(historyDebounceRef.current)
+    if (pendingBeforeRef.current) {
+      undoStackRef.current.push(pendingBeforeRef.current)
+      pendingBeforeRef.current = null
+    }
+    if (!undoStackRef.current.length) return
+    const target = undoStackRef.current.pop()
+    redoStackRef.current.push({ style: previewStyle, blocks: previewBlocks })
+    skipHistoryRef.current = true
+    prevSnapshotRef.current = target
+    setPreviewStyle(target.style)
+    setPreviewBlocks(target.blocks)
+    setSelectedItem(null)
+    setHistVersion(v => v + 1)
+  }
+  function redoPreviewChange() {
+    if (!redoStackRef.current.length) return
+    const target = redoStackRef.current.pop()
+    undoStackRef.current.push({ style: previewStyle, blocks: previewBlocks })
+    skipHistoryRef.current = true
+    prevSnapshotRef.current = target
+    setPreviewStyle(target.style)
+    setPreviewBlocks(target.blocks)
+    setSelectedItem(null)
+    setHistVersion(v => v + 1)
+  }
+  // eslint-disable-next-line no-unused-vars
+  const _histVersionTick = histVersion
+  const canUndo = undoStackRef.current.length > 0 || !!pendingBeforeRef.current
+  const canRedo = redoStackRef.current.length > 0
+
+  // Cmd/Ctrl+Z e Cmd/Ctrl+Shift+Z — só em modo de edição, nunca para quem
+  // está só a ver a página (evita capturar o atalho do browser por engano).
+  useEffect(() => {
+    if (!(isOwner && previewEditing)) return
+    function onKeyDown(e) {
+      if (!(e.metaKey || e.ctrlKey) || e.key.toLowerCase() !== 'z') return
+      const target = e.target
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return
+      e.preventDefault()
+      if (e.shiftKey) redoPreviewChange()
+      else undoPreviewChange()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOwner, previewEditing])
 
   // Pairs a section card with an optional image/video on the side (set via the
   // Secções tab) — falls back to the plain full-width card when no media is set.
@@ -1981,6 +2165,16 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
     { id: 'mobile',   Icon: Smartphone, label: 'Mobile',    title: 'Vista mobile (390px)' },
   ]
   const deviceMaxWidth = previewDevice === 'mobile' ? 390 : previewDevice === 'tablet' ? 768 : undefined
+
+  // Sidebar de provas (GitHub + Ficheiros) — opção do dono (previewStyle.
+  // proofLayout), não automática: por omissão fica tudo em coluna única,
+  // exatamente como sempre foi, e só quem escolher "Com barra lateral" no
+  // painel "Estilo" é que passa a ver a sidebar. Mesmo escolhida, só aparece
+  // com espaço real no ecrã (não em mobile, nem quando o editor está a
+  // simular um ecrã estreito) — a decisão da grelha não depende do
+  // conteúdo em si (que só se sabe depois de um fetch assíncrono em
+  // ProjectAttachments), para não trocar de layout a meio do carregamento.
+  const showProofSidebar = (previewStyle.proofLayout === 'sidebar') && hasRoomForProofSidebar && !deviceMaxWidth
 
   return (
     <div className="pv-outer" style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column', background: resolvedBg }}>
@@ -2121,21 +2315,59 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
         .pv-device-btn { transition: all 0.15s; }
         .pv-device-btn:hover { opacity: 0.8; }
 
+        /* ── Clicar para editar — hover/seleção de secções e blocos ── */
+        .pv-sel-hover { cursor: pointer; transition: outline-color 0.12s, box-shadow 0.12s; }
+        .pv-sel-hover:hover { outline: 1.5px dashed var(--color-border-hover); outline-offset: 3px; }
+        .pv-sel-hover:hover .pv-sel-badge { opacity: 1; transform: translateY(0); }
+        .pv-sel-active { outline: 1.5px solid var(--color-primary); outline-offset: 3px; box-shadow: 0 0 0 5px var(--color-primary-subtle); }
+        .pv-sel-badge {
+          position: absolute; top: -12px; left: 14px; z-index: 5;
+          opacity: 0; transform: translateY(4px); pointer-events: none;
+          transition: opacity 0.12s, transform 0.12s;
+          background: var(--color-primary); color: #fff;
+          font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 6px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+          font-family: var(--font-heading);
+        }
+        .pv-sel-active .pv-sel-badge { display: none; }
+        .pv-sel-toolbar {
+          position: absolute; top: -44px; left: 50%; transform: translateX(-50%); z-index: 20;
+          display: flex; align-items: center; gap: 2px;
+          background: var(--color-surface); border: 1px solid var(--color-border);
+          border-radius: 10px; padding: 5px; box-shadow: var(--shadow-xl);
+        }
+        .pv-sel-toolbar button {
+          all: unset; display: flex; align-items: center; justify-content: center;
+          width: 30px; height: 30px; border-radius: 6px; color: var(--color-text-secondary); cursor: pointer;
+        }
+        .pv-sel-toolbar button:hover { background: var(--color-surface-hover); color: var(--color-text); }
+        .pv-sel-sep { width: 1px; height: 18px; background: var(--color-border); margin: 0 3px; }
+
         /* ── Mobile: banner ── */
         @media (max-width: 600px) {
           .pv-banner-inner { flex-wrap: wrap; gap: 6px !important; padding: 8px 12px !important; }
           .pv-banner-sep { display: none !important; }
         }
-        /* ── Mobile: content ── */
+        /* ── Mobile: content ──
+           Repetido como seletor de atributo (sem @media) para o simulador de
+           ecrã do editor: a frame aí encolhe por CSS (max-width), mas a
+           JANELA do browser continua larga, por isso a media query nunca
+           disparava — o título ficava com o tamanho de desktop dentro de uma
+           moldura de 390px e saía cortado. Mesmas regras, duas portas de
+           entrada: a largura real (visitante a sério num telemóvel) ou a
+           largura simulada (data-pv-device, só dentro do editor). */}
         @media (max-width: 600px) {
           .pv-story { padding: 0 14px 80px !important; gap: 20px !important; }
           .pv-hero-title { font-size: clamp(24px, 7vw, 40px) !important; letter-spacing: -0.5px !important; line-height: 1.1 !important; }
           .pv-section-card { padding: 16px 16px !important; border-radius: 12px !important; }
-          /* Title block — reduce horizontal padding on mobile */
           .pv-title-block { padding: 0 16px !important; }
-          /* Creator pill — smaller on mobile */
           .pv-creator-pill { font-size: 12px !important; padding: 5px 12px !important; }
         }
+        [data-pv-device="mobile"] .pv-story { padding: 0 14px 80px !important; gap: 20px !important; }
+        [data-pv-device="mobile"] .pv-hero-title { font-size: clamp(24px, 7vw, 40px) !important; letter-spacing: -0.5px !important; line-height: 1.1 !important; }
+        [data-pv-device="mobile"] .pv-section-card { padding: 16px 16px !important; border-radius: 12px !important; }
+        [data-pv-device="mobile"] .pv-title-block { padding: 0 16px !important; }
+        [data-pv-device="mobile"] .pv-creator-pill { font-size: 12px !important; padding: 5px 12px !important; }
       `}</style>
 
       {/* ── Preview banner — só para o professor. O dono já tem a navbar
@@ -2255,8 +2487,8 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
           : undefined,
       }}>
 
-      {/* ── Device frame + CSS scope (data-pv-cs, data-pv-theme) ── */}
-      <div data-pv-cs={cardStyleVal} data-pv-theme={pvTheme || undefined} style={{
+      {/* ── Device frame + CSS scope (data-pv-cs, data-pv-theme, data-pv-device) ── */}
+      <div data-pv-cs={cardStyleVal} data-pv-theme={pvTheme || undefined} data-pv-device={previewDevice} style={{
         margin: previewDevice !== 'desktop' ? `${isOwner ? 16 : 40}px auto 0` : '0 auto',
         maxWidth: deviceMaxWidth,
         width: '100%',
@@ -2364,6 +2596,11 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
             fontFamily: selectedTitleFont.css,
             textTransform: titleStyle === 'caps' ? 'uppercase' : 'none',
             textAlign: titleAlign,
+            // Uma palavra sozinha mais larga que a moldura (ex: "Comfortable"
+            // num ecrã de 390px) não tinha onde quebrar e saía cortada pelo
+            // overflow:hidden do frame — isto deixa-a partir a meio antes de
+            // transbordar.
+            overflowWrap: 'break-word', wordBreak: 'break-word',
             ...(titleStyle === 'gradient' ? {
               // backgroundImage, não o shorthand "background" — o shorthand
               // reinicia background-clip para border-box sempre que o valor
@@ -2406,9 +2643,14 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
 
           {!isOwner && <ProjectTimelineBadge project={project} />}
 
-          {/* Creator pill */}
+          {/* Creator pill — maxWidth + flexWrap: um nome com curso comprido
+              (ex: "Bruno Silva · Design e Multimédia") num ecrã estreito não
+              tinha onde encolher (flex item não parte texto por omissão) e
+              saía da moldura, cortado pelo overflow:hidden do simulador —
+              e do mesmo jeito num telemóvel a sério. Agora quebra para uma
+              segunda linha dentro da própria pílula em vez de transbordar. */}
           {displayName && (
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 999, padding: '6px 16px 6px 6px' }}>
+            <div style={{ display: 'inline-flex', flexWrap: 'wrap', alignItems: 'center', gap: 10, maxWidth: '100%', boxSizing: 'border-box', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 999, padding: '6px 16px 6px 6px' }}>
               {avatarUrl ? (
                 <img src={avatarUrl} alt="" style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
               ) : (
@@ -2416,8 +2658,10 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                   {displayName[0]?.toUpperCase()}
                 </div>
               )}
-              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)' }}>{displayName}</span>
-              {course && <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>· {course}</span>}
+              <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '0 6px', minWidth: 0 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)' }}>{displayName}</span>
+                {course && <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>· {course}</span>}
+              </span>
             </div>
           )}
 
@@ -2544,8 +2788,14 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
             {/* Tabs + actions row — tabs centradas com a barra toda (não só
                 com o espaço que sobra ao lado do botão de guardar),
                 mesma receita da barra do mobile. */}
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', minHeight: 30, marginBottom: 10 }}>
-              <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', minHeight: 30, marginBottom: 10 }}>
+              {/* Espaçador à esquerda do mesmo peso do grupo da direita, para
+                  as abas ficarem mesmo centradas sem nunca sobrepor os
+                  botões (era position:absolute + left:50%, que a esta
+                  largura de painel ficava por baixo do grupo da direita —
+                  Desfazer/Refazer ficavam invisíveis e inclicáveis). */}
+              <div style={{ flex: 1 }} />
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
                 <SegmentedTabs
                   size="compact"
                   className="ws-segtabs"
@@ -2562,33 +2812,91 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                 />
               </div>
 
-              {/* Save icon — branco/monocromático, igual ao resto da app
-                  (era azul, destoava do preto/branco usado em todo o lado). */}
+              {/* Guardar — sozinho, continua em cima. Desfazer/Refazer
+                  desceram para a linha do simulador de ecrã, pedido do
+                  Gustavo: são ações de histórico, não de gravação, não
+                  faz sentido os três ficarem agrupados como se fossem a
+                  mesma coisa. */}
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4 }}>
+                {/* Save icon — branco/monocromático, igual ao resto da app
+                    (era azul, destoava do preto/branco usado em todo o lado). */}
+                <button
+                  onClick={async () => {
+                    const { error } = await supabase.from('projects')
+                      .update({ preview_blocks: previewBlocks, preview_style: previewStyle })
+                      .eq('id', project.id)
+                    if (!error) {
+                      setPreviewSaveError(false)
+                      setPreviewSaved(true)
+                      setTimeout(() => setPreviewSaved(false), 2000)
+                    } else {
+                      console.error('Save preview error:', error)
+                      setPreviewSaveError(true)
+                      setTimeout(() => setPreviewSaveError(false), 4000)
+                    }
+                  }}
+                  title={previewSaveError ? 'Erro ao guardar, tenta novamente' : 'Guardar'}
+                  style={{
+                    width: 28, height: 28, borderRadius: 7,
+                    background: previewSaveError ? 'var(--color-error-subtle)' : previewSaved ? 'var(--color-success-subtle)' : 'var(--color-text)',
+                    border: `1px solid ${previewSaveError ? 'var(--color-error-subtle)' : previewSaved ? 'var(--color-success-subtle)' : 'var(--color-text)'}`,
+                    color: previewSaveError ? 'var(--color-error)' : previewSaved ? 'var(--color-success)' : 'var(--color-bg)',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s', flexShrink: 0,
+                  }}
+                >
+                  {previewSaveError ? <X size={13} strokeWidth={3} /> : previewSaved ? <Check size={13} strokeWidth={3} /> : <Save size={13} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Simulador de ecrã — só faz sentido com o ecrã real em desktop
+                (é aqui que se vê a diferença); troca deviceMaxWidth, que
+                encolhe a própria moldura da preview. Desfazer/Refazer vivem
+                aqui ao lado, mas num grupo visualmente à parte (traço a
+                separar) — são ações de histórico, o simulador é só vista. */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, paddingBottom: 10 }}>
+              {DEVICES.map(d => (
+                <button
+                  key={d.id}
+                  onClick={() => setPreviewDevice(d.id)}
+                  title={d.title}
+                  style={{
+                    width: 28, height: 24, borderRadius: 6, border: 'none', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: previewDevice === d.id ? 'var(--color-primary-subtle)' : 'transparent',
+                    color: previewDevice === d.id ? 'var(--color-primary)' : 'var(--color-text-tertiary)',
+                    transition: 'background 0.13s, color 0.13s',
+                  }}
+                >
+                  <d.Icon size={14} />
+                </button>
+              ))}
+              <div style={{ width: 1, height: 16, background: 'var(--color-border)', margin: '0 4px' }} />
               <button
-                onClick={async () => {
-                  const { error } = await supabase.from('projects')
-                    .update({ preview_blocks: previewBlocks, preview_style: previewStyle })
-                    .eq('id', project.id)
-                  if (!error) {
-                    setPreviewSaveError(false)
-                    setPreviewSaved(true)
-                    setTimeout(() => setPreviewSaved(false), 2000)
-                  } else {
-                    console.error('Save preview error:', error)
-                    setPreviewSaveError(true)
-                    setTimeout(() => setPreviewSaveError(false), 4000)
-                  }
-                }}
-                title={previewSaveError ? 'Erro ao guardar, tenta novamente' : 'Guardar'}
+                onClick={undoPreviewChange}
+                disabled={!canUndo}
+                title="Desfazer"
                 style={{
-                  width: 28, height: 28, borderRadius: 7, marginLeft: 'auto',
-                  background: previewSaveError ? 'var(--color-error-subtle)' : previewSaved ? 'var(--color-success-subtle)' : 'var(--color-text)',
-                  border: `1px solid ${previewSaveError ? 'var(--color-error-subtle)' : previewSaved ? 'var(--color-success-subtle)' : 'var(--color-text)'}`,
-                  color: previewSaveError ? 'var(--color-error)' : previewSaved ? 'var(--color-success)' : 'var(--color-bg)',
-                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s', flexShrink: 0,
+                  width: 28, height: 24, borderRadius: 6, background: 'transparent', border: 'none',
+                  color: canUndo ? 'var(--color-text-secondary)' : 'var(--color-text-tertiary)',
+                  cursor: canUndo ? 'pointer' : 'default', opacity: canUndo ? 1 : 0.4,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 }}
               >
-                {previewSaveError ? <X size={13} strokeWidth={3} /> : previewSaved ? <Check size={13} strokeWidth={3} /> : <Save size={13} />}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"><path d="M3 10h10a5 5 0 0 1 0 10H8"/><path d="M8 6l-5 4 5 4"/></svg>
+              </button>
+              <button
+                onClick={redoPreviewChange}
+                disabled={!canRedo}
+                title="Refazer"
+                style={{
+                  width: 28, height: 24, borderRadius: 6, background: 'transparent', border: 'none',
+                  color: canRedo ? 'var(--color-text-secondary)' : 'var(--color-text-tertiary)',
+                  cursor: canRedo ? 'pointer' : 'default', opacity: canRedo ? 1 : 0.4,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" style={{ transform: 'scaleX(-1)' }}><path d="M3 10h10a5 5 0 0 1 0 10H8"/><path d="M8 6l-5 4 5 4"/></svg>
               </button>
             </div>
           </div>}
@@ -2607,8 +2915,95 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
               }
             }) : undefined}
           >
+          {/* ── Painel contextual — substitui as 3 abas enquanto algo estiver
+              selecionado no canvas (clicar numa secção/bloco). Ações
+              reutilizam exatamente a mesma lógica da aba Blocos (moveLayoutItem,
+              toggleSectionHidden, removeBlock); "Editar texto"/"Editar bloco"
+              só muda de aba, não duplica os formulários que já existem lá. ── */}
+          {selectedItem && (() => {
+            const [selKind, ...selRest] = selectedItem.split(':')
+            const selId = selRest.join(':')
+            const selItemObj = selKind === 'block' ? { kind: 'block', id: selId } : { kind: 'section', key: selId }
+            const isBlock = selKind === 'block'
+            const block = isBlock ? previewBlocks.find(b => b.id === selId) : null
+            const label = isBlock
+              ? (BLOCK_TYPES.find(bt => bt.type === block?.type)?.label || 'Bloco')
+              : (SECTION_META[selId]?.label || selId)
+            const isHidden = !isBlock && hiddenSections.has(selId)
+
+            return (
+              <div style={{ flex: 1, overflowY: 'scroll', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={wsGroupLabel}>A editar</div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-text)' }}>{label}</div>
+                  </div>
+                  <button
+                    onClick={() => setSelectedItem(null)}
+                    title="Fechar edição"
+                    style={{ width: 28, height: 28, borderRadius: 7, background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                  ><X size={14} /></button>
+                </div>
+
+                {!isBlock && (
+                  <div style={wsGroup}>
+                    <div style={wsGroupLabel}>Visibilidade</div>
+                    <div style={{ display: 'flex', background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: 9, padding: 3 }}>
+                      <button
+                        onClick={() => isHidden && toggleSectionHidden(selId)}
+                        style={{
+                          flex: 1, textAlign: 'center', fontSize: 12, fontWeight: 700, padding: '7px', borderRadius: 7, cursor: 'pointer', fontFamily: 'inherit', border: 'none',
+                          background: !isHidden ? 'var(--color-surface-hover)' : 'transparent',
+                          color: !isHidden ? 'var(--color-text)' : 'var(--color-text-secondary)',
+                        }}
+                      >Visível</button>
+                      <button
+                        onClick={() => { if (!isHidden) toggleSectionHidden(selId); setSelectedItem(null) }}
+                        style={{
+                          flex: 1, textAlign: 'center', fontSize: 12, fontWeight: 700, padding: '7px', borderRadius: 7, cursor: 'pointer', fontFamily: 'inherit', border: 'none',
+                          background: isHidden ? 'var(--color-surface-hover)' : 'transparent',
+                          color: isHidden ? 'var(--color-text)' : 'var(--color-text-secondary)',
+                        }}
+                      >Escondida</button>
+                    </div>
+                  </div>
+                )}
+
+                <div style={wsGroup}>
+                  <div style={wsGroupLabel}>Posição na página</div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      onClick={() => moveLayoutItem(selItemObj, -1)}
+                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 12, fontWeight: 700, padding: 9, borderRadius: 8, background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)', cursor: 'pointer', fontFamily: 'inherit' }}
+                    ><ChevronUp size={13} /> Subir</button>
+                    <button
+                      onClick={() => moveLayoutItem(selItemObj, 1)}
+                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 12, fontWeight: 700, padding: 9, borderRadius: 8, background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)', cursor: 'pointer', fontFamily: 'inherit' }}
+                    ><ChevronDown size={13} /> Descer</button>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => { setPreviewTab(isBlock ? 'blocos' : 'conteudo'); setSelectedItem(null) }}
+                  style={{ textAlign: 'left', fontSize: 12.5, fontWeight: 700, padding: '10px 12px', borderRadius: 9, background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)', cursor: 'pointer', fontFamily: 'inherit' }}
+                >{isBlock ? 'Editar conteúdo do bloco →' : 'Editar texto desta secção →'}</button>
+
+                {isBlock && (
+                  <button
+                    onClick={() => removeBlock(block.id)}
+                    style={{ textAlign: 'left', fontSize: 12.5, fontWeight: 700, padding: '10px 12px', borderRadius: 9, background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', color: 'var(--color-error)', cursor: 'pointer', fontFamily: 'inherit' }}
+                  >Remover bloco</button>
+                )}
+
+                <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)', lineHeight: 1.6, padding: '2px 2px 0' }}>
+                  Clica noutra secção da página para mudar de edição, ou fora de qualquer uma para fechar.
+                </div>
+              </div>
+            )
+          })()}
+
           {/* ── TAB: CONTEÚDO — os 8 campos, a substituir o EditModal por secção ── */}
-          {previewTab === 'conteudo' && (
+          {!selectedItem && previewTab === 'conteudo' && (
             <div style={{ flex: 1, overflowY: 'scroll', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
               {PROJECT_FIELDS.map(f => {
                 const draft = contentDrafts[f.key] ?? (project[f.key] || '')
@@ -2674,7 +3069,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
           )}
 
           {/* ── TAB: ESTILO ── */}
-          {previewTab === 'estilo' && (
+          {!selectedItem && previewTab === 'estilo' && (
             <div style={{ flex: 1, overflowY: 'scroll', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8, textAlign: 'center' }}>
 
               {/* Group: Identidade visual */}
@@ -2921,6 +3316,24 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                       )
                     })}
                   </div>
+                  <div style={{ marginTop: 8 }}>
+                    <input
+                      value={previewStyle.titleFontCustom || ''}
+                      onChange={e => setPreviewStyle(ps => ({ ...ps, titleFont: 'custom', titleFontCustom: e.target.value }))}
+                      placeholder="Ou o nome de uma Google Font (ex: Poppins)"
+                      style={{ ...wsInputNew, fontSize: 11 }}
+                      maxLength={40}
+                    />
+                    {usingCustomTitleFont && (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 5 }}>
+                        <span style={{ fontSize: 11, color: 'var(--color-text-secondary)', fontFamily: selectedTitleFont.css }}>A usar: {customTitleFontName}</span>
+                        <button type="button"
+                          onClick={() => setPreviewStyle(ps => ({ ...ps, titleFont: 'croogla', titleFontCustom: '' }))}
+                          style={{ background: 'transparent', border: 'none', color: 'var(--color-text-secondary)', fontSize: 10, cursor: 'pointer', textDecoration: 'underline', fontFamily: 'var(--font-body)' }}
+                        >Repor</button>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div style={{ marginBottom: 12 }}>
                   <div style={wsControlLabel}>Alinhamento</div>
@@ -2960,6 +3373,24 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                       )
                     })}
                   </div>
+                  <div style={{ marginTop: 8 }}>
+                    <input
+                      value={previewStyle.fontCustom || ''}
+                      onChange={e => setPreviewStyle(ps => ({ ...ps, font: 'custom', fontCustom: e.target.value }))}
+                      placeholder="Ou o nome de uma Google Font (ex: Poppins)"
+                      style={{ ...wsInputNew, fontSize: 11 }}
+                      maxLength={40}
+                    />
+                    {usingCustomFont && (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 5 }}>
+                        <span style={{ fontSize: 11, color: 'var(--color-text-secondary)', fontFamily: selectedFont.css }}>A usar: {customFontName}</span>
+                        <button type="button"
+                          onClick={() => setPreviewStyle(ps => ({ ...ps, font: 'default', fontCustom: '' }))}
+                          style={{ background: 'transparent', border: 'none', color: 'var(--color-text-secondary)', fontSize: 10, cursor: 'pointer', textDecoration: 'underline', fontFamily: 'var(--font-body)' }}
+                        >Repor</button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -2986,6 +3417,34 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                       </button>
                     )
                   })}
+                </div>
+              </div>
+
+              {/* Group: Organização da página */}
+              <div style={wsGroup}>
+                <div style={wsGroupLabel}>Organização</div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {[
+                    { key: 'stacked', label: 'Coluna única', desc: 'Tudo empilhado' },
+                    { key: 'sidebar', label: 'Com barra lateral', desc: 'GitHub e ficheiros ao lado' },
+                  ].map(o => {
+                    const isSel = (previewStyle.proofLayout || 'stacked') === o.key
+                    return (
+                      <button key={o.key} onClick={() => setPreviewStyle(ps => ({ ...ps, proofLayout: o.key }))}
+                        style={{
+                          flex: 1, padding: '10px 4px', borderRadius: 9, cursor: 'pointer', textAlign: 'center',
+                          ...wsOptStyle(isSel),
+                          fontFamily: 'inherit', transition: 'all 0.12s',
+                        }}
+                      >
+                        <div style={{ fontSize: 12, fontWeight: 700 }}>{o.label}</div>
+                        <div style={{ fontSize: 9, marginTop: 3, color: isSel ? 'var(--color-text-secondary)' : 'var(--color-text-tertiary)' }}>{o.desc}</div>
+                      </button>
+                    )
+                  })}
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', marginTop: 6 }}>
+                  Em ecrãs estreitos (telemóvel), fica sempre em coluna única, seja qual for a escolha.
                 </div>
               </div>
 
@@ -3033,7 +3492,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
               só lista reordenável: são a mesma decisão — "o que aparece e em
               que ordem" — vista de dois sítios diferentes só criava trabalho
               duplicado para dizer a mesma coisa) */}
-          {previewTab === 'blocos' && (() => {
+          {!selectedItem && previewTab === 'blocos' && (() => {
             const NATIVE_SECTIONS_MAP = {
               problem:         { label: 'Problema',        Icon: Search     },
               solution:        { label: 'Solução',         Icon: Lightbulb  },
@@ -3675,15 +4134,34 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
       )}
 
       {/* ── Story sections ── */}
-      <div className="pv-story" style={{ maxWidth: deviceMaxWidth ? Math.min(860, deviceMaxWidth) : 860, margin: `${isDesktop ? 40 : bannerH + 16}px auto 0`, padding: `0 ${previewDevice === 'mobile' ? '16px' : '28px'} 80px`, display: 'flex', flexDirection: 'column', gap: 32, fontFamily: selectedFont.css }}>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: showProofSidebar ? 'minmax(0,1fr) 300px' : '1fr',
+        gap: 28, alignItems: 'start',
+        maxWidth: showProofSidebar ? 1180 : undefined,
+        margin: showProofSidebar ? `${isDesktop ? 40 : bannerH + 16}px auto 0` : undefined,
+        padding: showProofSidebar ? `0 ${previewDevice === 'mobile' ? '16px' : '28px'}` : undefined,
+      }}>
+      <div className="pv-story" style={{
+        maxWidth: showProofSidebar ? 860 : (deviceMaxWidth ? Math.min(860, deviceMaxWidth) : 860),
+        width: showProofSidebar ? '100%' : undefined,
+        margin: showProofSidebar ? 0 : `${isDesktop ? 40 : bannerH + 16}px auto 0`,
+        padding: showProofSidebar ? '0 0 80px' : `0 ${previewDevice === 'mobile' ? '16px' : '28px'} 80px`,
+        display: 'flex', flexDirection: 'column', gap: 32, fontFamily: selectedFont.css,
+      }}
+      // Clicar fora de qualquer secção/bloco (espaço vazio entre eles)
+      // fecha a edição atual — cada item já trava a sua própria propagação.
+      onClick={isOwner && previewEditing ? () => setSelectedItem(null) : undefined}
+      >
 
-        {/* Prova de trabalho do GitHub — logo no topo do conteúdo, antes de
-            qualquer bloco ou secção reordenável: é a primeira coisa que
-            quem visita a página vê a seguir ao cabeçalho. */}
+        {/* Prova de trabalho do GitHub e Ficheiros — sem sidebar (mobile,
+            ou projeto só com uma delas), ficam aqui no topo como sempre;
+            com sidebar (desktop, as duas ativas), mudam-se para lá, para
+            não empilhar tudo numa coluna só. */}
         <LiveProof project={project} isOwner={false} />
-        <GithubProof project={project} />
+        {!showProofSidebar && <GithubProof project={project} />}
         <ApiProof project={project} />
-        <ProjectAttachments project={project} />
+        {!showProofSidebar && <ProjectAttachments project={project} />}
 
         {/* Custom blocks — workspace blocks shown first */}
         {(() => {
@@ -4049,7 +4527,38 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
         }
 
         function renderItem(item) {
-          return item.kind === 'block' ? renderOneBlock(blocksById[item.id]) : renderOneSection(item.key)
+          const node = item.kind === 'block' ? renderOneBlock(blocksById[item.id]) : renderOneSection(item.key)
+          if (!node || !isOwner || !previewEditing) return node
+
+          const key = itemKey(item)
+          const isSel = selectedItem === key
+          const label = item.kind === 'block'
+            ? (BLOCK_TYPES.find(bt => bt.type === blocksById[item.id]?.type)?.label || 'Bloco')
+            : (SECTION_META[item.key]?.label || item.key)
+
+          return (
+            <div
+              key={key}
+              className={isSel ? 'pv-sel-active' : 'pv-sel-hover'}
+              style={{ position: 'relative', borderRadius: 14 }}
+              onClick={e => { e.stopPropagation(); setSelectedItem(s => s === key ? null : key) }}
+            >
+              {isSel && (
+                <div className="pv-sel-toolbar" onClick={e => e.stopPropagation()}>
+                  <button onClick={() => moveLayoutItem(item, -1)} title="Mover para cima"><ChevronUp size={15} /></button>
+                  <button onClick={() => moveLayoutItem(item, 1)} title="Mover para baixo"><ChevronDown size={15} /></button>
+                  <div className="pv-sel-sep" />
+                  {item.kind === 'section' ? (
+                    <button onClick={() => { toggleSectionHidden(item.key); setSelectedItem(null) }} title="Esconder"><EyeOff size={15} /></button>
+                  ) : (
+                    <button onClick={() => removeBlock(item.id)} title="Remover"><X size={15} /></button>
+                  )}
+                </div>
+              )}
+              <div className="pv-sel-badge">Editar · {label}</div>
+              {node}
+            </div>
+          )
         }
 
         const canvas = previewStyle.canvasMode && previewBlocks.length > 0 && (
@@ -4079,16 +4588,30 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
           </div>
         )
 
+        // Uma secção sem conteúdo (ex: Resultados nunca preenchido, nunca
+        // escondido manualmente) renderiza null — mas sem este filtro ficava
+        // na mesma dentro do flex column, e o "gap" do pv-story contava duas
+        // vezes à volta de um item com altura zero, abrindo um vazio enorme
+        // entre as duas secções vizinhas. Pré-renderizar e tirar os null
+        // antes de devolver o array resolve isso de vez.
         return [
           canvas,
-          ...groups.map((g, gi) => g.length === 2 ? (
-            <div key={gi} style={{ display: 'flex', flexWrap: 'wrap', gap: 20 }}>
-              <div style={{ flex: '1 1 280px', minWidth: 0 }}>{renderItem(g[0])}</div>
-              <div style={{ flex: '1 1 280px', minWidth: 0 }}>{renderItem(g[1])}</div>
-            </div>
-          ) : (
-            <div key={gi}>{renderItem(g[0])}</div>
-          )),
+          ...groups.map((g, gi) => {
+            if (g.length === 2) {
+              const a = renderItem(g[0])
+              const b = renderItem(g[1])
+              if (!a && !b) return null
+              if (!a || !b) return <div key={gi}>{a || b}</div>
+              return (
+                <div key={gi} style={{ display: 'flex', flexWrap: 'wrap', gap: 20 }}>
+                  <div style={{ flex: '1 1 280px', minWidth: 0 }}>{a}</div>
+                  <div style={{ flex: '1 1 280px', minWidth: 0 }}>{b}</div>
+                </div>
+              )
+            }
+            const node = renderItem(g[0])
+            return node ? <div key={gi}>{node}</div> : null
+          }).filter(Boolean),
         ]
         })()}
 
@@ -4247,6 +4770,14 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
         )}
 
       </div>{/* end story-sections wrapper */}
+
+      {showProofSidebar && (
+        <aside style={{ display: 'flex', flexDirection: 'column', gap: 20, position: 'sticky', top: 20, alignSelf: 'start' }}>
+          <GithubProof project={project} />
+          <ProjectAttachments project={project} />
+        </aside>
+      )}
+      </div>{/* end proof-sidebar grid */}
       </div>{/* end device-frame / CSS scope */}
       </div>{/* end preview scroll area */}
     </div>

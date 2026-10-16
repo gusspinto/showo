@@ -31,6 +31,7 @@ import ProjectComments from '../components/ProjectComments'
 import ProjectTimeline from '../components/ProjectTimeline'
 import ProjectTimelineBadge from '../components/ProjectTimelineBadge'
 import { ShareStoryModal } from '../components/ShareStoryModal'
+import WheelDatePicker from '../components/WheelDatePicker'
 import { logFieldFilled } from '../lib/autoJournal'
 import { analyzeProject } from '../lib/analyzeProject'
 import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
@@ -2728,6 +2729,9 @@ export default function ProjectPage() {
           /* Sem sidebar no telemóvel, o card "Data de defesa" fica um
              botão compacto que abre um popup, em vez do card inteiro. */
           .proj-defense-mobile-btn { display: flex !important; }
+          /* Tocar fora do popup já fecha — o "x" só repete isso pior no
+             telemóvel (pedido do Gustavo, mesmo problema do PlanGateModal). */
+          .proj-defense-popup-close { display: none !important; }
           /* In Explorar tab: always show sections, hide the toggle button */
           .proj-mobile-active .proj-sections-toggle { display: none !important; }
           .proj-mobile-active .proj-sections-body.collapsed { display: flex !important; flex-direction: column; gap: 12px; }
@@ -4266,6 +4270,7 @@ export default function ProjectPage() {
             >
               <button
                 onClick={() => setShowDefensePopup(false)}
+                className="proj-defense-popup-close"
                 style={{ position: 'absolute', top: 14, right: 14, background: 'var(--color-surface-hover)', border: `1px solid ${colors.border}`, borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: colors.muted }}
               ><X size={14} /></button>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -4275,22 +4280,33 @@ export default function ProjectPage() {
                 <div style={{ fontSize: 15, fontWeight: 700, color: defenseDaysLeft != null && defenseDaysLeft <= 7 ? 'var(--color-error)' : colors.text }}>
                   {defenseLabel}
                 </div>
+                {savingDefense && <div style={{ width: 12, height: 12, flexShrink: 0, border: `1.5px solid ${colors.border}`, borderTop: `1.5px solid ${colors.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />}
               </div>
               <div style={{ position: 'relative', width: '100%', boxSizing: 'border-box' }}>
-                <input
-                  type="date"
+                <WheelDatePicker
                   value={defenseDate}
-                  onChange={e => handleSaveDefenseDate(e.target.value)}
-                  style={{
-                    display: 'block', width: '100%', minWidth: 0, maxWidth: '100%', boxSizing: 'border-box',
-                    background: 'var(--color-surface)', border: `1px solid ${colors.border}`,
-                    borderRadius: 8, padding: '10px 12px', color: colors.text,
-                    fontSize: 14, fontFamily: 'inherit', cursor: 'pointer', outline: 'none',
-                    colorScheme: theme === 'light' ? 'light' : 'dark',
-                  }}
+                  onChange={handleSaveDefenseDate}
+                  minYear={2026}
+                  maxYear={2030}
                 />
-                {savingDefense && <div style={{ position: 'absolute', top: 12, right: 12, width: 12, height: 12, border: `1.5px solid ${colors.border}`, borderTop: `1.5px solid ${colors.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />}
               </div>
+              {/* O picker de rolos nunca fica vazio (mostra sempre um dia
+                  concreto) — este botão é a única forma de voltar a "sem
+                  data marcada". */}
+              {defenseDate && (
+                <button
+                  type="button"
+                  onClick={() => handleSaveDefenseDate('')}
+                  style={{
+                    display: 'block', width: 'fit-content', margin: '0 auto',
+                    background: 'none', border: `1px solid ${colors.border}`, borderRadius: 100,
+                    padding: '7px 16px', color: colors.muted, fontSize: 12.5, fontWeight: 600,
+                    cursor: 'pointer', fontFamily: 'inherit',
+                  }}
+                >
+                  Limpar data
+                </button>
+              )}
             </div>
           </div>,
           document.body
@@ -5696,18 +5712,27 @@ export default function ProjectPage() {
                 </div>
                 {savingDefense && <div style={{ width: 12, height: 12, flexShrink: 0, border: `1.5px solid ${colors.border}`, borderTop: `1.5px solid ${colors.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />}
               </div>
-              <input
-                type="date"
+              <WheelDatePicker
                 value={defenseDate}
-                onChange={e => handleSaveDefenseDate(e.target.value)}
-                style={{
-                  width: '100%', boxSizing: 'border-box',
-                  background: 'var(--color-surface)', border: `1px solid ${colors.border}`,
-                  borderRadius: 8, padding: '8px 10px', color: colors.text,
-                  fontSize: 12.5, fontFamily: 'inherit', cursor: 'pointer', outline: 'none',
-                  colorScheme: theme === 'light' ? 'light' : 'dark',
-                }}
+                onChange={handleSaveDefenseDate}
+                minYear={2026}
+                maxYear={2030}
+                compact
               />
+              {defenseDate && (
+                <button
+                  type="button"
+                  onClick={() => handleSaveDefenseDate('')}
+                  style={{
+                    display: 'block', width: 'fit-content', margin: '8px auto 0',
+                    background: 'none', border: `1px solid ${colors.border}`, borderRadius: 100,
+                    padding: '6px 14px', color: colors.muted, fontSize: 11.5, fontWeight: 600,
+                    cursor: 'pointer', fontFamily: 'inherit',
+                  }}
+                >
+                  Limpar data
+                </button>
+              )}
             </div>
           )}
 

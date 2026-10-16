@@ -19,6 +19,7 @@ export const PLANS = {
       internshipPage: false,
       weeklyRecap: true,
       cleanLink: false,
+      githubSync: true,
     },
     files: { maxProjectMB: 250, maxAccountMB: 2560 },
   },
@@ -42,6 +43,7 @@ export const PLANS = {
       internshipPage: true,
       weeklyRecap: true,
       cleanLink: true,
+      githubSync: true,
     },
     files: { maxProjectMB: 1024, maxAccountMB: 5120 },
   },
@@ -65,6 +67,7 @@ export const PLANS = {
       internshipPage: false,
       weeklyRecap: false,
       cleanLink: false,
+      githubSync: false,
     },
     files: { maxProjectMB: 0, maxAccountMB: 0 },
   },
@@ -91,6 +94,7 @@ export const PLANS = {
       internshipPage: false,
       weeklyRecap: true,
       cleanLink: false,
+      githubSync: true,
     },
     files: { maxProjectMB: 250, maxAccountMB: 3840 },
   },
@@ -117,6 +121,7 @@ export const PLANS = {
       internshipPage: true,
       weeklyRecap: true,
       cleanLink: true,
+      githubSync: true,
     },
     files: { maxProjectMB: 1024, maxAccountMB: 5120 },
   },
@@ -158,6 +163,25 @@ export function nextPaidPlan(planId) {
   const resolved = PLAN_ALIASES[planId] || planId
   const nextId = NEXT_PAID_PLAN[resolved]
   return nextId ? PLANS[nextId] : null
+}
+
+// O primeiro plano pago que desbloqueia mesmo esta feature, a partir do plano
+// atual — "próximo tier" nem sempre chega: o link limpo só existe no Pro, por
+// exemplo, por isso quem está no Grátis não pode ser mandado só para o Plus.
+// Usado pelos cartões de upsell de features booleanas (career/ficheiros), que
+// nomeiam o plano certo em vez de assumir sempre o seguinte.
+const SELF_SERVE_TIERS = ['free', 'plus', 'pro']
+export function planThatUnlocks(feature, planId) {
+  const resolved = PLAN_ALIASES[planId] || planId
+  const current = SELF_SERVE_TIERS.indexOf(resolved)
+  const start = current === -1 ? 0 : current + 1
+  for (let i = start; i < SELF_SERVE_TIERS.length; i++) {
+    const p = PLANS[SELF_SERVE_TIERS[i]]
+    const unlocked = p.career?.[feature] === true
+      || (feature === 'projectFiles' && (p.files?.maxProjectMB ?? 0) > 0)
+    if (unlocked) return p
+  }
+  return null
 }
 
 // O ganho concreto na feature que bloqueou a pessoa ("3 → 15 projetos", "10 → 100 por
@@ -280,10 +304,14 @@ export const PLAN_GATE_MESSAGES = {
   }),
   cleanLink: () => ({
     title: 'Link limpo',
-    body: 'Tira o código aleatório do link do projeto e escolhe o teu próprio. Disponível no Pro.',
+    body: 'Escolhe o teu próprio link, sem código aleatório.',
+  }),
+  githubSync: () => ({
+    title: 'Sincronização com o GitHub',
+    body: 'O diário atualiza-se sozinho a cada push.',
   }),
   projectFiles: () => ({
     title: 'Ficheiros do projeto',
-    body: 'Anexa PDFs, Word, PowerPoint ou imagens como prova do trabalho, visíveis na página pública. Disponível a partir do Plus.',
+    body: 'Anexa PDFs, Word, PowerPoint ou imagens como prova.',
   }),
 }

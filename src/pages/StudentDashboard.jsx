@@ -736,7 +736,7 @@ export default function StudentDashboard({ user, profile }) {
 
       {showUpgradeModal && (
         <PlanGateModal
-          message={{ title: 'Experimenta o Plus', body: 'Mais análises de IA, mais defesa, mais espaço para o teu portefólio.' }}
+          message={{ title: 'Experimenta o Plus', body: 'Mais análises de IA, mais defesa, mais espaço para o teu portefólio.', feature: 'genericUpgrade' }}
           onClose={() => setShowUpgradeModal(false)}
         />
       )}

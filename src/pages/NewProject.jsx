@@ -13,6 +13,7 @@ import { DocumentTextIcon as FileText } from '@solar-icons/react/bold/document-t
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { DangerTriangleIcon as AlertTriangle } from '@solar-icons/react/bold/danger-triangle'
 import { containsProfanity } from '../lib/profanity'
+import WheelDatePicker from '../components/WheelDatePicker'
 import { looksLikeSpam } from '../lib/score'
 import { CalendarIcon as Calendar } from '@solar-icons/react/bold/calendar'
 import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
@@ -616,7 +617,11 @@ export default function NewProject() {
       console.error(err)
       const raw = err?.message || ''
       if (raw.includes('max_projects_reached')) {
-        setGateMsg('Atingiste o limite de projetos do teu plano. Faz upgrade para criar mais — ou adiciona este como anexo de um projeto que já tens.')
+        setGateMsg({
+          title: 'Limite de projetos atingido',
+          body: 'Atingiste o limite de projetos do teu plano. Faz upgrade para criar mais — ou adiciona este como anexo de um projeto que já tens.',
+          feature: 'maxProjects',
+        })
       } else {
         showToast(raw.includes('duplicate') || raw.includes('23505')
           ? 'Já tens um projeto com esse nome. Muda o nome e tenta outra vez.'
@@ -1069,14 +1074,15 @@ function TypeRow({ value, onChange, accountType, defenseDate, setDefenseDate, de
         <div className="np-pap-extra">
           <div className="np-pap-row">
             <span className="np-pap-label"><Calendar size={13} /> Data da defesa/apresentação</span>
-            <div className="np-pap-date-row">
-              <input
-                type="date"
-                value={defenseDate}
-                onChange={e => setDefenseDate(e.target.value)}
-                disabled={defenseDateUnknown}
-                className="np-pap-date-input"
-              />
+            <div className="np-pap-date-row" style={{ flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+              {!defenseDateUnknown && (
+                <WheelDatePicker
+                  value={defenseDate}
+                  onChange={setDefenseDate}
+                  minYear={2026}
+                  maxYear={2030}
+                />
+              )}
               <label className="np-pap-checkbox">
                 <input
                   type="checkbox"

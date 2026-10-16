@@ -360,13 +360,6 @@
 .np-pap-label { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; color: var(--color-text); }
 .np-pap-label-hint { font-weight: 400; color: var(--color-text-secondary); }
 .np-pap-date-row { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
-.np-pap-date-input {
-  padding: 7px 10px; border-radius: var(--radius-md);
-  border: 1.5px solid var(--color-border);
-  background: var(--color-surface); color: var(--color-text);
-  font-size: 13px; font-family: inherit;
-}
-.np-pap-date-input:disabled { opacity: 0.5; }
 .np-pap-checkbox {
   display: flex; align-items: center; gap: 6px;
   font-size: 12.5px; color: var(--color-text-secondary);

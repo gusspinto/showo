@@ -83,14 +83,15 @@ Deno.serve(async (req) => {
         .eq('id', user.id)
     }
 
-    // Códigos de desconto (ex: SHOWO_LAUNCH) são só para o mensal — o Stripe só
-    // restringe coupons por produto, não por price, e mensal/anual partilham o
-    // mesmo produto. A única forma de impedir o código no anual é não o deixar
-    // sequer entrar no campo em Checkout.
+    // Códigos de desconto (promocionais e de embaixadoras) agora valem para
+    // mensal e anual. Antes só entravam no mensal — o Stripe só restringe
+    // coupons por produto, não por price, e mensal/anual partilham o mesmo
+    // produto, por isso não há forma de deixar só os códigos de embaixadora
+    // passarem no anual sem deixar os outros também.
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
-      allow_promotion_codes: period === 'monthly',
+      allow_promotion_codes: true,
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: successUrl,
       cancel_url: cancelUrl,

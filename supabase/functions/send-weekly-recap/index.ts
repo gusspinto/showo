@@ -8,8 +8,9 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
    para as streaks: comunicação recorrente que mostra progresso real e dá um
    próximo passo concreto.
 
-   Quem recebe: plano Launch pessoal e contas de escola (o "Launch escolar").
-   O Build não recebe — carreira é o que separa os dois planos.
+   Quem recebe: Plus, Pro e contas de escola — os mesmos três que a
+   pricing page promete (Pricing.jsx, grupo "Mais" do Plus). Só o Grátis
+   fica de fora.
 
    Regras que evitam que isto se torne spam:
      · Sem projetos → não enviamos. Não há progresso nenhum para resumir.
@@ -170,13 +171,14 @@ Deno.serve(async (req) => {
     const lastMonday = new Date(thisMonday); lastMonday.setUTCDate(lastMonday.getUTCDate() - 7)
     const weekLabel = `${dayLabel(lastMonday)} – ${dayLabel(new Date(thisMonday.getTime() - 86400000))}`
 
-    // Launch pessoal + contas de escola. O Build não tem carreira, por isso
-    // não tem recap: a mesma fronteira que a página de planos comunica.
+    // Plus, Pro e contas de escola — a mesma fronteira que a pricing page
+    // promete. Só o Grátis fica de fora. ('build'=Plus, 'launch'=Pro, ver
+    // PLAN_ALIASES em src/lib/plans.js.)
     const { data: candidates, error: candErr } = await supabase
       .from('profiles')
       .select('id, full_name, plan, organization_id, weekly_recap_email_sent_at')
       .eq('weekly_recap_email_opt_in', true)
-      .or('plan.eq.launch,organization_id.not.is.null')
+      .or('plan.eq.build,plan.eq.launch,organization_id.not.is.null')
 
     if (candErr) throw candErr
 
@@ -306,6 +308,19 @@ Deno.serve(async (req) => {
           }),
         })
         if (!res.ok) { errors.push(await res.text()); continue }
+
+        // Sem isto, não havia nenhuma prova auditável de um envio ter
+        // mesmo acontecido — só o campo em profiles, que uma falha a meio
+        // (ex: o update abaixo falhar) também deixava sem rasto nenhum.
+        const { id: resendId } = await res.json()
+        if (resendId) {
+          await supabase.from('email_sends').insert({
+            user_id: p.id,
+            email_type: 'weekly_recap',
+            resend_id: resendId,
+            to_email: email,
+          })
+        }
 
         await supabase.from('profiles')
           .update({ weekly_recap_email_sent_at: now.toISOString() })
