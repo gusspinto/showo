@@ -1974,6 +1974,18 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
     ? { key: 'custom', label: customTitleFontName, css: `"${customTitleFontName}", sans-serif`, sample: 'Aw' }
     : (TITLE_FONT_OPTIONS.find(f => f.key === (previewStyle.titleFont || 'space')) || TITLE_FONT_OPTIONS[0])
   const titleStyle        = previewStyle.titleStyle || 'normal'
+  const TITLE_WEIGHTS = [
+    { key: 'light',  label: 'Fino',     value: 500 },
+    { key: 'normal', label: 'Normal',   value: 700 },
+    { key: 'bold',   label: 'Negrito',  value: 900 },
+  ]
+  const titleWeight = (TITLE_WEIGHTS.find(w => w.key === (previewStyle.titleWeight || 'bold')) || TITLE_WEIGHTS[2]).value
+  const CONTENT_WIDTHS = [
+    { key: 'narrow',  label: 'Estreito',  width: 700 },
+    { key: 'default', label: 'Normal',    width: 860 },
+    { key: 'wide',    label: 'Largo',     width: 1040 },
+  ]
+  const contentMaxWidth = (CONTENT_WIDTHS.find(w => w.key === (previewStyle.contentWidth || 'default')) || CONTENT_WIDTHS[1]).width
   const selectedBg        = BG_OPTIONS.find(b => b.key === (previewStyle.bg || 'default')) || BG_OPTIONS[0]
   const resolvedBg        = usingCustomBg ? customBg : (selectedBg.bg || 'var(--color-bg)')
   // Cor final do título, corrigida para ter contraste com o fundo do hero —
@@ -2177,7 +2189,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
   const showProofSidebar = (previewStyle.proofLayout === 'sidebar') && hasRoomForProofSidebar && !deviceMaxWidth
 
   return (
-    <div className="pv-outer" style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column', background: resolvedBg }}>
+    <div className="pv-outer" style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column', background: resolvedBg, '--pv-accent-1': hero.c1 || 'var(--color-primary)', '--pv-accent-2': hero.c2 || 'var(--color-primary)' }}>
 
       {/* ── Card style + preview theme scoped CSS ── */}
       <style>{`
@@ -2195,6 +2207,28 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
           backdrop-filter: blur(16px) !important;
           -webkit-backdrop-filter: blur(16px) !important;
           border: 1px solid rgba(255,255,255,0.09) !important;
+        }
+        [data-pv-cs="elevated"] .proj-card,
+        [data-pv-cs="elevated"] .pv-section-card {
+          border-color: transparent !important;
+          box-shadow: 0 12px 32px -8px rgba(0,0,0,0.35), 0 2px 8px -2px rgba(0,0,0,0.2) !important;
+        }
+        [data-pv-cs="outline-gradient"] .proj-card,
+        [data-pv-cs="outline-gradient"] .pv-section-card {
+          background: var(--c-card, var(--color-surface)) !important;
+          border: 1.5px solid transparent !important;
+          background-image: linear-gradient(var(--c-card, var(--color-surface)), var(--c-card, var(--color-surface))), linear-gradient(135deg, var(--pv-accent-1, var(--color-primary)), var(--pv-accent-2, var(--color-primary))) !important;
+          background-origin: border-box !important;
+          background-clip: padding-box, border-box !important;
+        }
+        [data-pv-cs="minimal"] .proj-card,
+        [data-pv-cs="minimal"] .pv-section-card {
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+          border-left-color: transparent !important;
+          padding-left: 0 !important;
+          padding-right: 0 !important;
         }
         [data-pv-theme="dark"] {
           --c-bg:#060c18; --c-bg-alt:#111c32; --c-card:#152030; --c-card-hover:#1c2d44;
@@ -2558,7 +2592,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
         )}
 
         {/* Title block over hero */}
-        <div className="pv-title-block" style={{ maxWidth: 860, margin: '0 auto', padding: '0 28px', position: 'relative', marginTop: coverAsHero ? -160 : project.cover_url ? -100 : -80, textAlign: titleAlign }}>
+        <div className="pv-title-block" style={{ maxWidth: contentMaxWidth, margin: '0 auto', padding: '0 28px', position: 'relative', marginTop: coverAsHero ? -160 : project.cover_url ? -100 : -80, textAlign: titleAlign }}>
           {/* Area / type chips — backed by a translucent pill when sitting over a
               cover photo, so they stay readable regardless of the image underneath */}
           <div style={{
@@ -2590,7 +2624,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
           </div>
 
           <h1 className="pv-hero-title" style={{
-            fontSize: 'clamp(36px, 6vw, 64px)', fontWeight: 900,
+            fontSize: 'clamp(36px, 6vw, 64px)', fontWeight: titleWeight,
             letterSpacing: titleStyle === 'caps' ? '0.04em' : '-1.5px', lineHeight: 1.0,
             margin: '0 0 14px',
             fontFamily: selectedTitleFont.css,
@@ -3316,6 +3350,21 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                       )
                     })}
                   </div>
+                  <div style={{ ...wsControlLabel, marginTop: 10 }}>Peso do título</div>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    {TITLE_WEIGHTS.map(w => {
+                      const isSel = (previewStyle.titleWeight || 'bold') === w.key
+                      return (
+                        <button key={w.key} onClick={() => setPreviewStyle(ps => ({ ...ps, titleWeight: w.key }))}
+                          style={{
+                            flex: 1, padding: '7px 4px', borderRadius: 8, cursor: 'pointer',
+                            ...wsOptStyle(isSel),
+                            fontSize: 11, fontWeight: w.value, fontFamily: 'var(--font-body)', transition: 'all 0.12s',
+                          }}
+                        >{w.label}</button>
+                      )
+                    })}
+                  </div>
                   <div style={{ marginTop: 8 }}>
                     <input
                       value={previewStyle.titleFontCustom || ''}
@@ -3397,17 +3446,20 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
               {/* Group: Estilo dos cards */}
               <div style={wsGroup}>
                 <div style={wsGroupLabel}>Estilo dos cards</div>
-                <div style={{ display: 'flex', gap: 6 }}>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {[
-                    { key: 'border', label: 'Padrão',  desc: 'Com bordas'    },
-                    { key: 'flat',   label: 'Flat',    desc: 'Sem bordas'    },
-                    { key: 'glass',  label: 'Glass',   desc: 'Transparente'  },
+                    { key: 'border',          label: 'Padrão',    desc: 'Com bordas'     },
+                    { key: 'flat',            label: 'Flat',      desc: 'Sem bordas'     },
+                    { key: 'glass',           label: 'Glass',     desc: 'Transparente'   },
+                    { key: 'elevated',        label: 'Elevado',   desc: 'Com sombra'     },
+                    { key: 'outline-gradient',label: 'Gradiente', desc: 'Borda em cor'   },
+                    { key: 'minimal',         label: 'Mínimo',    desc: 'Sem caixa'      },
                   ].map(c => {
                     const isSel = (previewStyle.cardStyle || 'glass') === c.key
                     return (
                       <button key={c.key} onClick={() => setPreviewStyle(ps => ({ ...ps, cardStyle: c.key }))}
                         style={{
-                          flex: 1, padding: '10px 4px', borderRadius: 9, cursor: 'pointer', textAlign: 'center',
+                          flex: '0 1 31%', minWidth: 72, padding: '10px 4px', borderRadius: 9, cursor: 'pointer', textAlign: 'center',
                           ...wsOptStyle(isSel),
                           fontFamily: 'inherit', transition: 'all 0.12s',
                         }}
@@ -3415,6 +3467,25 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                         <div style={{ fontSize: 12, fontWeight: 700 }}>{c.label}</div>
                         <div style={{ fontSize: 9, marginTop: 3, color: isSel ? 'var(--color-text-secondary)' : 'var(--color-text-tertiary)' }}>{c.desc}</div>
                       </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Group: Largura do conteúdo */}
+              <div style={wsGroup}>
+                <div style={wsGroupLabel}>Largura do conteúdo</div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {CONTENT_WIDTHS.map(w => {
+                    const isSel = (previewStyle.contentWidth || 'default') === w.key
+                    return (
+                      <button key={w.key} onClick={() => setPreviewStyle(ps => ({ ...ps, contentWidth: w.key }))}
+                        style={{
+                          flex: 1, padding: '9px 4px', borderRadius: 9, cursor: 'pointer', textAlign: 'center',
+                          ...wsOptStyle(isSel),
+                          fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-body)', transition: 'all 0.12s',
+                        }}
+                      >{w.label}</button>
                     )
                   })}
                 </div>
@@ -4143,7 +4214,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
         padding: showProofSidebar ? `0 ${previewDevice === 'mobile' ? '16px' : '28px'}` : undefined,
       }}>
       <div className="pv-story" style={{
-        maxWidth: showProofSidebar ? 860 : (deviceMaxWidth ? Math.min(860, deviceMaxWidth) : 860),
+        maxWidth: showProofSidebar ? contentMaxWidth : (deviceMaxWidth ? Math.min(contentMaxWidth, deviceMaxWidth) : contentMaxWidth),
         width: showProofSidebar ? '100%' : undefined,
         margin: showProofSidebar ? 0 : `${isDesktop ? 40 : bannerH + 16}px auto 0`,
         padding: showProofSidebar ? '0 0 80px' : `0 ${previewDevice === 'mobile' ? '16px' : '28px'} 80px`,
