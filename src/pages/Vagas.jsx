@@ -658,6 +658,10 @@ export default function Vagas() {
       ...prev,
       [vagaId]: (prev[vagaId] || []).map(c => c.id === candidaturaId ? { ...c, status } : c)
     }))
+    // Best-effort: avisa o candidato por email, nunca bloqueia a ação do recrutador.
+    if (status === 'aceite' || status === 'recusada') {
+      supabase.functions.invoke('notify-candidatura-status', { body: { candidatura_id: candidaturaId, new_status: status } }).catch(() => {})
+    }
   }
 
   async function saveVaga(form) {

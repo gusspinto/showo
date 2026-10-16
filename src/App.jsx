@@ -98,6 +98,7 @@ const Explore      = lazyPage(() => import('./pages/Explore'))
 const Dashboard    = lazyPage(() => import('./pages/Dashboard'))
 const Biblioteca   = lazyPage(() => import('./pages/Biblioteca'))
 const Vagas        = lazyPage(() => import('./pages/Vagas'))
+const Pipeline      = lazyPage(() => import('./pages/Pipeline'))
 const Settings     = lazyPage(() => import('./pages/Settings'))
 const UserProfile  = lazyPage(() => import('./pages/UserProfile'))
 const Admin        = lazyPage(() => import('./pages/Admin'))
@@ -175,6 +176,15 @@ const GATE_EXEMPT_PREFIXES = ['/oauth/']
 const isGateExempt = (pathname) =>
   GATE_EXEMPT_PATHS.has(pathname) || GATE_EXEMPT_PREFIXES.some(p => pathname.startsWith(p))
 
+// Número PT válido = exatamente 9 dígitos. Visto nos dados reais: os poucos
+// números inválidos vêm de erros óbvios de escrita (8, 7 ou 2 dígitos) ou de
+// terem colado algo errado (11 dígitos), nunca de um indicativo estrangeiro
+// guardado à parte, por isso esta regra simples basta.
+function isPhoneInvalid(phone) {
+  if (!phone) return false
+  return phone.replace(/\D/g, '').length !== 9
+}
+
 function PhoneGate({ children, reopenGate, setReopenGate }) {
   const { user, profile, refreshProfile } = useAuth()
   const location = useLocation()
@@ -182,19 +192,21 @@ function PhoneGate({ children, reopenGate, setReopenGate }) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
-  const needsPhone = (!isGateExempt(location.pathname) && user && profile && profile.role !== 'professor' && !profile.phone)
+  const phoneInvalid = isPhoneInvalid(profile?.phone)
+  const needsPhone = (!isGateExempt(location.pathname) && user && profile && profile.role !== 'professor' && (!profile.phone || phoneInvalid))
     || reopenGate === 'phone'
 
-  // Reabertura via "← Voltar" no OccupationGate — pré-preenche com o número
-  // que já lá estava, para a pessoa só corrigir o que estava errado, não
-  // escrever tudo de novo.
+  // Reabertura via "← Voltar" no OccupationGate, ou número existente mas
+  // inválido: pré-preenche com o número que já lá estava, para a pessoa só
+  // corrigir o que estava errado, não escrever tudo de novo.
   useEffect(() => {
-    if (reopenGate === 'phone' && profile?.phone) setPhone(profile.phone)
-  }, [reopenGate, profile?.phone])
+    if ((reopenGate === 'phone' || phoneInvalid) && profile?.phone) setPhone(profile.phone)
+  }, [reopenGate, profile?.phone, phoneInvalid])
 
   async function handleSubmit(e) {
     e.preventDefault()
     if (!phone.trim()) { setError('Introduz o teu número de telemóvel.'); return }
+    if (isPhoneInvalid(phone.trim())) { setError('Esse número não parece estar completo. Confirma e tenta de novo.'); return }
     setSaving(true)
     const { error: err } = await supabase.from('profiles').update({ phone: phone.trim() }).eq('id', user.id)
     if (err) { setError('Erro ao guardar. Tenta novamente.'); setSaving(false); return }
@@ -210,12 +222,16 @@ function PhoneGate({ children, reopenGate, setReopenGate }) {
       <div className="onboard-body">
         <img src="/darkmode_icon_logo.png" alt="Showo" className="onboard-logo" />
         <div className="onboard-head">
-          <h1 className="onboard-title">Deixa-nos o teu contacto</h1>
+          <h1 className="onboard-title">{phoneInvalid ? 'Reparámos que o teu número pode estar inválido' : 'Deixa-nos o teu contacto'}</h1>
           {/* Texto sem marca temporal: esta comporta aparece a quem acabou de
               criar conta E a quem se registou há meses e só agora voltou. O
               "Uma última coisa" anterior soava a fim de registo e não fazia
               sentido para o segundo caso, que é a maioria de quem falta. */}
-          <p className="onboard-subtitle">Usamos o teu número só para falar contigo sobre o teu percurso na Showo. Nunca é partilhado nem aparece no teu perfil.</p>
+          <p className="onboard-subtitle">
+            {phoneInvalid
+              ? 'Corrige o teu número de telemóvel para continuarmos a conseguir falar contigo sobre o teu percurso na Showo.'
+              : 'Usamos o teu número só para falar contigo sobre o teu percurso na Showo. Nunca é partilhado nem aparece no teu perfil.'}
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '100%' }}>
@@ -234,7 +250,7 @@ function PhoneGate({ children, reopenGate, setReopenGate }) {
           {error && <p className="onboard-error">{error}</p>}
 
           <button type="submit" disabled={saving} className="onboard-cta">
-            {saving ? 'A guardar…' : 'Activar acesso gratuito'}
+            {saving ? 'A guardar…' : phoneInvalid ? 'Guardar número' : 'Activar acesso gratuito'}
           </button>
         </form>
       </div>
@@ -809,6 +825,7 @@ export default function App() {
               <Route path="/post-semana"   element={<PostSemana />}  />
               <Route path="/biblioteca"    element={<Biblioteca />}  />
               <Route path="/vagas"         element={<Vagas />}       />
+              <Route path="/pipeline"      element={<Pipeline />}    />
               <Route path="/settings"      element={<Settings />}    />
               <Route path="/u/:username"   element={<UserProfile />} />
               <Route path="/admin"         element={<Admin />}       />
