@@ -1,14 +1,15 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 /* ══════════════════════════════════════════════════════════════════════════
-   Corre por cron a cada 5 minutos. Avisa por email quem tem mensagens por
-   ler há mais de 5 minutos, uma vez por conversa (não por mensagem), para
-   quem não está a usar a app a ver em direto não perder a mensagem.
+   O cron (a cada 5 minutos) só serve para verificar com frequência, o aviso
+   em si só dispara para mensagens por ler há mais de 2 horas (DELAY_MINUTES),
+   uma vez por conversa (não por mensagem), para não gerar spam em gente que
+   ia responder dali a pouco pela própria app.
    Idempotente via notified_at: só agrupa mensagens ainda não notificadas.
    ══════════════════════════════════════════════════════════════════════════ */
 
 const FROM = 'Showo <hello@showo.pt>'
-const DELAY_MINUTES = 5
+const DELAY_MINUTES = 2 * 60
 
 function buildHtml(senderName: string, preview: string, count: number) {
   const plural = count > 1 ? `${count} mensagens novas` : 'Uma mensagem nova'
