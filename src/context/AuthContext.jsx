@@ -270,6 +270,15 @@ export function AuthProvider({ children }) {
       // deadlock (refresh de token falha → logout sozinho; queries penduram
       // → "algo correu mal"). Adiar para fora do callback.
       setTimeout(() => loadProfile(u), 0)
+
+      // Só Register.jsx (email/password) disparava o email de boas-vindas —
+      // quem entra por Google nunca passava por ali e nunca o recebia.
+      // A função já é idempotente (verifica profiles.welcome_email_sent),
+      // por isso é seguro chamar sempre num SIGNED_IN real, qualquer que
+      // seja o método — nunca duplica para quem já o recebeu.
+      if (event === 'SIGNED_IN' && u) {
+        setTimeout(() => { supabase.functions.invoke('send-welcome-email').catch(() => {}) }, 0)
+      }
     })
 
     return () => { cancelled = true; subscription.unsubscribe() }
