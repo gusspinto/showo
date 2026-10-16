@@ -4500,11 +4500,11 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
 
           if (key === 'target_audience')
             return !project.target_audience ? null : withSectionMedia(key,
-              <div className="pv-section-card" style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap', padding: '2px 4px', justifyContent: sJustify, textAlign: sectionAlign }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Users size={12} /> Para quem é
+              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '24px 32px', textAlign: sectionAlign }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8, justifyContent: sJustify }}>
+                  <Users size={13} /> Para quem é
                 </div>
-                <p style={{ margin: 0, fontSize: 14, color: 'var(--color-text-secondary)', lineHeight: 1.6, overflowWrap: 'break-word' }}>{project.target_audience}</p>
+                <p style={{ margin: 0, fontSize: 15, color: 'var(--color-text)', lineHeight: 1.6, overflowWrap: 'break-word' }}>{project.target_audience}</p>
               </div>
             )
 
