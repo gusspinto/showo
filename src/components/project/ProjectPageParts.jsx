@@ -4388,7 +4388,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                 <div style={{ fontSize: 11, fontWeight: 800, color: hero.c1, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8, justifyContent: sJustify }}>
                   <Target size={13} /> O problema
                 </div>
-                <p style={{ margin: 0, fontSize: 'clamp(19px,2.8vw,26px)', color: 'var(--color-text)', lineHeight: 1.45, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.01em', overflowWrap: 'break-word' }}>{project.problem}</p>
+                <p style={{ margin: 0, fontSize: 'clamp(16px,2.1vw,20px)', color: 'var(--color-text)', lineHeight: 1.6, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.01em', overflowWrap: 'break-word' }}>{project.problem}</p>
               </div>
             )
 
