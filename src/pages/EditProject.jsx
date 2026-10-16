@@ -1952,29 +1952,7 @@ function NewTableForm({ project, onCreated, onCancel, initial }) {
 
       <div style={{ marginTop: 14 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: colors.subtle, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 }}>Colunas</div>
-        {/* Nome/tipo/obrigatório numa linha só não cabia em ecrã estreito —
-            "nome_da_coluna" e o tipo apareciam cortados a 2-3 letras. Cada
-            coluna ganha o seu próprio mini-cartão, com o nome na linha de
-            cima (largura toda) e tipo + obrigatório na de baixo, onde há
-            espaço para os dois respirarem. */}
-        {columns.map((col, idx) => (
-          <div key={idx} style={{ background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 10, padding: 10, marginBottom: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-              <input type="text" value={col.name} onChange={e => setCol(idx, { name: e.target.value })} placeholder="nome_da_coluna" style={{ ...inputStyle, flex: 1, padding: '8px 10px', fontSize: 13.5 }} {...inputHandlers} />
-              {columns.length > 1 && (
-                <button type="button" onClick={() => removeCol(idx)} style={{ background: 'none', border: 'none', color: colors.subtle, cursor: 'pointer', padding: 4, flexShrink: 0 }}><X size={15} /></button>
-              )}
-            </div>
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-              <select value={col.type} onChange={e => setCol(idx, { type: e.target.value })} style={{ ...inputStyle, flex: '1 1 110px', padding: '8px 10px', fontSize: 13.5 }}>
-                {ProjectDb.COLUMN_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-              </select>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: colors.muted, flexShrink: 0, whiteSpace: 'nowrap' }}>
-                <input type="checkbox" checked={!!col.required} onChange={e => setCol(idx, { required: e.target.checked })} /> obrigatório
-              </label>
-            </div>
-          </div>
-        ))}
+        <ColumnsEditor columns={columns} setCol={setCol} removeCol={removeCol} />
         <button type="button" onClick={addCol} style={{ background: 'none', border: 'none', color: colors.blue, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}>
           + Adicionar coluna
         </button>
@@ -1994,8 +1972,95 @@ function NewTableForm({ project, onCreated, onCancel, initial }) {
   )
 }
 
+/* Nome/tipo/obrigatório numa linha só não cabia em ecrã estreito —
+   "nome_da_coluna" e o tipo apareciam cortados a 2-3 letras. Cada coluna
+   ganha o seu próprio mini-cartão, com o nome na linha de cima (largura
+   toda) e tipo + obrigatório na de baixo, onde há espaço para os dois
+   respirarem. Partilhado entre criar tabela e editar colunas depois. */
+function ColumnsEditor({ columns, setCol, removeCol }) {
+  return (
+    <>
+      {columns.map((col, idx) => (
+        <div key={idx} style={{ background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 10, padding: 10, marginBottom: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <input type="text" value={col.name} onChange={e => setCol(idx, { name: e.target.value })} placeholder="nome_da_coluna" style={{ ...inputStyle, flex: 1, padding: '8px 10px', fontSize: 13.5 }} {...inputHandlers} />
+            {columns.length > 1 && (
+              <button type="button" onClick={() => removeCol(idx)} style={{ background: 'none', border: 'none', color: colors.subtle, cursor: 'pointer', padding: 4, flexShrink: 0 }}><X size={15} /></button>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+            <select value={col.type} onChange={e => setCol(idx, { type: e.target.value })} style={{ ...inputStyle, flex: '1 1 110px', padding: '8px 10px', fontSize: 13.5 }}>
+              {ProjectDb.COLUMN_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </select>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: colors.muted, flexShrink: 0, whiteSpace: 'nowrap' }}>
+              <input type="checkbox" checked={!!col.required} onChange={e => setCol(idx, { required: e.target.checked })} /> obrigatório
+            </label>
+          </div>
+        </div>
+      ))}
+    </>
+  )
+}
+
+function EditColumnsForm({ project, table, onSaved, onCancel }) {
+  const [columns, setColumns] = useState(table.columns.map(c => ({ ...c })))
+  const [saving, setSaving] = useState(false)
+  const [err, setErr] = useState(null)
+
+  function setCol(idx, patch) {
+    setColumns(cols => cols.map((c, i) => i === idx ? { ...c, ...patch } : c))
+  }
+  function addCol() { setColumns(cols => [...cols, { name: '', type: 'text', required: false }]) }
+  function removeCol(idx) { setColumns(cols => cols.filter((_, i) => i !== idx)) }
+
+  async function handleSave() {
+    setErr(null)
+    const cleanCols = columns
+      .map(c => ({ ...c, name: ProjectDb.slugifyTableName(c.name) }))
+      .filter(c => c.name)
+    if (!cleanCols.length) { setErr('A tabela precisa de pelo menos uma coluna.'); return }
+    const names = cleanCols.map(c => c.name)
+    if (new Set(names).size !== names.length) { setErr('Não pode haver duas colunas com o mesmo nome.'); return }
+    setSaving(true)
+    try {
+      await ProjectDb.updateTableColumns(project.id, table.id, cleanCols)
+      onSaved()
+    } catch (e) {
+      setErr(e.message)
+    }
+    setSaving(false)
+  }
+
+  return (
+    <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 10, padding: 12, marginBottom: 14 }}>
+      {/* Avisar antes de confundir alguém que apague uma coluna e os dados
+          dessa coluna "desapareçam" das linhas já guardadas — na verdade
+          ficam guardados, só deixam de aparecer. */}
+      <p style={{ margin: '0 0 10px', fontSize: 12, color: colors.subtle, lineHeight: 1.5 }}>
+        Se removeres ou renomeares uma coluna, os dados que já lá estavam ficam guardados mas deixam de aparecer nas linhas.
+      </p>
+      <ColumnsEditor columns={columns} setCol={setCol} removeCol={removeCol} />
+      <button type="button" onClick={addCol} style={{ background: 'none', border: 'none', color: colors.blue, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', padding: 0, fontFamily: 'inherit', marginBottom: 12, display: 'block' }}>
+        + Adicionar coluna
+      </button>
+
+      {err && <p style={{ margin: '0 0 10px', fontSize: 12.5, color: colors.red }}>{err}</p>}
+
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button type="button" onClick={handleSave} disabled={saving} style={{ background: colors.blue, color: '#fff', border: 'none', borderRadius: 7, padding: '7px 14px', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: saving ? 0.7 : 1 }}>
+          {saving ? 'A guardar…' : 'Guardar colunas'}
+        </button>
+        <button type="button" onClick={onCancel} style={{ background: 'none', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 7, padding: '7px 14px', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+          Cancelar
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function DataTableCard({ project, table, expanded, onToggleExpand, onChanged }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [editingColumns, setEditingColumns] = useState(false)
   const [busy, setBusy] = useState(false)
 
   async function handleTogglePublic() {
@@ -2041,20 +2106,36 @@ function DataTableCard({ project, table, expanded, onToggleExpand, onChanged }) 
               do Gustavo depois de criar uma tabela e não conseguir ver o
               que lá tinha posto sem abrir o formulário de novo. */}
           <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: colors.subtle, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 }}>Colunas</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {table.columns.map(c => (
-                <span key={c.name} style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 5,
-                  background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 7,
-                  padding: '4px 9px', fontSize: 12,
-                }}>
-                  <code style={{ color: colors.text, fontWeight: 600 }}>{c.name}</code>
-                  <span style={{ color: colors.subtle }}>{ProjectDb.COLUMN_TYPES.find(t => t.value === c.type)?.label || c.type}</span>
-                  {c.required && <span style={{ color: colors.blue, fontWeight: 700 }}>*</span>}
-                </span>
-              ))}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: colors.subtle, textTransform: 'uppercase', letterSpacing: 0.6 }}>Colunas</div>
+              {!editingColumns && (
+                <button type="button" onClick={() => setEditingColumns(true)} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', color: colors.blue, fontSize: 11.5, fontWeight: 600, cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}>
+                  <Pencil size={11} /> Editar colunas
+                </button>
+              )}
             </div>
+            {editingColumns ? (
+              <EditColumnsForm
+                project={project}
+                table={table}
+                onSaved={() => { setEditingColumns(false); onChanged() }}
+                onCancel={() => setEditingColumns(false)}
+              />
+            ) : (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {table.columns.map(c => (
+                  <span key={c.name} style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                    background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 7,
+                    padding: '4px 9px', fontSize: 12,
+                  }}>
+                    <code style={{ color: colors.text, fontWeight: 600 }}>{c.name}</code>
+                    <span style={{ color: colors.subtle }}>{ProjectDb.COLUMN_TYPES.find(t => t.value === c.type)?.label || c.type}</span>
+                    {c.required && <span style={{ color: colors.blue, fontWeight: 700 }}>*</span>}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           <RowsPanel project={project} table={table} onChanged={onChanged} />
@@ -2091,11 +2172,11 @@ function DataTableCard({ project, table, expanded, onToggleExpand, onChanged }) 
 
 function RowsPanel({ project, table, onChanged }) {
   const [rows, setRows] = useState(null)
-  const [showForm, setShowForm] = useState(false)
-  // null = a criar linha nova; um id = a editar essa linha existente.
-  const [editingId, setEditingId] = useState(null)
-  const [form, setForm] = useState({})
-  const [saving, setSaving] = useState(false)
+  // Rascunho da linha nova em baixo da grelha — só vai para o servidor
+  // quando tem pelo menos um campo preenchido e se clica em guardar/Enter
+  // na última célula, para não martelar a API com linhas vazias a cada clique.
+  const [draft, setDraft] = useState({})
+  const [savingRowId, setSavingRowId] = useState(null)
   const [err, setErr] = useState(null)
 
   async function load() {
@@ -2106,28 +2187,34 @@ function RowsPanel({ project, table, onChanged }) {
   }
   useEffect(() => { load() }, [table.id])
 
-  function openNewForm() {
-    setEditingId(null); setForm({}); setErr(null); setShowForm(true)
-  }
-  function openEditForm(row) {
-    setEditingId(row.id); setForm({ ...row.data }); setErr(null); setShowForm(true)
-  }
-
-  async function handleSave() {
-    setErr(null); setSaving(true)
+  async function handleCellCommit(row, colName, value) {
+    if (row.data[colName] === value || (!row.data[colName] && !value)) return
+    setErr(null); setSavingRowId(row.id)
     try {
-      if (editingId) await ProjectDb.updateRow(project.id, table.id, editingId, form)
-      else await ProjectDb.insertRow(project.id, table.id, form)
-      setForm({}); setShowForm(false); setEditingId(null)
+      await ProjectDb.updateRow(project.id, table.id, row.id, { [colName]: value })
       await load(); onChanged()
     } catch (e) { setErr(e.message) }
-    setSaving(false)
+    setSavingRowId(null)
+  }
+
+  function hasDraftContent() {
+    return table.columns.some(c => draft[c.name] !== undefined && draft[c.name] !== '')
+  }
+
+  async function handleSaveDraft() {
+    if (!hasDraftContent()) return
+    setErr(null); setSavingRowId('draft')
+    try {
+      await ProjectDb.insertRow(project.id, table.id, draft)
+      setDraft({})
+      await load(); onChanged()
+    } catch (e) { setErr(e.message) }
+    setSavingRowId(null)
   }
 
   async function handleDeleteRow(rowId) {
     try {
       await ProjectDb.deleteRow(project.id, table.id, rowId)
-      if (editingId === rowId) { setShowForm(false); setEditingId(null) }
       await load(); onChanged()
     } catch {}
   }
@@ -2185,90 +2272,92 @@ function RowsPanel({ project, table, onChanged }) {
 
   if (rows === null) return <p style={{ fontSize: 12.5, color: colors.subtle, margin: 0 }}>A carregar linhas…</p>
 
-  // Nomes de coluna como cabeçalho, não só os valores em fila — para
-  // parecer uma app com dados a sério, não uma lista de debug.
+  const cellStyle = { padding: '6px 8px', fontSize: 12.5, color: colors.text, borderBottom: `1px solid ${colors.border}`, verticalAlign: 'middle' }
+  const cellInputStyle = { width: '100%', border: 'none', background: 'transparent', color: colors.text, fontSize: 12.5, fontFamily: 'inherit', padding: '4px 2px', outline: 'none' }
+
+  // Grelha estilo Excel: cabeçalho fixo com os nomes das colunas, cada
+  // célula é um input que grava ao perder o foco — mais perto de uma
+  // folha de cálculo real do que o antigo formulário linha a linha.
   return (
     <div>
-      {rows.length === 0 ? (
-        <p style={{ fontSize: 12.5, color: colors.subtle, margin: '0 0 12px' }}>Ainda sem dados nesta tabela.</p>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
-          {rows.map(r => (
-            <div
-              key={r.id}
-              onClick={() => openEditForm(r)}
-              style={{ display: 'flex', alignItems: 'center', gap: 10, background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 8, padding: '8px 10px', cursor: 'pointer' }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = colors.borderBright}
-              onMouseLeave={e => e.currentTarget.style.borderColor = colors.border}
-            >
-              <div style={{ flex: 1, minWidth: 0, display: 'flex', flexWrap: 'wrap', gap: '2px 14px' }}>
-                {table.columns.map(c => {
-                  const v = r.data[c.name]
-                  if (v === undefined || v === '') return null
-                  return (
-                    <span key={c.name} style={{ fontSize: 12.5, color: colors.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 220 }}>
-                      <span style={{ color: colors.subtle }}>{c.name}: </span>
-                      {typeof v === 'boolean' ? (v ? 'Sim' : 'Não') : String(v)}
-                    </span>
-                  )
-                })}
-              </div>
-              <Pencil size={12} color={colors.subtle} style={{ flexShrink: 0 }} />
-              <button type="button" onClick={e => { e.stopPropagation(); handleDeleteRow(r.id) }} style={{ background: 'none', border: 'none', color: colors.subtle, cursor: 'pointer', padding: 2, flexShrink: 0 }}><Trash2 size={13} /></button>
-            </div>
-          ))}
-        </div>
-      )}
+      <div style={{ overflowX: 'auto', border: `1px solid ${colors.border}`, borderRadius: 8, marginBottom: 10 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: table.columns.length * 130 + 40 }}>
+          <thead>
+            <tr style={{ background: colors.bgAlt }}>
+              {table.columns.map(c => (
+                <th key={c.name} style={{ padding: '7px 8px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: colors.subtle, textTransform: 'uppercase', letterSpacing: 0.4, borderBottom: `1px solid ${colors.border}`, whiteSpace: 'nowrap' }}>
+                  {c.name}{c.required && ' *'}
+                </th>
+              ))}
+              <th style={{ width: 32, borderBottom: `1px solid ${colors.border}` }} />
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(r => (
+              <tr key={r.id} style={{ background: savingRowId === r.id ? 'var(--color-glass)' : 'transparent' }}>
+                {table.columns.map(c => (
+                  <td key={c.name} style={cellStyle}>
+                    {c.type === 'boolean' ? (
+                      <input type="checkbox" checked={!!r.data[c.name]} onChange={e => handleCellCommit(r, c.name, e.target.checked)} />
+                    ) : (
+                      <input
+                        type={c.type === 'number' ? 'number' : c.type === 'date' ? 'date' : 'text'}
+                        defaultValue={r.data[c.name] ?? ''}
+                        key={`${r.id}-${c.name}-${r.data[c.name]}`}
+                        onBlur={e => handleCellCommit(r, c.name, e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') e.target.blur() }}
+                        style={cellInputStyle}
+                      />
+                    )}
+                  </td>
+                ))}
+                <td style={{ ...cellStyle, textAlign: 'center' }}>
+                  <button type="button" onClick={() => handleDeleteRow(r.id)} style={{ background: 'none', border: 'none', color: colors.subtle, cursor: 'pointer', padding: 2 }}><Trash2 size={13} /></button>
+                </td>
+              </tr>
+            ))}
+            {/* Linha de rascunho sempre visível no fim — escreve-se nela
+                como numa folha de cálculo e só vai para o servidor quando
+                tiver pelo menos um valor. */}
+            <tr>
+              {table.columns.map((c, idx) => (
+                <td key={c.name} style={{ ...cellStyle, borderBottom: 'none' }}>
+                  {c.type === 'boolean' ? (
+                    <input type="checkbox" checked={!!draft[c.name]} onChange={e => setDraft(d => ({ ...d, [c.name]: e.target.checked }))} />
+                  ) : (
+                    <input
+                      type={c.type === 'number' ? 'number' : c.type === 'date' ? 'date' : 'text'}
+                      value={draft[c.name] ?? ''}
+                      placeholder={idx === 0 ? '+ nova linha' : ''}
+                      onChange={e => setDraft(d => ({ ...d, [c.name]: e.target.value }))}
+                      onKeyDown={e => { if (e.key === 'Enter') handleSaveDraft() }}
+                      onBlur={() => { if (hasDraftContent()) handleSaveDraft() }}
+                      style={{ ...cellInputStyle, color: colors.subtle }}
+                    />
+                  )}
+                </td>
+              ))}
+              <td style={{ ...cellStyle, borderBottom: 'none', textAlign: 'center' }}>
+                {savingRowId === 'draft' && <span style={{ fontSize: 10, color: colors.subtle }}>…</span>}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-      {showForm ? (
-        <div style={{ background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 8, padding: 12 }}>
-          {editingId && (
-            <p style={{ margin: '0 0 10px', fontSize: 11.5, color: colors.subtle, fontWeight: 600 }}>A editar linha existente</p>
-          )}
-          {table.columns.map(c => (
-            <div key={c.name} style={{ marginBottom: 8 }}>
-              <label style={{ fontSize: 10.5, fontWeight: 600, color: colors.subtle, textTransform: 'uppercase', letterSpacing: 0.4, display: 'block', marginBottom: 4 }}>
-                {c.name}{c.required && ' *'}
-              </label>
-              {c.type === 'boolean' ? (
-                <input type="checkbox" checked={!!form[c.name]} onChange={e => setForm(f => ({ ...f, [c.name]: e.target.checked }))} />
-              ) : (
-                <input
-                  type={c.type === 'number' ? 'number' : c.type === 'date' ? 'date' : 'text'}
-                  value={form[c.name] ?? ''}
-                  onChange={e => setForm(f => ({ ...f, [c.name]: e.target.value }))}
-                  style={{ ...inputStyle, padding: '7px 10px', fontSize: 13 }}
-                  {...inputHandlers}
-                />
-              )}
-            </div>
-          ))}
-          {err && <p style={{ margin: '0 0 8px', fontSize: 12, color: colors.red }}>{err}</p>}
-          <div style={{ display: 'flex', gap: 6 }}>
-            <button type="button" onClick={handleSave} disabled={saving} style={{ background: colors.blue, color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-              {saving ? 'A guardar…' : editingId ? 'Guardar alterações' : 'Guardar linha'}
-            </button>
-            <button type="button" onClick={() => { setShowForm(false); setEditingId(null); setErr(null) }} style={{ background: 'none', border: `1px solid ${colors.border}`, borderRadius: 6, padding: '6px 14px', fontSize: 12.5, fontWeight: 600, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit' }}>
-              Cancelar
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-          <button type="button" onClick={openNewForm} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: `1px dashed ${colors.border}`, borderRadius: 7, padding: '7px 12px', fontSize: 12.5, fontWeight: 600, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit' }}>
-            <PlusCircle size={13} /> Adicionar linha
+      {err && <p style={{ margin: '0 0 10px', fontSize: 12, color: colors.red }}>{err}</p>}
+
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <button type="button" onClick={() => fileInputRef.current?.click()} disabled={importing} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: `1px solid ${colors.border}`, borderRadius: 7, padding: '7px 12px', fontSize: 12.5, fontWeight: 600, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit' }}>
+          <Upload size={13} /> {importing ? 'A importar…' : 'Importar CSV'}
+        </button>
+        <input ref={fileInputRef} type="file" accept=".csv,text/csv" onChange={handleImportCsv} style={{ display: 'none' }} />
+        {rows.length > 0 && (
+          <button type="button" onClick={handleExportCsv} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: `1px solid ${colors.border}`, borderRadius: 7, padding: '7px 12px', fontSize: 12.5, fontWeight: 600, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit' }}>
+            <Download size={13} /> Exportar CSV
           </button>
-          <button type="button" onClick={() => fileInputRef.current?.click()} disabled={importing} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: `1px solid ${colors.border}`, borderRadius: 7, padding: '7px 12px', fontSize: 12.5, fontWeight: 600, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit' }}>
-            <Upload size={13} /> {importing ? 'A importar…' : 'Importar CSV'}
-          </button>
-          <input ref={fileInputRef} type="file" accept=".csv,text/csv" onChange={handleImportCsv} style={{ display: 'none' }} />
-          {rows.length > 0 && (
-            <button type="button" onClick={handleExportCsv} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: `1px solid ${colors.border}`, borderRadius: 7, padding: '7px 12px', fontSize: 12.5, fontWeight: 600, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit' }}>
-              <Download size={13} /> Exportar CSV
-            </button>
-          )}
-        </div>
-      )}
+        )}
+      </div>
       {importMsg && <p style={{ margin: '8px 0 0', fontSize: 12, color: colors.subtle }}>{importMsg}</p>}
     </div>
   )
