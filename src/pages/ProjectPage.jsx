@@ -3873,7 +3873,7 @@ export default function ProjectPage() {
               lineHeight: 1.08,
               letterSpacing: (previewStyle.titleStyle === 'caps') ? '0.04em' : '-0.02em',
               flex: 1,
-              fontFamily: (TITLE_FONT_OPTIONS.find(f => f.key === (previewStyle.titleFont || 'croogla'))?.css) || 'var(--font-heading)',
+              fontFamily: (TITLE_FONT_OPTIONS.find(f => f.key === (previewStyle.titleFont || 'space'))?.css) || 'var(--font-heading)',
               textTransform: previewStyle.titleStyle === 'caps' ? 'uppercase' : 'none',
               color: colors.text,
             }}>
