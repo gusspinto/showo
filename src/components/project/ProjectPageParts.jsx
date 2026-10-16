@@ -1972,7 +1972,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
     : (FONT_OPTIONS.find(f => f.key === (previewStyle.font || 'default')) || FONT_OPTIONS[0])
   const selectedTitleFont = usingCustomTitleFont
     ? { key: 'custom', label: customTitleFontName, css: `"${customTitleFontName}", sans-serif`, sample: 'Aw' }
-    : (TITLE_FONT_OPTIONS.find(f => f.key === (previewStyle.titleFont || 'croogla')) || TITLE_FONT_OPTIONS[0])
+    : (TITLE_FONT_OPTIONS.find(f => f.key === (previewStyle.titleFont || 'space')) || TITLE_FONT_OPTIONS[0])
   const titleStyle        = previewStyle.titleStyle || 'normal'
   const selectedBg        = BG_OPTIONS.find(b => b.key === (previewStyle.bg || 'default')) || BG_OPTIONS[0]
   const resolvedBg        = usingCustomBg ? customBg : (selectedBg.bg || 'var(--color-bg)')
@@ -2006,7 +2006,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
   const titleAlign        = previewStyle.titleAlign || 'center'
   const coverAsHero       = !!(previewStyle.coverAsHero && project.cover_url)
   const customTagline     = previewStyle.customTagline || ''
-  const cardStyleVal      = previewStyle.cardStyle || 'border'
+  const cardStyleVal      = previewStyle.cardStyle || 'glass'
   const hiddenSections = new Set(previewStyle.hiddenSections || [])
   const DEFAULT_SECTION_ORDER = ['problem','solution','target_audience','features','technologies','challenges','results','learnings','pap_supervisor']
   const orderedSections = previewStyle.sectionOrder?.length ? previewStyle.sectionOrder : DEFAULT_SECTION_ORDER
@@ -3286,7 +3286,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                   <div style={wsControlLabel}>Fonte do título</div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 4, marginBottom: 8 }}>
                     {TITLE_FONT_OPTIONS.map(f => {
-                      const isSel = (previewStyle.titleFont || 'croogla') === f.key
+                      const isSel = (previewStyle.titleFont || 'space') === f.key
                       return (
                         <button key={f.key} title={f.label}
                           onClick={() => setPreviewStyle(ps => ({ ...ps, titleFont: f.key }))}
@@ -3403,7 +3403,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                     { key: 'flat',   label: 'Flat',    desc: 'Sem bordas'    },
                     { key: 'glass',  label: 'Glass',   desc: 'Transparente'  },
                   ].map(c => {
-                    const isSel = (previewStyle.cardStyle || 'border') === c.key
+                    const isSel = (previewStyle.cardStyle || 'glass') === c.key
                     return (
                       <button key={c.key} onClick={() => setPreviewStyle(ps => ({ ...ps, cardStyle: c.key }))}
                         style={{
