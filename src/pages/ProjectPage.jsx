@@ -4312,8 +4312,8 @@ export default function ProjectPage() {
           document.body
         )}
 
-        {/* AI Analysis teaser for non-owners */}
-        {!isOwner && profile?.role !== 'professor' && (
+        {/* AI Analysis teaser — só para visitantes de fora, nunca para quem já colabora no projeto */}
+        {!isOwner && collaboratorSections === null && profile?.role !== 'professor' && (
           <div style={{
             background: colors.card,
             border: `1px solid ${colors.border}`,
