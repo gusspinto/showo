@@ -126,7 +126,7 @@ function buildHtml(firstName: string, weekLabel: string, stats: Stats, quiet: bo
     <div style="background:#0e1729;border:1px solid #1e3050;border-radius:10px;padding:16px 18px;margin-bottom:22px;">
       <p style="margin:0 0 4px;color:#eef2f8;font-size:14px;font-weight:700;">Transforma a semana num post</p>
       <p style="margin:0 0 12px;color:#98a9c0;font-size:13px;line-height:1.6;">
-        Uma semana com ${stats.entries} registos dá um bom post de progresso para o LinkedIn. A Showo escreve o rascunho, tu ajustas e publicas.
+        Uma semana com ${stats.entries} registos dá um bom post de progresso para o LinkedIn. O Showo escreve o rascunho, tu ajustas e publicas.
       </p>
       <a href="${APP}/post-semana" style="display:inline-block;background:rgba(255,255,255,0.08);color:#eef2f8;
         text-decoration:none;font-weight:700;font-size:13px;padding:9px 18px;border-radius:8px;border:1px solid #2a4275;">

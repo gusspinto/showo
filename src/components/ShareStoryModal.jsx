@@ -18,7 +18,7 @@ const TYPE_LABEL = {
  * ShareStoryModal — autocolante para stories.
  *
  * Regra de ouro: quem vê isto é um amigo no Instagram que nunca ouviu falar
- * da Showo e olha 2 segundos. Por isso o cartão mostra só o que é legível
+ * do Showo e olha 2 segundos. Por isso o cartão mostra só o que é legível
  * sem contexto — a capa do projeto (é o "mapa do percurso" do Strava: vê-se
  * e percebe-se), o nome, uma linha a dizer o que é, e quem fez.
  *
@@ -234,7 +234,7 @@ export function ShareStoryModal({ project, onClose }) {
 
                   {/* O destaque é a coisa que dá orgulho: está escrito na
                       terceira pessoa, como reconhecimento, e percebe-se sem
-                      saber o que é a Showo. */}
+                      saber o que é o Showo. */}
                   {highlight ? (
                     <div style={{ fontSize: 18, fontWeight: 400, color: '#fbfbfc', lineHeight: 1.34, marginTop: 14, fontFamily: FONT_DISPLAY }}>
                       {highlight}
