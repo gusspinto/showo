@@ -398,7 +398,7 @@ export default function Settings() {
     if (!user) return
     setSaving(true); setSaveMsg(null)
     if (containsProfanity(fullName) || containsProfanity(bio)) {
-      setSaveMsg({ type: 'err', text: 'Linguagem inapropriada detetada. A Showo é uma plataforma para estudantes — mantém o perfil respeitoso.' })
+      setSaveMsg({ type: 'err', text: 'Linguagem inapropriada detetada. O Showo é uma plataforma para estudantes — mantém o perfil respeitoso.' })
       setSaving(false); return
     }
     if (username && !/^[a-z0-9_]{3,30}$/.test(username)) {

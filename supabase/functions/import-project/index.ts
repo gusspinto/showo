@@ -5,7 +5,7 @@ import { checkRateLimit, getAuthUser, getCorsHeaders, checkPlanLimit, logAiCost 
 /* ══════════════════════════════════════════════════════════════════════════
    IMPORTAR PROJETO A PARTIR DE UM TRABALHO QUE JÁ EXISTE
    ──────────────────────────────────────────────────────────────────────────
-   A maior fricção de entrada na Showo é esta: o aluno já fez o trabalho — o
+   A maior fricção de entrada no Showo é esta: o aluno já fez o trabalho — o
    relatório da PAP, os slides da apresentação — e a app pedia-lhe para
    escrever tudo outra vez. Aqui ele envia o ficheiro e a IA devolve o que
    encontrou, campo a campo, para ele CONFIRMAR. Nunca cria nada sozinha:
@@ -290,7 +290,7 @@ Devolve APENAS este JSON: {"skills": [], "area": "", "summary": ""}`,
       type: 'text',
       text: `Estes ficheiros são o trabalho já feito por um estudante português. Tipo de projeto: ${typeLabel}.${extraNotes ? `\n\nO estudante acrescentou: "${extraNotes}"` : ''}
 
-Lê o trabalho e extrai o que lá está para preencher a ficha de projeto da Showo. Regras:
+Lê o trabalho e extrai o que lá está para preencher a ficha de projeto do Showo. Regras:
 - Português de Portugal ("utilizador", "ecrã", "equipa"). Nunca "usuário" nem "tela".
 - Escreve texto corrido e natural, como o aluno escreveria sobre o próprio trabalho, não tópicos telegráficos.
 - Nunca uses travessões (—) nem enchimento tipo "de forma eficaz", "no âmbito de", "revolucionário".
