@@ -142,7 +142,7 @@ export function Select({ label, value, onChange, options = [], placeholder = 'Se
               role="option"
               aria-selected={o.value === value}
               onMouseDown={e => { e.preventDefault(); onChange(o.value); setOpen(false) }}
-              style={{ padding: '9px 14px', cursor: 'pointer', fontSize: 'var(--text-base)', color: 'var(--color-text)', background: o.value === value ? 'var(--color-primary-subtle)' : 'transparent', fontWeight: o.value === value ? 600 : 400 }}
+              style={{ padding: '9px 14px', cursor: 'pointer', fontSize: 'var(--text-base)', color: 'var(--color-text)', background: o.value === value ? 'var(--color-primary-subtle)' : 'transparent', fontWeight: o.value === value ? 600 : 400, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
               onMouseEnter={e => { if (o.value !== value) e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
               onMouseLeave={e => { e.currentTarget.style.background = o.value === value ? 'var(--color-primary-subtle)' : 'transparent' }}
             >
