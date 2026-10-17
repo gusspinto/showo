@@ -33,6 +33,7 @@ import { CardIcon as CreditCard } from '@solar-icons/react/bold/card'
 import { CropModal } from '../components/CropModal'
 import { containsProfanity } from '../lib/profanity'
 import { Select } from '../components/ui'
+import PhoneInput from '../components/PhoneInput'
 import { OCCUPATIONS } from '../lib/occupations'
 import ExportProjectsModal from '../components/ExportProjectsModal'
 import { getAccountFilesUsage, formatFileSize } from '../lib/projectFiles'
@@ -268,6 +269,7 @@ export default function Settings() {
   const [occupation, setOccupation] = useState('')
   const [skills, setSkills] = useState([])
   const [phone, setPhone] = useState('')
+  const [phoneLoaded, setPhoneLoaded] = useState(false)
   const [currentPw, setCurrentPw] = useState('')
   const [newPw, setNewPw] = useState('')
   const [confirmPw, setConfirmPw] = useState('')
@@ -320,6 +322,7 @@ export default function Settings() {
         setArea(data.area ?? '')
         setOccupation(data.occupation ?? '')
         setPhone(data.phone ?? '')
+        setPhoneLoaded(true)
         setNotifyNewsletter(data.notify_newsletter ?? true)
         setNotifyMarketing(data.notify_marketing ?? true)
         setNotifyProductUpdates(data.notify_product_updates ?? true)
@@ -676,7 +679,21 @@ export default function Settings() {
                   )}
                   <Input label="Username" value={username} onChange={v => setUsername(v.toLowerCase().replace(/[^a-z0-9_]/g, ''))} placeholder={isRecruiter ? 'ex: rh_empresa' : 'ex: gustavo_silva'} prefix="@" hint={usernameHint} />
 
-                  <Input label="Telemóvel (opcional)" value={phone} onChange={setPhone} placeholder="912 345 678" hint="Para te contactarmos sobre o teu portfolio e oportunidades. Nunca partilhado publicamente." />
+                  <div className="settings-field">
+                    <label className="settings-label">Telemóvel (opcional)</label>
+                    <PhoneInput
+                      key={phoneLoaded ? 'loaded' : 'pending'}
+                      value={phone}
+                      onChange={setPhone}
+                      wrapStyle={{ gap: 8 }}
+                      inputStyle={{
+                        background: 'var(--color-input-bg)', border: '1.5px solid var(--color-input-border)',
+                        borderRadius: 'var(--radius-md)', padding: '10px 14px', color: 'var(--color-text)',
+                        fontSize: 'var(--text-base)', fontFamily: 'var(--font-body)', outline: 'none', boxSizing: 'border-box',
+                      }}
+                    />
+                    <p className="settings-hint">Para te contactarmos sobre o teu portfolio e oportunidades. Nunca partilhado publicamente.</p>
+                  </div>
 
                   {role === 'aluno' && (
                     <div className="settings-field">

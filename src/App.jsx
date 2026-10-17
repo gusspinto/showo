@@ -15,6 +15,8 @@ import { ChatRoundDotsIcon as ChatDots } from '@solar-icons/react/bold/chat-roun
 import { QuestionCircleIcon as QuestionCircle } from '@solar-icons/react/bold/question-circle'
 import { PhoneIcon as Phone } from '@solar-icons/react/bold/phone'
 import { HelmetProvider } from 'react-helmet-async'
+import { isValidPhoneNumber } from 'libphonenumber-js'
+import PhoneInput from './components/PhoneInput'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { SidebarProvider } from './context/SidebarContext'
@@ -176,13 +178,13 @@ const GATE_EXEMPT_PREFIXES = ['/oauth/']
 const isGateExempt = (pathname) =>
   GATE_EXEMPT_PATHS.has(pathname) || GATE_EXEMPT_PREFIXES.some(p => pathname.startsWith(p))
 
-// Número PT válido = exatamente 9 dígitos. Visto nos dados reais: os poucos
-// números inválidos vêm de erros óbvios de escrita (8, 7 ou 2 dígitos) ou de
-// terem colado algo errado (11 dígitos), nunca de um indicativo estrangeiro
-// guardado à parte, por isso esta regra simples basta.
+// Válido = E.164 completo (com indicativo) que a libphonenumber-js reconhece
+// como um número real desse país. Números antigos guardados sem indicativo
+// (formato legado, antes do seletor de país) nunca começam por "+", por
+// isso caem aqui como inválidos e forçam a pessoa a corrigir no login.
 function isPhoneInvalid(phone) {
   if (!phone) return false
-  return phone.replace(/\D/g, '').length !== 9
+  return !isValidPhoneNumber(phone)
 }
 
 function PhoneGate({ children, reopenGate, setReopenGate }) {
@@ -196,19 +198,12 @@ function PhoneGate({ children, reopenGate, setReopenGate }) {
   const needsPhone = (!isGateExempt(location.pathname) && user && profile && profile.role !== 'professor' && (!profile.phone || phoneInvalid))
     || reopenGate === 'phone'
 
-  // Reabertura via "← Voltar" no OccupationGate, ou número existente mas
-  // inválido: pré-preenche com o número que já lá estava, para a pessoa só
-  // corrigir o que estava errado, não escrever tudo de novo.
-  useEffect(() => {
-    if ((reopenGate === 'phone' || phoneInvalid) && profile?.phone) setPhone(profile.phone)
-  }, [reopenGate, profile?.phone, phoneInvalid])
-
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!phone.trim()) { setError('Introduz o teu número de telemóvel.'); return }
-    if (isPhoneInvalid(phone.trim())) { setError('Esse número não parece estar completo. Confirma e tenta de novo.'); return }
+    if (!phone) { setError('Introduz o teu número de telemóvel.'); return }
+    if (isPhoneInvalid(phone)) { setError('Esse número não parece estar completo. Confirma e tenta de novo.'); return }
     setSaving(true)
-    const { error: err } = await supabase.from('profiles').update({ phone: phone.trim() }).eq('id', user.id)
+    const { error: err } = await supabase.from('profiles').update({ phone }).eq('id', user.id)
     if (err) { setError('Erro ao guardar. Tenta novamente.'); setSaving(false); return }
     await refreshProfile()
     setSaving(false)
@@ -235,17 +230,19 @@ function PhoneGate({ children, reopenGate, setReopenGate }) {
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '100%' }}>
-          <div className="onboard-input-wrap">
-            <span className="onboard-input-prefix">+351</span>
-            <input
-              type="tel"
-              value={phone}
-              onChange={e => setPhone(e.target.value)}
-              placeholder="912 345 678"
-              autoFocus
-              className="onboard-input"
-            />
-          </div>
+          <PhoneInput
+            key={profile?.phone || 'empty'}
+            value={phoneInvalid || reopenGate === 'phone' ? profile?.phone : ''}
+            onChange={setPhone}
+            autoFocus
+            wrapClassName="onboard-input-wrap"
+            inputClassName="onboard-input"
+            selectStyle={{
+              background: 'transparent', border: 'none', boxShadow: 'none',
+              color: '#fff', padding: '15px 10px 15px 14px',
+              borderRight: '1px solid rgba(255,255,255,0.12)', borderRadius: 0,
+            }}
+          />
 
           {error && <p className="onboard-error">{error}</p>}
 

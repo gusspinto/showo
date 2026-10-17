@@ -20,6 +20,8 @@ import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import { OCCUPATIONS } from '../lib/occupations'
 import { Select } from '../components/ui'
+import PhoneInput from '../components/PhoneInput'
+import { isValidPhoneNumber } from 'libphonenumber-js'
 
 const C = {
   bg:          'var(--color-bg)',
@@ -401,7 +403,8 @@ export default function Register() {
     if (needsInviteCode && !inviteCode.trim()) { setError('Introduz o código de acesso enviado pela Showo.'); return }
     if (needsClassCode && !classCode.trim()) { setError('Introduz o código da turma fornecido pelo professor.'); return }
     if (password.length < 6) { setError('A palavra-passe tem de ter pelo menos 6 caracteres.'); return }
-    if (needsPhone && !phone.trim()) { setError('Introduz o teu número de telemóvel.'); return }
+    if (needsPhone && !phone) { setError('Introduz o teu número de telemóvel.'); return }
+    if (needsPhone && !isValidPhoneNumber(phone)) { setError('Esse número não parece estar completo. Confirma e tenta de novo.'); return }
 
     // Validate email domain against class's school before creating account
     if (needsClassCode) {
@@ -434,7 +437,7 @@ export default function Register() {
         pending_invite_code: needsInviteCode ? inviteCode.trim() : null,
         pending_school: needsSchool ? school.trim() : null,
         pending_partner_token: isPartnerFlow ? partnerToken : null,
-        pending_phone: phone.trim() || null,
+        pending_phone: phone || null,
         // Capturados já aqui (não depois) porque sobrevivem em user_metadata
         // mesmo que a confirmação de email demore. Lidos do localStorage
         // (gravado na primeira página vista, em App.jsx) e não de
@@ -1006,7 +1009,17 @@ export default function Register() {
                     </Field>
                     {needsPhone && (
                       <Field label="Telemóvel">
-                        <Input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="912 345 678" required />
+                        <PhoneInput
+                          value={phone}
+                          onChange={setPhone}
+                          wrapClassName="auth-field-wrap"
+                          inputClassName="auth-input"
+                          selectStyle={{
+                            background: 'transparent', border: 'none', boxShadow: 'none',
+                            color: 'var(--color-text)', padding: '11px 10px 11px 0',
+                            borderRight: '1.5px solid var(--color-border)', borderRadius: 0,
+                          }}
+                        />
                       </Field>
                     )}
                   </>
