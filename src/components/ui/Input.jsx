@@ -136,7 +136,19 @@ export function Select({ label, value, onChange, options = [], placeholder = 'Se
       </div>
       {open && (
         <div role="listbox" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, background: 'var(--color-surface)', border: '1.5px solid var(--color-input-border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 24px rgba(0,0,0,0.2)', zIndex: 9999, maxHeight: 240, overflowY: 'auto', padding: '4px 0' }}>
-          {normalized.map(o => (
+          {normalized.map(o => o.header ? (
+            <div
+              key={`header-${o.label}`}
+              role="presentation"
+              style={{
+                padding: '8px 14px 6px', fontSize: 'var(--text-xs)', fontWeight: 700,
+                color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em',
+                borderTop: '1px solid var(--color-border)', marginTop: 4,
+              }}
+            >
+              {o.label}
+            </div>
+          ) : (
             <div
               key={o.value}
               role="option"
