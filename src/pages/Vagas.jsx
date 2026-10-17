@@ -691,7 +691,7 @@ export default function Vagas() {
   }
 
   // Partilhar liga sempre a um id concreto (?v=), para quem recebe o link
-  // (de dentro ou de fora da Showo) cair direto nesta vaga, não na lista
+  // (de dentro ou de fora do Showo) cair direto nesta vaga, não na lista
   // genérica. navigator.share cobre o ecrã nativo de partilha (WhatsApp,
   // Instagram, Mensagens...); sem isso, copia o link para a área de
   // transferência.

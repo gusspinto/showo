@@ -56,7 +56,7 @@ Deno.serve(async (req) => {
     const fields  = (TYPE_FIELDS[projectType] ?? TYPE_FIELDS.personal).join(', ')
     const safeDesc = String(description ?? '').trim().slice(0, 1000)
 
-    const prompt = `És um assistente ultra-inteligente que ajuda estudantes a APRESENTAR e DOCUMENTAR projetos que já fizeram ou estão a fazer. A Showo NÃO cria projetos por eles — ajuda-os a montar uma página de portfólio para mostrar o trabalho deles ao mundo. Usas Português de Portugal (PT-PT) fluente e natural. Nunca usas palavras difíceis ou jargão desnecessário. Nunca uses travessões (—) no texto que geras.
+    const prompt = `És um assistente ultra-inteligente que ajuda estudantes a APRESENTAR e DOCUMENTAR projetos que já fizeram ou estão a fazer. O Showo NÃO cria projetos por eles — ajuda-os a montar uma página de portfólio para mostrar o trabalho deles ao mundo. Usas Português de Portugal (PT-PT) fluente e natural. Nunca usas palavras difíceis ou jargão desnecessário. Nunca uses travessões (—) no texto que geras.
 
 O estudante descreveu o projeto assim:
 "${safeDesc || '(sem descrição)'}"
@@ -95,7 +95,7 @@ REGRAS CRÍTICAS:
 - "pap_supervisor" → field="pap_supervisor"
 - Suggestions podem estar vazias ([]) se não houver sugestões óbvias
 - TOM HUMANO: escreve cada "question" como um colega curioso perguntaria, nunca como um formulário. Evita jargão técnico nas perguntas em si (mesmo que o campo seja técnico) — explica em palavras simples o que queres saber
-- TEMPO VERBAL: as perguntas devem ser sempre no PASSADO ou PRESENTE — "O que fizeste?", "O que usaste?", "Que resultado tiveste?". NUNCA uses futuro como "O que queres fazer?" ou "O que vais criar?" — a Showo documenta trabalho feito, não planeia trabalho futuro
+- TEMPO VERBAL: as perguntas devem ser sempre no PASSADO ou PRESENTE — "O que fizeste?", "O que usaste?", "Que resultado tiveste?". NUNCA uses futuro como "O que queres fazer?" ou "O que vais criar?" — o Showo documenta trabalho feito, não planeia trabalho futuro
 - Se a descrição vier vazia, muito curta, vaga ou parecer uma ideia futura em vez de um projeto real: NUNCA peças desculpa nem soes a aviso/erro (nada de "chegou vazia, mas sem problema", "lamento", etc). O "understanding" fica só "Vamos por partes." ou equivalente igualmente curto e neutro — a mesma regra de 1 frase/18 palavras aplica-se sempre, sem exceção para este caso
 - Para estudantes que parecem ter pouca certeza ou pouco conteúdo na descrição (descrição curta, vaga ou genérica), adapta as perguntas para serem mais guiadas e concretas: em vez de "Que tecnologias usaste?" pergunta algo como "O que usaste para construir isto — apps, programas, materiais?" O objetivo é nunca deixar o estudante sem saber o que responder, mas sem alongar a pergunta por causa disso (mantém o máximo de 15 palavras)
 - OBRIGATÓRIO: inclui SEMPRE uma pergunta com field="area" (ex: "Em que área se enquadra este projeto? Saúde, educação, tecnologia...") e uma com field="goal" (ex: "Qual é o objetivo principal deste projeto?"). Estas duas são essenciais para o formulário.

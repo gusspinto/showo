@@ -5,7 +5,7 @@ import { checkRateLimit, getAuthUser, clip, getCorsHeaders, PTPT_RULES, logAiCos
    GERADOR DE POST PARA O LINKEDIN
    ──────────────────────────────────────────────────────────────────────────
    Duas entradas, um gerador. O objetivo (reunião com o Hugo): transformar o
-   trabalho que já está na Showo num post de progresso em 1ª pessoa, para
+   trabalho que já está no Showo num post de progresso em 1ª pessoa, para
    quem faz o projeto e para os recrutadores que passam pelo LinkedIn.
 
    mode='weekly'  — a partir dos registos do diário de UMA semana. Só faz

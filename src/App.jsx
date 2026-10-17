@@ -242,10 +242,11 @@ function PhoneGate({ children, reopenGate, setReopenGate }) {
             onChange={setPhone}
             autoFocus
             wrapClassName="onboard-input-wrap"
+            wrapStyle={{ overflow: 'visible' }}
             inputClassName="onboard-input"
             selectStyle={{
               background: 'transparent', border: 'none', boxShadow: 'none',
-              color: '#fff', padding: '15px 10px 15px 14px',
+              color: '#fff', padding: '15px 34px 15px 14px',
               borderRight: '1px solid rgba(255,255,255,0.12)', borderRadius: 0,
             }}
           />

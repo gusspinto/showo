@@ -6,7 +6,7 @@ import { PlusIcon as Plus } from '../icons/PlusIcon'
 const WEEKDAYS = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D']
 const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
 
-// Três cores, todas da família da marca (e do ícone da Showo): a defesa é
+// Três cores, todas da família da marca (e do ícone do Showo): a defesa é
 // vermelha, as tarefas azul, os lembretes pessoais o teal de apoio.
 function eventTypeColor(type) {
   switch (type) {

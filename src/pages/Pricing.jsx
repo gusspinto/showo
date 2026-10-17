@@ -26,7 +26,7 @@ import './Pricing.css'
    linhas mais fortes desse plano, sem parágrafos de texto lá dentro. A
    tabela de comparação, mais abaixo, é que tem a lista toda.
 
-   E continua a valer a regra anterior: a Showo não é só para a escola —
+   E continua a valer a regra anterior: o Showo não é só para a escola —
    "PAP"/"sair da escola" não aparece nas frases principais. As features
    de escola continuam na lista, só não são a promessa de nenhum plano.
    ══════════════════════════════════════════════════════════════════════════ */
@@ -165,7 +165,7 @@ const FAQ = [
   },
   {
     q: 'A minha escola paga por mim?',
-    a: 'Se a tua escola tiver conta institucional na Showo, és promovido automaticamente assim que entras na turma com o código dela. Não pagas nada.',
+    a: 'Se a tua escola tiver conta institucional no Showo, és promovido automaticamente assim que entras na turma com o código dela. Não pagas nada.',
   },
   {
     q: 'Podem pagar por mim?',

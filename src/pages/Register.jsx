@@ -41,7 +41,7 @@ const REGISTER_PHRASES = [
 const ROLES = [
   // Rótulo "Individual" e não "Aluno" — o valor interno do role continua
   // 'aluno' (sem role novo na base de dados), mas quem já saiu da escola e
-  // usa a Showo como portefólio/procura de emprego não devia ver-se
+  // usa o Showo como portefólio/procura de emprego não devia ver-se
   // chamado de "Aluno" no ecrã.
   { id: 'aluno',               icon: <DiplomaIcon size={23} />,           label: 'Individual',          sub: 'Conta pessoal',             color: 'var(--color-primary)' },
   { id: 'aluno_institucional', icon: <UsersGroupRoundedIcon size={23} />, label: 'Aluno Institucional',  sub: 'Tenho código de turma',     color: 'var(--color-primary)' },
@@ -53,7 +53,7 @@ const ROLES = [
 // Nível 1 do registo: primeiro escolhe-se a categoria, só depois (quando há
 // mais que um papel dentro dela) o papel específico. "Individual" fica só
 // com Aluno — serve tanto quem ainda estuda como quem já saiu da escola e
-// usa a Showo como portfólio/procura de emprego; não há um papel
+// usa o Showo como portfólio/procura de emprego; não há um papel
 // "freelancer" à parte, seria distinção sem diferença nas funcionalidades.
 const CATEGORIES = [
   {
@@ -441,7 +441,7 @@ export default function Register() {
         // Capturados já aqui (não depois) porque sobrevivem em user_metadata
         // mesmo que a confirmação de email demore. Lidos do localStorage
         // (gravado na primeira página vista, em App.jsx) e não de
-        // document.referrer/da URL atual — quem navegou dentro da Showo antes
+        // document.referrer/da URL atual — quem navegou dentro do Showo antes
         // de chegar aqui já perdeu os dois.
         pending_signup_referrer: localStorage.getItem('showo_referrer') || document.referrer || 'direct',
         pending_signup_utm_source: localStorage.getItem('showo_utm_source') || new URLSearchParams(window.location.search).get('utm_source') || null,
@@ -1016,7 +1016,7 @@ export default function Register() {
                           inputClassName="auth-input"
                           selectStyle={{
                             background: 'transparent', border: 'none', boxShadow: 'none',
-                            color: 'var(--color-text)', padding: '11px 10px 11px 0',
+                            color: 'var(--color-text)', padding: '11px 32px 11px 0',
                             borderRight: '1.5px solid var(--color-border)', borderRadius: 0,
                           }}
                         />

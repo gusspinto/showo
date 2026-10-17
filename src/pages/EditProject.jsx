@@ -706,7 +706,7 @@ export default function EditProject() {
 
             <div className="ep-main">
               {/* Redes — LinkedIn/GitHub, com peso a sério: é uma das ligações
-                  mais fortes que a Showo tem para oferecer (prova social
+                  mais fortes que o Showo tem para oferecer (prova social
                   direta para quem vê o projeto), não um extra a esconder no
                   fundo de outro separador. Tinha vindo a viver dentro de
                   "Sobre o criador", que deixou de fazer sentido como
@@ -1741,7 +1741,7 @@ function DangerZone({ project, navigate }) {
 
 /* ══════════════════════════════════════════════════════════════════════════
    BASE DE DADOS + API — o hosting real: o aluno desenha tabelas, e o
-   projeto passa a ter uma API que funciona de fora da Showo (curl, Postman,
+   projeto passa a ter uma API que funciona de fora do Showo (curl, Postman,
    o próprio frontend dele), sem nunca correr código do aluno — só dados,
    validados contra o schema que ele desenhou. Ver project-db/index.ts para
    as decisões de segurança por trás disto.
@@ -1794,7 +1794,7 @@ function DatabaseSection({ project }) {
         <h2 className="ep-sec-heading" style={{ margin: 0 }}>Base de dados</h2>
       </div>
       <p style={{ margin: '0 0 16px', fontSize: 12.5, color: colors.subtle, lineHeight: 1.5 }}>
-        Tabelas com API própria, prontas a chamar de fora da Showo.
+        Tabelas com API própria, prontas a chamar de fora do Showo.
       </p>
 
       {noAccess ? (
@@ -2455,7 +2455,7 @@ function ApiKeyCard({ project, apiKey, firstTable, onKeyChanged }) {
         Chave de API
       </div>
       <p style={{ margin: '0 0 12px', fontSize: 12.5, color: colors.muted, lineHeight: 1.6 }}>
-        Usa esta chave para chamar a API do teu projeto de fora da Showo: de outro código, do Postman, ou de um site que construas.
+        Usa esta chave para chamar a API do teu projeto de fora do Showo: de outro código, do Postman, ou de um site que construas.
         Todos os pedidos são <code>POST</code> para o mesmo endereço; é o campo <code>action</code> no corpo que diz o que fazer.
       </p>
       {!apiKey && (

@@ -8,21 +8,21 @@ export default function Termos() {
     >
       <h2>1. Aceitação</h2>
       <p>
-        Ao usares a Showo, aceitas estas regras e a nossa <a href="/privacidade">Política de Privacidade</a>. Se não concordares,
+        Ao usares o Showo, aceitas estas regras e a nossa <a href="/privacidade">Política de Privacidade</a>. Se não concordares,
         não uses a app.
       </p>
 
-      <h2>2. O que é a Showo</h2>
+      <h2>2. O que é o Showo</h2>
       <p>
-        A Showo ajuda-te a documentar e apresentar os teus projetos, com páginas de portfólio, análise por IA e ferramentas para
-        te preparares, como a defesa da PAP. A Showo não faz os projetos por ti, ajuda-te a mostrá-los bem.
+        O Showo ajuda-te a documentar e apresentar os teus projetos, com páginas de portfólio, análise por IA e ferramentas para
+        te preparares, como a defesa da PAP. O Showo não faz os projetos por ti, ajuda-te a mostrá-los bem.
       </p>
 
       <h2>3. A tua conta</h2>
       <ul>
         <li>És responsável por manter a tua palavra-passe segura e por tudo o que acontece na tua conta.</li>
         <li>Ao registares-te, dá-nos informação verdadeira.</li>
-        <li>Se tens menos de 16 anos, só podes usar a Showo com o consentimento de quem cuida de ti.</li>
+        <li>Se tens menos de 16 anos, só podes usar o Showo com o consentimento de quem cuida de ti.</li>
       </ul>
 
       <h2>4. O teu conteúdo</h2>
@@ -33,7 +33,7 @@ export default function Termos() {
       </p>
 
       <h2>5. Uso aceitável</h2>
-      <p>Ao usar a Showo, comprometes-te a não:</p>
+      <p>Ao usar o Showo, comprometes-te a não:</p>
       <ul>
         <li>Publicar conteúdo ilegal, ofensivo ou que viole direitos de outros.</li>
         <li>Fazer-te passar por outra pessoa ou dar informação falsa.</li>
@@ -43,19 +43,19 @@ export default function Termos() {
 
       <h2>6. Análise por inteligência artificial</h2>
       <p>
-        A Showo usa IA para te dar feedback e sugestões sobre os teus projetos. Isto é uma ajuda, não uma garantia de nota nem de
+        O Showo usa IA para te dar feedback e sugestões sobre os teus projetos. Isto é uma ajuda, não uma garantia de nota nem de
         resultado. As decisões sobre o teu trabalho são sempre tuas.
       </p>
 
       <h2>7. O que é nosso</h2>
       <p>
-        A marca, o design e o software da Showo pertencem-nos. Estas regras não te dão direitos sobre isso, além de poderes usar
+        A marca, o design e o software do Showo pertencem-nos. Estas regras não te dão direitos sobre isso, além de poderes usar
         a app normalmente.
       </p>
 
       <h2>8. Disponibilidade e responsabilidade</h2>
       <p>
-        Fazemos os possíveis por manter a Showo disponível e segura, mas a app é fornecida tal como está, sem prometer que nunca
+        Fazemos os possíveis por manter o Showo disponível e segura, mas a app é fornecida tal como está, sem prometer que nunca
         falha. Dentro do que a lei permite, não somos responsáveis por prejuízos indiretos que resultem do uso da app.
       </p>
 

@@ -5,7 +5,7 @@ import { checkRateLimit, getCorsHeaders, getAuthUser } from '../_shared/rateLimi
    BASE DE DADOS + API DO PROJETO (premium)
    ──────────────────────────────────────────────────────────────────────────
    O aluno desenha tabelas no editor; isto dá-lhe um armazém de dados a
-   sério com uma API que funciona de fora da Showo — curl, Postman, o
+   sério com uma API que funciona de fora do Showo — curl, Postman, o
    frontend que ele próprio construir. É a diferença entre "projeto teórico"
    e "produto funcional".
 
@@ -23,7 +23,7 @@ import { checkRateLimit, getCorsHeaders, getAuthUser } from '../_shared/rateLimi
 
    3. Duas formas de entrar: sessão Showo (o dono, para gerir tabelas e
       dados) ou chave de API (para qualquer chamador externo — é isso que
-      torna a API "real", utilizável sem nunca ter conta na Showo). A chave
+      torna a API "real", utilizável sem nunca ter conta no Showo). A chave
       só chega a ações de dados (ler/escrever linhas), nunca a gerir
       tabelas ou emitir chaves novas.
    ══════════════════════════════════════════════════════════════════════════ */

@@ -8,8 +8,8 @@ export default function Privacidade() {
     >
       <h2>Quem somos</h2>
       <p>
-        A Showo ajuda estudantes e profissionais independentes a transformar os seus projetos (PAPs, estágios, trabalhos freelance) em páginas profissionais.
-        Quem trata os teus dados é a Showo, e podes falar connosco quando quiseres em <a href="mailto:hello@showo.pt">hello@showo.pt</a>.
+        O Showo ajuda estudantes e profissionais independentes a transformar os seus projetos (PAPs, estágios, trabalhos freelance) em páginas profissionais.
+        Quem trata os teus dados é o Showo, e podes falar connosco quando quiseres em <a href="mailto:hello@showo.pt">hello@showo.pt</a>.
       </p>
 
       <h2>Que dados guardamos</h2>
@@ -27,7 +27,7 @@ export default function Privacidade() {
         <li>Para gerar a análise e o feedback da inteligência artificial sobre os teus projetos.</li>
         <li>Para falar contigo quando é preciso, seja confirmar o email, repor a palavra-passe ou avisar de algo importante.</li>
         <li>Para te contactar por telemóvel, por WhatsApp ou meio parecido, sobre feedback ao produto, apoio ou, de vez em quando, novidades comerciais. Se não quiseres, é só dizeres que queres parar.</li>
-        <li>Para melhorar e proteger a Showo, olhando para estatísticas no conjunto e travando abusos.</li>
+        <li>Para melhorar e proteger o Showo, olhando para estatísticas no conjunto e travando abusos.</li>
       </ul>
 
       <h2>Com quem falam os teus dados</h2>
@@ -50,8 +50,8 @@ export default function Privacidade() {
       <h2>Google Calendar</h2>
       <p>
         Se ligares o teu Google Calendar, o Showo usa esse acesso só para escrever no teu calendário os prazos, lembretes e
-        datas de defesa que já criaste dentro da Showo. O Showo nunca lê o teu Google Calendar de volta, nem outros dados da
-        tua conta Google — a comunicação acontece só num sentido, da Showo para o Google. Podes desligar esta ligação a
+        datas de defesa que já criaste dentro do Showo. O Showo nunca lê o teu Google Calendar de volta, nem outros dados da
+        tua conta Google — a comunicação acontece só num sentido, do Showo para o Google. Podes desligar esta ligação a
         qualquer momento no painel da Agenda, o que revoga o acesso junto do Google.
       </p>
       <p>
@@ -70,7 +70,7 @@ export default function Privacidade() {
 
       <h2>Menores de idade</h2>
       <p>
-        A Showo é usada por estudantes e alguns podem ser menores. Em Portugal, tratar dados de quem tem menos de 16 anos precisa
+        O Showo é usado por estudantes e alguns podem ser menores. Em Portugal, tratar dados de quem tem menos de 16 anos precisa
         do consentimento de quem cuida deles. Se és encarregado de educação e achas que um menor nos deu dados sem esse consentimento,
         escreve-nos e apagamos tudo.
       </p>
