@@ -14,11 +14,13 @@ function countryName(iso) {
   return DISPLAY_NAMES?.of(iso) || iso
 }
 
-// PT fica sempre em primeiro (predefinido), o resto ordenado por nome.
+// PT primeiro (predefinido), depois Brasil e EUA (favoritos, pedido do
+// Gustavo), só depois o resto por ordem alfabética.
+const FAVORITES = ['PT', 'BR', 'US']
 const COUNTRY_OPTIONS = (() => {
   const codes = getCountries()
-  const rest = codes.filter(c => c !== 'PT').sort((a, b) => countryName(a).localeCompare(countryName(b), 'pt'))
-  return ['PT', ...rest].map(iso => ({
+  const rest = codes.filter(c => !FAVORITES.includes(c)).sort((a, b) => countryName(a).localeCompare(countryName(b), 'pt'))
+  return [...FAVORITES, ...rest].map(iso => ({
     value: iso,
     label: `${flagEmoji(iso)} +${getCountryCallingCode(iso)} ${countryName(iso)}`,
   }))
@@ -51,7 +53,7 @@ export default function PhoneInput({ value, onChange, autoFocus, inputClassName,
         value={country}
         onChange={setCountry}
         options={COUNTRY_OPTIONS}
-        style={{ width: 150, flexShrink: 0 }}
+        style={{ width: 210, flexShrink: 0 }}
         inputStyle={selectStyle}
       />
       <input
