@@ -230,8 +230,8 @@ function PhoneGate({ children, reopenGate, setReopenGate }) {
               sentido para o segundo caso, que é a maioria de quem falta. */}
           <p className="onboard-subtitle">
             {phoneInvalid
-              ? 'Corrige o teu número de telemóvel para continuarmos a conseguir falar contigo sobre o teu percurso na Showo.'
-              : 'Usamos o teu número só para falar contigo sobre o teu percurso na Showo. Nunca é partilhado nem aparece no teu perfil.'}
+              ? 'Corrige o teu número de telemóvel para continuarmos a conseguir falar contigo sobre o teu percurso no Showo.'
+              : 'Usamos o teu número só para falar contigo sobre o teu percurso no Showo. Nunca é partilhado nem aparece no teu perfil.'}
           </p>
         </div>
 
