@@ -20,10 +20,12 @@ const FAVORITES = ['PT', 'BR', 'US']
 const COUNTRY_OPTIONS = (() => {
   const codes = getCountries()
   const rest = codes.filter(c => !FAVORITES.includes(c)).sort((a, b) => countryName(a).localeCompare(countryName(b), 'pt'))
-  return [...FAVORITES, ...rest].map(iso => ({
-    value: iso,
-    label: `${flagEmoji(iso)} +${getCountryCallingCode(iso)} ${countryName(iso)}`,
-  }))
+  const toOption = iso => ({ value: iso, label: `${flagEmoji(iso)} +${getCountryCallingCode(iso)} ${countryName(iso)}` })
+  return [
+    ...FAVORITES.map(toOption),
+    { header: true, label: 'Todos os países' },
+    ...rest.map(toOption),
+  ]
 })()
 
 /* value/onChange trabalham sempre em E.164 completo (ex: "+351912345678").
