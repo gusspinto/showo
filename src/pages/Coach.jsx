@@ -8,11 +8,33 @@ import { chatGlobalCoach } from '../lib/chatGlobalCoach'
 import { renderMd } from '../lib/renderMd'
 import { BotIcon as Bot } from '@solar-icons/react/bold/bot'
 import { AltArrowDownIcon as ChevronDown } from '@solar-icons/react/bold/alt-arrow-down'
+import { AltArrowRightIcon as ChevronRight } from '@solar-icons/react/bold/alt-arrow-right'
 import { PlaneIcon as Send } from '@solar-icons/react/bold/plane'
+import { ClipboardListIcon as HistoryIcon } from '@solar-icons/react/bold/clipboard-list'
+import { CloseIcon as X } from '@solar-icons/react/bold/close'
 
 const C = {
   bg: 'var(--color-bg)', card: 'var(--color-surface)', border: 'var(--color-border)',
   blue: 'var(--color-primary)', muted: 'var(--color-text-secondary)', text: 'var(--color-text)',
+}
+
+function groupBySession(rows) {
+  const map = new Map()
+  for (const m of rows) {
+    const sid = m.session_id || 'default'
+    if (!map.has(sid)) map.set(sid, [])
+    map.get(sid).push(m)
+  }
+  return Array.from(map.entries())
+    .map(([id, msgs]) => ({ id, msgs, lastAt: msgs[msgs.length - 1]?.created_at }))
+    .sort((a, b) => (a.lastAt < b.lastAt ? 1 : -1))
+}
+
+function sessionPreview(msgs) {
+  const firstUser = msgs.find(m => m.role === 'user')
+  const text = firstUser ? firstUser.content.slice(0, 48) + (firstUser.content.length > 48 ? '...' : '') : 'Conversa sem mensagens'
+  const date = msgs[0]?.created_at ? new Date(msgs[0].created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' }) : ''
+  return { text, date }
 }
 
 export default function Coach() {
@@ -21,9 +43,13 @@ export default function Coach() {
 
   const [myProjects, setMyProjects] = useState([])
   const [pickerOpen, setPickerOpen] = useState(false)
+  const [historyOpen, setHistoryOpen] = useState(false)
+  const [expandedProjects, setExpandedProjects] = useState({})
 
   const [messages, setMessages] = useState([])
   const [sessionId, setSessionId] = useState(null)
+  const [allGlobalMsgs, setAllGlobalMsgs] = useState([])
+  const [projectCoachMsgs, setProjectCoachMsgs] = useState([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [gateMsg, setGateMsg] = useState(null)
@@ -44,12 +70,13 @@ export default function Coach() {
   // session_id, "Nova conversa" não apaga nada, só começa uma sessão nova.
   useEffect(() => {
     if (!user) return
-    const savedSid = localStorage.getItem('global_coach_session')
-    if (savedSid === 'new') return
-    supabase.from('global_coach_messages').select('role, content, session_id').eq('user_id', user.id)
-      .order('created_at', { ascending: true }).limit(300)
+    supabase.from('global_coach_messages').select('role, content, session_id, created_at').eq('user_id', user.id)
+      .order('created_at', { ascending: true }).limit(500)
       .then(({ data }) => {
         if (!data?.length) return
+        setAllGlobalMsgs(data)
+        const savedSid = localStorage.getItem('global_coach_session')
+        if (savedSid === 'new') return
         const lastSid = savedSid || data[data.length - 1]?.session_id
         const sessionMsgs = data.filter(m => m.session_id === lastSid)
         setMessages(sessionMsgs.map(m => ({ role: m.role, content: m.content })))
@@ -57,10 +84,46 @@ export default function Coach() {
       })
   }, [user])
 
+  // Histórico do coach de cada projeto (só para listar no painel — a
+  // conversa em si continua a abrir-se dentro do próprio projeto).
+  useEffect(() => {
+    if (!user || !myProjects.length) return
+    supabase.from('coach_messages').select('project_id, role, content, session_id, created_at')
+      .in('project_id', myProjects.map(p => p.id)).eq('user_id', user.id)
+      .order('created_at', { ascending: true }).limit(1000)
+      .then(({ data }) => setProjectCoachMsgs(data || []))
+  }, [user, myProjects])
+
+  const globalSessions = useMemo(() => groupBySession(allGlobalMsgs), [allGlobalMsgs])
+
+  const projectSessions = useMemo(() => {
+    const byProject = new Map()
+    for (const m of projectCoachMsgs) {
+      if (!byProject.has(m.project_id)) byProject.set(m.project_id, [])
+      byProject.get(m.project_id).push(m)
+    }
+    const result = new Map()
+    for (const [pid, rows] of byProject) result.set(pid, groupBySession(rows))
+    return result
+  }, [projectCoachMsgs])
+
+  function openGlobalSession(sess) {
+    setMessages(sess.msgs.map(m => ({ role: m.role, content: m.content })))
+    setSessionId(sess.id)
+    localStorage.setItem('global_coach_session', sess.id)
+    setHistoryOpen(false)
+  }
+
+  function openProjectSession(project, sess) {
+    localStorage.setItem(`coach_session_${project.id}`, sess.id)
+    navigate(`/projeto/${project.slug}?coach=1`)
+  }
+
   function newConversation() {
     setMessages([])
     setSessionId(null)
     localStorage.setItem('global_coach_session', 'new')
+    setHistoryOpen(false)
   }
 
   const greeting = useMemo(() => {
@@ -93,6 +156,8 @@ export default function Coach() {
       setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
       const sid = sessionId || crypto.randomUUID()
       if (!sessionId) { setSessionId(sid); localStorage.setItem('global_coach_session', sid) }
+      const now = new Date().toISOString()
+      setAllGlobalMsgs(prev => [...prev, { role: 'user', content: msg, session_id: sid, created_at: now }, { role: 'assistant', content: reply, session_id: sid, created_at: now }])
       supabase.from('global_coach_messages').insert([
         { user_id: user.id, role: 'user', content: msg, session_id: sid },
         { user_id: user.id, role: 'assistant', content: reply, session_id: sid },
@@ -106,6 +171,7 @@ export default function Coach() {
   if (!user) return null
 
   const isEmpty = messages.length === 0
+  const hasHistory = globalSessions.length > 0 || projectSessions.size > 0
 
   const picker = myProjects.length > 0 && (
     <div style={{ position: 'relative' }}>
@@ -159,91 +225,210 @@ export default function Coach() {
     </form>
   )
 
+  const historyPanel = (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div style={{ padding: '14px 14px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>Conversas</span>
+        <button
+          className="coach-history-close"
+          onClick={() => setHistoryOpen(false)}
+          style={{ display: 'none', background: 'none', border: 'none', cursor: 'pointer', color: C.muted, padding: 4 }}
+        ><X size={16} /></button>
+      </div>
+      <div style={{ padding: '0 10px 10px', flexShrink: 0 }}>
+        <button
+          onClick={newConversation}
+          style={{ display: 'flex', alignItems: 'center', gap: 7, width: '100%', background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 9, padding: '9px 12px', color: 'var(--color-primary)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+        >
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
+          Nova conversa (geral)
+        </button>
+      </div>
+
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0 10px 14px' }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.05em', padding: '8px 4px 6px' }}>Geral</div>
+        {globalSessions.length === 0 && <div style={{ fontSize: 12, color: C.muted, padding: '4px 4px 10px' }}>Sem conversas ainda.</div>}
+        {globalSessions.map(sess => {
+          const { text, date } = sessionPreview(sess.msgs)
+          const active = sess.id === sessionId
+          return (
+            <button
+              key={sess.id}
+              onClick={() => openGlobalSession(sess)}
+              style={{ display: 'block', width: '100%', textAlign: 'left', background: active ? 'var(--color-primary-subtle)' : 'transparent', border: 'none', borderRadius: 8, padding: '8px 10px', marginBottom: 2, cursor: 'pointer', fontFamily: 'inherit' }}
+              onMouseEnter={e => { if (!active) e.currentTarget.style.background = 'var(--color-bg-alt)' }}
+              onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent' }}
+            >
+              <div style={{ fontSize: 12.5, color: active ? 'var(--color-primary)' : C.text, fontWeight: active ? 700 : 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{text}</div>
+              <div style={{ fontSize: 10.5, color: C.muted, marginTop: 1 }}>{date}</div>
+            </button>
+          )
+        })}
+
+        {myProjects.length > 0 && (
+          <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.05em', padding: '16px 4px 6px' }}>Por projeto</div>
+        )}
+        {myProjects.map(p => {
+          const sessions = projectSessions.get(p.id) || []
+          const open = !!expandedProjects[p.id]
+          return (
+            <div key={p.id} style={{ marginBottom: 2 }}>
+              <button
+                onClick={() => setExpandedProjects(prev => ({ ...prev, [p.id]: !prev[p.id] }))}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', textAlign: 'left', background: 'transparent', border: 'none', borderRadius: 8, padding: '8px 10px', cursor: 'pointer', fontFamily: 'inherit' }}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--color-bg-alt)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              >
+                {sessions.length > 0 ? (open ? <ChevronDown size={12} color={C.muted} /> : <ChevronRight size={12} color={C.muted} />) : <span style={{ width: 12 }} />}
+                <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, color: C.text, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
+                {sessions.length > 0 && <span style={{ fontSize: 10.5, color: C.muted }}>{sessions.length}</span>}
+              </button>
+              {open && sessions.map(sess => {
+                const { text, date } = sessionPreview(sess.msgs)
+                return (
+                  <button
+                    key={sess.id}
+                    onClick={() => openProjectSession(p, sess)}
+                    style={{ display: 'block', width: '100%', textAlign: 'left', background: 'transparent', border: 'none', borderRadius: 8, padding: '7px 10px 7px 26px', marginBottom: 2, cursor: 'pointer', fontFamily: 'inherit' }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--color-bg-alt)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  >
+                    <div style={{ fontSize: 12, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{text}</div>
+                    <div style={{ fontSize: 10.5, color: C.muted, marginTop: 1 }}>{date}</div>
+                  </button>
+                )
+              })}
+              {open && sessions.length === 0 && (
+                <div style={{ fontSize: 11.5, color: C.muted, padding: '4px 10px 6px 26px' }}>Ainda sem conversas neste projeto.</div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+
   return (
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'inherit' }}>
       <Navbar />
       <div className="page-content" style={{ padding: 0 }}>
-        <div style={{ maxWidth: 760, margin: '0 auto', padding: '0 clamp(16px,3vw,24px)', display: 'flex', flexDirection: 'column', height: 'calc(100dvh - 70px)', boxSizing: 'border-box' }}>
+        <div style={{ display: 'flex', height: 'calc(100dvh - 70px)' }}>
 
-          {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 'clamp(16px,3vw,24px) 0 16px', flexShrink: 0 }}>
-            <div style={{ width: 38, height: 38, borderRadius: 11, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Bot size={19} color="var(--color-primary)" />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 17, fontWeight: 700, color: C.text }}>Coach IA</div>
-              <div style={{ fontSize: 12, color: C.muted }}>Conselho sobre o teu percurso</div>
-            </div>
-            <AiUsageBadge feature="coach" />
-            {!isEmpty && (
-              <button
-                onClick={newConversation}
-                title="Nova conversa"
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 9, color: C.muted, cursor: 'pointer' }}
-              >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
-              </button>
-            )}
-            {picker}
+          {/* Painel de histórico (docked no desktop, overlay no mobile) */}
+          <div className={`coach-history-panel${historyOpen ? ' coach-history-open' : ''}`} style={{ width: 272, flexShrink: 0, borderRight: `1px solid ${C.border}`, background: 'var(--color-bg-alt)' }}>
+            {historyPanel}
           </div>
+          {historyOpen && <div className="coach-history-backdrop" onClick={() => setHistoryOpen(false)} />}
 
-          {isEmpty ? (
-            // Sem mensagens ainda: tudo centrado a meio do ecrã (como o
-            // ecrã de "nova conversa" do ChatGPT/Claude), em vez de deixar
-            // um vazio enorme entre a saudação e a caixa lá em baixo.
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20, paddingBottom: '10vh' }}>
-              <div style={{ width: 52, height: 52, borderRadius: 15, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Bot size={26} color="var(--color-primary)" />
-              </div>
-              <p style={{ margin: 0, maxWidth: 440, textAlign: 'center', fontSize: 14, color: C.muted, lineHeight: 1.6 }}>{greeting}</p>
-              <div style={{ width: '100%', maxWidth: 480 }}>{inputBar}</div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', maxWidth: 480 }}>
-                {suggestions.map(q => (
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+            <div style={{ maxWidth: 760, width: '100%', margin: '0 auto', padding: '0 clamp(16px,3vw,24px)', display: 'flex', flexDirection: 'column', flex: 1, boxSizing: 'border-box', minHeight: 0 }}>
+
+              {/* Header */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 'clamp(16px,3vw,24px) 0 16px', flexShrink: 0 }}>
+                <button
+                  className="coach-history-toggle"
+                  onClick={() => setHistoryOpen(true)}
+                  title="Conversas"
+                  style={{ display: 'none', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 9, color: C.muted, cursor: 'pointer', flexShrink: 0 }}
+                ><HistoryIcon size={16} /></button>
+                <div style={{ width: 38, height: 38, borderRadius: 11, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Bot size={19} color="var(--color-primary)" />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 17, fontWeight: 700, color: C.text }}>Coach IA</div>
+                  <div style={{ fontSize: 12, color: C.muted }}>Conselho sobre o teu percurso</div>
+                </div>
+                <AiUsageBadge feature="coach" />
+                {!isEmpty && (
                   <button
-                    key={q}
-                    onClick={() => setInput(q)}
-                    style={{ background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 100, padding: '7px 14px', fontSize: 12, color: C.muted, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-primary-subtle)'; e.currentTarget.style.color = C.text }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}
-                  >{q}</button>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <>
-              {/* Messages */}
-              <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 16 }}>
-                {messages.map((m, i) => (
-                  <div key={i} style={{
-                    alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
-                    maxWidth: '87%',
-                    background: m.role === 'user' ? 'var(--color-primary)' : 'var(--color-bg-alt)',
-                    border: m.role === 'user' ? 'none' : `1px solid ${C.border}`,
-                    borderRadius: m.role === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
-                    padding: '10px 14px', fontSize: 13,
-                    color: m.role === 'user' ? '#fff' : C.text,
-                    lineHeight: 1.6,
-                    whiteSpace: m.role === 'user' ? 'pre-wrap' : undefined,
-                  }}>{m.role === 'assistant' ? renderMd(m.content) : m.content}</div>
-                ))}
-                {loading && (
-                  <div style={{ alignSelf: 'flex-start', background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: '14px 14px 14px 4px', padding: '10px 16px', display: 'flex', gap: 5, alignItems: 'center' }}>
-                    {[0, 1, 2].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: C.muted, animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />)}
-                  </div>
+                    onClick={newConversation}
+                    title="Nova conversa"
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 9, color: C.muted, cursor: 'pointer' }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
+                  </button>
                 )}
-                <div ref={bottomRef} />
+                {picker}
               </div>
 
-              {/* Input */}
-              <div style={{ padding: '10px 0 16px', borderTop: `1px solid ${C.border}`, flexShrink: 0 }}>{inputBar}</div>
-            </>
-          )}
+              {isEmpty ? (
+                // Sem mensagens ainda: tudo centrado a meio do ecrã (como o
+                // ecrã de "nova conversa" do ChatGPT/Claude), em vez de deixar
+                // um vazio enorme entre a saudação e a caixa lá em baixo.
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20, paddingBottom: '10vh' }}>
+                  <div style={{ width: 52, height: 52, borderRadius: 15, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Bot size={26} color="var(--color-primary)" />
+                  </div>
+                  <p style={{ margin: 0, maxWidth: 440, textAlign: 'center', fontSize: 14, color: C.muted, lineHeight: 1.6 }}>{greeting}</p>
+                  <div style={{ width: '100%', maxWidth: 480 }}>{inputBar}</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', maxWidth: 480 }}>
+                    {suggestions.map(q => (
+                      <button
+                        key={q}
+                        onClick={() => setInput(q)}
+                        style={{ background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 100, padding: '7px 14px', fontSize: 12, color: C.muted, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-primary-subtle)'; e.currentTarget.style.color = C.text }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}
+                      >{q}</button>
+                    ))}
+                  </div>
+                  {hasHistory && (
+                    <button
+                      className="coach-history-toggle-empty"
+                      onClick={() => setHistoryOpen(true)}
+                      style={{ display: 'none', alignItems: 'center', gap: 6, background: 'none', border: 'none', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}
+                    ><HistoryIcon size={13} /> Ver conversas anteriores</button>
+                  )}
+                </div>
+              ) : (
+                <>
+                  {/* Messages */}
+                  <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 16 }}>
+                    {messages.map((m, i) => (
+                      <div key={i} style={{
+                        alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
+                        maxWidth: '87%',
+                        background: m.role === 'user' ? 'var(--color-primary)' : 'var(--color-bg-alt)',
+                        border: m.role === 'user' ? 'none' : `1px solid ${C.border}`,
+                        borderRadius: m.role === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
+                        padding: '10px 14px', fontSize: 13,
+                        color: m.role === 'user' ? '#fff' : C.text,
+                        lineHeight: 1.6,
+                        whiteSpace: m.role === 'user' ? 'pre-wrap' : undefined,
+                      }}>{m.role === 'assistant' ? renderMd(m.content) : m.content}</div>
+                    ))}
+                    {loading && (
+                      <div style={{ alignSelf: 'flex-start', background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: '14px 14px 14px 4px', padding: '10px 16px', display: 'flex', gap: 5, alignItems: 'center' }}>
+                        {[0, 1, 2].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: C.muted, animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />)}
+                      </div>
+                    )}
+                    <div ref={bottomRef} />
+                  </div>
+
+                  {/* Input */}
+                  <div style={{ padding: '10px 0 16px', borderTop: `1px solid ${C.border}`, flexShrink: 0 }}>{inputBar}</div>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
       {gateMsg && <PlanGateModal message={gateMsg} onClose={() => setGateMsg(null)} />}
 
-      <style>{`@keyframes bounce { 0%,60%,100% { transform: translateY(0); opacity: 0.4; } 30% { transform: translateY(-4px); opacity: 1; } }`}</style>
+      <style>{`
+        @keyframes bounce { 0%,60%,100% { transform: translateY(0); opacity: 0.4; } 30% { transform: translateY(-4px); opacity: 1; } }
+        @media (max-width: 860px) {
+          .coach-history-toggle, .coach-history-toggle-empty { display: flex !important; }
+          .coach-history-panel {
+            position: fixed; top: 0; bottom: 0; left: 0; width: 280px !important;
+            z-index: 300; transform: translateX(-100%); transition: transform 0.2s ease-out;
+          }
+          .coach-history-open { transform: translateX(0); }
+          .coach-history-close { display: flex !important; }
+          .coach-history-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 299; }
+        }
+      `}</style>
     </div>
   )
 }
