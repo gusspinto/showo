@@ -5943,12 +5943,15 @@ export default function ProjectPage() {
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>Coach IA</div>
-                <div style={{ fontSize: 11, color: colors.muted, display: 'flex', alignItems: 'center', gap: 6 }}>Tutor do teu projeto <AiUsageBadge feature="coach" compact /></div>
+                <div style={{ fontSize: 11, color: colors.muted, display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>Tutor do teu projeto</span>
+                  <AiUsageBadge feature="coach" compact style={{ flexShrink: 0, whiteSpace: 'nowrap' }} />
+                </div>
               </div>
               {coachSessions.length >= 1 && (
                 <button
                   onClick={() => setCoachSessionsOpen(v => !v)}
-                  style={{ background: coachSessionsOpen ? 'var(--color-primary-subtle)' : 'none', border: 'none', cursor: 'pointer', color: coachSessionsOpen ? colors.blue : colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 5, borderRadius: 6, transition: 'all 0.15s' }}
+                  style={{ background: coachSessionsOpen ? 'var(--color-primary-subtle)' : 'none', border: 'none', cursor: 'pointer', color: coachSessionsOpen ? colors.blue : colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 5, borderRadius: 6, transition: 'all 0.15s', flexShrink: 0 }}
                   title="Conversas"
                 >
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="1.5" rx=".75" fill="currentColor"/><rect x="2" y="7.25" width="12" height="1.5" rx=".75" fill="currentColor"/><rect x="2" y="11.5" width="12" height="1.5" rx=".75" fill="currentColor"/></svg>
@@ -5956,21 +5959,21 @@ export default function ProjectPage() {
               )}
               <button
                 onClick={() => { setCoachMessages([]); setCoachSessionId(null); setCoachSessionsOpen(false); if (project?.id) localStorage.setItem(`coach_session_${project.id}`, 'new') }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 5, borderRadius: 6 }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 5, borderRadius: 6, flexShrink: 0 }}
                 title="Nova conversa"
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
               </button>
               <button
                 onClick={() => navigate('/coach')}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 5, borderRadius: 6 }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 5, borderRadius: 6, flexShrink: 0 }}
                 title="Abrir Coach IA (todas as conversas)"
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3H3.5A1.5 1.5 0 0 0 2 4.5v8A1.5 1.5 0 0 0 3.5 14h8a1.5 1.5 0 0 0 1.5-1.5V10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M9.5 2H14v4.5M14 2 7 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </button>
               <button
                 onClick={() => { setCoachOpen(false); setCoachSessionsOpen(false) }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 4, borderRadius: 6 }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 4, borderRadius: 6, flexShrink: 0 }}
                 title="Fechar"
               ><X size={16} /></button>
             </div>
