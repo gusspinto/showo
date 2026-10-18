@@ -5944,7 +5944,7 @@ export default function ProjectPage() {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>Coach IA</div>
                 <div style={{ fontSize: 11, color: colors.muted, display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>Tutor do teu projeto</span>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }} title={project.name}>{project.name}</span>
                   <AiUsageBadge feature="coach" compact style={{ flexShrink: 0, whiteSpace: 'nowrap' }} />
                 </div>
               </div>
