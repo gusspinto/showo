@@ -4722,6 +4722,9 @@ export default function ProjectPage() {
                 <button onClick={() => { setCoachMessages([]); setCoachSessionId(null); setCoachSessionsOpen(false); if (project?.id) localStorage.setItem(`coach_session_${project.id}`, 'new') }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6, borderRadius: 6 }} title="Nova conversa">
                   <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
                 </button>
+                <button onClick={() => navigate('/coach')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6, borderRadius: 6 }} title="Abrir Coach IA (todas as conversas)">
+                  <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M6 3H3.5A1.5 1.5 0 0 0 2 4.5v8A1.5 1.5 0 0 0 3.5 14h8a1.5 1.5 0 0 0 1.5-1.5V10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M9.5 2H14v4.5M14 2 7 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </button>
               </div>
             </div>
             {/* Sessions panel (mobile) */}
@@ -5957,6 +5960,13 @@ export default function ProjectPage() {
                 title="Nova conversa"
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+              </button>
+              <button
+                onClick={() => navigate('/coach')}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 5, borderRadius: 6 }}
+                title="Abrir Coach IA (todas as conversas)"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3H3.5A1.5 1.5 0 0 0 2 4.5v8A1.5 1.5 0 0 0 3.5 14h8a1.5 1.5 0 0 0 1.5-1.5V10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M9.5 2H14v4.5M14 2 7 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </button>
               <button
                 onClick={() => { setCoachOpen(false); setCoachSessionsOpen(false) }}
