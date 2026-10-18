@@ -20,6 +20,7 @@ import { Navbar } from '../components/Navbar'
 import SegmentedTabs from '../components/SegmentedTabs'
 import { PlanGateModal, AiUsageBadge, ConfirmUseModal } from '../components/PlanGate'
 import { chatProjectCoach } from '../lib/chatProjectCoach'
+import { renderMd } from '../lib/renderMd'
 import { useAuth } from '../context/AuthContext'
 import { useSidebar } from '../context/SidebarContext'
 import { useTheme } from '../context/ThemeContext'
@@ -166,40 +167,6 @@ function MembersPanel({ ownerName, members, colors, isOwner }) {
       </div>
     </div>
   )
-}
-
-function renderMd(text) {
-  const lines = text.split('\n')
-  const out = []
-  let listItems = []
-  let k = 0
-  function flush() {
-    if (!listItems.length) return
-    out.push(<ul key={k++} style={{ margin: '4px 0 4px 4px', paddingLeft: 16, listStyleType: 'disc' }}>{listItems}</ul>)
-    listItems = []
-  }
-  function inline(line) {
-    const parts = []
-    const re = /(\*\*(.+?)\*\*|\*(.+?)\*)/g
-    let last = 0, m
-    while ((m = re.exec(line)) !== null) {
-      if (m.index > last) parts.push(line.slice(last, m.index))
-      if (m[0].startsWith('**')) parts.push(<strong key={m.index}>{m[2]}</strong>)
-      else parts.push(<em key={m.index}>{m[3]}</em>)
-      last = m.index + m[0].length
-    }
-    if (last < line.length) parts.push(line.slice(last))
-    return parts
-  }
-  for (const line of lines) {
-    const isBullet = line.startsWith('- ') || line.startsWith('• ')
-    if (isBullet) { listItems.push(<li key={k++}>{inline(line.slice(2))}</li>); continue }
-    flush()
-    if (line === '') { out.push(<br key={k++} />); continue }
-    out.push(<span key={k++} style={{ display: 'block' }}>{inline(line)}</span>)
-  }
-  flush()
-  return out
 }
 
 /* ── Spotlight Tour ─────────────────────────────────────────────────────────── */
@@ -1288,6 +1255,12 @@ export default function ProjectPage() {
   const [coachOpen, setCoachOpen] = useState(false)
   const [coachSessionsOpen, setCoachSessionsOpen] = useState(false)
   const coachBottomRef = useRef(null)
+
+  // Entrada a partir do Coach IA global (sidebar → escolher este projeto):
+  // abre logo o painel, em vez de a pessoa ter de clicar no FAB outra vez.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('coach') === '1') setCoachOpen(true)
+  }, [])
 
   const coachSessions = useMemo(() => {
     if (!coachAllMessages.length) return []
