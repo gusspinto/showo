@@ -17,6 +17,7 @@ export const PLANS = {
     },
     career: {
       internshipPage: false,
+      maxApplicationsPerMonth: 0,
       weeklyRecap: true,
       cleanLink: false,
       githubSync: true,
@@ -41,6 +42,7 @@ export const PLANS = {
     },
     career: {
       internshipPage: true,
+      maxApplicationsPerMonth: Infinity,
       weeklyRecap: true,
       cleanLink: true,
       githubSync: true,
@@ -65,6 +67,7 @@ export const PLANS = {
     },
     career: {
       internshipPage: false,
+      maxApplicationsPerMonth: 0,
       weeklyRecap: false,
       cleanLink: false,
       githubSync: false,
@@ -91,7 +94,8 @@ export const PLANS = {
       exportPptx: 15,
     },
     career: {
-      internshipPage: false,
+      internshipPage: true,
+      maxApplicationsPerMonth: 3,
       weeklyRecap: true,
       cleanLink: false,
       githubSync: true,
@@ -119,6 +123,7 @@ export const PLANS = {
     },
     career: {
       internshipPage: true,
+      maxApplicationsPerMonth: Infinity,
       weeklyRecap: true,
       cleanLink: true,
       githubSync: true,
@@ -299,8 +304,14 @@ export const PLAN_GATE_MESSAGES = {
     body: 'Todas as segundas recebes um resumo do que fizeste na semana anterior. Disponível a partir do Plus.',
   }),
   internshipPage: () => ({
-    title: 'Página de estágio',
-    body: 'Uma página do teu portfólio organizada para recrutadores. Disponível no Pro.',
+    title: 'Vagas de estágio',
+    body: 'Vê e candidata-te a vagas publicadas por empresas parceiras. Disponível a partir do Plus.',
+  }),
+  vagaApplication: (plan) => ({
+    title: 'Limite de candidaturas atingido',
+    body: plan === 'plus'
+      ? 'Já usaste as 3 candidaturas deste mês no plano Plus. Com o Pro tens candidaturas ilimitadas.'
+      : `Chegaste ao limite de candidaturas este mês no plano ${getPlan(plan).name}. Faz upgrade para teres mais.`,
   }),
   cleanLink: () => ({
     title: 'Link limpo',
