@@ -495,7 +495,7 @@ function TourVisualPreview() {
 
 function TourVisualCoach() {
   return (
-    <MacWindow title="Assistente IA">
+    <MacWindow title="Coach IA">
       <div style={{padding:'10px 12px', display:'flex', flexDirection:'column', gap:5}}>
         <div style={{display:'flex', gap:6, alignItems:'flex-start'}}>
           <div style={{
@@ -752,7 +752,7 @@ const TOUR_STEPS_PAP = [
   },
   {
     target: 'coach',
-    title: 'Assistente IA',
+    title: 'Coach IA',
     visual: <TourVisualCoach />,
     bullets: [
       'Conhece o teu projeto e ajuda a melhorar qualquer secção',
@@ -811,9 +811,9 @@ const TOUR_STEPS_MOBILE_PAP = [
   },
   {
     target: 'coach',
-    title: 'Assistente IA',
+    title: 'Coach IA',
     bullets: [
-      'Toca neste botão para abrir o chat com o teu assistente',
+      'Toca neste botão para abrir o chat com o teu coach',
       'Conhece o teu projeto e ajuda a melhorar qualquer secção',
     ],
   },
@@ -4710,7 +4710,7 @@ export default function ProjectPage() {
                 <Sparkles size={18} color="var(--color-primary)" />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 15, fontWeight: 800, color: colors.text, lineHeight: 1.2 }}>Assistente IA</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: colors.text, lineHeight: 1.2 }}>Coach IA</div>
                 <div style={{ fontSize: 12, color: colors.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{project.name}</div>
               </div>
               <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
@@ -4721,6 +4721,9 @@ export default function ProjectPage() {
                 )}
                 <button onClick={() => { setCoachMessages([]); setCoachSessionId(null); setCoachSessionsOpen(false); if (project?.id) localStorage.setItem(`coach_session_${project.id}`, 'new') }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6, borderRadius: 6 }} title="Nova conversa">
                   <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+                </button>
+                <button onClick={() => navigate('/coach')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6, borderRadius: 6 }} title="Abrir Coach IA (todas as conversas)">
+                  <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M6 3H3.5A1.5 1.5 0 0 0 2 4.5v8A1.5 1.5 0 0 0 3.5 14h8a1.5 1.5 0 0 0 1.5-1.5V10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M9.5 2H14v4.5M14 2 7 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </button>
               </div>
             </div>
@@ -4785,7 +4788,7 @@ export default function ProjectPage() {
                   <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', maxWidth: '92%' }}>
                     {botAvatar}
                     <div style={{ background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: '4px 18px 18px 18px', padding: '13px 16px', fontSize: 15.5, color: colors.text, lineHeight: 1.65 }}>
-                      Olá! Sou o teu assistente para melhorar o <strong>{project.name}</strong>.{greetingDetail}
+                      Olá! Sou o teu coach para melhorar o <strong>{project.name}</strong>.{greetingDetail}
                     </div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginLeft: 32 }}>
@@ -5880,8 +5883,8 @@ export default function ProjectPage() {
             cursor: 'pointer', alignItems: 'center', justifyContent: 'center',
             transition: 'all 0.2s',
           }}
-          title="Assistente IA"
-          aria-label="Assistente IA"
+          title="Coach IA"
+          aria-label="Coach IA"
         >
           <Bot size={22} color="#fff" />
         </button>
@@ -5903,7 +5906,7 @@ export default function ProjectPage() {
               cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
               transition: 'all 0.2s',
             }}
-            title="Assistente IA"
+            title="Coach IA"
           >
             <Bot size={20} color="#fff" />
           </button>
@@ -5939,7 +5942,7 @@ export default function ProjectPage() {
                 <Bot size={15} color="var(--color-primary)" />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>Assistente IA</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>Coach IA</div>
                 <div style={{ fontSize: 11, color: colors.muted, display: 'flex', alignItems: 'center', gap: 6 }}>Tutor do teu projeto <AiUsageBadge feature="coach" compact /></div>
               </div>
               {coachSessions.length >= 1 && (
@@ -5957,6 +5960,13 @@ export default function ProjectPage() {
                 title="Nova conversa"
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+              </button>
+              <button
+                onClick={() => navigate('/coach')}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 5, borderRadius: 6 }}
+                title="Abrir Coach IA (todas as conversas)"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3H3.5A1.5 1.5 0 0 0 2 4.5v8A1.5 1.5 0 0 0 3.5 14h8a1.5 1.5 0 0 0 1.5-1.5V10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M9.5 2H14v4.5M14 2 7 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </button>
               <button
                 onClick={() => { setCoachOpen(false); setCoachSessionsOpen(false) }}
@@ -6023,8 +6033,8 @@ export default function ProjectPage() {
                 return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <div style={{ background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 12, padding: '14px 16px', fontSize: 13, color: colors.text, lineHeight: 1.6 }}>
-                    <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Assistente IA</span>
-                    Olá! Sou o teu assistente para o <strong>{project.name}</strong>.{greetingD}
+                    <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Coach IA</span>
+                    Olá! Sou o teu coach para o <strong>{project.name}</strong>.{greetingD}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     {suggestionsD.slice(0, 3).map(q => (
