@@ -25,6 +25,7 @@ import { AltArrowUpIcon as ChevronUp } from '@solar-icons/react/bold/alt-arrow-u
 import { LightningIcon as Zap } from '@solar-icons/react/bold/lightning'
 import SkillsPicker from '../components/SkillsPicker'
 import { Select } from '../components/ui'
+import { PlanGateModal } from '../components/PlanGate'
 
 // % de compatibilidade: skills do aluno vs skills requeridas pela vaga
 function matchScore(studentSkills, vagaSkills) {
@@ -469,7 +470,7 @@ export default function Vagas() {
   const [searchParams] = useSearchParams()
   const sharedVagaId = searchParams.get('v')
   const { toast, show: showToast } = useToast()
-  const { user, profile, isSchoolAccount, checkGate } = useAuth()
+  const { user, profile, isSchoolAccount, checkGate, refreshVagaApplications } = useAuth()
   const isRecruiter = profile?.role === 'recrutador' || profile?.role === 'empresa'
   const isAluno = profile?.role === 'aluno'
 
@@ -485,13 +486,18 @@ export default function Vagas() {
   }, [user, isAluno])
   const schoolGradeOk = isSchoolAccount && (gradeLevel === '11' || gradeLevel === '12')
   // Fora de escola (B2C individual), a entrada é a feature "internshipPage" do
-  // plano — só Pro. Dentro de escola mantém-se a regra do Hugo tal e qual,
-  // sem gate de plano em cima (a escola já paga à parte).
-  const individualProOk = !isSchoolAccount && checkGate('internshipPage').allowed
+  // plano — Plus e Pro (Plus fica depois limitado no número de candidaturas
+  // por mês, Pro ilimitado). Dentro de escola mantém-se a regra do Hugo tal
+  // e qual, sem gate de plano em cima (a escola já paga à parte).
+  const individualAccessOk = !isSchoolAccount && checkGate('internshipPage').allowed
   // A vaga da própria Showo (free_for_all) fica sempre visível a toda a
   // gente — só as vagas de empresas reais, à medida que forem entrando,
   // ficam reservadas a quem tem acesso completo.
-  const hasFullVagasAccess = !isAluno || schoolGradeOk || individualProOk
+  const hasFullVagasAccess = !isAluno || schoolGradeOk || individualAccessOk
+  // Quota mensal de candidaturas só se aplica a contas individuais (B2C) —
+  // escola tem a regra do Hugo à parte, sem conceito de quota por aluno.
+  const { allowed: canApplyMore, remaining: applicationsRemaining, limit: applicationsLimit } =
+    !isSchoolAccount ? checkGate('vagaApplication') : { allowed: true, remaining: null, limit: null }
 
   const [vagas, setVagas] = useState([])
   const [myVagas, setMyVagas] = useState([])
@@ -505,6 +511,7 @@ export default function Vagas() {
   const [saving, setSaving] = useState(false)
   const [activeTab, setActiveTab] = useState(isRecruiter ? 'minhas' : 'todas')
   const [candidatarVaga, setCandidatarVaga] = useState(null)
+  const [gateMsg, setGateMsg] = useState(null)
   const [sendingCandidatura, setSendingCandidatura] = useState(false)
   // Student invites
   const [myInvites, setMyInvites] = useState([])
@@ -635,6 +642,7 @@ export default function Vagas() {
 
   async function submitCandidatura(msg, screeningAnswers) {
     if (!user || !candidatarVaga) return
+    if (!isSchoolAccount && !checkGate('vagaApplication').allowed) { setGateMsg(checkGate('vagaApplication').message); return }
     setSendingCandidatura(true)
     const { data: inserted } = await supabase.from('candidaturas').upsert({
       vaga_id: candidatarVaga.id,
@@ -644,6 +652,7 @@ export default function Vagas() {
       screening_answers: screeningAnswers || [],
     }, { onConflict: 'vaga_id,student_id' }).select('id').single()
     setMyCandidaturas(prev => ({ ...prev, [candidatarVaga.id]: { status: 'pendente' } }))
+    if (!isSchoolAccount) refreshVagaApplications()
     setSendingCandidatura(false)
     setCandidatarVaga(null)
     // Best-effort — nunca bloqueia a candidatura se o email falhar.
@@ -753,8 +762,13 @@ export default function Vagas() {
             </div>
             <div>
               <h1 style={{ color: C.text, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 6px', letterSpacing: '-0.5px' }}>Vagas</h1>
-              <p style={{ color: C.muted, fontSize: 13, margin: 0 }}>
+              <p style={{ color: C.muted, fontSize: 13, margin: 0, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 {isRecruiter ? 'Gere as tuas ofertas e encontra candidatos' : 'Ofertas de estágio e emprego de empresas e recrutadores'}
+                {isAluno && !isSchoolAccount && applicationsLimit != null && applicationsLimit !== Infinity && (
+                  <span style={{ fontSize: 11, fontWeight: 600, color: applicationsRemaining === 0 ? 'var(--color-error)' : C.subtle, background: 'var(--color-surface-hover)', borderRadius: 100, padding: '3px 10px' }}>
+                    {applicationsRemaining}/{applicationsLimit} candidaturas este mês
+                  </span>
+                )}
               </p>
             </div>
           </div>
@@ -932,7 +946,10 @@ export default function Vagas() {
                 <PublicCard key={v.id} vaga={v} recruiterProfile={profiles[v.recruiter_id]}
                   myStatus={myCandidaturas[v.id]?.status}
                   isAluno={isAluno}
-                  onCandidatar={setCandidatarVaga}
+                  onCandidatar={(v) => {
+                    if (!isSchoolAccount && !canApplyMore) { setGateMsg(checkGate('vagaApplication').message); return }
+                    setCandidatarVaga(v)
+                  }}
                   onShare={shareVaga}
                   highlighted={highlightedVagaId === v.id}
                   userSkills={profile?.skills}
@@ -943,7 +960,7 @@ export default function Vagas() {
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 10, background: C.glass, border: `1px dashed ${C.glassBorder}`, borderRadius: 12, padding: '24px 20px' }}>
                     <Briefcase size={22} color={C.muted} style={{ opacity: 0.6 }} />
                     <p style={{ margin: 0, fontSize: 13, color: C.muted }}>
-                      <strong style={{ color: C.text }}>+{lockedVagasCount} vaga{lockedVagasCount !== 1 ? 's' : ''}</strong> {lockedVagasCount !== 1 ? 'disponíveis' : 'disponível'} no Pro
+                      <strong style={{ color: C.text }}>+{lockedVagasCount} vaga{lockedVagasCount !== 1 ? 's' : ''}</strong> {lockedVagasCount !== 1 ? 'disponíveis' : 'disponível'} a partir do Plus
                     </p>
                     <button onClick={() => navigate('/planos')}
                       style={{ fontSize: 13, fontWeight: 700, padding: '8px 16px', borderRadius: 8, border: 'none', background: C.blue, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -976,6 +993,7 @@ export default function Vagas() {
           sending={sendingCandidatura}
         />
       )}
+      {gateMsg && <PlanGateModal message={gateMsg} onClose={() => setGateMsg(null)} />}
 
       {showModal && (
         <VagaModal

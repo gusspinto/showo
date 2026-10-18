@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
 import { PlanGateModal, AiUsageBadge } from '../components/PlanGate'
 import { chatGlobalCoach } from '../lib/chatGlobalCoach'
+import { chatProjectCoach } from '../lib/chatProjectCoach'
 import { renderMd } from '../lib/renderMd'
 import { BotIcon as Bot } from '@solar-icons/react/bold/bot'
 import { AltArrowDownIcon as ChevronDown } from '@solar-icons/react/bold/alt-arrow-down'
@@ -43,6 +44,11 @@ export default function Coach() {
   const [myProjects, setMyProjects] = useState([])
   const [pickerOpen, setPickerOpen] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
+  // Projeto sobre o qual se está a falar agora (null = conversa geral).
+  // Guarda a linha completa do projeto (não só id/name/slug) porque o
+  // project-coach precisa do objetivo/problema/solução/etc. para dar
+  // respostas com contexto real, não genéricas.
+  const [activeProject, setActiveProject] = useState(null)
 
   const [messages, setMessages] = useState([])
   const [sessionId, setSessionId] = useState(null)
@@ -112,12 +118,64 @@ export default function Coach() {
     setHistoryOpen(false)
   }
 
-  function openProjectSession(project, sess) {
-    localStorage.setItem(`coach_session_${project.id}`, sess.id)
-    navigate(`/projeto/${project.slug}?coach=1`)
+  // Carrega o contexto completo do projeto (campos do score, não só
+  // id/name/slug) para o project-coach poder dar respostas específicas.
+  async function loadFullProject(project) {
+    const { data } = await supabase.from('projects').select('*').eq('id', project.id).single()
+    return data || project
   }
 
+  async function selectProject(project) {
+    setPickerOpen(false)
+    const full = await loadFullProject(project)
+    setActiveProject(full)
+    const rows = projectCoachMsgs.filter(m => m.project_id === project.id)
+    const savedSid = localStorage.getItem(`coach_session_${project.id}`)
+    const sid = savedSid && savedSid !== 'new' ? savedSid : rows[rows.length - 1]?.session_id
+    if (sid) {
+      setMessages(rows.filter(m => m.session_id === sid).map(m => ({ role: m.role, content: m.content })))
+      setSessionId(sid)
+    } else {
+      setMessages([])
+      setSessionId(null)
+    }
+  }
+
+  function selectGeral() {
+    setPickerOpen(false)
+    setActiveProject(null)
+    const savedSid = localStorage.getItem('global_coach_session')
+    const sid = savedSid && savedSid !== 'new' ? savedSid : allGlobalMsgs[allGlobalMsgs.length - 1]?.session_id
+    if (sid) {
+      setMessages(allGlobalMsgs.filter(m => m.session_id === sid).map(m => ({ role: m.role, content: m.content })))
+      setSessionId(sid)
+    } else {
+      setMessages([])
+      setSessionId(null)
+    }
+  }
+
+  async function openProjectSession(project, sess) {
+    setHistoryOpen(false)
+    const full = await loadFullProject(project)
+    setActiveProject(full)
+    setMessages(sess.msgs.map(m => ({ role: m.role, content: m.content })))
+    setSessionId(sess.id)
+    localStorage.setItem(`coach_session_${project.id}`, sess.id)
+  }
+
+  // Nova conversa dentro do contexto atual (geral ou do projeto ativo).
   function newConversation() {
+    setMessages([])
+    setSessionId(null)
+    if (activeProject) localStorage.setItem(`coach_session_${activeProject.id}`, 'new')
+    else localStorage.setItem('global_coach_session', 'new')
+    setHistoryOpen(false)
+  }
+
+  // Botão dedicado do painel de histórico: sai sempre para a conversa geral.
+  function newGeneralConversation() {
+    setActiveProject(null)
     setMessages([])
     setSessionId(null)
     localStorage.setItem('global_coach_session', 'new')
@@ -126,15 +184,18 @@ export default function Coach() {
 
   const greeting = useMemo(() => {
     const name = profile?.full_name?.split(' ')[0] || ''
+    if (activeProject) return `Olá${name ? `, ${name}` : ''}! Estamos a falar sobre o projeto "${activeProject.name}". Pergunta-me o que quiseres sobre ele.`
     return myProjects.length === 0
       ? `Olá${name ? `, ${name}` : ''}! Ainda não tens nenhum projeto criado. Posso ajudar-te a escolher um tema, pensar numa ideia, ou qualquer dúvida que tenhas antes de começares.`
       : `Olá${name ? `, ${name}` : ''}! Esta é a conversa geral, não ligada a nenhum projeto específico. Se quiseres falar sobre um dos teus projetos em concreto, escolhe-o no seletor em cima.`
-  }, [profile, myProjects])
+  }, [profile, myProjects, activeProject])
 
-  const suggestions = useMemo(() => myProjects.length === 0
-    ? ['Preciso de ideias para a minha PAP', 'Como estruturo um projeto do zero?', 'Que tecnologias devo usar?']
-    : ['Como melhoro o meu portefólio?', 'Como me preparo para a defesa?', 'O que devo fazer a seguir?']
-  , [myProjects])
+  const suggestions = useMemo(() => {
+    if (activeProject) return ['O que está mais fraco no meu projeto?', 'Como me preparo para a defesa?', 'Escreve-me um texto para a secção de resultados.']
+    return myProjects.length === 0
+      ? ['Preciso de ideias para a minha PAP', 'Como estruturo um projeto do zero?', 'Que tecnologias devo usar?']
+      : ['Como melhoro o meu portefólio?', 'Como me preparo para a defesa?', 'O que devo fazer a seguir?']
+  }, [myProjects, activeProject])
 
   async function send(e) {
     e?.preventDefault()
@@ -148,18 +209,29 @@ export default function Coach() {
     setInput('')
     setLoading(true)
     try {
-      const reply = await chatGlobalCoach({ messages, message: msg })
+      const reply = activeProject
+        ? await chatProjectCoach({ project: activeProject, messages, message: msg })
+        : await chatGlobalCoach({ messages, message: msg })
       consumeAI('coach')
       setMessages(prev => [...prev, { role: 'assistant', content: reply }])
       setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
       const sid = sessionId || crypto.randomUUID()
-      if (!sessionId) { setSessionId(sid); localStorage.setItem('global_coach_session', sid) }
       const now = new Date().toISOString()
-      setAllGlobalMsgs(prev => [...prev, { role: 'user', content: msg, session_id: sid, created_at: now }, { role: 'assistant', content: reply, session_id: sid, created_at: now }])
-      supabase.from('global_coach_messages').insert([
-        { user_id: user.id, role: 'user', content: msg, session_id: sid },
-        { user_id: user.id, role: 'assistant', content: reply, session_id: sid },
-      ]).then(({ error }) => { if (error) console.error('[global_coach_messages]', error.message) })
+      if (activeProject) {
+        if (!sessionId) { setSessionId(sid); localStorage.setItem(`coach_session_${activeProject.id}`, sid) }
+        setProjectCoachMsgs(prev => [...prev, { project_id: activeProject.id, role: 'user', content: msg, session_id: sid, created_at: now }, { project_id: activeProject.id, role: 'assistant', content: reply, session_id: sid, created_at: now }])
+        supabase.from('coach_messages').insert([
+          { project_id: activeProject.id, user_id: user.id, role: 'user', content: msg, session_id: sid },
+          { project_id: activeProject.id, user_id: user.id, role: 'assistant', content: reply, session_id: sid },
+        ]).then(({ error }) => { if (error) console.error('[coach_messages]', error.message) })
+      } else {
+        if (!sessionId) { setSessionId(sid); localStorage.setItem('global_coach_session', sid) }
+        setAllGlobalMsgs(prev => [...prev, { role: 'user', content: msg, session_id: sid, created_at: now }, { role: 'assistant', content: reply, session_id: sid, created_at: now }])
+        supabase.from('global_coach_messages').insert([
+          { user_id: user.id, role: 'user', content: msg, session_id: sid },
+          { user_id: user.id, role: 'assistant', content: reply, session_id: sid },
+        ]).then(({ error }) => { if (error) console.error('[global_coach_messages]', error.message) })
+      }
     } catch {
       setMessages(prev => [...prev, { role: 'assistant', content: 'Ocorreu um erro. Tenta novamente.' }])
     }
@@ -172,23 +244,28 @@ export default function Coach() {
   const hasHistory = globalSessions.length > 0 || projectSessions.size > 0
 
   const picker = myProjects.length > 0 && (
-    <div style={{ position: 'relative' }}>
+    <div style={{ position: 'relative', minWidth: 0 }}>
       <button
         onClick={() => setPickerOpen(v => !v)}
-        style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 9, padding: '8px 12px', color: C.text, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+        style={{ display: 'flex', alignItems: 'center', gap: 6, maxWidth: 160, background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 9, padding: '8px 12px', color: C.text, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
       >
-        Geral <ChevronDown size={14} />
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeProject ? activeProject.name : 'Geral'}</span>
+        <ChevronDown size={14} style={{ flexShrink: 0 }} />
       </button>
       {pickerOpen && (
-        <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, width: 240, background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.2)', zIndex: 20, maxHeight: 280, overflowY: 'auto', padding: '6px 0' }}>
-          <div style={{ padding: '7px 14px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Falar sobre um projeto</div>
+        <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, width: 240, background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.2)', zIndex: 20, maxHeight: 320, overflowY: 'auto', padding: '6px 0' }}>
+          <button
+            onClick={selectGeral}
+            style={{ display: 'block', width: '100%', textAlign: 'left', background: !activeProject ? 'var(--color-primary-subtle)' : 'none', border: 'none', padding: '9px 14px', fontSize: 13, fontWeight: 600, color: !activeProject ? 'var(--color-primary)' : C.text, cursor: 'pointer', fontFamily: 'inherit' }}
+          >Geral (sem projeto)</button>
+          <div style={{ padding: '10px 14px 7px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Falar sobre um projeto</div>
           {myProjects.map(p => (
             <button
               key={p.id}
-              onClick={() => navigate(`/projeto/${p.slug}?coach=1`)}
-              style={{ display: 'block', width: '100%', textAlign: 'left', background: 'none', border: 'none', padding: '9px 14px', fontSize: 13, color: C.text, cursor: 'pointer', fontFamily: 'inherit', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-              onMouseEnter={e => e.currentTarget.style.background = 'var(--color-bg-alt)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              onClick={() => selectProject(p)}
+              style={{ display: 'block', width: '100%', textAlign: 'left', background: activeProject?.id === p.id ? 'var(--color-primary-subtle)' : 'none', border: 'none', padding: '9px 14px', fontSize: 13, color: activeProject?.id === p.id ? 'var(--color-primary)' : C.text, fontWeight: activeProject?.id === p.id ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+              onMouseEnter={e => { if (activeProject?.id !== p.id) e.currentTarget.style.background = 'var(--color-bg-alt)' }}
+              onMouseLeave={e => { if (activeProject?.id !== p.id) e.currentTarget.style.background = 'transparent' }}
             >{p.name}</button>
           ))}
         </div>
@@ -235,7 +312,7 @@ export default function Coach() {
       </div>
       <div style={{ padding: '0 10px 10px', flexShrink: 0 }}>
         <button
-          onClick={newConversation}
+          onClick={newGeneralConversation}
           style={{ display: 'flex', alignItems: 'center', gap: 7, width: '100%', background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 9, padding: '9px 12px', color: 'var(--color-primary)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
         >
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
@@ -278,15 +355,16 @@ export default function Coach() {
               </div>
               {sessions.map(sess => {
                 const { text, date } = sessionPreview(sess.msgs)
+                const active = activeProject?.id === p.id && sess.id === sessionId
                 return (
                   <button
                     key={sess.id}
                     onClick={() => openProjectSession(p, sess)}
-                    style={{ display: 'block', width: '100%', textAlign: 'left', background: 'transparent', border: 'none', borderRadius: 8, padding: '7px 10px 7px 21px', marginBottom: 2, cursor: 'pointer', fontFamily: 'inherit' }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'var(--color-bg-alt)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    style={{ display: 'block', width: '100%', textAlign: 'left', background: active ? 'var(--color-primary-subtle)' : 'transparent', border: 'none', borderRadius: 8, padding: '7px 10px 7px 21px', marginBottom: 2, cursor: 'pointer', fontFamily: 'inherit' }}
+                    onMouseEnter={e => { if (!active) e.currentTarget.style.background = 'var(--color-bg-alt)' }}
+                    onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent' }}
                   >
-                    <div style={{ fontSize: 12, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{text}</div>
+                    <div style={{ fontSize: 12, color: active ? 'var(--color-primary)' : C.text, fontWeight: active ? 700 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{text}</div>
                     <div style={{ fontSize: 10.5, color: C.muted, marginTop: 1 }}>{date}</div>
                   </button>
                 )
@@ -334,7 +412,7 @@ export default function Coach() {
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 17, fontWeight: 700, color: C.text }}>Coach IA</div>
-                  <div style={{ fontSize: 12, color: C.muted }}>Conselho sobre o teu percurso</div>
+                  <div style={{ fontSize: 12, color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeProject ? `A falar sobre: ${activeProject.name}` : 'Conselho sobre o teu percurso'}</div>
                 </div>
                 <AiUsageBadge feature="coach" />
                 {!isEmpty && (

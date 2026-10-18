@@ -25,10 +25,21 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [aiUsage, setAiUsage] = useState({})
+  const [vagaApplicationsThisMonth, setVagaApplicationsThisMonth] = useState(0)
 
   const fetchAiUsage = useCallback(async () => {
     const { data } = await supabase.rpc('get_ai_usage')
     if (data) setAiUsage(data)
+  }, [])
+
+  // Contagem direta da tabela candidaturas (não uma quota à parte) — é a
+  // própria fonte de verdade de quantas vezes a pessoa já se candidatou
+  // este mês, sem ter de manter um contador sincronizado.
+  const fetchVagaApplications = useCallback(async (uid) => {
+    const startOfMonth = new Date(); startOfMonth.setDate(1); startOfMonth.setHours(0, 0, 0, 0)
+    const { count } = await supabase.from('candidaturas').select('id', { count: 'exact', head: true })
+      .eq('student_id', uid).gte('created_at', startOfMonth.toISOString())
+    setVagaApplicationsThisMonth(count ?? 0)
   }, [])
 
   const fetchProfile = useCallback(async (uid) => {
@@ -226,8 +237,9 @@ export function AuthProvider({ children }) {
         })
       }
       fetchAiUsage()
+      fetchVagaApplications(uid)
     }
-  }, [fetchAiUsage])
+  }, [fetchAiUsage, fetchVagaApplications])
 
   useEffect(() => {
     let cancelled = false
@@ -316,6 +328,13 @@ export function AuthProvider({ children }) {
       const allowed = plan.career[feature] === true
       return { allowed, message: allowed ? null : withFeature(feature, PLAN_GATE_MESSAGES[feature]?.()) }
     }
+    if (feature === 'vagaApplication') {
+      const gate = checkGate('internshipPage')
+      if (!gate.allowed) return gate
+      const limit = plan.career.maxApplicationsPerMonth ?? 0
+      const allowed = vagaApplicationsThisMonth < limit
+      return { allowed, remaining: Math.max(0, limit - vagaApplicationsThisMonth), limit, message: allowed ? null : withFeature(feature, PLAN_GATE_MESSAGES.vagaApplication(planId)) }
+    }
     if (feature === 'projectFiles') {
       const allowed = (plan.files?.maxProjectMB ?? 0) > 0
       return {
@@ -353,7 +372,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signOut, refreshProfile, isAdmin, plan, planId, isSchoolAccount, checkGate, consumeAI, aiUsage, refreshAiUsage: fetchAiUsage, logFunnelEvent }}>
+    <AuthContext.Provider value={{ user, profile, loading, signOut, refreshProfile, isAdmin, plan, planId, isSchoolAccount, checkGate, consumeAI, aiUsage, refreshAiUsage: fetchAiUsage, vagaApplicationsThisMonth, refreshVagaApplications: () => user?.id && fetchVagaApplications(user.id), logFunnelEvent }}>
       {children}
     </AuthContext.Provider>
   )
