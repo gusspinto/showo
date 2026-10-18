@@ -23,6 +23,7 @@ export default function Coach() {
   const [pickerOpen, setPickerOpen] = useState(false)
 
   const [messages, setMessages] = useState([])
+  const [sessionId, setSessionId] = useState(null)
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [gateMsg, setGateMsg] = useState(null)
@@ -39,12 +40,28 @@ export default function Coach() {
   }, [user])
 
   // Histórico da conversa "geral" (persistido, continua entre visitas).
+  // Mesmo padrão de sessões do coach dentro do projeto: agrupado por
+  // session_id, "Nova conversa" não apaga nada, só começa uma sessão nova.
   useEffect(() => {
     if (!user) return
-    supabase.from('global_coach_messages').select('role, content').eq('user_id', user.id)
-      .order('created_at', { ascending: true }).limit(100)
-      .then(({ data }) => { if (data?.length) setMessages(data.map(m => ({ role: m.role, content: m.content }))) })
+    const savedSid = localStorage.getItem('global_coach_session')
+    if (savedSid === 'new') return
+    supabase.from('global_coach_messages').select('role, content, session_id').eq('user_id', user.id)
+      .order('created_at', { ascending: true }).limit(300)
+      .then(({ data }) => {
+        if (!data?.length) return
+        const lastSid = savedSid || data[data.length - 1]?.session_id
+        const sessionMsgs = data.filter(m => m.session_id === lastSid)
+        setMessages(sessionMsgs.map(m => ({ role: m.role, content: m.content })))
+        setSessionId(lastSid)
+      })
   }, [user])
+
+  function newConversation() {
+    setMessages([])
+    setSessionId(null)
+    localStorage.setItem('global_coach_session', 'new')
+  }
 
   const greeting = useMemo(() => {
     const name = profile?.full_name?.split(' ')[0] || ''
@@ -52,6 +69,11 @@ export default function Coach() {
       ? `Olá${name ? `, ${name}` : ''}! Ainda não tens nenhum projeto criado. Posso ajudar-te a escolher um tema, pensar numa ideia, ou qualquer dúvida que tenhas antes de começares.`
       : `Olá${name ? `, ${name}` : ''}! Esta é a conversa geral, não ligada a nenhum projeto específico. Se quiseres falar sobre um dos teus projetos em concreto, escolhe-o no seletor em cima.`
   }, [profile, myProjects])
+
+  const suggestions = useMemo(() => myProjects.length === 0
+    ? ['Preciso de ideias para a minha PAP', 'Como estruturo um projeto do zero?', 'Que tecnologias devo usar?']
+    : ['Como melhoro o meu portefólio?', 'Como me preparo para a defesa?', 'O que devo fazer a seguir?']
+  , [myProjects])
 
   async function send(e) {
     e?.preventDefault()
@@ -69,9 +91,11 @@ export default function Coach() {
       consumeAI('coach')
       setMessages(prev => [...prev, { role: 'assistant', content: reply }])
       setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+      const sid = sessionId || crypto.randomUUID()
+      if (!sessionId) { setSessionId(sid); localStorage.setItem('global_coach_session', sid) }
       supabase.from('global_coach_messages').insert([
-        { user_id: user.id, role: 'user', content: msg },
-        { user_id: user.id, role: 'assistant', content: reply },
+        { user_id: user.id, role: 'user', content: msg, session_id: sid },
+        { user_id: user.id, role: 'assistant', content: reply, session_id: sid },
       ]).then(({ error }) => { if (error) console.error('[global_coach_messages]', error.message) })
     } catch {
       setMessages(prev => [...prev, { role: 'assistant', content: 'Ocorreu um erro. Tenta novamente.' }])
@@ -148,10 +172,18 @@ export default function Coach() {
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 17, fontWeight: 700, color: C.text }}>Coach IA</div>
-              <div style={{ fontSize: 12, color: C.muted, display: 'flex', alignItems: 'center', gap: 6 }}>
-                Conselho sobre o teu percurso <AiUsageBadge feature="coach" compact />
-              </div>
+              <div style={{ fontSize: 12, color: C.muted }}>Conselho sobre o teu percurso</div>
             </div>
+            <AiUsageBadge feature="coach" />
+            {!isEmpty && (
+              <button
+                onClick={newConversation}
+                title="Nova conversa"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 9, color: C.muted, cursor: 'pointer' }}
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
+              </button>
+            )}
             {picker}
           </div>
 
@@ -165,6 +197,17 @@ export default function Coach() {
               </div>
               <p style={{ margin: 0, maxWidth: 440, textAlign: 'center', fontSize: 14, color: C.muted, lineHeight: 1.6 }}>{greeting}</p>
               <div style={{ width: '100%', maxWidth: 480 }}>{inputBar}</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', maxWidth: 480 }}>
+                {suggestions.map(q => (
+                  <button
+                    key={q}
+                    onClick={() => setInput(q)}
+                    style={{ background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 100, padding: '7px 14px', fontSize: 12, color: C.muted, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-primary-subtle)'; e.currentTarget.style.color = C.text }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}
+                  >{q}</button>
+                ))}
+              </div>
             </div>
           ) : (
             <>
