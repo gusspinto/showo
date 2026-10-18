@@ -178,6 +178,13 @@ export default function Explore() {
   const [filterPeopleArea, setFilterPeopleArea] = useState('')
   const [showFilters, setShowFilters] = useState(() => !!searchParams.get('tech'))
   const [showPeopleFilters, setShowPeopleFilters] = useState(false)
+  // Resultado de pesquisa por nome/username/bio/empresa, vindo diretamente da
+  // BD (não só filtrado sobre os `people` já carregados). A lista de `people`
+  // está limitada às 500 contas mais recentes (ver loadPeople) — com mais de
+  // 500 perfis, pesquisar só dentro dela nunca encontrava quem se registou
+  // há mais tempo. `null` quando não há pesquisa ativa (usa `people`).
+  const [searchResults, setSearchResults] = useState(null)
+  const [searchLoading, setSearchLoading] = useState(false)
 
   // Cobre o caso de a página montar já com tab=pessoas na URL (ex: voltar
   // atrás de um perfil) — handleTabChange só carrega ao clicar na aba.
@@ -242,6 +249,52 @@ export default function Explore() {
     load()
   }, [profile?.id])
 
+  // Perfis demonstrados (tecnologias dos projetos públicos) para um lote de
+  // ids — mesma lógica usada no loadPeople, extraída para ser reutilizável
+  // pela pesquisa por nome.
+  async function attachDemonstrated(profiles) {
+    const ids = profiles.map(p => p.id)
+    if (!ids.length) return profiles
+    const { data: projs } = await supabase
+      .from('projects')
+      .select('user_id, skills, tech_stack, library_skills')
+      .in('user_id', ids)
+      .or('visibility.eq.public,visibility.is.null')
+    const byUser = {}
+    for (const pr of projs || []) {
+      const set = byUser[pr.user_id] || (byUser[pr.user_id] = new Set())
+      for (const s of [...(pr.skills || []), ...(pr.tech_stack || []), ...(pr.library_skills || [])]) {
+        if (s) set.add(String(s))
+      }
+    }
+    return profiles.map(p => ({ ...p, demonstrated: [...(byUser[p.id] || [])].sort() }))
+  }
+
+  // Pesquisa por nome/username/bio/empresa feita na BD, não só sobre as 500
+  // contas já carregadas (ver nota em searchResults acima).
+  useEffect(() => {
+    if (tab !== 'pessoas') return
+    const q = peopleSearch.trim()
+    if (!q) { setSearchResults(null); setSearchLoading(false); return }
+    setSearchLoading(true)
+    const t = setTimeout(async () => {
+      // vírgulas e parênteses partem a sintaxe do .or(), não são relevantes
+      // para pesquisa de texto por nome
+      const safe = q.replace(/[,()]/g, ' ').trim()
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, full_name, username, bio, role, avatar_url, company, company_role, looking_for, available_for_work, skills, area, organization_id')
+        .not('full_name', 'is', null)
+        .is('banned_at', null)
+        .or(`full_name.ilike.%${safe}%,username.ilike.%${safe}%,bio.ilike.%${safe}%,company.ilike.%${safe}%,looking_for.ilike.%${safe}%`)
+        .limit(200)
+      const enriched = await attachDemonstrated(data || [])
+      setSearchResults(enriched)
+      setSearchLoading(false)
+    }, 300)
+    return () => clearTimeout(t)
+  }, [peopleSearch, tab])
+
   async function loadPeople() {
     if (peopleLoaded) return
     setPeopleLoading(true)
@@ -268,23 +321,7 @@ export default function Explore() {
     // Tecnologias/competências DEMONSTRADAS: união do que a IA extraiu dos
     // projetos públicos de cada pessoa (pedido do Hugo — o recrutador filtra
     // por quem provou, não só por quem escreveu no perfil).
-    let enriched = data || []
-    const ids = enriched.map(p => p.id)
-    if (ids.length) {
-      const { data: projs } = await supabase
-        .from('projects')
-        .select('user_id, skills, tech_stack, library_skills')
-        .in('user_id', ids)
-        .or('visibility.eq.public,visibility.is.null')
-      const byUser = {}
-      for (const pr of projs || []) {
-        const set = byUser[pr.user_id] || (byUser[pr.user_id] = new Set())
-        for (const s of [...(pr.skills || []), ...(pr.tech_stack || []), ...(pr.library_skills || [])]) {
-          if (s) set.add(String(s))
-        }
-      }
-      enriched = enriched.map(p => ({ ...p, demonstrated: [...(byUser[p.id] || [])].sort() }))
-    }
+    const enriched = await attachDemonstrated(data || [])
     setPeople(enriched)
     setPeopleLoaded(true)
     setPeopleLoading(false)
@@ -357,14 +394,10 @@ export default function Explore() {
   const activeFilterCount = [filterArea, filterType, filterZone, filterAvailable, filterTech].filter(Boolean).length
 
   const peopleQuery = peopleSearch.toLowerCase().trim()
-  const filteredPeople = useMemo(() => people.filter(p => {
-    if (peopleQuery && !(
-      p.full_name?.toLowerCase().includes(peopleQuery) ||
-      p.username?.toLowerCase().includes(peopleQuery) ||
-      p.bio?.toLowerCase().includes(peopleQuery) ||
-      p.company?.toLowerCase().includes(peopleQuery) ||
-      p.looking_for?.toLowerCase().includes(peopleQuery)
-    )) return false
+  // Com pesquisa ativa, a base já vem filtrada pela BD (searchResults, sem o
+  // limite de 500 de `people`) — só falta aplicar os filtros de área/skill.
+  const peoplePool = peopleQuery ? (searchResults ?? []) : people
+  const filteredPeople = useMemo(() => peoplePool.filter(p => {
     if (filterSkill) {
       const fl = filterSkill.toLowerCase()
       const has = [...(p.skills || []), ...(p.demonstrated || [])].some(s => String(s).toLowerCase() === fl)
@@ -372,7 +405,7 @@ export default function Explore() {
     }
     if (filterPeopleArea && p.area !== filterPeopleArea) return false
     return true
-  }), [people, peopleQuery, filterSkill, filterPeopleArea])
+  }), [peoplePool, filterSkill, filterPeopleArea])
 
   const SORT_OPTIONS = [
     { id: 'recent', label: 'Mais recentes' },
@@ -709,7 +742,7 @@ export default function Explore() {
               </div>
             )}
 
-            {peopleLoading ? (
+            {peopleLoading || (peopleQuery && (searchLoading || searchResults === null)) ? (
               <PeopleSkeleton />
             ) : filteredPeople.length === 0 ? (
               !user && !peopleQuery ? (
