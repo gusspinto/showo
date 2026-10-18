@@ -8,7 +8,6 @@ import { chatGlobalCoach } from '../lib/chatGlobalCoach'
 import { renderMd } from '../lib/renderMd'
 import { BotIcon as Bot } from '@solar-icons/react/bold/bot'
 import { AltArrowDownIcon as ChevronDown } from '@solar-icons/react/bold/alt-arrow-down'
-import { AltArrowRightIcon as ChevronRight } from '@solar-icons/react/bold/alt-arrow-right'
 import { PlaneIcon as Send } from '@solar-icons/react/bold/plane'
 import { ClipboardListIcon as HistoryIcon } from '@solar-icons/react/bold/clipboard-list'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
@@ -44,7 +43,6 @@ export default function Coach() {
   const [myProjects, setMyProjects] = useState([])
   const [pickerOpen, setPickerOpen] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
-  const [expandedProjects, setExpandedProjects] = useState({})
 
   const [messages, setMessages] = useState([])
   const [sessionId, setSessionId] = useState(null)
@@ -265,31 +263,26 @@ export default function Coach() {
           )
         })}
 
-        {myProjects.length > 0 && (
+        {/* Só projetos com conversa real — listar todos, a maioria vazios,
+            era o que tornava isto confuso. */}
+        {myProjects.filter(p => (projectSessions.get(p.id) || []).length > 0).length > 0 && (
           <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.05em', padding: '16px 4px 6px' }}>Por projeto</div>
         )}
-        {myProjects.map(p => {
+        {myProjects.filter(p => (projectSessions.get(p.id) || []).length > 0).map(p => {
           const sessions = projectSessions.get(p.id) || []
-          const open = !!expandedProjects[p.id]
           return (
-            <div key={p.id} style={{ marginBottom: 2 }}>
-              <button
-                onClick={() => setExpandedProjects(prev => ({ ...prev, [p.id]: !prev[p.id] }))}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', textAlign: 'left', background: 'transparent', border: 'none', borderRadius: 8, padding: '8px 10px', cursor: 'pointer', fontFamily: 'inherit' }}
-                onMouseEnter={e => e.currentTarget.style.background = 'var(--color-bg-alt)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-              >
-                {sessions.length > 0 ? (open ? <ChevronDown size={12} color={C.muted} /> : <ChevronRight size={12} color={C.muted} />) : <span style={{ width: 12 }} />}
-                <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, color: C.text, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
-                {sessions.length > 0 && <span style={{ fontSize: 10.5, color: C.muted }}>{sessions.length}</span>}
-              </button>
-              {open && sessions.map(sess => {
+            <div key={p.id} style={{ marginBottom: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 10px 5px' }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--color-primary)', flexShrink: 0 }} />
+                <span style={{ fontSize: 11.5, color: C.text, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
+              </div>
+              {sessions.map(sess => {
                 const { text, date } = sessionPreview(sess.msgs)
                 return (
                   <button
                     key={sess.id}
                     onClick={() => openProjectSession(p, sess)}
-                    style={{ display: 'block', width: '100%', textAlign: 'left', background: 'transparent', border: 'none', borderRadius: 8, padding: '7px 10px 7px 26px', marginBottom: 2, cursor: 'pointer', fontFamily: 'inherit' }}
+                    style={{ display: 'block', width: '100%', textAlign: 'left', background: 'transparent', border: 'none', borderRadius: 8, padding: '7px 10px 7px 21px', marginBottom: 2, cursor: 'pointer', fontFamily: 'inherit' }}
                     onMouseEnter={e => e.currentTarget.style.background = 'var(--color-bg-alt)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >
@@ -298,9 +291,6 @@ export default function Coach() {
                   </button>
                 )
               })}
-              {open && sessions.length === 0 && (
-                <div style={{ fontSize: 11.5, color: C.muted, padding: '4px 10px 6px 26px' }}>Ainda sem conversas neste projeto.</div>
-              )}
             </div>
           )
         })}
@@ -315,7 +305,15 @@ export default function Coach() {
         <div style={{ display: 'flex', height: 'calc(100dvh - 70px)' }}>
 
           {/* Painel de histórico (docked no desktop, overlay no mobile) */}
-          <div className={`coach-history-panel${historyOpen ? ' coach-history-open' : ''}`} style={{ width: 272, flexShrink: 0, borderRight: `1px solid ${C.border}`, background: 'var(--color-bg-alt)' }}>
+          <div
+            className={`coach-history-panel${historyOpen ? ' coach-history-open' : ''}`}
+            style={{
+              width: 272, flexShrink: 0,
+              background: 'linear-gradient(165deg, var(--color-bg-alt), var(--color-bg))',
+              borderRadius: '0 22px 22px 0',
+              boxShadow: '10px 0 28px -18px rgba(0,0,0,0.45)',
+            }}
+          >
             {historyPanel}
           </div>
           {historyOpen && <div className="coach-history-backdrop" onClick={() => setHistoryOpen(false)} />}
