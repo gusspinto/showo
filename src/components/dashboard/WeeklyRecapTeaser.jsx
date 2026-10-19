@@ -24,12 +24,14 @@ const LinkedInMark = ({ size = 14 }) => (
       em maiúsculas por cima, lia a cartão de testemunho de marketing, não
       a excerto real. Corrigido para alinhado à esquerda, sem aspas, como
       um documento, não uma peça de publicidade.
-   2. NA APP. O post de LinkedIn sai de um botão dentro da app
-      (WeeklyPostCard, edge function linkedin-post), feature já existente.
-      Mostrar só o email não respondia à pergunta real: o que se ganha com
-      isto na prática é consistência visível a professores e recrutadores.
-      Texto do post segue as regras reais do gerador: primeira pessoa,
-      concreto, sem "aprendi imenso", zero emojis ou hashtags.
+   2. EXEMPLO do post de LinkedIn, marcado como tal. O email em si não
+      mostra este texto, só uma caixa genérica com um botão "Gerar o
+      post" (confirmado no código); a IA só escreve o post depois de a
+      pessoa clicar, com o diário real dela nesse momento. A primeira
+      versão mostrava este cartão sem dizer que era exemplo, dava a
+      entender que o texto já vinha pronto dentro do email. Texto segue
+      as regras reais do gerador: primeira pessoa, concreto, sem
+      "aprendi imenso", zero emojis ou hashtags.
 
    Números sobem de 0 ao valor real ao aparecer, uma vez só, nunca em
    loop. Respeita prefers-reduced-motion. Só para B2C (isSchoolAccount já
@@ -151,28 +153,38 @@ export default function WeeklyRecapTeaser({ userId, onDismiss, onUpgrade }) {
             itálico, alinhado à esquerda, como um documento real. Mesma
             lógica do email (pickHighlight em send-weekly-recap): escolhe
             a entrada mais substancial da semana, não a mais frequente. */}
-        <div className="recap-teaser-stat" style={{ animationDelay: '300ms', borderLeft: '3px solid #2a4275', padding: '1px 0 1px 12px' }}>
+        <div className="recap-teaser-stat" style={{ animationDelay: '300ms', borderLeft: '3px solid #2a4275', padding: '1px 0 1px 12px', marginBottom: 14 }}>
           <p style={{ margin: '0 0 3px', color: '#5a6b85', fontSize: 10.5 }}>Decisão em DragBuild</p>
           <p style={{ margin: 0, color: '#c3cede', fontSize: 12.5, lineHeight: 1.5 }}>
             Decidi simplificar o fluxo de arrastar componentes depois de testar com duas pessoas que acharam confuso.
           </p>
         </div>
+        {/* Linha que faltava: o email real também mostra os dias até à
+            defesa quando o projeto em foco tem data marcada (stats.
+            daysToDefense em send-weekly-recap). Sem isto o teaser estava
+            incompleto, não falso, só a faltar um pedaço real. */}
+        <p className="recap-teaser-stat" style={{ animationDelay: '380ms', margin: 0, color: '#c3cede', fontSize: 12.5, lineHeight: 1.6 }}>
+          Faltam <strong style={{ color: '#eef2f8' }}>12 dias</strong> para a defesa.
+        </p>
       </div>
 
       <div className="recap-teaser-arrow" style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '0 0 10px', paddingLeft: 2 }}>
         <ArrowDown size={13} color="var(--on-dim)" />
-        <span style={{ fontSize: 11, color: 'var(--on-dim)' }}>abres a app e um clique transforma a semana num post</span>
+        <span style={{ fontSize: 11, color: 'var(--on-dim)' }}>o email tem um botão "Gerar o post", a IA escreve isto na hora</span>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, margin: '0 0 8px', paddingLeft: 2 }}>
-        <span style={{ fontSize: 9.5, fontWeight: 800, color: 'var(--on)', background: 'var(--on-fill)', border: '1px solid var(--on-line)', padding: '3px 9px', borderRadius: 100, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Na app · botão "Gerar post"</span>
+        <span style={{ fontSize: 9.5, fontWeight: 800, color: 'var(--on)', background: 'var(--on-fill)', border: '1px solid var(--on-line)', padding: '3px 9px', borderRadius: 100, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Exemplo · resultado do botão, não conteúdo do email</span>
       </div>
 
       {/* Mesma feature que já existe (WeeklyPostCard, edge function
           linkedin-post), o texto segue as regras reais do gerador:
           primeira pessoa, concreto, sem "aprendi imenso", zero emojis ou
-          hashtags. Cartão claro de propósito, como um LinkedIn a sério
-          teria, para contrastar com o email escuro e ler-se como um
-          screenshot, não como decoração a condizer. */}
+          hashtags. O email em si NÃO mostra este texto, só uma caixa
+          genérica com um botão "Gerar o post" que leva à app; a IA só
+          escreve isto depois de a pessoa clicar, com o diário real dela
+          nesse momento. Por isso a etiqueta "Exemplo" explícita aqui, ao
+          contrário do bloco do email, que é 1:1 com o que é mesmo
+          enviado. */}
       <div className="recap-teaser-post" style={{ background: '#fff', borderRadius: 12, padding: '14px 16px', margin: '0 0 14px', boxShadow: '0 12px 28px rgba(0,0,0,0.35)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
           <span style={{ width: 28, height: 28, borderRadius: '50%', background: '#1a60c8', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 12, fontWeight: 800 }}>G</span>
