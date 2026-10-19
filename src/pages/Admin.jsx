@@ -57,7 +57,7 @@ const C = {
 // authenticated only has column-level SELECT grant on these (no email — that
 // comes from admin_get_users() instead) since migration 033; select('*')
 // fails outright and silently returns no rows.
-const PROFILE_COLUMNS = 'id, username, total_xp, created_at, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, project_draft, signup_country, signup_city, signup_referrer, signup_utm_source, last_active_at, last_action, plan, account_type, organization_id, stripe_customer_id'
+const PROFILE_COLUMNS = 'id, username, total_xp, created_at, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, project_draft, signup_country, signup_city, signup_referrer, signup_utm_source, last_active_at, last_action, plan, account_type, organization_id, stripe_customer_id, occupation'
 
 // build/launch are legacy plan names still sitting in old profile rows —
 // resolvePlanId() normalizes those to plus/pro, but these maps stay here as
@@ -362,6 +362,7 @@ function SparkLine({ data, labels, height = 80, color = C.blue }) {
 
 // ─── OVERVIEW TAB ───────────────────────────────────────────
 const SORT_OPTIONS = [
+  { id: 'usage', label: 'Quem mais usa' },
   { id: 'newest', label: 'Mais recente' },
   { id: 'oldest', label: 'Mais antigo' },
   { id: 'active', label: 'Última atividade' },
@@ -421,7 +422,14 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
   const [userSearch, setUserSearch] = useState('')
   const [showLimitUsers, setShowLimitUsers] = useState(false)
   const [showSubscribers, setShowSubscribers] = useState(false)
-  const [sort, setSort] = useState('active')
+  const [sort, setSort] = useState('usage')
+  // Filtros por categoria — role já existia como etiqueta solta na lista,
+  // mas não dava para filtrar por ele nem pelos outros eixos que já estão
+  // na BD (occupation vem do onboarding: "Aluno", "Freelancer", "Developer"
+  // etc; account_type distingue individual de conta de escola).
+  const [filterRole, setFilterRole] = useState('all')
+  const [filterOccupation, setFilterOccupation] = useState('all')
+  const [filterAccountType, setFilterAccountType] = useState('all')
   const [range, setRange] = useState(TIME_RANGES[1])
 
   // Contagens de utilizadores ativos vêm agregadas do servidor (nunca linhas
@@ -589,11 +597,22 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
   users.forEach(u => { if (u.signup_utm_source) utmCounts[u.signup_utm_source] = (utmCounts[u.signup_utm_source] || 0) + 1 })
   const topUtmSources = Object.entries(utmCounts).sort((a, b) => b[1] - a[1]).slice(0, 5)
 
+  // Categorias disponíveis para filtrar — calculadas a partir dos dados
+  // reais (não uma lista fixa), para nunca mostrar uma opção vazia nem
+  // esconder uma categoria nova que apareça no onboarding.
+  const occupationCounts = {}
+  users.forEach(u => { const o = u.occupation || 'Não indicado'; occupationCounts[o] = (occupationCounts[o] || 0) + 1 })
+  const occupationOptions = Object.entries(occupationCounts).sort((a, b) => b[1] - a[1])
+
   // Sorted & filtered users
   const uq = userSearch.toLowerCase()
   const sortedUsers = [...users]
     .filter(u => !uq || (u.full_name || '').toLowerCase().includes(uq) || (u.email || '').toLowerCase().includes(uq) || (u.signup_country || '').toLowerCase().includes(uq) || (u.role || '').toLowerCase().includes(uq))
+    .filter(u => filterRole === 'all' || (u.role || 'aluno') === filterRole)
+    .filter(u => filterAccountType === 'all' || (u.account_type || 'individual') === filterAccountType)
+    .filter(u => filterOccupation === 'all' || (u.occupation || 'Não indicado') === filterOccupation)
     .sort((a, b) => {
+      if (sort === 'usage') return (b.total_xp || 0) - (a.total_xp || 0)
       if (sort === 'oldest') return new Date(a.created_at) - new Date(b.created_at)
       if (sort === 'active') return (b.last_active_at ? new Date(b.last_active_at) : 0) - (a.last_active_at ? new Date(a.last_active_at) : 0)
       if (sort === 'projects') return (projectCountMap[b.id] || 0) - (projectCountMap[a.id] || 0)
@@ -825,12 +844,35 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
                 inputStyle={{ padding: '5px 24px 5px 8px', borderRadius: 6, border: `1px solid ${C.border}`, background: C.bgAlt, fontSize: 11 }} />
             </div>
           </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
+            <Select value={filterRole} onChange={setFilterRole}
+              options={[{ value: 'all', label: 'Todos os cargos' }, ...Object.keys(roleCounts).sort().map(r => ({ value: r, label: `${ROLE_LABELS[r] || r} (${roleCounts[r]})` }))]}
+              inputStyle={{ padding: '5px 24px 5px 8px', borderRadius: 6, border: `1px solid ${C.border}`, background: C.bgAlt, fontSize: 11, minWidth: 120 }} />
+            <Select value={filterAccountType} onChange={setFilterAccountType}
+              options={[{ value: 'all', label: 'Individual e escola' }, { value: 'individual', label: 'Individual' }, { value: 'school', label: 'Conta de escola' }]}
+              inputStyle={{ padding: '5px 24px 5px 8px', borderRadius: 6, border: `1px solid ${C.border}`, background: C.bgAlt, fontSize: 11, minWidth: 120 }} />
+            <Select value={filterOccupation} onChange={setFilterOccupation}
+              options={[{ value: 'all', label: 'Todas as categorias' }, ...occupationOptions.map(([o, n]) => ({ value: o, label: `${o} (${n})` }))]}
+              inputStyle={{ padding: '5px 24px 5px 8px', borderRadius: 6, border: `1px solid ${C.border}`, background: C.bgAlt, fontSize: 11, minWidth: 150 }} />
+            {(filterRole !== 'all' || filterAccountType !== 'all' || filterOccupation !== 'all') && (
+              <button
+                onClick={() => { setFilterRole('all'); setFilterAccountType('all'); setFilterOccupation('all') }}
+                style={{ padding: '5px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', border: 'none', background: 'transparent', color: C.blue }}
+              >Limpar filtros</button>
+            )}
+          </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
             {sortedUsers.map(u => {
               const regDate = new Date(u.created_at)
               const diffH = Math.floor((now - regDate) / 3600000)
-              const lastSeenH = u.last_active_at ? Math.floor((now - new Date(u.last_active_at)) / 3600000) : null
-              const isOnline = lastSeenH !== null && lastSeenH < 1
+              // "Online agora" com janela de 1h dizia isso de alguém que já
+              // tinha saído há 55 minutos — 10 min é o que se espera de um
+              // indicador "agora" a sério. lastSeenMin alimenta o rótulo em
+              // minutos, não só horas, para essa primeira hora não ficar
+              // tudo arredondado a "ativo há 0h".
+              const lastSeenMin = u.last_active_at ? Math.floor((now - new Date(u.last_active_at)) / 60000) : null
+              const lastSeenH = lastSeenMin !== null ? Math.floor(lastSeenMin / 60) : null
+              const isOnline = lastSeenMin !== null && lastSeenMin < 10
               const referrerDomain = u.signup_referrer ? u.signup_referrer.replace(/^https?:\/\//, '').split('/')[0] : null
               const pc = projectCountMap[u.id] || 0
 
@@ -841,7 +883,8 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
               }
 
               const lastActiveLabel = u.last_active_at ? (() => {
-                if (lastSeenH < 1) return 'online agora'
+                if (lastSeenMin < 10) return 'online agora'
+                if (lastSeenMin < 60) return `ativo há ${lastSeenMin}min`
                 if (lastSeenH < 24) return `ativo há ${lastSeenH}h`
                 return fmtDate(u.last_active_at)
               })() : 'nunca entrou'
@@ -865,6 +908,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
                         <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: u.role === 'professor' ? C.greenSoft : C.purpleSoft, color: u.role === 'professor' ? C.green : C.purple }}>{u.role}</span>
                       )}
                       {u.account_type === 'school' && <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: C.greenSoft, color: C.green }}>{u._orgName || 'escola'}</span>}
+                      {u.occupation && <span style={{ fontSize: 9, fontWeight: 600, padding: '1px 5px', borderRadius: 4, background: C.bgAlt, color: C.subtle, border: `1px solid ${C.border}` }}>{u.occupation}</span>}
                       {diffH < 48 && <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: C.blueSoft, color: C.blue }}>novo</span>}
                       {u._orphan && <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: C.yellowSoft, color: C.yellow }}>sem perfil</span>}
                       {!u._orphan && pc === 0 && diffH > 48 && <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: C.redSoft, color: C.red }}>sem projeto</span>}
@@ -886,6 +930,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
                       {isOnline && '● '}{lastActiveLabel}
                     </span>
                     {pc > 0 && <span style={{ fontSize: 10, color: C.blue }}>{pc} projeto{pc > 1 ? 's' : ''}</span>}
+                    {sort === 'usage' && u.total_xp > 0 && <span style={{ fontSize: 10, color: C.yellow }}>{u.total_xp} XP</span>}
                     <span style={{ fontSize: 10, color: C.subtle }}>registado {fmtDate(u.created_at)}</span>
                   </div>
                 </div>

@@ -296,6 +296,24 @@ export function AuthProvider({ children }) {
     return () => { cancelled = true; subscription.unsubscribe() }
   }, [fetchProfile])
 
+  // Heartbeat de "online" — sem isto, last_active_at só é escrito no login
+  // (acima), fica parado o resto da sessão, e qualquer janela de "online
+  // agora" no Admin fica errada: alguém a usar a app agora mesmo, mas que
+  // entrou há 20 min, aparecia como offline. Atualiza a cada 3 min, só com
+  // o separador visível (não gasta nada com a pessoa a fazer outra coisa
+  // ou com o portátil fechado) — é um UPDATE de uma linha por PK, sem IA
+  // nenhuma envolvida, custo irrelevante mesmo com muitos utilizadores.
+  useEffect(() => {
+    if (!user?.id) return
+    function beat() {
+      if (document.visibilityState !== 'visible') return
+      supabase.from('profiles').update({ last_active_at: new Date().toISOString() }).eq('id', user.id).then(() => {})
+    }
+    const id = setInterval(beat, 3 * 60 * 1000)
+    document.addEventListener('visibilitychange', beat)
+    return () => { clearInterval(id); document.removeEventListener('visibilitychange', beat) }
+  }, [user?.id])
+
   async function signOut() {
     await supabase.auth.signOut()
     setUser(null)
