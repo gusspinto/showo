@@ -453,14 +453,6 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
                   </div>
                 )}
                 <div style={C.upsell}>
-                  {upgrade.priceLabelAnnual && (
-                    <div style={C.periodToggle} role="group" aria-label="Periodicidade do pagamento">
-                      <button type="button" style={C.periodBtn(!annual)} onClick={() => setAnnual(false)}>Mensal</button>
-                      <button type="button" style={C.periodBtn(annual)} onClick={() => setAnnual(true)}>
-                        Anual <span style={C.periodBadge}>2 meses grátis</span>
-                      </button>
-                    </div>
-                  )}
                   <div style={C.upsellHead}>
                     <span style={C.upsellName}>{upgrade.name}</span>
                     <span style={C.upsellPrice}>
