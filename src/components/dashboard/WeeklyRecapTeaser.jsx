@@ -1,23 +1,21 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
-import { CalendarMarkIcon as CalendarMark } from '@solar-icons/react/bold/calendar-mark'
+import { LetterIcon as Mail } from '@solar-icons/react/bold/letter'
 
 /* Teaser do recap semanal automático (feature "weeklyRecap", a partir do
-   Plus) para quem está no Grátis — mostra um exemplo real do que a conta
-   recebe por email todas as segundas (stat tiles de registos/dias ativos/
-   tipo de trabalho, não uma redação gerada por IA: é isso que o recap
-   realmente é, ver supabase/functions/send-weekly-recap).
+   Plus) para quem está no Grátis. Em vez de um cartão azul genérico com
+   ícone+checklist (o padrão "AI slop" que o Gustavo apontou — bonito mas
+   sem nada concreto), isto mostra uma réplica fiel do email real que a
+   conta recebe toda a segunda: mesmo fundo quase-preto, mesma eyebrow em
+   maiúsculas, mesmo estilo de stat tile (#0e1729/#1e3050), ver
+   supabase/functions/send-weekly-recap. É uma janela de email dentro do
+   cartão de marca, não um cartão a mais — a pessoa vê literalmente o que
+   vai cair na caixa de entrada dela, não uma promessa abstrata.
 
-   Usa o painel de marca (sdb-panel--brand, o mesmo gradiente azul do
-   cartão "Experimenta o Plus"). Os números sobem de 0 até ao valor real
-   e os cartões entram em cascata, uma vez, ao aparecer — "parece uma
-   coisa viva a acontecer", em vez de texto estático só com boa cor. Uma
-   única sequência ao montar, nunca em loop (ninguém quer isto a animar
-   sem parar numa dashboard que se olha todos os dias). Respeita
-   prefers-reduced-motion: mostra os valores finais de imediato.
-   Só para B2C (isSchoolAccount já filtra antes de renderizar).
-   Dispensável, guarda a escolha em localStorage. */
+   Números sobem de 0 ao valor real ao aparecer, uma vez só, nunca em
+   loop. Respeita prefers-reduced-motion. Só para B2C (isSchoolAccount já
+   filtra antes de renderizar). Dispensável, guarda em localStorage. */
 
 function useCountUp(target, { delay = 0, duration = 700 } = {}) {
   const [value, setValue] = useState(0)
@@ -30,7 +28,7 @@ function useCountUp(target, { delay = 0, duration = 700 } = {}) {
       function tick(ts) {
         if (!start) start = ts
         const p = Math.min(1, (ts - start) / duration)
-        const eased = 1 - (1 - p) * (1 - p) // ease-out quad
+        const eased = 1 - (1 - p) * (1 - p)
         setValue(Math.round(eased * target))
         if (p < 1) raf = requestAnimationFrame(tick)
       }
@@ -43,16 +41,15 @@ function useCountUp(target, { delay = 0, duration = 700 } = {}) {
   return value
 }
 
-function Stat({ target, label, delay }) {
+function EmailStat({ target, label, delay, accent }) {
   const value = useCountUp(target, { delay })
   return (
     <div className="recap-teaser-stat" style={{
-      flex: 1, padding: '12px 8px', textAlign: 'center', borderRadius: 10,
-      background: 'var(--on-fill)', border: '1px solid var(--on-line)',
-      animationDelay: `${delay}ms`,
+      flex: 1, padding: '12px 6px', textAlign: 'center', borderRadius: 8,
+      background: '#0e1729', border: '1px solid #1e3050', animationDelay: `${delay}ms`,
     }}>
-      <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--on)', lineHeight: 1, fontFamily: 'var(--font-heading)', fontVariantNumeric: 'tabular-nums' }}>{value}</div>
-      <div style={{ fontSize: 10.5, color: 'var(--on-dim)', marginTop: 5, textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>{label}</div>
+      <div style={{ fontSize: 21, fontWeight: 700, color: accent || '#eef2f8', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+      <div style={{ fontSize: 9.5, color: '#7d93b0', marginTop: 5 }}>{label}</div>
     </div>
   )
 }
@@ -77,43 +74,57 @@ export default function WeeklyRecapTeaser({ userId, onDismiss }) {
           from { opacity: 0; }
           to   { opacity: 1; }
         }
+        @keyframes recap-teaser-window {
+          from { opacity: 0; transform: translateY(10px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .recap-teaser-window { animation: recap-teaser-window 0.5s cubic-bezier(0.16,1,0.3,1) backwards; }
         .recap-teaser-stat { animation: recap-teaser-pop 0.45s cubic-bezier(0.16,1,0.3,1) backwards; }
-        .recap-teaser-quote { animation: recap-teaser-fade 0.5s ease-out 0.75s backwards; }
+        .recap-teaser-quote { animation: recap-teaser-fade 0.5s ease-out 0.85s backwards; }
         @media (prefers-reduced-motion: reduce) {
-          .recap-teaser-stat, .recap-teaser-quote { animation: none; }
+          .recap-teaser-stat, .recap-teaser-quote, .recap-teaser-window { animation: none; }
         }
       `}</style>
 
       <button
         onClick={dismiss}
         aria-label="Dispensar"
-        style={{ position: 'absolute', top: 14, right: 14, background: 'var(--on-fill)', border: 'none', borderRadius: 7, cursor: 'pointer', color: 'var(--on-dim)', padding: 5, display: 'flex' }}
+        style={{ position: 'absolute', top: 14, right: 14, background: 'var(--on-fill)', border: 'none', borderRadius: 7, cursor: 'pointer', color: 'var(--on-dim)', padding: 5, display: 'flex', zIndex: 1 }}
       ><X size={14} /></button>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, paddingRight: 28 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4, paddingRight: 28 }}>
         <span style={{ width: 32, height: 32, borderRadius: 9, background: 'var(--on-fill)', border: '1px solid var(--on-line)', color: 'var(--on)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <CalendarMark size={16} />
+          <Mail size={16} />
         </span>
         <p style={{ margin: 0, fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--on)', fontFamily: 'var(--font-heading)', lineHeight: 1.3 }}>
-          O que recebes todas as segundas a partir do Plus
+          Isto cai na tua caixa de entrada toda a segunda, a partir do Plus
         </p>
       </div>
 
-      <p style={{ margin: '0 0 14px', fontSize: 'var(--text-sm)', color: 'var(--on-dim)', lineHeight: 1.55 }}>
-        Um email automático com o que avançaste na semana, gerado a partir do diário — sem teres de escrever nada.
-      </p>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-        <span style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--on)', background: 'var(--on-fill)', border: '1px solid var(--on-line)', padding: '2px 8px', borderRadius: 100, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Exemplo real</span>
+      {/* Réplica do email real — não é decoração, é literalmente o que a
+          conta recebe (mesmas cores e estrutura de send-weekly-recap). */}
+      <div className="recap-teaser-window" style={{ background: '#03060d', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '14px 16px 16px', margin: '14px 0 12px', boxShadow: '0 12px 28px rgba(0,0,0,0.35)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12 }}>
+          <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#ff5f57' }} />
+          <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#febc2e' }} />
+          <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#28c840' }} />
+          <span style={{ fontSize: 10, color: '#5a6b85', marginLeft: 4 }}>hello@showo.pt · segunda-feira, 08:00</span>
+        </div>
+        <p style={{ margin: '0 0 4px', color: '#7d93b0', fontSize: 10, textAlign: 'center', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 700 }}>
+          Recap · 13 – 19 out
+        </p>
+        <p style={{ margin: '0 0 14px', color: '#eef2f8', fontSize: 16, lineHeight: 1.3, textAlign: 'center', fontWeight: 700 }}>
+          5 registos na semana passada
+        </p>
+        <div style={{ display: 'flex', gap: 7 }}>
+          <EmailStat target={5} label="registos" delay={0} />
+          <EmailStat target={4} label="dias ativos" delay={120} />
+          <EmailStat target={3} label="semanas seguidas" delay={240} accent="#f0a500" />
+        </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-        <Stat target={5} label="registos" delay={0} />
-        <Stat target={4} label="dias ativos" delay={120} />
-        <Stat target={12} label="dias p/ defesa" delay={240} />
-      </div>
-      <p className="recap-teaser-quote" style={{ margin: '0 0 18px', fontSize: 12.5, color: 'var(--on-dim)', fontStyle: 'italic', lineHeight: 1.5, borderLeft: '2px solid var(--on-line)', paddingLeft: 10 }}>
-        "Em DragBuild, registaste 5 entradas em 4 dias diferentes — sobretudo progresso, decisões."
+      <p className="recap-teaser-quote" style={{ margin: '0 0 16px', fontSize: 12, color: 'var(--on-dim)', lineHeight: 1.5 }}>
+        Gerado sozinho a partir do que já escreves no diário — zero esforço extra, e não é texto inventado por IA: são os teus números reais.
       </p>
 
       <button
