@@ -44,6 +44,18 @@ export default function Coach() {
   const [myProjects, setMyProjects] = useState([])
   const [pickerOpen, setPickerOpen] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
+  // Grupos "Por projeto" fecham por omissão — só o grupo do projeto ativo
+  // começa aberto. Clicar no nome do projeto (com a seta) abre/fecha; sem
+  // isto, uma sessão listada por baixo do nome do projeto parecia solta,
+  // sem deixar claro a que projeto pertencia.
+  const [expandedProjects, setExpandedProjects] = useState(new Set())
+  function toggleProjectExpanded(id) {
+    setExpandedProjects(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
   // Projeto sobre o qual se está a falar agora (null = conversa geral).
   // Guarda a linha completa do projeto (não só id/name/slug) porque o
   // project-coach precisa do objetivo/problema/solução/etc. para dar
@@ -347,13 +359,19 @@ export default function Coach() {
         )}
         {myProjects.filter(p => (projectSessions.get(p.id) || []).length > 0).map(p => {
           const sessions = projectSessions.get(p.id) || []
+          const expanded = expandedProjects.has(p.id) || activeProject?.id === p.id
           return (
             <div key={p.id} style={{ marginBottom: 10 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 10px 5px' }}>
-                <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--color-primary)', flexShrink: 0 }} />
-                <span style={{ fontSize: 11.5, color: C.text, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
-              </div>
-              {sessions.map(sess => {
+              <button
+                onClick={() => toggleProjectExpanded(p.id)}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', padding: '5px 8px 5px 4px', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', borderRadius: 6 }}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--color-bg-alt)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              >
+                <ChevronDown size={12} color={C.muted} style={{ flexShrink: 0, transition: 'transform 0.15s', transform: expanded ? 'rotate(0deg)' : 'rotate(-90deg)' }} />
+                <span style={{ fontSize: 11.5, color: C.text, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'left' }}>{p.name}</span>
+              </button>
+              {expanded && sessions.map(sess => {
                 const { text, date } = sessionPreview(sess.msgs)
                 const active = activeProject?.id === p.id && sess.id === sessionId
                 return (
