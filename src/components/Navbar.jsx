@@ -27,6 +27,8 @@ import { GraphNewUpIcon as TrendingUp } from '@solar-icons/react/bold/graph-new-
 import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/square-academic-cap'
 import { UserPlusRoundedIcon as UserPlus } from '@solar-icons/react/bold/user-plus-rounded'
 import { Widget4Icon as LayoutDashboard } from '@solar-icons/react/bold/widget-4'
+import { ClipboardListIcon as ClipboardList } from '@solar-icons/react/bold/clipboard-list'
+import { BotIcon as Bot } from '@solar-icons/react/bold/bot'
 import { PlusIcon as Plus } from './icons/PlusIcon'
 import { CompassIcon as Compass } from '@solar-icons/react/bold/compass'
 import { LibraryIcon } from '@solar-icons/react/bold/library'
@@ -1675,6 +1677,14 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 <LayoutDashboard size={16} />{!collapsed && showLabels && <span>Dashboard</span>}
               </button>
 
+              <button className={`sb-item${isActive('/vagas') ? ' active' : ''}`} onClick={() => navigate('/vagas')}>
+                <Briefcase size={16} />{!collapsed && showLabels && <span>Vagas</span>}
+              </button>
+
+              <button className={`sb-item${isActive('/pipeline') ? ' active' : ''}`} onClick={() => navigate('/pipeline')}>
+                <ClipboardList size={16} />{!collapsed && showLabels && <span>Candidatos</span>}
+              </button>
+
               <button className={`sb-item${isActive('/explorar') ? ' active' : ''}`} onClick={() => navigate('/explorar')}>
                 <Compass size={16} />{!collapsed && showLabels && <span>Explorar</span>}
               </button>
@@ -1739,6 +1749,11 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               <button className={`sb-item${isActive('/explorar') ? ' active' : ''}`} onClick={() => navigate('/explorar')}>
                 <Compass size={16} />{!collapsed && showLabels && <span>Explorar</span>}
               </button>
+              {user && (
+                <button className={`sb-item${isActive('/coach') ? ' active' : ''}`} onClick={() => navigate('/coach')}>
+                  <Bot size={16} />{!collapsed && showLabels && <span>Coach IA</span>}
+                </button>
+              )}
 
               {user && (
                 <>

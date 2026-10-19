@@ -1972,8 +1972,20 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
     : (FONT_OPTIONS.find(f => f.key === (previewStyle.font || 'default')) || FONT_OPTIONS[0])
   const selectedTitleFont = usingCustomTitleFont
     ? { key: 'custom', label: customTitleFontName, css: `"${customTitleFontName}", sans-serif`, sample: 'Aw' }
-    : (TITLE_FONT_OPTIONS.find(f => f.key === (previewStyle.titleFont || 'croogla')) || TITLE_FONT_OPTIONS[0])
+    : (TITLE_FONT_OPTIONS.find(f => f.key === (previewStyle.titleFont || 'space')) || TITLE_FONT_OPTIONS[0])
   const titleStyle        = previewStyle.titleStyle || 'normal'
+  const TITLE_WEIGHTS = [
+    { key: 'light',  label: 'Fino',     value: 500 },
+    { key: 'normal', label: 'Normal',   value: 700 },
+    { key: 'bold',   label: 'Negrito',  value: 900 },
+  ]
+  const titleWeight = (TITLE_WEIGHTS.find(w => w.key === (previewStyle.titleWeight || 'bold')) || TITLE_WEIGHTS[2]).value
+  const CONTENT_WIDTHS = [
+    { key: 'narrow',  label: 'Estreito',  width: 700 },
+    { key: 'default', label: 'Normal',    width: 860 },
+    { key: 'wide',    label: 'Largo',     width: 1040 },
+  ]
+  const contentMaxWidth = (CONTENT_WIDTHS.find(w => w.key === (previewStyle.contentWidth || 'default')) || CONTENT_WIDTHS[1]).width
   const selectedBg        = BG_OPTIONS.find(b => b.key === (previewStyle.bg || 'default')) || BG_OPTIONS[0]
   const resolvedBg        = usingCustomBg ? customBg : (selectedBg.bg || 'var(--color-bg)')
   // Cor final do título, corrigida para ter contraste com o fundo do hero —
@@ -2004,9 +2016,15 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
   // segue o tema da própria app.
   const heroSurfaceIsLight = pvTheme === 'light' || (!pvTheme && theme === 'light')
   const titleAlign        = previewStyle.titleAlign || 'center'
+  // Separado do alinhamento do título de propósito: um título centrado
+  // fica bem, mas parágrafos de várias linhas centrados são difíceis de
+  // ler e fazem qualquer secção parecer uma citação genérica em vez de
+  // texto a sério — por isso o corpo das secções tem o seu próprio
+  // default (esquerda), independente de como o título está alinhado.
+  const sectionAlign      = previewStyle.sectionAlign || 'left'
   const coverAsHero       = !!(previewStyle.coverAsHero && project.cover_url)
   const customTagline     = previewStyle.customTagline || ''
-  const cardStyleVal      = previewStyle.cardStyle || 'border'
+  const cardStyleVal      = previewStyle.cardStyle || 'glass'
   const hiddenSections = new Set(previewStyle.hiddenSections || [])
   const DEFAULT_SECTION_ORDER = ['problem','solution','target_audience','features','technologies','challenges','results','learnings','pap_supervisor']
   const orderedSections = previewStyle.sectionOrder?.length ? previewStyle.sectionOrder : DEFAULT_SECTION_ORDER
@@ -2177,7 +2195,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
   const showProofSidebar = (previewStyle.proofLayout === 'sidebar') && hasRoomForProofSidebar && !deviceMaxWidth
 
   return (
-    <div className="pv-outer" style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column', background: resolvedBg }}>
+    <div className="pv-outer" style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column', background: resolvedBg, '--pv-accent-1': hero.c1 || 'var(--color-primary)', '--pv-accent-2': hero.c2 || 'var(--color-primary)' }}>
 
       {/* ── Card style + preview theme scoped CSS ── */}
       <style>{`
@@ -2195,6 +2213,28 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
           backdrop-filter: blur(16px) !important;
           -webkit-backdrop-filter: blur(16px) !important;
           border: 1px solid rgba(255,255,255,0.09) !important;
+        }
+        [data-pv-cs="elevated"] .proj-card,
+        [data-pv-cs="elevated"] .pv-section-card {
+          border-color: transparent !important;
+          box-shadow: 0 12px 32px -8px rgba(0,0,0,0.35), 0 2px 8px -2px rgba(0,0,0,0.2) !important;
+        }
+        [data-pv-cs="outline-gradient"] .proj-card,
+        [data-pv-cs="outline-gradient"] .pv-section-card {
+          background: var(--c-card, var(--color-surface)) !important;
+          border: 1.5px solid transparent !important;
+          background-image: linear-gradient(var(--c-card, var(--color-surface)), var(--c-card, var(--color-surface))), linear-gradient(135deg, var(--pv-accent-1, var(--color-primary)), var(--pv-accent-2, var(--color-primary))) !important;
+          background-origin: border-box !important;
+          background-clip: padding-box, border-box !important;
+        }
+        [data-pv-cs="minimal"] .proj-card,
+        [data-pv-cs="minimal"] .pv-section-card {
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+          border-left-color: transparent !important;
+          padding-left: 0 !important;
+          padding-right: 0 !important;
         }
         [data-pv-theme="dark"] {
           --c-bg:#060c18; --c-bg-alt:#111c32; --c-card:#152030; --c-card-hover:#1c2d44;
@@ -2558,7 +2598,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
         )}
 
         {/* Title block over hero */}
-        <div className="pv-title-block" style={{ maxWidth: 860, margin: '0 auto', padding: '0 28px', position: 'relative', marginTop: coverAsHero ? -160 : project.cover_url ? -100 : -80, textAlign: titleAlign }}>
+        <div className="pv-title-block" style={{ maxWidth: contentMaxWidth, margin: '0 auto', padding: '0 28px', position: 'relative', marginTop: coverAsHero ? -160 : project.cover_url ? -100 : -80, textAlign: titleAlign }}>
           {/* Area / type chips — backed by a translucent pill when sitting over a
               cover photo, so they stay readable regardless of the image underneath */}
           <div style={{
@@ -2590,7 +2630,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
           </div>
 
           <h1 className="pv-hero-title" style={{
-            fontSize: 'clamp(36px, 6vw, 64px)', fontWeight: 900,
+            fontSize: 'clamp(36px, 6vw, 64px)', fontWeight: titleWeight,
             letterSpacing: titleStyle === 'caps' ? '0.04em' : '-1.5px', lineHeight: 1.0,
             margin: '0 0 14px',
             fontFamily: selectedTitleFont.css,
@@ -3286,7 +3326,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                   <div style={wsControlLabel}>Fonte do título</div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 4, marginBottom: 8 }}>
                     {TITLE_FONT_OPTIONS.map(f => {
-                      const isSel = (previewStyle.titleFont || 'croogla') === f.key
+                      const isSel = (previewStyle.titleFont || 'space') === f.key
                       return (
                         <button key={f.key} title={f.label}
                           onClick={() => setPreviewStyle(ps => ({ ...ps, titleFont: f.key }))}
@@ -3316,6 +3356,21 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                       )
                     })}
                   </div>
+                  <div style={{ ...wsControlLabel, marginTop: 10 }}>Peso do título</div>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    {TITLE_WEIGHTS.map(w => {
+                      const isSel = (previewStyle.titleWeight || 'bold') === w.key
+                      return (
+                        <button key={w.key} onClick={() => setPreviewStyle(ps => ({ ...ps, titleWeight: w.key }))}
+                          style={{
+                            flex: 1, padding: '7px 4px', borderRadius: 8, cursor: 'pointer',
+                            ...wsOptStyle(isSel),
+                            fontSize: 11, fontWeight: w.value, fontFamily: 'var(--font-body)', transition: 'all 0.12s',
+                          }}
+                        >{w.label}</button>
+                      )
+                    })}
+                  </div>
                   <div style={{ marginTop: 8 }}>
                     <input
                       value={previewStyle.titleFontCustom || ''}
@@ -3328,7 +3383,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 5 }}>
                         <span style={{ fontSize: 11, color: 'var(--color-text-secondary)', fontFamily: selectedTitleFont.css }}>A usar: {customTitleFontName}</span>
                         <button type="button"
-                          onClick={() => setPreviewStyle(ps => ({ ...ps, titleFont: 'croogla', titleFontCustom: '' }))}
+                          onClick={() => setPreviewStyle(ps => ({ ...ps, titleFont: 'space', titleFontCustom: '' }))}
                           style={{ background: 'transparent', border: 'none', color: 'var(--color-text-secondary)', fontSize: 10, cursor: 'pointer', textDecoration: 'underline', fontFamily: 'var(--font-body)' }}
                         >Repor</button>
                       </div>
@@ -3336,7 +3391,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                   </div>
                 </div>
                 <div style={{ marginBottom: 12 }}>
-                  <div style={wsControlLabel}>Alinhamento</div>
+                  <div style={wsControlLabel}>Alinhamento do título</div>
                   <div style={{ display: 'flex', gap: 4 }}>
                     {[
                       { val: 'left', Icon: AlignLeft }, { val: 'center', Icon: AlignCenter }, { val: 'right', Icon: AlignRight },
@@ -3344,6 +3399,25 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                       const isSel = (previewStyle.titleAlign || 'center') === a.val
                       return (
                         <button key={a.val} onClick={() => setPreviewStyle(ps => ({ ...ps, titleAlign: a.val }))}
+                          style={{
+                            flex: 1, padding: '8px 0', borderRadius: 8, cursor: 'pointer',
+                            ...wsOptStyle(isSel),
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.12s',
+                          }}
+                        ><a.Icon size={14} /></button>
+                      )
+                    })}
+                  </div>
+                </div>
+                <div style={{ marginBottom: 12 }}>
+                  <div style={wsControlLabel}>Alinhamento do texto das secções</div>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    {[
+                      { val: 'left', Icon: AlignLeft }, { val: 'center', Icon: AlignCenter }, { val: 'right', Icon: AlignRight },
+                    ].map(a => {
+                      const isSel = (previewStyle.sectionAlign || 'left') === a.val
+                      return (
+                        <button key={a.val} onClick={() => setPreviewStyle(ps => ({ ...ps, sectionAlign: a.val }))}
                           style={{
                             flex: 1, padding: '8px 0', borderRadius: 8, cursor: 'pointer',
                             ...wsOptStyle(isSel),
@@ -3397,17 +3471,20 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
               {/* Group: Estilo dos cards */}
               <div style={wsGroup}>
                 <div style={wsGroupLabel}>Estilo dos cards</div>
-                <div style={{ display: 'flex', gap: 6 }}>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {[
-                    { key: 'border', label: 'Padrão',  desc: 'Com bordas'    },
-                    { key: 'flat',   label: 'Flat',    desc: 'Sem bordas'    },
-                    { key: 'glass',  label: 'Glass',   desc: 'Transparente'  },
+                    { key: 'border',          label: 'Padrão',    desc: 'Com bordas'     },
+                    { key: 'flat',            label: 'Flat',      desc: 'Sem bordas'     },
+                    { key: 'glass',           label: 'Glass',     desc: 'Transparente'   },
+                    { key: 'elevated',        label: 'Elevado',   desc: 'Com sombra'     },
+                    { key: 'outline-gradient',label: 'Gradiente', desc: 'Borda em cor'   },
+                    { key: 'minimal',         label: 'Mínimo',    desc: 'Sem caixa'      },
                   ].map(c => {
-                    const isSel = (previewStyle.cardStyle || 'border') === c.key
+                    const isSel = (previewStyle.cardStyle || 'glass') === c.key
                     return (
                       <button key={c.key} onClick={() => setPreviewStyle(ps => ({ ...ps, cardStyle: c.key }))}
                         style={{
-                          flex: 1, padding: '10px 4px', borderRadius: 9, cursor: 'pointer', textAlign: 'center',
+                          flex: '0 1 31%', minWidth: 72, padding: '10px 4px', borderRadius: 9, cursor: 'pointer', textAlign: 'center',
                           ...wsOptStyle(isSel),
                           fontFamily: 'inherit', transition: 'all 0.12s',
                         }}
@@ -3415,6 +3492,25 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                         <div style={{ fontSize: 12, fontWeight: 700 }}>{c.label}</div>
                         <div style={{ fontSize: 9, marginTop: 3, color: isSel ? 'var(--color-text-secondary)' : 'var(--color-text-tertiary)' }}>{c.desc}</div>
                       </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Group: Largura do conteúdo */}
+              <div style={wsGroup}>
+                <div style={wsGroupLabel}>Largura do conteúdo</div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {CONTENT_WIDTHS.map(w => {
+                    const isSel = (previewStyle.contentWidth || 'default') === w.key
+                    return (
+                      <button key={w.key} onClick={() => setPreviewStyle(ps => ({ ...ps, contentWidth: w.key }))}
+                        style={{
+                          flex: 1, padding: '9px 4px', borderRadius: 9, cursor: 'pointer', textAlign: 'center',
+                          ...wsOptStyle(isSel),
+                          fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-body)', transition: 'all 0.12s',
+                        }}
+                      >{w.label}</button>
                     )
                   })}
                 </div>
@@ -4143,7 +4239,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
         padding: showProofSidebar ? `0 ${previewDevice === 'mobile' ? '16px' : '28px'}` : undefined,
       }}>
       <div className="pv-story" style={{
-        maxWidth: showProofSidebar ? 860 : (deviceMaxWidth ? Math.min(860, deviceMaxWidth) : 860),
+        maxWidth: showProofSidebar ? contentMaxWidth : (deviceMaxWidth ? Math.min(contentMaxWidth, deviceMaxWidth) : contentMaxWidth),
         width: showProofSidebar ? '100%' : undefined,
         margin: showProofSidebar ? 0 : `${isDesktop ? 40 : bannerH + 16}px auto 0`,
         padding: showProofSidebar ? '0 0 80px' : `0 ${previewDevice === 'mobile' ? '16px' : '28px'} 80px`,
@@ -4380,21 +4476,21 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
         }
 
         function renderOneSection(key) {
-          const sJustify = titleAlign === 'center' ? 'center' : titleAlign === 'right' ? 'flex-end' : 'flex-start'
+          const sJustify = sectionAlign === 'center' ? 'center' : sectionAlign === 'right' ? 'flex-end' : 'flex-start'
 
           if (key === 'problem')
             return !project.problem ? null : withSectionMedia(key,
-              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderLeft: `4px solid ${hero.c1}`, borderRadius: '0 12px 12px 0', padding: '30px 32px 26px', textAlign: titleAlign }}>
+              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderLeft: `4px solid ${hero.c1}`, borderRadius: '0 12px 12px 0', padding: '30px 32px 26px', textAlign: sectionAlign }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: hero.c1, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8, justifyContent: sJustify }}>
                   <Target size={13} /> O problema
                 </div>
-                <p style={{ margin: 0, fontSize: 'clamp(19px,2.8vw,26px)', color: 'var(--color-text)', lineHeight: 1.45, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.01em', overflowWrap: 'break-word' }}>{project.problem}</p>
+                <p style={{ margin: 0, fontSize: 'clamp(16px,2.1vw,20px)', color: 'var(--color-text)', lineHeight: 1.6, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.01em', overflowWrap: 'break-word' }}>{project.problem}</p>
               </div>
             )
 
           if (key === 'solution')
             return !project.solution ? null : withSectionMedia(key,
-              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderLeft: `4px solid ${hero.c1}55`, borderRadius: '0 12px 12px 0', padding: '24px 32px', textAlign: titleAlign }}>
+              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderLeft: `4px solid ${hero.c1}55`, borderRadius: '0 12px 12px 0', padding: '24px 32px', textAlign: sectionAlign }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8, justifyContent: sJustify }}>
                   <Zap size={13} /> A solução
                 </div>
@@ -4404,23 +4500,23 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
 
           if (key === 'target_audience')
             return !project.target_audience ? null : withSectionMedia(key,
-              <div className="pv-section-card" style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap', padding: '2px 4px', justifyContent: sJustify, textAlign: titleAlign }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Users size={12} /> Para quem é
+              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '24px 32px', textAlign: sectionAlign }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8, justifyContent: sJustify }}>
+                  <Users size={13} /> Para quem é
                 </div>
-                <p style={{ margin: 0, fontSize: 14, color: 'var(--color-text-secondary)', lineHeight: 1.6, overflowWrap: 'break-word' }}>{project.target_audience}</p>
+                <p style={{ margin: 0, fontSize: 15, color: 'var(--color-text)', lineHeight: 1.6, overflowWrap: 'break-word' }}>{project.target_audience}</p>
               </div>
             )
 
           if (key === 'features')
             return features.length === 0 ? null : withSectionMedia(key,
-              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '28px 32px', textAlign: titleAlign }}>
+              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '28px 32px', textAlign: sectionAlign }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8, justifyContent: sJustify }}>
                   <Wrench size={13} /> O que faz
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: titleAlign === 'center' ? 'center' : titleAlign === 'right' ? 'flex-end' : 'stretch' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: sectionAlign === 'center' ? 'center' : sectionAlign === 'right' ? 'flex-end' : 'stretch' }}>
                   {features.slice(0, 8).map((f, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, flexDirection: titleAlign === 'right' ? 'row-reverse' : 'row', textAlign: titleAlign === 'center' ? 'left' : titleAlign }}>
+                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, flexDirection: sectionAlign === 'right' ? 'row-reverse' : 'row', textAlign: sectionAlign === 'center' ? 'left' : sectionAlign }}>
                       <div style={{ width: 22, height: 22, borderRadius: 6, flexShrink: 0, marginTop: 1, background: `${hero.c1}22`, border: `1px solid ${hero.c1}44`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <CheckCircle size={12} color={`${hero.c1}cc`} />
                       </div>
@@ -4433,7 +4529,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
 
           if (key === 'technologies')
             return tech.length === 0 ? null : withSectionMedia(key,
-              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '28px 32px', textAlign: titleAlign }}>
+              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '28px 32px', textAlign: sectionAlign }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8, justifyContent: sJustify }}>
                   <Zap size={13} /> Tecnologias
                 </div>
@@ -4452,7 +4548,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
 
           if (key === 'challenges')
             return !project.challenges ? null : withSectionMedia(key,
-              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderLeft: '4px solid var(--color-warning)', borderRadius: '0 12px 12px 0', padding: '28px 32px', textAlign: titleAlign }}>
+              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderLeft: '4px solid var(--color-warning)', borderRadius: '0 12px 12px 0', padding: '28px 32px', textAlign: sectionAlign }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-warning)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8, justifyContent: sJustify }}>
                   <Zap size={13} /> Desafios
                 </div>
@@ -4462,7 +4558,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
 
           if (key === 'results')
             return !project.results ? null : withSectionMedia(key,
-              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '28px 32px', textAlign: titleAlign }}>
+              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '28px 32px', textAlign: sectionAlign }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-success)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8, justifyContent: sJustify }}>
                   <BarChart2 size={13} /> Resultados
                 </div>
@@ -4472,7 +4568,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
 
           if (key === 'learnings')
             return !project.learnings ? null : withSectionMedia(key,
-              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '28px 32px', textAlign: titleAlign }}>
+              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '28px 32px', textAlign: sectionAlign }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-accent)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8, justifyContent: sJustify }}>
                   <BookOpen size={13} /> Aprendizagens
                 </div>

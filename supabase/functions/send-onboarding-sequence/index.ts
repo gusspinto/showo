@@ -113,7 +113,7 @@ function buildDay1(firstName: string | undefined, unsubscribeUrl: string, hasPro
       headline('Ainda não criaste o teu primeiro projeto') +
       paragraph('Não precisa de estar pronto nem perfeito. Sobe um PDF, um PowerPoint, ou descreve em duas frases o que já fizeste — a IA trata do resto.') +
       paragraph('A partir daí, a IA já lê o diário do projeto antes de responder, sem teres de explicar tudo outra vez sempre que perguntas algo.', true) +
-      cta(`${APP}/novo`, 'Criar o meu primeiro projeto'),
+      cta(`${APP}/novo`, 'Começar agora — 2 minutos'),
       'Dia 1 de 5',
       unsubscribeUrl,
     )
@@ -125,7 +125,7 @@ function buildDay1(firstName: string | undefined, unsubscribeUrl: string, hasPro
     headline('Já reparaste que o ChatGPT começa sempre do zero?') +
     paragraph('Sempre que abres o ChatGPT para falar do teu projeto, tens de explicar tudo outra vez.') +
     paragraph('No Showo a IA lê o diário do projeto antes de responder. Continuas a mesma conversa, com contexto acumulado desde o primeiro dia.', true) +
-    cta(`${APP}/dashboard`, 'Analisar o meu projeto'),
+    cta(`${APP}/dashboard`, 'Continuar a conversa com a IA'),
     'Dia 1 de 5',
     unsubscribeUrl,
   )
@@ -134,13 +134,19 @@ function buildDay1(firstName: string | undefined, unsubscribeUrl: string, hasPro
 
 function buildDay2(firstName: string | undefined, unsubscribeUrl: string, hasProject: boolean) {
   if (!hasProject) {
-    const subject = 'Já tens o GitHub? Isso já chega para começar'
+    // Antes disto, o dia 2 repetia quase a mesma mensagem do dia 1 para
+    // quem ainda não tinha projeto ("é rápido, um PDF chega"), só com o
+    // GitHub como variação — a mesma objeção reaparecia dois dias
+    // seguidos. A objeção real de quem não avançou já não é "é
+    // complicado", é "não sei o que mostrar" — por isso o ângulo muda
+    // para exemplos concretos do que conta como projeto.
+    const subject = 'Não sabes o que mostrar? Nem precisa de estar acabado'
     const html = wrapEmail(
       greeting(firstName) +
-      headline('Tens repositórios no GitHub? Isso já é meio caminho andado') +
-      paragraph('Liga o teu GitHub ao criar o projeto e os commits entram sozinhos no diário — não precisas de escrever nada à mão.') +
-      paragraph('Sem GitHub também funciona: um PDF ou só texto já chega para começar.', true) +
-      cta(`${APP}/novo`, 'Começar agora'),
+      headline('"Não tenho nada digno de mostrar" — é a dúvida mais comum') +
+      paragraph('PAP a meio, estágio em curso, um projeto pessoal, até trabalho de faculdade. Não precisa de estar pronto nem de ser impressionante — o que interessa é mostrar o processo real, não só o resultado final.') +
+      paragraph('Sobe o que já tens e a IA ajuda a organizar isso numa página que faz sentido.', true) +
+      cta(`${APP}/novo`, 'Ver o meu projeto em 2 minutos'),
       'Dia 2 de 5',
       unsubscribeUrl,
     )
@@ -169,7 +175,7 @@ function buildDay3(firstName: string | undefined, unsubscribeUrl: string, hasPro
     paragraph('Preferimos mostrar o que quem já usa o Showo disse, com o nome deles:') +
     quote('Para alguém que fez PAP e queria usá-la para exposição, esta app é um gamechanger para estudantes na mesma situação.', 'Rafael Matos, Estudante de Engenharia Informática da Universidade de Aveiro') +
     quote('Na minha opinião, um dos pontos mais fortes da plataforma é a Defesa. A organização e preparação torna tudo mais interativo e envolvente.', 'Rita Sousa, Estudante na Escola Profissional Bento de Jesus Caraça') +
-    (hasProject ? cta(`${APP}/dashboard`, 'Ver o meu dashboard') : cta(`${APP}/novo`, 'Criar o meu projeto agora')),
+    (hasProject ? cta(`${APP}/dashboard`, 'Quero o mesmo resultado') : cta(`${APP}/novo`, 'Quero começar agora')),
     'Dia 3 de 5',
     unsubscribeUrl,
   )
@@ -183,7 +189,7 @@ function buildDay45(firstName: string | undefined, unsubscribeUrl: string) {
     headline('Já deste o primeiro passo, o teu projeto está criado. Boa.') +
     paragraph('O plano Grátis inclui 1 análise de IA por mês, 3 projetos, e 10 mensagens de Coach IA. Chega para começar, mas sentes o limite depressa se usares a sério.') +
     paragraph('O Plus dá 10 análises por mês, 15 projetos, 100 mensagens de Coach, e recap semanal automático.', true) +
-    cta(`${APP}/pricing`, 'Ver planos'),
+    cta(`${APP}/pricing`, 'Desbloquear 10x mais análises'),
     'Dia 4/5',
     unsubscribeUrl,
   )

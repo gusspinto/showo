@@ -26,6 +26,108 @@ function orderTestimonials(feature) {
   return [list[i], ...list.slice(0, i), ...list.slice(i + 1)]
 }
 
+// Preview real do que se recebe — pedido do Gustavo depois do teaser do
+// recap semanal ("eles têm de ter uma preview do que vai realmente ver se
+// comprarem"). Em vez de um ícone genérico, mostra uma réplica fiel de uma
+// das telas reais que a feature desbloqueia, com o mesmo texto/estrutura
+// que o utilizador vai mesmo ver — não uma promessa abstrata. Mapeia cada
+// feature de gate para a preview mais relevante; o que não tem mapa
+// específico cai no Coach IA, a feature paga mais universal de todas.
+const FEATURE_PREVIEW_KIND = {
+  coach: 'coach',
+  weeklyRecap: 'recap',
+  internshipPage: 'vagas',
+  vagaApplication: 'vagas',
+  defense: 'defense',
+  defenseTraining: 'defense',
+}
+
+function CoachPreview() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ alignSelf: 'flex-start', maxWidth: '85%', background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: '12px 12px 12px 4px', padding: '9px 12px', fontSize: 12.5, color: 'var(--color-text)', lineHeight: 1.5 }}>
+        Faltam exemplos concretos na secção de resultados. Queres que escreva um rascunho?
+      </div>
+      <div style={{ alignSelf: 'flex-end', maxWidth: '70%', background: 'var(--color-primary)', borderRadius: '12px 12px 4px 12px', padding: '9px 12px', fontSize: 12.5, color: '#fff' }}>
+        sim, por favor
+      </div>
+      <div style={{ alignSelf: 'flex-start', maxWidth: '85%', background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: '12px 12px 12px 4px', padding: '9px 12px', fontSize: 12.5, color: 'var(--color-text)', lineHeight: 1.5 }}>
+        Pronto — já tens um texto específico ao teu projeto, pronto a colar.
+      </div>
+    </div>
+  )
+}
+
+function VagasPreview() {
+  return (
+    <div style={{ background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 10, padding: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+        <span style={{ width: 26, height: 26, borderRadius: 7, background: 'var(--color-primary-subtle)', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 11, fontWeight: 800 }}>T</span>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--color-text)' }}>Estágio em Marketing Digital</div>
+          <div style={{ fontSize: 10.5, color: 'var(--color-text-secondary)' }}>TechCorp · Porto</div>
+        </div>
+      </div>
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 700, color: 'var(--color-success)', background: 'var(--color-success-subtle)', padding: '3px 8px', borderRadius: 100 }}>
+        ✓ Candidatura enviada
+      </div>
+    </div>
+  )
+}
+
+function DefensePreview() {
+  return (
+    <div style={{ background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 10, padding: 12 }}>
+      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Pergunta provável do júri</div>
+      <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--color-text)', marginBottom: 8 }}>"Porque escolheste esta solução e não outra?"</div>
+      <div style={{ fontSize: 11.5, color: 'var(--color-text-secondary)', lineHeight: 1.5, borderLeft: '2px solid var(--color-primary-muted)', paddingLeft: 8 }}>
+        Resposta sugerida, baseada no teu diário: menciona a alternativa que consideraste e o critério que decidiu.
+      </div>
+    </div>
+  )
+}
+
+function RecapPreview() {
+  return (
+    <div style={{ background: '#03060d', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 14px 14px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+        <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ff5f57' }} />
+        <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#febc2e' }} />
+        <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#28c840' }} />
+        <span style={{ fontSize: 9.5, color: '#5a6b85', marginLeft: 3 }}>hello@showo.pt</span>
+      </div>
+      <p style={{ margin: '0 0 10px', color: '#eef2f8', fontSize: 13.5, lineHeight: 1.3, fontWeight: 700 }}>5 registos na semana passada</p>
+      <div style={{ display: 'flex', gap: 6 }}>
+        {[['5', 'registos'], ['4', 'dias ativos'], ['3', 'semanas']].map(([v, l]) => (
+          <div key={l} style={{ flex: 1, padding: '8px 4px', textAlign: 'center', borderRadius: 7, background: '#0e1729', border: '1px solid #1e3050' }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: '#eef2f8', lineHeight: 1 }}>{v}</div>
+            <div style={{ fontSize: 8.5, color: '#7d93b0', marginTop: 3 }}>{l}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function FeaturePreview({ feature }) {
+  const kind = FEATURE_PREVIEW_KIND[feature] || 'coach'
+  const label = {
+    coach: 'Preview real do Coach IA',
+    recap: 'Preview real do email que recebes',
+    vagas: 'Preview real das vagas de estágio',
+    defense: 'Preview real da preparação de defesa',
+  }[kind]
+  return (
+    <div className="plan-gate-fade">
+      <p style={{ margin: '0 0 8px', fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
+      {kind === 'coach' && <CoachPreview />}
+      {kind === 'vagas' && <VagasPreview />}
+      {kind === 'defense' && <DefensePreview />}
+      {kind === 'recap' && <RecapPreview />}
+    </div>
+  )
+}
+
 // Marca do plano ao lado do nome — a marca Showo na cor do plano
 // (grátis não tem badge). Imagens em /public: plus.png, pro.png, escola.png.
 const PLAN_BADGES = {
@@ -341,6 +443,7 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
               </div>
 
               <div className="plan-gate-col-left">
+                <FeaturePreview feature={feature} />
                 {upgrade.priceLabelAnnual && (
                   <div style={{ ...C.periodToggle, margin: '0 auto 12px' }} role="group" aria-label="Periodicidade do pagamento">
                     <button type="button" style={C.periodBtn(!annual)} onClick={() => setAnnual(false)}>Mensal</button>
@@ -450,26 +553,30 @@ export function AiUsageBadge({ feature, style, compact }) {
   const color = remaining === 0 ? 'var(--color-error)' : isLow ? 'var(--color-warning)' : 'var(--color-text-secondary)'
   const bg = remaining === 0 ? 'rgba(239,68,68,0.1)' : isLow ? 'rgba(251,191,36,0.1)' : 'rgba(148,163,184,0.1)'
   const border = remaining === 0 ? 'rgba(239,68,68,0.25)' : isLow ? 'rgba(251,191,36,0.25)' : 'rgba(148,163,184,0.15)'
+  // Sem isto, ninguém percebe que o número volta a subir sozinho no mês
+  // seguinte — parecia um limite para sempre, só o email de esgotamento
+  // (que muita gente nunca lê) dizia "este mês".
+  const title = 'Renova no dia 1 de cada mês'
   if (compact) {
     return (
-      <span style={{
+      <span title={title} style={{
         display: 'inline-flex', alignItems: 'center', gap: 4,
         fontSize: '0.72rem', fontWeight: 600, color,
         ...style,
       }}>
-        {remaining}/{limit} restantes
+        {remaining}/{limit} este mês
       </span>
     )
   }
   return (
-    <span style={{
+    <span title={title} style={{
       display: 'inline-flex', alignItems: 'center', gap: 5,
       fontSize: '0.8rem', fontWeight: 700,
       color, background: bg, border: `1px solid ${border}`,
       padding: '5px 12px', borderRadius: '100px',
       ...style,
     }}>
-      {remaining}/{limit} restantes
+      {remaining}/{limit} restantes este mês
     </span>
   )
 }

@@ -25,10 +25,21 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [aiUsage, setAiUsage] = useState({})
+  const [vagaApplicationsThisMonth, setVagaApplicationsThisMonth] = useState(0)
 
   const fetchAiUsage = useCallback(async () => {
     const { data } = await supabase.rpc('get_ai_usage')
     if (data) setAiUsage(data)
+  }, [])
+
+  // Contagem direta da tabela candidaturas (não uma quota à parte) — é a
+  // própria fonte de verdade de quantas vezes a pessoa já se candidatou
+  // este mês, sem ter de manter um contador sincronizado.
+  const fetchVagaApplications = useCallback(async (uid) => {
+    const startOfMonth = new Date(); startOfMonth.setDate(1); startOfMonth.setHours(0, 0, 0, 0)
+    const { count } = await supabase.from('candidaturas').select('id', { count: 'exact', head: true })
+      .eq('student_id', uid).gte('created_at', startOfMonth.toISOString())
+    setVagaApplicationsThisMonth(count ?? 0)
   }, [])
 
   const fetchProfile = useCallback(async (uid) => {
@@ -226,8 +237,9 @@ export function AuthProvider({ children }) {
         })
       }
       fetchAiUsage()
+      fetchVagaApplications(uid)
     }
-  }, [fetchAiUsage])
+  }, [fetchAiUsage, fetchVagaApplications])
 
   useEffect(() => {
     let cancelled = false
@@ -270,10 +282,37 @@ export function AuthProvider({ children }) {
       // deadlock (refresh de token falha → logout sozinho; queries penduram
       // → "algo correu mal"). Adiar para fora do callback.
       setTimeout(() => loadProfile(u), 0)
+
+      // Só Register.jsx (email/password) disparava o email de boas-vindas —
+      // quem entra por Google nunca passava por ali e nunca o recebia.
+      // A função já é idempotente (verifica profiles.welcome_email_sent),
+      // por isso é seguro chamar sempre num SIGNED_IN real, qualquer que
+      // seja o método — nunca duplica para quem já o recebeu.
+      if (event === 'SIGNED_IN' && u) {
+        setTimeout(() => { supabase.functions.invoke('send-welcome-email').catch(() => {}) }, 0)
+      }
     })
 
     return () => { cancelled = true; subscription.unsubscribe() }
   }, [fetchProfile])
+
+  // Heartbeat de "online" — sem isto, last_active_at só é escrito no login
+  // (acima), fica parado o resto da sessão, e qualquer janela de "online
+  // agora" no Admin fica errada: alguém a usar a app agora mesmo, mas que
+  // entrou há 20 min, aparecia como offline. Atualiza a cada 3 min, só com
+  // o separador visível (não gasta nada com a pessoa a fazer outra coisa
+  // ou com o portátil fechado) — é um UPDATE de uma linha por PK, sem IA
+  // nenhuma envolvida, custo irrelevante mesmo com muitos utilizadores.
+  useEffect(() => {
+    if (!user?.id) return
+    function beat() {
+      if (document.visibilityState !== 'visible') return
+      supabase.from('profiles').update({ last_active_at: new Date().toISOString() }).eq('id', user.id).then(() => {})
+    }
+    const id = setInterval(beat, 3 * 60 * 1000)
+    document.addEventListener('visibilitychange', beat)
+    return () => { clearInterval(id); document.removeEventListener('visibilitychange', beat) }
+  }, [user?.id])
 
   async function signOut() {
     await supabase.auth.signOut()
@@ -306,6 +345,13 @@ export function AuthProvider({ children }) {
     if (feature === 'internshipPage' || feature === 'weeklyRecap' || feature === 'cleanLink' || feature === 'githubSync') {
       const allowed = plan.career[feature] === true
       return { allowed, message: allowed ? null : withFeature(feature, PLAN_GATE_MESSAGES[feature]?.()) }
+    }
+    if (feature === 'vagaApplication') {
+      const gate = checkGate('internshipPage')
+      if (!gate.allowed) return gate
+      const limit = plan.career.maxApplicationsPerMonth ?? 0
+      const allowed = vagaApplicationsThisMonth < limit
+      return { allowed, remaining: Math.max(0, limit - vagaApplicationsThisMonth), limit, message: allowed ? null : withFeature(feature, PLAN_GATE_MESSAGES.vagaApplication(planId)) }
     }
     if (feature === 'projectFiles') {
       const allowed = (plan.files?.maxProjectMB ?? 0) > 0
@@ -344,7 +390,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signOut, refreshProfile, isAdmin, plan, planId, isSchoolAccount, checkGate, consumeAI, aiUsage, refreshAiUsage: fetchAiUsage, logFunnelEvent }}>
+    <AuthContext.Provider value={{ user, profile, loading, signOut, refreshProfile, isAdmin, plan, planId, isSchoolAccount, checkGate, consumeAI, aiUsage, refreshAiUsage: fetchAiUsage, vagaApplicationsThisMonth, refreshVagaApplications: () => user?.id && fetchVagaApplications(user.id), logFunnelEvent }}>
       {children}
     </AuthContext.Provider>
   )

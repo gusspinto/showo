@@ -81,6 +81,7 @@ const PLANS = [
           { label: 'Sincronização com o GitHub', icon: 'github', tip: 'O teu diário atualiza-se sozinho a cada push, sem teres de voltar cá para escrever nada.' },
           { label: 'Ficheiros de prova', value: '250MB', tip: 'Anexa PDFs, Word, PowerPoint ou imagens, qualquer ficheiro que prove o trabalho. Escolhes o que aparece na página pública.' },
           { label: 'Assistente semanal', tip: 'Todas as semanas recebes um email com o que avançaste, o que ficou parado e o que vem a seguir, sem teres de ir à procura.' },
+          { label: 'Vagas de estágio', value: '3x mais hipóteses', tip: 'Vê e candidata-te a vagas publicadas por empresas parceiras, com o teu portfólio em vez de CV. Até 3 candidaturas por mês.' },
         ],
       },
       {
@@ -115,7 +116,7 @@ const PLANS = [
           { label: 'Exportar PowerPoint', value: 'sem limite' },
           { label: 'Ficheiros de prova', value: '1GB', tip: 'Anexa PDFs, Word, PowerPoint ou imagens, qualquer ficheiro que prove o trabalho. Escolhes o que aparece na página pública.' },
           { label: 'Link à tua medida', tip: 'Tira o código aleatório do link do teu projeto e escolhe o teu próprio texto.' },
-          { label: 'Vagas de estágio', tip: 'Vê e candidata-te a vagas publicadas por empresas parceiras, com o teu portfólio em vez de CV.' },
+          { label: 'Vagas de estágio', value: 'candidaturas ilimitadas', tip: 'Vê e candidata-te a vagas publicadas por empresas parceiras, com o teu portfólio em vez de CV. Sem limite de candidaturas por mês.' },
         ],
       },
       {
@@ -151,7 +152,7 @@ const COMPARE_ROWS = [
   { label: 'Exportar PowerPoint', free: '3x', plus: '15x', pro: 'Ilimitado' },
   { label: 'Assistente semanal por email', free: false, plus: true, pro: true },
   { label: 'Sincronização com o GitHub', free: false, plus: true, pro: true },
-  { label: 'Vagas de estágio', free: false, plus: false, pro: true },
+  { label: 'Vagas de estágio', free: false, plus: '3x/mês', pro: 'Ilimitadas' },
 ]
 
 const FAQ = [

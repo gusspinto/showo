@@ -76,7 +76,7 @@ function CandidatoModal({ cand, vagas, onClose, onStageChange, navigate }) {
           <Briefcase size={14} color={C.muted} />
           <div>
             <div style={{ fontSize: 11, fontWeight: 600, color: C.muted, textTransform: 'uppercase', letterSpacing: 0.8 }}>Candidatou-se a</div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{vaga?.title || 'Vaga'}</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{vaga?.titulo || 'Vaga'}</div>
           </div>
         </div>
 
@@ -152,7 +152,7 @@ export default function Pipeline() {
 
     const { data: vagasData } = await supabase
       .from('vagas')
-      .select('id, title')
+      .select('id, titulo')
       .eq('recruiter_id', user.id)
       .order('created_at', { ascending: false })
 
@@ -184,12 +184,21 @@ export default function Pipeline() {
     setLoading(false)
   }
 
+  // O candidato só vê o status simples (pendente/vista/aceite/recusada) em
+  // /vagas, a fase do pipeline é mais granular e interna ao recrutador, por
+  // isso cada mudança de fase também atualiza o status visível ao candidato.
+  const STAGE_TO_STATUS = {
+    novo: 'pendente', em_analise: 'vista', entrevista: 'vista', oferta: 'vista',
+    aceite: 'aceite', rejeitado: 'recusada',
+  }
+
   async function updateStage(candId, stage) {
     const current = candidaturas.find(c => c.id === candId)
     const expectedStage = current?.pipeline_stage || 'novo'
+    const newStatus = STAGE_TO_STATUS[stage] ?? 'pendente'
     const { data, error } = await supabase
       .from('candidaturas')
-      .update({ pipeline_stage: stage })
+      .update({ pipeline_stage: stage, status: newStatus })
       .eq('id', candId)
       .eq('pipeline_stage', expectedStage)
       .select('id')
@@ -198,8 +207,14 @@ export default function Pipeline() {
       loadData()
       return
     }
-    setCandidaturas(prev => prev.map(c => c.id === candId ? { ...c, pipeline_stage: stage } : c))
-    setSelected(prev => prev?.id === candId ? { ...prev, pipeline_stage: stage } : prev)
+    setCandidaturas(prev => prev.map(c => c.id === candId ? { ...c, pipeline_stage: stage, status: newStatus } : c))
+    setSelected(prev => prev?.id === candId ? { ...prev, pipeline_stage: stage, status: newStatus } : prev)
+
+    if (stage === 'aceite' || stage === 'rejeitado') {
+      supabase.functions.invoke('notify-candidatura-status', {
+        body: { candidatura_id: candId, new_status: newStatus },
+      }).catch(() => {})
+    }
   }
 
   const filtered = filterVaga === 'all' ? candidaturas : candidaturas.filter(c => c.vaga_id === filterVaga)
@@ -238,7 +253,7 @@ export default function Pipeline() {
             </div>
             {vagas.length > 1 && (
               <Select value={filterVaga} onChange={setFilterVaga}
-                options={[{ value: 'all', label: 'Todas as vagas' }, ...vagas.map(v => ({ value: v.id, label: v.title }))]}
+                options={[{ value: 'all', label: 'Todas as vagas' }, ...vagas.map(v => ({ value: v.id, label: v.titulo }))]}
                 inputStyle={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 9, color: C.text, fontSize: 13, padding: '8px 28px 8px 12px' }} />
             )}
           </div>
@@ -327,7 +342,7 @@ export default function Pipeline() {
                           </div>
                           {vaga && (
                             <div style={{ fontSize: 11, color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', background: 'var(--color-bg-alt)', padding: '4px 8px', borderRadius: 6 }}>
-                              {vaga.title}
+                              {vaga.titulo}
                             </div>
                           )}
                         </button>

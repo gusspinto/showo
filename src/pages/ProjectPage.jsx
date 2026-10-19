@@ -20,6 +20,7 @@ import { Navbar } from '../components/Navbar'
 import SegmentedTabs from '../components/SegmentedTabs'
 import { PlanGateModal, AiUsageBadge, ConfirmUseModal } from '../components/PlanGate'
 import { chatProjectCoach } from '../lib/chatProjectCoach'
+import { renderMd } from '../lib/renderMd'
 import { useAuth } from '../context/AuthContext'
 import { useSidebar } from '../context/SidebarContext'
 import { useTheme } from '../context/ThemeContext'
@@ -166,40 +167,6 @@ function MembersPanel({ ownerName, members, colors, isOwner }) {
       </div>
     </div>
   )
-}
-
-function renderMd(text) {
-  const lines = text.split('\n')
-  const out = []
-  let listItems = []
-  let k = 0
-  function flush() {
-    if (!listItems.length) return
-    out.push(<ul key={k++} style={{ margin: '4px 0 4px 4px', paddingLeft: 16, listStyleType: 'disc' }}>{listItems}</ul>)
-    listItems = []
-  }
-  function inline(line) {
-    const parts = []
-    const re = /(\*\*(.+?)\*\*|\*(.+?)\*)/g
-    let last = 0, m
-    while ((m = re.exec(line)) !== null) {
-      if (m.index > last) parts.push(line.slice(last, m.index))
-      if (m[0].startsWith('**')) parts.push(<strong key={m.index}>{m[2]}</strong>)
-      else parts.push(<em key={m.index}>{m[3]}</em>)
-      last = m.index + m[0].length
-    }
-    if (last < line.length) parts.push(line.slice(last))
-    return parts
-  }
-  for (const line of lines) {
-    const isBullet = line.startsWith('- ') || line.startsWith('• ')
-    if (isBullet) { listItems.push(<li key={k++}>{inline(line.slice(2))}</li>); continue }
-    flush()
-    if (line === '') { out.push(<br key={k++} />); continue }
-    out.push(<span key={k++} style={{ display: 'block' }}>{inline(line)}</span>)
-  }
-  flush()
-  return out
 }
 
 /* ── Spotlight Tour ─────────────────────────────────────────────────────────── */
@@ -528,7 +495,7 @@ function TourVisualPreview() {
 
 function TourVisualCoach() {
   return (
-    <MacWindow title="Assistente IA">
+    <MacWindow title="Coach IA">
       <div style={{padding:'10px 12px', display:'flex', flexDirection:'column', gap:5}}>
         <div style={{display:'flex', gap:6, alignItems:'flex-start'}}>
           <div style={{
@@ -785,7 +752,7 @@ const TOUR_STEPS_PAP = [
   },
   {
     target: 'coach',
-    title: 'Assistente IA',
+    title: 'Coach IA',
     visual: <TourVisualCoach />,
     bullets: [
       'Conhece o teu projeto e ajuda a melhorar qualquer secção',
@@ -844,9 +811,9 @@ const TOUR_STEPS_MOBILE_PAP = [
   },
   {
     target: 'coach',
-    title: 'Assistente IA',
+    title: 'Coach IA',
     bullets: [
-      'Toca neste botão para abrir o chat com o teu assistente',
+      'Toca neste botão para abrir o chat com o teu coach',
       'Conhece o teu projeto e ajuda a melhorar qualquer secção',
     ],
   },
@@ -1288,6 +1255,12 @@ export default function ProjectPage() {
   const [coachOpen, setCoachOpen] = useState(false)
   const [coachSessionsOpen, setCoachSessionsOpen] = useState(false)
   const coachBottomRef = useRef(null)
+
+  // Entrada a partir do Coach IA global (sidebar → escolher este projeto):
+  // abre logo o painel, em vez de a pessoa ter de clicar no FAB outra vez.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('coach') === '1') setCoachOpen(true)
+  }, [])
 
   const coachSessions = useMemo(() => {
     if (!coachAllMessages.length) return []
@@ -3873,7 +3846,7 @@ export default function ProjectPage() {
               lineHeight: 1.08,
               letterSpacing: (previewStyle.titleStyle === 'caps') ? '0.04em' : '-0.02em',
               flex: 1,
-              fontFamily: (TITLE_FONT_OPTIONS.find(f => f.key === (previewStyle.titleFont || 'croogla'))?.css) || 'var(--font-heading)',
+              fontFamily: (TITLE_FONT_OPTIONS.find(f => f.key === (previewStyle.titleFont || 'space'))?.css) || 'var(--font-heading)',
               textTransform: previewStyle.titleStyle === 'caps' ? 'uppercase' : 'none',
               color: colors.text,
             }}>
@@ -4312,8 +4285,8 @@ export default function ProjectPage() {
           document.body
         )}
 
-        {/* AI Analysis teaser for non-owners */}
-        {!isOwner && profile?.role !== 'professor' && (
+        {/* AI Analysis teaser — só para visitantes de fora, nunca para quem já colabora no projeto */}
+        {!isOwner && collaboratorSections === null && profile?.role !== 'professor' && (
           <div style={{
             background: colors.card,
             border: `1px solid ${colors.border}`,
@@ -4737,7 +4710,7 @@ export default function ProjectPage() {
                 <Sparkles size={18} color="var(--color-primary)" />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 15, fontWeight: 800, color: colors.text, lineHeight: 1.2 }}>Assistente IA</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: colors.text, lineHeight: 1.2 }}>Coach IA</div>
                 <div style={{ fontSize: 12, color: colors.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{project.name}</div>
               </div>
               <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
@@ -4748,6 +4721,9 @@ export default function ProjectPage() {
                 )}
                 <button onClick={() => { setCoachMessages([]); setCoachSessionId(null); setCoachSessionsOpen(false); if (project?.id) localStorage.setItem(`coach_session_${project.id}`, 'new') }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6, borderRadius: 6 }} title="Nova conversa">
                   <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+                </button>
+                <button onClick={() => navigate('/coach')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6, borderRadius: 6 }} title="Abrir Coach IA (todas as conversas)">
+                  <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M6 3H3.5A1.5 1.5 0 0 0 2 4.5v8A1.5 1.5 0 0 0 3.5 14h8a1.5 1.5 0 0 0 1.5-1.5V10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M9.5 2H14v4.5M14 2 7 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </button>
               </div>
             </div>
@@ -4812,7 +4788,7 @@ export default function ProjectPage() {
                   <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', maxWidth: '92%' }}>
                     {botAvatar}
                     <div style={{ background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: '4px 18px 18px 18px', padding: '13px 16px', fontSize: 15.5, color: colors.text, lineHeight: 1.65 }}>
-                      Olá! Sou o teu assistente para melhorar o <strong>{project.name}</strong>.{greetingDetail}
+                      Olá! Sou o teu coach para melhorar o <strong>{project.name}</strong>.{greetingDetail}
                     </div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginLeft: 32 }}>
@@ -5907,8 +5883,8 @@ export default function ProjectPage() {
             cursor: 'pointer', alignItems: 'center', justifyContent: 'center',
             transition: 'all 0.2s',
           }}
-          title="Assistente IA"
-          aria-label="Assistente IA"
+          title="Coach IA"
+          aria-label="Coach IA"
         >
           <Bot size={22} color="#fff" />
         </button>
@@ -5930,7 +5906,7 @@ export default function ProjectPage() {
               cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
               transition: 'all 0.2s',
             }}
-            title="Assistente IA"
+            title="Coach IA"
           >
             <Bot size={20} color="#fff" />
           </button>
@@ -5966,13 +5942,16 @@ export default function ProjectPage() {
                 <Bot size={15} color="var(--color-primary)" />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>Assistente IA</div>
-                <div style={{ fontSize: 11, color: colors.muted, display: 'flex', alignItems: 'center', gap: 6 }}>Tutor do teu projeto <AiUsageBadge feature="coach" compact /></div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>Coach IA</div>
+                <div style={{ fontSize: 11, color: colors.muted, display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }} title={project.name}>{project.name}</span>
+                  <AiUsageBadge feature="coach" compact style={{ flexShrink: 0, whiteSpace: 'nowrap' }} />
+                </div>
               </div>
               {coachSessions.length >= 1 && (
                 <button
                   onClick={() => setCoachSessionsOpen(v => !v)}
-                  style={{ background: coachSessionsOpen ? 'var(--color-primary-subtle)' : 'none', border: 'none', cursor: 'pointer', color: coachSessionsOpen ? colors.blue : colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 5, borderRadius: 6, transition: 'all 0.15s' }}
+                  style={{ background: coachSessionsOpen ? 'var(--color-primary-subtle)' : 'none', border: 'none', cursor: 'pointer', color: coachSessionsOpen ? colors.blue : colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 5, borderRadius: 6, transition: 'all 0.15s', flexShrink: 0 }}
                   title="Conversas"
                 >
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="1.5" rx=".75" fill="currentColor"/><rect x="2" y="7.25" width="12" height="1.5" rx=".75" fill="currentColor"/><rect x="2" y="11.5" width="12" height="1.5" rx=".75" fill="currentColor"/></svg>
@@ -5980,14 +5959,21 @@ export default function ProjectPage() {
               )}
               <button
                 onClick={() => { setCoachMessages([]); setCoachSessionId(null); setCoachSessionsOpen(false); if (project?.id) localStorage.setItem(`coach_session_${project.id}`, 'new') }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 5, borderRadius: 6 }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 5, borderRadius: 6, flexShrink: 0 }}
                 title="Nova conversa"
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
               </button>
               <button
+                onClick={() => navigate('/coach')}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 5, borderRadius: 6, flexShrink: 0 }}
+                title="Abrir Coach IA (todas as conversas)"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3H3.5A1.5 1.5 0 0 0 2 4.5v8A1.5 1.5 0 0 0 3.5 14h8a1.5 1.5 0 0 0 1.5-1.5V10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M9.5 2H14v4.5M14 2 7 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+              <button
                 onClick={() => { setCoachOpen(false); setCoachSessionsOpen(false) }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 4, borderRadius: 6 }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 4, borderRadius: 6, flexShrink: 0 }}
                 title="Fechar"
               ><X size={16} /></button>
             </div>
@@ -6050,8 +6036,8 @@ export default function ProjectPage() {
                 return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <div style={{ background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 12, padding: '14px 16px', fontSize: 13, color: colors.text, lineHeight: 1.6 }}>
-                    <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Assistente IA</span>
-                    Olá! Sou o teu assistente para o <strong>{project.name}</strong>.{greetingD}
+                    <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Coach IA</span>
+                    Olá! Sou o teu coach para o <strong>{project.name}</strong>.{greetingD}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     {suggestionsD.slice(0, 3).map(q => (

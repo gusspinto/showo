@@ -110,7 +110,20 @@ Deno.serve(async (req) => {
       if (sub.status === 'active' || sub.status === 'trialing') {
         const plan = sub.metadata?.plan || 'plus'
         const period = sub.metadata?.period || 'monthly'
+        // billing_events (fonte do MRR/subscritores reais no Admin) só era
+        // escrito a partir de checkout.session.completed — descoberto que
+        // a tabela estava 100% vazia porque, na prática, ativações reais
+        // também chegam por aqui (subscription.updated), sem nunca passar
+        // por aquele evento. Só regista quando é mesmo uma ativação nova
+        // (vinha de free/sem plano), para não duplicar em cada renovação.
+        const sb = supabase()
+        const { data: existing } = await sb.from('profiles').select('plan').eq('stripe_customer_id', sub.customer as string).single()
+        const wasFree = !existing?.plan || existing.plan === 'free'
         await updatePlan(sub.customer as string, plan, period)
+        if (wasFree) {
+          const amount = sub.items?.data?.[0]?.price?.unit_amount ?? null
+          await logBillingEvent(sub.customer as string, 'subscription_started', plan, amount, period)
+        }
       } else if (sub.status === 'past_due' || sub.status === 'unpaid') {
         // Keep plan active during grace period but log it
         console.warn('[stripe-webhook] Subscription past_due/unpaid:', sub.id)
