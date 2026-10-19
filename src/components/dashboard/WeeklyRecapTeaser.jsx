@@ -66,7 +66,7 @@ function Stat({ target, label, delay, accent }) {
   return (
     <div className="recap-teaser-stat" style={{ flex: 1, padding: '10px 6px', textAlign: 'center', borderRadius: 8, background: '#0e1729', border: '1px solid #1e3050', animationDelay: `${delay}ms` }}>
       <div style={{ fontSize: 19, fontWeight: 700, color: accent || '#eef2f8', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
-      <div style={{ fontSize: 9, color: '#7d93b0', marginTop: 4 }}>{label}</div>
+      <div style={{ fontSize: 9, color: '#a3b4ce', marginTop: 4 }}>{label}</div>
     </div>
   )
 }
@@ -135,8 +135,8 @@ export default function WeeklyRecapTeaser({ userId, onDismiss, onUpgrade }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 12 }}>
           <span style={{ width: 24, height: 24, borderRadius: 7, background: '#1a60c8', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 11, fontWeight: 800 }}>S</span>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={{ fontSize: 11.5, fontWeight: 700, color: '#eef2f8' }}>Showo <span style={{ fontWeight: 400, color: '#5a6b85' }}>hello@showo.pt</span></div>
-            <div style={{ fontSize: 10, color: '#5a6b85' }}>Para ti · segunda-feira, 08:00</div>
+            <div style={{ fontSize: 11.5, fontWeight: 700, color: '#eef2f8' }}>Showo <span style={{ fontWeight: 400, color: '#93a4c0' }}>hello@showo.pt</span></div>
+            <div style={{ fontSize: 10, color: '#93a4c0' }}>Para ti · segunda-feira, 08:00</div>
           </div>
         </div>
         <p style={{ margin: '0 0 14px', color: '#eef2f8', fontSize: 16, lineHeight: 1.3, textAlign: 'center', fontWeight: 700 }}>
@@ -154,7 +154,7 @@ export default function WeeklyRecapTeaser({ userId, onDismiss, onUpgrade }) {
             lógica do email (pickHighlight em send-weekly-recap): escolhe
             a entrada mais substancial da semana, não a mais frequente. */}
         <div className="recap-teaser-stat" style={{ animationDelay: '300ms', borderLeft: '3px solid #2a4275', padding: '1px 0 1px 12px', marginBottom: 14 }}>
-          <p style={{ margin: '0 0 3px', color: '#5a6b85', fontSize: 10.5 }}>Decisão em DragBuild</p>
+          <p style={{ margin: '0 0 3px', color: '#93a4c0', fontSize: 10.5 }}>Decisão em DragBuild</p>
           <p style={{ margin: 0, color: '#c3cede', fontSize: 12.5, lineHeight: 1.5 }}>
             Decidi simplificar o fluxo de arrastar componentes depois de testar com duas pessoas que acharam confuso.
           </p>

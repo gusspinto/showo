@@ -92,14 +92,14 @@ function RecapPreview() {
     <div style={{ background: '#03060d', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 14px 14px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
         <span style={{ width: 20, height: 20, borderRadius: 6, background: '#1a60c8', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 9.5, fontWeight: 800 }}>S</span>
-        <span style={{ fontSize: 9.5, color: '#5a6b85' }}>Showo <span style={{ color: '#5a6b85' }}>hello@showo.pt</span></span>
+        <span style={{ fontSize: 9.5, color: '#93a4c0' }}>Showo <span style={{ color: '#93a4c0' }}>hello@showo.pt</span></span>
       </div>
       <p style={{ margin: '0 0 10px', color: '#eef2f8', fontSize: 13.5, lineHeight: 1.3, fontWeight: 700 }}>5 registos na semana passada</p>
       <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
         {[['5', 'registos'], ['4', 'dias ativos'], ['3', 'semanas', '#f0a500']].map(([v, l, c]) => (
           <div key={l} style={{ flex: 1, padding: '8px 4px', textAlign: 'center', borderRadius: 7, background: '#0e1729', border: '1px solid #1e3050' }}>
             <div style={{ fontSize: 16, fontWeight: 700, color: c || '#eef2f8', lineHeight: 1 }}>{v}</div>
-            <div style={{ fontSize: 8.5, color: '#7d93b0', marginTop: 3 }}>{l}</div>
+            <div style={{ fontSize: 8.5, color: '#a3b4ce', marginTop: 3 }}>{l}</div>
           </div>
         ))}
       </div>
@@ -107,7 +107,7 @@ function RecapPreview() {
           excerto real por baixo dos números, sem aspas nem itálico, barra
           lateral, não cartão de testemunho centrado. */}
       <div style={{ borderLeft: '3px solid #2a4275', padding: '1px 0 1px 10px' }}>
-        <p style={{ margin: '0 0 2px', color: '#5a6b85', fontSize: 9.5 }}>Decisão em DragBuild</p>
+        <p style={{ margin: '0 0 2px', color: '#93a4c0', fontSize: 9.5 }}>Decisão em DragBuild</p>
         <p style={{ margin: 0, color: '#c3cede', fontSize: 11.5, lineHeight: 1.45 }}>
           Decidi simplificar o fluxo depois de testar com duas pessoas que acharam confuso.
         </p>

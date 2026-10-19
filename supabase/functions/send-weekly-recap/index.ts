@@ -115,7 +115,7 @@ function buildHtml(firstName: string, weekLabel: string, stats: Stats, quiet: bo
   const stat = (value: string, label: string, color = '#eef2f8') => `
     <td style="width:33.33%;padding:14px 8px;background:#0e1729;border:1px solid #1e3050;text-align:center;">
       <div style="font-size:24px;font-weight:700;color:${color};line-height:1;">${esc(value)}</div>
-      <div style="font-size:11px;color:#7d93b0;margin-top:5px;">${esc(label)}</div>
+      <div style="font-size:11px;color:#a3b4ce;margin-top:5px;">${esc(label)}</div>
     </td>`
 
   const headline = quiet
@@ -148,7 +148,7 @@ function buildHtml(firstName: string, weekLabel: string, stats: Stats, quiet: bo
   <div style="max-width:480px;margin:0 auto;">
     <img src="${APP}/icon.png" alt="Showo" width="30" height="30" style="display:block;margin:0 auto 22px;border:0;" />
 
-    <p style="margin:0 0 6px;color:#7d93b0;font-size:12px;text-align:center;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;">
+    <p style="margin:0 0 6px;color:#a3b4ce;font-size:12px;text-align:center;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;">
       Recap · ${esc(weekLabel)}
     </p>
     <h1 style="margin:0 0 22px;color:#eef2f8;font-size:22px;line-height:1.3;text-align:center;font-weight:700;">
@@ -164,7 +164,7 @@ function buildHtml(firstName: string, weekLabel: string, stats: Stats, quiet: bo
 
     ${!quiet && stats.highlight ? `
     <div style="border-left:3px solid #2a4275;padding:2px 0 2px 14px;margin:0 0 22px;">
-      <p style="margin:0 0 3px;color:#5a6b85;font-size:11px;">${esc(KIND_SINGULAR[stats.highlight.kind] ?? stats.highlight.kind)}${stats.projectName ? ` em ${esc(stats.projectName)}` : ''}</p>
+      <p style="margin:0 0 3px;color:#93a4c0;font-size:11px;">${esc(KIND_SINGULAR[stats.highlight.kind] ?? stats.highlight.kind)}${stats.projectName ? ` em ${esc(stats.projectName)}` : ''}</p>
       <p style="margin:0;color:#c3cede;font-size:14px;line-height:1.6;">${esc(clip(stats.highlight.content ?? '', 180))}</p>
     </div>
     ` : ''}
