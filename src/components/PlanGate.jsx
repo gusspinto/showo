@@ -173,7 +173,7 @@ function FeaturePreview({ feature }) {
     defense: 'Preview real da preparação de defesa',
   }[kind]
   return (
-    <div className="plan-gate-fade">
+    <div className="plan-gate-fade" style={{ marginTop: 14 }}>
       <p style={{ margin: '0 0 8px', fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
       {kind === 'coach' && <CoachPreview />}
       {kind === 'vagas' && <VagasPreview />}
@@ -501,6 +501,11 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
                   ficar em cima de tudo em mobile e, no desktop, mudar de
                   posição via grid-area para o topo da coluna dos botões —
                   sem duplicar JSX para cada tamanho de ecrã. */}
+              {/* A preview (FeaturePreview) estava à esquerda, ao lado do cartão de
+                  preço e do testemunho, e a coluna direita ficava quase vazia por
+                  baixo do título (só os botões lá em baixo). Passa para aqui, a
+                  coluna da direita fica com o conteúdo a mostrar o valor, a
+                  esquerda fica só com preço + testemunho, mais equilibrado. */}
               <div className="plan-gate-title-block">
                 <p style={C.titleRight}>{title}</p>
                 <p style={C.subtitleRight}>Escolhe como queres continuar.</p>
@@ -514,10 +519,10 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
                     ))}
                   </ul>
                 )}
+                <FeaturePreview feature={feature} />
               </div>
 
               <div className="plan-gate-col-left">
-                <FeaturePreview feature={feature} />
                 {upgrade.priceLabelAnnual && (
                   <div style={{ ...C.periodToggle, margin: '0 auto 12px' }} role="group" aria-label="Periodicidade do pagamento">
                     <button type="button" style={C.periodBtn(!annual)} onClick={() => setAnnual(false)}>Mensal</button>
