@@ -1,14 +1,14 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 /* ══════════════════════════════════════════════════════════════════════════
-   RECAP SEMANAL POR EMAIL — segundas, 08:00 UTC
+   RECAP SEMANAL POR EMAIL, segundas, 08:00 UTC
    ──────────────────────────────────────────────────────────────────────────
    O recap já existia dentro da app, mas só o via quem já lá estava. O email
-   é o que traz de volta quem não está — o mesmo princípio que o Duolingo usa
+   é o que traz de volta quem não está, o mesmo princípio que o Duolingo usa
    para as streaks: comunicação recorrente que mostra progresso real e dá um
    próximo passo concreto.
 
-   Quem recebe: Plus, Pro e contas de escola — os mesmos três que a
+   Quem recebe: Plus, Pro e contas de escola, os mesmos três que a
    pricing page promete (Pricing.jsx, grupo "Mais" do Plus). Só o Grátis
    fica de fora.
 
@@ -40,8 +40,49 @@ const KIND_LABELS: Record<string, string> = {
   nota:        'notas',
 }
 
+// Rótulo no singular, para a legenda "X desta semana" por cima da citação.
+const KIND_SINGULAR: Record<string, string> = {
+  progresso:   'Progresso',
+  dificuldade: 'Dificuldade',
+  decisao:     'Decisão',
+  pesquisa:    'Pesquisa',
+  ideia:       'Ideia',
+  resultado:   'Resultado',
+  nota:        'Nota',
+}
+
+// Ordem de valor como prova de substância, não de frequência. Um resultado
+// ou uma decisão dizem mais sobre o trabalho do que uma nota solta, mesmo
+// que a nota seja o tipo mais comum na semana.
+const KIND_PRIORITY = ['resultado', 'decisao', 'dificuldade', 'progresso', 'pesquisa', 'ideia', 'nota']
+
 function esc(v: unknown) {
   return String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!))
+}
+
+function clip(text: string, max: number): string {
+  const t = text.trim()
+  return t.length > max ? t.slice(0, max).trim() + '…' : t
+}
+
+type JournalEntry = { kind: string; content: string | null; project_id: string }
+
+/* Escolhe a entrada mais substancial da semana para citar, não a que soma
+   mais vezes. Prioriza o projeto em foco; se não houver nada com texto lá,
+   olha para o resto. Dentro de cada prioridade de tipo, fica com a mais
+   longa (normalmente a mais desenvolvida). Devolve null quando não há
+   nenhuma entrada com texto real; nesse caso o email cai para a versão
+   antiga, por contagem. */
+function pickHighlight(weekEntries: JournalEntry[], topProjectId: string | undefined): JournalEntry | null {
+  const withText = (list: JournalEntry[]) => list.filter(e => (e.content ?? '').trim().length > 0)
+  const inFocus = withText(weekEntries.filter(e => e.project_id === topProjectId))
+  const pool = inFocus.length ? inFocus : withText(weekEntries)
+  if (!pool.length) return null
+  for (const kind of KIND_PRIORITY) {
+    const match = pool.filter(e => e.kind === kind)
+    if (match.length) return match.sort((a, b) => (b.content?.length ?? 0) - (a.content?.length ?? 0))[0]
+  }
+  return pool[0]
 }
 
 /** Segunda-feira 00:00 UTC da semana a que `d` pertence. */
@@ -64,6 +105,7 @@ type Stats = {
   projectName: string | null
   daysToDefense: number | null
   tasksDue: number
+  highlight: JournalEntry | null
 }
 
 /* ── Email ──
@@ -73,38 +115,45 @@ function buildHtml(firstName: string, weekLabel: string, stats: Stats, quiet: bo
   const stat = (value: string, label: string, color = '#eef2f8') => `
     <td style="width:33.33%;padding:14px 8px;background:#0e1729;border:1px solid #1e3050;text-align:center;">
       <div style="font-size:24px;font-weight:700;color:${color};line-height:1;">${esc(value)}</div>
-      <div style="font-size:11px;color:#7d93b0;margin-top:5px;">${esc(label)}</div>
+      <div style="font-size:11px;color:#a3b4ce;margin-top:5px;">${esc(label)}</div>
     </td>`
 
   const headline = quiet
     ? 'A semana passada esteve parada'
     : `${stats.entries} ${stats.entries === 1 ? 'registo' : 'registos'} na semana passada`
 
+  const defenseLine = stats.daysToDefense != null && stats.daysToDefense >= 0
+    ? `Faltam <strong style="color:#eef2f8;">${stats.daysToDefense} dias</strong> para a defesa.`
+    : ''
+
   const body = quiet
-    ? `Não houve registos entre ${esc(weekLabel)}. Acontece — semanas de testes, semanas cheias.
+    ? `Não houve registos entre ${esc(weekLabel)}. Acontece, semanas de testes, semanas cheias.
        ${stats.daysToDefense != null && stats.daysToDefense >= 0
         ? `Ainda assim, faltam <strong style="color:#eef2f8;">${stats.daysToDefense} dias</strong> para a tua defesa.`
         : ''}
        Um registo de duas linhas hoje chega para a semana voltar a contar.`
-    : `${stats.projectName ? `Em <strong style="color:#eef2f8;">${esc(stats.projectName)}</strong>, registaste` : 'Registaste'}
-       ${stats.entries} ${stats.entries === 1 ? 'entrada' : 'entradas'} em ${stats.activeDays} ${stats.activeDays === 1 ? 'dia' : 'dias'} diferentes${
-        stats.kinds.length ? ` — sobretudo ${esc(stats.kinds.map(k => KIND_LABELS[k] ?? k).slice(0, 3).join(', '))}` : ''}.
-       ${stats.daysToDefense != null && stats.daysToDefense >= 0
-        ? ` Faltam <strong style="color:#eef2f8;">${stats.daysToDefense} dias</strong> para a defesa.`
-        : ''}`
+    : stats.highlight
+      // Com citação em destaque no topo, este parágrafo fica só para o
+      // prazo da defesa, o resto já foi dito pela citação e pelos números.
+      ? defenseLine
+      // Sem nenhuma entrada com texto para citar (ex: só registos vazios
+      // vindos do GitHub): cai para a versão antiga, por contagem.
+      : `${stats.projectName ? `Em <strong style="color:#eef2f8;">${esc(stats.projectName)}</strong>, registaste` : 'Registaste'}
+         ${stats.entries} ${stats.entries === 1 ? 'entrada' : 'entradas'} em ${stats.activeDays} ${stats.activeDays === 1 ? 'dia' : 'dias'} diferentes${
+          stats.kinds.length ? `, sobretudo ${esc(stats.kinds.map(k => KIND_LABELS[k] ?? k).slice(0, 3).join(', '))}` : ''}.
+         ${defenseLine}`
 
   return `
 <div style="background:#03060d;padding:44px 20px;font-family:-apple-system,Helvetica,Arial,sans-serif;">
   <div style="max-width:480px;margin:0 auto;">
     <img src="${APP}/icon.png" alt="Showo" width="30" height="30" style="display:block;margin:0 auto 22px;border:0;" />
 
-    <p style="margin:0 0 6px;color:#7d93b0;font-size:12px;text-align:center;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;">
+    <p style="margin:0 0 6px;color:#a3b4ce;font-size:12px;text-align:center;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;">
       Recap · ${esc(weekLabel)}
     </p>
     <h1 style="margin:0 0 22px;color:#eef2f8;font-size:22px;line-height:1.3;text-align:center;font-weight:700;">
       ${esc(firstName)}, ${headline}
     </h1>
-
     <table role="presentation" width="100%" style="border-collapse:collapse;margin-bottom:22px;">
       <tr>
         ${stat(String(stats.entries), stats.entries === 1 ? 'registo' : 'registos')}
@@ -113,7 +162,14 @@ function buildHtml(firstName: string, weekLabel: string, stats: Stats, quiet: bo
       </tr>
     </table>
 
-    <p style="margin:0 0 22px;color:#c3cede;font-size:14px;line-height:1.7;">${body}</p>
+    ${!quiet && stats.highlight ? `
+    <div style="border-left:3px solid #2a4275;padding:2px 0 2px 14px;margin:0 0 22px;">
+      <p style="margin:0 0 3px;color:#93a4c0;font-size:11px;">${esc(KIND_SINGULAR[stats.highlight.kind] ?? stats.highlight.kind)}${stats.projectName ? ` em ${esc(stats.projectName)}` : ''}</p>
+      <p style="margin:0;color:#c3cede;font-size:14px;line-height:1.6;">${esc(clip(stats.highlight.content ?? '', 180))}</p>
+    </div>
+    ` : ''}
+
+    ${body.trim() ? `<p style="margin:0 0 22px;color:#c3cede;font-size:14px;line-height:1.7;">${body}</p>` : ''}
 
     ${stats.tasksDue > 0 ? `
     <div style="background:rgba(27,120,247,0.08);border:1px solid rgba(27,120,247,0.25);border-radius:10px;padding:14px 16px;margin-bottom:22px;">
@@ -171,7 +227,7 @@ Deno.serve(async (req) => {
     const lastMonday = new Date(thisMonday); lastMonday.setUTCDate(lastMonday.getUTCDate() - 7)
     const weekLabel = `${dayLabel(lastMonday)} – ${dayLabel(new Date(thisMonday.getTime() - 86400000))}`
 
-    // Plus, Pro e contas de escola — a mesma fronteira que a pricing page
+    // Plus, Pro e contas de escola, a mesma fronteira que a pricing page
     // promete. Só o Grátis fica de fora. ('build'=Plus, 'launch'=Pro, ver
     // PLAN_ALIASES em src/lib/plans.js.)
     const { data: candidates, error: candErr } = await supabase
@@ -207,7 +263,7 @@ Deno.serve(async (req) => {
         const since = new Date(thisMonday); since.setUTCDate(since.getUTCDate() - 28)
         const { data: entries } = await supabase
           .from('project_journal_entries')
-          .select('kind, created_at, project_id')
+          .select('kind, content, created_at, project_id')
           .eq('user_id', p.id)
           .gte('created_at', since.toISOString())
 
@@ -258,7 +314,7 @@ Deno.serve(async (req) => {
           ? Math.ceil((new Date(focus.defense_date + 'T00:00:00Z').getTime() - now.getTime()) / 86400000)
           : null
 
-        // Tarefas de turma por entregar — só relevante para quem tem turmas.
+        // Tarefas de turma por entregar, só relevante para quem tem turmas.
         let tasksDue = 0
         const { data: memberships } = await supabase
           .from('class_members').select('class_id').eq('user_id', p.id)
@@ -283,6 +339,7 @@ Deno.serve(async (req) => {
           projectName: focus?.name ?? null,
           daysToDefense,
           tasksDue,
+          highlight: pickHighlight(weekEntries, topProjectId),
         }
 
         const { data: authUser } = await supabase.auth.admin.getUserById(p.id)
@@ -294,7 +351,7 @@ Deno.serve(async (req) => {
         // Semana com substância: vale a pena oferecer o post do LinkedIn.
         const showPost = weekEntries.length >= 3
         const subject = quiet
-          ? 'A tua semana no Showo — vamos recomeçar?'
+          ? 'A tua semana no Showo, vamos recomeçar?'
           : `${weekEntries.length} ${weekEntries.length === 1 ? 'registo' : 'registos'} na semana passada${streak > 1 ? ` · ${streak} semanas seguidas` : ''}`
 
         const res = await fetch('https://api.resend.com/emails', {
@@ -310,7 +367,7 @@ Deno.serve(async (req) => {
         if (!res.ok) { errors.push(await res.text()); continue }
 
         // Sem isto, não havia nenhuma prova auditável de um envio ter
-        // mesmo acontecido — só o campo em profiles, que uma falha a meio
+        // mesmo acontecido, só o campo em profiles, que uma falha a meio
         // (ex: o update abaixo falhar) também deixava sem rasto nenhum.
         const { id: resendId } = await res.json()
         if (resendId) {
