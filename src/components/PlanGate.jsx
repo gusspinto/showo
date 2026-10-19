@@ -96,7 +96,7 @@ function DefensePreview() {
 
 function RecapPreview() {
   return (
-    <div style={{ background: '#03060d', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 14px 14px' }}>
+    <div style={{ background: '#03060d', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 14px 14px', marginTop: 10 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
         <span style={{ width: 20, height: 20, borderRadius: 6, background: '#1a60c8', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 9.5, fontWeight: 800 }}>S</span>
         <span style={{ fontSize: 9.5, color: '#93a4c0' }}>Showo <span style={{ color: '#93a4c0' }}>hello@showo.pt</span></span>
@@ -130,10 +130,12 @@ function RecapPreview() {
 // "Gerar o post" (confirmado em send-weekly-recap); a IA só escreve isto
 // depois de a pessoa clicar, com o diário real dela nesse momento. Por
 // isso a etiqueta "Exemplo" explícita, não misturado com o bloco do email.
+// Entra primeiro no FeaturePreview porque é o gancho principal da faixa do
+// dashboard (ícone de LinkedIn), o email vem depois como prova de suporte.
 function LinkedInPostPreview() {
   return (
     <div>
-      <p style={{ margin: '10px 0 6px', fontSize: 9, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+      <p style={{ margin: '0 0 6px', fontSize: 9, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
         Exemplo · resultado do botão "Gerar o post", não conteúdo do email
       </p>
       <div style={{ background: '#fff', borderRadius: 10, padding: 12 }}>
@@ -160,7 +162,7 @@ function FeaturePreview({ feature }) {
   const kind = FEATURE_PREVIEW_KIND[feature] || 'coach'
   const label = {
     coach: 'Preview real do Coach IA',
-    recap: 'Preview real: o email que recebes',
+    recap: 'Preview real: o que vais poder mostrar',
     vagas: 'Preview real das vagas de estágio',
     defense: 'Preview real da preparação de defesa',
   }[kind]
@@ -170,7 +172,7 @@ function FeaturePreview({ feature }) {
       {kind === 'coach' && <CoachPreview />}
       {kind === 'vagas' && <VagasPreview />}
       {kind === 'defense' && <DefensePreview />}
-      {kind === 'recap' && <><RecapPreview /><LinkedInPostPreview /></>}
+      {kind === 'recap' && <><LinkedInPostPreview /><RecapPreview /></>}
     </div>
   )
 }
