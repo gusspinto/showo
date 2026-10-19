@@ -362,6 +362,7 @@ function SparkLine({ data, labels, height = 80, color = C.blue }) {
 
 // ─── OVERVIEW TAB ───────────────────────────────────────────
 const SORT_OPTIONS = [
+  { id: 'usage', label: 'Quem mais usa' },
   { id: 'newest', label: 'Mais recente' },
   { id: 'oldest', label: 'Mais antigo' },
   { id: 'active', label: 'Última atividade' },
@@ -421,7 +422,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
   const [userSearch, setUserSearch] = useState('')
   const [showLimitUsers, setShowLimitUsers] = useState(false)
   const [showSubscribers, setShowSubscribers] = useState(false)
-  const [sort, setSort] = useState('active')
+  const [sort, setSort] = useState('usage')
   // Filtros por categoria — role já existia como etiqueta solta na lista,
   // mas não dava para filtrar por ele nem pelos outros eixos que já estão
   // na BD (occupation vem do onboarding: "Aluno", "Freelancer", "Developer"
@@ -611,6 +612,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
     .filter(u => filterAccountType === 'all' || (u.account_type || 'individual') === filterAccountType)
     .filter(u => filterOccupation === 'all' || (u.occupation || 'Não indicado') === filterOccupation)
     .sort((a, b) => {
+      if (sort === 'usage') return (b.total_xp || 0) - (a.total_xp || 0)
       if (sort === 'oldest') return new Date(a.created_at) - new Date(b.created_at)
       if (sort === 'active') return (b.last_active_at ? new Date(b.last_active_at) : 0) - (a.last_active_at ? new Date(a.last_active_at) : 0)
       if (sort === 'projects') return (projectCountMap[b.id] || 0) - (projectCountMap[a.id] || 0)
@@ -863,8 +865,14 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
             {sortedUsers.map(u => {
               const regDate = new Date(u.created_at)
               const diffH = Math.floor((now - regDate) / 3600000)
-              const lastSeenH = u.last_active_at ? Math.floor((now - new Date(u.last_active_at)) / 3600000) : null
-              const isOnline = lastSeenH !== null && lastSeenH < 1
+              // "Online agora" com janela de 1h dizia isso de alguém que já
+              // tinha saído há 55 minutos — 10 min é o que se espera de um
+              // indicador "agora" a sério. lastSeenMin alimenta o rótulo em
+              // minutos, não só horas, para essa primeira hora não ficar
+              // tudo arredondado a "ativo há 0h".
+              const lastSeenMin = u.last_active_at ? Math.floor((now - new Date(u.last_active_at)) / 60000) : null
+              const lastSeenH = lastSeenMin !== null ? Math.floor(lastSeenMin / 60) : null
+              const isOnline = lastSeenMin !== null && lastSeenMin < 10
               const referrerDomain = u.signup_referrer ? u.signup_referrer.replace(/^https?:\/\//, '').split('/')[0] : null
               const pc = projectCountMap[u.id] || 0
 
@@ -875,7 +883,8 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
               }
 
               const lastActiveLabel = u.last_active_at ? (() => {
-                if (lastSeenH < 1) return 'online agora'
+                if (lastSeenMin < 10) return 'online agora'
+                if (lastSeenMin < 60) return `ativo há ${lastSeenMin}min`
                 if (lastSeenH < 24) return `ativo há ${lastSeenH}h`
                 return fmtDate(u.last_active_at)
               })() : 'nunca entrou'
@@ -921,6 +930,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
                       {isOnline && '● '}{lastActiveLabel}
                     </span>
                     {pc > 0 && <span style={{ fontSize: 10, color: C.blue }}>{pc} projeto{pc > 1 ? 's' : ''}</span>}
+                    {sort === 'usage' && u.total_xp > 0 && <span style={{ fontSize: 10, color: C.yellow }}>{u.total_xp} XP</span>}
                     <span style={{ fontSize: 10, color: C.subtle }}>registado {fmtDate(u.created_at)}</span>
                   </div>
                 </div>
