@@ -26,11 +26,11 @@ function orderTestimonials(feature) {
   return [list[i], ...list.slice(0, i), ...list.slice(i + 1)]
 }
 
-// Preview real do que se recebe — pedido do Gustavo depois do teaser do
+// Preview real do que se recebe, pedido do Gustavo depois do teaser do
 // recap semanal ("eles têm de ter uma preview do que vai realmente ver se
 // comprarem"). Em vez de um ícone genérico, mostra uma réplica fiel de uma
-// das telas reais que a feature desbloqueia, com o mesmo texto/estrutura
-// que o utilizador vai mesmo ver — não uma promessa abstrata. Mapeia cada
+// das telas reais que a feature desbloqueia, com o mesmo texto e estrutura
+// que o utilizador vai mesmo ver, não uma promessa abstrata. Mapeia cada
 // feature de gate para a preview mais relevante; o que não tem mapa
 // específico cai no Coach IA, a feature paga mais universal de todas.
 const FEATURE_PREVIEW_KIND = {
@@ -52,7 +52,7 @@ function CoachPreview() {
         sim, por favor
       </div>
       <div style={{ alignSelf: 'flex-start', maxWidth: '85%', background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: '12px 12px 12px 4px', padding: '9px 12px', fontSize: 12.5, color: 'var(--color-text)', lineHeight: 1.5 }}>
-        Pronto — já tens um texto específico ao teu projeto, pronto a colar.
+        Pronto. Já tens um texto específico ao teu projeto, pronto a colar.
       </div>
     </div>
   )

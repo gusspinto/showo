@@ -11,21 +11,20 @@ const LinkedInMark = ({ size = 14 }) => (
 )
 
 /* Teaser do recap semanal automático (feature "weeklyRecap", a partir do
-   Plus) para quem está no Grátis. Em vez de um cartão azul genérico com
-   ícone+checklist (o padrão "AI slop" que o Gustavo apontou — bonito mas
-   sem nada concreto), isto mostra uma réplica fiel do email real que a
-   conta recebe toda a segunda: mesmo fundo quase-preto, mesma eyebrow em
-   maiúsculas, mesmo estilo de stat tile (#0e1729/#1e3050), ver
-   supabase/functions/send-weekly-recap.
+   Plus) para quem está no Grátis. Mostra dois ecrãs em sequência, cada um
+   uma réplica fiel do que a conta recebe/produz a sério, não um cartão
+   genérico com ícone e checklist.
 
-   Só o email não respondia à pergunta real ("o que ganho com isto na
-   prática?") — falta o elo seguinte: o recap serve de base a um post de
-   LinkedIn real (feature já existente, WeeklyPostCard + edge function
-   linkedin-post), que é como a consistência chega a professores e
-   recrutadores. Por isso o teaser agora mostra os dois ecrãs ligados: o
-   email, depois o post que sai dele, como uma sequência — não dois
-   cartões soltos. O texto do post segue as mesmas regras do gerador real
-   (1ª pessoa, concreto, sem "aprendi imenso", zero emojis/hashtags).
+   1. O email (mesmo fundo quase preto, mesma eyebrow em maiúsculas, mesmo
+      estilo de stat tile, ver supabase/functions/send-weekly-recap), com
+      cabeçalho de remetente e assunto, para ler como um email aberto a
+      sério e não como uma janela qualquer.
+   2. O post de LinkedIn que sai do recap (feature já existente,
+      WeeklyPostCard + edge function linkedin-post), porque mostrar o email
+      sozinho não respondia à pergunta real: o que se ganha com isto na
+      prática é consistência visível a professores e recrutadores. O texto
+      do post segue as mesmas regras do gerador real: primeira pessoa,
+      concreto, sem "aprendi imenso", zero emojis ou hashtags.
 
    Números sobem de 0 ao valor real ao aparecer, uma vez só, nunca em
    loop. Respeita prefers-reduced-motion. Só para B2C (isSchoolAccount já
@@ -116,17 +115,19 @@ export default function WeeklyRecapTeaser({ userId, onDismiss, onUpgrade }) {
         </p>
       </div>
 
-      {/* Réplica do email real — não é decoração, é literalmente o que a
-          conta recebe (mesmas cores e estrutura de send-weekly-recap). */}
+      {/* Réplica do email real, não decoração: cabeçalho com remetente e
+          assunto, para ler como um email mesmo aberto na caixa de entrada
+          (mesmas cores e estrutura de send-weekly-recap). */}
       <div className="recap-teaser-window" style={{ background: '#03060d', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '14px 16px 16px', margin: '14px 0 12px', boxShadow: '0 12px 28px rgba(0,0,0,0.35)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12 }}>
-          <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#ff5f57' }} />
-          <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#febc2e' }} />
-          <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#28c840' }} />
-          <span style={{ fontSize: 10, color: '#5a6b85', marginLeft: 4 }}>hello@showo.pt · segunda-feira, 08:00</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 12 }}>
+          <span style={{ width: 24, height: 24, borderRadius: 7, background: '#1a60c8', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 11, fontWeight: 800 }}>S</span>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ fontSize: 11.5, fontWeight: 700, color: '#eef2f8' }}>Showo <span style={{ fontWeight: 400, color: '#5a6b85' }}>hello@showo.pt</span></div>
+            <div style={{ fontSize: 10, color: '#5a6b85' }}>Para ti · segunda-feira, 08:00</div>
+          </div>
         </div>
         <p style={{ margin: '0 0 4px', color: '#7d93b0', fontSize: 10, textAlign: 'center', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 700 }}>
-          Recap · 13 – 19 out
+          Recap · 13 a 19 de outubro
         </p>
         <p style={{ margin: '0 0 14px', color: '#eef2f8', fontSize: 16, lineHeight: 1.3, textAlign: 'center', fontWeight: 700 }}>
           5 registos na semana passada
@@ -143,11 +144,12 @@ export default function WeeklyRecapTeaser({ userId, onDismiss, onUpgrade }) {
         <span style={{ fontSize: 11, color: 'var(--on-dim)' }}>e viras isso num post, pronto a partilhar</span>
       </div>
 
-      {/* Mesma feature que já existe (WeeklyPostCard → linkedin-post) — o
-          texto segue as regras reais do gerador: 1ª pessoa, concreto, sem
-          "aprendi imenso", zero emojis/hashtags. Cartão claro de propósito,
-          como um LinkedIn a sério teria, para contrastar com o email escuro
-          e ler-se como um screenshot, não como decoração a condizer. */}
+      {/* Mesma feature que já existe (WeeklyPostCard, edge function
+          linkedin-post), o texto segue as regras reais do gerador:
+          primeira pessoa, concreto, sem "aprendi imenso", zero emojis ou
+          hashtags. Cartão claro de propósito, como um LinkedIn a sério
+          teria, para contrastar com o email escuro e ler-se como um
+          screenshot, não como decoração a condizer. */}
       <div className="recap-teaser-post" style={{ background: '#fff', borderRadius: 12, padding: '14px 16px', margin: '0 0 14px', boxShadow: '0 12px 28px rgba(0,0,0,0.35)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
           <span style={{ width: 28, height: 28, borderRadius: '50%', background: '#1a60c8', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 12, fontWeight: 800 }}>G</span>
@@ -167,7 +169,7 @@ export default function WeeklyRecapTeaser({ userId, onDismiss, onUpgrade }) {
       </div>
 
       <p className="recap-teaser-quote" style={{ margin: '0 0 16px', fontSize: 12, color: 'var(--on-dim)', lineHeight: 1.5 }}>
-        Os dois gerados sozinhos a partir do diário — zero esforço extra, e não é texto inventado: são os teus registos e números reais.
+        Os dois são gerados sozinhos a partir do diário, zero esforço extra. Não é texto inventado: são os teus registos e números reais.
       </p>
 
       <button
