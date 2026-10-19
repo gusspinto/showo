@@ -8,18 +8,24 @@ import { CalendarMarkIcon as CalendarMark } from '@solar-icons/react/bold/calend
    tipo de trabalho, não uma redação gerada por IA: é isso que o recap
    realmente é, ver supabase/functions/send-weekly-recap).
 
-   Só para B2C (isSchoolAccount já filtra antes de renderizar) — escola
-   tem o seu próprio canal (Navbar, painel "Turma"). Objetivo: a pessoa
-   vê o que está a perder sem ter de ler um email que nunca abre (0
-   opens medidos nalguns lotes), mesmo sítio onde já clica "Experimenta
-   o Plus". Dispensável, guarda a escolha em localStorage. */
+   Usa o painel de marca (sdb-panel--brand, o mesmo gradiente azul do
+   cartão "Experimenta o Plus") em vez de um tom escuro genérico — a
+   primeira versão (fundo quase preto sobre o resto da dashboard, já
+   escura) não se destacava nem parecia nada de especial. Só para B2C
+   (isSchoolAccount já filtra antes de renderizar). Dispensável, guarda
+   a escolha em localStorage. */
 
-const STAT = (value, label) => (
-  <div style={{ flex: 1, padding: '10px 6px', background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: 8, textAlign: 'center' }}>
-    <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--color-text)', lineHeight: 1 }}>{value}</div>
-    <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', marginTop: 4 }}>{label}</div>
-  </div>
-)
+function Stat({ value, label }) {
+  return (
+    <div style={{
+      flex: 1, padding: '12px 8px', textAlign: 'center', borderRadius: 10,
+      background: 'var(--on-fill)', border: '1px solid var(--on-line)',
+    }}>
+      <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--on)', lineHeight: 1, fontFamily: 'var(--font-heading)' }}>{value}</div>
+      <div style={{ fontSize: 10.5, color: 'var(--on-dim)', marginTop: 5, textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>{label}</div>
+    </div>
+  )
+}
 
 export default function WeeklyRecapTeaser({ userId, onDismiss }) {
   const navigate = useNavigate()
@@ -31,38 +37,44 @@ export default function WeeklyRecapTeaser({ userId, onDismiss }) {
   }
 
   return (
-    <section className="sdb-panel sdb-panel--tint" style={{ position: 'relative' }}>
+    <section className="sdb-panel sdb-panel--brand" style={{ position: 'relative' }}>
       <button
         onClick={dismiss}
         aria-label="Dispensar"
-        style={{ position: 'absolute', top: 10, right: 10, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-secondary)', padding: 4, display: 'flex' }}
+        style={{ position: 'absolute', top: 14, right: 14, background: 'var(--on-fill)', border: 'none', borderRadius: 7, cursor: 'pointer', color: 'var(--on-dim)', padding: 5, display: 'flex' }}
       ><X size={14} /></button>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-        <span style={{ width: 26, height: 26, borderRadius: 8, background: 'var(--color-primary-subtle)', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <CalendarMark size={14} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, paddingRight: 28 }}>
+        <span style={{ width: 32, height: 32, borderRadius: 9, background: 'var(--on-fill)', border: '1px solid var(--on-line)', color: 'var(--on)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <CalendarMark size={16} />
         </span>
-        <p style={{ margin: 0, fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+        <p style={{ margin: 0, fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--on)', fontFamily: 'var(--font-heading)', lineHeight: 1.3 }}>
           O que recebes todas as segundas a partir do Plus
         </p>
       </div>
 
-      <p style={{ margin: '0 0 12px', fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', lineHeight: 1.55 }}>
-        Um email automático com o que avançaste na semana, gerado a partir do diário — sem teres de escrever nada. Exemplo real:
+      <p style={{ margin: '0 0 14px', fontSize: 'var(--text-sm)', color: 'var(--on-dim)', lineHeight: 1.55 }}>
+        Um email automático com o que avançaste na semana, gerado a partir do diário — sem teres de escrever nada.
       </p>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-        {STAT('5', 'registos')}
-        {STAT('4', 'dias ativos')}
-        {STAT('12', 'dias p/ defesa')}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+        <span style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--on)', background: 'var(--on-fill)', border: '1px solid var(--on-line)', padding: '2px 8px', borderRadius: 100, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Exemplo real</span>
       </div>
-      <p style={{ margin: '0 0 14px', fontSize: 11, color: 'var(--color-text-secondary)', fontStyle: 'italic' }}>
-        "Em DragBuild, registaste 5 entradas em 4 dias diferentes — sobretudo progresso, decisões." · exemplo
+
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+        <Stat value="5" label="registos" />
+        <Stat value="4" label="dias ativos" />
+        <Stat value="12" label="dias p/ defesa" />
+      </div>
+      <p style={{ margin: '0 0 18px', fontSize: 12.5, color: 'var(--on-dim)', fontStyle: 'italic', lineHeight: 1.5, borderLeft: '2px solid var(--on-line)', paddingLeft: 10 }}>
+        "Em DragBuild, registaste 5 entradas em 4 dias diferentes — sobretudo progresso, decisões."
       </p>
 
       <button
         onClick={() => navigate('/pricing')}
-        style={{ fontSize: 13, fontWeight: 700, padding: '9px 16px', borderRadius: 8, border: 'none', background: 'var(--color-primary)', color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}
+        style={{ fontSize: 13, fontWeight: 700, padding: '10px 20px', borderRadius: 100, border: 'none', background: '#fff', color: 'var(--color-primary-deep)', cursor: 'pointer', fontFamily: 'inherit', transition: 'opacity 0.15s' }}
+        onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
+        onMouseLeave={e => e.currentTarget.style.opacity = '1'}
       >
         Ver planos
       </button>
