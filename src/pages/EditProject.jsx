@@ -1456,13 +1456,66 @@ function GithubAdvancedCard({ project }) {
         </>
       ) : (
       <>
-      {/* Texto e botão em cima um do outro, com espaço a sério — espalmados
-          lado a lado num card pequeno não tinham onde respirar. */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16, padding: '14px 16px', background: colors.bgAlt, borderRadius: 10, border: `1px solid ${colors.border}` }}>
+      {/* Um cartão só (estado + ações), em vez de dois empilhados — ícone com
+          indicador de ligação, nome em destaque, e os botões centrados por
+          baixo. Em ecrãs estreitos os botões quebram linha e continuam
+          centrados, sem precisar de media query. */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, marginBottom: 16, padding: '18px 16px', background: colors.bgAlt, borderRadius: 12, border: `1px solid ${colors.border}` }}>
         {connection ? (
-          <span style={{ fontSize: 12.5, color: colors.text, lineHeight: 1.5 }}>
-            Ligado como <strong>{connection.github_login}</strong>. Já dá para sincronizar repos privados.
-          </span>
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, maxWidth: '100%' }}>
+              <span style={{ position: 'relative', flexShrink: 0, width: 38, height: 38, borderRadius: '50%', background: colors.card, border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="19" height="19" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" style={{ color: colors.text }}><path fillRule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" /></svg>
+                <span style={{ position: 'absolute', bottom: -1, right: -1, width: 11, height: 11, borderRadius: '50%', background: colors.green, border: `2px solid ${colors.bgAlt}` }} />
+              </span>
+              <div style={{ minWidth: 0, textAlign: 'left' }}>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: colors.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{connection.github_login}</div>
+                <div style={{ fontSize: 11.5, color: colors.subtle }}>Conta ligada · lê repositórios privados</div>
+              </div>
+            </div>
+
+            <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 8, width: '100%' }}>
+              <button
+                type="button"
+                onClick={() => showRepoPicker ? setShowRepoPicker(false) : openRepoPicker()}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.text, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                <Link2 size={13} />
+                {repo ? 'Trocar repositório' : 'Escolher repositório'}
+              </button>
+              <button
+                type="button"
+                onClick={() => removeGithubWebhook(project.id).then(() => disconnectGithub(user.id)).then(() => setConnection(null))}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: 'rgba(244,63,94,0.1)', border: '1px solid rgba(244,63,94,0.3)', borderRadius: 8, color: colors.red, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                <X size={13} />
+                Desligar
+              </button>
+
+              {showRepoPicker && (
+                <div style={{ position: 'absolute', top: 'calc(100% + 8px)', left: '50%', transform: 'translateX(-50%)', zIndex: 10, width: 320, maxWidth: '100%', maxHeight: 280, overflowY: 'auto', background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.35)', textAlign: 'left' }}>
+                  {loadingRepos && <p style={{ margin: 0, padding: 14, fontSize: 12.5, color: colors.muted }}>A carregar…</p>}
+                  {repoListError && <p style={{ margin: 0, padding: 14, fontSize: 12.5, color: '#ef4444' }}>{repoListError}</p>}
+                  {repoList && !loadingRepos && repoList.length === 0 && (
+                    <p style={{ margin: 0, padding: 14, fontSize: 12.5, color: colors.muted }}>Não encontrámos nenhum repositório teu.</p>
+                  )}
+                  {repoList && repoList.map(r => (
+                    <button
+                      key={r.full_name}
+                      type="button"
+                      onClick={() => pickRepo(r.html_url)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left', padding: '10px 14px', background: 'transparent', border: 'none', borderBottom: `1px solid ${colors.border}`, color: colors.text, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}
+                    >
+                      <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.full_name}</span>
+                      {r.private && (
+                        <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, color: colors.subtle, background: colors.bgAlt, borderRadius: 5, padding: '2px 6px' }}>privado</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, textAlign: 'center' }}>
             <span style={{ fontSize: 12.5, color: colors.muted, lineHeight: 1.5 }}>Sem conta GitHub ligada. Só lê repositórios públicos.</span>
@@ -1477,48 +1530,6 @@ function GithubAdvancedCard({ project }) {
           </div>
         )}
       </div>
-
-      {connection && (
-        <div style={{ marginBottom: 16, position: 'relative', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-          <button
-            type="button"
-            onClick={() => showRepoPicker ? setShowRepoPicker(false) : openRepoPicker()}
-            style={{ padding: '8px 14px', background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.text, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-          >
-            {repo ? 'Trocar repositório' : 'Escolher repositório'}
-          </button>
-          <button
-            type="button"
-            onClick={() => removeGithubWebhook(project.id).then(() => disconnectGithub(user.id)).then(() => setConnection(null))}
-            style={{ padding: '8px 14px', background: 'rgba(244,63,94,0.1)', border: '1px solid rgba(244,63,94,0.3)', borderRadius: 8, color: colors.red, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-          >
-            Desligar
-          </button>
-
-          {showRepoPicker && (
-            <div style={{ position: 'absolute', top: '110%', left: 0, zIndex: 10, width: 320, maxHeight: 280, overflowY: 'auto', background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.35)' }}>
-              {loadingRepos && <p style={{ margin: 0, padding: 14, fontSize: 12.5, color: colors.muted }}>A carregar…</p>}
-              {repoListError && <p style={{ margin: 0, padding: 14, fontSize: 12.5, color: '#ef4444' }}>{repoListError}</p>}
-              {repoList && !loadingRepos && repoList.length === 0 && (
-                <p style={{ margin: 0, padding: 14, fontSize: 12.5, color: colors.muted }}>Não encontrámos nenhum repositório teu.</p>
-              )}
-              {repoList && repoList.map(r => (
-                <button
-                  key={r.full_name}
-                  type="button"
-                  onClick={() => pickRepo(r.html_url)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left', padding: '10px 14px', background: 'transparent', border: 'none', borderBottom: `1px solid ${colors.border}`, color: colors.text, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}
-                >
-                  <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.full_name}</span>
-                  {r.private && (
-                    <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, color: colors.subtle, background: colors.bgAlt, borderRadius: 5, padding: '2px 6px' }}>privado</span>
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
 
       {!repo ? (
         <p style={{ margin: 0, fontSize: 13.5, color: colors.muted, lineHeight: 1.6 }}>
