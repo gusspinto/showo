@@ -19,7 +19,6 @@ import { CopyIcon as Copy } from '@solar-icons/react/bold/copy'
 import { SquareArrowRightUpIcon as ExternalLink } from '@solar-icons/react/bold/square-arrow-right-up'
 import { DangerTriangleIcon as AlertTriangle } from '@solar-icons/react/bold/danger-triangle'
 import { TrashBinMinimalisticIcon as Trash2 } from '@solar-icons/react/bold/trash-bin-minimalistic'
-import { RefreshCircleIcon as RefreshCw } from '@solar-icons/react/bold/refresh-circle'
 import { Code2Icon as Code } from '@solar-icons/react/bold/code-2'
 import { looksLikeSpam } from '../lib/score'
 import { Select } from '../components/ui'
@@ -1335,9 +1334,21 @@ function GithubAdvancedCard({ project }) {
   const [removed, setRemoved] = useState(null)
   const [githubUrlOverride, setGithubUrlOverride] = useState(null)
   const [showRepoPicker, setShowRepoPicker] = useState(false)
+  const repoPickerRef = useRef(null)
   const [repoList, setRepoList] = useState(null) // null = por carregar
   const [loadingRepos, setLoadingRepos] = useState(false)
   const [repoListError, setRepoListError] = useState(null)
+
+  // Fecha o dropdown ao clicar fora dele (ou do botão que o abre) — antes só
+  // fechava ao escolher um repositório ou clicar de novo no botão.
+  useEffect(() => {
+    if (!showRepoPicker) return
+    function onPointerDown(e) {
+      if (repoPickerRef.current && !repoPickerRef.current.contains(e.target)) setShowRepoPicker(false)
+    }
+    document.addEventListener('mousedown', onPointerDown)
+    return () => document.removeEventListener('mousedown', onPointerDown)
+  }, [showRepoPicker])
   const [webhookNotice, setWebhookNotice] = useState(null) // aviso suave se o sync automático não ligou
 
   useEffect(() => {
@@ -1474,7 +1485,7 @@ function GithubAdvancedCard({ project }) {
               </div>
             </div>
 
-            <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 8, width: '100%' }}>
+            <div ref={repoPickerRef} style={{ position: 'relative', display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 8, width: '100%' }}>
               <button
                 type="button"
                 onClick={() => showRepoPicker ? setShowRepoPicker(false) : openRepoPicker()}
@@ -1539,9 +1550,17 @@ function GithubAdvancedCard({ project }) {
         </p>
       ) : (
         <>
-          <p style={{ margin: '0 0 8px', fontSize: 13.5, color: colors.muted, lineHeight: 1.6 }}>
-            Vamos ler <strong style={{ color: colors.text }}>{repo.owner}/{repo.repo}</strong>. Cada dia com
-            commits vira uma entrada no diário. {connection ? 'Com a conta ligada, também funciona com repositórios privados teus.' : 'Só funciona com repositórios públicos; liga a tua conta acima para privados.'}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+            <span style={{ fontSize: 12.5, color: colors.muted }}>A ler</span>
+            <span style={{
+              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+              fontSize: 12.5, fontWeight: 600, color: colors.text,
+              background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 6,
+              padding: '3px 9px', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>{repo.owner}/{repo.repo}</span>
+          </div>
+          <p style={{ margin: '0 0 16px', fontSize: 13, color: colors.muted, lineHeight: 1.6 }}>
+            Cada dia com commits vira uma entrada no diário. {connection ? 'Com a conta ligada, também funciona com repositórios privados teus.' : 'Só funciona com repositórios públicos; liga a tua conta acima para privados.'}
           </p>
           <p style={{ margin: '0 0 16px', fontSize: 12.5, color: webhookNotice ? '#f59e0b' : colors.subtle, lineHeight: 1.5 }}>
             {webhookNotice || (project?.github_webhook_id ? 'Sincronização automática ativa: cada push atualiza o diário sozinho.' : 'Sincroniza também manualmente, com o botão abaixo.')}
@@ -1621,12 +1640,11 @@ function GithubAdvancedCard({ project }) {
           )}
 
           <button type="button" onClick={handleSync} disabled={syncing} style={{
-            display: 'flex', alignItems: 'center', gap: 8,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%',
             background: syncing ? colors.border : colors.blue, color: '#fff', border: 'none',
             borderRadius: 10, padding: '11px 20px', fontSize: 14, fontWeight: 700,
-            cursor: syncing ? 'default' : 'pointer', fontFamily: 'inherit',
+            cursor: syncing ? 'default' : 'pointer', fontFamily: 'inherit', opacity: syncing ? 0.75 : 1,
           }}>
-            <RefreshCw size={15} style={syncing ? { animation: 'spin 1s linear infinite' } : undefined} />
             {syncing ? 'A ler o repositório…' : stats ? 'Sincronizar outra vez' : 'Sincronizar commits'}
           </button>
 
@@ -1639,7 +1657,7 @@ function GithubAdvancedCard({ project }) {
           {stats && (
             <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${colors.border}` }}>
               {!confirmRemove ? (
-                <button type="button" onClick={() => setConfirmRemove(true)} style={{ background: 'none', border: 'none', padding: 0, color: colors.subtle, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline', textUnderlineOffset: 3 }}>
+                <button type="button" onClick={() => setConfirmRemove(true)} style={{ background: 'none', border: 'none', padding: 0, color: colors.subtle, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                   Remover as entradas do GitHub do diário
                 </button>
               ) : (
@@ -1664,7 +1682,6 @@ function GithubAdvancedCard({ project }) {
       )}
       </>
       )}
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   )
 }
