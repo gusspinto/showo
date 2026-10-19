@@ -13,17 +13,21 @@ const LinkedInMark = ({ size = 14 }) => (
 /* Teaser do recap semanal automático (feature "weeklyRecap", a partir do
    Plus) para quem está no Grátis. Mostra dois ecrãs em sequência, cada um
    uma réplica fiel do que a conta recebe/produz a sério, não um cartão
-   genérico com ícone e checklist.
+   genérico com ícone e checklist. Decisão explícita (pergunta direta do
+   Gustavo: isto é email, app ou plataforma?), com etiqueta em cada bloco,
+   não deixada implícita no desenho:
 
-   1. O email (mesmo fundo quase preto, mesma eyebrow em maiúsculas, mesmo
-      estilo de stat tile, ver supabase/functions/send-weekly-recap), com
-      cabeçalho de remetente e assunto, para ler como um email aberto a
-      sério e não como uma janela qualquer.
-   2. O post de LinkedIn que sai do recap (feature já existente,
-      WeeklyPostCard + edge function linkedin-post), porque mostrar o email
-      sozinho não respondia à pergunta real: o que se ganha com isto na
-      prática é consistência visível a professores e recrutadores. O texto
-      do post segue as mesmas regras do gerador real: primeira pessoa,
+   1. EMAIL. Os 3 números (registos, dias ativos, semanas seguidas) só
+      existem por email hoje, confirmado no código: não há ecrã nenhum na
+      app com este conteúdo (mesmo fundo quase preto, mesma eyebrow em
+      maiúsculas, mesmo estilo de stat tile do email real, ver
+      supabase/functions/send-weekly-recap), com cabeçalho de remetente
+      para ler como um email aberto a sério.
+   2. NA APP. O post de LinkedIn sai de um botão dentro da app
+      (WeeklyPostCard, edge function linkedin-post), feature já existente.
+      Mostrar só o email não respondia à pergunta real: o que se ganha com
+      isto na prática é consistência visível a professores e recrutadores.
+      Texto do post segue as regras reais do gerador: primeira pessoa,
       concreto, sem "aprendi imenso", zero emojis ou hashtags.
 
    Números sobem de 0 ao valor real ao aparecer, uma vez só, nunca em
@@ -115,10 +119,19 @@ export default function WeeklyRecapTeaser({ userId, onDismiss, onUpgrade }) {
         </p>
       </div>
 
+      {/* Etiqueta deliberada: o Gustavo perguntou diretamente se isto é
+          email, app ou plataforma. Decidido e explícito, não deixado
+          implícito no desenho: os 3 números só existem por email hoje,
+          não há ecrã nenhum na app com este conteúdo (confirmado no
+          código, send-weekly-recap é só email). */}
+      <div className="recap-teaser-arrow" style={{ display: 'flex', alignItems: 'center', gap: 6, margin: '14px 0 8px', paddingLeft: 2 }}>
+        <span style={{ fontSize: 9.5, fontWeight: 800, color: 'var(--on)', background: 'var(--on-fill)', border: '1px solid var(--on-line)', padding: '3px 9px', borderRadius: 100, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Email · toda a segunda</span>
+      </div>
+
       {/* Réplica do email real, não decoração: cabeçalho com remetente e
           assunto, para ler como um email mesmo aberto na caixa de entrada
           (mesmas cores e estrutura de send-weekly-recap). */}
-      <div className="recap-teaser-window" style={{ background: '#03060d', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '14px 16px 16px', margin: '14px 0 12px', boxShadow: '0 12px 28px rgba(0,0,0,0.35)' }}>
+      <div className="recap-teaser-window" style={{ background: '#03060d', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '14px 16px 16px', margin: '0 0 12px', boxShadow: '0 12px 28px rgba(0,0,0,0.35)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 12 }}>
           <span style={{ width: 24, height: 24, borderRadius: 7, background: '#1a60c8', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 11, fontWeight: 800 }}>S</span>
           <div style={{ minWidth: 0, flex: 1 }}>
@@ -139,9 +152,12 @@ export default function WeeklyRecapTeaser({ userId, onDismiss, onUpgrade }) {
         </div>
       </div>
 
-      <div className="recap-teaser-arrow" style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '0 0 12px', paddingLeft: 4 }}>
+      <div className="recap-teaser-arrow" style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '0 0 10px', paddingLeft: 2 }}>
         <ArrowDown size={13} color="var(--on-dim)" />
-        <span style={{ fontSize: 11, color: 'var(--on-dim)' }}>e viras isso num post, pronto a partilhar</span>
+        <span style={{ fontSize: 11, color: 'var(--on-dim)' }}>abres a app e um clique transforma a semana num post</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, margin: '0 0 8px', paddingLeft: 2 }}>
+        <span style={{ fontSize: 9.5, fontWeight: 800, color: 'var(--on)', background: 'var(--on-fill)', border: '1px solid var(--on-line)', padding: '3px 9px', borderRadius: 100, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Na app · botão "Gerar post"</span>
       </div>
 
       {/* Mesma feature que já existe (WeeklyPostCard, edge function
@@ -169,7 +185,7 @@ export default function WeeklyRecapTeaser({ userId, onDismiss, onUpgrade }) {
       </div>
 
       <p className="recap-teaser-quote" style={{ margin: '0 0 16px', fontSize: 12, color: 'var(--on-dim)', lineHeight: 1.5 }}>
-        Os dois são gerados sozinhos a partir do diário, zero esforço extra. Não é texto inventado: são os teus registos e números reais.
+        Os dois são gerados sozinhos a partir do que já escreves no diário, sem trabalho extra nenhum. Não é texto inventado: são os teus registos e números reais, prontos para mostrar.
       </p>
 
       <button
