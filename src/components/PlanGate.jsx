@@ -5,7 +5,7 @@ import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { LikeIcon as ThumbUp } from '@solar-icons/react/bold/like'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { getPlan, nextPaidPlan, upgradeGain } from '../lib/plans'
+import { getPlan, nextPaidPlan, upgradeGain, planHighlights } from '../lib/plans'
 import { TESTIMONIALS } from './TestimonialsMarquee'
 
 const LinkedInMark = ({ size = 14 }) => (
@@ -227,6 +227,14 @@ const C = {
   // Frase curta a ligar o título às duas opções logo a seguir — só para não
   // ficar espaço em branco entre o título e os botões, nada mais.
   subtitleRight: { margin: '0 0 4px', fontSize: '0.85rem', color: 'var(--color-text-secondary)' },
+  // Preenche o espaço entre o título e os botões com benefícios reais
+  // (planHighlights, dados dos planos), em vez de ficar vazio no desktop
+  // enquanto a coluna da esquerda, mais alta, não chega ao fundo.
+  highlights: { display: 'flex', flexDirection: 'column', gap: '10px', margin: 'var(--sp-2) 0' },
+  highlightItem: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '10px', fontSize: '0.88rem' },
+  highlightLabel: { color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '7px' },
+  highlightCheck: { color: 'var(--color-success)', fontWeight: 800, flexShrink: 0 },
+  highlightValue: { color: 'var(--color-primary)', fontWeight: 700, whiteSpace: 'nowrap' },
   msg:   { margin: 0, fontSize: '0.98rem', color: 'var(--color-text-secondary)', lineHeight: 1.6, maxWidth: '420px' },
   body: { display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)', padding: 'var(--sp-8)' },
   // .sdb-panel--tint do Dashboard — o bloco de apoio à marca, tinta subtil,
@@ -378,6 +386,7 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
   // sabe que o "próximo tier" não chega (ex: link limpo só existe no Pro, não no Plus).
   const upgrade = forcedPlan || nextPaidPlan(planId)
   const gain = upgrade && feature ? upgradeGain(feature, planId, upgrade) : null
+  const highlights = upgrade ? planHighlights(planId, upgrade) : []
 
   // Carrossel de testemunhos, a começar no mais relevante à feature que
   // bloqueou a pessoa — pedido do Gustavo depois de ver o pop-up do
@@ -489,6 +498,16 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
               <div className="plan-gate-title-block">
                 <p style={C.titleRight}>{title}</p>
                 <p style={C.subtitleRight}>Escolhe como queres continuar.</p>
+                {highlights.length > 0 && (
+                  <ul style={{ ...C.highlights, listStyle: 'none', padding: 0 }}>
+                    {highlights.map(h => (
+                      <li key={h.label} style={C.highlightItem}>
+                        <span style={C.highlightLabel}><span style={C.highlightCheck}>✓</span>{h.label}</span>
+                        <span style={C.highlightValue}>{h.value}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
 
               <div className="plan-gate-col-left">

@@ -189,6 +189,37 @@ export function planThatUnlocks(feature, planId) {
   return null
 }
 
+// Visão geral do que o próximo plano desbloqueia, para preencher o pop-up de
+// upgrade com benefícios concretos em vez de espaço vazio ao lado dos botões
+// (pedido do Gustavo, o utilizador "não consegue perceber os benefícios reais").
+// Dados reais dos planos, não uma lista inventada, só o que de facto melhora.
+export function planHighlights(fromPlanId, toPlan) {
+  const from = getPlan(fromPlanId)
+  if (!toPlan) return []
+  const fmt = (n) => (n === Infinity ? 'ilimitado' : n)
+  const items = []
+
+  if (toPlan.maxProjects > from.maxProjects) {
+    items.push({ label: 'Projetos', value: `${fmt(from.maxProjects)} → ${fmt(toPlan.maxProjects)}` })
+  }
+  if (toPlan.ai.coach > from.ai.coach) {
+    items.push({ label: 'Coach IA', value: `${fmt(from.ai.coach)} → ${fmt(toPlan.ai.coach)} por mês` })
+  }
+  if (toPlan.career.weeklyRecap && !from.career.weeklyRecap) {
+    items.push({ label: 'Recap semanal automático', value: 'incluído' })
+  }
+  if (toPlan.career.internshipPage && !from.career.internshipPage) {
+    items.push({ label: 'Vagas de estágio', value: 'incluído' })
+  }
+  if (toPlan.career.cleanLink && !from.career.cleanLink) {
+    items.push({ label: 'Link limpo, sem /u/...', value: 'incluído' })
+  }
+  if (toPlan.ai.exportPptx > from.ai.exportPptx) {
+    items.push({ label: 'Exportar PowerPoint', value: `${fmt(from.ai.exportPptx)} → ${fmt(toPlan.ai.exportPptx)} por mês` })
+  }
+  return items.slice(0, 4)
+}
+
 // O ganho concreto na feature que bloqueou a pessoa ("3 → 15 projetos", "10 → 100 por
 // mês"), para mostrar no pop-up em vez de uma lista genérica de benefícios do plano.
 export function upgradeGain(feature, fromPlanId, toPlan) {
