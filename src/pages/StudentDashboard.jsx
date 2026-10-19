@@ -1016,10 +1016,6 @@ export default function StudentDashboard({ user, profile }) {
 
             {dashTab === 'projetos' && <>
 
-            {!isSchoolAccount && planId === 'free' && !recapTeaserDismissed && (
-              <WeeklyRecapTeaser userId={user.id} onDismiss={() => setRecapTeaserDismissed(true)} onUpgrade={() => setShowUpgradeModal('weeklyRecap')} />
-            )}
-
             {myInterests.length > 0 && (
               <section className="sdb-panel sdb-panel--tint sdb-o-recruiter sdb-opportunity">
                 <header className="sdb-panel-head">
@@ -1254,6 +1250,17 @@ export default function StudentDashboard({ user, profile }) {
                   onSync={() => setShowCalendarSync(true)}
                   onEventClick={handleEventClick}
                 />
+              </div>
+            )}
+
+            {/* Por baixo da Agenda, não na coluna principal — versão grande
+                anterior ocupava demasiado espaço e competia com o conteúdo
+                do dashboard (pedido do Gustavo). Mesma ordem em mobile
+                (sdb-o-agenda), logo a seguir, via empate de `order` + ordem
+                de declaração no DOM. */}
+            {!isSchoolAccount && planId === 'free' && !recapTeaserDismissed && (
+              <div className="sdb-o-recap">
+                <WeeklyRecapTeaser userId={user.id} onDismiss={() => setRecapTeaserDismissed(true)} onUpgrade={() => setShowUpgradeModal('weeklyRecap')} />
               </div>
             )}
 
