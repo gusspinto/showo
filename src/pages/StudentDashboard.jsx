@@ -1253,11 +1253,11 @@ export default function StudentDashboard({ user, profile }) {
               </div>
             )}
 
-            {/* Por baixo da Agenda, não na coluna principal — versão grande
+            {/* Por baixo da Agenda, não na coluna principal: a versão grande
                 anterior ocupava demasiado espaço e competia com o conteúdo
-                do dashboard (pedido do Gustavo). Mesma ordem em mobile
-                (sdb-o-agenda), logo a seguir, via empate de `order` + ordem
-                de declaração no DOM. */}
+                do dashboard (pedido do Gustavo). Em mobile fica logo a
+                seguir à Agenda (sdb-o-recap tem o mesmo `order`, 8, e vem
+                depois dela no DOM). */}
             {!isSchoolAccount && planId === 'free' && !recapTeaserDismissed && (
               <div className="sdb-o-recap">
                 <WeeklyRecapTeaser userId={user.id} onDismiss={() => setRecapTeaserDismissed(true)} onUpgrade={() => setShowUpgradeModal('weeklyRecap')} />
