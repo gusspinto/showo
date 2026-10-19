@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { LetterIcon as Mail } from '@solar-icons/react/bold/letter'
 
@@ -54,8 +53,7 @@ function EmailStat({ target, label, delay, accent }) {
   )
 }
 
-export default function WeeklyRecapTeaser({ userId, onDismiss }) {
-  const navigate = useNavigate()
+export default function WeeklyRecapTeaser({ userId, onDismiss, onUpgrade }) {
   const key = `showo_recap_teaser_dismissed_${userId}`
 
   function dismiss() {
@@ -128,7 +126,7 @@ export default function WeeklyRecapTeaser({ userId, onDismiss }) {
       </p>
 
       <button
-        onClick={() => navigate('/pricing')}
+        onClick={onUpgrade}
         style={{ fontSize: 13, fontWeight: 700, padding: '10px 20px', borderRadius: 100, border: 'none', background: '#fff', color: 'var(--color-primary-deep)', cursor: 'pointer', fontFamily: 'inherit', transition: 'opacity 0.15s' }}
         onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
         onMouseLeave={e => e.currentTarget.style.opacity = '1'}

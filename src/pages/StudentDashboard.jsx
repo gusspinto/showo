@@ -738,7 +738,11 @@ export default function StudentDashboard({ user, profile }) {
 
       {showUpgradeModal && (
         <PlanGateModal
-          message={{ title: 'Experimenta o Plus', body: 'Mais análises de IA, mais defesa, mais espaço para o teu portefólio.', feature: 'genericUpgrade' }}
+          message={
+            showUpgradeModal === 'weeklyRecap'
+              ? { title: 'O que recebes com o Plus', body: 'Um recap automático toda a segunda, gerado a partir do teu diário.', feature: 'weeklyRecap' }
+              : { title: 'Experimenta o Plus', body: 'Mais análises de IA, mais defesa, mais espaço para o teu portefólio.', feature: 'genericUpgrade' }
+          }
           onClose={() => setShowUpgradeModal(false)}
         />
       )}
@@ -1013,7 +1017,7 @@ export default function StudentDashboard({ user, profile }) {
             {dashTab === 'projetos' && <>
 
             {!isSchoolAccount && planId === 'free' && !recapTeaserDismissed && (
-              <WeeklyRecapTeaser userId={user.id} onDismiss={() => setRecapTeaserDismissed(true)} />
+              <WeeklyRecapTeaser userId={user.id} onDismiss={() => setRecapTeaserDismissed(true)} onUpgrade={() => setShowUpgradeModal('weeklyRecap')} />
             )}
 
             {myInterests.length > 0 && (
