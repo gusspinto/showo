@@ -90,21 +90,19 @@ function DefensePreview() {
 function RecapPreview() {
   return (
     <div style={{ background: '#03060d', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 14px 14px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-        <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ff5f57' }} />
-        <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#febc2e' }} />
-        <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#28c840' }} />
-        <span style={{ fontSize: 9.5, color: '#5a6b85', marginLeft: 3 }}>hello@showo.pt</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
+        <span style={{ width: 20, height: 20, borderRadius: 6, background: '#1a60c8', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 9.5, fontWeight: 800 }}>S</span>
+        <span style={{ fontSize: 9.5, color: '#5a6b85' }}>Showo <span style={{ color: '#5a6b85' }}>hello@showo.pt</span></span>
       </div>
-      <p style={{ margin: '0 0 10px', color: '#eef2f8', fontSize: 13.5, lineHeight: 1.3, fontWeight: 700 }}>5 registos na semana passada</p>
-      <div style={{ display: 'flex', gap: 6 }}>
-        {[['5', 'registos'], ['4', 'dias ativos'], ['3', 'semanas']].map(([v, l]) => (
-          <div key={l} style={{ flex: 1, padding: '8px 4px', textAlign: 'center', borderRadius: 7, background: '#0e1729', border: '1px solid #1e3050' }}>
-            <div style={{ fontSize: 16, fontWeight: 700, color: '#eef2f8', lineHeight: 1 }}>{v}</div>
-            <div style={{ fontSize: 8.5, color: '#7d93b0', marginTop: 3 }}>{l}</div>
-          </div>
-        ))}
-      </div>
+      {/* Mesma escolha do email real (pickHighlight em send-weekly-recap):
+          cita a entrada mais substancial, não lidera com um número. */}
+      <p style={{ margin: '0 0 5px', color: '#7d93b0', fontSize: 9.5, textAlign: 'center', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 700 }}>Decisão desta semana</p>
+      <p style={{ margin: '0 0 8px', color: '#eef2f8', fontSize: 13, lineHeight: 1.35, textAlign: 'center', fontWeight: 700, fontStyle: 'italic' }}>
+        "Decidi simplificar o fluxo depois de testar com duas pessoas que acharam confuso."
+      </p>
+      <p style={{ margin: 0, color: '#7d93b0', fontSize: 10.5, textAlign: 'center' }}>
+        5 registos · 4 dias ativos · <span style={{ color: '#f0a500', fontWeight: 700 }}>3ª semana seguida</span>
+      </p>
     </div>
   )
 }

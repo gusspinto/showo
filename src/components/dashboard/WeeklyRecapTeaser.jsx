@@ -58,16 +58,17 @@ function useCountUp(target, { delay = 0, duration = 700 } = {}) {
   return value
 }
 
-function EmailStat({ target, label, delay, accent }) {
-  const value = useCountUp(target, { delay })
+// Linha compacta de apoio por baixo da citação, números ainda a subir de 0
+// (mantém a sensação de "coisa viva"), mas já não a liderar o cartão.
+function CountUpLine({ entries, activeDays, streak }) {
+  const e = useCountUp(entries, { delay: 0 })
+  const d = useCountUp(activeDays, { delay: 100 })
+  const s = useCountUp(streak, { delay: 200 })
   return (
-    <div className="recap-teaser-stat" style={{
-      flex: 1, padding: '12px 6px', textAlign: 'center', borderRadius: 8,
-      background: '#0e1729', border: '1px solid #1e3050', animationDelay: `${delay}ms`,
-    }}>
-      <div style={{ fontSize: 21, fontWeight: 700, color: accent || '#eef2f8', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
-      <div style={{ fontSize: 9.5, color: '#7d93b0', marginTop: 5 }}>{label}</div>
-    </div>
+    <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+      {e} {e === 1 ? 'registo' : 'registos'} · {d} {d === 1 ? 'dia ativo' : 'dias ativos'}
+      {s > 1 && <> · <span style={{ color: '#f0a500', fontWeight: 700 }}>{s}ª semana seguida</span></>}
+    </span>
   )
 }
 
@@ -142,13 +143,19 @@ export default function WeeklyRecapTeaser({ userId, onDismiss, onUpgrade }) {
         <p style={{ margin: '0 0 4px', color: '#7d93b0', fontSize: 10, textAlign: 'center', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 700 }}>
           Recap · 13 a 19 de outubro
         </p>
-        <p style={{ margin: '0 0 14px', color: '#eef2f8', fontSize: 16, lineHeight: 1.3, textAlign: 'center', fontWeight: 700 }}>
-          5 registos na semana passada
+        {/* Lidera com a citação real do diário, não com um número. 3
+            registos num dashboard não convence ninguém, uma frase
+            concreta sobre o que foi feito convence. Mesma lógica do
+            email real (pickHighlight em send-weekly-recap): escolhe a
+            entrada mais substancial da semana, não a mais frequente. */}
+        <p style={{ margin: '0 0 6px', color: '#7d93b0', fontSize: 10.5, textAlign: 'center', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 700 }}>
+          Decisão desta semana · DragBuild
         </p>
-        <div style={{ display: 'flex', gap: 7 }}>
-          <EmailStat target={5} label="registos" delay={0} />
-          <EmailStat target={4} label="dias ativos" delay={120} />
-          <EmailStat target={3} label="semanas seguidas" delay={240} accent="#f0a500" />
+        <p className="recap-teaser-stat" style={{ margin: '0 0 12px', color: '#eef2f8', fontSize: 16, lineHeight: 1.4, textAlign: 'center', fontWeight: 700, fontStyle: 'italic' }}>
+          "Decidi simplificar o fluxo de arrastar componentes depois de testar com duas pessoas que acharam confuso."
+        </p>
+        <div className="recap-teaser-stat" style={{ animationDelay: '150ms', fontSize: 11.5, color: '#7d93b0', textAlign: 'center' }}>
+          <CountUpLine entries={5} activeDays={4} streak={3} />
         </div>
       </div>
 
