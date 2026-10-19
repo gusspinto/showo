@@ -391,7 +391,7 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
   // sabe que o "próximo tier" não chega (ex: link limpo só existe no Pro, não no Plus).
   const upgrade = forcedPlan || nextPaidPlan(planId)
   const gain = upgrade && feature ? upgradeGain(feature, planId, upgrade) : null
-  const highlights = upgrade ? planHighlights(planId, upgrade) : []
+  const highlights = upgrade ? planHighlights(planId, upgrade, feature) : []
 
   // Carrossel de testemunhos, a começar no mais relevante à feature que
   // bloqueou a pessoa — pedido do Gustavo depois de ver o pop-up do

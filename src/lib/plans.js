@@ -193,28 +193,31 @@ export function planThatUnlocks(feature, planId) {
 // upgrade com benefícios concretos em vez de espaço vazio ao lado dos botões
 // (pedido do Gustavo, o utilizador "não consegue perceber os benefícios reais").
 // Dados reais dos planos, não uma lista inventada, só o que de facto melhora.
-export function planHighlights(fromPlanId, toPlan) {
+// `excludeFeature` tira da lista a mesma feature que já aparece no cartão de
+// preço via upgradeGain (ex: weeklyRecap), para não repetir "incluído" duas
+// vezes no mesmo pop-up.
+export function planHighlights(fromPlanId, toPlan, excludeFeature) {
   const from = getPlan(fromPlanId)
   if (!toPlan) return []
   const fmt = (n) => (n === Infinity ? 'ilimitado' : n)
   const items = []
 
-  if (toPlan.maxProjects > from.maxProjects) {
+  if (excludeFeature !== 'maxProjects' && toPlan.maxProjects > from.maxProjects) {
     items.push({ label: 'Projetos', value: `${fmt(from.maxProjects)} → ${fmt(toPlan.maxProjects)}` })
   }
-  if (toPlan.ai.coach > from.ai.coach) {
+  if (excludeFeature !== 'coach' && toPlan.ai.coach > from.ai.coach) {
     items.push({ label: 'Coach IA', value: `${fmt(from.ai.coach)} → ${fmt(toPlan.ai.coach)} por mês` })
   }
-  if (toPlan.career.weeklyRecap && !from.career.weeklyRecap) {
+  if (excludeFeature !== 'weeklyRecap' && toPlan.career.weeklyRecap && !from.career.weeklyRecap) {
     items.push({ label: 'Recap semanal automático', value: 'incluído' })
   }
-  if (toPlan.career.internshipPage && !from.career.internshipPage) {
+  if (excludeFeature !== 'internshipPage' && toPlan.career.internshipPage && !from.career.internshipPage) {
     items.push({ label: 'Vagas de estágio', value: 'incluído' })
   }
-  if (toPlan.career.cleanLink && !from.career.cleanLink) {
+  if (excludeFeature !== 'cleanLink' && toPlan.career.cleanLink && !from.career.cleanLink) {
     items.push({ label: 'Link limpo, sem /u/...', value: 'incluído' })
   }
-  if (toPlan.ai.exportPptx > from.ai.exportPptx) {
+  if (excludeFeature !== 'exportPptx' && toPlan.ai.exportPptx > from.ai.exportPptx) {
     items.push({ label: 'Exportar PowerPoint', value: `${fmt(from.ai.exportPptx)} → ${fmt(toPlan.ai.exportPptx)} por mês` })
   }
   return items.slice(0, 4)
