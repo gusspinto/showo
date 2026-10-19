@@ -1460,18 +1460,9 @@ function GithubAdvancedCard({ project }) {
           lado a lado num card pequeno não tinham onde respirar. */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16, padding: '14px 16px', background: colors.bgAlt, borderRadius: 10, border: `1px solid ${colors.border}` }}>
         {connection ? (
-          <>
-            <span style={{ fontSize: 12.5, color: colors.text, lineHeight: 1.5 }}>
-              Ligado como <strong>{connection.github_login}</strong>. Já dá para sincronizar repos privados.
-            </span>
-            <button
-              type="button"
-              onClick={() => removeGithubWebhook(project.id).then(() => disconnectGithub(user.id)).then(() => setConnection(null))}
-              style={{ alignSelf: 'flex-start', background: 'transparent', border: 'none', padding: 0, color: colors.subtle, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-            >
-              Desligar
-            </button>
-          </>
+          <span style={{ fontSize: 12.5, color: colors.text, lineHeight: 1.5 }}>
+            Ligado como <strong>{connection.github_login}</strong>. Já dá para sincronizar repos privados.
+          </span>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, textAlign: 'center' }}>
             <span style={{ fontSize: 12.5, color: colors.muted, lineHeight: 1.5 }}>Sem conta GitHub ligada. Só lê repositórios públicos.</span>
@@ -1488,13 +1479,20 @@ function GithubAdvancedCard({ project }) {
       </div>
 
       {connection && (
-        <div style={{ marginBottom: 16, position: 'relative' }}>
+        <div style={{ marginBottom: 16, position: 'relative', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
           <button
             type="button"
             onClick={() => showRepoPicker ? setShowRepoPicker(false) : openRepoPicker()}
             style={{ padding: '8px 14px', background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.text, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
           >
             {repo ? 'Trocar repositório' : 'Escolher repositório'}
+          </button>
+          <button
+            type="button"
+            onClick={() => removeGithubWebhook(project.id).then(() => disconnectGithub(user.id)).then(() => setConnection(null))}
+            style={{ padding: '8px 14px', background: 'rgba(244,63,94,0.1)', border: '1px solid rgba(244,63,94,0.3)', borderRadius: 8, color: colors.red, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            Desligar
           </button>
 
           {showRepoPicker && (
