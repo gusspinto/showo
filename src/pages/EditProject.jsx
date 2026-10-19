@@ -1427,7 +1427,13 @@ function GithubAdvancedCard({ project }) {
   const months = commitSpanMonths(stats)
 
   return (
-    <div style={{ ...glassPanel, padding: '18px 20px' }}>
+    // position/zIndex aqui (não só no dropdown): cada secção de "Avançado" é
+    // um cartão de vidro com backdrop-filter, que cria o seu próprio
+    // contexto de stacking — o z-index do dropdown de repositórios só vale
+    // dentro deste cartão, por isso sem isto a secção "Zona de perigo",
+    // pintada a seguir no DOM, tapava o dropdown mesmo este tendo z-index
+    // maior. Só sobe acima das outras secções enquanto o dropdown está aberto.
+    <div style={{ ...glassPanel, padding: '18px 20px', position: 'relative', zIndex: showRepoPicker ? 20 : 'auto' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, color: colors.subtle, marginBottom: 14, textTransform: 'uppercase', letterSpacing: 0.6 }}>
         <Code size={12} /> GitHub
       </div>
