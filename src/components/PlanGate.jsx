@@ -2,10 +2,17 @@ import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
+import { LikeIcon as ThumbUp } from '@solar-icons/react/bold/like'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { getPlan, nextPaidPlan, upgradeGain } from '../lib/plans'
 import { TESTIMONIALS } from './TestimonialsMarquee'
+
+const LinkedInMark = ({ size = 14 }) => (
+  <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" aria-hidden="true">
+    <path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.55C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.72C24 .77 23.2 0 22.22 0z"/>
+  </svg>
+)
 
 // Mesmo testemunho da Pricing/Home, sem inventar nada — só escolhido para
 // soar relevante à feature que bloqueou a pessoa. Fora dos casos abaixo,
@@ -106,11 +113,44 @@ function RecapPreview() {
       {/* Mesma escolha do email real (pickHighlight em send-weekly-recap):
           excerto real por baixo dos números, sem aspas nem itálico, barra
           lateral, não cartão de testemunho centrado. */}
-      <div style={{ borderLeft: '3px solid #2a4275', padding: '1px 0 1px 10px' }}>
+      <div style={{ borderLeft: '3px solid #2a4275', padding: '1px 0 1px 10px', marginBottom: 10 }}>
         <p style={{ margin: '0 0 2px', color: '#93a4c0', fontSize: 9.5 }}>Decisão em DragBuild</p>
         <p style={{ margin: 0, color: '#c3cede', fontSize: 11.5, lineHeight: 1.45 }}>
           Decidi simplificar o fluxo depois de testar com duas pessoas que acharam confuso.
         </p>
+      </div>
+      <p style={{ margin: 0, color: '#c3cede', fontSize: 11.5, lineHeight: 1.5 }}>
+        Faltam <strong style={{ color: '#eef2f8' }}>12 dias</strong> para a defesa.
+      </p>
+    </div>
+  )
+}
+
+// O email em si não mostra este texto, só uma caixa genérica com um botão
+// "Gerar o post" (confirmado em send-weekly-recap); a IA só escreve isto
+// depois de a pessoa clicar, com o diário real dela nesse momento. Por
+// isso a etiqueta "Exemplo" explícita, não misturado com o bloco do email.
+function LinkedInPostPreview() {
+  return (
+    <div>
+      <p style={{ margin: '10px 0 6px', fontSize: 9, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+        Exemplo · resultado do botão "Gerar o post", não conteúdo do email
+      </p>
+      <div style={{ background: '#fff', borderRadius: 10, padding: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
+          <span style={{ width: 22, height: 22, borderRadius: '50%', background: '#1a60c8', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 10, fontWeight: 800 }}>G</span>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ fontSize: 10.5, fontWeight: 700, color: '#1a1a1a' }}>A tua página</div>
+          </div>
+          <span style={{ color: '#0A66C2', flexShrink: 0 }}><LinkedInMark size={13} /></span>
+        </div>
+        <p style={{ margin: 0, fontSize: 11, color: '#1a1a1a', lineHeight: 1.5 }}>
+          Esta semana avancei o DragBuild: melhorei a explicação do problema que o projeto resolve e simplifiquei o fluxo de arrastar componentes, depois de testar com duas pessoas que acharam confuso.
+        </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 8, paddingTop: 7, borderTop: '1px solid #eee' }}>
+          <ThumbUp size={11} color="#0A66C2" />
+          <span style={{ fontSize: 9.5, color: '#767676' }}>Gostei · Comentar · Partilhar</span>
+        </div>
       </div>
     </div>
   )
@@ -120,7 +160,7 @@ function FeaturePreview({ feature }) {
   const kind = FEATURE_PREVIEW_KIND[feature] || 'coach'
   const label = {
     coach: 'Preview real do Coach IA',
-    recap: 'Preview real do email que recebes',
+    recap: 'Preview real: o email que recebes',
     vagas: 'Preview real das vagas de estágio',
     defense: 'Preview real da preparação de defesa',
   }[kind]
@@ -130,7 +170,7 @@ function FeaturePreview({ feature }) {
       {kind === 'coach' && <CoachPreview />}
       {kind === 'vagas' && <VagasPreview />}
       {kind === 'defense' && <DefensePreview />}
-      {kind === 'recap' && <RecapPreview />}
+      {kind === 'recap' && <><RecapPreview /><LinkedInPostPreview /></>}
     </div>
   )
 }
