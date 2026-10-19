@@ -5,7 +5,7 @@ import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { LikeIcon as ThumbUp } from '@solar-icons/react/bold/like'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { getPlan, nextPaidPlan, upgradeGain, planHighlights } from '../lib/plans'
+import { getPlan, nextPaidPlan, planHighlights } from '../lib/plans'
 import { TESTIMONIALS } from './TestimonialsMarquee'
 
 const LinkedInMark = ({ size = 14 }) => (
@@ -273,12 +273,6 @@ const C = {
   upsellName: { fontSize: '1.15rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)' },
   upsellPrice: { fontSize: '1.3rem', fontWeight: 700, color: 'var(--color-text)' },
   upsellPeriod: { fontWeight: 500, fontSize: '0.8rem', color: 'var(--color-text-secondary)' },
-  upsellGain: {
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    fontSize: '0.88rem', color: 'var(--color-text-secondary)',
-    borderTop: '1px solid var(--color-primary-muted)', paddingTop: 'var(--sp-3)',
-  },
-  upsellGainValue: { color: 'var(--color-primary)', fontWeight: 700 },
   errorText: { margin: 0, fontSize: '0.78rem', color: 'var(--color-error)' },
   // .sdb-panel simples — mesmo cartão neutro que qualquer painel do
   // Dashboard, só para o testemunho não se confundir visualmente com o
@@ -390,8 +384,10 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
   // pagamento nenhum, só a mensagem e fechar. `forcedPlan` sobrepõe-se quando o chamador já
   // sabe que o "próximo tier" não chega (ex: link limpo só existe no Pro, não no Plus).
   const upgrade = forcedPlan || nextPaidPlan(planId)
-  const gain = upgrade && feature ? upgradeGain(feature, planId, upgrade) : null
-  const highlights = upgrade ? planHighlights(planId, upgrade, feature) : []
+  // O cartão de preço deixou de ter a linha "Recap semanal: incluído" (gain,
+  // pedido do Gustavo, repetia a lista de benefícios ao lado). Sem exclude
+  // aqui, essa feature volta a aparecer, mas só na lista, não duplicada.
+  const highlights = upgrade ? planHighlights(planId, upgrade) : []
 
   // Carrossel de testemunhos, a começar no mais relevante à feature que
   // bloqueou a pessoa — pedido do Gustavo depois de ver o pop-up do
@@ -537,12 +533,6 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
                       <span style={C.upsellPeriod}>{annual && upgrade.priceLabelAnnual ? '/ano' : upgrade.period}</span>
                     </span>
                   </div>
-                  {gain && (
-                    <div style={C.upsellGain}>
-                      <span>{gain.label}</span>
-                      <span style={C.upsellGainValue}>{gain.value}</span>
-                    </div>
-                  )}
                 </div>
 
                 {testimonial && (
