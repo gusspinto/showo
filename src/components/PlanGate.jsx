@@ -94,9 +94,16 @@ function DefensePreview() {
   )
 }
 
+// Etiqueta própria, igual à do LinkedInPostPreview, para as duas coisas
+// ficarem claramente distintas uma da outra em vez de um bloco só ("isto é
+// o email ou o LinkedIn?", pedido do Gustavo depois de ver o pop-up).
 function RecapPreview() {
   return (
-    <div style={{ background: '#03060d', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 14px 14px', marginTop: 10 }}>
+    <div>
+      <p style={{ margin: '0 0 6px', fontSize: 9, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+        O email que recebes, toda a segunda
+      </p>
+      <div style={{ background: '#03060d', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 14px 14px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
         <span style={{ width: 20, height: 20, borderRadius: 6, background: '#1a60c8', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 9.5, fontWeight: 800 }}>S</span>
         <span style={{ fontSize: 9.5, color: '#93a4c0' }}>Showo <span style={{ color: '#93a4c0' }}>hello@showo.pt</span></span>
@@ -122,6 +129,7 @@ function RecapPreview() {
       <p style={{ margin: 0, color: '#c3cede', fontSize: 11.5, lineHeight: 1.5 }}>
         Faltam <strong style={{ color: '#eef2f8' }}>12 dias</strong> para a defesa.
       </p>
+      </div>
     </div>
   )
 }
@@ -129,14 +137,12 @@ function RecapPreview() {
 // O email em si não mostra este texto, só uma caixa genérica com um botão
 // "Gerar o post" (confirmado em send-weekly-recap); a IA só escreve isto
 // depois de a pessoa clicar, com o diário real dela nesse momento. Por
-// isso a etiqueta "Exemplo" explícita, não misturado com o bloco do email.
-// Entra primeiro no FeaturePreview porque é o gancho principal da faixa do
-// dashboard (ícone de LinkedIn), o email vem depois como prova de suporte.
+// isso a etiqueta deixa claro que é um exemplo do resultado, não do email.
 function LinkedInPostPreview() {
   return (
-    <div>
+    <div style={{ marginTop: 14 }}>
       <p style={{ margin: '0 0 6px', fontSize: 9, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-        Exemplo · resultado do botão "Gerar o post", não conteúdo do email
+        O que podes gerar a partir dele, não vem no email
       </p>
       <div style={{ background: '#fff', borderRadius: 10, padding: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
@@ -162,7 +168,7 @@ function FeaturePreview({ feature }) {
   const kind = FEATURE_PREVIEW_KIND[feature] || 'coach'
   const label = {
     coach: 'Preview real do Coach IA',
-    recap: 'Preview real: o que vais poder mostrar',
+    recap: 'Preview real do recap semanal',
     vagas: 'Preview real das vagas de estágio',
     defense: 'Preview real da preparação de defesa',
   }[kind]
@@ -172,7 +178,7 @@ function FeaturePreview({ feature }) {
       {kind === 'coach' && <CoachPreview />}
       {kind === 'vagas' && <VagasPreview />}
       {kind === 'defense' && <DefensePreview />}
-      {kind === 'recap' && <><LinkedInPostPreview /><RecapPreview /></>}
+      {kind === 'recap' && <><RecapPreview /><LinkedInPostPreview /></>}
     </div>
   )
 }
