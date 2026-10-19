@@ -17,12 +17,13 @@ const LinkedInMark = ({ size = 14 }) => (
    Gustavo: isto é email, app ou plataforma?), com etiqueta em cada bloco,
    não deixada implícita no desenho:
 
-   1. EMAIL. Os 3 números (registos, dias ativos, semanas seguidas) só
-      existem por email hoje, confirmado no código: não há ecrã nenhum na
-      app com este conteúdo (mesmo fundo quase preto, mesma eyebrow em
-      maiúsculas, mesmo estilo de stat tile do email real, ver
-      supabase/functions/send-weekly-recap), com cabeçalho de remetente
-      para ler como um email aberto a sério.
+   1. EMAIL (mesma estrutura de supabase/functions/send-weekly-recap):
+      título + 3 stat tiles, como no email real, com um excerto real do
+      diário por baixo, em barra lateral, sem aspas nem itálico. A
+      primeira versão citava o diário centrado, em itálico, com etiqueta
+      em maiúsculas por cima, lia a cartão de testemunho de marketing, não
+      a excerto real. Corrigido para alinhado à esquerda, sem aspas, como
+      um documento, não uma peça de publicidade.
    2. NA APP. O post de LinkedIn sai de um botão dentro da app
       (WeeklyPostCard, edge function linkedin-post), feature já existente.
       Mostrar só o email não respondia à pergunta real: o que se ganha com
@@ -58,17 +59,13 @@ function useCountUp(target, { delay = 0, duration = 700 } = {}) {
   return value
 }
 
-// Linha compacta de apoio por baixo da citação, números ainda a subir de 0
-// (mantém a sensação de "coisa viva"), mas já não a liderar o cartão.
-function CountUpLine({ entries, activeDays, streak }) {
-  const e = useCountUp(entries, { delay: 0 })
-  const d = useCountUp(activeDays, { delay: 100 })
-  const s = useCountUp(streak, { delay: 200 })
+function Stat({ target, label, delay, accent }) {
+  const value = useCountUp(target, { delay })
   return (
-    <span style={{ fontVariantNumeric: 'tabular-nums' }}>
-      {e} {e === 1 ? 'registo' : 'registos'} · {d} {d === 1 ? 'dia ativo' : 'dias ativos'}
-      {s > 1 && <> · <span style={{ color: '#f0a500', fontWeight: 700 }}>{s}ª semana seguida</span></>}
-    </span>
+    <div className="recap-teaser-stat" style={{ flex: 1, padding: '10px 6px', textAlign: 'center', borderRadius: 8, background: '#0e1729', border: '1px solid #1e3050', animationDelay: `${delay}ms` }}>
+      <div style={{ fontSize: 19, fontWeight: 700, color: accent || '#eef2f8', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+      <div style={{ fontSize: 9, color: '#7d93b0', marginTop: 4 }}>{label}</div>
+    </div>
   )
 }
 
@@ -140,22 +137,25 @@ export default function WeeklyRecapTeaser({ userId, onDismiss, onUpgrade }) {
             <div style={{ fontSize: 10, color: '#5a6b85' }}>Para ti · segunda-feira, 08:00</div>
           </div>
         </div>
-        <p style={{ margin: '0 0 4px', color: '#7d93b0', fontSize: 10, textAlign: 'center', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 700 }}>
-          Recap · 13 a 19 de outubro
+        <p style={{ margin: '0 0 14px', color: '#eef2f8', fontSize: 16, lineHeight: 1.3, textAlign: 'center', fontWeight: 700 }}>
+          5 registos na semana passada
         </p>
-        {/* Lidera com a citação real do diário, não com um número. 3
-            registos num dashboard não convence ninguém, uma frase
-            concreta sobre o que foi feito convence. Mesma lógica do
-            email real (pickHighlight em send-weekly-recap): escolhe a
-            entrada mais substancial da semana, não a mais frequente. */}
-        <p style={{ margin: '0 0 6px', color: '#7d93b0', fontSize: 10.5, textAlign: 'center', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 700 }}>
-          Decisão desta semana · DragBuild
-        </p>
-        <p className="recap-teaser-stat" style={{ margin: '0 0 12px', color: '#eef2f8', fontSize: 16, lineHeight: 1.4, textAlign: 'center', fontWeight: 700, fontStyle: 'italic' }}>
-          "Decidi simplificar o fluxo de arrastar componentes depois de testar com duas pessoas que acharam confuso."
-        </p>
-        <div className="recap-teaser-stat" style={{ animationDelay: '150ms', fontSize: 11.5, color: '#7d93b0', textAlign: 'center' }}>
-          <CountUpLine entries={5} activeDays={4} streak={3} />
+        <div style={{ display: 'flex', gap: 7, marginBottom: 14 }}>
+          <Stat target={5} label="registos" delay={0} />
+          <Stat target={4} label="dias ativos" delay={100} />
+          <Stat target={3} label="semanas seguidas" delay={200} accent="#f0a500" />
+        </div>
+        {/* Excerto real do diário por baixo dos números, não a liderar o
+            cartão como citação centrada em itálico (lia a testemunho de
+            marketing, não a excerto real). Barra lateral, sem aspas, sem
+            itálico, alinhado à esquerda, como um documento real. Mesma
+            lógica do email (pickHighlight em send-weekly-recap): escolhe
+            a entrada mais substancial da semana, não a mais frequente. */}
+        <div className="recap-teaser-stat" style={{ animationDelay: '300ms', borderLeft: '3px solid #2a4275', padding: '1px 0 1px 12px' }}>
+          <p style={{ margin: '0 0 3px', color: '#5a6b85', fontSize: 10.5 }}>Decisão em DragBuild</p>
+          <p style={{ margin: 0, color: '#c3cede', fontSize: 12.5, lineHeight: 1.5 }}>
+            Decidi simplificar o fluxo de arrastar componentes depois de testar com duas pessoas que acharam confuso.
+          </p>
         </div>
       </div>
 

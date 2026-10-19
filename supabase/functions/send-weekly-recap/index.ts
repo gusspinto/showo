@@ -122,11 +122,6 @@ function buildHtml(firstName: string, weekLabel: string, stats: Stats, quiet: bo
     ? 'A semana passada esteve parada'
     : `${stats.entries} ${stats.entries === 1 ? 'registo' : 'registos'} na semana passada`
 
-  // Linha de apoio por baixo da citação (ou do título, quando não há
-  // citação): os números passam a legenda, não a liderar o email.
-  const statsLine = `${stats.entries} ${stats.entries === 1 ? 'registo' : 'registos'} · ${stats.activeDays} ${stats.activeDays === 1 ? 'dia ativo' : 'dias ativos'}${
-    stats.streak > 1 ? ` · ${stats.streak}ª semana seguida` : ''}`
-
   const defenseLine = stats.daysToDefense != null && stats.daysToDefense >= 0
     ? `Faltam <strong style="color:#eef2f8;">${stats.daysToDefense} dias</strong> para a defesa.`
     : ''
@@ -156,16 +151,6 @@ function buildHtml(firstName: string, weekLabel: string, stats: Stats, quiet: bo
     <p style="margin:0 0 6px;color:#7d93b0;font-size:12px;text-align:center;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;">
       Recap · ${esc(weekLabel)}
     </p>
-
-    ${!quiet && stats.highlight ? `
-    <p style="margin:0 0 6px;color:#7d93b0;font-size:11px;text-align:center;letter-spacing:0.06em;text-transform:uppercase;font-weight:700;">
-      ${esc(KIND_SINGULAR[stats.highlight.kind] ?? stats.highlight.kind)} desta semana${stats.projectName ? ` · ${esc(stats.projectName)}` : ''}
-    </p>
-    <p style="margin:0 0 14px;color:#eef2f8;font-size:19px;line-height:1.45;text-align:center;font-weight:700;font-style:italic;">
-      "${esc(clip(stats.highlight.content ?? '', 160))}"
-    </p>
-    <p style="margin:0 0 22px;color:#7d93b0;font-size:12px;text-align:center;">${esc(statsLine)}</p>
-    ` : `
     <h1 style="margin:0 0 22px;color:#eef2f8;font-size:22px;line-height:1.3;text-align:center;font-weight:700;">
       ${esc(firstName)}, ${headline}
     </h1>
@@ -176,7 +161,13 @@ function buildHtml(firstName: string, weekLabel: string, stats: Stats, quiet: bo
         ${stat(String(stats.streak), stats.streak === 1 ? 'semana seguida' : 'semanas seguidas', '#f0a500')}
       </tr>
     </table>
-    `}
+
+    ${!quiet && stats.highlight ? `
+    <div style="border-left:3px solid #2a4275;padding:2px 0 2px 14px;margin:0 0 22px;">
+      <p style="margin:0 0 3px;color:#5a6b85;font-size:11px;">${esc(KIND_SINGULAR[stats.highlight.kind] ?? stats.highlight.kind)}${stats.projectName ? ` em ${esc(stats.projectName)}` : ''}</p>
+      <p style="margin:0;color:#c3cede;font-size:14px;line-height:1.6;">${esc(clip(stats.highlight.content ?? '', 180))}</p>
+    </div>
+    ` : ''}
 
     ${body.trim() ? `<p style="margin:0 0 22px;color:#c3cede;font-size:14px;line-height:1.7;">${body}</p>` : ''}
 
