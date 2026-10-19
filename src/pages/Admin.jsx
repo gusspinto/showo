@@ -609,8 +609,12 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
   // todos os users isso fica em 0, não refletia uso real nenhum. Pedido do
   // Gustavo depois da reunião com o mentor (perguntou se dava para ver quem
   // faz mais logins, para ligar aos mais ativos). admin_get_activity_stats
-  // agora devolve login_counts (migração 202), contagem real de logins por
-  // user no período selecionado.
+  // agora devolve login_counts (migração 202). O Gustavo reparou que os
+  // números pareciam demasiado altos (21 "logins" em 3 dias para uma conta
+  // nova). A causa era o AuthContext a gravar um login por carregamento de
+  // página, não por sessão nova a sério (ver AuthContext.jsx, fetchProfile).
+  // Corrigido lá para 1 por dia de calendário, por isso isto já é, na
+  // prática, dias ativos no período, não "logins" literais.
   const loginCountMap = activityStats?.login_counts || {}
 
   // Sorted & filtered users
@@ -939,7 +943,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
                       {isOnline && '● '}{lastActiveLabel}
                     </span>
                     {pc > 0 && <span style={{ fontSize: 10, color: C.blue }}>{pc} projeto{pc > 1 ? 's' : ''}</span>}
-                    {sort === 'usage' && loginCountMap[u.id] > 0 && <span style={{ fontSize: 10, color: C.yellow }}>{loginCountMap[u.id]} login{loginCountMap[u.id] > 1 ? 's' : ''}</span>}
+                    {sort === 'usage' && loginCountMap[u.id] > 0 && <span style={{ fontSize: 10, color: C.yellow }}>{loginCountMap[u.id]} dia{loginCountMap[u.id] > 1 ? 's' : ''} ativo{loginCountMap[u.id] > 1 ? 's' : ''}</span>}
                     <span style={{ fontSize: 10, color: C.subtle }}>registado {fmtDate(u.created_at)}</span>
                   </div>
                 </div>

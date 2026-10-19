@@ -45,8 +45,8 @@ export function AuthProvider({ children }) {
   const fetchProfile = useCallback(async (uid) => {
     if (!uid) { setProfile(null); setAiUsage({}); resetAnalytics(); return }
 
-    const PROFILE_SELECT = 'id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, occupation, plan, phone, organization_id, account_type, signup_country, course, academic_year'
-    const PROFILE_SELECT_LEGACY = 'id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, occupation, plan, phone'
+    const PROFILE_SELECT = 'id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, occupation, plan, phone, organization_id, account_type, signup_country, course, academic_year, last_active_at'
+    const PROFILE_SELECT_LEGACY = 'id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, occupation, plan, phone, last_active_at'
 
     const [profileRes, userRes] = await Promise.all([
       supabase.from('profiles').select(PROFILE_SELECT).eq('id', uid).single(),
@@ -224,9 +224,26 @@ export function AuthProvider({ children }) {
       if (storedRef && !data.referred_by) {
         supabase.rpc('claim_referral', { code: storedRef }).then(() => localStorage.removeItem('showo_ref'))
       }
-      const ts = new Date().toISOString()
+      const now = new Date()
+      const ts = now.toISOString()
       supabase.from('profiles').update({ last_active_at: ts, last_action: 'login' }).eq('id', uid).then(() => {})
-      supabase.from('activity_log').insert({ user_id: uid, action: 'login' }).then(() => {})
+      // Um registo em activity_log por dia de calendário, não por carregamento
+      // de página. fetchProfile corre em todo o INITIAL_SESSION/SIGNED_IN (ver
+      // onAuthStateChange abaixo), ou seja, em cada separador aberto ou
+      // refresh com sessão guardada. Sem este limite, "Quem mais usa" no
+      // Admin contava isso como "login", e alguém a abrir a app várias vezes
+      // ao dia acumulava dezenas de "logins" em poucos dias (confirmado:
+      // 21 em 3 dias para uma conta registada há 3 dias, o Gustavo notou que
+      // não batia certo). last_active_at (antes deste UPDATE) diz quando foi
+      // o último registo a sério.
+      const prevActive = data.last_active_at ? new Date(data.last_active_at) : null
+      const sameDay = prevActive
+        && prevActive.getFullYear() === now.getFullYear()
+        && prevActive.getMonth() === now.getMonth()
+        && prevActive.getDate() === now.getDate()
+      if (!sameDay) {
+        supabase.from('activity_log').insert({ user_id: uid, action: 'login' }).then(() => {})
+      }
       const freshGoogleAvatar = (meta.avatar_url ?? meta.picture ?? '').replace(/=s\d+-c$/, '=s400-c')
       if (freshGoogleAvatar && (data.avatar_url?.includes('googleusercontent.com') || !data.avatar_url)) {
         persistGoogleAvatar(uid, freshGoogleAvatar).then(permanent => {
