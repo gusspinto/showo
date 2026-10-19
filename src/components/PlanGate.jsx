@@ -173,7 +173,7 @@ function FeaturePreview({ feature }) {
     defense: 'Preview real da preparação de defesa',
   }[kind]
   return (
-    <div className="plan-gate-fade" style={{ marginTop: 14 }}>
+    <div className="plan-gate-fade">
       <p style={{ margin: '0 0 14px', fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
       {kind === 'coach' && <CoachPreview />}
       {kind === 'vagas' && <VagasPreview />}
@@ -500,15 +500,19 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
                   ficar em cima de tudo em mobile e, no desktop, mudar de
                   posição via grid-area para o topo da coluna dos botões —
                   sem duplicar JSX para cada tamanho de ecrã. */}
-              {/* A preview (FeaturePreview) estava à esquerda, ao lado do cartão de
-                  preço e do testemunho, e a coluna direita ficava quase vazia por
-                  baixo do título (só os botões lá em baixo). Passa para aqui, a
-                  coluna da direita fica com o conteúdo a mostrar o valor. O
-                  título ("O que recebes...") foi para a esquerda, colado ao
-                  preço, "o que ganhas" mesmo em cima de "quanto custa". */}
+              {/* Só a preview (FeaturePreview) fica na coluna da direita. Título,
+                  lista de benefícios, preço e testemunho ficam todos juntos à
+                  esquerda, "o que ganhas" inteiro mesmo em cima de "quanto
+                  custa", não partido a meio entre as duas colunas. */}
               <div className="plan-gate-title-block">
+                <FeaturePreview feature={feature} />
+              </div>
+
+              <div className="plan-gate-col-left">
+                <p style={C.titleRight}>{title}</p>
+                <p style={C.subtitleRight}>Escolhe como queres continuar.</p>
                 {highlights.length > 0 && (
-                  <ul style={{ ...C.highlights, listStyle: 'none', padding: 0, marginTop: 0 }}>
+                  <ul style={{ ...C.highlights, listStyle: 'none', padding: 0 }}>
                     {highlights.map(h => (
                       <li key={h.label} style={C.highlightItem}>
                         <span style={C.highlightLabel}><span style={C.highlightCheck}>✓</span>{h.label}</span>
@@ -517,12 +521,6 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
                     ))}
                   </ul>
                 )}
-                <FeaturePreview feature={feature} />
-              </div>
-
-              <div className="plan-gate-col-left">
-                <p style={C.titleRight}>{title}</p>
-                <p style={C.subtitleRight}>Escolhe como queres continuar.</p>
                 {upgrade.priceLabelAnnual && (
                   <div style={{ ...C.periodToggle, margin: '0 auto 12px' }} role="group" aria-label="Periodicidade do pagamento">
                     <button type="button" style={C.periodBtn(!annual)} onClick={() => setAnnual(false)}>Mensal</button>
