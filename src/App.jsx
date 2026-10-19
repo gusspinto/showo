@@ -208,7 +208,14 @@ function PhoneGate({ children, reopenGate, setReopenGate }) {
     if (err) { setError('Erro ao guardar. Tenta novamente.'); setSaving(false); return }
     await refreshProfile()
     setSaving(false)
-    setReopenGate(null)
+    // Se este ecrã apareceu por termos sido reabertos via "← Voltar" (não
+    // porque faltava mesmo o telemóvel), avança exatamente um passo — para o
+    // próximo da sequência fixa — em vez de cair no "próximo passo em falta"
+    // calculado a partir dos dados: isso, com vários "Voltar" seguidos,
+    // saltava por cima de passos já respondidos e parecia "avançar" em vez
+    // de voltar. Avançar um de cada vez devolve sempre ao ecrã seguinte ao
+    // que acabou de ser confirmado, sem saltos.
+    setReopenGate(reopenGate === 'phone' ? 'occupation' : null)
   }
 
   if (!needsPhone) return children
@@ -286,7 +293,9 @@ function OccupationGate({ children, reopenGate, setReopenGate }) {
       const { error: err } = await supabase.from('profiles').update({ occupation: value }).eq('id', user.id)
       if (err) { setSaving(false); setError(err.message); return }
       await refreshProfile()
-      setReopenGate(null)
+      // Mesma lógica do PhoneGate: avança exatamente um passo quando este
+      // ecrã foi reaberto via "← Voltar", nunca salta para o passo em falta.
+      setReopenGate(reopenGate === 'occupation' ? 'heard_from' : null)
     } catch (ex) {
       setError(String(ex?.message || ex))
     }
@@ -349,7 +358,12 @@ function HeardFromGate({ children, reopenGate, setReopenGate }) {
     setHeardFrom(id)
     setSaving(true)
     const { error: err } = await supabase.from('profiles').update({ heard_from: id }).eq('id', user.id)
-    if (!err) { await refreshProfile(); setReopenGate(null) }
+    if (!err) {
+      await refreshProfile()
+      // Mesma lógica do PhoneGate/OccupationGate: avança exatamente um
+      // passo quando este ecrã foi reaberto via "← Voltar".
+      setReopenGate(reopenGate === 'heard_from' ? 'intent' : null)
+    }
     setSaving(false)
   }
 
