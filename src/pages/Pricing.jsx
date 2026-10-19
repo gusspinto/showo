@@ -319,7 +319,10 @@ export default function Pricing() {
                   {plan.period && <span className="pricing-period">{annual && plan.priceAnnual ? '/ano' : plan.period}</span>}
                 </div>
                 {annual && plan.annualEquivalent ? (
-                  <p className="pricing-annual-note">equivale a {plan.annualEquivalent}</p>
+                  <p className="pricing-annual-note pricing-annual-note--with-badge">
+                    equivale a {plan.annualEquivalent}
+                    <span className="pricing-period-badge pricing-period-badge--card">2 meses grátis</span>
+                  </p>
                 ) : plan.weeklyNote ? (
                   /* Ao dia os cêntimos não dizem nada a ninguém; à semana
                      já se compara com alguma coisa real. É a mesma conta,
