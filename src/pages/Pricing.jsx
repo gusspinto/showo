@@ -294,7 +294,7 @@ export default function Pricing() {
             className={`pricing-period-btn${annual ? ' is-active' : ''}`}
             onClick={() => setAnnual(true)}
           >
-            Anual <span className="pricing-period-badge">2 meses grátis</span>
+            Anual
           </button>
         </div>
 
