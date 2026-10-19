@@ -174,7 +174,7 @@ function FeaturePreview({ feature }) {
   }[kind]
   return (
     <div className="plan-gate-fade" style={{ marginTop: 14 }}>
-      <p style={{ margin: '0 0 8px', fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
+      <p style={{ margin: '0 0 14px', fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
       {kind === 'coach' && <CoachPreview />}
       {kind === 'vagas' && <VagasPreview />}
       {kind === 'defense' && <DefensePreview />}
@@ -224,11 +224,10 @@ const C = {
     padding: '5px 12px', borderRadius: 'var(--radius-full)',
   },
   title: { margin: 0, fontSize: '1.6rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)', lineHeight: 1.25 },
-  // Mesmo título, mas encostado à esquerda em cima dos botões — não centrado
-  // como cabeçalho, é a versão que fica quando há upgrade a oferecer.
-  // margin-top a condizer com o padding de dentro do cartão do preço ao
-  // lado — sem isto o título arrancava colado ao topo da coluna, mais
-  // acima do que o "Plus €4,99/mês" que tem o padding do cartão a empurrá-lo.
+  // Mesmo título, mas encostado à esquerda, logo acima do cartão de preço
+  // (pedido do Gustavo: "o que ganhas" mesmo em cima de "quanto custa"),
+  // não centrado como cabeçalho, versão que fica quando há upgrade a
+  // oferecer.
   titleRight: { margin: 'var(--sp-2) 0 4px', fontSize: '1.3rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)', lineHeight: 1.25 },
   // Frase curta a ligar o título às duas opções logo a seguir — só para não
   // ficar espaço em branco entre o título e os botões, nada mais.
@@ -504,13 +503,12 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
               {/* A preview (FeaturePreview) estava à esquerda, ao lado do cartão de
                   preço e do testemunho, e a coluna direita ficava quase vazia por
                   baixo do título (só os botões lá em baixo). Passa para aqui, a
-                  coluna da direita fica com o conteúdo a mostrar o valor, a
-                  esquerda fica só com preço + testemunho, mais equilibrado. */}
+                  coluna da direita fica com o conteúdo a mostrar o valor. O
+                  título ("O que recebes...") foi para a esquerda, colado ao
+                  preço, "o que ganhas" mesmo em cima de "quanto custa". */}
               <div className="plan-gate-title-block">
-                <p style={C.titleRight}>{title}</p>
-                <p style={C.subtitleRight}>Escolhe como queres continuar.</p>
                 {highlights.length > 0 && (
-                  <ul style={{ ...C.highlights, listStyle: 'none', padding: 0 }}>
+                  <ul style={{ ...C.highlights, listStyle: 'none', padding: 0, marginTop: 0 }}>
                     {highlights.map(h => (
                       <li key={h.label} style={C.highlightItem}>
                         <span style={C.highlightLabel}><span style={C.highlightCheck}>✓</span>{h.label}</span>
@@ -523,6 +521,8 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
               </div>
 
               <div className="plan-gate-col-left">
+                <p style={C.titleRight}>{title}</p>
+                <p style={C.subtitleRight}>Escolhe como queres continuar.</p>
                 {upgrade.priceLabelAnnual && (
                   <div style={{ ...C.periodToggle, margin: '0 auto 12px' }} role="group" aria-label="Periodicidade do pagamento">
                     <button type="button" style={C.periodBtn(!annual)} onClick={() => setAnnual(false)}>Mensal</button>
