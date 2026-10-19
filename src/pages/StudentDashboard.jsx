@@ -45,6 +45,7 @@ import AgendaPanel from '../components/dashboard/AgendaPanel'
 import { ActivityPanel } from '../components/dashboard/RhythmPanel'
 import WeeklyRecap, { shouldShowRecap, RecapsPanel } from '../components/dashboard/WeeklyRecap'
 import WeeklyPostCard from '../components/dashboard/WeeklyPostCard'
+import WeeklyRecapTeaser from '../components/dashboard/WeeklyRecapTeaser'
 import SegmentedTabs from '../components/SegmentedTabs'
 import WeeklyCheckin, { shouldShowCheckin } from '../components/dashboard/WeeklyCheckin'
 import AddReminderModal from '../components/dashboard/AddReminderModal'
@@ -197,6 +198,7 @@ export default function StudentDashboard({ user, profile }) {
 
   /* ── UI ── */
   const [tutorialPotentialSeen, setTutorialPotentialSeen] = useState(() => !!localStorage.getItem(`showo_tut_potential_${user.id}`))
+  const [recapTeaserDismissed, setRecapTeaserDismissed] = useState(() => !!localStorage.getItem(`showo_recap_teaser_dismissed_${user.id}`))
   const [composerKind, setComposerKind] = useState(null)
   // A que projeto pertence o "Registar" que está aberto. Sem isto, o
   // composer ficava sempre agarrado a focusFull (o projeto em foco
@@ -1009,6 +1011,10 @@ export default function StudentDashboard({ user, profile }) {
             )}
 
             {dashTab === 'projetos' && <>
+
+            {!isSchoolAccount && planId === 'free' && !recapTeaserDismissed && (
+              <WeeklyRecapTeaser userId={user.id} onDismiss={() => setRecapTeaserDismissed(true)} />
+            )}
 
             {myInterests.length > 0 && (
               <section className="sdb-panel sdb-panel--tint sdb-o-recruiter sdb-opportunity">
