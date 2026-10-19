@@ -134,13 +134,19 @@ function buildDay1(firstName: string | undefined, unsubscribeUrl: string, hasPro
 
 function buildDay2(firstName: string | undefined, unsubscribeUrl: string, hasProject: boolean) {
   if (!hasProject) {
-    const subject = 'Já tens o GitHub? Isso já chega para começar'
+    // Antes disto, o dia 2 repetia quase a mesma mensagem do dia 1 para
+    // quem ainda não tinha projeto ("é rápido, um PDF chega"), só com o
+    // GitHub como variação — a mesma objeção reaparecia dois dias
+    // seguidos. A objeção real de quem não avançou já não é "é
+    // complicado", é "não sei o que mostrar" — por isso o ângulo muda
+    // para exemplos concretos do que conta como projeto.
+    const subject = 'Não sabes o que mostrar? Nem precisa de estar acabado'
     const html = wrapEmail(
       greeting(firstName) +
-      headline('Tens repositórios no GitHub? Isso já é meio caminho andado') +
-      paragraph('Liga o teu GitHub ao criar o projeto e os commits entram sozinhos no diário — não precisas de escrever nada à mão.') +
-      paragraph('Sem GitHub também funciona: um PDF ou só texto já chega para começar.', true) +
-      cta(`${APP}/novo`, 'Começar agora'),
+      headline('"Não tenho nada digno de mostrar" — é a dúvida mais comum') +
+      paragraph('PAP a meio, estágio em curso, um projeto pessoal, até trabalho de faculdade. Não precisa de estar pronto nem de ser impressionante — o que interessa é mostrar o processo real, não só o resultado final.') +
+      paragraph('Sobe o que já tens e a IA ajuda a organizar isso numa página que faz sentido.', true) +
+      cta(`${APP}/novo`, 'Ver como fica o meu projeto'),
       'Dia 2 de 5',
       unsubscribeUrl,
     )
