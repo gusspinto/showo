@@ -5,32 +5,12 @@ import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { getPlan, nextPaidPlan, planHighlights } from '../lib/plans'
-import { TESTIMONIALS } from './TestimonialsMarquee'
 
 const LinkedInMark = ({ size = 14 }) => (
   <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" aria-hidden="true">
     <path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.55C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.72C24 .77 23.2 0 22.22 0z"/>
   </svg>
 )
-
-// Mesmo testemunho da Pricing/Home, sem inventar nada — só escolhido para
-// soar relevante à feature que bloqueou a pessoa. Fora dos casos abaixo,
-// cai no primeiro da lista partilhada.
-const FEATURE_TESTIMONIAL_NAME = {
-  defense: 'Rita Sousa',
-  defenseTraining: 'Rita Sousa',
-  exportPptx: 'Rita Sousa',
-}
-// Ordena a lista toda a começar pelo testemunho mais relevante à feature —
-// os outros seguem-se, para o carrossel ter por onde rodar em vez de mostrar
-// sempre o mesmo. Nenhum é inventado, são os mesmos da Pricing/Home.
-function orderTestimonials(feature) {
-  const list = TESTIMONIALS.filter(t => t.popup !== false)
-  const wanted = FEATURE_TESTIMONIAL_NAME[feature]
-  const i = list.findIndex(t => t.name === wanted)
-  if (i <= 0) return list
-  return [list[i], ...list.slice(0, i), ...list.slice(i + 1)]
-}
 
 // Preview real do que se recebe, pedido do Gustavo depois do teaser do
 // recap semanal ("eles têm de ter uma preview do que vai realmente ver se
@@ -212,10 +192,7 @@ const C = {
   // (pedido do Gustavo: "o que ganhas" mesmo em cima de "quanto custa"),
   // não centrado como cabeçalho, versão que fica quando há upgrade a
   // oferecer.
-  titleRight: { margin: 'var(--sp-2) 0 4px', fontSize: '1.3rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)', lineHeight: 1.25 },
-  // Frase curta a ligar o título às duas opções logo a seguir — só para não
-  // ficar espaço em branco entre o título e os botões, nada mais.
-  subtitleRight: { margin: '0 0 4px', fontSize: '0.85rem', color: 'var(--color-text-secondary)' },
+  titleRight: { margin: 'var(--sp-2) 0 10px', fontSize: '1.3rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)', lineHeight: 1.25 },
   // Preenche o espaço entre o título e os botões com benefícios reais
   // (planHighlights, dados dos planos), em vez de ficar vazio no desktop
   // enquanto a coluna da esquerda, mais alta, não chega ao fundo.
@@ -258,49 +235,6 @@ const C = {
   upsellPrice: { fontSize: '1.3rem', fontWeight: 700, color: 'var(--color-text)' },
   upsellPeriod: { fontWeight: 500, fontSize: '0.8rem', color: 'var(--color-text-secondary)' },
   errorText: { margin: 0, fontSize: '0.78rem', color: 'var(--color-error)' },
-  // .sdb-panel simples — mesmo cartão neutro que qualquer painel do
-  // Dashboard, só para o testemunho não se confundir visualmente com o
-  // bloco do preço (que é o único a usar a tinta da marca).
-  testimonial: {
-    display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)',
-    // Não estica até à altura da coluna do preço: a caixa fica só do tamanho do
-    // conteúdo, sem espaço vazio entre o testemunho e a autoria.
-    alignSelf: 'start',
-    background: 'var(--color-surface)', border: '1px solid var(--color-border)',
-    borderRadius: 'var(--radius-lg)', padding: 'var(--sp-5)',
-  },
-  // Sem corte: o testemunho inteiro aparece. Para o modal não saltar a cada
-  // rotação, todos os testemunhos ficam empilhados na mesma célula da grelha
-  // (testimonialStack) e só o ativo é visível — a altura é a do mais longo.
-  testimonialStack: { display: 'grid' },
-  testimonialQuote: {
-    margin: 0, fontSize: '0.95rem', color: 'var(--color-text)', lineHeight: 1.55,
-    gridArea: '1 / 1',
-  },
-  testimonialFooter: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' },
-  testimonialPerson: { display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 },
-  // Contorno de 1px neutro (preto no claro, branco no escuro, via --color-text),
-  // para a foto não se fundir com o cartão nem apanhar a cor da superfície.
-  testimonialPhoto: {
-    width: '36px', height: '36px', borderRadius: 'var(--radius-full)', objectFit: 'cover', flexShrink: 0,
-    outline: '1px solid color-mix(in srgb, var(--color-text) 10%, transparent)', outlineOffset: '-1px',
-  },
-  testimonialName: { fontSize: '0.84rem', fontWeight: 700, color: 'var(--color-text)' },
-  // Antes cortava com "..." (1 linha, depois 2) e ainda ficava ilegível
-  // ("Universidade da Maia e..."). Sem clamp nenhum agora — o cargo embrulha
-  // por inteiro, por mais linhas que precisar.
-  testimonialRole: {
-    fontSize: '0.7rem', color: 'var(--color-text-secondary)', lineHeight: 1.35,
-  },
-  testimonialDots: { display: 'flex', gap: '5px', flexShrink: 0 },
-  testimonialDot: (active) => ({
-    width: active ? '14px' : '5px', height: '5px', borderRadius: '3px',
-    /* Preto no modo claro, branco no escuro (var(--color-text)). A
-       diferença entre ativo e inativo fica na largura, não na cor. */
-    background: 'var(--color-text)',
-    opacity: active ? 1 : 0.3,
-    transition: 'width 0.25s ease, background 0.25s ease',
-  }),
   // Invertido (var(--color-text)/var(--color-bg)), não azul — o mesmo botão
   // "cheio" que a Home, o Login e o Registo já usam. O azul fica reservado
   // à faixa do plano em cima, não ao botão de ação.
@@ -372,20 +306,6 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
   // pedido do Gustavo, repetia a lista de benefícios ao lado). Sem exclude
   // aqui, essa feature volta a aparecer, mas só na lista, não duplicada.
   const highlights = upgrade ? planHighlights(planId, upgrade) : []
-
-  // Carrossel de testemunhos, a começar no mais relevante à feature que
-  // bloqueou a pessoa — pedido do Gustavo depois de ver o pop-up do
-  // StudyFetch, onde os testemunhos mudam sozinhos em vez de ficar um só
-  // fixo a olhar para a pessoa.
-  const orderedTestimonials = orderTestimonials(feature)
-  const [tIdx, setTIdx] = useState(0)
-  useEffect(() => {
-    if (!upgrade || orderedTestimonials.length < 2) return
-    const id = setInterval(() => setTIdx(i => (i + 1) % orderedTestimonials.length), 5000)
-    return () => clearInterval(id)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [upgrade, orderedTestimonials.length])
-  const testimonial = upgrade ? orderedTestimonials[tIdx] : null
 
   // Registo do funil: quando alguém vê mesmo o pop-up de upgrade (não o nudge
   // leve do Dashboard, que já tinha isto). Só regista quando há oferta de
@@ -481,16 +401,19 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
                   posição via grid-area para o topo da coluna dos botões —
                   sem duplicar JSX para cada tamanho de ecrã. */}
               {/* Só a preview (FeaturePreview) fica na coluna da direita. Título,
-                  lista de benefícios, preço e testemunho ficam todos juntos à
-                  esquerda, "o que ganhas" inteiro mesmo em cima de "quanto
-                  custa", não partido a meio entre as duas colunas. */}
+                  lista de benefícios e preço ficam todos juntos à esquerda,
+                  "o que ganhas" inteiro mesmo em cima de "quanto custa", não
+                  partido a meio entre as duas colunas. Testemunho tirado
+                  daqui: o popup já tem uma prova concreta (a preview da
+                  feature, à direita), um segundo bloco de confiança por
+                  baixo só repetia a decisão com mais scroll, sem acrescentar
+                  nada que ajudasse a decidir mais depressa. */}
               <div className="plan-gate-title-block">
                 <FeaturePreview feature={feature} />
               </div>
 
               <div className="plan-gate-col-left">
                 <p style={C.titleRight}>{title}</p>
-                <p style={C.subtitleRight}>Escolhe como queres continuar.</p>
                 {highlights.length > 0 && (
                   <ul style={{ ...C.highlights, listStyle: 'none', padding: 0 }}>
                     {highlights.map(h => (
@@ -518,35 +441,6 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
                     </span>
                   </div>
                 </div>
-
-                {testimonial && (
-                  <div style={C.testimonial}>
-                    <div style={C.testimonialStack}>
-                      {orderedTestimonials.map((t, i) => (
-                        <p
-                          key={i}
-                          style={{ ...C.testimonialQuote, visibility: i === tIdx ? 'visible' : 'hidden' }}
-                          className={i === tIdx ? 'plan-gate-fade' : undefined}
-                          aria-hidden={i !== tIdx}
-                        >“{t.quote}”</p>
-                      ))}
-                    </div>
-                    <div style={C.testimonialFooter}>
-                      <div style={C.testimonialPerson}>
-                        <img src={testimonial.photo} alt="" style={C.testimonialPhoto} />
-                        <div style={{ minWidth: 0 }}>
-                          <div style={C.testimonialName}>{testimonial.name}</div>
-                          <div style={C.testimonialRole}>{testimonial.role}</div>
-                        </div>
-                      </div>
-                    </div>
-                    {orderedTestimonials.length > 1 && (
-                      <div style={{ ...C.testimonialDots, justifyContent: 'center' }}>
-                        {orderedTestimonials.map((_, i) => <span key={i} style={C.testimonialDot(i === tIdx)} />)}
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
 
               <div className="plan-gate-col-right">
