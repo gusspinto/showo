@@ -1510,6 +1510,7 @@
   .sdb-o-recruiter      { order: 6; }
   .sdb-o-tasks          { order: 7; }
   .sdb-o-agenda         { order: 8; }
+  .sdb-o-recap          { order: 8; }
   .sdb-o-tips           { order: 9; }
   .sdb-o-rhythm         { order: 10; }
   .sdb-o-turma          { order: 11; }

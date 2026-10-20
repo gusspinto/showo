@@ -1016,10 +1016,6 @@ export default function StudentDashboard({ user, profile }) {
 
             {dashTab === 'projetos' && <>
 
-            {!isSchoolAccount && planId === 'free' && !recapTeaserDismissed && (
-              <WeeklyRecapTeaser userId={user.id} onDismiss={() => setRecapTeaserDismissed(true)} onUpgrade={() => setShowUpgradeModal('weeklyRecap')} />
-            )}
-
             {myInterests.length > 0 && (
               <section className="sdb-panel sdb-panel--tint sdb-o-recruiter sdb-opportunity">
                 <header className="sdb-panel-head">
@@ -1254,6 +1250,19 @@ export default function StudentDashboard({ user, profile }) {
                   onSync={() => setShowCalendarSync(true)}
                   onEventClick={handleEventClick}
                 />
+              </div>
+            )}
+
+            {/* Por baixo da Agenda, não na coluna principal: o Gustavo não
+                gostou do cartão largo ali, competia com o resto do
+                dashboard. O WeeklyRecapTeaser já está desenhado para esta
+                largura (empilhado), não é o mesmo componente adaptado à
+                força. Mesma ordem em mobile, logo a seguir à Agenda
+                (sdb-o-recap tem o mesmo `order`, 8, e vem depois dela no
+                DOM). */}
+            {!isSchoolAccount && planId === 'free' && !recapTeaserDismissed && (
+              <div className="sdb-o-recap">
+                <WeeklyRecapTeaser userId={user.id} onDismiss={() => setRecapTeaserDismissed(true)} onUpgrade={() => setShowUpgradeModal('weeklyRecap')} />
               </div>
             )}
 
