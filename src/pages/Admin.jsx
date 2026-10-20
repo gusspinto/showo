@@ -604,6 +604,19 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
   users.forEach(u => { const o = u.occupation || 'Não indicado'; occupationCounts[o] = (occupationCounts[o] || 0) + 1 })
   const occupationOptions = Object.entries(occupationCounts).sort((a, b) => b[1] - a[1])
 
+  // "Quem mais usa" ordenava por total_xp, que só sobe com award_xp
+  // ('mission_complete'), o único motivo chamado no frontend. Para quase
+  // todos os users isso fica em 0, não refletia uso real nenhum. Pedido do
+  // Gustavo depois da reunião com o mentor (perguntou se dava para ver quem
+  // faz mais logins, para ligar aos mais ativos). admin_get_activity_stats
+  // agora devolve login_counts (migração 202). O Gustavo reparou que os
+  // números pareciam demasiado altos (21 "logins" em 3 dias para uma conta
+  // nova). A causa era o AuthContext a gravar um login por carregamento de
+  // página, não por sessão nova a sério (ver AuthContext.jsx, fetchProfile).
+  // Corrigido lá para 1 por dia de calendário, por isso isto já é, na
+  // prática, dias ativos no período, não "logins" literais.
+  const loginCountMap = activityStats?.login_counts || {}
+
   // Sorted & filtered users
   const uq = userSearch.toLowerCase()
   const sortedUsers = [...users]
@@ -612,7 +625,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
     .filter(u => filterAccountType === 'all' || (u.account_type || 'individual') === filterAccountType)
     .filter(u => filterOccupation === 'all' || (u.occupation || 'Não indicado') === filterOccupation)
     .sort((a, b) => {
-      if (sort === 'usage') return (b.total_xp || 0) - (a.total_xp || 0)
+      if (sort === 'usage') return (loginCountMap[b.id] || 0) - (loginCountMap[a.id] || 0)
       if (sort === 'oldest') return new Date(a.created_at) - new Date(b.created_at)
       if (sort === 'active') return (b.last_active_at ? new Date(b.last_active_at) : 0) - (a.last_active_at ? new Date(a.last_active_at) : 0)
       if (sort === 'projects') return (projectCountMap[b.id] || 0) - (projectCountMap[a.id] || 0)
@@ -930,7 +943,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
                       {isOnline && '● '}{lastActiveLabel}
                     </span>
                     {pc > 0 && <span style={{ fontSize: 10, color: C.blue }}>{pc} projeto{pc > 1 ? 's' : ''}</span>}
-                    {sort === 'usage' && u.total_xp > 0 && <span style={{ fontSize: 10, color: C.yellow }}>{u.total_xp} XP</span>}
+                    {sort === 'usage' && loginCountMap[u.id] > 0 && <span style={{ fontSize: 10, color: C.yellow }}>{loginCountMap[u.id]} dia{loginCountMap[u.id] > 1 ? 's' : ''} ativo{loginCountMap[u.id] > 1 ? 's' : ''}</span>}
                     <span style={{ fontSize: 10, color: C.subtle }}>registado {fmtDate(u.created_at)}</span>
                   </div>
                 </div>

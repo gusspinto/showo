@@ -2,10 +2,17 @@ import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
+import { LikeIcon as ThumbUp } from '@solar-icons/react/bold/like'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { getPlan, nextPaidPlan, upgradeGain } from '../lib/plans'
+import { getPlan, nextPaidPlan, planHighlights } from '../lib/plans'
 import { TESTIMONIALS } from './TestimonialsMarquee'
+
+const LinkedInMark = ({ size = 14 }) => (
+  <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" aria-hidden="true">
+    <path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.55C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.72C24 .77 23.2 0 22.22 0z"/>
+  </svg>
+)
 
 // Mesmo testemunho da Pricing/Home, sem inventar nada — só escolhido para
 // soar relevante à feature que bloqueou a pessoa. Fora dos casos abaixo,
@@ -26,11 +33,11 @@ function orderTestimonials(feature) {
   return [list[i], ...list.slice(0, i), ...list.slice(i + 1)]
 }
 
-// Preview real do que se recebe — pedido do Gustavo depois do teaser do
+// Preview real do que se recebe, pedido do Gustavo depois do teaser do
 // recap semanal ("eles têm de ter uma preview do que vai realmente ver se
 // comprarem"). Em vez de um ícone genérico, mostra uma réplica fiel de uma
-// das telas reais que a feature desbloqueia, com o mesmo texto/estrutura
-// que o utilizador vai mesmo ver — não uma promessa abstrata. Mapeia cada
+// das telas reais que a feature desbloqueia, com o mesmo texto e estrutura
+// que o utilizador vai mesmo ver, não uma promessa abstrata. Mapeia cada
 // feature de gate para a preview mais relevante; o que não tem mapa
 // específico cai no Coach IA, a feature paga mais universal de todas.
 const FEATURE_PREVIEW_KIND = {
@@ -52,7 +59,7 @@ function CoachPreview() {
         sim, por favor
       </div>
       <div style={{ alignSelf: 'flex-start', maxWidth: '85%', background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: '12px 12px 12px 4px', padding: '9px 12px', fontSize: 12.5, color: 'var(--color-text)', lineHeight: 1.5 }}>
-        Pronto — já tens um texto específico ao teu projeto, pronto a colar.
+        Pronto. Já tens um texto específico ao teu projeto, pronto a colar.
       </div>
     </div>
   )
@@ -87,23 +94,71 @@ function DefensePreview() {
   )
 }
 
+// Etiqueta própria, igual à do LinkedInPostPreview, para as duas coisas
+// ficarem claramente distintas uma da outra em vez de um bloco só ("isto é
+// o email ou o LinkedIn?", pedido do Gustavo depois de ver o pop-up).
 function RecapPreview() {
   return (
-    <div style={{ background: '#03060d', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 14px 14px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-        <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ff5f57' }} />
-        <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#febc2e' }} />
-        <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#28c840' }} />
-        <span style={{ fontSize: 9.5, color: '#5a6b85', marginLeft: 3 }}>hello@showo.pt</span>
+    <div>
+      <p style={{ margin: '0 0 6px', fontSize: 9, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+        O email que recebes, toda a segunda
+      </p>
+      <div style={{ background: '#03060d', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 14px 14px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
+        <span style={{ width: 20, height: 20, borderRadius: 6, background: '#1a60c8', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 9.5, fontWeight: 800 }}>S</span>
+        <span style={{ fontSize: 9.5, color: '#93a4c0' }}>Showo <span style={{ color: '#93a4c0' }}>hello@showo.pt</span></span>
       </div>
       <p style={{ margin: '0 0 10px', color: '#eef2f8', fontSize: 13.5, lineHeight: 1.3, fontWeight: 700 }}>5 registos na semana passada</p>
-      <div style={{ display: 'flex', gap: 6 }}>
-        {[['5', 'registos'], ['4', 'dias ativos'], ['3', 'semanas']].map(([v, l]) => (
+      <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+        {[['5', 'registos'], ['4', 'dias ativos'], ['3', 'semanas', '#f0a500']].map(([v, l, c]) => (
           <div key={l} style={{ flex: 1, padding: '8px 4px', textAlign: 'center', borderRadius: 7, background: '#0e1729', border: '1px solid #1e3050' }}>
-            <div style={{ fontSize: 16, fontWeight: 700, color: '#eef2f8', lineHeight: 1 }}>{v}</div>
-            <div style={{ fontSize: 8.5, color: '#7d93b0', marginTop: 3 }}>{l}</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: c || '#eef2f8', lineHeight: 1 }}>{v}</div>
+            <div style={{ fontSize: 8.5, color: '#a3b4ce', marginTop: 3 }}>{l}</div>
           </div>
         ))}
+      </div>
+      {/* Mesma escolha do email real (pickHighlight em send-weekly-recap):
+          excerto real por baixo dos números, sem aspas nem itálico, barra
+          lateral, não cartão de testemunho centrado. */}
+      <div style={{ borderLeft: '3px solid #2a4275', padding: '1px 0 1px 10px', marginBottom: 10 }}>
+        <p style={{ margin: '0 0 2px', color: '#93a4c0', fontSize: 9.5 }}>Decisão em DragBuild</p>
+        <p style={{ margin: 0, color: '#c3cede', fontSize: 11.5, lineHeight: 1.45 }}>
+          Decidi simplificar o fluxo depois de testar com duas pessoas que acharam confuso.
+        </p>
+      </div>
+      <p style={{ margin: 0, color: '#c3cede', fontSize: 11.5, lineHeight: 1.5 }}>
+        Faltam <strong style={{ color: '#eef2f8' }}>12 dias</strong> para a defesa.
+      </p>
+      </div>
+    </div>
+  )
+}
+
+// O email em si não mostra este texto, só uma caixa genérica com um botão
+// "Gerar o post" (confirmado em send-weekly-recap); a IA só escreve isto
+// depois de a pessoa clicar, com o diário real dela nesse momento. Por
+// isso a etiqueta deixa claro que é um exemplo do resultado, não do email.
+function LinkedInPostPreview() {
+  return (
+    <div style={{ marginTop: 14 }}>
+      <p style={{ margin: '0 0 6px', fontSize: 9, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+        O que podes gerar a partir dele, não vem no email
+      </p>
+      <div style={{ background: '#fff', borderRadius: 10, padding: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
+          <span style={{ width: 22, height: 22, borderRadius: '50%', background: '#1a60c8', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 10, fontWeight: 800 }}>G</span>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ fontSize: 10.5, fontWeight: 700, color: '#1a1a1a' }}>A tua página</div>
+          </div>
+          <span style={{ color: '#0A66C2', flexShrink: 0 }}><LinkedInMark size={13} /></span>
+        </div>
+        <p style={{ margin: 0, fontSize: 11, color: '#1a1a1a', lineHeight: 1.5 }}>
+          Esta semana avancei o DragBuild: melhorei a explicação do problema que o projeto resolve e simplifiquei o fluxo de arrastar componentes, depois de testar com duas pessoas que acharam confuso.
+        </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 8, paddingTop: 7, borderTop: '1px solid #eee' }}>
+          <ThumbUp size={11} color="#0A66C2" />
+          <span style={{ fontSize: 9.5, color: '#767676' }}>Gostei · Comentar · Partilhar</span>
+        </div>
       </div>
     </div>
   )
@@ -113,17 +168,17 @@ function FeaturePreview({ feature }) {
   const kind = FEATURE_PREVIEW_KIND[feature] || 'coach'
   const label = {
     coach: 'Preview real do Coach IA',
-    recap: 'Preview real do email que recebes',
+    recap: 'Preview real do recap semanal',
     vagas: 'Preview real das vagas de estágio',
     defense: 'Preview real da preparação de defesa',
   }[kind]
   return (
     <div className="plan-gate-fade">
-      <p style={{ margin: '0 0 8px', fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
+      <p style={{ margin: '0 0 14px', fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
       {kind === 'coach' && <CoachPreview />}
       {kind === 'vagas' && <VagasPreview />}
       {kind === 'defense' && <DefensePreview />}
-      {kind === 'recap' && <RecapPreview />}
+      {kind === 'recap' && <><RecapPreview /><LinkedInPostPreview /></>}
     </div>
   )
 }
@@ -169,15 +224,22 @@ const C = {
     padding: '5px 12px', borderRadius: 'var(--radius-full)',
   },
   title: { margin: 0, fontSize: '1.6rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)', lineHeight: 1.25 },
-  // Mesmo título, mas encostado à esquerda em cima dos botões — não centrado
-  // como cabeçalho, é a versão que fica quando há upgrade a oferecer.
-  // margin-top a condizer com o padding de dentro do cartão do preço ao
-  // lado — sem isto o título arrancava colado ao topo da coluna, mais
-  // acima do que o "Plus €4,99/mês" que tem o padding do cartão a empurrá-lo.
+  // Mesmo título, mas encostado à esquerda, logo acima do cartão de preço
+  // (pedido do Gustavo: "o que ganhas" mesmo em cima de "quanto custa"),
+  // não centrado como cabeçalho, versão que fica quando há upgrade a
+  // oferecer.
   titleRight: { margin: 'var(--sp-2) 0 4px', fontSize: '1.3rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)', lineHeight: 1.25 },
   // Frase curta a ligar o título às duas opções logo a seguir — só para não
   // ficar espaço em branco entre o título e os botões, nada mais.
   subtitleRight: { margin: '0 0 4px', fontSize: '0.85rem', color: 'var(--color-text-secondary)' },
+  // Preenche o espaço entre o título e os botões com benefícios reais
+  // (planHighlights, dados dos planos), em vez de ficar vazio no desktop
+  // enquanto a coluna da esquerda, mais alta, não chega ao fundo.
+  highlights: { display: 'flex', flexDirection: 'column', gap: '10px', margin: 'var(--sp-2) 0' },
+  highlightItem: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '10px', fontSize: '0.88rem' },
+  highlightLabel: { color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '7px' },
+  highlightCheck: { color: 'var(--color-success)', fontWeight: 800, flexShrink: 0 },
+  highlightValue: { color: 'var(--color-primary)', fontWeight: 700, whiteSpace: 'nowrap' },
   msg:   { margin: 0, fontSize: '0.98rem', color: 'var(--color-text-secondary)', lineHeight: 1.6, maxWidth: '420px' },
   body: { display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)', padding: 'var(--sp-8)' },
   // .sdb-panel--tint do Dashboard — o bloco de apoio à marca, tinta subtil,
@@ -211,12 +273,6 @@ const C = {
   upsellName: { fontSize: '1.15rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)' },
   upsellPrice: { fontSize: '1.3rem', fontWeight: 700, color: 'var(--color-text)' },
   upsellPeriod: { fontWeight: 500, fontSize: '0.8rem', color: 'var(--color-text-secondary)' },
-  upsellGain: {
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    fontSize: '0.88rem', color: 'var(--color-text-secondary)',
-    borderTop: '1px solid var(--color-primary-muted)', paddingTop: 'var(--sp-3)',
-  },
-  upsellGainValue: { color: 'var(--color-primary)', fontWeight: 700 },
   errorText: { margin: 0, fontSize: '0.78rem', color: 'var(--color-error)' },
   // .sdb-panel simples — mesmo cartão neutro que qualquer painel do
   // Dashboard, só para o testemunho não se confundir visualmente com o
@@ -328,7 +384,10 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
   // pagamento nenhum, só a mensagem e fechar. `forcedPlan` sobrepõe-se quando o chamador já
   // sabe que o "próximo tier" não chega (ex: link limpo só existe no Pro, não no Plus).
   const upgrade = forcedPlan || nextPaidPlan(planId)
-  const gain = upgrade && feature ? upgradeGain(feature, planId, upgrade) : null
+  // O cartão de preço deixou de ter a linha "Recap semanal: incluído" (gain,
+  // pedido do Gustavo, repetia a lista de benefícios ao lado). Sem exclude
+  // aqui, essa feature volta a aparecer, mas só na lista, não duplicada.
+  const highlights = upgrade ? planHighlights(planId, upgrade) : []
 
   // Carrossel de testemunhos, a começar no mais relevante à feature que
   // bloqueou a pessoa — pedido do Gustavo depois de ver o pop-up do
@@ -437,13 +496,27 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
                   ficar em cima de tudo em mobile e, no desktop, mudar de
                   posição via grid-area para o topo da coluna dos botões —
                   sem duplicar JSX para cada tamanho de ecrã. */}
+              {/* Só a preview (FeaturePreview) fica na coluna da direita. Título,
+                  lista de benefícios, preço e testemunho ficam todos juntos à
+                  esquerda, "o que ganhas" inteiro mesmo em cima de "quanto
+                  custa", não partido a meio entre as duas colunas. */}
               <div className="plan-gate-title-block">
-                <p style={C.titleRight}>{title}</p>
-                <p style={C.subtitleRight}>Escolhe como queres continuar.</p>
+                <FeaturePreview feature={feature} />
               </div>
 
               <div className="plan-gate-col-left">
-                <FeaturePreview feature={feature} />
+                <p style={C.titleRight}>{title}</p>
+                <p style={C.subtitleRight}>Escolhe como queres continuar.</p>
+                {highlights.length > 0 && (
+                  <ul style={{ ...C.highlights, listStyle: 'none', padding: 0 }}>
+                    {highlights.map(h => (
+                      <li key={h.label} style={C.highlightItem}>
+                        <span style={C.highlightLabel}><span style={C.highlightCheck}>✓</span>{h.label}</span>
+                        <span style={C.highlightValue}>{h.value}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
                 {upgrade.priceLabelAnnual && (
                   <div style={{ ...C.periodToggle, margin: '0 auto 12px' }} role="group" aria-label="Periodicidade do pagamento">
                     <button type="button" style={C.periodBtn(!annual)} onClick={() => setAnnual(false)}>Mensal</button>
@@ -460,12 +533,6 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
                       <span style={C.upsellPeriod}>{annual && upgrade.priceLabelAnnual ? '/ano' : upgrade.period}</span>
                     </span>
                   </div>
-                  {gain && (
-                    <div style={C.upsellGain}>
-                      <span>{gain.label}</span>
-                      <span style={C.upsellGainValue}>{gain.value}</span>
-                    </div>
-                  )}
                 </div>
 
                 {testimonial && (
