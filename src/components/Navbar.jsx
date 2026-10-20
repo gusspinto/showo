@@ -1743,7 +1743,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               )}
               {showEstagios && (
                 <button className={`sb-item${isActive('/vagas') ? ' active' : ''}`} onClick={() => navigate('/vagas')}>
-                  <Briefcase size={16} />{!collapsed && showLabels && <span>Estágios</span>}
+                  <Briefcase size={16} />{!collapsed && showLabels && <span>Vagas</span>}
                 </button>
               )}
               <button className={`sb-item${isActive('/explorar') ? ' active' : ''}`} onClick={() => navigate('/explorar')}>
