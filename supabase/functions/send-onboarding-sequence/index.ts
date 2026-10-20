@@ -149,7 +149,8 @@ function buildDay1({ firstName, unsubscribeUrl, hasProject, code, dia }: DayBuil
         urgencyBand(dia, code) +
         headline('Ainda não criaste o teu primeiro projeto') +
         paragraph('Não precisa de estar pronto nem perfeito. Sobe um PDF, um PowerPoint, ou descreve em duas frases o que já fizeste, a IA trata do resto.') +
-        paragraph('A partir daí, a IA já lê o diário do projeto antes de responder, sem teres de explicar tudo outra vez sempre que perguntas algo.', true) +
+        paragraph('A partir daí, a IA já lê o diário do projeto antes de responder, sem teres de explicar tudo outra vez sempre que perguntas algo.') +
+        paragraph(`Já agora: tens 50% de desconto no Plus durante os primeiros 6 meses com o código ${esc(code)}, quando quiseres avançar.`, true) +
         cta(`${APP}/novo`, 'Começar agora, 2 minutos'),
         `Dia ${dia} de ${TOTAL_DAYS}`,
         unsubscribeUrl,
@@ -164,7 +165,8 @@ function buildDay1({ firstName, unsubscribeUrl, hasProject, code, dia }: DayBuil
       urgencyBand(dia, code) +
       headline('Já reparaste que o ChatGPT começa sempre do zero?') +
       paragraph('Sempre que abres o ChatGPT para falar do teu projeto, tens de explicar tudo outra vez.') +
-      paragraph('No Showo a IA lê o diário do projeto antes de responder. Continuas a mesma conversa, com contexto acumulado desde o primeiro dia.', true) +
+      paragraph('No Showo a IA lê o diário do projeto antes de responder. Continuas a mesma conversa, com contexto acumulado desde o primeiro dia.') +
+      paragraph(`Já agora: tens 50% de desconto no Plus durante os primeiros 6 meses com o código ${esc(code)}, quando quiseres avançar.`, true) +
       cta(`${APP}/dashboard`, 'Continuar a conversa com a IA'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
@@ -182,7 +184,8 @@ function buildDay2({ firstName, unsubscribeUrl, hasProject, code, dia }: DayBuil
         urgencyBand(dia, code) +
         headline('"Não tenho nada digno de mostrar" é a dúvida mais comum') +
         paragraph('PAP a meio, estágio em curso, um projeto pessoal, até trabalho de faculdade. Não precisa de estar pronto nem de ser impressionante, o que interessa é mostrar o processo real, não só o resultado final.') +
-        paragraph('Sobe o que já tens e a IA ajuda a organizar isso numa página que faz sentido.', true) +
+        paragraph('Sobe o que já tens e a IA ajuda a organizar isso numa página que faz sentido.') +
+        paragraph(`Já agora: tens 50% de desconto no Plus durante os primeiros 6 meses com o código ${esc(code)}, quando quiseres avançar.`, true) +
         cta(`${APP}/novo`, 'Ver o meu projeto em 2 minutos'),
         `Dia ${dia} de ${TOTAL_DAYS}`,
         unsubscribeUrl,
@@ -197,7 +200,8 @@ function buildDay2({ firstName, unsubscribeUrl, hasProject, code, dia }: DayBuil
       urgencyBand(dia, code) +
       headline('O teu GitHub também pode contar a história') +
       paragraph('Liga o repositório e os commits entram sozinhos no diário do projeto, ao lado das tuas notas.') +
-      paragraph('Quando o portfólio estiver pronto, publicas direto no LinkedIn, sem exportar nada à mão.', true) +
+      paragraph('Quando o portfólio estiver pronto, publicas direto no LinkedIn, sem exportar nada à mão.') +
+      paragraph(`Já agora: tens 50% de desconto no Plus durante os primeiros 6 meses com o código ${esc(code)}, quando quiseres avançar.`, true) +
       cta(`${APP}/dashboard`, 'Ligar o GitHub ao meu projeto'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
@@ -216,6 +220,7 @@ function buildDay3({ firstName, unsubscribeUrl, hasProject, code, dia }: DayBuil
       paragraph('Preferimos mostrar o que quem já usa o Showo disse, com o nome deles:') +
       quote('Para alguém que fez PAP e queria usá-la para exposição, esta app é um gamechanger para estudantes na mesma situação.', 'Rafael Matos, Estudante de Engenharia Informática da Universidade de Aveiro') +
       quote('Na minha opinião, um dos pontos mais fortes da plataforma é a Defesa. A organização e preparação torna tudo mais interativo e envolvente.', 'Rita Sousa, Estudante na Escola Profissional Bento de Jesus Caraça') +
+      paragraph(`Já agora: tens 50% de desconto no Plus durante os primeiros 6 meses com o código ${esc(code)}, quando quiseres avançar.`, true) +
       (hasProject ? cta(`${APP}/dashboard`, 'Quero o mesmo resultado') : cta(`${APP}/novo`, 'Quero começar agora')),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
@@ -249,7 +254,8 @@ function buildDay5({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bui
       urgencyBand(dia, code) +
       headline('O recap semanal mostra a tua consistência a quem conta') +
       paragraph('Toda a segunda, um resumo automático do que fizeste na semana: quantos registos, quantos dias ativo, e um excerto real do teu diário.') +
-      paragraph('A partir dele, geras um post pronto para o LinkedIn, para professores e recrutadores verem o processo, não só o resultado final.', true) +
+      paragraph('A partir dele, geras um post pronto para o LinkedIn, para professores e recrutadores verem o processo, não só o resultado final.') +
+      paragraph(`É uma feature do Plus. Com o código ${esc(code)}, tens 50% de desconto durante os primeiros 6 meses.`, true) +
       cta(`${APP}/pricing`, 'Ver como funciona o recap'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
@@ -266,7 +272,8 @@ function buildDay6({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bui
       urgencyBand(dia, code) +
       headline('10 mensagens de Coach IA por mês esgotam depressa') +
       paragraph('Cada pergunta ao Coach, cada revisão de texto, cada dúvida sobre o projeto conta para o limite mensal do plano Grátis.') +
-      paragraph('No Plus são 100 por mês, dez vezes mais espaço para usares a IA como apoio real ao longo do projeto, não só nos primeiros dias.', true) +
+      paragraph('No Plus são 100 por mês, dez vezes mais espaço para usares a IA como apoio real ao longo do projeto, não só nos primeiros dias.') +
+      paragraph(`Com o código ${esc(code)}, tens 50% de desconto durante os primeiros 6 meses.`, true) +
       cta(`${APP}/pricing`, 'Passar a 100 mensagens por mês'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
@@ -300,7 +307,8 @@ function buildDay8({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bui
       urgencyBand(dia, code) +
       headline('As vagas de estágio também vivem dentro do Showo') +
       paragraph('Para além do portfólio, há uma lista de vagas reais de estágio. Candidatas-te direto, com o teu perfil Showo como prova do que já fizeste.') +
-      paragraph('É uma das razões pelas quais quem está à procura de estágio ou primeiro emprego fica no plano pago, não só pelo portfólio.', true) +
+      paragraph('É uma das razões pelas quais quem está à procura de estágio ou primeiro emprego fica no plano pago, não só pelo portfólio.') +
+      paragraph(`Com o código ${esc(code)}, tens 50% de desconto durante os primeiros 6 meses.`, true) +
       cta(`${APP}/vagas`, 'Ver as vagas abertas'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
@@ -334,7 +342,8 @@ function buildDay10({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bu
       urgencyBand(dia, code) +
       headline('A defesa não começa a preparar-se na véspera') +
       paragraph('O Showo gera perguntas prováveis do júri a partir do teu diário real, e sugere respostas baseadas no que decidiste e porquê, desde o início do projeto.') +
-      paragraph('Quem chega à defesa já com isto trabalhado nota a diferença, não é um resumo feito às pressas na última semana.', true) +
+      paragraph('Quem chega à defesa já com isto trabalhado nota a diferença, não é um resumo feito às pressas na última semana.') +
+      paragraph(`Com o código ${esc(code)}, tens 50% de desconto durante os primeiros 6 meses.`, true) +
       cta(`${APP}/pricing`, 'Ver a preparação de defesa'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
@@ -351,7 +360,8 @@ function buildDay11({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bu
       urgencyBand(dia, code) +
       headline('O que professores e recrutadores veem no teu perfil') +
       quote('Era esta a ferramenta que me faltava para os meus estudos. Bastante alinhado com as necessidades dos alunos.', 'Maria Eduarda, Estudante da Computação e Engenharia de Software, Natixis') +
-      paragraph('Um link, um portfólio organizado, com a consistência do teu trabalho ao longo do tempo, não só um PDF estático.', true) +
+      paragraph('Um link, um portfólio organizado, com a consistência do teu trabalho ao longo do tempo, não só um PDF estático.') +
+      paragraph(`Com o código ${esc(code)}, tens 50% de desconto durante os primeiros 6 meses.`, true) +
       cta(`${APP}/pricing`, 'Melhorar o meu perfil'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
