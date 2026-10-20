@@ -481,7 +481,7 @@ a { transition: color 0.15s, opacity 0.15s; }
 .plan-gate-title-block { grid-area: title; }
 /* Cartões reais (.sdb-panel/.sdb-panel--tint do Dashboard) — a própria
    borda de cada um já separa preço de testemunho. */
-.plan-gate-col-left { grid-area: left; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.plan-gate-col-left { grid-area: left; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .plan-gate-col-right { grid-area: buttons; display: flex; flex-direction: column; gap: 12px; }
 @media (min-width: 640px) {
   /* Desktop: duas colunas. "left" ocupa as duas linhas da coluna 1 (o
@@ -492,7 +492,7 @@ a { transition: color 0.15s, opacity 0.15s; }
     grid-template-columns: 1.1fr 1fr;
     grid-template-rows: auto 1fr;
     grid-template-areas: "left title" "left buttons";
-    gap: 28px;
+    gap: 22px;
   }
   .plan-gate-col-right { justify-content: flex-end; }
 }

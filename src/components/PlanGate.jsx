@@ -100,18 +100,18 @@ function DefensePreview() {
 function RecapPreview() {
   return (
     <div>
-      <p style={{ margin: '0 0 6px', fontSize: 9, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+      <p style={{ margin: '0 0 5px', fontSize: 9, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
         O email que recebes, toda a segunda
       </p>
-      <div style={{ background: '#03060d', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 14px 14px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
+      <div style={{ background: '#03060d', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 13px 12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
         <span style={{ width: 20, height: 20, borderRadius: 6, background: '#1a60c8', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 9.5, fontWeight: 800 }}>S</span>
         <span style={{ fontSize: 9.5, color: '#93a4c0' }}>Showo <span style={{ color: '#93a4c0' }}>hello@showo.pt</span></span>
       </div>
-      <p style={{ margin: '0 0 10px', color: '#eef2f8', fontSize: 13.5, lineHeight: 1.3, fontWeight: 700 }}>5 registos na semana passada</p>
-      <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+      <p style={{ margin: '0 0 8px', color: '#eef2f8', fontSize: 13.5, lineHeight: 1.3, fontWeight: 700 }}>5 registos na semana passada</p>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
         {[['5', 'registos'], ['4', 'dias ativos'], ['3', 'semanas', '#f0a500']].map(([v, l, c]) => (
-          <div key={l} style={{ flex: 1, padding: '8px 4px', textAlign: 'center', borderRadius: 7, background: '#0e1729', border: '1px solid #1e3050' }}>
+          <div key={l} style={{ flex: 1, padding: '7px 4px', textAlign: 'center', borderRadius: 7, background: '#0e1729', border: '1px solid #1e3050' }}>
             <div style={{ fontSize: 16, fontWeight: 700, color: c || '#eef2f8', lineHeight: 1 }}>{v}</div>
             <div style={{ fontSize: 8.5, color: '#a3b4ce', marginTop: 3 }}>{l}</div>
           </div>
@@ -120,7 +120,7 @@ function RecapPreview() {
       {/* Mesma escolha do email real (pickHighlight em send-weekly-recap):
           excerto real por baixo dos números, sem aspas nem itálico, barra
           lateral, não cartão de testemunho centrado. */}
-      <div style={{ borderLeft: '3px solid #2a4275', padding: '1px 0 1px 10px', marginBottom: 10 }}>
+      <div style={{ borderLeft: '3px solid #2a4275', padding: '1px 0 1px 10px', marginBottom: 8 }}>
         <p style={{ margin: '0 0 2px', color: '#93a4c0', fontSize: 9.5 }}>Decisão em DragBuild</p>
         <p style={{ margin: 0, color: '#c3cede', fontSize: 11.5, lineHeight: 1.45 }}>
           Decidi simplificar o fluxo depois de testar com duas pessoas que acharam confuso.
@@ -140,12 +140,12 @@ function RecapPreview() {
 // isso a etiqueta deixa claro que é um exemplo do resultado, não do email.
 function LinkedInPostPreview() {
   return (
-    <div style={{ marginTop: 14 }}>
-      <p style={{ margin: '0 0 6px', fontSize: 9, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+    <div style={{ marginTop: 10 }}>
+      <p style={{ margin: '0 0 5px', fontSize: 9, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
         O que podes gerar a partir dele, não vem no email
       </p>
-      <div style={{ background: '#fff', borderRadius: 10, padding: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
+      <div style={{ background: '#fff', borderRadius: 10, padding: 11 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 7 }}>
           <span style={{ width: 22, height: 22, borderRadius: '50%', background: '#1a60c8', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 10, fontWeight: 800 }}>G</span>
           <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{ fontSize: 10.5, fontWeight: 700, color: '#1a1a1a' }}>A tua página</div>
@@ -155,7 +155,7 @@ function LinkedInPostPreview() {
         <p style={{ margin: 0, fontSize: 11, color: '#1a1a1a', lineHeight: 1.5 }}>
           Esta semana avancei o DragBuild: melhorei a explicação do problema que o projeto resolve e simplifiquei o fluxo de arrastar componentes, depois de testar com duas pessoas que acharam confuso.
         </p>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 8, paddingTop: 7, borderTop: '1px solid #eee' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 7, paddingTop: 6, borderTop: '1px solid #eee' }}>
           <ThumbUp size={11} color="#0A66C2" />
           <span style={{ fontSize: 9.5, color: '#767676' }}>Gostei · Comentar · Partilhar</span>
         </div>
@@ -174,7 +174,7 @@ function FeaturePreview({ feature }) {
   }[kind]
   return (
     <div className="plan-gate-fade">
-      <p style={{ margin: '0 0 14px', fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
+      <p style={{ margin: '0 0 10px', fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
       {kind === 'coach' && <CoachPreview />}
       {kind === 'vagas' && <VagasPreview />}
       {kind === 'defense' && <DefensePreview />}
@@ -241,7 +241,7 @@ const C = {
   highlightCheck: { color: 'var(--color-success)', fontWeight: 800, flexShrink: 0 },
   highlightValue: { color: 'var(--color-primary)', fontWeight: 700, whiteSpace: 'nowrap' },
   msg:   { margin: 0, fontSize: '0.98rem', color: 'var(--color-text-secondary)', lineHeight: 1.6, maxWidth: '420px' },
-  body: { display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)', padding: 'var(--sp-8)' },
+  body: { display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)', padding: 'var(--sp-6) var(--sp-8)' },
   // .sdb-panel--tint do Dashboard — o bloco de apoio à marca, tinta subtil,
   // não uma faixa azul cheia. É o mesmo painel que o resto da app usa para
   // "isto é importante mas não é O botão principal".
