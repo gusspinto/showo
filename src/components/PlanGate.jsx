@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
-import { LikeIcon as ThumbUp } from '@solar-icons/react/bold/like'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { getPlan, nextPaidPlan, planHighlights } from '../lib/plans'
@@ -134,32 +133,15 @@ function RecapPreview() {
   )
 }
 
-// O email em si não mostra este texto, só uma caixa genérica com um botão
-// "Gerar o post" (confirmado em send-weekly-recap); a IA só escreve isto
-// depois de a pessoa clicar, com o diário real dela nesse momento. Por
-// isso a etiqueta deixa claro que é um exemplo do resultado, não do email.
-function LinkedInPostPreview() {
+// Versão compacta: o email real é a prova que importa (números concretos);
+// o post de LinkedIn era um segundo mockup completo empilhado a seguir, só
+// a repetir a mesma frase de exemplo com outra moldura. Uma linha com o
+// ícone já diz que a funcionalidade existe, sem duplicar o cartão inteiro.
+function LinkedInPostHint() {
   return (
-    <div style={{ marginTop: 10 }}>
-      <p style={{ margin: '0 0 5px', fontSize: 9, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-        O que podes gerar a partir dele, não vem no email
-      </p>
-      <div style={{ background: '#fff', borderRadius: 10, padding: 11 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 7 }}>
-          <span style={{ width: 22, height: 22, borderRadius: '50%', background: '#1a60c8', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 10, fontWeight: 800 }}>G</span>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={{ fontSize: 10.5, fontWeight: 700, color: '#1a1a1a' }}>A tua página</div>
-          </div>
-          <span style={{ color: '#0A66C2', flexShrink: 0 }}><LinkedInMark size={13} /></span>
-        </div>
-        <p style={{ margin: 0, fontSize: 11, color: '#1a1a1a', lineHeight: 1.5 }}>
-          Esta semana avancei o DragBuild: melhorei a explicação do problema que o projeto resolve e simplifiquei o fluxo de arrastar componentes, depois de testar com duas pessoas que acharam confuso.
-        </p>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 7, paddingTop: 6, borderTop: '1px solid #eee' }}>
-          <ThumbUp size={11} color="#0A66C2" />
-          <span style={{ fontSize: 9.5, color: '#767676' }}>Gostei · Comentar · Partilhar</span>
-        </div>
-      </div>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 8, fontSize: 11, color: 'var(--color-text-secondary)' }}>
+      <span style={{ color: '#0A66C2', flexShrink: 0, display: 'flex' }}><LinkedInMark size={13} /></span>
+      Também vira post de LinkedIn pronto a publicar, com um clique.
     </div>
   )
 }
@@ -168,17 +150,19 @@ function FeaturePreview({ feature }) {
   const kind = FEATURE_PREVIEW_KIND[feature] || 'coach'
   const label = {
     coach: 'Preview real do Coach IA',
-    recap: 'Preview real do recap semanal',
     vagas: 'Preview real das vagas de estágio',
     defense: 'Preview real da preparação de defesa',
   }[kind]
   return (
     <div className="plan-gate-fade">
-      <p style={{ margin: '0 0 10px', fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
+      {/* O recap não repete o rótulo aqui: a RecapPreview já tem o seu
+          próprio, "o email que recebes, toda a segunda", que já diz o
+          suficiente sem duplicar a ideia de "preview real" duas vezes. */}
+      {label && <p style={{ margin: '0 0 10px', fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>}
       {kind === 'coach' && <CoachPreview />}
       {kind === 'vagas' && <VagasPreview />}
       {kind === 'defense' && <DefensePreview />}
-      {kind === 'recap' && <><RecapPreview /><LinkedInPostPreview /></>}
+      {kind === 'recap' && <><RecapPreview /><LinkedInPostHint /></>}
     </div>
   )
 }
