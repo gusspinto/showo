@@ -73,55 +73,37 @@ function DefensePreview() {
   )
 }
 
-// Etiqueta própria, igual à do LinkedInPostPreview, para as duas coisas
-// ficarem claramente distintas uma da outra em vez de um bloco só ("isto é
-// o email ou o LinkedIn?", pedido do Gustavo depois de ver o pop-up).
+// Só o post de LinkedIn, pedido do Gustavo depois de ver o pop-up com
+// email + números + citação + prazo, tudo junto: "muita informação e
+// principalmente não compreensível". Um cartão só, a coisa mais concreta
+// e reconhecível que a feature desbloqueia, sem repetir a mesma frase de
+// exemplo em duas molduras diferentes.
 function RecapPreview() {
+  const { profile } = useAuth()
+  const name = profile?.full_name || 'O teu nome'
+  const initial = profile?.full_name ? profile.full_name.trim()[0].toUpperCase() : 'S'
   return (
     <div>
-      <p style={{ margin: '0 0 5px', fontSize: 9, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-        O email que recebes, toda a segunda
+      {/* padding-right para nunca ficar por baixo do X de fechar, que é
+          posicionado absoluto no canto do modal; margin-top para abrir
+          distância clara da mesma zona (pedido do Gustavo: "ainda está em
+          cima", depois de ver o rótulo perto de mais do botão). */}
+      <p style={{ margin: '22px 26px 10px 0', fontSize: 9, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+        Post de LinkedIn pronto a publicar
       </p>
-      <div style={{ background: '#03060d', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 13px 12px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
-        <span style={{ width: 20, height: 20, borderRadius: 6, background: '#1a60c8', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 9.5, fontWeight: 800 }}>S</span>
-        <span style={{ fontSize: 9.5, color: '#93a4c0' }}>Showo <span style={{ color: '#93a4c0' }}>hello@showo.pt</span></span>
-      </div>
-      <p style={{ margin: '0 0 8px', color: '#eef2f8', fontSize: 13.5, lineHeight: 1.3, fontWeight: 700 }}>5 registos na semana passada</p>
-      <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
-        {[['5', 'registos'], ['4', 'dias ativos'], ['3', 'semanas', '#f0a500']].map(([v, l, c]) => (
-          <div key={l} style={{ flex: 1, padding: '7px 4px', textAlign: 'center', borderRadius: 7, background: '#0e1729', border: '1px solid #1e3050' }}>
-            <div style={{ fontSize: 16, fontWeight: 700, color: c || '#eef2f8', lineHeight: 1 }}>{v}</div>
-            <div style={{ fontSize: 8.5, color: '#a3b4ce', marginTop: 3 }}>{l}</div>
+      <div style={{ background: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 13px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 9 }}>
+          <span style={{ width: 32, height: 32, borderRadius: '50%', background: '#1a60c8', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 13, fontWeight: 800 }}>{initial}</span>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: '#1a1a1a' }}>{name}</div>
+            <div style={{ fontSize: 10.5, color: '#5a5a5a' }}>via Showo · agora</div>
           </div>
-        ))}
-      </div>
-      {/* Mesma escolha do email real (pickHighlight em send-weekly-recap):
-          excerto real por baixo dos números, sem aspas nem itálico, barra
-          lateral, não cartão de testemunho centrado. */}
-      <div style={{ borderLeft: '3px solid #2a4275', padding: '1px 0 1px 10px', marginBottom: 8 }}>
-        <p style={{ margin: '0 0 2px', color: '#93a4c0', fontSize: 9.5 }}>Decisão em DragBuild</p>
-        <p style={{ margin: 0, color: '#c3cede', fontSize: 11.5, lineHeight: 1.45 }}>
-          Decidi simplificar o fluxo depois de testar com duas pessoas que acharam confuso.
+          <span style={{ marginLeft: 'auto', color: '#0A66C2', flexShrink: 0, display: 'flex' }}><LinkedInMark size={16} /></span>
+        </div>
+        <p style={{ margin: 0, color: '#1a1a1a', fontSize: 12.5, lineHeight: 1.5 }}>
+          Decidi simplificar o fluxo do DragBuild depois de testar com duas pessoas que acharam confuso.
         </p>
       </div>
-      <p style={{ margin: 0, color: '#c3cede', fontSize: 11.5, lineHeight: 1.5 }}>
-        Faltam <strong style={{ color: '#eef2f8' }}>12 dias</strong> para a defesa.
-      </p>
-      </div>
-    </div>
-  )
-}
-
-// Versão compacta: o email real é a prova que importa (números concretos);
-// o post de LinkedIn era um segundo mockup completo empilhado a seguir, só
-// a repetir a mesma frase de exemplo com outra moldura. Uma linha com o
-// ícone já diz que a funcionalidade existe, sem duplicar o cartão inteiro.
-function LinkedInPostHint() {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 8, fontSize: 11, color: 'var(--color-text-secondary)' }}>
-      <span style={{ color: '#0A66C2', flexShrink: 0, display: 'flex' }}><LinkedInMark size={13} /></span>
-      Também vira post de LinkedIn pronto a publicar, com um clique.
     </div>
   )
 }
@@ -142,7 +124,7 @@ function FeaturePreview({ feature }) {
       {kind === 'coach' && <CoachPreview />}
       {kind === 'vagas' && <VagasPreview />}
       {kind === 'defense' && <DefensePreview />}
-      {kind === 'recap' && <><RecapPreview /><LinkedInPostHint /></>}
+      {kind === 'recap' && <RecapPreview />}
     </div>
   )
 }
@@ -203,19 +185,19 @@ const C = {
   highlightValue: { color: 'var(--color-primary)', fontWeight: 700, whiteSpace: 'nowrap' },
   msg:   { margin: 0, fontSize: '0.98rem', color: 'var(--color-text-secondary)', lineHeight: 1.6, maxWidth: '420px' },
   body: { display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)', padding: 'var(--sp-6) var(--sp-8)' },
-  // .sdb-panel--tint do Dashboard — o bloco de apoio à marca, tinta subtil,
-  // não uma faixa azul cheia. É o mesmo painel que o resto da app usa para
-  // "isto é importante mas não é O botão principal".
-  upsell: {
-    display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)',
-    background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-muted)',
+  // Um cartão só para "o que ganhas" (benefícios + periodicidade + preço),
+  // em vez de três blocos soltos com ritmos diferentes (lista nua, pílulas
+  // soltas, cartão tintado) — pedido do Gustavo.
+  benefitsCard: {
+    display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)',
+    background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)',
     borderRadius: 'var(--radius-lg)', padding: 'var(--sp-5)',
   },
+  upsellDivider: { height: 1, background: 'var(--color-border)' },
   periodToggle: {
     display: 'flex', gap: '3px', width: 'fit-content',
-    padding: '3px', marginBottom: 'var(--sp-3)',
     background: 'var(--color-bg)', border: '1px solid var(--color-border)',
-    borderRadius: 'var(--radius-full)',
+    padding: '3px', borderRadius: 'var(--radius-full)',
   },
   periodBtn: (active) => ({
     display: 'flex', alignItems: 'center', gap: '5px',
@@ -414,25 +396,30 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
 
               <div className="plan-gate-col-left">
                 <p style={C.titleRight}>{title}</p>
-                {highlights.length > 0 && (
-                  <ul style={{ ...C.highlights, listStyle: 'none', padding: 0 }}>
-                    {highlights.map(h => (
-                      <li key={h.label} style={C.highlightItem}>
-                        <span style={C.highlightLabel}><span style={C.highlightCheck}>✓</span>{h.label}</span>
-                        <span style={C.highlightValue}>{h.value}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {upgrade.priceLabelAnnual && (
-                  <div style={{ ...C.periodToggle, margin: '0 auto 12px' }} role="group" aria-label="Periodicidade do pagamento">
-                    <button type="button" style={C.periodBtn(!annual)} onClick={() => setAnnual(false)}>Mensal</button>
-                    <button type="button" style={C.periodBtn(annual)} onClick={() => setAnnual(true)}>
-                      Anual <span style={C.periodBadge}>2 meses grátis</span>
-                    </button>
-                  </div>
-                )}
-                <div style={C.upsell}>
+                {/* Um cartão só, não lista solta + pílulas soltas + cartão de
+                    preço, cada um com o seu próprio ritmo visual (pedido do
+                    Gustavo: "esta estranha"). O destaque (preço) continua
+                    separado por dentro do mesmo cartão, não por fora. */}
+                <div style={C.benefitsCard}>
+                  {highlights.length > 0 && (
+                    <ul style={{ ...C.highlights, listStyle: 'none', padding: 0, margin: 0 }}>
+                      {highlights.map(h => (
+                        <li key={h.label} style={C.highlightItem}>
+                          <span style={C.highlightLabel}><span style={C.highlightCheck}>✓</span>{h.label}</span>
+                          <span style={C.highlightValue}>{h.value}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <div style={C.upsellDivider} />
+                  {upgrade.priceLabelAnnual && (
+                    <div style={C.periodToggle} role="group" aria-label="Periodicidade do pagamento">
+                      <button type="button" style={C.periodBtn(!annual)} onClick={() => setAnnual(false)}>Mensal</button>
+                      <button type="button" style={C.periodBtn(annual)} onClick={() => setAnnual(true)}>
+                        Anual <span style={C.periodBadge}>2 meses grátis</span>
+                      </button>
+                    </div>
+                  )}
                   <div style={C.upsellHead}>
                     <span style={C.upsellName}>{upgrade.name}</span>
                     <span style={C.upsellPrice}>
