@@ -416,6 +416,14 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
     if (!upgrade) return
     setLoading(true)
     setCheckoutError('')
+    // Faltava aqui: Pricing.jsx já registava checkout_started no seu próprio
+    // botão, mas este popup (o caminho principal, disparado sempre que
+    // alguém bate num limite real, 190 vezes este mês) nunca registava
+    // nada. O funil do Admin mostrava quase ninguém a avançar depois de ver
+    // a oferta, mas estava só a contar o caminho secundário (página /pricing
+    // à parte), não este. Mesmo buraco de medição que o "0% clicaram no
+    // nudge" já tinha revelado.
+    logFunnelEvent('checkout_started', feature)
     try {
       const returnPath = `${location.pathname}${location.search}`
       const { data, error } = await supabase.functions.invoke('create-checkout', {
@@ -437,6 +445,9 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
   // pronta, em vez de redirecionar logo o próprio browser.
   async function handleAskParents() {
     if (!upgrade) return
+    // Também é um início de checkout real (mesma sessão Stripe, só muda o
+    // canal), por isso regista igual ao handleUpgrade.
+    logFunnelEvent('checkout_started', feature)
     // Aberto já, síncrono com o clique — se esperasse pelo fetch antes de
     // abrir, o Safari (e por vezes o Chrome) trata a nova aba como popup
     // não pedido pelo utilizador e bloqueia-a em silêncio, sem erro nenhum
