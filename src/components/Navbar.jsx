@@ -1746,11 +1746,10 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           ) : (
             /* ── ALUNO sidebar ── */
             <>
-              {/* Mesa de trabalho: tudo o que é trabalho do dia a dia do
-                  aluno num só grupo (projeto, diário, coach, comunidade,
-                  vagas), em vez de espalhado pela sidebar inteira. Pedido
-                  explícito do Gustavo. Biblioteca/Turmas/Planos/Aprende a
-                  usar ficam fora, não fazem parte deste grupo. */}
+              {/* Mesa de trabalho: tudo o que é o trabalho do próprio aluno
+                  (projeto, diário, coach, biblioteca, turmas) num só grupo.
+                  Biblioteca e Turmas estavam soltas sem título nenhum antes
+                  disto, apontado pelo Gustavo. */}
               {!collapsed && showLabels && <span className="sb-label">Mesa de trabalho</span>}
 
               {user && (
@@ -1772,6 +1771,16 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   <Bot size={16} />{!collapsed && showLabels && <span>Coach IA</span>}
                 </button>
               )}
+              {user && (
+                <button className={`sb-item${isActive('/biblioteca') ? ' active' : ''}`} onClick={() => navigate('/biblioteca')}>
+                  <LibraryIcon size={16} />{!collapsed && showLabels && <span>Biblioteca</span>}
+                </button>
+              )}
+              {isSchoolAccount && (
+                <button className={`sb-item${isActive('/turmas') ? ' active' : ''}`} onClick={() => navigate('/turmas')}>
+                  <Users2 size={16} />{!collapsed && showLabels && <span>Turmas</span>}
+                </button>
+              )}
 
               {user && (
                 <>
@@ -1791,29 +1800,22 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                       </span>
                     )}
                   </button>
+
+                  {showEstagios && (
+                    <button className={`sb-item${isActive('/vagas') ? ' active' : ''}`} onClick={() => navigate('/vagas')}>
+                      <Briefcase size={16} />{!collapsed && showLabels && <span>Vagas</span>}
+                    </button>
+                  )}
                 </>
               )}
 
-              {showEstagios && (
-                <button className={`sb-item${isActive('/vagas') ? ' active' : ''}`} onClick={() => navigate('/vagas')}>
-                  <Briefcase size={16} />{!collapsed && showLabels && <span>Vagas</span>}
-                </button>
-              )}
-
+              {/* Conta: tudo o que é sobre a relação com o Showo em si
+                  (pagar mais, aprender a usar a app), não é trabalho nem
+                  comunidade. Planos e Aprende a usar também estavam soltos
+                  sem título, mesmo pedido. Sem gate de user, tal como já
+                  era antes (visível a visitante não autenticado). */}
               <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
-
-              {user && (
-                <button className={`sb-item${isActive('/biblioteca') ? ' active' : ''}`} onClick={() => navigate('/biblioteca')}>
-                  <LibraryIcon size={16} />{!collapsed && showLabels && <span>Biblioteca</span>}
-                </button>
-              )}
-              {isSchoolAccount && (
-                <button className={`sb-item${isActive('/turmas') ? ' active' : ''}`} onClick={() => navigate('/turmas')}>
-                  <Users2 size={16} />{!collapsed && showLabels && <span>Turmas</span>}
-                </button>
-              )}
-
-              <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
+              {!collapsed && showLabels && <span className="sb-label">Conta</span>}
 
               {!isSchoolAccount && (
                 <button className={`sb-item${isActive('/pricing') ? ' active' : ''}`} onClick={() => navigate('/pricing')} title="Planos">
