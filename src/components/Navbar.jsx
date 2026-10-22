@@ -1746,15 +1746,19 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           ) : (
             /* ── ALUNO sidebar ── */
             <>
-              {/* Mesa de trabalho: tudo o que é o trabalho do próprio aluno
+              {/* Espaço de trabalho: tudo o que é o trabalho do próprio aluno
                   (projeto, diário, coach, biblioteca, turmas) num só grupo.
                   Biblioteca e Turmas estavam soltas sem título nenhum antes
-                  disto, apontado pelo Gustavo. */}
-              {!collapsed && showLabels && <span className="sb-label">Mesa de trabalho</span>}
+                  disto, apontado pelo Gustavo. Era "Mesa de trabalho", o
+                  Gustavo achou que não soava bem, "Espaço de trabalho" é
+                  mais natural em PT-PT, mesma ideia. O item "Dashboard"
+                  também tinha passado a "Projetos", voltou a "Dashboard",
+                  termo mais familiar para quem já usa outras apps. */}
+              {!collapsed && showLabels && <span className="sb-label">Espaço de trabalho</span>}
 
               {user && (
                 <button className={`sb-item${isActive('/dashboard') ? ' active' : ''}`} onClick={() => navigate('/dashboard')}>
-                  <LayoutDashboard size={16} />{!collapsed && showLabels && <span>Projetos</span>}
+                  <LayoutDashboard size={16} />{!collapsed && showLabels && <span>Dashboard</span>}
                 </button>
               )}
               {/* O diário é por projeto, não existe um "diário geral", vai
