@@ -474,7 +474,7 @@ a { transition: color 0.15s, opacity 0.15s; }
    botões, nunca duas colunas a competir pela atenção. */
 .plan-gate-columns {
   display: grid; gap: 20px;
-  /* minmax(0, 1fr), não só 1fr — 1fr sozinho equivale a minmax(auto, 1fr),
+  /* minmax(0, 1fr), não só 1fr: 1fr sozinho equivale a minmax(auto, 1fr),
      e "auto" deixa a coluna crescer até ao min-content do que lá dentro
      (os cartões de números do recap), o pop-up inteiro passava para fora
      do ecrã no mobile, cortando texto. */
