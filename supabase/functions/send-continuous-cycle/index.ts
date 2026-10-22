@@ -27,6 +27,14 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const CYCLE_LENGTH = 4
 const COOLDOWN_DAYS = 6
 
+// Mesma regra do onboarding (send-onboarding-sequence): 75% da base real é
+// estudante, e quem nunca respondeu fica tratado como estudante também.
+// Só respostas explícitas diferentes de "Aluno / A estudar" contam como
+// profissional, para não assumir "júri"/defesa académica em quem não tem.
+function isProfessionalOccupation(occupation: string | null | undefined): boolean {
+  return !!occupation && occupation !== 'Aluno / A estudar'
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': 'https://showo.pt',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -88,16 +96,18 @@ function cta(href: string, label: string) {
 
 // Mesmo princípio do urgencyBand do onboarding: quando a pessoa tem um
 // projeto com defense_date real no futuro, usa-se esse prazo em vez da
-// oferta genérica, é urgência verdadeira, não fabricada por nós.
+// oferta genérica, é urgência verdadeira, não fabricada por nós. Forma
+// causal, não só reportar a data: o resultado depende do que a pessoa
+// fizer agora, não é uma contagem decrescente que acontece sozinha.
 function offerBand(code: string, daysToDefense: number | null) {
   if (daysToDefense !== null) {
-    const prazo = daysToDefense === 0
-      ? 'é hoje'
+    const janela = daysToDefense === 0
+      ? 'hoje'
       : daysToDefense === 1
-        ? 'é amanhã'
-        : `é daqui a ${daysToDefense} dias`
+        ? 'amanhã'
+        : `nos próximos ${daysToDefense} dias`
     const color = daysToDefense <= 14 ? '#F5493B' : '#2B7EF5'
-    return `<tr><td style="padding:0 0 20px;"><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr><td style="background:${color}1a;border:1px solid ${color}40;border-radius:8px;padding:8px 12px;color:${color};font-size:12.5px;font-weight:700;">A tua defesa ${prazo}. 50% com o código ${esc(code)} enquanto preparas.</td></tr></table></td></tr>`
+    return `<tr><td style="padding:0 0 20px;"><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr><td style="background:${color}1a;border:1px solid ${color}40;border-radius:8px;padding:8px 12px;color:${color};font-size:12.5px;font-weight:700;">O que fizeres ${janela} decide como chegas à tua defesa. 50% com o código ${esc(code)} enquanto preparas.</td></tr></table></td></tr>`
   }
   return `<tr><td style="padding:0 0 20px;"><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr><td style="background:#2B7EF51a;border:1px solid #2B7EF540;border-radius:8px;padding:8px 12px;color:#2B7EF5;font-size:12.5px;font-weight:700;">Oferta de lançamento até dezembro: 50% com o código ${esc(code)}.</td></tr></table></td></tr>`
 }
@@ -107,7 +117,7 @@ type Built = { subject: string; html: string }
 // 4 ângulos em loop, mesmo conteúdo de fundo dos dias 4/6/8/10 do
 // onboarding, mas reescrito para não ser cópia literal (repetir a frase
 // exata de outro email já foi um erro corrigido nesta sequência).
-function buildWeek0({ firstName, unsubscribeUrl, code, daysToDefense }: { firstName?: string; unsubscribeUrl: string; code: string; daysToDefense: number | null }): Built {
+function buildWeek0({ firstName, unsubscribeUrl, code, daysToDefense }: { firstName?: string; unsubscribeUrl: string; code: string; daysToDefense: number | null; isProfessional: boolean }): Built {
   return {
     subject: 'Ainda no plano Grátis? Eis o que estás a perder',
     html: wrapEmail(
@@ -122,7 +132,7 @@ function buildWeek0({ firstName, unsubscribeUrl, code, daysToDefense }: { firstN
   }
 }
 
-function buildWeek1({ firstName, unsubscribeUrl, code, daysToDefense }: { firstName?: string; unsubscribeUrl: string; code: string; daysToDefense: number | null }): Built {
+function buildWeek1({ firstName, unsubscribeUrl, code, daysToDefense }: { firstName?: string; unsubscribeUrl: string; code: string; daysToDefense: number | null; isProfessional: boolean }): Built {
   return {
     subject: '100 mensagens por mês. 10 vezes mais espaço para pensar em voz alta',
     html: wrapEmail(
@@ -137,7 +147,7 @@ function buildWeek1({ firstName, unsubscribeUrl, code, daysToDefense }: { firstN
   }
 }
 
-function buildWeek2({ firstName, unsubscribeUrl, code, daysToDefense }: { firstName?: string; unsubscribeUrl: string; code: string; daysToDefense: number | null }): Built {
+function buildWeek2({ firstName, unsubscribeUrl, code, daysToDefense }: { firstName?: string; unsubscribeUrl: string; code: string; daysToDefense: number | null; isProfessional: boolean }): Built {
   return {
     subject: 'Enquanto procuras emprego, as vagas estão aqui dentro',
     html: wrapEmail(
@@ -152,7 +162,21 @@ function buildWeek2({ firstName, unsubscribeUrl, code, daysToDefense }: { firstN
   }
 }
 
-function buildWeek3({ firstName, unsubscribeUrl, code, daysToDefense }: { firstName?: string; unsubscribeUrl: string; code: string; daysToDefense: number | null }): Built {
+function buildWeek3({ firstName, unsubscribeUrl, code, daysToDefense, isProfessional }: { firstName?: string; unsubscribeUrl: string; code: string; daysToDefense: number | null; isProfessional: boolean }): Built {
+  if (isProfessional) {
+    return {
+      subject: 'Quem prepara a entrevista cedo, nota a diferença',
+      html: wrapEmail(
+        greeting(firstName) +
+        offerBand(code, daysToDefense) +
+        headline('Quem prepara a entrevista com antecedência nota a diferença') +
+        paragraph('O Showo gera perguntas prováveis a partir do teu diário real de projeto, com respostas baseadas no que decidiste e porquê, desde o início. Não é um resumo feito às pressas na última hora.') +
+        paragraph(`Esta e as outras features do Plus ficam a 4,49€/mês com o código ${esc(code)}, durante os primeiros 6 meses.`, true) +
+        cta(`${APP}/pricing`, 'Ver a preparação de entrevista'),
+        unsubscribeUrl,
+      ),
+    }
+  }
   return {
     subject: 'Quem prepara a defesa cedo, nota a diferença',
     html: wrapEmail(
@@ -167,7 +191,7 @@ function buildWeek3({ firstName, unsubscribeUrl, code, daysToDefense }: { firstN
   }
 }
 
-const WEEK_BUILDERS: Array<(ctx: { firstName?: string; unsubscribeUrl: string; code: string; daysToDefense: number | null }) => Built> = [
+const WEEK_BUILDERS: Array<(ctx: { firstName?: string; unsubscribeUrl: string; code: string; daysToDefense: number | null; isProfessional: boolean }) => Built> = [
   buildWeek0, buildWeek1, buildWeek2, buildWeek3,
 ]
 
@@ -212,7 +236,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    const PROFILE_COLS = 'id, full_name, plan, onboarding_sequence_step, continuous_cycle_step, continuous_cycle_sent_at, continuous_cycle_opted_out'
+    const PROFILE_COLS = 'id, full_name, plan, onboarding_sequence_step, continuous_cycle_step, continuous_cycle_sent_at, continuous_cycle_opted_out, occupation'
     let profilesQuery = supabase.from('profiles').select(PROFILE_COLS)
       .gte('onboarding_sequence_step', 14)
       .eq('plan', 'free')
@@ -258,7 +282,7 @@ Deno.serve(async (req) => {
           : null
 
         const builder = WEEK_BUILDERS[weekIdx]
-        const built = builder({ firstName, unsubscribeUrl, code: discountCode, daysToDefense })
+        const built = builder({ firstName, unsubscribeUrl, code: discountCode, daysToDefense, isProfessional: isProfessionalOccupation(p.occupation) })
         const emailType = `continuous_cycle_week${weekIdx + 1}`
 
         const res = await fetch('https://api.resend.com/emails', {

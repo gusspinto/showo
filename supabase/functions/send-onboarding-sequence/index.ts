@@ -36,6 +36,17 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const TOTAL_DAYS = 14
 
+// 75% da base real é "Aluno / A estudar" (847 de 1129, confirmado contra a
+// BD), e quem nunca respondeu (18%, NULL) fica tratado como estudante
+// também, por decisão explícita: é a aposta mais provável, errar ao
+// contrário custaria caro em volume. Só as respostas explícitas distintas
+// de "Aluno / A estudar" (freelancer, developer, designer, etc., ~6,5% da
+// base) são tratadas como profissionais, para não assumir "júri"/"PAP" em
+// quem claramente não tem nenhum dos dois.
+function isProfessionalOccupation(occupation: string | null | undefined): boolean {
+  return !!occupation && occupation !== 'Aluno / A estudar'
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': 'https://showo.pt',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -126,13 +137,18 @@ function quote(text: string, author: string) {
 // continua válido no Stripe depois do email do dia 14 de quem se registou.
 function urgencyBand(diaAtual: number, code: string, daysToDefense: number | null) {
   if (daysToDefense !== null) {
-    const prazo = daysToDefense === 0
-      ? 'é hoje'
+    // Forma causal, não só reportar a data: o resultado depende do que a
+    // pessoa fizer agora, não é uma contagem decrescente que acontece
+    // sozinha. Pedido explícito depois de ver a versão anterior ("a tua
+    // defesa é daqui a X dias"), que só reportava um facto sem ligação a
+    // uma ação.
+    const janela = daysToDefense === 0
+      ? 'hoje'
       : daysToDefense === 1
-        ? 'é amanhã'
-        : `é daqui a ${daysToDefense} dias`
+        ? 'amanhã'
+        : `nos próximos ${daysToDefense} dias`
     const color = daysToDefense <= 14 ? '#F5493B' : '#2B7EF5'
-    return `<tr><td style="padding:0 0 20px;"><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr><td style="background:${color}1a;border:1px solid ${color}40;border-radius:8px;padding:8px 12px;color:${color};font-size:12.5px;font-weight:700;">A tua defesa ${prazo}. 50% com o código ${esc(code)} enquanto preparas.</td></tr></table></td></tr>`
+    return `<tr><td style="padding:0 0 20px;"><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr><td style="background:${color}1a;border:1px solid ${color}40;border-radius:8px;padding:8px 12px;color:${color};font-size:12.5px;font-weight:700;">O que fizeres ${janela} decide como chegas à tua defesa. 50% com o código ${esc(code)} enquanto preparas.</td></tr></table></td></tr>`
   }
   const urgente = diaAtual >= TOTAL_DAYS - 2
   const color = urgente ? '#F5493B' : '#2B7EF5'
@@ -152,6 +168,7 @@ type DayBuilderCtx = {
   code: string
   dia: number
   daysToDefense: number | null
+  isProfessional: boolean
 }
 
 function buildDay1({ firstName, unsubscribeUrl, hasProject, projectState, code, dia, daysToDefense }: DayBuilderCtx): Built {
@@ -382,7 +399,24 @@ function buildDay9({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayB
   }
 }
 
-function buildDay10({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayBuilderCtx): Built {
+function buildDay10({ firstName, unsubscribeUrl, code, dia, daysToDefense, isProfessional }: DayBuilderCtx): Built {
+  if (isProfessional) {
+    const subject = 'Que perguntas difíceis vais levar na próxima entrevista?'
+    return {
+      subject,
+      html: wrapEmail(
+        greeting(firstName) +
+        urgencyBand(dia, code, daysToDefense) +
+        headline('A entrevista não se prepara na véspera') +
+        paragraph('O Showo gera perguntas prováveis a partir do teu diário real de projeto, e sugere respostas baseadas no que decidiste e porquê, desde o início.') +
+        paragraph('Quem chega à entrevista já com isto trabalhado nota a diferença, não é um resumo feito às pressas na última hora.') +
+        paragraph(`Esta e as outras features do Plus ficam a 50% com o código ${esc(code)}, durante os primeiros 6 meses.`, true) +
+        cta(`${APP}/pricing`, 'Ver a preparação de entrevista'),
+        `Dia ${dia} de ${TOTAL_DAYS}`,
+        unsubscribeUrl,
+      ),
+    }
+  }
   const subject = 'O que o júri vai perguntar? Já sabemos.'
   return {
     subject,
@@ -517,7 +551,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    const PROFILE_COLS = 'id, full_name, role, organization_id, plan, created_at, onboarding_sequence_step, onboarding_opted_out'
+    const PROFILE_COLS = 'id, full_name, role, organization_id, plan, created_at, onboarding_sequence_step, onboarding_opted_out, occupation'
     let profilesQuery = supabase.from('profiles').select(PROFILE_COLS).not('onboarding_sequence_step', 'is', null)
     if (testUserId) profilesQuery = supabase.from('profiles').select(PROFILE_COLS).eq('id', testUserId)
 
@@ -577,7 +611,7 @@ Deno.serve(async (req) => {
           : null
 
         const builder = DAY_BUILDERS[step]
-        const built = builder({ firstName, unsubscribeUrl, hasProject, projectState, code: discountCode, dia: step + 1, daysToDefense })
+        const built = builder({ firstName, unsubscribeUrl, hasProject, projectState, code: discountCode, dia: step + 1, daysToDefense, isProfessional: isProfessionalOccupation(p.occupation) })
         const emailType = `onboarding_day${step + 1}`
 
         const res = await fetch('https://api.resend.com/emails', {

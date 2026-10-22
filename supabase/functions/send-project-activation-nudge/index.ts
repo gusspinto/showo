@@ -95,17 +95,25 @@ function buildEmail(firstName: string | undefined, projectName: string, sections
   const missing = 3 - sectionsCount
 
   if (daysToDefense !== null) {
+    // Subject mantém a data (precisa de ser claro a abrir), mas o corpo
+    // usa forma causal: o resultado depende do que a pessoa fizer agora,
+    // não é só reportar uma contagem decrescente.
     const prazo = daysToDefense === 0
       ? 'é hoje'
       : daysToDefense === 1
         ? 'é amanhã'
         : `é daqui a ${daysToDefense} dias`
+    const janela = daysToDefense === 0
+      ? 'hoje'
+      : daysToDefense === 1
+        ? 'amanhã'
+        : `nos próximos ${daysToDefense} dias`
     const subject = `A tua defesa ${prazo}, e "${projectName}" ainda não está pronto`
     return {
       subject,
       html: wrapEmail(
         greeting(firstName) +
-        headline(`A tua defesa ${prazo}`) +
+        headline(`O que fizeres ${janela} decide a tua defesa`) +
         paragraph(sectionsCount === 0
           ? `"${projectName}" ainda não tem nenhuma secção preenchida. Quem avaliar o teu trabalho vai ver isto antes de te ver a ti.`
           : `Faltam ${missing} secç${missing === 1 ? 'ão' : 'ões'} para o projeto estar pronto a mostrar ao júri, e o tempo está a encurtar.`) +
