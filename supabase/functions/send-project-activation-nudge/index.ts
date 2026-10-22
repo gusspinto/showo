@@ -38,7 +38,19 @@ function esc(v: unknown) {
   return String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!))
 }
 
-function wrapEmail(bodyRows: string) {
+async function signUserId(userId: string, secret: string): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  )
+  const sigBuf = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(userId))
+  return Array.from(new Uint8Array(sigBuf)).map(b => b.toString(16).padStart(2, '0')).join('')
+}
+
+function wrapEmail(bodyRows: string, unsubscribeUrl: string) {
   return `
 <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#080808" style="background:#080808;">
   <tr>
@@ -46,7 +58,7 @@ function wrapEmail(bodyRows: string) {
       <table role="presentation" width="440" border="0" cellpadding="0" cellspacing="0" style="max-width:440px;width:100%;text-align:left;">
         <tr><td style="padding:0 0 28px;"><img src="https://showo.pt/icon.png" alt="Showo" width="32" height="32" style="display:block;border:0;" /></td></tr>
         ${bodyRows}
-        <tr><td style="font-size:11px;color:#555555;">Showo &middot; <a href="${APP}" style="color:#555555;">showo.pt</a></td></tr>
+        <tr><td style="font-size:11px;color:#555555;">Showo &middot; <a href="${APP}" style="color:#555555;">showo.pt</a> &middot; <a href="${esc(unsubscribeUrl)}" style="color:#555555;">cancelar estes emails</a></td></tr>
       </table>
     </td>
   </tr>
@@ -73,7 +85,7 @@ function cta(href: string, label: string) {
   return `<tr><td style="padding:0 0 24px;"><a href="${href}" style="display:inline-block;background:#2B7EF5;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:12px 24px;border-radius:10px;">${esc(label)}</a></td></tr>`
 }
 
-function buildEmail(firstName: string | undefined, projectName: string, sectionsCount: number) {
+function buildEmail(firstName: string | undefined, projectName: string, sectionsCount: number, slug: string, unsubscribeUrl: string) {
   const missing = 3 - sectionsCount
   const subject = sectionsCount === 0
     ? `"${projectName}" está criado, falta a parte que conta`
@@ -88,7 +100,8 @@ function buildEmail(firstName: string | undefined, projectName: string, sections
       headline(sectionsCount === 0 ? 'Falta a parte que conta' : 'Estás quase lá') +
       paragraph(body) +
       paragraph('O problema que resolveste, as decisões que tomaste, os resultados. Não precisa de estar perfeito, precisa de existir.', true) +
-      cta(`${APP}/dashboard`, 'Completar o projeto'),
+      cta(`${APP}/editar/${slug}`, 'Completar o projeto'),
+      unsubscribeUrl,
     ),
   }
 }
@@ -134,21 +147,25 @@ Deno.serve(async (req) => {
     const { data: projects, error: projErr } = await projectsQuery
     if (projErr) throw projErr
 
-    const incomplete = (projects ?? []).filter(
+    const incompleteRaw = (projects ?? []).filter(
       p => !Array.isArray(p.preview_blocks) || p.preview_blocks.length < 3
     )
 
-    if (incomplete.length === 0) {
+    if (incompleteRaw.length === 0) {
       return new Response(JSON.stringify({ ok: true, candidates: 0, sent: 0 }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
-    const userIds = [...new Set(incomplete.map(p => p.user_id))]
+    const userIds = [...new Set(incompleteRaw.map(p => p.user_id))]
     const { data: profiles } = await supabase
       .from('profiles')
-      .select('id, full_name')
+      .select('id, full_name, activation_nudge_opted_out')
       .in('id', userIds)
+    const profileById = new Map((profiles ?? []).map(p => [p.id, p]))
+    const incomplete = testProjectId
+      ? incompleteRaw
+      : incompleteRaw.filter(p => !profileById.get(p.user_id)?.activation_nudge_opted_out)
     const nameById = new Map((profiles ?? []).map(p => [p.id, p.full_name]))
 
     const emailById = new Map<string, string>()
@@ -172,7 +189,9 @@ Deno.serve(async (req) => {
         if (!email) continue
         const firstName = nameById.get(p.user_id)?.split(' ')[0]
         const sectionsCount = Array.isArray(p.preview_blocks) ? p.preview_blocks.length : 0
-        const built = buildEmail(firstName, p.name || 'o teu projeto', sectionsCount)
+        const unsubSig = await signUserId(p.user_id, cronSecret)
+        const unsubscribeUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/project-activation-unsubscribe?u=${p.user_id}&sig=${unsubSig}`
+        const built = buildEmail(firstName, p.name || 'o teu projeto', sectionsCount, p.slug, unsubscribeUrl)
 
         const res = await fetch('https://api.resend.com/emails', {
           method: 'POST',
