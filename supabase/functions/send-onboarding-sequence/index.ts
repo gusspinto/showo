@@ -115,19 +115,18 @@ function quote(text: string, author: string) {
   return `<tr><td style="padding:0 0 20px;"><table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0"><tr><td style="border-left:2px solid #2B7EF5;padding-left:16px;color:#cccccc;font-size:15px;line-height:1.6;font-style:italic;">"${text}"<div style="margin-top:8px;color:#888888;font-size:13px;font-style:normal;">${author}</div></td></tr></table></td></tr>`
 }
 
-// Faixa de urgência, mesma em todos os dias, só muda o texto conforme
-// quanto falta. Últimos 3 dias ficam vermelhos (mais intensos), o resto
-// azul (consistente com a marca, não grita artificialmente desde o dia 1).
+// Faixa de urgência, mesma em todos os dias. O código ONBOARDING_DISCOUNT_CODE
+// é um promo code partilhado no Stripe com expiração própria (a confirmar
+// sempre no dashboard do Stripe, não hardcoded aqui), não uma contagem
+// pessoal de 14 dias. Dizer "acaba amanhã" com base no dia da conta era
+// falso: o código continua válido no Stripe depois do email do dia 14 de
+// quem se registou. Por isso a faixa não promete uma data que a BD não
+// controla, só identifica a oferta de lançamento. Últimos 3 dias do ciclo
+// ficam vermelhos (mais intensos) só visualmente, sem reclamar um deadline.
 function urgencyBand(diaAtual: number, code: string) {
-  const diasRestantes = TOTAL_DAYS - diaAtual
-  const urgente = diasRestantes <= 2
-  const texto = diasRestantes <= 0
-    ? 'Último dia, o desconto termina hoje à meia-noite.'
-    : diasRestantes === 1
-      ? 'Resta 1 dia de desconto.'
-      : `Restam ${diasRestantes} dias de desconto.`
+  const urgente = diaAtual >= TOTAL_DAYS - 2
   const color = urgente ? '#F5493B' : '#2B7EF5'
-  return `<tr><td style="padding:0 0 20px;"><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr><td style="background:${color}1a;border:1px solid ${color}40;border-radius:8px;padding:8px 12px;color:${color};font-size:12.5px;font-weight:700;">${esc(texto)} 50% com o código ${esc(code)}.</td></tr></table></td></tr>`
+  return `<tr><td style="padding:0 0 20px;"><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr><td style="background:${color}1a;border:1px solid ${color}40;border-radius:8px;padding:8px 12px;color:${color};font-size:12.5px;font-weight:700;">Oferta de lançamento até dezembro: 50% com o código ${esc(code)}.</td></tr></table></td></tr>`
 }
 
 type Built = { subject: string; html: string }
@@ -321,14 +320,14 @@ function buildDay6({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bui
 }
 
 function buildDay7({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Built {
-  const subject = 'Estás a meio do prazo do desconto'
+  const subject = 'Já estás a meio caminho, falta uma decisão'
   return {
     subject,
     html: wrapEmail(
       greeting(firstName) +
       urgencyBand(dia, code) +
-      headline('Estás a meio do prazo do desconto de 50%') +
-      paragraph('Daqui a 7 dias o código deixa de ser válido. Se já sabes que vais querer usar o Showo a sério, agora é a altura mais barata para decidir.') +
+      headline('Já estás a meio caminho') +
+      paragraph('Se já sabes que vais querer usar o Showo a sério, a oferta de lançamento continua disponível, e é a altura mais barata para decidir.') +
       paragraph(`Código ${esc(code)}, de 8,99€ para 4,49€/mês durante os primeiros 6 meses, aplica-se no checkout.`, true) +
       cta(`${APP}/pricing`, 'Usar o desconto agora'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
@@ -409,14 +408,14 @@ function buildDay11({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bu
 }
 
 function buildDay12({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Built {
-  const subject = 'Faltam 2 dias para o desconto acabar'
+  const subject = 'Ainda estás a pensar? É este o momento'
   return {
     subject,
     html: wrapEmail(
       greeting(firstName) +
       urgencyBand(dia, code) +
-      headline('Faltam 2 dias para o código deixar de valer') +
-      paragraph(`${esc(code)} dá 4,49€/mês durante 6 meses no Plus, em vez de 8,99€. Depois de amanhã, o preço volta ao normal.`) +
+      headline('Ainda estás a pensar?') +
+      paragraph(`${esc(code)} dá 4,49€/mês durante 6 meses no Plus, em vez de 8,99€.`) +
       paragraph('Se estavas à espera do momento certo, é este.', true) +
       cta(`${APP}/pricing`, 'Usar o desconto antes que acabe'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
@@ -426,15 +425,15 @@ function buildDay12({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bu
 }
 
 function buildDay13({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Built {
-  const subject = 'Última chamada: o desconto acaba amanhã'
+  const subject = 'Falta pouco para este ciclo de emails acabar'
   return {
     subject,
     html: wrapEmail(
       greeting(firstName) +
       urgencyBand(dia, code) +
-      headline('O desconto acaba amanhã') +
-      paragraph(`Amanhã à meia-noite o código ${esc(code)} deixa de funcionar. É a última oportunidade de entrar no Plus a 4,49€/mês em vez de 8,99€.`, true) +
-      cta(`${APP}/pricing`, 'Garantir o desconto hoje'),
+      headline('Falta pouco para este ciclo de emails acabar') +
+      paragraph(`Depois de amanhã deixas de receber estes emails diários. O código ${esc(code)} continua disponível, mas se querias experimentar o Plus enquanto ainda tens isto fresco na cabeça, entra no Plus a 4,49€/mês em vez de 8,99€.`, true) +
+      cta(`${APP}/pricing`, 'Entrar no Plus agora'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
     ),
@@ -442,15 +441,15 @@ function buildDay13({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bu
 }
 
 function buildDay14({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Built {
-  const subject = 'Hoje é o último dia do desconto'
+  const subject = 'O último destes emails'
   return {
     subject,
     html: wrapEmail(
       greeting(firstName) +
       urgencyBand(dia, code) +
-      headline('Hoje é o último dia') +
-      paragraph(`Depois de hoje o código ${esc(code)} deixa de ser válido. 4,49€/mês em vez de 8,99€, durante 6 meses. Se vais usar o Showo a sério, não há melhor altura do que agora.`, true) +
-      cta(`${APP}/pricing`, 'Usar o desconto antes que feche'),
+      headline('Este é o último email desta série') +
+      paragraph(`Não vais receber mais nenhum destes. O código ${esc(code)} continua disponível até dezembro, se quiseres entrar no Plus a 4,49€/mês em vez de 8,99€, durante 6 meses.`, true) +
+      cta(`${APP}/pricing`, 'Usar o desconto'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
     ),
