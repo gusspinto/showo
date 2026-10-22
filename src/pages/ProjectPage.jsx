@@ -1116,7 +1116,7 @@ export default function ProjectPage() {
   const { slug } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
-  const { user, profile, loading: authLoading, checkGate, consumeAI } = useAuth()
+  const { user, profile, loading: authLoading, checkGate, consumeAI, refreshProfile } = useAuth()
   const [project, setProject] = useState(() => location.state?.projectData ?? null)
   const [projectJournalEntries, setProjectJournalEntries] = useState([])
   const [loading, setLoading] = useState(!location.state?.projectData)
@@ -1363,13 +1363,15 @@ export default function ProjectPage() {
     juryHydrated.current = true
   }, [project])
 
-  // Spotlight tour: ?tour=1 (dev) ou sempre que a pessoa acaba de criar um
-  // projeto. Antes só disparava "no primeiro projeto de sempre" (count===1),
-  // o que significava que praticamente ninguém via isto, porque a maioria
-  // já tinha pelo menos um projeto antes desta funcionalidade existir, ou
-  // cria o segundo/terceiro projeto sem nunca ter visto o tour no primeiro.
-  // Pedido explícito: mostrar a toda a gente, sempre que cria um projeto,
-  // não só a quem nunca teve nenhum.
+  // Spotlight tour: ?tour=1 (dev), sempre que a pessoa acaba de criar um
+  // projeto, ou (novo, pedido do Gustavo) a primeira vez que abre QUALQUER
+  // projeto sem nunca ter visto o tour. Antes só disparava "no primeiro
+  // projeto de sempre" (count===1), o que significava que praticamente
+  // ninguém via isto, porque a maioria já tinha pelo menos um projeto antes
+  // desta funcionalidade existir, ou cria o segundo/terceiro projeto sem
+  // nunca ter visto o tour no primeiro. A criação continua a mostrar
+  // sempre (isNewProject, sem condição de "já viu"); quem só abre projetos
+  // antigos é apanhado pelo !profile.tour_seen_at, uma única vez.
   const tourCheckedRef = useRef(false)
   useEffect(() => {
     if (!project?.id || !profile?.id) return
@@ -1380,15 +1382,25 @@ export default function ProjectPage() {
     const params = new URLSearchParams(window.location.search)
     const isTourParam = params.get('tour') === '1'
     const isNewProject = !!location.state?.newProject
+    const neverSeenTour = !profile.tour_seen_at
 
     function triggerTour() {
       if (showLaunchOverlay) tourPendingRef.current = true
       else setShowTour(true)
     }
 
-    if (isTourParam || isNewProject) triggerTour()
+    if (isTourParam || isNewProject || neverSeenTour) triggerTour()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project?.id, profile?.id])
+
+  // Grava a primeira vez que o tour fecha (concluído ou saltado, tanto faz
+  // para este efeito), para o gate "nunca viu" acima não voltar a disparar
+  // ao abrir outro projeto antigo na mesma conta.
+  function markTourSeen() {
+    if (!user?.id || profile?.tour_seen_at) return
+    supabase.from('profiles').update({ tour_seen_at: new Date().toISOString() }).eq('id', user.id)
+      .then(() => refreshProfile?.())
+  }
 
   // Class-defined evaluation criteria (fetched when the page is opened from a turma)
   const [classCriteria, setClassCriteria] = useState([])   // [{id, name, weight}]
@@ -3003,7 +3015,7 @@ export default function ProjectPage() {
       {showTour && (
         <ProjectTour
           isPap={isPap}
-          onClose={() => { setShowTour(false); setTourMenuOpen(false) }}
+          onClose={() => { setShowTour(false); setTourMenuOpen(false); markTourSeen() }}
           onStep={target => {
             if (window.innerWidth < 640) {
               if (target === 'missions') setMobileTab('melhorar')
