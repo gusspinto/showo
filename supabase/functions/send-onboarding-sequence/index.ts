@@ -197,7 +197,7 @@ function buildDay1({ firstName, unsubscribeUrl, hasProject, projectState, code, 
 
 function buildDay2({ firstName, unsubscribeUrl, hasProject, projectState, code, dia }: DayBuilderCtx): Built {
   if (projectState === 'incomplete') {
-    const subject = 'A diferença entre um rascunho e um portefólio'
+    const subject = 'O que falta para isto deixar de ser um rascunho'
     return {
       subject,
       html: wrapEmail(
@@ -267,7 +267,7 @@ function buildDay3({ firstName, unsubscribeUrl, hasProject, projectState, code, 
 }
 
 function buildDay4({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Built {
-  const subject = 'O plano Grátis tem só 1 análise de IA por mês'
+  const subject = '10x mais análises de IA. A diferença é maior do que pensas'
   return {
     subject,
     html: wrapEmail(
@@ -302,7 +302,7 @@ function buildDay5({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bui
 }
 
 function buildDay6({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Built {
-  const subject = '10 mensagens por mês esgotam depressa'
+  const subject = 'Quando o Coach IA te deixa a meio da conversa, o que fazes?'
   return {
     subject,
     html: wrapEmail(
@@ -320,7 +320,7 @@ function buildDay6({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bui
 }
 
 function buildDay7({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Built {
-  const subject = 'Já estás a meio caminho, falta uma decisão'
+  const subject = 'Estás a meio do caminho. Falta só uma coisa.'
   return {
     subject,
     html: wrapEmail(
@@ -337,7 +337,7 @@ function buildDay7({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bui
 }
 
 function buildDay8({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Built {
-  const subject = 'As vagas também vivem dentro do Showo'
+  const subject = 'Há vagas reais à tua espera, dentro da tua própria conta'
   return {
     subject,
     html: wrapEmail(
@@ -372,7 +372,7 @@ function buildDay9({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bui
 }
 
 function buildDay10({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Built {
-  const subject = 'A preparação da defesa, feita com meses de antecedência'
+  const subject = 'O que o júri vai perguntar? Já sabemos.'
   return {
     subject,
     html: wrapEmail(
@@ -425,7 +425,7 @@ function buildDay12({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bu
 }
 
 function buildDay13({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Built {
-  const subject = 'Falta pouco para este ciclo de emails acabar'
+  const subject = 'Penúltimo email. Vale a pena ler este.'
   return {
     subject,
     html: wrapEmail(
@@ -441,7 +441,7 @@ function buildDay13({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bu
 }
 
 function buildDay14({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Built {
-  const subject = 'O último destes emails'
+  const subject = 'Última vez que te escrevo sobre isto'
   return {
     subject,
     html: wrapEmail(

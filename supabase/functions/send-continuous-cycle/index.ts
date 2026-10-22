@@ -97,7 +97,7 @@ type Built = { subject: string; html: string }
 // exata de outro email já foi um erro corrigido nesta sequência).
 function buildWeek0({ firstName, unsubscribeUrl, code }: { firstName?: string; unsubscribeUrl: string; code: string }): Built {
   return {
-    subject: 'Ainda estás no plano Grátis? Isto explica porque vale a pena mudar',
+    subject: 'Ainda no plano Grátis? Eis o que estás a perder',
     html: wrapEmail(
       greeting(firstName) +
       offerBand(code) +
@@ -112,7 +112,7 @@ function buildWeek0({ firstName, unsubscribeUrl, code }: { firstName?: string; u
 
 function buildWeek1({ firstName, unsubscribeUrl, code }: { firstName?: string; unsubscribeUrl: string; code: string }): Built {
   return {
-    subject: 'O Coach IA no plano Grátis esgota-se em poucos dias',
+    subject: '100 mensagens por mês. 10 vezes mais espaço para pensar em voz alta',
     html: wrapEmail(
       greeting(firstName) +
       offerBand(code) +
@@ -127,7 +127,7 @@ function buildWeek1({ firstName, unsubscribeUrl, code }: { firstName?: string; u
 
 function buildWeek2({ firstName, unsubscribeUrl, code }: { firstName?: string; unsubscribeUrl: string; code: string }): Built {
   return {
-    subject: 'As vagas de estágio também estão dentro do Showo',
+    subject: 'Enquanto procuras emprego, as vagas estão aqui dentro',
     html: wrapEmail(
       greeting(firstName) +
       offerBand(code) +
@@ -142,7 +142,7 @@ function buildWeek2({ firstName, unsubscribeUrl, code }: { firstName?: string; u
 
 function buildWeek3({ firstName, unsubscribeUrl, code }: { firstName?: string; unsubscribeUrl: string; code: string }): Built {
   return {
-    subject: 'A preparação da defesa não começa na véspera',
+    subject: 'Quem prepara a defesa cedo, nota a diferença',
     html: wrapEmail(
       greeting(firstName) +
       offerBand(code) +
