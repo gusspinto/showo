@@ -46,6 +46,7 @@ import { ActivityPanel } from '../components/dashboard/RhythmPanel'
 import WeeklyRecap, { shouldShowRecap, RecapsPanel } from '../components/dashboard/WeeklyRecap'
 import WeeklyPostCard from '../components/dashboard/WeeklyPostCard'
 import WeeklyRecapTeaser from '../components/dashboard/WeeklyRecapTeaser'
+import LimitNudgeBanner from '../components/dashboard/LimitNudgeBanner'
 import SegmentedTabs from '../components/SegmentedTabs'
 import WeeklyCheckin, { shouldShowCheckin } from '../components/dashboard/WeeklyCheckin'
 import AddReminderModal from '../components/dashboard/AddReminderModal'
@@ -143,6 +144,16 @@ function JoinTurmaStudentModal({ onClose, onJoined }) {
    StudentDashboard
    ══════════════════════════════════════════════════════════════════════════ */
 
+// Mensagens do popup de upgrade quando aberto a partir do LimitNudgeBanner,
+// uma por feature de IA que pode ficar quase esgotada no plano grátis.
+const NUDGE_UPGRADE_MESSAGES = {
+  coach: { title: 'Continua a falar com o Coach IA', body: 'O Coach ajuda a melhorar o projeto frase a frase. Com o Plus tens muito mais conversas por mês.' },
+  createProject: { title: 'Cria mais projetos com IA', body: 'Com o Plus tens muito mais criações de projeto com IA por mês.' },
+  defense: { title: 'Continua a preparar a defesa', body: 'Com o Plus tens muito mais perguntas de defesa por mês, geradas a partir do teu projeto real.' },
+  narrative: { title: 'Continua a gerar a narrativa do projeto', body: 'Com o Plus tens muito mais narrativas por mês, para apresentares o projeto todo pronto.' },
+  exportPptx: { title: 'Exporta mais vezes para PowerPoint', body: 'Com o Plus tens muito mais exportações por mês, prontas a apresentar.' },
+}
+
 export default function StudentDashboard({ user, profile }) {
   const navigate = useNavigate()
   const location = useLocation()
@@ -171,30 +182,41 @@ export default function StudentDashboard({ user, profile }) {
   const [showExportModal, setShowExportModal] = useState(false)
   const [shareProject, setShareProject] = useState(null)
 
-  // Logged once per month, purely for the admin funnel view — not tied to
-  // the dismiss state, so it fires even if the banner was already dismissed
-  // earlier and reappears because a different feature ran low.
-  useEffect(() => {
-    if (planId !== 'free' || !aiUsage) return
-    const NUDGE_FEATURES = ['coach', 'createProject', 'defense', 'narrative', 'exportPptx']
-    const hasSignal = NUDGE_FEATURES.some(f => {
+  // Sinal de limite quase esgotado (>=70% usado), plano grátis. Dá a mesma
+  // feature a dois sítios: o evento nudge_shown (funil do Admin, já existia)
+  // e a faixa LimitNudgeBanner abaixo, que antes não existia, o evento
+  // disparava mas não havia nenhum elemento na página a mostrar isto à
+  // pessoa.
+  const NUDGE_FEATURES = ['coach', 'createProject', 'defense', 'narrative', 'exportPptx']
+  const nudgeSignal = useMemo(() => {
+    if (planId !== 'free' || !aiUsage) return null
+    for (const f of NUDGE_FEATURES) {
       const limit = getPlan(planId).ai[f]
-      if (!(limit > 0)) return false
+      if (!(limit > 0)) continue
       // Sobre o que já foi usado, não sobre o que resta — com limites de 1x
       // (Defesa IA, Narrativa IA), "resta 1" é indistinguível de "nunca usou
       // nada", o que disparava o aviso "estás quase a esgotar" para quem
       // ainda não tinha tocado em nenhuma feature de IA.
       const used = featureUsed(f, aiUsage)
-      return used > 0 && used >= limit * 0.7
-    })
-    if (!hasSignal) return
+      if (used > 0 && used >= limit * 0.7) return { feature: f, used, limit }
+    }
+    return null
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [planId, aiUsage])
+
+  useEffect(() => {
+    if (!nudgeSignal) return
     const shownKey = `showo_nudge_shown_${user.id}_${new Date().toISOString().slice(0, 7)}`
     try {
       if (localStorage.getItem(shownKey)) return
       localStorage.setItem(shownKey, '1')
     } catch { /* ignore */ }
     logFunnelEvent('nudge_shown')
-  }, [planId, aiUsage, user.id, logFunnelEvent])
+  }, [nudgeSignal, user.id, logFunnelEvent])
+
+  const [nudgeBannerDismissed, setNudgeBannerDismissed] = useState(
+    () => !!localStorage.getItem(`showo_nudge_banner_dismissed_${user.id}_${new Date().toISOString().slice(0, 7)}`)
+  )
 
   /* ── UI ── */
   const [tutorialPotentialSeen, setTutorialPotentialSeen] = useState(() => !!localStorage.getItem(`showo_tut_potential_${user.id}`))
@@ -741,7 +763,9 @@ export default function StudentDashboard({ user, profile }) {
           message={
             showUpgradeModal === 'weeklyRecap'
               ? { title: 'O que recebes com o Plus', body: 'Um recap automático toda a segunda, gerado a partir do teu diário.', feature: 'weeklyRecap' }
-              : { title: 'Experimenta o Plus', body: 'Mais análises de IA, mais defesa, mais espaço para o teu portefólio.', feature: 'genericUpgrade' }
+              : NUDGE_UPGRADE_MESSAGES[showUpgradeModal]
+                ? { ...NUDGE_UPGRADE_MESSAGES[showUpgradeModal], feature: showUpgradeModal }
+                : { title: 'Experimenta o Plus', body: 'Mais análises de IA, mais defesa, mais espaço para o teu portefólio.', feature: 'genericUpgrade' }
           }
           onClose={() => setShowUpgradeModal(false)}
         />
@@ -1018,6 +1042,20 @@ export default function StudentDashboard({ user, profile }) {
 
             {!isSchoolAccount && planId === 'free' && !recapTeaserDismissed && (
               <WeeklyRecapTeaser userId={user.id} onDismiss={() => setRecapTeaserDismissed(true)} onUpgrade={() => setShowUpgradeModal('weeklyRecap')} />
+            )}
+
+            {!isSchoolAccount && planId === 'free' && recapTeaserDismissed && nudgeSignal && !nudgeBannerDismissed && (
+              <LimitNudgeBanner
+                userId={user.id}
+                feature={nudgeSignal.feature}
+                used={nudgeSignal.used}
+                limit={nudgeSignal.limit}
+                onDismiss={() => setNudgeBannerDismissed(true)}
+                onUpgrade={() => {
+                  logFunnelEvent('nudge_clicked', nudgeSignal.feature)
+                  setShowUpgradeModal(nudgeSignal.feature)
+                }}
+              />
             )}
 
             {myInterests.length > 0 && (

@@ -1363,7 +1363,13 @@ export default function ProjectPage() {
     juryHydrated.current = true
   }, [project])
 
-  // Spotlight tour: only on ?tour=1 (dev) or when the user just created their very first project
+  // Spotlight tour: ?tour=1 (dev) ou sempre que a pessoa acaba de criar um
+  // projeto. Antes só disparava "no primeiro projeto de sempre" (count===1),
+  // o que significava que praticamente ninguém via isto, porque a maioria
+  // já tinha pelo menos um projeto antes desta funcionalidade existir, ou
+  // cria o segundo/terceiro projeto sem nunca ter visto o tour no primeiro.
+  // Pedido explícito: mostrar a toda a gente, sempre que cria um projeto,
+  // não só a quem nunca teve nenhum.
   const tourCheckedRef = useRef(false)
   useEffect(() => {
     if (!project?.id || !profile?.id) return
@@ -1380,15 +1386,7 @@ export default function ProjectPage() {
       else setShowTour(true)
     }
 
-    if (isTourParam) { triggerTour(); return }
-    if (!isNewProject) return
-
-    // Only show for their very first project
-    supabase
-      .from('projects')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', profile.id)
-      .then(({ count }) => { if (count === 1) triggerTour() })
+    if (isTourParam || isNewProject) triggerTour()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project?.id, profile?.id])
 
@@ -2829,20 +2827,33 @@ export default function ProjectPage() {
               padding: '36px 32px 28px',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-              <Check size={22} color="var(--color-success)" />
-              <h2 style={{
-                margin: 0,
-                fontFamily: 'var(--font-heading)',
-                fontSize: 22,
-                fontWeight: 400,
-                color: 'var(--color-text)',
-                letterSpacing: '-0.5px',
-                lineHeight: 1.2,
-              }}>
-                O teu projeto está no ar
-              </h2>
-            </div>
+            {(() => {
+              // Secções = definição de ativação usada em todo o resto do
+              // produto (CLAUDE.md, emails de onboarding). Até agora este
+              // popup dizia "está no ar, partilha" mesmo com 0 secções,
+              // dizendo a quem acabou de começar que já tinha acabado.
+              // Confirmado contra a BD: 446 de 527 projetos nunca tiveram
+              // um registo sequer, é o momento de maior atenção da pessoa
+              // e estava a mandá-la embora satisfeita, em vez de a guiar.
+              const sectionsCount = Array.isArray(previewBlocks) ? previewBlocks.length : 0
+              const isActivated = sectionsCount >= 3
+              return (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                  <Check size={22} color={isActivated ? 'var(--color-success)' : 'var(--color-warning)'} />
+                  <h2 style={{
+                    margin: 0,
+                    fontFamily: 'var(--font-heading)',
+                    fontSize: 22,
+                    fontWeight: 400,
+                    color: 'var(--color-text)',
+                    letterSpacing: '-0.5px',
+                    lineHeight: 1.2,
+                  }}>
+                    {isActivated ? 'O teu projeto está no ar' : 'O teu projeto está criado'}
+                  </h2>
+                </div>
+              )
+            })()}
 
             {location.state?.clearedFields?.length > 0 ? (
               <p style={{
@@ -2856,6 +2867,19 @@ export default function ProjectPage() {
                 padding: '10px 12px',
               }}>
                 A IA não tinha a certeza sobre {location.state.clearedFields.join(', ')} — ficou em branco. Preenche quando quiseres.
+              </p>
+            ) : (Array.isArray(previewBlocks) ? previewBlocks.length : 0) < 3 ? (
+              <p style={{
+                margin: '0 0 24px',
+                fontSize: 14,
+                color: 'var(--color-warning)',
+                lineHeight: 1.6,
+                background: 'var(--color-warning-subtle)',
+                border: '1px solid var(--color-warning-subtle)',
+                borderRadius: 8,
+                padding: '10px 12px',
+              }}>
+                Falta a parte que conta: com menos de 3 secções, quem vir o link ainda não percebe o que fizeste. Volta a editar antes de partilhar.
               </p>
             ) : (
               <p style={{
@@ -2912,9 +2936,17 @@ export default function ProjectPage() {
               </button>
             </div>
 
-            {/* CTA button */}
+            {/* CTA button: dispara sempre o tour guiado (score, editar,
+                diário, IA, etc.), igual ao clique fora do popup. Antes
+                saltava o tour de vez para quem tinha <3 secções e ia
+                direto para o editor, o que tirava a esta maioria
+                precisamente o guia que lhes explica onde está tudo. */}
             <button
-              onClick={() => { setShowLaunchOverlay(false); window.history.replaceState({}, ''); if (tourPendingRef.current) { tourPendingRef.current = false; setShowTour(true) } }}
+              onClick={() => {
+                setShowLaunchOverlay(false)
+                window.history.replaceState({}, '')
+                if (tourPendingRef.current) { tourPendingRef.current = false; setShowTour(true) }
+              }}
               style={{
                 display: 'block',
                 width: '100%',
@@ -2932,7 +2964,7 @@ export default function ProjectPage() {
               onMouseEnter={e => { e.currentTarget.style.opacity = '0.88' }}
               onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
             >
-              Ver a minha página
+              {(Array.isArray(previewBlocks) ? previewBlocks.length : 0) < 3 ? 'Completar o projeto' : 'Ver a minha página'}
             </button>
 
             {!user && (

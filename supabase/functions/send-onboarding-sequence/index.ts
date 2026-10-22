@@ -36,6 +36,17 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const TOTAL_DAYS = 14
 
+// 75% da base real é "Aluno / A estudar" (847 de 1129, confirmado contra a
+// BD), e quem nunca respondeu (18%, NULL) fica tratado como estudante
+// também, por decisão explícita: é a aposta mais provável, errar ao
+// contrário custaria caro em volume. Só as respostas explícitas distintas
+// de "Aluno / A estudar" (freelancer, developer, designer, etc., ~6,5% da
+// base) são tratadas como profissionais, para não assumir "júri"/"PAP" em
+// quem claramente não tem nenhum dos dois.
+function isProfessionalOccupation(occupation: string | null | undefined): boolean {
+  return !!occupation && occupation !== 'Aluno / A estudar'
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': 'https://showo.pt',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -115,15 +126,30 @@ function quote(text: string, author: string) {
   return `<tr><td style="padding:0 0 20px;"><table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0"><tr><td style="border-left:2px solid #2B7EF5;padding-left:16px;color:#cccccc;font-size:15px;line-height:1.6;font-style:italic;">"${text}"<div style="margin-top:8px;color:#888888;font-size:13px;font-style:normal;">${author}</div></td></tr></table></td></tr>`
 }
 
-// Faixa de urgência, mesma em todos os dias. O código ONBOARDING_DISCOUNT_CODE
-// é um promo code partilhado no Stripe com expiração própria (a confirmar
-// sempre no dashboard do Stripe, não hardcoded aqui), não uma contagem
-// pessoal de 14 dias. Dizer "acaba amanhã" com base no dia da conta era
-// falso: o código continua válido no Stripe depois do email do dia 14 de
-// quem se registou. Por isso a faixa não promete uma data que a BD não
-// controla, só identifica a oferta de lançamento. Últimos 3 dias do ciclo
-// ficam vermelhos (mais intensos) só visualmente, sem reclamar um deadline.
-function urgencyBand(diaAtual: number, code: string) {
+// Faixa de urgência, mesma em todos os dias, mas com dois modos. Quando a
+// pessoa tem um projeto com defense_date real no futuro (~15% dos casos,
+// confirmado contra a BD), usa-se ESSE prazo: é urgência verdadeira, da
+// própria pessoa, não inventada por nós. Nos restantes casos, cai na oferta
+// genérica de lançamento. O código ONBOARDING_DISCOUNT_CODE é um promo code
+// partilhado no Stripe com expiração própria (a confirmar sempre no
+// dashboard do Stripe, não hardcoded aqui), não uma contagem pessoal de 14
+// dias. Dizer "acaba amanhã" com base no dia da conta era falso: o código
+// continua válido no Stripe depois do email do dia 14 de quem se registou.
+function urgencyBand(diaAtual: number, code: string, daysToDefense: number | null) {
+  if (daysToDefense !== null) {
+    // Forma causal, não só reportar a data: o resultado depende do que a
+    // pessoa fizer agora, não é uma contagem decrescente que acontece
+    // sozinha. Pedido explícito depois de ver a versão anterior ("a tua
+    // defesa é daqui a X dias"), que só reportava um facto sem ligação a
+    // uma ação.
+    const janela = daysToDefense === 0
+      ? 'hoje'
+      : daysToDefense === 1
+        ? 'amanhã'
+        : `nos próximos ${daysToDefense} dias`
+    const color = daysToDefense <= 14 ? '#F5493B' : '#2B7EF5'
+    return `<tr><td style="padding:0 0 20px;"><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr><td style="background:${color}1a;border:1px solid ${color}40;border-radius:8px;padding:8px 12px;color:${color};font-size:12.5px;font-weight:700;">O que fizeres ${janela} decide como chegas à tua defesa. 50% com o código ${esc(code)} enquanto preparas.</td></tr></table></td></tr>`
+  }
   const urgente = diaAtual >= TOTAL_DAYS - 2
   const color = urgente ? '#F5493B' : '#2B7EF5'
   return `<tr><td style="padding:0 0 20px;"><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr><td style="background:${color}1a;border:1px solid ${color}40;border-radius:8px;padding:8px 12px;color:${color};font-size:12.5px;font-weight:700;">Oferta de lançamento até dezembro: 50% com o código ${esc(code)}.</td></tr></table></td></tr>`
@@ -141,16 +167,18 @@ type DayBuilderCtx = {
   projectState: ProjectState
   code: string
   dia: number
+  daysToDefense: number | null
+  isProfessional: boolean
 }
 
-function buildDay1({ firstName, unsubscribeUrl, hasProject, projectState, code, dia }: DayBuilderCtx): Built {
+function buildDay1({ firstName, unsubscribeUrl, hasProject, projectState, code, dia, daysToDefense }: DayBuilderCtx): Built {
   if (projectState === 'incomplete') {
     const subject = 'O teu projeto está criado, mas falta a parte que conta'
     return {
       subject,
       html: wrapEmail(
         greeting(firstName) +
-        urgencyBand(dia, code) +
+        urgencyBand(dia, code, daysToDefense) +
         headline('Já criaste o projeto. Falta torná-lo apresentável.') +
         paragraph('Um projeto com só uma ou duas secções ainda não diz muito a quem o vê, professor, recrutador, ou tu próprio dentro de 6 meses.') +
         paragraph('Volta e acrescenta pelo menos mais uma secção: o problema que resolveste, as decisões que tomaste, ou os resultados. É nessa altura que o portefólio começa a valer a pena partilhar.') +
@@ -167,7 +195,7 @@ function buildDay1({ firstName, unsubscribeUrl, hasProject, projectState, code, 
       subject,
       html: wrapEmail(
         greeting(firstName) +
-        urgencyBand(dia, code) +
+        urgencyBand(dia, code, daysToDefense) +
         headline('Ainda não criaste o teu primeiro projeto') +
         paragraph('Não precisa de estar pronto nem perfeito. Sobe um PDF, um PowerPoint, ou descreve em duas frases o que já fizeste, a IA trata do resto.') +
         paragraph('A partir daí, a IA já lê o diário do projeto antes de responder, sem teres de explicar tudo outra vez sempre que perguntas algo.') +
@@ -183,7 +211,7 @@ function buildDay1({ firstName, unsubscribeUrl, hasProject, projectState, code, 
     subject,
     html: wrapEmail(
       greeting(firstName) +
-      urgencyBand(dia, code) +
+      urgencyBand(dia, code, daysToDefense) +
       headline('Já reparaste que o ChatGPT começa sempre do zero?') +
       paragraph('Sempre que abres o ChatGPT para falar do teu projeto, tens de explicar tudo outra vez.') +
       paragraph('No Showo a IA lê o diário do projeto antes de responder. Continuas a mesma conversa, com contexto acumulado desde o primeiro dia.') +
@@ -195,14 +223,14 @@ function buildDay1({ firstName, unsubscribeUrl, hasProject, projectState, code, 
   }
 }
 
-function buildDay2({ firstName, unsubscribeUrl, hasProject, projectState, code, dia }: DayBuilderCtx): Built {
+function buildDay2({ firstName, unsubscribeUrl, hasProject, projectState, code, dia, daysToDefense }: DayBuilderCtx): Built {
   if (projectState === 'incomplete') {
-    const subject = 'A diferença entre um rascunho e um portefólio'
+    const subject = 'O que falta para isto deixar de ser um rascunho'
     return {
       subject,
       html: wrapEmail(
         greeting(firstName) +
-        urgencyBand(dia, code) +
+        urgencyBand(dia, code, daysToDefense) +
         headline('O que separa um rascunho de um portefólio de verdade') +
         paragraph('Não é o design nem a quantidade de texto, é mostrar o processo: o que decidiste, porquê, e o que aprendeste pelo caminho.') +
         paragraph('Volta ao teu projeto e acrescenta essa parte, mesmo que em poucas frases. É isso que faz alguém ficar a ler até ao fim.') +
@@ -219,7 +247,7 @@ function buildDay2({ firstName, unsubscribeUrl, hasProject, projectState, code, 
       subject,
       html: wrapEmail(
         greeting(firstName) +
-        urgencyBand(dia, code) +
+        urgencyBand(dia, code, daysToDefense) +
         headline('"Não tenho nada digno de mostrar" é a dúvida mais comum') +
         paragraph('PAP a meio, estágio em curso, um projeto pessoal, até trabalho de faculdade. Não precisa de estar pronto nem de ser impressionante, o que interessa é mostrar o processo real, não só o resultado final.') +
         paragraph('Sobe o que já tens e a IA ajuda a organizar isso numa página que faz sentido.') +
@@ -235,7 +263,7 @@ function buildDay2({ firstName, unsubscribeUrl, hasProject, projectState, code, 
     subject,
     html: wrapEmail(
       greeting(firstName) +
-      urgencyBand(dia, code) +
+      urgencyBand(dia, code, daysToDefense) +
       headline('O teu GitHub também pode contar a história') +
       paragraph('Liga o repositório e os commits entram sozinhos no diário do projeto, ao lado das tuas notas.') +
       paragraph('Quando o portfólio estiver pronto, publicas direto no LinkedIn, sem exportar nada à mão.') +
@@ -247,13 +275,13 @@ function buildDay2({ firstName, unsubscribeUrl, hasProject, projectState, code, 
   }
 }
 
-function buildDay3({ firstName, unsubscribeUrl, hasProject, projectState, code, dia }: DayBuilderCtx): Built {
+function buildDay3({ firstName, unsubscribeUrl, hasProject, projectState, code, dia, daysToDefense }: DayBuilderCtx): Built {
   const subject = 'Não inventamos números só para parecer impressionante'
   return {
     subject,
     html: wrapEmail(
       greeting(firstName) +
-      urgencyBand(dia, code) +
+      urgencyBand(dia, code, daysToDefense) +
       headline('Não vamos inventar números só para parecer impressionante') +
       paragraph('Preferimos mostrar o que quem já usa o Showo disse, com o nome deles:') +
       quote('Para alguém que fez PAP e queria usá-la para exposição, esta app é um gamechanger para estudantes na mesma situação.', 'Rafael Matos, Estudante de Engenharia Informática da Universidade de Aveiro') +
@@ -266,13 +294,13 @@ function buildDay3({ firstName, unsubscribeUrl, hasProject, projectState, code, 
   }
 }
 
-function buildDay4({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Built {
-  const subject = 'O plano Grátis tem só 1 análise de IA por mês'
+function buildDay4({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayBuilderCtx): Built {
+  const subject = '10x mais análises de IA. A diferença é maior do que pensas'
   return {
     subject,
     html: wrapEmail(
       greeting(firstName) +
-      urgencyBand(dia, code) +
+      urgencyBand(dia, code, daysToDefense) +
       headline('Já deste o primeiro passo. O teu projeto está criado.') +
       paragraph('O plano Grátis inclui 1 análise de IA por mês, 3 projetos, e 10 mensagens de Coach IA. Chega para começar, mas sentes o limite depressa se usares a sério.') +
       paragraph(`O Plus dá 10 análises por mês, 15 projetos, 100 mensagens de Coach, e recap semanal automático. Com o código ${esc(code)}, de 8,99€ para 4,49€/mês durante os primeiros 6 meses.`, true) +
@@ -283,13 +311,13 @@ function buildDay4({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bui
   }
 }
 
-function buildDay5({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Built {
+function buildDay5({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayBuilderCtx): Built {
   const subject = 'Toda a segunda, um email pronto a partilhar no LinkedIn'
   return {
     subject,
     html: wrapEmail(
       greeting(firstName) +
-      urgencyBand(dia, code) +
+      urgencyBand(dia, code, daysToDefense) +
       headline('O recap semanal mostra a tua consistência a quem conta') +
       paragraph('Toda a segunda, um resumo automático do que fizeste na semana: quantos registos, quantos dias ativo, e um excerto real do teu diário.') +
       paragraph('A partir dele, geras um post pronto para o LinkedIn, para professores e recrutadores verem o processo, não só o resultado final.') +
@@ -301,13 +329,13 @@ function buildDay5({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bui
   }
 }
 
-function buildDay6({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Built {
-  const subject = '10 mensagens por mês esgotam depressa'
+function buildDay6({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayBuilderCtx): Built {
+  const subject = 'Quando o Coach IA te deixa a meio da conversa, o que fazes?'
   return {
     subject,
     html: wrapEmail(
       greeting(firstName) +
-      urgencyBand(dia, code) +
+      urgencyBand(dia, code, daysToDefense) +
       headline('10 mensagens de Coach IA por mês esgotam depressa') +
       paragraph('Cada pergunta ao Coach, cada revisão de texto, cada dúvida sobre o projeto conta para o limite mensal do plano Grátis.') +
       paragraph('No Plus são 100 por mês, dez vezes mais espaço para usares a IA como apoio real ao longo do projeto, não só nos primeiros dias.') +
@@ -319,13 +347,13 @@ function buildDay6({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bui
   }
 }
 
-function buildDay7({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Built {
-  const subject = 'Já estás a meio caminho, falta uma decisão'
+function buildDay7({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayBuilderCtx): Built {
+  const subject = 'Estás a meio do caminho. Falta só uma coisa.'
   return {
     subject,
     html: wrapEmail(
       greeting(firstName) +
-      urgencyBand(dia, code) +
+      urgencyBand(dia, code, daysToDefense) +
       headline('Já estás a meio caminho') +
       paragraph('Se já sabes que vais querer usar o Showo a sério, a oferta de lançamento continua disponível, e é a altura mais barata para decidir.') +
       paragraph(`Código ${esc(code)}, de 8,99€ para 4,49€/mês durante os primeiros 6 meses, aplica-se no checkout.`, true) +
@@ -336,13 +364,13 @@ function buildDay7({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bui
   }
 }
 
-function buildDay8({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Built {
-  const subject = 'As vagas também vivem dentro do Showo'
+function buildDay8({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayBuilderCtx): Built {
+  const subject = 'Há vagas reais à tua espera, dentro da tua própria conta'
   return {
     subject,
     html: wrapEmail(
       greeting(firstName) +
-      urgencyBand(dia, code) +
+      urgencyBand(dia, code, daysToDefense) +
       headline('As vagas também vivem dentro do Showo') +
       paragraph('Para além do portfólio, há uma lista de vagas reais, de estágio e de primeiro emprego. Candidatas-te direto, com o teu perfil Showo como prova do que já fizeste.') +
       paragraph('É uma das razões pelas quais quem está à procura de trabalho fica no plano pago, não só pelo portfólio.') +
@@ -354,13 +382,13 @@ function buildDay8({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bui
   }
 }
 
-function buildDay9({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Built {
+function buildDay9({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayBuilderCtx): Built {
   const subject = 'Quanto custa por dia, a sério'
   return {
     subject,
     html: wrapEmail(
       greeting(firstName) +
-      urgencyBand(dia, code) +
+      urgencyBand(dia, code, daysToDefense) +
       headline('Quanto custa isto por dia, a sério?') +
       paragraph(`Com o código ${esc(code)}, o Plus fica a 4,49€/mês durante 6 meses. Isso é 0,15€ por dia, menos do que um café por semana.`) +
       paragraph('Não é um gasto, é tempo que deixas de perder a reexplicar o projeto do zero a cada conversa com IA.', true) +
@@ -371,13 +399,30 @@ function buildDay9({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bui
   }
 }
 
-function buildDay10({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Built {
-  const subject = 'A preparação da defesa, feita com meses de antecedência'
+function buildDay10({ firstName, unsubscribeUrl, code, dia, daysToDefense, isProfessional }: DayBuilderCtx): Built {
+  if (isProfessional) {
+    const subject = 'Que perguntas difíceis vais levar na próxima entrevista?'
+    return {
+      subject,
+      html: wrapEmail(
+        greeting(firstName) +
+        urgencyBand(dia, code, daysToDefense) +
+        headline('A entrevista não se prepara na véspera') +
+        paragraph('O Showo gera perguntas prováveis a partir do teu diário real de projeto, e sugere respostas baseadas no que decidiste e porquê, desde o início.') +
+        paragraph('Quem chega à entrevista já com isto trabalhado nota a diferença, não é um resumo feito às pressas na última hora.') +
+        paragraph(`Esta e as outras features do Plus ficam a 50% com o código ${esc(code)}, durante os primeiros 6 meses.`, true) +
+        cta(`${APP}/pricing`, 'Ver a preparação de entrevista'),
+        `Dia ${dia} de ${TOTAL_DAYS}`,
+        unsubscribeUrl,
+      ),
+    }
+  }
+  const subject = 'O que o júri vai perguntar? Já sabemos.'
   return {
     subject,
     html: wrapEmail(
       greeting(firstName) +
-      urgencyBand(dia, code) +
+      urgencyBand(dia, code, daysToDefense) +
       headline('A defesa não começa a preparar-se na véspera') +
       paragraph('O Showo gera perguntas prováveis do júri a partir do teu diário real, e sugere respostas baseadas no que decidiste e porquê, desde o início do projeto.') +
       paragraph('Quem chega à defesa já com isto trabalhado nota a diferença, não é um resumo feito às pressas na última semana.') +
@@ -389,13 +434,13 @@ function buildDay10({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bu
   }
 }
 
-function buildDay11({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Built {
+function buildDay11({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayBuilderCtx): Built {
   const subject = 'O que professores e recrutadores veem quando olham para o teu perfil'
   return {
     subject,
     html: wrapEmail(
       greeting(firstName) +
-      urgencyBand(dia, code) +
+      urgencyBand(dia, code, daysToDefense) +
       headline('O que professores e recrutadores veem no teu perfil') +
       quote('Era esta a ferramenta que me faltava para os meus estudos. Bastante alinhado com as necessidades dos alunos.', 'Maria Eduarda, Estudante da Computação e Engenharia de Software, Natixis') +
       paragraph('Um link, um portfólio organizado, com a consistência do teu trabalho ao longo do tempo, não só um PDF estático.') +
@@ -407,13 +452,13 @@ function buildDay11({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bu
   }
 }
 
-function buildDay12({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Built {
+function buildDay12({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayBuilderCtx): Built {
   const subject = 'Ainda estás a pensar? É este o momento'
   return {
     subject,
     html: wrapEmail(
       greeting(firstName) +
-      urgencyBand(dia, code) +
+      urgencyBand(dia, code, daysToDefense) +
       headline('Ainda estás a pensar?') +
       paragraph(`${esc(code)} dá 4,49€/mês durante 6 meses no Plus, em vez de 8,99€.`) +
       paragraph('Se estavas à espera do momento certo, é este.', true) +
@@ -424,13 +469,13 @@ function buildDay12({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bu
   }
 }
 
-function buildDay13({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Built {
-  const subject = 'Falta pouco para este ciclo de emails acabar'
+function buildDay13({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayBuilderCtx): Built {
+  const subject = 'Penúltimo email. Vale a pena ler este.'
   return {
     subject,
     html: wrapEmail(
       greeting(firstName) +
-      urgencyBand(dia, code) +
+      urgencyBand(dia, code, daysToDefense) +
       headline('Falta pouco para este ciclo de emails acabar') +
       paragraph(`Depois de amanhã deixas de receber estes emails diários. O código ${esc(code)} continua disponível, mas se querias experimentar o Plus enquanto ainda tens isto fresco na cabeça, entra no Plus a 4,49€/mês em vez de 8,99€.`, true) +
       cta(`${APP}/pricing`, 'Entrar no Plus agora'),
@@ -440,13 +485,13 @@ function buildDay13({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bu
   }
 }
 
-function buildDay14({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Built {
-  const subject = 'O último destes emails'
+function buildDay14({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayBuilderCtx): Built {
+  const subject = 'Última vez que te escrevo sobre isto'
   return {
     subject,
     html: wrapEmail(
       greeting(firstName) +
-      urgencyBand(dia, code) +
+      urgencyBand(dia, code, daysToDefense) +
       headline('Este é o último email desta série') +
       paragraph(`Não vais receber mais nenhum destes. O código ${esc(code)} continua disponível até dezembro, se quiseres entrar no Plus a 4,49€/mês em vez de 8,99€, durante 6 meses.`, true) +
       cta(`${APP}/pricing`, 'Usar o desconto'),
@@ -506,7 +551,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    const PROFILE_COLS = 'id, full_name, role, organization_id, plan, created_at, onboarding_sequence_step, onboarding_opted_out'
+    const PROFILE_COLS = 'id, full_name, role, organization_id, plan, created_at, onboarding_sequence_step, onboarding_opted_out, occupation'
     let profilesQuery = supabase.from('profiles').select(PROFILE_COLS).not('onboarding_sequence_step', 'is', null)
     if (testUserId) profilesQuery = supabase.from('profiles').select(PROFILE_COLS).eq('id', testUserId)
 
@@ -546,7 +591,7 @@ Deno.serve(async (req) => {
         // a pena mostrar.
         const { data: projectRows } = await supabase
           .from('projects')
-          .select('preview_blocks')
+          .select('preview_blocks, defense_date')
           .eq('user_id', p.id)
           .eq('entry_kind', 'full')
         const hasProject = (projectRows?.length ?? 0) > 0
@@ -555,8 +600,18 @@ Deno.serve(async (req) => {
         )
         const projectState: ProjectState = !hasProject ? 'none' : hasCompleteProject ? 'complete' : 'incomplete'
 
+        // Prazo real de defesa (ver urgencyBand): junta todas as
+        // defense_date futuras dos projetos da pessoa e fica com a mais
+        // próxima, é a que importa mais.
+        const futureDefenses = (projectRows ?? [])
+          .map(r => r.defense_date ? new Date(r.defense_date).getTime() : null)
+          .filter((t): t is number => t !== null && t > Date.now())
+        const daysToDefense = futureDefenses.length
+          ? Math.max(0, Math.ceil((Math.min(...futureDefenses) - Date.now()) / 86400000))
+          : null
+
         const builder = DAY_BUILDERS[step]
-        const built = builder({ firstName, unsubscribeUrl, hasProject, projectState, code: discountCode, dia: step + 1 })
+        const built = builder({ firstName, unsubscribeUrl, hasProject, projectState, code: discountCode, dia: step + 1, daysToDefense, isProfessional: isProfessionalOccupation(p.occupation) })
         const emailType = `onboarding_day${step + 1}`
 
         const res = await fetch('https://api.resend.com/emails', {
