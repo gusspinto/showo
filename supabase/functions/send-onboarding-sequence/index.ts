@@ -131,15 +131,37 @@ function urgencyBand(diaAtual: number, code: string) {
 }
 
 type Built = { subject: string; html: string }
+// 'none' = sem projeto full nenhum. 'incomplete' = tem projeto mas <3
+// secções em preview_blocks (ativação, ver CLAUDE.md, ainda não atingida).
+// 'complete' = 3+ secções, já cumpriu a definição de ativação.
+type ProjectState = 'none' | 'incomplete' | 'complete'
 type DayBuilderCtx = {
   firstName?: string
   unsubscribeUrl: string
   hasProject: boolean
+  projectState: ProjectState
   code: string
   dia: number
 }
 
-function buildDay1({ firstName, unsubscribeUrl, hasProject, code, dia }: DayBuilderCtx): Built {
+function buildDay1({ firstName, unsubscribeUrl, hasProject, projectState, code, dia }: DayBuilderCtx): Built {
+  if (projectState === 'incomplete') {
+    const subject = 'O teu projeto está criado, mas falta a parte que conta'
+    return {
+      subject,
+      html: wrapEmail(
+        greeting(firstName) +
+        urgencyBand(dia, code) +
+        headline('Já criaste o projeto. Falta torná-lo apresentável.') +
+        paragraph('Um projeto com só uma ou duas secções ainda não diz muito a quem o vê, professor, recrutador, ou tu próprio dentro de 6 meses.') +
+        paragraph('Volta e acrescenta pelo menos mais uma secção: o problema que resolveste, as decisões que tomaste, ou os resultados. É nessa altura que o portefólio começa a valer a pena partilhar.') +
+        paragraph(`Já agora: o código ${esc(code)} dá 50% no Plus durante os primeiros 6 meses.`, true) +
+        cta(`${APP}/dashboard`, 'Completar o meu projeto'),
+        `Dia ${dia} de ${TOTAL_DAYS}`,
+        unsubscribeUrl,
+      ),
+    }
+  }
   if (!hasProject) {
     const subject = 'O teu primeiro projeto demora 2 minutos a criar'
     return {
@@ -174,7 +196,24 @@ function buildDay1({ firstName, unsubscribeUrl, hasProject, code, dia }: DayBuil
   }
 }
 
-function buildDay2({ firstName, unsubscribeUrl, hasProject, code, dia }: DayBuilderCtx): Built {
+function buildDay2({ firstName, unsubscribeUrl, hasProject, projectState, code, dia }: DayBuilderCtx): Built {
+  if (projectState === 'incomplete') {
+    const subject = 'A diferença entre um rascunho e um portefólio'
+    return {
+      subject,
+      html: wrapEmail(
+        greeting(firstName) +
+        urgencyBand(dia, code) +
+        headline('O que separa um rascunho de um portefólio de verdade') +
+        paragraph('Não é o design nem a quantidade de texto, é mostrar o processo: o que decidiste, porquê, e o que aprendeste pelo caminho.') +
+        paragraph('Volta ao teu projeto e acrescenta essa parte, mesmo que em poucas frases. É isso que faz alguém ficar a ler até ao fim.') +
+        paragraph(`${esc(code)} dá 50% no Plus durante os primeiros 6 meses, para quando quiseres mais do que isto.`, true) +
+        cta(`${APP}/dashboard`, 'Voltar ao meu projeto'),
+        `Dia ${dia} de ${TOTAL_DAYS}`,
+        unsubscribeUrl,
+      ),
+    }
+  }
   if (!hasProject) {
     const subject = 'Não sabes o que mostrar? Nem precisa de estar acabado'
     return {
@@ -209,7 +248,7 @@ function buildDay2({ firstName, unsubscribeUrl, hasProject, code, dia }: DayBuil
   }
 }
 
-function buildDay3({ firstName, unsubscribeUrl, hasProject, code, dia }: DayBuilderCtx): Built {
+function buildDay3({ firstName, unsubscribeUrl, hasProject, projectState, code, dia }: DayBuilderCtx): Built {
   const subject = 'Não inventamos números só para parecer impressionante'
   return {
     subject,
@@ -221,7 +260,7 @@ function buildDay3({ firstName, unsubscribeUrl, hasProject, code, dia }: DayBuil
       quote('Para alguém que fez PAP e queria usá-la para exposição, esta app é um gamechanger para estudantes na mesma situação.', 'Rafael Matos, Estudante de Engenharia Informática da Universidade de Aveiro') +
       quote('Na minha opinião, um dos pontos mais fortes da plataforma é a Defesa. A organização e preparação torna tudo mais interativo e envolvente.', 'Rita Sousa, Estudante na Escola Profissional Bento de Jesus Caraça') +
       paragraph(`Se quiseres resultados assim, o código ${esc(code)} dá 50% no Plus durante os primeiros 6 meses.`, true) +
-      (hasProject ? cta(`${APP}/dashboard`, 'Quero o mesmo resultado') : cta(`${APP}/novo`, 'Quero começar agora')),
+      (projectState === 'incomplete' ? cta(`${APP}/dashboard`, 'Completar o meu projeto') : hasProject ? cta(`${APP}/dashboard`, 'Quero o mesmo resultado') : cta(`${APP}/novo`, 'Quero começar agora')),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
     ),
@@ -498,18 +537,27 @@ Deno.serve(async (req) => {
         const unsubSig = await signUserId(p.id, cronSecret)
         const unsubscribeUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/onboarding-unsubscribe?u=${p.id}&sig=${unsubSig}`
 
-        // hasProject é usado nos primeiros 3 dias, para escolher a variante
-        // de copy certa (já validado: falar como se houvesse projeto para
-        // quem não tem nenhum matava o clique).
-        const { count: projectCount } = await supabase
+        // hasProject/projectState são usados nos primeiros dias, para
+        // escolher a variante de copy certa (já validado: falar como se
+        // houvesse projeto para quem não tem nenhum matava o clique).
+        // Ativação (CLAUDE.md) = 3+ secções em preview_blocks: quem criou o
+        // projeto mas ficou por 1-2 secções é tratado como "incomplete",
+        // não como "já tem projeto", porque receber copy de GitHub sync ou
+        // testemunhos não ajuda quem nem chegou a publicar nada que valha
+        // a pena mostrar.
+        const { data: projectRows } = await supabase
           .from('projects')
-          .select('id', { count: 'exact', head: true })
+          .select('preview_blocks')
           .eq('user_id', p.id)
           .eq('entry_kind', 'full')
-        const hasProject = (projectCount ?? 0) > 0
+        const hasProject = (projectRows?.length ?? 0) > 0
+        const hasCompleteProject = (projectRows ?? []).some(
+          r => Array.isArray(r.preview_blocks) && r.preview_blocks.length >= 3
+        )
+        const projectState: ProjectState = !hasProject ? 'none' : hasCompleteProject ? 'complete' : 'incomplete'
 
         const builder = DAY_BUILDERS[step]
-        const built = builder({ firstName, unsubscribeUrl, hasProject, code: discountCode, dia: step + 1 })
+        const built = builder({ firstName, unsubscribeUrl, hasProject, projectState, code: discountCode, dia: step + 1 })
         const emailType = `onboarding_day${step + 1}`
 
         const res = await fetch('https://api.resend.com/emails', {
