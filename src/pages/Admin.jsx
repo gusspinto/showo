@@ -59,6 +59,27 @@ const C = {
 // fails outright and silently returns no rows.
 const PROFILE_COLUMNS = 'id, username, total_xp, created_at, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, project_draft, signup_country, signup_city, signup_referrer, signup_utm_source, last_active_at, last_action, plan, account_type, organization_id, stripe_customer_id, occupation'
 
+const FETCH_PAGE_SIZE = 1000
+
+// O PostgREST tem um limite por omissão de 1000 linhas por pedido. Sem
+// paginação, select().order() sem .range() corta silenciosamente nas 1000
+// mais recentes assim que a tabela passa desse tamanho, todos os números
+// do painel (utilizadores, score médio, retenção, funil) ficavam a excluir
+// os utilizadores mais antigos sem erro nenhum a avisar. Confirmado ao vivo
+// em produção com 1085 utilizadores: "Utilizadores" mostrava 1000 redondo.
+async function fetchAllRows(baseQuery) {
+  const rows = []
+  let from = 0
+  for (;;) {
+    const { data, error } = await baseQuery.range(from, from + FETCH_PAGE_SIZE - 1)
+    if (error) return { data: rows, error }
+    rows.push(...(data || []))
+    if (!data || data.length < FETCH_PAGE_SIZE) break
+    from += FETCH_PAGE_SIZE
+  }
+  return { data: rows, error: null }
+}
+
 // build/launch are legacy plan names still sitting in old profile rows —
 // resolvePlanId() normalizes those to plus/pro, but these maps stay here as
 // a fallback for any raw value that slips through un-resolved.
@@ -1901,9 +1922,9 @@ export default function Admin() {
     setLoading(true)
     try {
       const [profilesRes, projectsRes, emailsRes, signupsRes, aiUsageRes, funnelRes] = await Promise.all([
-        supabase.from('profiles').select(PROFILE_COLUMNS).order('created_at', { ascending: false }),
-        supabase.from('projects').select('*').order('created_at', { ascending: false }),
-        supabase.rpc('admin_get_users'),
+        fetchAllRows(supabase.from('profiles').select(PROFILE_COLUMNS).order('created_at', { ascending: false })),
+        fetchAllRows(supabase.from('projects').select('*').order('created_at', { ascending: false })),
+        fetchAllRows(supabase.rpc('admin_get_users')),
         supabase.from('waitlist_signups').select('*').order('created_at', { ascending: false }).limit(100),
         supabase.rpc('admin_get_ai_usage_summary'),
         supabase.rpc('admin_get_funnel_summary'),
