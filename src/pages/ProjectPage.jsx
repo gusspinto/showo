@@ -4383,7 +4383,13 @@ export default function ProjectPage() {
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: '-0.2px', color: colors.text }}>Como subir o score</div>
                     <div style={{ fontSize: 12, color: colors.muted, marginTop: 3 }}>
-                      {pct === 100 ? 'Perfil completo — bom trabalho.' : `${goodCount} de ${fq.length} campos · toca para editar`}
+                      {/* pct===100 só mede os 9 campos de texto, não as secções
+                          publicadas (ativação, preview_blocks). Dizer "perfil
+                          completo" quando ainda faltam secções era falso e
+                          enganava quem via isto como "já está pronto". */}
+                      {pct === 100
+                        ? (previewBlocks.length >= 3 ? 'Perfil completo, bom trabalho.' : 'Dados completos. Falta publicar as secções.')
+                        : `${goodCount} de ${fq.length} campos · toca para editar`}
                     </div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
@@ -5769,10 +5775,16 @@ export default function ProjectPage() {
             const pct = Math.round((goodCount / fieldQuality.length) * 100)
 
             const isComplete = pct === 100
+            // pct só mede os 9 campos de texto (PROFILE_SCORE_FIELDS), não as
+            // secções publicadas (ativação, preview_blocks). "Perfil completo"
+            // só é verdade quando as duas coisas batem certo, senão isto
+            // mandava quem ainda não tinha nada publicado para o diário em
+            // vez de a mandar completar o próprio projeto.
+            const isActivated = previewBlocks.length >= 3
             return (
               <div className="proj-card" style={isComplete ? {} : {}}>
-                {isComplete ? (
-                  /* ── Completude 100%: redirect focus to diary ── */
+                {isComplete && isActivated ? (
+                  /* ── Completude 100% e ativado: redirect focus to diary ── */
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{
@@ -5796,6 +5808,35 @@ export default function ProjectPage() {
                       }}
                     >
                       Abrir diário do projeto →
+                    </button>
+                  </div>
+                ) : isComplete ? (
+                  /* ── Completude 100% mas ainda sem 3 secções publicadas:
+                      falta mesmo a parte que conta, manda completar o
+                      projeto, não o diário. ── */
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{
+                        width: 30, height: 30, borderRadius: 8, flexShrink: 0,
+                        background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <Sparkles size={14} color="#f59e0b" />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: colors.text, marginBottom: 1 }}>Dados completos, falta publicar</div>
+                        <div style={{ fontSize: 11, color: colors.subtle, lineHeight: 1.4 }}>Com menos de 3 secções, quem vir o link ainda não percebe o que fizeste.</div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => { setPreviewEditing(true); setWsExpanded(true) }}
+                      style={{
+                        width: '100%', padding: '7px 0', border: '1px solid rgba(245,158,11,0.25)',
+                        borderRadius: 8, background: 'rgba(245,158,11,0.07)', color: '#f59e0b',
+                        fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                      }}
+                    >
+                      Completar o projeto →
                     </button>
                   </div>
                 ) : (
