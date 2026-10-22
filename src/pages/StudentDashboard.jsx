@@ -56,6 +56,7 @@ import {
   computeReportCoverage, computeWeekStreak, buildWeeklyActivity, computeEngagementSignal,
   timeAgoLabel, startOfDay,
 } from '../lib/journal'
+import { pickFocusProject, daysUntil } from '../lib/focusProject'
 import './Dashboard.css'          // modais e toast partilhados (namespace dash-*)
 import './StudentDashboard.css'
 
@@ -84,28 +85,9 @@ function toISO(d) {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
 }
 
-function daysUntil(dateStr) {
-  if (!dateStr) return null
-  return Math.ceil((new Date(dateStr + 'T00:00:00') - startOfDay(new Date())) / 86400000)
-}
-
-/* Qual é "o projeto" do aluno neste momento: a PAP ganha sempre, depois quem
-   tem defesa mais próxima, depois o mais recente. */
-function pickFocusProject(projects) {
-  if (!projects.length) return null
-  const rank = p => {
-    let r = 0
-    if (p.is_pap || p.project_type === 'pap') r += 100
-    const d = daysUntil(p.defense_date)
-    if (d != null && d >= 0) r += 50 - Math.min(49, d / 4)
-    return r
-  }
-  return [...projects].sort((a, b) => {
-    const diff = rank(b) - rank(a)
-    if (diff !== 0) return diff
-    return new Date(b.created_at) - new Date(a.created_at)
-  })[0]
-}
+// daysUntil e pickFocusProject vivem em lib/focusProject.js, a Navbar
+// precisa da mesma lógica para o atalho do Diário na sidebar, e as duas
+// nunca podem escolher projetos em foco diferentes.
 
 /* ── JoinTurmaStudentModal ─────────────────────────────────────────────── */
 function JoinTurmaStudentModal({ onClose, onJoined }) {

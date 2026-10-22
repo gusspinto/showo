@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { pickFocusProject } from '../lib/focusProject'
 import { PlanGateModal } from './PlanGate'
 import { SearchPalette } from './SearchPalette'
 import { useTheme } from '../context/ThemeContext'
@@ -1070,6 +1071,25 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
     return () => supabase.removeChannel(ch)
   }, [user])
 
+  // Atalho do Diário na sidebar: o diário é por projeto, não existe um
+  // "diário geral", por isso o atalho precisa de saber para que projeto ir.
+  // Usa o mesmo critério do Dashboard (pickFocusProject, lib/focusProject.js)
+  // para nunca escolher um projeto diferente do que já aparece em foco lá.
+  const [focusProjectSlug, setFocusProjectSlug] = useState(null)
+  useEffect(() => {
+    if (!user || !isAlunoRole) { setFocusProjectSlug(null); return }
+    let cancelled = false
+    supabase.from('projects')
+      .select('slug, is_pap, project_type, defense_date, created_at')
+      .eq('user_id', user.id)
+      .eq('entry_kind', 'full')
+      .then(({ data }) => {
+        if (cancelled) return
+        setFocusProjectSlug(pickFocusProject(data || [])?.slug ?? null)
+      })
+    return () => { cancelled = true }
+  }, [user, isAlunoRole])
+
   const profileUrl = profile?.username ? `/u/${profile.username}` : user ? `/u/${user.id}` : null
 
   function isActive(path) {
@@ -1726,29 +1746,27 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           ) : (
             /* ── ALUNO sidebar ── */
             <>
+              {/* Mesa de trabalho: tudo o que é trabalho do dia a dia do
+                  aluno num só grupo (projeto, diário, coach, comunidade,
+                  vagas), em vez de espalhado pela sidebar inteira. Pedido
+                  explícito do Gustavo. Biblioteca/Turmas/Planos/Aprende a
+                  usar ficam fora, não fazem parte deste grupo. */}
+              {!collapsed && showLabels && <span className="sb-label">Mesa de trabalho</span>}
+
               {user && (
                 <button className={`sb-item${isActive('/dashboard') ? ' active' : ''}`} onClick={() => navigate('/dashboard')}>
-                  <LayoutDashboard size={16} />{!collapsed && showLabels && <span>Dashboard</span>}
+                  <LayoutDashboard size={16} />{!collapsed && showLabels && <span>Projetos</span>}
                 </button>
               )}
-              {user && (
-                <button className={`sb-item${isActive('/biblioteca') ? ' active' : ''}`} onClick={() => navigate('/biblioteca')}>
-                  <LibraryIcon size={16} />{!collapsed && showLabels && <span>Biblioteca</span>}
+              {/* O diário é por projeto, não existe um "diário geral", vai
+                  para o projeto em foco (mesmo critério do Dashboard,
+                  lib/focusProject.js). Só aparece depois de haver pelo
+                  menos um projeto para onde ir. */}
+              {user && focusProjectSlug && (
+                <button className={`sb-item${location.pathname === `/projeto/${focusProjectSlug}/diario` ? ' active' : ''}`} onClick={() => navigate(`/projeto/${focusProjectSlug}/diario`)}>
+                  <BookOpen size={16} />{!collapsed && showLabels && <span>Diário</span>}
                 </button>
               )}
-              {isSchoolAccount && (
-                <button className={`sb-item${isActive('/turmas') ? ' active' : ''}`} onClick={() => navigate('/turmas')}>
-                  <Users2 size={16} />{!collapsed && showLabels && <span>Turmas</span>}
-                </button>
-              )}
-              {showEstagios && (
-                <button className={`sb-item${isActive('/vagas') ? ' active' : ''}`} onClick={() => navigate('/vagas')}>
-                  <Briefcase size={16} />{!collapsed && showLabels && <span>Vagas</span>}
-                </button>
-              )}
-              <button className={`sb-item${isActive('/explorar') ? ' active' : ''}`} onClick={() => navigate('/explorar')}>
-                <Compass size={16} />{!collapsed && showLabels && <span>Explorar</span>}
-              </button>
               {user && (
                 <button className={`sb-item${isActive('/coach') ? ' active' : ''}`} onClick={() => navigate('/coach')}>
                   <Bot size={16} />{!collapsed && showLabels && <span>Coach IA</span>}
@@ -1759,6 +1777,10 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 <>
                   <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
                   {!collapsed && showLabels && <span className="sb-label">Comunidade</span>}
+
+                  <button className={`sb-item${isActive('/explorar') ? ' active' : ''}`} onClick={() => navigate('/explorar')}>
+                    <Compass size={16} />{!collapsed && showLabels && <span>Explorar</span>}
+                  </button>
 
                   <button className={`sb-item${isActive('/mensagens') ? ' active' : ''}`} onClick={() => navigate('/mensagens')}
                     style={{ position: 'relative' }}>
@@ -1772,6 +1794,24 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 </>
               )}
 
+              {showEstagios && (
+                <button className={`sb-item${isActive('/vagas') ? ' active' : ''}`} onClick={() => navigate('/vagas')}>
+                  <Briefcase size={16} />{!collapsed && showLabels && <span>Vagas</span>}
+                </button>
+              )}
+
+              <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
+
+              {user && (
+                <button className={`sb-item${isActive('/biblioteca') ? ' active' : ''}`} onClick={() => navigate('/biblioteca')}>
+                  <LibraryIcon size={16} />{!collapsed && showLabels && <span>Biblioteca</span>}
+                </button>
+              )}
+              {isSchoolAccount && (
+                <button className={`sb-item${isActive('/turmas') ? ' active' : ''}`} onClick={() => navigate('/turmas')}>
+                  <Users2 size={16} />{!collapsed && showLabels && <span>Turmas</span>}
+                </button>
+              )}
 
               <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
 
