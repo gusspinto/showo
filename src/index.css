@@ -445,13 +445,12 @@ a { transition: color 0.15s, opacity 0.15s; }
 }
 
 /* ── PlanGateModal (pop-up de limite/upgrade) ──
-   Mais espaçoso em desktop, pedido do Gustavo à imagem do pop-up do
-   StudyFetch — em mobile fica como estava (a largura vem do overlay).
-   760px, não 680 — com duas colunas e dois cartões com padding a sério,
-   680 deixava pouca largura para o texto do testemunho respirar. */
+   Uma coluna só (ver plan-gate-columns), por isso volta a ser estreito
+   mesmo em desktop, como um cartão a ler de cima a baixo, não uma página
+   larga com duas colunas. */
 .plan-gate-modal { max-width: 460px; }
 @media (min-width: 640px) {
-  .plan-gate-modal { max-width: 760px; }
+  .plan-gate-modal { max-width: 480px; }
 }
 /* No mobile o X fica perto de mais do botão "Mensal/Anual" e do X ↔ dedo do
    polegar já nem chega lá sem esforço — tocar fora do cartão (o overlay)
@@ -469,33 +468,24 @@ a { transition: color 0.15s, opacity 0.15s; }
 }
 .plan-gate-cta-primary:active:not(:disabled) { transform: scale(0.98); }
 
-/* Grid, não flex — o título precisa de mudar de posição visual consoante o
-   ecrã (em cima de tudo em mobile, em cima só dos botões em desktop) sem
-   duplicar JSX, e só grid-area consegue isso. Mobile: uma coluna, ordem de
-   leitura título → cartão do plano → botões. */
+/* Uma coluna só, em qualquer ecrã, pedido do Gustavo depois de ver o
+   pop-up com duas colunas: "nem sabem onde ler". A leitura é sempre um
+   único caminho de cima a baixo: preview → o que ganhas → preço →
+   botões, nunca duas colunas a competir pela atenção. */
 .plan-gate-columns {
   display: grid; gap: 20px;
-  grid-template-columns: 1fr;
+  /* minmax(0, 1fr), não só 1fr — 1fr sozinho equivale a minmax(auto, 1fr),
+     e "auto" deixa a coluna crescer até ao min-content do que lá dentro
+     (os cartões de números do recap), o pop-up inteiro passava para fora
+     do ecrã no mobile, cortando texto. */
+  grid-template-columns: minmax(0, 1fr);
   grid-template-areas: "title" "left" "buttons";
 }
-.plan-gate-title-block { grid-area: title; }
+.plan-gate-title-block { grid-area: title; min-width: 0; }
 /* Cartões reais (.sdb-panel/.sdb-panel--tint do Dashboard) — a própria
    borda de cada um já separa preço de testemunho. */
 .plan-gate-col-left { grid-area: left; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
 .plan-gate-col-right { grid-area: buttons; display: flex; flex-direction: column; gap: 12px; }
-@media (min-width: 640px) {
-  /* Desktop: duas colunas. "left" ocupa as duas linhas da coluna 1 (o
-     cartão do plano à esquerda, altura toda); a coluna 2 tem o título em
-     cima e os botões em baixo — a linha do meio (1fr) empurra os botões
-     para o fundo sem precisar de margin-top:auto. */
-  .plan-gate-columns {
-    grid-template-columns: 1.1fr 1fr;
-    grid-template-rows: auto 1fr;
-    grid-template-areas: "left title" "left buttons";
-    gap: 28px;
-  }
-  .plan-gate-col-right { justify-content: flex-end; }
-}
 
 /* ── Pop-ups em mobile: sem botão X, fecha-se tocando fora (pedido do
    Gustavo). Não se aplica ao recorte de imagem nem ao menu lateral, que
