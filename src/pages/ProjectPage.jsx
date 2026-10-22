@@ -1363,7 +1363,13 @@ export default function ProjectPage() {
     juryHydrated.current = true
   }, [project])
 
-  // Spotlight tour: only on ?tour=1 (dev) or when the user just created their very first project
+  // Spotlight tour: ?tour=1 (dev) ou sempre que a pessoa acaba de criar um
+  // projeto. Antes só disparava "no primeiro projeto de sempre" (count===1),
+  // o que significava que praticamente ninguém via isto, porque a maioria
+  // já tinha pelo menos um projeto antes desta funcionalidade existir, ou
+  // cria o segundo/terceiro projeto sem nunca ter visto o tour no primeiro.
+  // Pedido explícito: mostrar a toda a gente, sempre que cria um projeto,
+  // não só a quem nunca teve nenhum.
   const tourCheckedRef = useRef(false)
   useEffect(() => {
     if (!project?.id || !profile?.id) return
@@ -1380,15 +1386,7 @@ export default function ProjectPage() {
       else setShowTour(true)
     }
 
-    if (isTourParam) { triggerTour(); return }
-    if (!isNewProject) return
-
-    // Only show for their very first project
-    supabase
-      .from('projects')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', profile.id)
-      .then(({ count }) => { if (count === 1) triggerTour() })
+    if (isTourParam || isNewProject) triggerTour()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project?.id, profile?.id])
 
@@ -2938,15 +2936,15 @@ export default function ProjectPage() {
               </button>
             </div>
 
-            {/* CTA button: leva a completar quando ainda não está ativado
-                (<3 secções), em vez de só fechar o popup e assumir que a
-                pessoa já sabe o que fazer a seguir. */}
+            {/* CTA button: dispara sempre o tour guiado (score, editar,
+                diário, IA, etc.), igual ao clique fora do popup. Antes
+                saltava o tour de vez para quem tinha <3 secções e ia
+                direto para o editor, o que tirava a esta maioria
+                precisamente o guia que lhes explica onde está tudo. */}
             <button
               onClick={() => {
-                const sectionsCount = Array.isArray(previewBlocks) ? previewBlocks.length : 0
                 setShowLaunchOverlay(false)
                 window.history.replaceState({}, '')
-                if (sectionsCount < 3) { navigate(`/editar/${project.slug}`); return }
                 if (tourPendingRef.current) { tourPendingRef.current = false; setShowTour(true) }
               }}
               style={{
