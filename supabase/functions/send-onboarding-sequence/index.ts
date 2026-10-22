@@ -115,31 +115,52 @@ function quote(text: string, author: string) {
   return `<tr><td style="padding:0 0 20px;"><table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0"><tr><td style="border-left:2px solid #2B7EF5;padding-left:16px;color:#cccccc;font-size:15px;line-height:1.6;font-style:italic;">"${text}"<div style="margin-top:8px;color:#888888;font-size:13px;font-style:normal;">${author}</div></td></tr></table></td></tr>`
 }
 
-// Faixa de urgência, mesma em todos os dias, só muda o texto conforme
-// quanto falta. Últimos 3 dias ficam vermelhos (mais intensos), o resto
-// azul (consistente com a marca, não grita artificialmente desde o dia 1).
+// Faixa de urgência, mesma em todos os dias. O código ONBOARDING_DISCOUNT_CODE
+// é um promo code partilhado no Stripe com expiração própria (a confirmar
+// sempre no dashboard do Stripe, não hardcoded aqui), não uma contagem
+// pessoal de 14 dias. Dizer "acaba amanhã" com base no dia da conta era
+// falso: o código continua válido no Stripe depois do email do dia 14 de
+// quem se registou. Por isso a faixa não promete uma data que a BD não
+// controla, só identifica a oferta de lançamento. Últimos 3 dias do ciclo
+// ficam vermelhos (mais intensos) só visualmente, sem reclamar um deadline.
 function urgencyBand(diaAtual: number, code: string) {
-  const diasRestantes = TOTAL_DAYS - diaAtual
-  const urgente = diasRestantes <= 2
-  const texto = diasRestantes <= 0
-    ? 'Último dia, o desconto termina hoje à meia-noite.'
-    : diasRestantes === 1
-      ? 'Resta 1 dia de desconto.'
-      : `Restam ${diasRestantes} dias de desconto.`
+  const urgente = diaAtual >= TOTAL_DAYS - 2
   const color = urgente ? '#F5493B' : '#2B7EF5'
-  return `<tr><td style="padding:0 0 20px;"><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr><td style="background:${color}1a;border:1px solid ${color}40;border-radius:8px;padding:8px 12px;color:${color};font-size:12.5px;font-weight:700;">${esc(texto)} 50% com o código ${esc(code)}.</td></tr></table></td></tr>`
+  return `<tr><td style="padding:0 0 20px;"><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr><td style="background:${color}1a;border:1px solid ${color}40;border-radius:8px;padding:8px 12px;color:${color};font-size:12.5px;font-weight:700;">Oferta de lançamento até dezembro: 50% com o código ${esc(code)}.</td></tr></table></td></tr>`
 }
 
 type Built = { subject: string; html: string }
+// 'none' = sem projeto full nenhum. 'incomplete' = tem projeto mas <3
+// secções em preview_blocks (ativação, ver CLAUDE.md, ainda não atingida).
+// 'complete' = 3+ secções, já cumpriu a definição de ativação.
+type ProjectState = 'none' | 'incomplete' | 'complete'
 type DayBuilderCtx = {
   firstName?: string
   unsubscribeUrl: string
   hasProject: boolean
+  projectState: ProjectState
   code: string
   dia: number
 }
 
-function buildDay1({ firstName, unsubscribeUrl, hasProject, code, dia }: DayBuilderCtx): Built {
+function buildDay1({ firstName, unsubscribeUrl, hasProject, projectState, code, dia }: DayBuilderCtx): Built {
+  if (projectState === 'incomplete') {
+    const subject = 'O teu projeto está criado, mas falta a parte que conta'
+    return {
+      subject,
+      html: wrapEmail(
+        greeting(firstName) +
+        urgencyBand(dia, code) +
+        headline('Já criaste o projeto. Falta torná-lo apresentável.') +
+        paragraph('Um projeto com só uma ou duas secções ainda não diz muito a quem o vê, professor, recrutador, ou tu próprio dentro de 6 meses.') +
+        paragraph('Volta e acrescenta pelo menos mais uma secção: o problema que resolveste, as decisões que tomaste, ou os resultados. É nessa altura que o portefólio começa a valer a pena partilhar.') +
+        paragraph(`Já agora: o código ${esc(code)} dá 50% no Plus durante os primeiros 6 meses.`, true) +
+        cta(`${APP}/dashboard`, 'Completar o meu projeto'),
+        `Dia ${dia} de ${TOTAL_DAYS}`,
+        unsubscribeUrl,
+      ),
+    }
+  }
   if (!hasProject) {
     const subject = 'O teu primeiro projeto demora 2 minutos a criar'
     return {
@@ -174,7 +195,24 @@ function buildDay1({ firstName, unsubscribeUrl, hasProject, code, dia }: DayBuil
   }
 }
 
-function buildDay2({ firstName, unsubscribeUrl, hasProject, code, dia }: DayBuilderCtx): Built {
+function buildDay2({ firstName, unsubscribeUrl, hasProject, projectState, code, dia }: DayBuilderCtx): Built {
+  if (projectState === 'incomplete') {
+    const subject = 'A diferença entre um rascunho e um portefólio'
+    return {
+      subject,
+      html: wrapEmail(
+        greeting(firstName) +
+        urgencyBand(dia, code) +
+        headline('O que separa um rascunho de um portefólio de verdade') +
+        paragraph('Não é o design nem a quantidade de texto, é mostrar o processo: o que decidiste, porquê, e o que aprendeste pelo caminho.') +
+        paragraph('Volta ao teu projeto e acrescenta essa parte, mesmo que em poucas frases. É isso que faz alguém ficar a ler até ao fim.') +
+        paragraph(`${esc(code)} dá 50% no Plus durante os primeiros 6 meses, para quando quiseres mais do que isto.`, true) +
+        cta(`${APP}/dashboard`, 'Voltar ao meu projeto'),
+        `Dia ${dia} de ${TOTAL_DAYS}`,
+        unsubscribeUrl,
+      ),
+    }
+  }
   if (!hasProject) {
     const subject = 'Não sabes o que mostrar? Nem precisa de estar acabado'
     return {
@@ -209,7 +247,7 @@ function buildDay2({ firstName, unsubscribeUrl, hasProject, code, dia }: DayBuil
   }
 }
 
-function buildDay3({ firstName, unsubscribeUrl, hasProject, code, dia }: DayBuilderCtx): Built {
+function buildDay3({ firstName, unsubscribeUrl, hasProject, projectState, code, dia }: DayBuilderCtx): Built {
   const subject = 'Não inventamos números só para parecer impressionante'
   return {
     subject,
@@ -221,7 +259,7 @@ function buildDay3({ firstName, unsubscribeUrl, hasProject, code, dia }: DayBuil
       quote('Para alguém que fez PAP e queria usá-la para exposição, esta app é um gamechanger para estudantes na mesma situação.', 'Rafael Matos, Estudante de Engenharia Informática da Universidade de Aveiro') +
       quote('Na minha opinião, um dos pontos mais fortes da plataforma é a Defesa. A organização e preparação torna tudo mais interativo e envolvente.', 'Rita Sousa, Estudante na Escola Profissional Bento de Jesus Caraça') +
       paragraph(`Se quiseres resultados assim, o código ${esc(code)} dá 50% no Plus durante os primeiros 6 meses.`, true) +
-      (hasProject ? cta(`${APP}/dashboard`, 'Quero o mesmo resultado') : cta(`${APP}/novo`, 'Quero começar agora')),
+      (projectState === 'incomplete' ? cta(`${APP}/dashboard`, 'Completar o meu projeto') : hasProject ? cta(`${APP}/dashboard`, 'Quero o mesmo resultado') : cta(`${APP}/novo`, 'Quero começar agora')),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
     ),
@@ -237,7 +275,7 @@ function buildDay4({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bui
       urgencyBand(dia, code) +
       headline('Já deste o primeiro passo. O teu projeto está criado.') +
       paragraph('O plano Grátis inclui 1 análise de IA por mês, 3 projetos, e 10 mensagens de Coach IA. Chega para começar, mas sentes o limite depressa se usares a sério.') +
-      paragraph(`O Plus dá 10 análises por mês, 15 projetos, 100 mensagens de Coach, e recap semanal automático. Com o código ${esc(code)}, metade do preço durante os primeiros 6 meses.`, true) +
+      paragraph(`O Plus dá 10 análises por mês, 15 projetos, 100 mensagens de Coach, e recap semanal automático. Com o código ${esc(code)}, de 8,99€ para 4,49€/mês durante os primeiros 6 meses.`, true) +
       cta(`${APP}/pricing`, 'Desbloquear 10x mais análises'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
@@ -282,15 +320,15 @@ function buildDay6({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bui
 }
 
 function buildDay7({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Built {
-  const subject = 'Estás a meio do prazo do desconto'
+  const subject = 'Já estás a meio caminho, falta uma decisão'
   return {
     subject,
     html: wrapEmail(
       greeting(firstName) +
       urgencyBand(dia, code) +
-      headline('Estás a meio do prazo do desconto de 50%') +
-      paragraph('Daqui a 7 dias o código deixa de ser válido. Se já sabes que vais querer usar o Showo a sério, agora é a altura mais barata para decidir.') +
-      paragraph(`Código ${esc(code)}, 50% durante os primeiros 6 meses, aplica-se no checkout.`, true) +
+      headline('Já estás a meio caminho') +
+      paragraph('Se já sabes que vais querer usar o Showo a sério, a oferta de lançamento continua disponível, e é a altura mais barata para decidir.') +
+      paragraph(`Código ${esc(code)}, de 8,99€ para 4,49€/mês durante os primeiros 6 meses, aplica-se no checkout.`, true) +
       cta(`${APP}/pricing`, 'Usar o desconto agora'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
@@ -324,7 +362,7 @@ function buildDay9({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bui
       greeting(firstName) +
       urgencyBand(dia, code) +
       headline('Quanto custa isto por dia, a sério?') +
-      paragraph(`Com o código ${esc(code)}, o Plus fica a metade do preço durante 6 meses, menos do que um café por semana.`) +
+      paragraph(`Com o código ${esc(code)}, o Plus fica a 4,49€/mês durante 6 meses. Isso é 0,15€ por dia, menos do que um café por semana.`) +
       paragraph('Não é um gasto, é tempo que deixas de perder a reexplicar o projeto do zero a cada conversa com IA.', true) +
       cta(`${APP}/pricing`, 'Ver o preço com desconto'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
@@ -370,14 +408,14 @@ function buildDay11({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bu
 }
 
 function buildDay12({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Built {
-  const subject = 'Faltam 2 dias para o desconto acabar'
+  const subject = 'Ainda estás a pensar? É este o momento'
   return {
     subject,
     html: wrapEmail(
       greeting(firstName) +
       urgencyBand(dia, code) +
-      headline('Faltam 2 dias para o código deixar de valer') +
-      paragraph(`${esc(code)} dá 50% durante 6 meses no Plus. Depois de amanhã, o preço volta ao normal.`) +
+      headline('Ainda estás a pensar?') +
+      paragraph(`${esc(code)} dá 4,49€/mês durante 6 meses no Plus, em vez de 8,99€.`) +
       paragraph('Se estavas à espera do momento certo, é este.', true) +
       cta(`${APP}/pricing`, 'Usar o desconto antes que acabe'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
@@ -387,15 +425,15 @@ function buildDay12({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bu
 }
 
 function buildDay13({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Built {
-  const subject = 'Última chamada: o desconto acaba amanhã'
+  const subject = 'Falta pouco para este ciclo de emails acabar'
   return {
     subject,
     html: wrapEmail(
       greeting(firstName) +
       urgencyBand(dia, code) +
-      headline('O desconto acaba amanhã') +
-      paragraph(`Amanhã à meia-noite o código ${esc(code)} deixa de funcionar. É a última oportunidade de entrar no Plus a metade do preço.`, true) +
-      cta(`${APP}/pricing`, 'Garantir o desconto hoje'),
+      headline('Falta pouco para este ciclo de emails acabar') +
+      paragraph(`Depois de amanhã deixas de receber estes emails diários. O código ${esc(code)} continua disponível, mas se querias experimentar o Plus enquanto ainda tens isto fresco na cabeça, entra no Plus a 4,49€/mês em vez de 8,99€.`, true) +
+      cta(`${APP}/pricing`, 'Entrar no Plus agora'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
     ),
@@ -403,15 +441,15 @@ function buildDay13({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bu
 }
 
 function buildDay14({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Built {
-  const subject = 'Hoje é o último dia do desconto'
+  const subject = 'O último destes emails'
   return {
     subject,
     html: wrapEmail(
       greeting(firstName) +
       urgencyBand(dia, code) +
-      headline('Hoje é o último dia') +
-      paragraph(`Depois de hoje o código ${esc(code)} deixa de ser válido. Se vais usar o Showo a sério, não há melhor altura do que agora.`, true) +
-      cta(`${APP}/pricing`, 'Usar o desconto antes que feche'),
+      headline('Este é o último email desta série') +
+      paragraph(`Não vais receber mais nenhum destes. O código ${esc(code)} continua disponível até dezembro, se quiseres entrar no Plus a 4,49€/mês em vez de 8,99€, durante 6 meses.`, true) +
+      cta(`${APP}/pricing`, 'Usar o desconto'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
     ),
@@ -498,18 +536,27 @@ Deno.serve(async (req) => {
         const unsubSig = await signUserId(p.id, cronSecret)
         const unsubscribeUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/onboarding-unsubscribe?u=${p.id}&sig=${unsubSig}`
 
-        // hasProject é usado nos primeiros 3 dias, para escolher a variante
-        // de copy certa (já validado: falar como se houvesse projeto para
-        // quem não tem nenhum matava o clique).
-        const { count: projectCount } = await supabase
+        // hasProject/projectState são usados nos primeiros dias, para
+        // escolher a variante de copy certa (já validado: falar como se
+        // houvesse projeto para quem não tem nenhum matava o clique).
+        // Ativação (CLAUDE.md) = 3+ secções em preview_blocks: quem criou o
+        // projeto mas ficou por 1-2 secções é tratado como "incomplete",
+        // não como "já tem projeto", porque receber copy de GitHub sync ou
+        // testemunhos não ajuda quem nem chegou a publicar nada que valha
+        // a pena mostrar.
+        const { data: projectRows } = await supabase
           .from('projects')
-          .select('id', { count: 'exact', head: true })
+          .select('preview_blocks')
           .eq('user_id', p.id)
           .eq('entry_kind', 'full')
-        const hasProject = (projectCount ?? 0) > 0
+        const hasProject = (projectRows?.length ?? 0) > 0
+        const hasCompleteProject = (projectRows ?? []).some(
+          r => Array.isArray(r.preview_blocks) && r.preview_blocks.length >= 3
+        )
+        const projectState: ProjectState = !hasProject ? 'none' : hasCompleteProject ? 'complete' : 'incomplete'
 
         const builder = DAY_BUILDERS[step]
-        const built = builder({ firstName, unsubscribeUrl, hasProject, code: discountCode, dia: step + 1 })
+        const built = builder({ firstName, unsubscribeUrl, hasProject, projectState, code: discountCode, dia: step + 1 })
         const emailType = `onboarding_day${step + 1}`
 
         const res = await fetch('https://api.resend.com/emails', {
