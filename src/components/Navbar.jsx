@@ -1082,7 +1082,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
     supabase.from('projects')
       .select('slug, is_pap, project_type, defense_date, created_at')
       .eq('user_id', user.id)
-      .is('parent_project_id', null)
+      .eq('entry_kind', 'full')
       .then(({ data }) => {
         if (cancelled) return
         setFocusProjectSlug(pickFocusProject(data || [])?.slug ?? null)
