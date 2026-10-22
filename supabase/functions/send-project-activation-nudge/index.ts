@@ -85,8 +85,37 @@ function cta(href: string, label: string) {
   return `<tr><td style="padding:0 0 24px;"><a href="${href}" style="display:inline-block;background:#2B7EF5;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:12px 24px;border-radius:10px;">${esc(label)}</a></td></tr>`
 }
 
-function buildEmail(firstName: string | undefined, projectName: string, sectionsCount: number, slug: string, unsubscribeUrl: string) {
+// daysToDefense vem de projects.defense_date quando preenchida e ainda no
+// futuro (só ~15% dos projetos têm isto, confirmado contra a BD antes de
+// construir). Quando existe, é o gancho de urgência mais forte que temos,
+// porque é o prazo real da própria pessoa, não um desconto inventado por
+// nós, a mesma distinção que já nos obrigou a tirar a falsa data limite
+// dos emails de onboarding. Quando não existe, cai no aviso genérico.
+function buildEmail(firstName: string | undefined, projectName: string, sectionsCount: number, slug: string, unsubscribeUrl: string, daysToDefense: number | null) {
   const missing = 3 - sectionsCount
+
+  if (daysToDefense !== null) {
+    const prazo = daysToDefense === 0
+      ? 'é hoje'
+      : daysToDefense === 1
+        ? 'é amanhã'
+        : `é daqui a ${daysToDefense} dias`
+    const subject = `A tua defesa ${prazo}, e "${projectName}" ainda não está pronto`
+    return {
+      subject,
+      html: wrapEmail(
+        greeting(firstName) +
+        headline(`A tua defesa ${prazo}`) +
+        paragraph(sectionsCount === 0
+          ? `"${projectName}" ainda não tem nenhuma secção preenchida. Quem avaliar o teu trabalho vai ver isto antes de te ver a ti.`
+          : `Faltam ${missing} secç${missing === 1 ? 'ão' : 'ões'} para o projeto estar pronto a mostrar ao júri, e o tempo está a encurtar.`) +
+        paragraph('Não precisa de estar perfeito, precisa de estar lá antes do dia marcado.', true) +
+        cta(`${APP}/editar/${slug}`, 'Completar antes da defesa'),
+        unsubscribeUrl,
+      ),
+    }
+  }
+
   const subject = sectionsCount === 0
     ? `"${projectName}" está criado, falta a parte que conta`
     : `Faltam ${missing} secç${missing === 1 ? 'ão' : 'ões'} para "${projectName}" ficar pronto a mostrar`
@@ -132,7 +161,7 @@ Deno.serve(async (req) => {
 
     let projectsQuery = supabase
       .from('projects')
-      .select('id, name, slug, user_id, preview_blocks, created_at, entry_kind, activation_nudge_sent_at')
+      .select('id, name, slug, user_id, preview_blocks, created_at, entry_kind, activation_nudge_sent_at, defense_date')
       .eq('entry_kind', 'full')
       .is('activation_nudge_sent_at', null)
       .lte('created_at', new Date(Date.now() - 24 * 3600000).toISOString())
@@ -140,7 +169,7 @@ Deno.serve(async (req) => {
     if (testProjectId) {
       projectsQuery = supabase
         .from('projects')
-        .select('id, name, slug, user_id, preview_blocks, created_at, entry_kind, activation_nudge_sent_at')
+        .select('id, name, slug, user_id, preview_blocks, created_at, entry_kind, activation_nudge_sent_at, defense_date')
         .eq('id', testProjectId)
     }
 
@@ -191,7 +220,11 @@ Deno.serve(async (req) => {
         const sectionsCount = Array.isArray(p.preview_blocks) ? p.preview_blocks.length : 0
         const unsubSig = await signUserId(p.user_id, cronSecret)
         const unsubscribeUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/project-activation-unsubscribe?u=${p.user_id}&sig=${unsubSig}`
-        const built = buildEmail(firstName, p.name || 'o teu projeto', sectionsCount, p.slug, unsubscribeUrl)
+        const daysToDefense = p.defense_date
+          ? Math.max(0, Math.ceil((new Date(p.defense_date).getTime() - Date.now()) / 86400000))
+          : null
+        const hasFutureDefense = p.defense_date && new Date(p.defense_date).getTime() > Date.now()
+        const built = buildEmail(firstName, p.name || 'o teu projeto', sectionsCount, p.slug, unsubscribeUrl, hasFutureDefense ? daysToDefense : null)
 
         const res = await fetch('https://api.resend.com/emails', {
           method: 'POST',
