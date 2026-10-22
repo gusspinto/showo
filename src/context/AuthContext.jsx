@@ -230,20 +230,12 @@ export function AuthProvider({ children }) {
       // Um registo em activity_log por dia de calendário, não por carregamento
       // de página. fetchProfile corre em todo o INITIAL_SESSION/SIGNED_IN (ver
       // onAuthStateChange abaixo), ou seja, em cada separador aberto ou
-      // refresh com sessão guardada. Sem este limite, "Quem mais usa" no
-      // Admin contava isso como "login", e alguém a abrir a app várias vezes
-      // ao dia acumulava dezenas de "logins" em poucos dias (confirmado:
-      // 21 em 3 dias para uma conta registada há 3 dias, o Gustavo notou que
-      // não batia certo). last_active_at (antes deste UPDATE) diz quando foi
-      // o último registo a sério.
-      const prevActive = data.last_active_at ? new Date(data.last_active_at) : null
-      const sameDay = prevActive
-        && prevActive.getFullYear() === now.getFullYear()
-        && prevActive.getMonth() === now.getMonth()
-        && prevActive.getDate() === now.getDate()
-      if (!sameDay) {
-        supabase.from('activity_log').insert({ user_id: uid, action: 'login' }).then(() => {})
-      }
+      // refresh com sessão guardada. Um dedupe no cliente (comparar
+      // last_active_at antes de inserir) tem uma condição de corrida: duas
+      // tabs a abrir ao mesmo tempo leem o mesmo last_active_at antigo e
+      // inserem as duas. A deduplicação real está num índice único em BD
+      // (migração 203), esta RPC só faz insert + ON CONFLICT DO NOTHING.
+      supabase.rpc('record_login').then(() => {})
       const freshGoogleAvatar = (meta.avatar_url ?? meta.picture ?? '').replace(/=s\d+-c$/, '=s400-c')
       if (freshGoogleAvatar && (data.avatar_url?.includes('googleusercontent.com') || !data.avatar_url)) {
         persistGoogleAvatar(uid, freshGoogleAvatar).then(permanent => {
