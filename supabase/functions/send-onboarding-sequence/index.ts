@@ -237,7 +237,7 @@ function buildDay4({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bui
       urgencyBand(dia, code) +
       headline('Já deste o primeiro passo. O teu projeto está criado.') +
       paragraph('O plano Grátis inclui 1 análise de IA por mês, 3 projetos, e 10 mensagens de Coach IA. Chega para começar, mas sentes o limite depressa se usares a sério.') +
-      paragraph(`O Plus dá 10 análises por mês, 15 projetos, 100 mensagens de Coach, e recap semanal automático. Com o código ${esc(code)}, metade do preço durante os primeiros 6 meses.`, true) +
+      paragraph(`O Plus dá 10 análises por mês, 15 projetos, 100 mensagens de Coach, e recap semanal automático. Com o código ${esc(code)}, de 8,99€ para 4,49€/mês durante os primeiros 6 meses.`, true) +
       cta(`${APP}/pricing`, 'Desbloquear 10x mais análises'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
@@ -290,7 +290,7 @@ function buildDay7({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bui
       urgencyBand(dia, code) +
       headline('Estás a meio do prazo do desconto de 50%') +
       paragraph('Daqui a 7 dias o código deixa de ser válido. Se já sabes que vais querer usar o Showo a sério, agora é a altura mais barata para decidir.') +
-      paragraph(`Código ${esc(code)}, 50% durante os primeiros 6 meses, aplica-se no checkout.`, true) +
+      paragraph(`Código ${esc(code)}, de 8,99€ para 4,49€/mês durante os primeiros 6 meses, aplica-se no checkout.`, true) +
       cta(`${APP}/pricing`, 'Usar o desconto agora'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
@@ -324,7 +324,7 @@ function buildDay9({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bui
       greeting(firstName) +
       urgencyBand(dia, code) +
       headline('Quanto custa isto por dia, a sério?') +
-      paragraph(`Com o código ${esc(code)}, o Plus fica a metade do preço durante 6 meses, menos do que um café por semana.`) +
+      paragraph(`Com o código ${esc(code)}, o Plus fica a 4,49€/mês durante 6 meses. Isso é 0,15€ por dia, menos do que um café por semana.`) +
       paragraph('Não é um gasto, é tempo que deixas de perder a reexplicar o projeto do zero a cada conversa com IA.', true) +
       cta(`${APP}/pricing`, 'Ver o preço com desconto'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
@@ -377,7 +377,7 @@ function buildDay12({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bu
       greeting(firstName) +
       urgencyBand(dia, code) +
       headline('Faltam 2 dias para o código deixar de valer') +
-      paragraph(`${esc(code)} dá 50% durante 6 meses no Plus. Depois de amanhã, o preço volta ao normal.`) +
+      paragraph(`${esc(code)} dá 4,49€/mês durante 6 meses no Plus, em vez de 8,99€. Depois de amanhã, o preço volta ao normal.`) +
       paragraph('Se estavas à espera do momento certo, é este.', true) +
       cta(`${APP}/pricing`, 'Usar o desconto antes que acabe'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
@@ -394,7 +394,7 @@ function buildDay13({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bu
       greeting(firstName) +
       urgencyBand(dia, code) +
       headline('O desconto acaba amanhã') +
-      paragraph(`Amanhã à meia-noite o código ${esc(code)} deixa de funcionar. É a última oportunidade de entrar no Plus a metade do preço.`, true) +
+      paragraph(`Amanhã à meia-noite o código ${esc(code)} deixa de funcionar. É a última oportunidade de entrar no Plus a 4,49€/mês em vez de 8,99€.`, true) +
       cta(`${APP}/pricing`, 'Garantir o desconto hoje'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
@@ -410,7 +410,7 @@ function buildDay14({ firstName, unsubscribeUrl, code, dia }: DayBuilderCtx): Bu
       greeting(firstName) +
       urgencyBand(dia, code) +
       headline('Hoje é o último dia') +
-      paragraph(`Depois de hoje o código ${esc(code)} deixa de ser válido. Se vais usar o Showo a sério, não há melhor altura do que agora.`, true) +
+      paragraph(`Depois de hoje o código ${esc(code)} deixa de ser válido. 4,49€/mês em vez de 8,99€, durante 6 meses. Se vais usar o Showo a sério, não há melhor altura do que agora.`, true) +
       cta(`${APP}/pricing`, 'Usar o desconto antes que feche'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
