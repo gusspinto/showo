@@ -157,6 +157,7 @@
   justify-content: center;
   width: 30px;
   height: 30px;
+  min-height: 0; /* sem isto, herda o min-height:44px global de toque mínimo (index.css) e estica para 30x44 */
   flex-shrink: 0;
   border: none;
   border-radius: var(--radius-sm);
@@ -3242,9 +3243,12 @@
     padding: 0;
     margin: 0;
   }
-  /* no mobile esconde TODOS os botões do head — as ações ficam no footer */
-  .sdb-pinned-head-left .sdb-icon-btn,
-  .sdb-pinned-head-right .sdb-icon-btn { display: none; }
+  /* no mobile esconde os botões do head que têm equivalente no footer —
+     mas o desafixar/remover da dashboard não tem, ficava sem forma de
+     tirar um projeto do "Em foco" no telemóvel, apontado pelo Gustavo.
+     Fica visível, só ele. */
+  .sdb-pinned-head-left .sdb-icon-btn:not(.sdb-icon-btn--pin):not(.sdb-icon-btn--quiet),
+  .sdb-pinned-head-right .sdb-icon-btn:not(.sdb-icon-btn--pin):not(.sdb-icon-btn--quiet) { display: none; }
   .sdb-pulse-danger-confirm { display: none; }
 
   /* body: unified, generous spacing */
@@ -3264,7 +3268,11 @@
     font-size: clamp(18px, 5.5vw, 22px);
     letter-spacing: -0.4px;
     white-space: normal;
-    overflow: visible;
+    /* overflow:hidden, não visible — sem isto o -webkit-line-clamp não
+       recorta mesmo, e um nome de projeto comprido continuava a crescer
+       por baixo do resto do cartão (score, área, botão Registar),
+       apontado pelo Gustavo. */
+    overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;

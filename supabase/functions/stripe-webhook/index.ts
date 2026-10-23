@@ -11,11 +11,11 @@ function supabase() {
   )
 }
 
-async function updatePlan(customerId: string, plan: string, period: string | null = null) {
+async function updatePlan(customerId: string, plan: string, period: string | null = null, expiresAt: string | null = null) {
   const sb = supabase()
   const { error } = await sb
     .from('profiles')
-    .update({ plan, plan_period: plan === 'free' ? null : period })
+    .update({ plan, plan_period: plan === 'free' ? null : period, plan_expires_at: plan === 'free' ? null : expiresAt })
     .eq('stripe_customer_id', customerId)
   if (error) console.error('[stripe-webhook] updatePlan error:', error.message)
 }
@@ -100,6 +100,18 @@ Deno.serve(async (req) => {
         const period = sub.metadata?.period || 'monthly'
         await updatePlan(session.customer as string, plan, period)
         await logBillingEvent(session.customer as string, 'subscription_started', plan, session.amount_total ?? null, period)
+        await attributeAmbassadorFromCheckoutCode(session)
+      } else if (session.mode === 'payment' && session.metadata?.kind === 'annual_one_time' && session.payment_status === 'paid') {
+        // create-annual-checkout: Multibanco/MB WAY não funcionam em
+        // mode:'subscription' (confirmado por teste direto na API), por
+        // isso o anual com esses métodos é pagamento único, sem subscrição
+        // do Stripe. Um ano a partir de agora, não a partir do checkout
+        // criado: Multibanco/MB WAY podem demorar dias a confirmar.
+        const plan = session.metadata.plan || 'plus'
+        const expiresAt = new Date()
+        expiresAt.setFullYear(expiresAt.getFullYear() + 1)
+        await updatePlan(session.customer as string, plan, 'annual', expiresAt.toISOString())
+        await logBillingEvent(session.customer as string, 'subscription_started', plan, session.amount_total ?? null, 'annual')
         await attributeAmbassadorFromCheckoutCode(session)
       }
       break

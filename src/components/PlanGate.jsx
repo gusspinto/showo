@@ -397,9 +397,14 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
     logFunnelEvent('checkout_started', feature)
     try {
       const returnPath = `${location.pathname}${location.search}`
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { plan: upgrade.id, period: annual ? 'annual' : 'monthly', returnPath },
-      })
+      // O anual vai por create-annual-checkout (pagamento único, com
+      // Multibanco e MB WAY): Multibanco/MB WAY não funcionam em
+      // mode:'subscription' no Stripe, confirmado por teste direto na API.
+      // O mensal continua por create-checkout (subscrição, só cartão).
+      const { data, error } = await supabase.functions.invoke(
+        annual ? 'create-annual-checkout' : 'create-checkout',
+        { body: annual ? { plan: upgrade.id, returnPath } : { plan: upgrade.id, period: 'monthly', returnPath } },
+      )
       if (error || !data?.url) { setCheckoutError('Erro ao iniciar pagamento. Tenta novamente.'); return }
       window.location.href = data.url
     } catch {
@@ -428,9 +433,10 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
     setCheckoutError('')
     try {
       const returnPath = `${location.pathname}${location.search}`
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { plan: upgrade.id, period: annual ? 'annual' : 'monthly', returnPath },
-      })
+      const { data, error } = await supabase.functions.invoke(
+        annual ? 'create-annual-checkout' : 'create-checkout',
+        { body: annual ? { plan: upgrade.id, returnPath } : { plan: upgrade.id, period: 'monthly', returnPath } },
+      )
       if (error || !data?.url) {
         win?.close()
         setCheckoutError('Erro ao preparar o pedido. Tenta novamente.')

@@ -247,9 +247,13 @@ export default function Pricing() {
     setLoading(plan.id)
     setError('')
     try {
-      const { data, error: fnErr } = await supabase.functions.invoke('create-checkout', {
-        body: { plan: plan.id, period: annual ? 'annual' : 'monthly' },
-      })
+      // O anual vai por create-annual-checkout (pagamento único, com
+      // Multibanco e MB WAY): esses métodos não funcionam em
+      // mode:'subscription' no Stripe. Mesma troca do PlanGate.jsx.
+      const { data, error: fnErr } = await supabase.functions.invoke(
+        annual ? 'create-annual-checkout' : 'create-checkout',
+        { body: annual ? { plan: plan.id } : { plan: plan.id, period: 'monthly' } },
+      )
       if (fnErr || !data?.url) { setError('Erro ao iniciar pagamento. Tenta novamente.'); return }
       window.location.href = data.url
     } catch {

@@ -825,8 +825,14 @@ export default function StudentDashboard({ user, profile }) {
             Em desktop o CTA vive na sidebar (Navbar.jsx, junto ao sino) —
             aqui é só mobile, onde a sidebar não aparece. Pedido do Gustavo,
             à imagem do cartão "Desbloquear Premium" do StudyFetch. Só para
-            quem está no plano Grátis. */}
-        {planId === 'free' && (
+            quem está no plano Grátis.
+            Para quem também vê a faixa do LinkedIn (WeeklyRecapTeaser, mais
+            abaixo) este cartão fica de fora enquanto ela estiver visível —
+            as duas são o mesmo convite a pagar, ter as duas ao mesmo tempo
+            no topo do mobile ficava repetitivo, apontado pelo Gustavo.
+            Continua a aparecer para contas de escola (sem faixa do LinkedIn)
+            e para quem já dispensou a faixa. */}
+        {planId === 'free' && (isSchoolAccount || recapTeaserDismissed) && (
           <div className="sdb-upgrade-card sdb-panel sdb-panel--brand">
             <div>
               <p className="sdb-upgrade-card-title">Experimenta o Plus</p>
