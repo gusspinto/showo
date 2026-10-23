@@ -849,6 +849,7 @@ export default function App() {
               <Route path="/certificado/:slug"  element={<Certificate />}  />
               <Route path="/mensagens"          element={<Mensagens />}    />
               <Route path="/projeto/:slug/diario" element={<DiaryCanvas />}  />
+              <Route path="/diario"               element={<DiaryCanvas />}  />
               <Route path="/privacidade"        element={<Privacidade />}   />
               <Route path="/termos"             element={<Termos />}        />
               <Route path="/oauth/google-calendar" element={<GoogleCalendarCallback />} />

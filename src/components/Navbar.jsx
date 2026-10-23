@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { pickFocusProject } from '../lib/focusProject'
 import { PlanGateModal } from './PlanGate'
 import { SearchPalette } from './SearchPalette'
 import { useTheme } from '../context/ThemeContext'
@@ -1071,25 +1070,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
     return () => supabase.removeChannel(ch)
   }, [user])
 
-  // Atalho do Diário na sidebar: o diário é por projeto, não existe um
-  // "diário geral", por isso o atalho precisa de saber para que projeto ir.
-  // Usa o mesmo critério do Dashboard (pickFocusProject, lib/focusProject.js)
-  // para nunca escolher um projeto diferente do que já aparece em foco lá.
-  const [focusProjectSlug, setFocusProjectSlug] = useState(null)
-  useEffect(() => {
-    if (!user || !isAlunoRole) { setFocusProjectSlug(null); return }
-    let cancelled = false
-    supabase.from('projects')
-      .select('slug, is_pap, project_type, defense_date, created_at')
-      .eq('user_id', user.id)
-      .eq('entry_kind', 'full')
-      .then(({ data }) => {
-        if (cancelled) return
-        setFocusProjectSlug(pickFocusProject(data || [])?.slug ?? null)
-      })
-    return () => { cancelled = true }
-  }, [user, isAlunoRole])
-
   const profileUrl = profile?.username ? `/u/${profile.username}` : user ? `/u/${user.id}` : null
 
   function isActive(path) {
@@ -1746,27 +1726,23 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           ) : (
             /* ── ALUNO sidebar ── */
             <>
-              {/* Espaço de trabalho: tudo o que é o trabalho do próprio aluno
+              {/* Mesa de trabalho: tudo o que é o trabalho do próprio aluno
                   (projeto, diário, coach, biblioteca, turmas) num só grupo.
                   Biblioteca e Turmas estavam soltas sem título nenhum antes
-                  disto, apontado pelo Gustavo. Era "Mesa de trabalho", o
-                  Gustavo achou que não soava bem, "Espaço de trabalho" é
-                  mais natural em PT-PT, mesma ideia. O item "Dashboard"
-                  também tinha passado a "Projetos", voltou a "Dashboard",
-                  termo mais familiar para quem já usa outras apps. */}
-              {!collapsed && showLabels && <span className="sb-label">Espaço de trabalho</span>}
+                  disto, apontado pelo Gustavo. Mantém-se "Mesa de trabalho"
+                  (uma mudança anterior para "Espaço de trabalho" foi revertida
+                  a pedido dele). O item "Dashboard" tinha passado a "Projetos",
+                  voltou a "Dashboard", termo mais familiar para quem já usa
+                  outras apps. */}
+              {!collapsed && showLabels && <span className="sb-label">Mesa de trabalho</span>}
 
               {user && (
                 <button className={`sb-item${isActive('/dashboard') ? ' active' : ''}`} onClick={() => navigate('/dashboard')}>
                   <LayoutDashboard size={16} />{!collapsed && showLabels && <span>Dashboard</span>}
                 </button>
               )}
-              {/* O diário é por projeto, não existe um "diário geral", vai
-                  para o projeto em foco (mesmo critério do Dashboard,
-                  lib/focusProject.js). Só aparece depois de haver pelo
-                  menos um projeto para onde ir. */}
-              {user && focusProjectSlug && (
-                <button className={`sb-item${location.pathname === `/projeto/${focusProjectSlug}/diario` ? ' active' : ''}`} onClick={() => navigate(`/projeto/${focusProjectSlug}/diario`)}>
+              {user && (
+                <button className={`sb-item${location.pathname === '/diario' ? ' active' : ''}`} onClick={() => navigate('/diario')}>
                   <BookOpen size={16} />{!collapsed && showLabels && <span>Diário</span>}
                 </button>
               )}
@@ -2230,12 +2206,12 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 </>
               ) : (
                 <>
-                  {/* Mesmos três grupos da sidebar de desktop (Espaço de
-                      trabalho / Comunidade / Conta) — o menu mobile tinha
+                  {/* Mesmos três grupos da sidebar de desktop (Mesa de
+                      trabalho / Comunidade / Conta), o menu mobile tinha
                       ficado sem as etiquetas e sem Coach IA/Vagas quando
                       essa reorganização aconteceu no desktop, apontado
                       pelo Gustavo ao rever a dev. */}
-                  {user && <span className="mob-nav-section-label">Espaço de trabalho</span>}
+                  {user && <span className="mob-nav-section-label">Mesa de trabalho</span>}
                   {user && (
                     <button className={`mob-nav-btn${isActive('/dashboard') ? ' active' : ''}`} onClick={() => { navigate('/dashboard'); setMenuOpen(false) }}>
                       <LayoutDashboard size={18} /> Dashboard

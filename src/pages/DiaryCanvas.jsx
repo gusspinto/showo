@@ -13,8 +13,10 @@ import { UndoLeftIcon as Undo2 } from '@solar-icons/react/bold/undo-left'
 import { RefreshIcon as Redo2 } from '@solar-icons/react/bold/refresh'
 import { DisketteIcon as Save } from '@solar-icons/react/bold/diskette'
 import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
+import { AltArrowDownIcon as ChevronDown } from '@solar-icons/react/bold/alt-arrow-down'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import { pickFocusProject } from '../lib/focusProject'
 import './DiaryCanvas.css'
 
 const CARD_TYPES = {
@@ -54,6 +56,13 @@ export default function DiaryCanvas() {
   const [loading,    setLoading]    = useState(true)
   const [selectedId, setSelectedId] = useState(null)
   const [showAddMenu, setShowAddMenu] = useState(false)
+
+  // Seletor de projeto (rota /diario, sem slug): lista dos projetos do
+  // utilizador, projeto ativo (null = diário geral, sem projeto), e o
+  // dropdown, tal como no Coach IA.
+  const [myProjects, setMyProjects] = useState([])
+  const [activeProjectId, setActiveProjectId] = useState(null)
+  const [pickerOpen, setPickerOpen] = useState(false)
 
   const containerRef = useRef(null)
   const worldRef     = useRef(null)
@@ -125,33 +134,69 @@ export default function DiaryCanvas() {
     applyTransform()
   }
 
-  // ── Load ─────────────────────────────────────────────────────────────────
+  // ── Load: contexto (projeto da rota /projeto/:slug/diario, ou, na rota
+  // /diario sem slug, a lista de projetos do utilizador + projeto em foco
+  // por omissão, como no Coach IA) ────────────────────────────────────────
   useEffect(() => {
-    if (!user || !slug) return
+    if (!user) return
     let cancelled = false
 
     ;(async () => {
-      const { data: proj } = await supabase
-        .from('projects').select('id, name, preview_style, user_id')
-        .eq('slug', slug).single()
+      if (slug) {
+        const { data: proj } = await supabase
+          .from('projects').select('id, name, preview_style, user_id')
+          .eq('slug', slug).single()
 
-      if (cancelled || !proj) { setLoading(false); return }
-      if (proj.user_id !== user.id) {
-        navigate(`/projeto/${slug}`, { replace: true }); return
+        if (cancelled || !proj) { setLoading(false); return }
+        if (proj.user_id !== user.id) {
+          navigate(`/projeto/${slug}`, { replace: true }); return
+        }
+
+        setProject(proj)
+        setActiveProjectId(proj.id)
+        return
       }
 
-      setProject(proj)
+      const { data: projs } = await supabase
+        .from('projects').select('id, name, is_pap, project_type, defense_date, created_at')
+        .eq('user_id', user.id).eq('entry_kind', 'full')
 
-      const { data: rows } = await supabase
-        .from('diary_canvas_items').select('*')
-        .eq('project_id', proj.id).eq('user_id', user.id)
-        .order('created_at', { ascending: true })
+      if (cancelled) return
+      setMyProjects(projs || [])
+      const focus = pickFocusProject(projs || [])
+      setProject(focus || null)
+      setActiveProjectId(focus?.id ?? null)
+    })()
+
+    return () => { cancelled = true }
+  }, [slug, user])
+
+  // ── Load: itens do contexto ativo (projeto específico, ou gerais quando
+  // activeProjectId é null) ────────────────────────────────────────────────
+  useEffect(() => {
+    if (!user) return
+    if (slug && !project) return // rota /projeto/:slug/diario ainda a carregar o projeto
+
+    let cancelled = false
+    ;(async () => {
+      const base = supabase.from('diary_canvas_items').select('*').eq('user_id', user.id)
+      const { data: rows } = activeProjectId
+        ? await base.eq('project_id', activeProjectId).order('created_at', { ascending: true })
+        : await base.is('project_id', null).order('created_at', { ascending: true })
 
       if (!cancelled) { setItems(rows || []); setLoading(false) }
     })()
 
     return () => { cancelled = true }
-  }, [slug, user])
+  }, [activeProjectId, user, slug, project])
+
+  function selectDiaryProject(p) {
+    setPickerOpen(false)
+    if (p?.id === activeProjectId) return
+    setLoading(true)
+    setProject(p || null)
+    setActiveProjectId(p?.id ?? null)
+  }
 
   // Load title font from Google Fonts
   useEffect(() => {
@@ -440,7 +485,7 @@ export default function DiaryCanvas() {
 
   // ── CRUD ─────────────────────────────────────────────────────────────────
   async function addItem(type) {
-    if (!project || !user) return
+    if (!user) return
     setShowAddMenu(false)
     const def = CARD_TYPES[type]
     const rect = containerRef.current.getBoundingClientRect()
@@ -450,7 +495,7 @@ export default function DiaryCanvas() {
 
     const { data } = await supabase
       .from('diary_canvas_items')
-      .insert({ project_id: project.id, user_id: user.id, type, x, y, w: def.w, h: def.h, content: '', color: def.color, pinned: false })
+      .insert({ project_id: activeProjectId, user_id: user.id, type, x, y, w: def.w, h: def.h, content: '', color: def.color, pinned: false })
       .select().single()
 
     if (data) { setItems(prev => [...prev, data]); setSelectedId(data.id) }
@@ -490,27 +535,60 @@ export default function DiaryCanvas() {
 
   // ── Render ───────────────────────────────────────────────────────────────
   if (loading) return <div className="dc-loading"><div className="dc-loading-spin" /></div>
-  if (!project) return null
+  if (slug && !project) return null
 
-  const fontKey = project.preview_style?.titleFont
+  const fontKey = project?.preview_style?.titleFont
   const titleFontCss = fontKey ? (TITLE_FONT_MAP[fontKey]?.css || 'var(--font-heading)') : 'var(--font-heading)'
+
+  const picker = !slug && myProjects.length > 0 && (
+    <div style={{ position: 'relative', pointerEvents: 'auto' }}>
+      <button
+        onClick={() => setPickerOpen(v => !v)}
+        className="dc-tb-action-btn"
+        style={{ display: 'flex', alignItems: 'center', gap: 6, width: 'auto', padding: '0 10px', fontSize: 13, fontWeight: 600 }}
+      >
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 140 }}>
+          {project ? project.name : 'Geral'}
+        </span>
+        <ChevronDown size={14} style={{ flexShrink: 0 }} />
+      </button>
+      {pickerOpen && (
+        <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, width: 240, background: 'var(--color-bg-overlay)', border: '1px solid var(--color-border)', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.3)', zIndex: 20, maxHeight: 320, overflowY: 'auto', padding: '6px 0' }}>
+          <button
+            onClick={() => selectDiaryProject(null)}
+            style={{ display: 'block', width: '100%', textAlign: 'left', background: !activeProjectId ? 'var(--color-primary-subtle)' : 'none', border: 'none', padding: '9px 14px', fontSize: 13, fontWeight: 600, color: !activeProjectId ? 'var(--color-primary)' : 'var(--color-text)', cursor: 'pointer', fontFamily: 'inherit' }}
+          >Geral (sem projeto)</button>
+          <div style={{ padding: '10px 14px 7px', fontSize: 11, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Diário de um projeto</div>
+          {myProjects.map(p => (
+            <button
+              key={p.id}
+              onClick={() => selectDiaryProject(p)}
+              style={{ display: 'block', width: '100%', textAlign: 'left', background: activeProjectId === p.id ? 'var(--color-primary-subtle)' : 'none', border: 'none', padding: '9px 14px', fontSize: 13, color: activeProjectId === p.id ? 'var(--color-primary)' : 'var(--color-text)', fontWeight: activeProjectId === p.id ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+            >{p.name}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 
   return (
     <div className="dc-root">
       {/* Toolbar */}
       <div className="dc-toolbar">
         {/* Left: back */}
-        <button className="dc-tb-back" onClick={() => navigate(`/projeto/${slug}`)} title="Voltar ao projeto">
+        <button className="dc-tb-back" onClick={() => navigate(slug ? `/projeto/${slug}` : '/dashboard')} title={slug ? 'Voltar ao projeto' : 'Voltar ao dashboard'}>
           <ArrowLeft size={15} />
           <span>Voltar</span>
         </button>
 
-        {/* Center: logo + project name */}
+        {/* Center: logo + project name (ou seletor, na rota /diario) */}
         <div className="dc-tb-center">
           <img src="/icon.png" alt="Showo" className="dc-logo" />
-          <div className="dc-tb-title" style={{ fontFamily: titleFontCss }}>
-            <span className="dc-tb-project-name">{project.name}</span>
-          </div>
+          {slug ? (
+            <div className="dc-tb-title" style={{ fontFamily: titleFontCss }}>
+              <span className="dc-tb-project-name">{project.name}</span>
+            </div>
+          ) : picker}
         </div>
 
         {/* Right: undo/redo + save */}
