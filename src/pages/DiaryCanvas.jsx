@@ -184,7 +184,16 @@ export default function DiaryCanvas() {
         ? await base.eq('project_id', activeProjectId).order('created_at', { ascending: true })
         : await base.is('project_id', null).order('created_at', { ascending: true })
 
-      if (!cancelled) { setItems(rows || []); setLoading(false) }
+      if (!cancelled) {
+        setItems(rows || [])
+        setLoading(false)
+        // Histórico de posições é por contexto (projeto ou geral): ao trocar
+        // de projeto no seletor, o undo/redo de um projeto não deve aplicar-se
+        // a outro. Ponto de partida: o estado tal como veio da BD.
+        historyRef.current = [(rows || []).map(({ id, x, y, w, h }) => ({ id, x, y, w, h }))]
+        histIdxRef.current = 0
+        setHistIdx(0)
+      }
     })()
 
     return () => { cancelled = true }
@@ -228,9 +237,19 @@ export default function DiaryCanvas() {
     return () => { flushAll(); window.removeEventListener('beforeunload', flushAll) }
   }, [])
 
-  // ── History helpers ───────────────────────────────────────────────────────
-  function pushHistory() {
-    const snap = itemsRef.current.map(({ id, x, y, w, h }) => ({ id, x, y, w, h }))
+  // ── History helpers ─────────────────────────────────────────────────────
+  // Guarda sempre o estado DEPOIS da edição (não antes): historyRef[0] é o
+  // ponto de partida (carregado do load effect), e cada drag/resize completo
+  // soma uma entrada nova. Undo/redo andam para trás/frente nesta linha do
+  // tempo. `override` entra porque, no momento em que o pointerup chama isto,
+  // o setItems() que acabou de correr ainda não propagou a itemsRef (só
+  // sincroniza num useEffect, depois deste commit); sem o override, o
+  // snapshot ficava com a posição ANTIGA do item que se acabou de mover.
+  function pushHistory(override) {
+    const snap = itemsRef.current.map(({ id, x, y, w, h }) => {
+      if (override && override.id === id) return { id, x: override.x ?? x, y: override.y ?? y, w: override.w ?? w, h: override.h ?? h }
+      return { id, x, y, w, h }
+    })
     historyRef.current = historyRef.current.slice(0, histIdxRef.current + 1)
     historyRef.current.push(snap)
     if (historyRef.current.length > 60) historyRef.current.shift()
@@ -341,7 +360,6 @@ export default function DiaryCanvas() {
     e.preventDefault()
     e.stopPropagation()
     setSelectedId(item.id)
-    pushHistory()
     const pos = s2c(e.clientX, e.clientY)
     const ox = pos.x - item.x
     const oy = pos.y - item.y
@@ -360,6 +378,7 @@ export default function DiaryCanvas() {
       const nx = p.x - ox, ny = p.y - oy
       setItems(prev => prev.map(it => it.id === id ? { ...it, x: nx, y: ny } : it))
       scheduleSave(id)
+      pushHistory({ id, x: nx, y: ny })
     }
     window.addEventListener('pointermove', onMove)
     window.addEventListener('pointerup', onUp)
@@ -371,7 +390,6 @@ export default function DiaryCanvas() {
     if (e.button !== 0 && e.pointerType === 'mouse') return
     e.preventDefault()
     e.stopPropagation()
-    pushHistory()
     const pos = s2c(e.clientX, e.clientY)
     const startX = pos.x, startY = pos.y
     const origW = item.w, origH = item.h
@@ -393,6 +411,7 @@ export default function DiaryCanvas() {
       const nh = Math.max(80,  origH + p.y - startY)
       setItems(prev => prev.map(it => it.id === id ? { ...it, w: nw, h: nh } : it))
       scheduleSave(id)
+      pushHistory({ id, w: nw, h: nh })
     }
     window.addEventListener('pointermove', onMove)
     window.addEventListener('pointerup', onUp)
