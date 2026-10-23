@@ -2218,6 +2218,11 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                     </button>
                   )}
                   {user && (
+                    <button className={`mob-nav-btn${location.pathname === '/diario' ? ' active' : ''}`} onClick={() => { navigate('/diario'); setMenuOpen(false) }}>
+                      <BookOpen size={18} /> Diário
+                    </button>
+                  )}
+                  {user && (
                     <button className={`mob-nav-btn${isActive('/coach') ? ' active' : ''}`} onClick={() => { navigate('/coach'); setMenuOpen(false) }}>
                       <Bot size={18} /> Coach IA
                     </button>

@@ -75,6 +75,22 @@ async function attributeAmbassadorFromCheckoutCode(session: Stripe.Checkout.Sess
   }
 }
 
+// create-annual-checkout: Multibanco/MB WAY não funcionam em mode:'subscription'
+// (confirmado por teste direto na API), por isso o anual com esses métodos é
+// pagamento único, sem subscrição do Stripe. Um ano a partir de agora, não a
+// partir do checkout criado: Multibanco/MB WAY podem demorar dias a confirmar,
+// por isso esta função corre tanto em checkout.session.completed (cartão, que
+// confirma logo) como em checkout.session.async_payment_succeeded (Multibanco/
+// MB WAY, que só confirmam depois).
+async function activateAnnualOneTime(session: Stripe.Checkout.Session) {
+  const plan = session.metadata?.plan || 'plus'
+  const expiresAt = new Date()
+  expiresAt.setFullYear(expiresAt.getFullYear() + 1)
+  await updatePlan(session.customer as string, plan, 'annual', expiresAt.toISOString())
+  await logBillingEvent(session.customer as string, 'subscription_started', plan, session.amount_total ?? null, 'annual')
+  await attributeAmbassadorFromCheckoutCode(session)
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { status: 200 })
@@ -102,17 +118,19 @@ Deno.serve(async (req) => {
         await logBillingEvent(session.customer as string, 'subscription_started', plan, session.amount_total ?? null, period)
         await attributeAmbassadorFromCheckoutCode(session)
       } else if (session.mode === 'payment' && session.metadata?.kind === 'annual_one_time' && session.payment_status === 'paid') {
-        // create-annual-checkout: Multibanco/MB WAY não funcionam em
-        // mode:'subscription' (confirmado por teste direto na API), por
-        // isso o anual com esses métodos é pagamento único, sem subscrição
-        // do Stripe. Um ano a partir de agora, não a partir do checkout
-        // criado: Multibanco/MB WAY podem demorar dias a confirmar.
-        const plan = session.metadata.plan || 'plus'
-        const expiresAt = new Date()
-        expiresAt.setFullYear(expiresAt.getFullYear() + 1)
-        await updatePlan(session.customer as string, plan, 'annual', expiresAt.toISOString())
-        await logBillingEvent(session.customer as string, 'subscription_started', plan, session.amount_total ?? null, 'annual')
-        await attributeAmbassadorFromCheckoutCode(session)
+        // Cartão: o pagamento já confirmou aqui mesmo.
+        await activateAnnualOneTime(session)
+      }
+      break
+    }
+
+    case 'checkout.session.async_payment_succeeded': {
+      // Multibanco/MB WAY: checkout.session.completed já chegou com
+      // payment_status 'unpaid' (só a referência tinha sido gerada), e não
+      // ativou nada. Este evento é o que confirma o pagamento, dias depois.
+      const session = event.data.object as Stripe.Checkout.Session
+      if (session.mode === 'payment' && session.metadata?.kind === 'annual_one_time') {
+        await activateAnnualOneTime(session)
       }
       break
     }

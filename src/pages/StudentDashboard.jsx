@@ -827,7 +827,7 @@ export default function StudentDashboard({ user, profile }) {
             à imagem do cartão "Desbloquear Premium" do StudyFetch. Só para
             quem está no plano Grátis.
             Para quem também vê a faixa do LinkedIn (WeeklyRecapTeaser, mais
-            abaixo) este cartão fica de fora enquanto ela estiver visível —
+            abaixo) este cartão fica de fora enquanto ela estiver visível:
             as duas são o mesmo convite a pagar, ter as duas ao mesmo tempo
             no topo do mobile ficava repetitivo, apontado pelo Gustavo.
             Continua a aparecer para contas de escola (sem faixa do LinkedIn)
