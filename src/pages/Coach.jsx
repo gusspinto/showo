@@ -258,13 +258,13 @@ export default function Coach() {
   const hasHistory = globalSessions.length > 0 || projectSessions.size > 0
 
   const picker = myProjects.length > 0 && (
-    <div style={{ position: 'relative', minWidth: 0 }}>
+    <div style={{ position: 'relative', minWidth: 0, flex: isMobile ? 1 : undefined }}>
       <button
         onClick={() => setPickerOpen(v => !v)}
-        style={{ display: 'flex', alignItems: 'center', gap: 6, maxWidth: 160, background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 9, padding: '8px 12px', color: C.text, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+        style={{ display: 'flex', alignItems: 'center', gap: 6, width: isMobile ? '100%' : undefined, maxWidth: isMobile ? undefined : 160, background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 9, padding: '8px 12px', color: C.text, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
       >
         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeProject ? activeProject.name : 'Geral'}</span>
-        <ChevronDown size={14} style={{ flexShrink: 0 }} />
+        <ChevronDown size={14} style={{ flexShrink: 0, marginLeft: isMobile ? 'auto' : 0 }} />
       </button>
       {pickerOpen && (
         <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, width: 240, background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.2)', zIndex: 20, maxHeight: 320, overflowY: 'auto', padding: '6px 0' }}>
@@ -419,32 +419,30 @@ export default function Coach() {
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
             <div style={{ maxWidth: 760, width: '100%', margin: '0 auto', padding: '0 clamp(16px,3vw,24px)', display: 'flex', flexDirection: 'column', flex: 1, boxSizing: 'border-box', minHeight: 0 }}>
 
-              {/* Header — flex-wrap, não ellipsis: título/badge/seletor a
-                  competir pela mesma linha num ecrã estreito cortava "Coach
-                  IA" a meio e sobrepunha o badge, apontado pelo Gustavo.
-                  Em vez de cortar texto, o grupo da direita (badge + nova
-                  conversa + seletor de projeto) passa para uma segunda
-                  linha, alinhado à direita, quando não cabe ao lado do
-                  título — o título nunca mais precisa de encolher. */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10, padding: 'clamp(16px,3vw,24px) 0 16px', flexShrink: 0 }}>
-                <button
-                  className="coach-history-toggle"
-                  onClick={() => setHistoryOpen(true)}
-                  title="Conversas"
-                  style={{ display: 'none', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 9, color: C.muted, cursor: 'pointer', flexShrink: 0 }}
-                ><HistoryIcon size={16} /></button>
-                <div style={{ width: 38, height: 38, borderRadius: 11, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Bot size={19} color="var(--color-primary)" />
-                </div>
-                <div style={{ flex: '1 1 140px', minWidth: 140 }}>
-                  <div style={{ fontSize: 17, fontWeight: 700, color: C.text }}>Coach IA</div>
-                  <div style={{ fontSize: 12, color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeProject ? `A falar sobre: ${activeProject.name}` : 'Conselho sobre o teu percurso'}</div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 'auto' }}>
-                  {/* Compacto em mobile ("10/10 este mês", sem pílula) — a
-                      versão cheia ("10/10 restantes este mês" com fundo) é
-                      larga de mais para caber neste grupo em mobile. */}
-                  <AiUsageBadge feature="coach" compact={isMobile} style={{ flexShrink: 0 }} />
+              {/* Header: duas versões, não uma só espremida.
+                  Desktop: ícone + "Coach IA"/legenda à esquerda, badge +
+                  nova conversa + seletor à direita — como sempre foi.
+                  Mobile: nada de "Coach IA" repetido (já se sabe onde se
+                  está) nem ícone a ocupar espaço — pedido do Gustavo depois
+                  de ver o título a sobrepor-se ao badge num ecrã estreito.
+                  Fica o seletor de projeto a esticar (é o controlo que
+                  interessa, já identifica o contexto sozinho — "Geral" ou
+                  o nome do projeto) e o badge/nova conversa compactos ao
+                  lado, tudo numa linha só. */}
+              {isMobile ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '16px 0' }}>
+                  <button
+                    className="coach-history-toggle"
+                    onClick={() => setHistoryOpen(true)}
+                    title="Conversas"
+                    style={{ display: 'none', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 9, color: C.muted, cursor: 'pointer', flexShrink: 0 }}
+                  ><HistoryIcon size={16} /></button>
+                  {picker || (
+                    <div style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {activeProject ? activeProject.name : 'Geral'}
+                    </div>
+                  )}
+                  <AiUsageBadge feature="coach" compact style={{ flexShrink: 0 }} />
                   {!isEmpty && (
                     <button
                       onClick={newConversation}
@@ -454,9 +452,35 @@ export default function Coach() {
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
                     </button>
                   )}
+                </div>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 'clamp(16px,3vw,24px) 0 16px', flexShrink: 0 }}>
+                  <button
+                    className="coach-history-toggle"
+                    onClick={() => setHistoryOpen(true)}
+                    title="Conversas"
+                    style={{ display: 'none', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 9, color: C.muted, cursor: 'pointer', flexShrink: 0 }}
+                  ><HistoryIcon size={16} /></button>
+                  <div style={{ width: 38, height: 38, borderRadius: 11, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Bot size={19} color="var(--color-primary)" />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 17, fontWeight: 700, color: C.text }}>Coach IA</div>
+                    <div style={{ fontSize: 12, color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeProject ? `A falar sobre: ${activeProject.name}` : 'Conselho sobre o teu percurso'}</div>
+                  </div>
+                  <AiUsageBadge feature="coach" />
+                  {!isEmpty && (
+                    <button
+                      onClick={newConversation}
+                      title="Nova conversa"
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 9, color: C.muted, cursor: 'pointer' }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
+                    </button>
+                  )}
                   {picker}
                 </div>
-              </div>
+              )}
 
               {isEmpty ? (
                 // Sem mensagens ainda: tudo centrado a meio do ecrã (como o
