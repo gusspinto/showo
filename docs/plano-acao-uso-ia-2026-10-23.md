@@ -10,9 +10,8 @@ Gerado a partir de `analise-uso-features-ia-2026-10-23.md`. Checklist vivo, vou 
 
 ## Construção (a ação de maior alavancagem primeiro)
 
-- [ ] Email/notificação: 1ª sessão do Coach (projeto) sem retorno em X dias, referindo o que a pessoa perguntou
-- [ ] Email/notificação: 1ª sessão do Coach geral sem retorno em X dias (só se a investigação acima confirmar que não é handoff)
-- [ ] Corrigir confusão de UI entre a caixa de feedback e o Coach (user colou PAP inteira no sítio errado)
+- [x] Email/notificação: 1ª sessão do Coach (projeto ou geral) sem retorno em 3-21 dias, citando a própria pergunta que a pessoa fez. **`send-coach-return-nudge` + `coach-nudge-unsubscribe`, deployed, cron diário às 10h20, testado de ponta a ponta (email real enviado, registado em `email_sends`, `resend_id` confirmado).**
+- [x] Corrigir confusão de UI entre a caixa de feedback e o Coach. **Aviso inline em `Feedback.jsx` quando o texto cola >500 caracteres, com link direto para `/coach`. Testado visualmente, sem erros novos na consola.**
 
 ## Decisão do Gustavo, não construo sem resposta
 
