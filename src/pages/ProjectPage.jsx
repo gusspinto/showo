@@ -1116,7 +1116,7 @@ export default function ProjectPage() {
   const { slug } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
-  const { user, profile, loading: authLoading, checkGate, consumeAI } = useAuth()
+  const { user, profile, loading: authLoading, checkGate, consumeAI, refreshProfile } = useAuth()
   const [project, setProject] = useState(() => location.state?.projectData ?? null)
   const [projectJournalEntries, setProjectJournalEntries] = useState([])
   const [loading, setLoading] = useState(!location.state?.projectData)
@@ -1363,13 +1363,15 @@ export default function ProjectPage() {
     juryHydrated.current = true
   }, [project])
 
-  // Spotlight tour: ?tour=1 (dev) ou sempre que a pessoa acaba de criar um
-  // projeto. Antes só disparava "no primeiro projeto de sempre" (count===1),
-  // o que significava que praticamente ninguém via isto, porque a maioria
-  // já tinha pelo menos um projeto antes desta funcionalidade existir, ou
-  // cria o segundo/terceiro projeto sem nunca ter visto o tour no primeiro.
-  // Pedido explícito: mostrar a toda a gente, sempre que cria um projeto,
-  // não só a quem nunca teve nenhum.
+  // Spotlight tour: ?tour=1 (dev), sempre que a pessoa acaba de criar um
+  // projeto, ou (novo, pedido do Gustavo) a primeira vez que abre QUALQUER
+  // projeto sem nunca ter visto o tour. Antes só disparava "no primeiro
+  // projeto de sempre" (count===1), o que significava que praticamente
+  // ninguém via isto, porque a maioria já tinha pelo menos um projeto antes
+  // desta funcionalidade existir, ou cria o segundo/terceiro projeto sem
+  // nunca ter visto o tour no primeiro. A criação continua a mostrar
+  // sempre (isNewProject, sem condição de "já viu"); quem só abre projetos
+  // antigos é apanhado pelo !profile.tour_seen_at, uma única vez.
   const tourCheckedRef = useRef(false)
   useEffect(() => {
     if (!project?.id || !profile?.id) return
@@ -1380,15 +1382,25 @@ export default function ProjectPage() {
     const params = new URLSearchParams(window.location.search)
     const isTourParam = params.get('tour') === '1'
     const isNewProject = !!location.state?.newProject
+    const neverSeenTour = !profile.tour_seen_at
 
     function triggerTour() {
       if (showLaunchOverlay) tourPendingRef.current = true
       else setShowTour(true)
     }
 
-    if (isTourParam || isNewProject) triggerTour()
+    if (isTourParam || isNewProject || neverSeenTour) triggerTour()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project?.id, profile?.id])
+
+  // Grava a primeira vez que o tour fecha (concluído ou saltado, tanto faz
+  // para este efeito), para o gate "nunca viu" acima não voltar a disparar
+  // ao abrir outro projeto antigo na mesma conta.
+  function markTourSeen() {
+    if (!user?.id || profile?.tour_seen_at) return
+    supabase.from('profiles').update({ tour_seen_at: new Date().toISOString() }).eq('id', user.id)
+      .then(() => refreshProfile?.())
+  }
 
   // Class-defined evaluation criteria (fetched when the page is opened from a turma)
   const [classCriteria, setClassCriteria] = useState([])   // [{id, name, weight}]
@@ -3003,7 +3015,7 @@ export default function ProjectPage() {
       {showTour && (
         <ProjectTour
           isPap={isPap}
-          onClose={() => { setShowTour(false); setTourMenuOpen(false) }}
+          onClose={() => { setShowTour(false); setTourMenuOpen(false); markTourSeen() }}
           onStep={target => {
             if (window.innerWidth < 640) {
               if (target === 'missions') setMobileTab('melhorar')
@@ -4371,7 +4383,13 @@ export default function ProjectPage() {
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: '-0.2px', color: colors.text }}>Como subir o score</div>
                     <div style={{ fontSize: 12, color: colors.muted, marginTop: 3 }}>
-                      {pct === 100 ? 'Perfil completo — bom trabalho.' : `${goodCount} de ${fq.length} campos · toca para editar`}
+                      {/* pct===100 só mede os 9 campos de texto, não as secções
+                          publicadas (ativação, preview_blocks). Dizer "perfil
+                          completo" quando ainda faltam secções era falso e
+                          enganava quem via isto como "já está pronto". */}
+                      {pct === 100
+                        ? (previewBlocks.length >= 3 ? 'Perfil completo, bom trabalho.' : 'Dados completos. Falta publicar as secções.')
+                        : `${goodCount} de ${fq.length} campos · toca para editar`}
                     </div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
@@ -5757,10 +5775,16 @@ export default function ProjectPage() {
             const pct = Math.round((goodCount / fieldQuality.length) * 100)
 
             const isComplete = pct === 100
+            // pct só mede os 9 campos de texto (PROFILE_SCORE_FIELDS), não as
+            // secções publicadas (ativação, preview_blocks). "Perfil completo"
+            // só é verdade quando as duas coisas batem certo, senão isto
+            // mandava quem ainda não tinha nada publicado para o diário em
+            // vez de a mandar completar o próprio projeto.
+            const isActivated = previewBlocks.length >= 3
             return (
               <div className="proj-card" style={isComplete ? {} : {}}>
-                {isComplete ? (
-                  /* ── Completude 100%: redirect focus to diary ── */
+                {isComplete && isActivated ? (
+                  /* ── Completude 100% e ativado: redirect focus to diary ── */
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{
@@ -5784,6 +5808,35 @@ export default function ProjectPage() {
                       }}
                     >
                       Abrir diário do projeto →
+                    </button>
+                  </div>
+                ) : isComplete ? (
+                  /* ── Completude 100% mas ainda sem 3 secções publicadas:
+                      falta mesmo a parte que conta, manda completar o
+                      projeto, não o diário. ── */
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{
+                        width: 30, height: 30, borderRadius: 8, flexShrink: 0,
+                        background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <Sparkles size={14} color="#f59e0b" />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: colors.text, marginBottom: 1 }}>Dados completos, falta publicar</div>
+                        <div style={{ fontSize: 11, color: colors.subtle, lineHeight: 1.4 }}>Com menos de 3 secções, quem vir o link ainda não percebe o que fizeste.</div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => { setPreviewEditing(true); setWsExpanded(true) }}
+                      style={{
+                        width: '100%', padding: '7px 0', border: '1px solid rgba(245,158,11,0.25)',
+                        borderRadius: 8, background: 'rgba(245,158,11,0.07)', color: '#f59e0b',
+                        fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                      }}
+                    >
+                      Completar o projeto →
                     </button>
                   </div>
                 ) : (

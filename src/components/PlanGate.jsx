@@ -2,17 +2,10 @@ import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
-import { LikeIcon as ThumbUp } from '@solar-icons/react/bold/like'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { getPlan, nextPaidPlan, planHighlights } from '../lib/plans'
 import { TESTIMONIALS } from './TestimonialsMarquee'
-
-const LinkedInMark = ({ size = 14 }) => (
-  <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" aria-hidden="true">
-    <path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.55C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.72C24 .77 23.2 0 22.22 0z"/>
-  </svg>
-)
 
 // Mesmo testemunho da Pricing/Home, sem inventar nada — só escolhido para
 // soar relevante à feature que bloqueou a pessoa. Fora dos casos abaixo,
@@ -94,9 +87,6 @@ function DefensePreview() {
   )
 }
 
-// Etiqueta própria, igual à do LinkedInPostPreview, para as duas coisas
-// ficarem claramente distintas uma da outra em vez de um bloco só ("isto é
-// o email ou o LinkedIn?", pedido do Gustavo depois de ver o pop-up).
 function RecapPreview() {
   return (
     <div>
@@ -111,7 +101,7 @@ function RecapPreview() {
       <p style={{ margin: '0 0 10px', color: '#eef2f8', fontSize: 13.5, lineHeight: 1.3, fontWeight: 700 }}>5 registos na semana passada</p>
       <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
         {[['5', 'registos'], ['4', 'dias ativos'], ['3', 'semanas', '#f0a500']].map(([v, l, c]) => (
-          <div key={l} style={{ flex: 1, padding: '8px 4px', textAlign: 'center', borderRadius: 7, background: '#0e1729', border: '1px solid #1e3050' }}>
+          <div key={l} style={{ flex: 1, minWidth: 0, padding: '8px 4px', textAlign: 'center', borderRadius: 7, background: '#0e1729', border: '1px solid #1e3050' }}>
             <div style={{ fontSize: 16, fontWeight: 700, color: c || '#eef2f8', lineHeight: 1 }}>{v}</div>
             <div style={{ fontSize: 8.5, color: '#a3b4ce', marginTop: 3 }}>{l}</div>
           </div>
@@ -134,36 +124,6 @@ function RecapPreview() {
   )
 }
 
-// O email em si não mostra este texto, só uma caixa genérica com um botão
-// "Gerar o post" (confirmado em send-weekly-recap); a IA só escreve isto
-// depois de a pessoa clicar, com o diário real dela nesse momento. Por
-// isso a etiqueta deixa claro que é um exemplo do resultado, não do email.
-function LinkedInPostPreview() {
-  return (
-    <div style={{ marginTop: 14 }}>
-      <p style={{ margin: '0 0 6px', fontSize: 9, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-        O que podes gerar a partir dele, não vem no email
-      </p>
-      <div style={{ background: '#fff', borderRadius: 10, padding: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
-          <span style={{ width: 22, height: 22, borderRadius: '50%', background: '#1a60c8', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 10, fontWeight: 800 }}>G</span>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={{ fontSize: 10.5, fontWeight: 700, color: '#1a1a1a' }}>A tua página</div>
-          </div>
-          <span style={{ color: '#0A66C2', flexShrink: 0 }}><LinkedInMark size={13} /></span>
-        </div>
-        <p style={{ margin: 0, fontSize: 11, color: '#1a1a1a', lineHeight: 1.5 }}>
-          Esta semana avancei o DragBuild: melhorei a explicação do problema que o projeto resolve e simplifiquei o fluxo de arrastar componentes, depois de testar com duas pessoas que acharam confuso.
-        </p>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 8, paddingTop: 7, borderTop: '1px solid #eee' }}>
-          <ThumbUp size={11} color="#0A66C2" />
-          <span style={{ fontSize: 9.5, color: '#767676' }}>Gostei · Comentar · Partilhar</span>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 function FeaturePreview({ feature }) {
   const kind = FEATURE_PREVIEW_KIND[feature] || 'coach'
   const label = {
@@ -178,7 +138,11 @@ function FeaturePreview({ feature }) {
       {kind === 'coach' && <CoachPreview />}
       {kind === 'vagas' && <VagasPreview />}
       {kind === 'defense' && <DefensePreview />}
-      {kind === 'recap' && <><RecapPreview /><LinkedInPostPreview /></>}
+      {/* Era RecapPreview + LinkedInPostPreview empilhados, duas previews
+          diferentes no mesmo bloco ("isto é o email ou o LinkedIn?"). Com o
+          pop-up a passar a uma coluna só, ficava longo demais, cortado ao
+          email real, que é a prova direta da feature paga. */}
+      {kind === 'recap' && <RecapPreview />}
     </div>
   )
 }
@@ -229,17 +193,16 @@ const C = {
   // não centrado como cabeçalho, versão que fica quando há upgrade a
   // oferecer.
   titleRight: { margin: 'var(--sp-2) 0 4px', fontSize: '1.3rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)', lineHeight: 1.25 },
-  // Frase curta a ligar o título às duas opções logo a seguir — só para não
-  // ficar espaço em branco entre o título e os botões, nada mais.
+  // Frase curta a ligar o título à lista de benefícios logo a seguir, só
+  // para não ficar espaço em branco entre os dois, nada mais.
   subtitleRight: { margin: '0 0 4px', fontSize: '0.85rem', color: 'var(--color-text-secondary)' },
-  // Preenche o espaço entre o título e os botões com benefícios reais
-  // (planHighlights, dados dos planos), em vez de ficar vazio no desktop
-  // enquanto a coluna da esquerda, mais alta, não chega ao fundo.
   highlights: { display: 'flex', flexDirection: 'column', gap: '10px', margin: 'var(--sp-2) 0' },
   highlightItem: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '10px', fontSize: '0.88rem' },
-  highlightLabel: { color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '7px' },
+  highlightLabel: { color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '7px', flexShrink: 0 },
   highlightCheck: { color: 'var(--color-success)', fontWeight: 800, flexShrink: 0 },
-  highlightValue: { color: 'var(--color-primary)', fontWeight: 700, whiteSpace: 'nowrap' },
+  // Sem nowrap: a "10 → 100 por mês" cortava no mobile, a coluna ficou
+  // mais estreita do que no layout antigo de duas colunas.
+  highlightValue: { color: 'var(--color-primary)', fontWeight: 700, textAlign: 'right' },
   msg:   { margin: 0, fontSize: '0.98rem', color: 'var(--color-text-secondary)', lineHeight: 1.6, maxWidth: '420px' },
   body: { display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)', padding: 'var(--sp-8)' },
   // .sdb-panel--tint do Dashboard — o bloco de apoio à marca, tinta subtil,
@@ -330,6 +293,14 @@ const C = {
     width: '100%', padding: '15px 18px', borderRadius: 'var(--radius-full)',
     border: '1px solid var(--color-border)', background: 'transparent', color: 'var(--color-text)',
     fontWeight: 600, fontSize: '0.96rem', cursor: 'pointer', fontFamily: 'var(--font-body)',
+  },
+  // "Pedir aos pais para pagar" não é um botão igual ao principal, é uma
+  // alternativa para quem não tem cartão. Em link, não em botão cheio,
+  // para só haver uma ação a competir visualmente com "Passar a X agora".
+  ctaLink: {
+    width: '100%', padding: '8px 18px', border: 'none', background: 'transparent',
+    color: 'var(--color-text-secondary)', fontWeight: 600, fontSize: '0.84rem',
+    cursor: 'pointer', fontFamily: 'var(--font-body)', textDecoration: 'underline',
   },
   dismiss: {
     background: 'none', border: 'none', cursor: 'pointer', padding: '4px', alignSelf: 'center',
@@ -582,7 +553,7 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
                   <button style={C.ctaPrimary} className="plan-gate-cta-primary" disabled={loading || askingParents} onClick={handleUpgrade}>
                     {loading ? 'A abrir…' : `Passar a ${upgrade.name} agora`}
                   </button>
-                  <button style={C.ctaSecondary} disabled={loading || askingParents} onClick={handleAskParents}>
+                  <button style={C.ctaLink} disabled={loading || askingParents} onClick={handleAskParents}>
                     {askingParents ? 'A preparar…' : 'Pedir aos pais para pagar'}
                   </button>
                 </div>

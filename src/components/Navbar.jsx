@@ -1746,15 +1746,19 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           ) : (
             /* ── ALUNO sidebar ── */
             <>
-              {/* Mesa de trabalho: tudo o que é o trabalho do próprio aluno
+              {/* Espaço de trabalho: tudo o que é o trabalho do próprio aluno
                   (projeto, diário, coach, biblioteca, turmas) num só grupo.
                   Biblioteca e Turmas estavam soltas sem título nenhum antes
-                  disto, apontado pelo Gustavo. */}
-              {!collapsed && showLabels && <span className="sb-label">Mesa de trabalho</span>}
+                  disto, apontado pelo Gustavo. Era "Mesa de trabalho", o
+                  Gustavo achou que não soava bem, "Espaço de trabalho" é
+                  mais natural em PT-PT, mesma ideia. O item "Dashboard"
+                  também tinha passado a "Projetos", voltou a "Dashboard",
+                  termo mais familiar para quem já usa outras apps. */}
+              {!collapsed && showLabels && <span className="sb-label">Espaço de trabalho</span>}
 
               {user && (
                 <button className={`sb-item${isActive('/dashboard') ? ' active' : ''}`} onClick={() => navigate('/dashboard')}>
-                  <LayoutDashboard size={16} />{!collapsed && showLabels && <span>Projetos</span>}
+                  <LayoutDashboard size={16} />{!collapsed && showLabels && <span>Dashboard</span>}
                 </button>
               )}
               {/* O diário é por projeto, não existe um "diário geral", vai
@@ -2226,9 +2230,20 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 </>
               ) : (
                 <>
+                  {/* Mesmos três grupos da sidebar de desktop (Espaço de
+                      trabalho / Comunidade / Conta) — o menu mobile tinha
+                      ficado sem as etiquetas e sem Coach IA/Vagas quando
+                      essa reorganização aconteceu no desktop, apontado
+                      pelo Gustavo ao rever a dev. */}
+                  {user && <span className="mob-nav-section-label">Espaço de trabalho</span>}
                   {user && (
                     <button className={`mob-nav-btn${isActive('/dashboard') ? ' active' : ''}`} onClick={() => { navigate('/dashboard'); setMenuOpen(false) }}>
                       <LayoutDashboard size={18} /> Dashboard
+                    </button>
+                  )}
+                  {user && (
+                    <button className={`mob-nav-btn${isActive('/coach') ? ' active' : ''}`} onClick={() => { navigate('/coach'); setMenuOpen(false) }}>
+                      <Bot size={18} /> Coach IA
                     </button>
                   )}
                   {user && (
@@ -2249,6 +2264,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                       <BookOpen size={18} /> Aprende a usar
                     </button>
                   )}
+                  {user && <span className="mob-nav-section-label">Comunidade</span>}
                   <button className={`mob-nav-btn${isActive('/explorar') ? ' active' : ''}`} onClick={() => { navigate('/explorar'); setMenuOpen(false) }}>
                     <Compass size={18} /> Explorar
                   </button>
@@ -2259,7 +2275,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   )}
                   {user && (
                     <>
-                      <span className="mob-nav-section-label">Comunidade</span>
                       {/* Faltava aqui — o ramo "aluno" deste menu nunca
                           verificava isSchoolAccount, só o ramo "professor"
                           lá em cima tinha Turmas. Contas de escola ficavam
@@ -2274,6 +2289,12 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                         <MessageSquare size={18} /> Mensagens
                         {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-text)', color: 'var(--color-bg)', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
                       </button>
+                      {showEstagios && (
+                        <button className={`mob-nav-btn${isActive('/vagas') ? ' active' : ''}`} onClick={() => { navigate('/vagas'); setMenuOpen(false) }}>
+                          <Briefcase size={18} /> Vagas
+                        </button>
+                      )}
+                      <span className="mob-nav-section-label">Conta</span>
                       <button className={`mob-nav-btn${isActive('/pricing') ? ' active' : ''}`} onClick={() => { navigate('/pricing'); setMenuOpen(false) }}>
                         <Sparkles size={18} /> Planos
                       </button>
