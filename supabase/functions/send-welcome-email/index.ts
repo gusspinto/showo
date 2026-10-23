@@ -51,19 +51,29 @@ Deno.serve(async (req) => {
     const resendKey = Deno.env.get('RESEND_API_KEY')
     if (!resendKey) throw new Error('RESEND_API_KEY not configured')
 
-    const { data: profile } = await supabase
+    // Reivindica o envio com um UPDATE condicional atómico, em vez de
+    // ler welcome_email_sent e só marcar true depois de enviar. Essa
+    // janela entre leitura e escrita é o que deixava duas chamadas em
+    // paralelo (Register.jsx chama direto + AuthContext chama no SIGNED_IN,
+    // quase ao mesmo tempo) passarem as duas pelo "ainda não foi enviado"
+    // antes de qualquer uma escrever: resultado, 2-3 emails de boas-vindas
+    // para a mesma pessoa. O UPDATE só afeta a linha se ainda estiver
+    // false/null, por isso só uma chamada concorrente "ganha" a corrida.
+    const { data: claimed } = await supabase
       .from('profiles')
-      .select('full_name, welcome_email_sent')
+      .update({ welcome_email_sent: true })
       .eq('id', user.id)
-      .single()
+      .or('welcome_email_sent.is.null,welcome_email_sent.eq.false')
+      .select('full_name')
+      .maybeSingle()
 
-    if (profile?.welcome_email_sent) {
+    if (!claimed) {
       return new Response(JSON.stringify({ ok: true, skipped: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
-    const html = buildHtml(profile?.full_name || '')
+    const html = buildHtml(claimed.full_name || '')
 
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -82,15 +92,14 @@ Deno.serve(async (req) => {
     if (!res.ok) {
       const err = await res.text()
       console.error('Resend error:', err)
+      // Devolve a reivindicação: já marcámos welcome_email_sent=true acima
+      // para travar chamadas concorrentes, mas o envio falhou, por isso um
+      // próximo login tem de poder tentar outra vez.
+      await supabase.from('profiles').update({ welcome_email_sent: false }).eq('id', user.id)
       return new Response(JSON.stringify({ error: 'email_failed' }), {
         status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
-
-    await supabase
-      .from('profiles')
-      .update({ welcome_email_sent: true })
-      .eq('id', user.id)
 
     return new Response(JSON.stringify({ ok: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
