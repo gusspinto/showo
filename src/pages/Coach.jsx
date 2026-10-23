@@ -12,6 +12,7 @@ import { AltArrowDownIcon as ChevronDown } from '@solar-icons/react/bold/alt-arr
 import { PlaneIcon as Send } from '@solar-icons/react/bold/plane'
 import { ClipboardListIcon as HistoryIcon } from '@solar-icons/react/bold/clipboard-list'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
+import { useIsMobile } from '../lib/useIsMobile'
 
 const C = {
   bg: 'var(--color-bg)', card: 'var(--color-surface)', border: 'var(--color-border)',
@@ -40,6 +41,7 @@ function sessionPreview(msgs) {
 export default function Coach() {
   const navigate = useNavigate()
   const { user, profile, checkGate, consumeAI } = useAuth()
+  const isMobile = useIsMobile()
 
   const [myProjects, setMyProjects] = useState([])
   const [pickerOpen, setPickerOpen] = useState(false)
@@ -417,8 +419,14 @@ export default function Coach() {
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
             <div style={{ maxWidth: 760, width: '100%', margin: '0 auto', padding: '0 clamp(16px,3vw,24px)', display: 'flex', flexDirection: 'column', flex: 1, boxSizing: 'border-box', minHeight: 0 }}>
 
-              {/* Header */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 'clamp(16px,3vw,24px) 0 16px', flexShrink: 0 }}>
+              {/* Header — flex-wrap, não ellipsis: título/badge/seletor a
+                  competir pela mesma linha num ecrã estreito cortava "Coach
+                  IA" a meio e sobrepunha o badge, apontado pelo Gustavo.
+                  Em vez de cortar texto, o grupo da direita (badge + nova
+                  conversa + seletor de projeto) passa para uma segunda
+                  linha, alinhado à direita, quando não cabe ao lado do
+                  título — o título nunca mais precisa de encolher. */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10, padding: 'clamp(16px,3vw,24px) 0 16px', flexShrink: 0 }}>
                 <button
                   className="coach-history-toggle"
                   onClick={() => setHistoryOpen(true)}
@@ -428,21 +436,26 @@ export default function Coach() {
                 <div style={{ width: 38, height: 38, borderRadius: 11, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <Bot size={19} color="var(--color-primary)" />
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ flex: '1 1 140px', minWidth: 140 }}>
                   <div style={{ fontSize: 17, fontWeight: 700, color: C.text }}>Coach IA</div>
                   <div style={{ fontSize: 12, color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeProject ? `A falar sobre: ${activeProject.name}` : 'Conselho sobre o teu percurso'}</div>
                 </div>
-                <AiUsageBadge feature="coach" />
-                {!isEmpty && (
-                  <button
-                    onClick={newConversation}
-                    title="Nova conversa"
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 9, color: C.muted, cursor: 'pointer' }}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
-                  </button>
-                )}
-                {picker}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 'auto' }}>
+                  {/* Compacto em mobile ("10/10 este mês", sem pílula) — a
+                      versão cheia ("10/10 restantes este mês" com fundo) é
+                      larga de mais para caber neste grupo em mobile. */}
+                  <AiUsageBadge feature="coach" compact={isMobile} style={{ flexShrink: 0 }} />
+                  {!isEmpty && (
+                    <button
+                      onClick={newConversation}
+                      title="Nova conversa"
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 9, color: C.muted, cursor: 'pointer', flexShrink: 0 }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
+                    </button>
+                  )}
+                  {picker}
+                </div>
               </div>
 
               {isEmpty ? (
