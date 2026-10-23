@@ -71,6 +71,7 @@ export default function DiaryCanvas() {
   const pinchRef     = useRef(null)
   const activePtrs   = useRef(new Map())
   const saveTimers   = useRef({})
+  const histTimers   = useRef({})
   const zoomLabelRef = useRef(null)
   const dirtyRef     = useRef(new Set())
   const historyRef   = useRef([])   // [{id,x,y,w,h}[]]
@@ -187,10 +188,10 @@ export default function DiaryCanvas() {
       if (!cancelled) {
         setItems(rows || [])
         setLoading(false)
-        // Histórico de posições é por contexto (projeto ou geral): ao trocar
-        // de projeto no seletor, o undo/redo de um projeto não deve aplicar-se
-        // a outro. Ponto de partida: o estado tal como veio da BD.
-        historyRef.current = [(rows || []).map(({ id, x, y, w, h }) => ({ id, x, y, w, h }))]
+        // Histórico é por contexto (projeto ou geral): ao trocar de projeto
+        // no seletor, o undo/redo de um projeto não deve aplicar-se a outro.
+        // Ponto de partida: o estado tal como veio da BD.
+        historyRef.current = [snapshotFields(rows || [])]
         histIdxRef.current = 0
         setHistIdx(0)
       }
@@ -239,17 +240,18 @@ export default function DiaryCanvas() {
 
   // ── History helpers ─────────────────────────────────────────────────────
   // Guarda sempre o estado DEPOIS da edição (não antes): historyRef[0] é o
-  // ponto de partida (carregado do load effect), e cada drag/resize completo
-  // soma uma entrada nova. Undo/redo andam para trás/frente nesta linha do
-  // tempo. `override` entra porque, no momento em que o pointerup chama isto,
-  // o setItems() que acabou de correr ainda não propagou a itemsRef (só
-  // sincroniza num useEffect, depois deste commit); sem o override, o
-  // snapshot ficava com a posição ANTIGA do item que se acabou de mover.
-  function pushHistory(override) {
-    const snap = itemsRef.current.map(({ id, x, y, w, h }) => {
-      if (override && override.id === id) return { id, x: override.x ?? x, y: override.y ?? y, w: override.w ?? w, h: override.h ?? h }
-      return { id, x, y, w, h }
-    })
+  // ponto de partida (carregado do load effect), e cada edição completa
+  // (mover, redimensionar, escrever, criar, apagar) soma uma entrada nova
+  // com o array INTEIRO de itens nesse momento. Undo/redo andam para trás/
+  // frente nesta linha do tempo. Guardar o array inteiro (não só x/y/w/h) é
+  // o que permite que apagar e criar cartões também sejam desfeitos, não só
+  // mover/redimensionar.
+  function snapshotFields(arr) {
+    return arr.map(({ id, type, x, y, w, h, content, color, pinned }) => ({ id, type, x, y, w, h, content, color, pinned }))
+  }
+
+  function pushHistory(nextItems) {
+    const snap = snapshotFields(nextItems)
     historyRef.current = historyRef.current.slice(0, histIdxRef.current + 1)
     historyRef.current.push(snap)
     if (historyRef.current.length > 60) historyRef.current.shift()
@@ -258,11 +260,33 @@ export default function DiaryCanvas() {
   }
 
   function applyHistorySnap(snap) {
-    setItems(prev => prev.map(it => {
-      const s = snap.find(s => s.id === it.id)
-      return s ? { ...it, x: s.x, y: s.y, w: s.w, h: s.h } : it
+    const snapIds = new Set(snap.map(s => s.id))
+    const curItems = itemsRef.current
+    const curIds = new Set(curItems.map(it => it.id))
+
+    // Itens que saem de cena neste ponto da história (undo de um "criar",
+    // ou redo de um "apagar") vs itens que voltam a existir (redo de um
+    // "criar", undo de um "apagar"). Sem isto, undo/redo só mexiam em
+    // posição/tamanho de cartões que já existiam dos dois lados.
+    const toDelete = curItems.filter(it => !snapIds.has(it.id))
+    const toInsert = snap.filter(s => !curIds.has(s.id))
+
+    setItems(snap.map(s => {
+      const cur = curItems.find(it => it.id === s.id)
+      return cur ? { ...cur, ...s } : { ...s, project_id: activeProjectId, user_id: user.id, pinned: s.pinned ?? false, created_at: new Date().toISOString() }
     }))
-    snap.forEach(s => scheduleSave(s.id))
+
+    toDelete.forEach(it => {
+      supabase.from('diary_canvas_items').delete().eq('id', it.id)
+        .then(({ error }) => { if (error) console.error('[diary-canvas] undo delete', error.message) })
+      dirtyRef.current.delete(it.id)
+    })
+    toInsert.forEach(s => {
+      supabase.from('diary_canvas_items')
+        .insert({ id: s.id, project_id: activeProjectId, user_id: user.id, type: s.type, x: s.x, y: s.y, w: s.w, h: s.h, content: s.content, color: s.color, pinned: s.pinned ?? false })
+        .then(({ error }) => { if (error) console.error('[diary-canvas] undo insert', error.message) })
+    })
+    snap.filter(s => curIds.has(s.id)).forEach(s => scheduleSave(s.id))
     snap.forEach(s => {
       const el = worldRef.current?.querySelector(`[data-card-id="${s.id}"]`)
       if (el) { el.style.left = `${s.x}px`; el.style.top = `${s.y}px`; el.style.width = `${s.w}px`; el.style.height = `${s.h}px` }
@@ -378,7 +402,7 @@ export default function DiaryCanvas() {
       const nx = p.x - ox, ny = p.y - oy
       setItems(prev => prev.map(it => it.id === id ? { ...it, x: nx, y: ny } : it))
       scheduleSave(id)
-      pushHistory({ id, x: nx, y: ny })
+      pushHistory(itemsRef.current.map(it => it.id === id ? { ...it, x: nx, y: ny } : it))
     }
     window.addEventListener('pointermove', onMove)
     window.addEventListener('pointerup', onUp)
@@ -411,7 +435,7 @@ export default function DiaryCanvas() {
       const nh = Math.max(80,  origH + p.y - startY)
       setItems(prev => prev.map(it => it.id === id ? { ...it, w: nw, h: nh } : it))
       scheduleSave(id)
-      pushHistory({ id, w: nw, h: nh })
+      pushHistory(itemsRef.current.map(it => it.id === id ? { ...it, w: nw, h: nh } : it))
     }
     window.addEventListener('pointermove', onMove)
     window.addEventListener('pointerup', onUp)
@@ -517,7 +541,11 @@ export default function DiaryCanvas() {
       .insert({ project_id: activeProjectId, user_id: user.id, type, x, y, w: def.w, h: def.h, content: '', color: def.color, pinned: false })
       .select().single()
 
-    if (data) { setItems(prev => [...prev, data]); setSelectedId(data.id) }
+    if (data) {
+      setItems(prev => [...prev, data])
+      setSelectedId(data.id)
+      pushHistory([...itemsRef.current, data])
+    }
   }
 
   async function deleteItem(id) {
@@ -525,11 +553,21 @@ export default function DiaryCanvas() {
     setItems(prev => prev.filter(it => it.id !== id))
     if (selectedId === id) setSelectedId(null)
     dirtyRef.current.delete(id)
+    pushHistory(itemsRef.current.filter(it => it.id !== id))
   }
 
   function updateContent(id, content) {
     setItems(prev => prev.map(it => it.id === id ? { ...it, content } : it))
     scheduleSave(id)
+    // Debounce próprio, separado do scheduleSave (que só trata de
+    // persistência): cada tecla não pode virar um passo de undo, senão
+    // desfazer uma frase inteira seria letra a letra. Junta o texto todo
+    // escrito de seguida num único passo, só quando a pessoa pára de
+    // escrever.
+    clearTimeout(histTimers.current[id])
+    histTimers.current[id] = setTimeout(() => {
+      pushHistory(itemsRef.current.map(it => it.id === id ? { ...it, content } : it))
+    }, 800)
   }
 
   function scheduleSave(id) {
