@@ -38,6 +38,12 @@ export default function Feedback() {
   const rawFrom = searchParams.get('from')
   const fromPath = rawFrom && rawFrom.startsWith('/') && !rawFrom.startsWith('//') ? rawFrom : null
 
+  // Achado da análise de uso de 2026-10-23: alguém colou uma proposta de
+  // PAP inteira aqui (milhares de caracteres), claramente destinada ao
+  // Coach IA, não a um relato de bug. O título já diz "Reportar um
+  // problema", mas isso não chegou. Em vez de bloquear o envio (pode ser
+  // mesmo um bug bem descrito e longo), avisa e aponta para o sítio certo.
+  const PROJECT_CONTENT_THRESHOLD = 500
   const [message, setMessage] = useState('')
   const [imageFile, setImageFile] = useState(null)
   const [imagePreview, setImagePreview] = useState(null)
@@ -160,6 +166,13 @@ export default function Feedback() {
                 style={{ display: 'none' }}
                 onChange={handleImageChange}
               />
+
+              {message.trim().length > PROJECT_CONTENT_THRESHOLD && (
+                <p className="fbp-hint">
+                  Isto parece conteúdo do teu projeto, não um bug. Para ajuda a melhorá-lo, usa o{' '}
+                  <a href="/coach" onClick={(e) => { e.preventDefault(); navigate('/coach') }}>Coach IA</a> em vez disto.
+                </p>
+              )}
 
               {status === 'error' && (
                 <p className="fbp-error">Erro ao enviar. Tenta novamente.</p>
