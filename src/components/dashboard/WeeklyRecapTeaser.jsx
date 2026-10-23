@@ -74,12 +74,25 @@ export default function WeeklyRecapTeaser({ userId, onDismiss, onUpgrade }) {
         @media (prefers-reduced-motion: reduce) {
           .recap-teaser-bar { animation: none; }
         }
+        /* O botão herdava o min-height:44px global de toque mínimo
+           (regra em index.css, correta para botões normais), o que o
+           esticava na vertical para um retângulo alto em vez do quadrado
+           pequeno pretendido, apontado pelo Gustavo. Tamanho fixo aqui
+           resolve isso; a área de toque mantém-se grande, só que
+           invisível, via ::before, em vez de esticar o botão visível. */
+        .recap-teaser-dismiss {
+          width: 21px; height: 21px; min-height: 0;
+        }
+        .recap-teaser-dismiss::before {
+          content: ''; position: absolute; inset: -10px;
+        }
       `}</style>
 
       <button
         onClick={dismiss}
         aria-label="Dispensar"
-        style={{ position: 'absolute', top: 10, right: 10, background: 'var(--on-fill)', border: 'none', borderRadius: 7, cursor: 'pointer', color: 'var(--on-dim)', padding: 4, display: 'flex', zIndex: 1 }}
+        className="recap-teaser-dismiss"
+        style={{ position: 'absolute', top: 10, right: 10, background: 'var(--on-fill)', border: 'none', borderRadius: 7, cursor: 'pointer', color: 'var(--on-dim)', padding: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}
       ><X size={13} /></button>
 
       <div className="recap-teaser-bar-row" style={{ paddingRight: 24 }}>
