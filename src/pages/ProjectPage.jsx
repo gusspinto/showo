@@ -18,6 +18,7 @@ import { getProjectField } from '../lib/projectFields'
 import { getProjectState } from '../lib/projectState'
 import { Navbar } from '../components/Navbar'
 import SegmentedTabs from '../components/SegmentedTabs'
+import JournalComposer from '../components/dashboard/JournalComposer'
 import { PlanGateModal, AiUsageBadge, ConfirmUseModal } from '../components/PlanGate'
 import { chatProjectCoach } from '../lib/chatProjectCoach'
 import { renderMd } from '../lib/renderMd'
@@ -96,7 +97,7 @@ import { PaintRollerIcon as Paintbrush } from '@solar-icons/react/bold/paint-rol
 import { WindowFrameIcon as LayoutTemplate } from '@solar-icons/react/bold/window-frame'
 
 import {
-  ANON_PROJECT_COLUMNS, AUTH_PROJECT_COLUMNS, ApiProof, DbSetupNudge, GithubProof, LiveProof, colors,
+  ANON_PROJECT_COLUMNS, AUTH_PROJECT_COLUMNS, ApiProof, DbSetupNudge, GithubProof, LiveProof, PostTourChain, colors,
   PROJECT_TYPE_LABELS, TYPE_HERO, PROFILE_SCORE_FIELDS, SECTION_GROUPS,
   humanizeFieldKey, FeedbackCommentText, progBar, progTrack, getAreaGradient,
   getLevelInfo, ScoreRing, Section, MissionRow, Toast, Confetti,
@@ -917,7 +918,7 @@ function ProjectTour({ isPap, onClose, onStep }) {
       raf2 = requestAnimationFrame(() => {
         if (skipRef.current) return
         const found = advanceToVisible(stepIdx)
-        if (!found) { onClose(); return }
+        if (!found) { onClose(false); return }
         if (found.idx !== stepIdx) { setStepIdx(found.idx); return }
         setRect(found.rect)
       })
@@ -1010,7 +1011,7 @@ function ProjectTour({ isPap, onClose, onStep }) {
         {/* No mobile, "Saltar tour" precisa de se notar — antes era texto
             cinzento quase invisível ao lado de um botão gradiente que
             dominava tudo; agora tem contorno e peso próprios. */}
-        <button onClick={onClose} style={isMobile ? {
+        <button onClick={() => onClose(false)} style={isMobile ? {
           background: 'none', border: '1.5px solid var(--color-border)', borderRadius: 8,
           padding: '8px 14px', cursor: 'pointer',
           fontSize: 14, fontWeight: 700, color: 'var(--color-text-secondary)', fontFamily: 'inherit',
@@ -1021,7 +1022,7 @@ function ProjectTour({ isPap, onClose, onStep }) {
           Saltar tour
         </button>
         <button
-          onClick={() => isLast ? onClose() : setStepIdx(i => i + 1)}
+          onClick={() => isLast ? onClose(true) : setStepIdx(i => i + 1)}
           aria-label={isLast ? 'Começar' : 'Próximo'}
           style={{
             backgroundImage: 'var(--brand-gradient)', border: 'none',
@@ -1179,6 +1180,11 @@ export default function ProjectPage() {
   // ser descrito. Isto força o menu a abrir a sério nesse passo.
   const [tourMenuOpen, setTourMenuOpen] = useState(false)
   const tourPendingRef = useRef(false)
+  // Cadeia de sugestões depois do tour: '1' diário → '2' Coach IA → '3'
+  // partilhar → 'done'. Persistida por projeto em localStorage, lida no
+  // arranque para retomar se a pessoa saiu e voltou a meio da cadeia.
+  const [postTourStage, setPostTourStage] = useState(null)
+  const [showJournalComposer, setShowJournalComposer] = useState(false)
   const [claimBannerDismissed, setClaimBannerDismissed] = useState(false)
   const [defenseDate, setDefenseDate] = useState('')
   const [savingDefense, setSavingDefense] = useState(false)
@@ -2256,6 +2262,35 @@ export default function ProjectPage() {
     setInviting(false)
   }
 
+  function advancePostTourStage(next) {
+    setPostTourStage(next)
+    if (!project?.id) return
+    try { localStorage.setItem(`showo_post_tour_chain_${project.id}`, next) } catch { /* localStorage indisponível, não é crítico */ }
+  }
+
+  // Lê o ponto da cadeia pós-tour guardado para este projeto, para retomar
+  // se a pessoa saiu e voltou (não é lido no useState inicial porque o
+  // project.id só existe depois do fetch). Tem de correr antes dos "return"
+  // condicionais de loading/projeto em falta mais abaixo: hooks não podem
+  // ser saltados em alguns renders e chamados noutros.
+  useEffect(() => {
+    if (!project?.id) return
+    try { setPostTourStage(localStorage.getItem(`showo_post_tour_chain_${project.id}`)) } catch { /* localStorage indisponível */ }
+  }, [project?.id])
+
+  // Se a pessoa já escreveu no diário por outro caminho (ex: dashboard)
+  // antes de chegar a este passo, salta a sugestão do diário em vez de
+  // repetir uma ação já feita.
+  useEffect(() => {
+    if (postTourStage !== '1' || !project?.id || !user?.id) return
+    let cancelled = false
+    supabase.from('project_journal_entries').select('id', { count: 'exact', head: true })
+      .eq('project_id', project.id).eq('user_id', user.id)
+      .then(({ count }) => { if (!cancelled && (count || 0) > 0) advancePostTourStage('2') })
+    return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [postTourStage, project?.id, user?.id])
+
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'var(--font-body)', overflowX: 'clip' }}>
@@ -2971,7 +3006,18 @@ export default function ProjectPage() {
       {showTour && (
         <ProjectTour
           isPap={isPap}
-          onClose={() => { setShowTour(false); setTourMenuOpen(false) }}
+          onClose={(completed) => {
+            setShowTour(false); setTourMenuOpen(false)
+            // Só arranca a cadeia de sugestões quando a pessoa vê o tour até
+            // ao fim ("Começar") — saltar o tour não implica querer mais
+            // prompts a seguir. Não reinicia se já havia progresso guardado.
+            if (completed && project?.id) {
+              try {
+                const key = `showo_post_tour_chain_${project.id}`
+                if (!localStorage.getItem(key)) { localStorage.setItem(key, '1'); setPostTourStage('1') }
+              } catch { /* localStorage indisponível, não é crítico */ }
+            }
+          }}
           onStep={target => {
             if (window.innerWidth < 640) {
               if (target === 'missions') setMobileTab('melhorar')
@@ -4040,6 +4086,33 @@ export default function ProjectPage() {
         {/* Prova de trabalho do GitHub/BD — antes da barra de separadores,
             não depois: é um empurrão contextual sobre o próprio projeto,
             não um separador de navegação, e ficava perdido lá abaixo. */}
+        {isOwner && !showLaunchOverlay && !showRegisterPopup && !showTour && !showInvite && !coachOpen && !showJournalComposer && (
+          <PostTourChain
+            stage={postTourStage}
+            onAct={() => {
+              if (postTourStage === '1') { setShowJournalComposer(true); return }
+              if (postTourStage === '2') { setCoachOpen(true); advancePostTourStage('3'); return }
+              if (postTourStage === '3') {
+                navigator.clipboard.writeText(`${window.location.origin}/p/${project.slug}`)
+                triggerToast('Link copiado!')
+                advancePostTourStage('done')
+              }
+            }}
+            onDismiss={() => advancePostTourStage(postTourStage === '3' ? 'done' : String(Number(postTourStage) + 1))}
+          />
+        )}
+        {showJournalComposer && (
+          <JournalComposer
+            userId={user.id}
+            project={project}
+            onClose={() => setShowJournalComposer(false)}
+            onCreated={() => {
+              setShowJournalComposer(false)
+              triggerToast('Registo guardado no diário.')
+              advancePostTourStage('2')
+            }}
+          />
+        )}
         <DbSetupNudge project={project} isOwner={isOwner} />
         <LiveProof project={project} isOwner={isOwner && !!user} onSave={handleSaveProofUrl} />
         <GithubProof project={project} />

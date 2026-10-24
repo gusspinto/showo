@@ -407,6 +407,47 @@ export function DbSetupNudge({ project, isOwner }) {
   )
 }
 
+/* Sugestão a seguir ao tour guiado — para nunca deixar a pessoa sem saber
+ * o próximo passo depois de ver o guia até ao fim. Três sugestões fixas,
+ * nesta ordem (diário → Coach IA → partilhar), uma de cada vez, sempre
+ * dispensável e nunca repetida. O estado (em que ponto da cadeia a pessoa
+ * está) vive no ProjectPage, que também decide quando a esconder (outro
+ * modal já aberto) — este componente é só a apresentação do passo atual. */
+export function PostTourChain({ stage, onAct, onDismiss }) {
+  const STEPS = {
+    '1': { icon: <FileText size={15} color="var(--color-primary)" />, text: 'Escreve a tua primeira entrada no diário do projeto.' },
+    '2': { icon: <Bot size={15} color="var(--color-primary)" />, text: 'Fala com o Coach IA sobre o que acabaste de escrever.' },
+    '3': { icon: <Globe size={15} color="var(--color-primary)" />, text: 'Partilha a página do projeto com alguém.' },
+  }
+  const step = STEPS[stage]
+  if (!step) return null
+
+  return (
+    <div
+      onClick={onAct}
+      role="button" tabIndex={0}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onAct() }}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 8,
+        background: 'color-mix(in srgb, var(--color-primary) 8%, var(--color-surface))',
+        border: '1px solid color-mix(in srgb, var(--color-primary) 25%, var(--color-border))',
+        borderRadius: 12, padding: '10px 12px', marginBottom: 10, cursor: 'pointer',
+        fontFamily: 'var(--font-body, system-ui, sans-serif)',
+      }}
+    >
+      {step.icon}
+      <p style={{ margin: 0, flex: 1, fontSize: 12, color: 'var(--color-text)', lineHeight: 1.5 }}>
+        {step.text}
+      </p>
+      <button
+        onClick={e => { e.stopPropagation(); onDismiss() }}
+        aria-label="Dispensar"
+        style={{ flexShrink: 0, color: 'var(--color-text-tertiary)', background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex' }}
+      ><X size={13} /></button>
+    </div>
+  )
+}
+
 function proofHost(url) {
   try { return new URL(url).hostname.replace(/^www\./, '') } catch { return url }
 }
