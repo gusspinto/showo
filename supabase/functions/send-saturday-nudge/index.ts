@@ -7,9 +7,12 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
    Audiência: utilizadores com pelo menos um projeto entry_kind='full', sem
    nenhum registo no diário (project_journal_entries) nas últimas 48h (ou
-   nunca registaram nada), e sem marketing_campaign_opted_out. Mesma lista
-   de cancelamento que as outras campanhas de marketing (campaign-unsubscribe),
-   não é um opt-out novo só para isto.
+   nunca registaram nada), sem marketing_campaign_opted_out (mesma lista
+   de cancelamento que as outras campanhas de marketing), e com conta
+   registada há 14+ dias (quem está mais recente ainda recebe 1 email por
+   dia do send-onboarding-sequence, não faz sentido empilhar). Medido
+   contra a BD em 2026-10-24: ~56 pessoas por semana, não a quase toda a
+   gente como a primeira versão sem este último filtro.
 
    Projeto escolhido por utilizador: mesmo critério do pickFocusProject
    (src/lib/focusProject.js): PAP primeiro, depois defesa mais próxima,
@@ -170,7 +173,7 @@ Deno.serve(async (req) => {
 
     const { data: profiles } = await supabase
       .from('profiles')
-      .select('id, full_name, marketing_campaign_opted_out, saturday_nudge_sent_at')
+      .select('id, full_name, marketing_campaign_opted_out, saturday_nudge_sent_at, created_at')
       .in('id', userIds)
     const profileById = new Map((profiles ?? []).map(p => [p.id, p]))
 
@@ -189,6 +192,13 @@ Deno.serve(async (req) => {
       if (!profile || profile.marketing_campaign_opted_out) return false
       if (profile.saturday_nudge_sent_at && profile.saturday_nudge_sent_at > sixDaysAgo) return false
       if (activeUserIds.has(uid)) return false
+      // Quem se registou há menos de 14 dias ainda está a receber 1 email
+      // por dia do send-onboarding-sequence. Confirmado contra a BD que
+      // onboarding_sequence_step não é fiável para isto (nunca passa de 7
+      // na prática, mesmo depois do dia 14), por isso usa-se a idade real
+      // da conta, mesma janela de 14 dias que o send-continuous-cycle
+      // espera antes de começar a mandar a sua própria campanha semanal.
+      if (profile.created_at && new Date(profile.created_at) > new Date(Date.now() - 14 * 24 * 3600000)) return false
       return true
     })
 
