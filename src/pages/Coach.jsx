@@ -224,8 +224,8 @@ export default function Coach() {
     setLoading(true)
     try {
       const reply = activeProject
-        ? await chatProjectCoach({ project: activeProject, messages, message: msg })
-        : await chatGlobalCoach({ messages, message: msg })
+        ? await chatProjectCoach({ project: activeProject, messages, message: msg, profile })
+        : await chatGlobalCoach({ messages, message: msg, profile })
       consumeAI('coach')
       setMessages(prev => [...prev, { role: 'assistant', content: reply }])
       setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
