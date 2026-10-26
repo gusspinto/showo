@@ -1486,7 +1486,7 @@ export default function ProjectPage() {
     setCoachInput('')
     setCoachLoading(true)
     try {
-      const reply = await chatProjectCoach({ project: { ...project, journal: projectJournalEntries, teacher_feedback: teacherFeedback }, messages: coachMessages, message: msg })
+      const reply = await chatProjectCoach({ project: { ...project, journal: projectJournalEntries, teacher_feedback: teacherFeedback }, messages: coachMessages, message: msg, profile })
       consumeAI('coach')
       const now = new Date().toISOString()
       setCoachMessages(prev => [...prev, { role: 'assistant', content: reply }])

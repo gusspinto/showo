@@ -3,9 +3,7 @@
 ## Quem sou e o que é o Showo
 Sou o Gustavo, fundador do Showo e responsável por estratégia de produto, comercial, outreach escolar e conteúdo. O Showo é um SaaS que ajuda pessoas a desenvolver e apresentar os seus projetos, com IA a guiar o processo e a transformar o resultado num portefólio profissional.
 
-Dois modelos em paralelo:
-- B2B2C: escolas profissionais, para estudantes em PAP/estágio, com validação por professor.
-- B2C: diretamente para freelancers e profissionais independentes, a construir portefólio a partir de trabalho real.
+Só B2C, por agora (decidido 2026-10-26). Sem outreach escolar, sem canal B2B2C. O público é qualquer pessoa que queira mostrar os seus projetos: alunos, freelancers, profissionais e pessoas à procura de emprego, todos a criarem conta diretamente, sem passar por escola ou professor.
 
 Não é só para estudantes.
 
@@ -30,10 +28,10 @@ Não é só para estudantes.
 - Preto: `#000000`
 
 ## North Star Metric
-Projetos validados por professor. Não construir features que não aproximem desta métrica sem justificação clara.
+A definir, com o foco agora em B2C puro. O antigo North Star ("projetos validados por professor") e a meta dos 10 professores validadores foram abandonados em 2026-10-26, quando decidi parar o canal B2B2C/escolar. Não assumir essa métrica nem esse objetivo em conversas futuras.
 
 ## Meta atual
-10 professores validadores confirmados até 30 de novembro de 2026.
+Sem meta formal registada ainda para o B2C puro. Perguntar ao Gustavo antes de assumir qualquer número.
 
 ## Como me dares tarefas
 - Trata-me como um developer júnior a quem se dão problemas, não só comandos diretos. Em vez de "escreve uma função que faça X", prefere "como devíamos tratar o tracking de crescimento?" — dá-me espaço para pensar na abordagem e explicar as minhas suposições antes de escrever código. Isto costuma dar resultados melhores do que um pedido direto.
@@ -44,9 +42,8 @@ Projetos validados por professor. Não construir features que não aproximem des
 
 ## Regras de produto e negócio
 - Nunca alterar a lógica de portfolio score sem aprovação explícita.
-- No canal B2B2C (escolas): entrada de novos utilizadores é sempre via professor, nunca via diretor — manter isto na copy e nos fluxos de onboarding desse canal. Não se aplica ao canal B2C, que não passa por escola.
+- Canal B2B2C (escolas) está parado desde 2026-10-26. As regras antigas desse canal (entrada via professor, professor gratuito antes da escola pagar) ficam registadas aqui como histórico, não como regra ativa. Não propor outreach a escolas ou professores sem o Gustavo pedir explicitamente.
 - Ativação = publicar 1 projeto com 3+ secções e partilhar o link.
-- Professor usa o Showo gratuitamente antes de a escola pagar.
 - Analytics como visualizações, aberturas e métricas de engagement são visíveis só ao próprio utilizador dono dos dados, nunca publicamente nem entre contas, a não ser que eu diga explicitamente o contrário.
 
 ## Regras de engenharia
