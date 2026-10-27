@@ -43,7 +43,7 @@ const PLANS = [
       {
         label: 'Inclui',
         items: [
-          { label: '3 projetos' },
+          { label: '2 projetos' },
           { label: 'Mesa de trabalho completa', tip: 'Editor completo e página pública, sem versão reduzida nem bloqueada.' },
           { label: 'Diário, agenda e lembretes' },
           { label: 'Certificado de projeto' },
