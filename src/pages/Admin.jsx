@@ -546,6 +546,9 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
   const nudgeShown = funnelMap.nudge_shown || 0
   const nudgeClicked = funnelMap.nudge_clicked || 0
   const checkoutStarted = funnelMap.checkout_started || 0
+  const novoViewed = funnelMap.novo_viewed || 0
+  const novoStarted = (funnelMap.novo_manual_started || 0) + (funnelMap.novo_ai_generate_result || 0)
+  const projectCreated = funnelMap.project_created || 0
 
   // Registrations per week
   const numWeeks = Math.min(Math.ceil(days / 7), 12)
@@ -768,6 +771,17 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
             ))}
           </div>
         )}
+      </div>
+
+      {/* Funil até ao primeiro projeto */}
+      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px', marginBottom: 24 }}>
+        <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Funil até ao primeiro projeto · mês atual</h3>
+        <p style={{ margin: '0 0 18px', fontSize: 11, color: C.subtle }}>Onde as pessoas desistem entre entrar em "Criar projeto" e teres mesmo um projeto criado. Começou a registar agora, os números só ficam úteis daqui a uns dias.</p>
+        <FunnelFlow steps={[
+          { label: 'Viram "Criar projeto"', value: novoViewed, icon: <Folder size={14} />, color: C.yellow },
+          { label: 'Começaram a preencher', value: novoStarted, icon: <ArrowRight2 size={14} />, color: C.blue },
+          { label: 'Criaram o projeto', value: projectCreated, icon: <Check size={14} />, color: C.green },
+        ]} />
       </div>
 
       {/* Charts row */}
