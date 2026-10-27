@@ -8,6 +8,7 @@ import { toWebP } from '../lib/imageOptimize'
 import { getVisitorCity } from '../lib/geolocation'
 import { useIsMobile } from '../lib/useIsMobile'
 import { calculateScore, looksLikeSpam } from '../lib/score'
+import { computeReportCoverage } from '../lib/journal'
 import { containsProfanity } from '../lib/profanity'
 import { hasPlaceholder } from '../lib/textQuality'
 import { topLanguages, commitSpanMonths, repoAgeMonths } from '../lib/social'
@@ -28,6 +29,7 @@ import { useTheme } from '../context/ThemeContext'
 // à parte para não entrar no bundle de todas as visitas a um projeto, quando
 // a esmagadora maioria nunca abre este modo.
 const DefenseMode = lazy(() => import('../components/DefenseMode'))
+const ReportPanel = lazy(() => import('../components/dashboard/ReportPanel'))
 import ProjectComments from '../components/ProjectComments'
 import ProjectTimeline from '../components/ProjectTimeline'
 import ProjectTimelineBadge from '../components/ProjectTimelineBadge'
@@ -1119,6 +1121,11 @@ export default function ProjectPage() {
   const { user, profile, loading: authLoading, checkGate, consumeAI, refreshProfile } = useAuth()
   const [project, setProject] = useState(() => location.state?.projectData ?? null)
   const [projectJournalEntries, setProjectJournalEntries] = useState([])
+  const [showReport, setShowReport] = useState(false)
+  const reportCoverage = useMemo(
+    () => computeReportCoverage(project ?? {}, projectJournalEntries),
+    [project, projectJournalEntries],
+  )
   const [loading, setLoading] = useState(!location.state?.projectData)
   const [copied, setCopied] = useState(false)
   const [score, setScore] = useState(0)
@@ -1683,6 +1690,7 @@ export default function ProjectPage() {
         onShareStory: () => setShowStoryModal(true),
         onDefense: project.project_type === 'pap' ? () => setDefenseMode(true) : null,
         onAnalyze: handleAIClick,
+        onReport: () => setShowReport(true),
         onInvite: isOwner ? () => { setShowInvite(true); document.body.style.overflow = 'hidden' } : null,
         // "Colega" só faz sentido em contexto de turma — numa conta
         // individual, quem convidas não é necessariamente um "colega".
@@ -2806,6 +2814,18 @@ export default function ProjectPage() {
             isOwner={isOwner}
             collaboratorSections={collaboratorSections}
             onClose={() => setDefenseMode(false)}
+          />
+        </Suspense>
+      )}
+
+      {showReport && (
+        <Suspense fallback={null}>
+          <ReportPanel
+            project={project}
+            entries={projectJournalEntries}
+            coverage={reportCoverage}
+            onClose={() => setShowReport(false)}
+            onDraftSaved={(draft, at) => setProject(p => ({ ...p, report_draft: draft, report_updated_at: at }))}
           />
         </Suspense>
       )}
