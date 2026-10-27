@@ -560,6 +560,10 @@ export default function NewProject() {
   /* ── Criar ── */
   async function handleSubmit() {
     if (requireAccount('/novo')) return
+    // Só se aplica a página própria: um anexo não conta para o limite do
+    // plano (parent_project_id faz o enforce_max_projects ignorá-lo), e
+    // chamar isto aqui bloquearia anexos sem necessidade.
+    if (!(presentation === 'attachment' && parentId) && !(await guardProjectCount())) return
     setStep('submitting')
     setError(null)
     let aiResult = {}
