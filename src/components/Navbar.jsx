@@ -61,6 +61,7 @@ import { Book2Icon as BookOpen } from '@solar-icons/react/bold/book-2'
 import { BugIcon as Bug } from '@solar-icons/react/bold/bug'
 import { CheckReadIcon as CheckRead } from '@solar-icons/react/bold/check-read'
 import { TrashBinMinimalisticIcon as TrashBin } from '@solar-icons/react/bold/trash-bin-minimalistic'
+import { DocumentTextIcon as FileText } from '@solar-icons/react/bold/document-text'
 
 // Strip emoji characters from notification messages coming from the DB
 function stripEmoji(str) {
@@ -1198,6 +1199,11 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                       <Sparkles size={16} /> {extras.aiScore != null ? 'Ver análise IA' : 'Análise IA'}
                     </button>
                   )}
+                  {extras.onReport && (
+                    <button className="mobile-drawer-btn" onClick={() => { extras.onReport(); setOpen(false) }}>
+                      <FileText size={16} /> Relatório
+                    </button>
+                  )}
                   {extras.showCertificate && (
                     <button className="mobile-drawer-btn" onClick={() => { navigate(`/certificado/${extras.slug}`); setOpen(false) }}>
                       <Trophy size={16} /> Certificado
@@ -1590,6 +1596,11 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
             {extras.showCertificate && (
               <button className="mob-nav-btn" onClick={() => { navigate(`/certificado/${extras.slug}`); setProjMenuOpen(false) }}>
                 <Trophy size={18} /> Certificado
+              </button>
+            )}
+            {extras.onReport && (
+              <button className="mob-nav-btn" onClick={() => { extras.onReport(); setProjMenuOpen(false) }}>
+                <FileText size={18} /> Relatório
               </button>
             )}
             {extras.onTogglePublicView && (
@@ -2082,6 +2093,12 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
             <button className={`pmf-btn${extras.analyzingAI ? ' active' : ''}`} data-tour="ai" aria-label="Análise IA" onClick={extras.onAnalyze} disabled={extras.analyzingAI}>
               <Sparkles size={16} />
               <span className="pmf-tooltip">{extras.analyzingAI ? 'A analisar…' : 'Análise IA'}</span>
+            </button>
+          )}
+          {extras.onReport && (
+            <button className="pmf-btn" aria-label="Relatório" onClick={extras.onReport}>
+              <FileText size={16} />
+              <span className="pmf-tooltip">Relatório</span>
             </button>
           )}
           {extras.showCertificate && (
