@@ -45,8 +45,8 @@ export function AuthProvider({ children }) {
   const fetchProfile = useCallback(async (uid) => {
     if (!uid) { setProfile(null); setAiUsage({}); resetAnalytics(); return }
 
-    const PROFILE_SELECT = 'id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, occupation, plan, phone, organization_id, account_type, signup_country, course, academic_year, last_active_at, tour_seen_at, plan_expires_at'
-    const PROFILE_SELECT_LEGACY = 'id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, occupation, plan, phone, last_active_at, tour_seen_at, plan_expires_at'
+    const PROFILE_SELECT = 'id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, occupation, plan, phone, organization_id, account_type, signup_country, course, academic_year, last_active_at, tour_seen_at, featured_popup_seen_at, plan_expires_at'
+    const PROFILE_SELECT_LEGACY = 'id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, occupation, plan, phone, last_active_at, tour_seen_at, featured_popup_seen_at, plan_expires_at'
 
     const [profileRes, userRes] = await Promise.all([
       supabase.from('profiles').select(PROFILE_SELECT).eq('id', uid).single(),

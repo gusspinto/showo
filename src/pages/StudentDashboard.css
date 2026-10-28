@@ -186,6 +186,19 @@
   vertical-align: middle;
   flex-shrink: 0;
 }
+.sdb-projrow-spotlight {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  margin-left: 8px;
+  border-radius: 6px;
+  background: rgba(245,158,11,0.12);
+  color: #f59e0b;
+  font-size: 11px;
+  font-weight: 600;
+  vertical-align: middle;
+}
 .sdb-icon-btn--quiet {
   background: transparent;
   color: var(--color-text-tertiary);
