@@ -30,12 +30,14 @@ import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/
 import { UploadIcon as Upload } from '@solar-icons/react/bold/upload'
 import { ClipboardTextIcon as ClipboardCheck } from '@solar-icons/react/bold/clipboard-text'
 import { BookBookmarkIcon as BookMarked } from '@solar-icons/react/bold/book-bookmark'
+import { FireIcon as Fire } from '@solar-icons/react/bold/fire'
 import { Button, Card, SectionLabel, Modal, Select } from '../components/ui'
 import { PlanGateModal } from '../components/PlanGate'
 import { useAuth } from '../context/AuthContext'
 import { featureUsed, getPlan } from '../lib/plans'
 import ExportProjectsModal from '../components/ExportProjectsModal'
 import { ShareStoryModal } from '../components/ShareStoryModal'
+import FeaturedSpotlightModal from '../components/dashboard/FeaturedSpotlightModal'
 
 // ProjectPulse removed — focus project now shown as auto-pinned card
 import JournalComposer from '../components/dashboard/JournalComposer'
@@ -203,6 +205,11 @@ export default function StudentDashboard({ user, profile }) {
   /* ── UI ── */
   const [tutorialPotentialSeen, setTutorialPotentialSeen] = useState(() => !!localStorage.getItem(`showo_tut_potential_${user.id}`))
   const [recapTeaserDismissed, setRecapTeaserDismissed] = useState(() => !!localStorage.getItem(`showo_recap_teaser_dismissed_${user.id}`))
+  // "Em destaque" (spotlight do Explorar/Home, calculado por get_featured_projects):
+  // featuredProjectIds alimenta o selo fixo na linha do projeto; o popup só
+  // aparece uma vez na vida da conta, controlado por profiles.featured_popup_seen_at.
+  const [featuredProjectIds, setFeaturedProjectIds] = useState(() => new Set())
+  const [featuredPopupProject, setFeaturedPopupProject] = useState(null)
   const [composerKind, setComposerKind] = useState(null)
   // A que projeto pertence o "Registar" que está aberto. Sem isto, o
   // composer ficava sempre agarrado a focusFull (o projeto em foco
@@ -290,6 +297,30 @@ export default function StudentDashboard({ user, profile }) {
     }
     load()
   }, [user.id])
+
+  /* ── "Em destaque": cruza o spotlight do Explorar/Home (get_featured_projects)
+     com os projetos do próprio utilizador. Alimenta o selo fixo na linha do
+     projeto; na primeira vez que algum projeto próprio aparece ali, e só
+     nessa primeira vez na vida da conta (featured_popup_seen_at), mostra o
+     popup de parabéns. */
+  useEffect(() => {
+    if (!projects.length) return
+    supabase.rpc('get_featured_projects', { p_limit: 2, p_weeks: 12 }).then(({ data, error }) => {
+      if (error || !data) return
+      const myIds = new Set(projects.map(p => p.id))
+      const mine = data.filter(d => myIds.has(d.id))
+      setFeaturedProjectIds(new Set(mine.map(d => d.id)))
+      if (mine.length && !profile?.featured_popup_seen_at) {
+        setFeaturedPopupProject(mine[0])
+      }
+    })
+  }, [projects, profile?.featured_popup_seen_at])
+
+  async function markFeaturedPopupSeen() {
+    if (!user?.id || profile?.featured_popup_seen_at) return
+    await supabase.from('profiles').update({ featured_popup_seen_at: new Date().toISOString() }).eq('id', user.id)
+    refreshProfile?.()
+  }
 
   const focusProject = useMemo(() => pickFocusProject(projects), [projects])
 
@@ -755,6 +786,13 @@ export default function StudentDashboard({ user, profile }) {
 
       {shareProject && (
         <ShareStoryModal project={shareProject} onClose={() => setShareProject(null)} />
+      )}
+
+      {featuredPopupProject && (
+        <FeaturedSpotlightModal
+          project={featuredPopupProject}
+          onClose={() => { setFeaturedPopupProject(null); markFeaturedPopupSeen() }}
+        />
       )}
 
       {showRecap && (
@@ -1244,6 +1282,7 @@ export default function StudentDashboard({ user, profile }) {
                       onToggleFeatured={toggleFeatured}
                       canFeature={canFeature}
                       onToggleDashboardPin={toggleDashboardPinned}
+                      isSpotlighted={featuredProjectIds.has(p.id)}
                     />
                   ))}
                   {collabProjects.map(p => (
@@ -1252,6 +1291,7 @@ export default function StudentDashboard({ user, profile }) {
                       onEdit={() => navigate(`/projeto/${p.slug}`)}
                       onCopy={() => copyProjectLink(p.slug)}
                       copied={copiedSlug === p.slug}
+                      isSpotlighted={featuredProjectIds.has(p.id)}
                     />
                   ))}
                 </ul>
@@ -1356,7 +1396,7 @@ function PotentialTutorial({ potential, onDismiss }) {
 
 /* ── Linha de projeto (portfólio) ─────────────────────────────────────────── */
 
-function ProjectRow({ project, shared, onOpen, onEdit, onCopy, copied, onDelete, onToggleFeatured, canFeature, onToggleDashboardPin }) {
+function ProjectRow({ project, shared, onOpen, onEdit, onCopy, copied, onDelete, onToggleFeatured, canFeature, onToggleDashboardPin, isSpotlighted }) {
   const [confirm, setConfirm] = useState(false)
 
   return (
@@ -1369,6 +1409,7 @@ function ProjectRow({ project, shared, onOpen, onEdit, onCopy, copied, onDelete,
         <span className="sdb-projrow-name">
           {project.name}
           {shared && <span className="sdb-projrow-tag">partilhado</span>}
+          {isSpotlighted && <span className="sdb-projrow-spotlight"><Fire size={11} /> Em destaque</span>}
         </span>
         <span className="sdb-projrow-area">{project.area || 'Sem área definida'}</span>
       </button>
