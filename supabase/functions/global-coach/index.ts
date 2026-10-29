@@ -78,7 +78,20 @@ async function notifyLimitExhausted(supabase: any, userId: string, feature: stri
     headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ from: 'Showo <hello@showo.pt>', to: email, subject: 'Coach IA esgotou este mês', html }),
   })
-  if (!res.ok) console.error('[planLimit] Resend error:', await res.text())
+  if (!res.ok) { console.error('[planLimit] Resend error:', await res.text()); return }
+
+  // Sem isto, este email fica invisível em qualquer análise de aberturas/
+  // cliques feita a partir de email_sends, mesmo disparando normalmente
+  // (achado de 2026-10-29, a rever campanhas com o Maia).
+  const { id: resendId } = await res.json()
+  if (resendId) {
+    await supabase.from('email_sends').insert({
+      user_id: userId,
+      email_type: `limit_exhausted_${feature}`,
+      resend_id: resendId,
+      to_email: email,
+    })
+  }
 }
 
 async function checkPlanLimit(feature: string, userId: string): Promise<{ allowed: boolean; remaining: number; limit: number; used: number } | null> {
