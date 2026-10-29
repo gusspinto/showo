@@ -362,7 +362,23 @@ function buildDay7({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayB
   }
 }
 
-function buildDay8({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayBuilderCtx): Built {
+function buildDay8({ firstName, unsubscribeUrl, code, dia, daysToDefense, isProfessional }: DayBuilderCtx): Built {
+  if (isProfessional) {
+    const subject = 'Um portefólio que trabalha por ti enquanto fazes outra coisa'
+    return {
+      subject,
+      html: wrapEmail(
+        greeting(firstName) +
+        urgencyBand(dia, code, daysToDefense) +
+        headline('Alguém vai decidir confiar em ti antes de falares') +
+        paragraph('Um cliente, um recrutador, um colega, decide muito antes da primeira reunião, só a partir do que encontra sobre ti online. Um perfil organizado faz essa decisão a teu favor, sem teres de estar presente.') +
+        paragraph(`Com ${esc(code)}: 4,49€/mês em vez de 8,99€ no Plus, durante 6 meses.`, true) +
+        cta(`${APP}/pricing`, 'Quero que decidam a meu favor'),
+        `Dia ${dia} de ${TOTAL_DAYS}`,
+        unsubscribeUrl,
+      ),
+    }
+  }
   const subject = 'Achas que o primeiro emprego vai ser por acaso?'
   return {
     subject,
@@ -379,7 +395,23 @@ function buildDay8({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayB
   }
 }
 
-function buildDay9({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayBuilderCtx): Built {
+function buildDay9({ firstName, unsubscribeUrl, code, dia, daysToDefense, isProfessional }: DayBuilderCtx): Built {
+  if (isProfessional) {
+    const subject = 'O que custa mais, isto ou chegar lá sem nada pronto?'
+    return {
+      subject,
+      html: wrapEmail(
+        greeting(firstName) +
+        urgencyBand(dia, code, daysToDefense) +
+        headline('Compara o que custa, não o que parece custar') +
+        paragraph('0,15€ por dia é o preço do Plus. O preço de chegares a uma oportunidade sem nada pronto para mostrar, esse não se paga em dinheiro.') +
+        paragraph(`Com ${esc(code)}, o Plus fica a 4,49€/mês durante 6 meses.`, true) +
+        cta(`${APP}/pricing`, 'Não quero correr esse risco'),
+        `Dia ${dia} de ${TOTAL_DAYS}`,
+        unsubscribeUrl,
+      ),
+    }
+  }
   const subject = 'O que custa mais, isto ou chegar lá sem preparação?'
   return {
     subject,
@@ -429,7 +461,22 @@ function buildDay10({ firstName, unsubscribeUrl, code, dia, daysToDefense, isPro
   }
 }
 
-function buildDay11({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayBuilderCtx): Built {
+function buildDay11({ firstName, unsubscribeUrl, code, dia, daysToDefense, isProfessional }: DayBuilderCtx): Built {
+  if (isProfessional) {
+    const subject = 'Tens 8 segundos antes de alguém decidir'
+    return {
+      subject,
+      html: wrapEmail(
+        greeting(firstName) +
+        urgencyBand(dia, code, daysToDefense) +
+        headline('O tempo que alguém olha para um perfil é curto. Conta.') +
+        paragraph(`Um link que mostra meses de consistência num olhar, não um PDF que ninguém abre até ao fim. Com ${esc(code)}: 4,49€/mês em vez de 8,99€ no Plus, durante 6 meses.`, true) +
+        cta(`${APP}/pricing`, 'Quero ser lembrado, não esquecido'),
+        `Dia ${dia} de ${TOTAL_DAYS}`,
+        unsubscribeUrl,
+      ),
+    }
+  }
   const subject = 'Tens 8 segundos antes de um recrutador decidir'
   return {
     subject,
