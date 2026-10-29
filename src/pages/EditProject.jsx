@@ -19,7 +19,6 @@ import { CopyIcon as Copy } from '@solar-icons/react/bold/copy'
 import { SquareArrowRightUpIcon as ExternalLink } from '@solar-icons/react/bold/square-arrow-right-up'
 import { DangerTriangleIcon as AlertTriangle } from '@solar-icons/react/bold/danger-triangle'
 import { TrashBinMinimalisticIcon as Trash2 } from '@solar-icons/react/bold/trash-bin-minimalistic'
-import { RefreshCircleIcon as RefreshCw } from '@solar-icons/react/bold/refresh-circle'
 import { Code2Icon as Code } from '@solar-icons/react/bold/code-2'
 import { looksLikeSpam } from '../lib/score'
 import { Select } from '../components/ui'
@@ -1335,9 +1334,21 @@ function GithubAdvancedCard({ project }) {
   const [removed, setRemoved] = useState(null)
   const [githubUrlOverride, setGithubUrlOverride] = useState(null)
   const [showRepoPicker, setShowRepoPicker] = useState(false)
+  const repoPickerRef = useRef(null)
   const [repoList, setRepoList] = useState(null) // null = por carregar
   const [loadingRepos, setLoadingRepos] = useState(false)
   const [repoListError, setRepoListError] = useState(null)
+
+  // Fecha o dropdown ao clicar fora dele (ou do botão que o abre) — antes só
+  // fechava ao escolher um repositório ou clicar de novo no botão.
+  useEffect(() => {
+    if (!showRepoPicker) return
+    function onPointerDown(e) {
+      if (repoPickerRef.current && !repoPickerRef.current.contains(e.target)) setShowRepoPicker(false)
+    }
+    document.addEventListener('mousedown', onPointerDown)
+    return () => document.removeEventListener('mousedown', onPointerDown)
+  }, [showRepoPicker])
   const [webhookNotice, setWebhookNotice] = useState(null) // aviso suave se o sync automático não ligou
 
   useEffect(() => {
@@ -1456,21 +1467,65 @@ function GithubAdvancedCard({ project }) {
         </>
       ) : (
       <>
-      {/* Texto e botão em cima um do outro, com espaço a sério — espalmados
-          lado a lado num card pequeno não tinham onde respirar. */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16, padding: '14px 16px', background: colors.bgAlt, borderRadius: 10, border: `1px solid ${colors.border}` }}>
+      {/* Um cartão só (estado + ações), em vez de dois empilhados — ícone com
+          indicador de ligação, nome em destaque, e os botões centrados por
+          baixo. Em ecrãs estreitos os botões quebram linha e continuam
+          centrados, sem precisar de media query. */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, marginBottom: 16, padding: '18px 16px', background: colors.bgAlt, borderRadius: 12, border: `1px solid ${colors.border}` }}>
         {connection ? (
           <>
-            <span style={{ fontSize: 12.5, color: colors.text, lineHeight: 1.5 }}>
-              Ligado como <strong>{connection.github_login}</strong>. Já dá para sincronizar repos privados.
-            </span>
-            <button
-              type="button"
-              onClick={() => removeGithubWebhook(project.id).then(() => disconnectGithub(user.id)).then(() => setConnection(null))}
-              style={{ alignSelf: 'flex-start', background: 'transparent', border: 'none', padding: 0, color: colors.subtle, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-            >
-              Desligar
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, maxWidth: '100%' }}>
+              <span style={{ position: 'relative', flexShrink: 0, width: 38, height: 38, borderRadius: '50%', background: colors.card, border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="19" height="19" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" style={{ color: colors.text }}><path fillRule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" /></svg>
+                <span style={{ position: 'absolute', bottom: -1, right: -1, width: 11, height: 11, borderRadius: '50%', background: colors.green, border: `2px solid ${colors.bgAlt}` }} />
+              </span>
+              <div style={{ minWidth: 0, textAlign: 'left' }}>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: colors.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{connection.github_login}</div>
+                <div style={{ fontSize: 11.5, color: colors.subtle }}>Conta ligada · lê repositórios privados</div>
+              </div>
+            </div>
+
+            <div ref={repoPickerRef} style={{ position: 'relative', display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 8, width: '100%' }}>
+              <button
+                type="button"
+                onClick={() => showRepoPicker ? setShowRepoPicker(false) : openRepoPicker()}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.text, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                <Link2 size={13} />
+                {repo ? 'Trocar repositório' : 'Escolher repositório'}
+              </button>
+              <button
+                type="button"
+                onClick={() => removeGithubWebhook(project.id).then(() => disconnectGithub(user.id)).then(() => setConnection(null))}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: 'rgba(244,63,94,0.1)', border: '1px solid rgba(244,63,94,0.3)', borderRadius: 8, color: colors.red, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                <X size={13} />
+                Desligar
+              </button>
+
+              {showRepoPicker && (
+                <div style={{ position: 'absolute', top: 'calc(100% + 8px)', left: '50%', transform: 'translateX(-50%)', zIndex: 10, width: 320, maxWidth: '100%', maxHeight: 280, overflowY: 'auto', background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.35)', textAlign: 'left' }}>
+                  {loadingRepos && <p style={{ margin: 0, padding: 14, fontSize: 12.5, color: colors.muted }}>A carregar…</p>}
+                  {repoListError && <p style={{ margin: 0, padding: 14, fontSize: 12.5, color: '#ef4444' }}>{repoListError}</p>}
+                  {repoList && !loadingRepos && repoList.length === 0 && (
+                    <p style={{ margin: 0, padding: 14, fontSize: 12.5, color: colors.muted }}>Não encontrámos nenhum repositório teu.</p>
+                  )}
+                  {repoList && repoList.map(r => (
+                    <button
+                      key={r.full_name}
+                      type="button"
+                      onClick={() => pickRepo(r.html_url)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left', padding: '10px 14px', background: 'transparent', border: 'none', borderBottom: `1px solid ${colors.border}`, color: colors.text, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}
+                    >
+                      <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.full_name}</span>
+                      {r.private && (
+                        <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, color: colors.subtle, background: colors.bgAlt, borderRadius: 5, padding: '2px 6px' }}>privado</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, textAlign: 'center' }}>
@@ -1487,41 +1542,6 @@ function GithubAdvancedCard({ project }) {
         )}
       </div>
 
-      {connection && (
-        <div style={{ marginBottom: 16, position: 'relative' }}>
-          <button
-            type="button"
-            onClick={() => showRepoPicker ? setShowRepoPicker(false) : openRepoPicker()}
-            style={{ padding: '8px 14px', background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.text, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-          >
-            {repo ? 'Trocar repositório' : 'Escolher repositório'}
-          </button>
-
-          {showRepoPicker && (
-            <div style={{ position: 'absolute', top: '110%', left: 0, zIndex: 10, width: 320, maxHeight: 280, overflowY: 'auto', background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.35)' }}>
-              {loadingRepos && <p style={{ margin: 0, padding: 14, fontSize: 12.5, color: colors.muted }}>A carregar…</p>}
-              {repoListError && <p style={{ margin: 0, padding: 14, fontSize: 12.5, color: '#ef4444' }}>{repoListError}</p>}
-              {repoList && !loadingRepos && repoList.length === 0 && (
-                <p style={{ margin: 0, padding: 14, fontSize: 12.5, color: colors.muted }}>Não encontrámos nenhum repositório teu.</p>
-              )}
-              {repoList && repoList.map(r => (
-                <button
-                  key={r.full_name}
-                  type="button"
-                  onClick={() => pickRepo(r.html_url)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left', padding: '10px 14px', background: 'transparent', border: 'none', borderBottom: `1px solid ${colors.border}`, color: colors.text, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}
-                >
-                  <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.full_name}</span>
-                  {r.private && (
-                    <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, color: colors.subtle, background: colors.bgAlt, borderRadius: 5, padding: '2px 6px' }}>privado</span>
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
       {!repo ? (
         <p style={{ margin: 0, fontSize: 13.5, color: colors.muted, lineHeight: 1.6 }}>
           {connection
@@ -1530,9 +1550,17 @@ function GithubAdvancedCard({ project }) {
         </p>
       ) : (
         <>
-          <p style={{ margin: '0 0 8px', fontSize: 13.5, color: colors.muted, lineHeight: 1.6 }}>
-            Vamos ler <strong style={{ color: colors.text }}>{repo.owner}/{repo.repo}</strong>. Cada dia com
-            commits vira uma entrada no diário. {connection ? 'Com a conta ligada, também funciona com repositórios privados teus.' : 'Só funciona com repositórios públicos; liga a tua conta acima para privados.'}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+            <span style={{ fontSize: 12.5, color: colors.muted }}>A ler</span>
+            <span style={{
+              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+              fontSize: 12.5, fontWeight: 600, color: colors.text,
+              background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 6,
+              padding: '3px 9px', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>{repo.owner}/{repo.repo}</span>
+          </div>
+          <p style={{ margin: '0 0 16px', fontSize: 13, color: colors.muted, lineHeight: 1.6 }}>
+            Cada dia com commits vira uma entrada no diário. {connection ? 'Com a conta ligada, também funciona com repositórios privados teus.' : 'Só funciona com repositórios públicos; liga a tua conta acima para privados.'}
           </p>
           <p style={{ margin: '0 0 16px', fontSize: 12.5, color: webhookNotice ? '#f59e0b' : colors.subtle, lineHeight: 1.5 }}>
             {webhookNotice || (project?.github_webhook_id ? 'Sincronização automática ativa: cada push atualiza o diário sozinho.' : 'Sincroniza também manualmente, com o botão abaixo.')}
@@ -1612,12 +1640,11 @@ function GithubAdvancedCard({ project }) {
           )}
 
           <button type="button" onClick={handleSync} disabled={syncing} style={{
-            display: 'flex', alignItems: 'center', gap: 8,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%',
             background: syncing ? colors.border : colors.blue, color: '#fff', border: 'none',
             borderRadius: 10, padding: '11px 20px', fontSize: 14, fontWeight: 700,
-            cursor: syncing ? 'default' : 'pointer', fontFamily: 'inherit',
+            cursor: syncing ? 'default' : 'pointer', fontFamily: 'inherit', opacity: syncing ? 0.75 : 1,
           }}>
-            <RefreshCw size={15} style={syncing ? { animation: 'spin 1s linear infinite' } : undefined} />
             {syncing ? 'A ler o repositório…' : stats ? 'Sincronizar outra vez' : 'Sincronizar commits'}
           </button>
 
@@ -1630,7 +1657,7 @@ function GithubAdvancedCard({ project }) {
           {stats && (
             <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${colors.border}` }}>
               {!confirmRemove ? (
-                <button type="button" onClick={() => setConfirmRemove(true)} style={{ background: 'none', border: 'none', padding: 0, color: colors.subtle, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline', textUnderlineOffset: 3 }}>
+                <button type="button" onClick={() => setConfirmRemove(true)} style={{ background: 'none', border: 'none', padding: 0, color: colors.subtle, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                   Remover as entradas do GitHub do diário
                 </button>
               ) : (
@@ -1655,7 +1682,6 @@ function GithubAdvancedCard({ project }) {
       )}
       </>
       )}
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   )
 }
@@ -1958,29 +1984,7 @@ function NewTableForm({ project, onCreated, onCancel, initial }) {
 
       <div style={{ marginTop: 14 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: colors.subtle, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 }}>Colunas</div>
-        {/* Nome/tipo/obrigatório numa linha só não cabia em ecrã estreito —
-            "nome_da_coluna" e o tipo apareciam cortados a 2-3 letras. Cada
-            coluna ganha o seu próprio mini-cartão, com o nome na linha de
-            cima (largura toda) e tipo + obrigatório na de baixo, onde há
-            espaço para os dois respirarem. */}
-        {columns.map((col, idx) => (
-          <div key={idx} style={{ background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 10, padding: 10, marginBottom: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-              <input type="text" value={col.name} onChange={e => setCol(idx, { name: e.target.value })} placeholder="nome_da_coluna" style={{ ...inputStyle, flex: 1, padding: '8px 10px', fontSize: 13.5 }} {...inputHandlers} />
-              {columns.length > 1 && (
-                <button type="button" onClick={() => removeCol(idx)} style={{ background: 'none', border: 'none', color: colors.subtle, cursor: 'pointer', padding: 4, flexShrink: 0 }}><X size={15} /></button>
-              )}
-            </div>
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-              <select value={col.type} onChange={e => setCol(idx, { type: e.target.value })} style={{ ...inputStyle, flex: '1 1 110px', padding: '8px 10px', fontSize: 13.5 }}>
-                {ProjectDb.COLUMN_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-              </select>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: colors.muted, flexShrink: 0, whiteSpace: 'nowrap' }}>
-                <input type="checkbox" checked={!!col.required} onChange={e => setCol(idx, { required: e.target.checked })} /> obrigatório
-              </label>
-            </div>
-          </div>
-        ))}
+        <ColumnsEditor columns={columns} setCol={setCol} removeCol={removeCol} />
         <button type="button" onClick={addCol} style={{ background: 'none', border: 'none', color: colors.blue, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}>
           + Adicionar coluna
         </button>
@@ -2000,8 +2004,95 @@ function NewTableForm({ project, onCreated, onCancel, initial }) {
   )
 }
 
+/* Nome/tipo/obrigatório numa linha só não cabia em ecrã estreito —
+   "nome_da_coluna" e o tipo apareciam cortados a 2-3 letras. Cada coluna
+   ganha o seu próprio mini-cartão, com o nome na linha de cima (largura
+   toda) e tipo + obrigatório na de baixo, onde há espaço para os dois
+   respirarem. Partilhado entre criar tabela e editar colunas depois. */
+function ColumnsEditor({ columns, setCol, removeCol }) {
+  return (
+    <>
+      {columns.map((col, idx) => (
+        <div key={idx} style={{ background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 10, padding: 10, marginBottom: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <input type="text" value={col.name} onChange={e => setCol(idx, { name: e.target.value })} placeholder="nome_da_coluna" style={{ ...inputStyle, flex: 1, padding: '8px 10px', fontSize: 13.5 }} {...inputHandlers} />
+            {columns.length > 1 && (
+              <button type="button" onClick={() => removeCol(idx)} style={{ background: 'none', border: 'none', color: colors.subtle, cursor: 'pointer', padding: 4, flexShrink: 0 }}><X size={15} /></button>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+            <select value={col.type} onChange={e => setCol(idx, { type: e.target.value })} style={{ ...inputStyle, flex: '1 1 110px', padding: '8px 10px', fontSize: 13.5 }}>
+              {ProjectDb.COLUMN_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </select>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: colors.muted, flexShrink: 0, whiteSpace: 'nowrap' }}>
+              <input type="checkbox" checked={!!col.required} onChange={e => setCol(idx, { required: e.target.checked })} /> obrigatório
+            </label>
+          </div>
+        </div>
+      ))}
+    </>
+  )
+}
+
+function EditColumnsForm({ project, table, onSaved, onCancel }) {
+  const [columns, setColumns] = useState(table.columns.map(c => ({ ...c })))
+  const [saving, setSaving] = useState(false)
+  const [err, setErr] = useState(null)
+
+  function setCol(idx, patch) {
+    setColumns(cols => cols.map((c, i) => i === idx ? { ...c, ...patch } : c))
+  }
+  function addCol() { setColumns(cols => [...cols, { name: '', type: 'text', required: false }]) }
+  function removeCol(idx) { setColumns(cols => cols.filter((_, i) => i !== idx)) }
+
+  async function handleSave() {
+    setErr(null)
+    const cleanCols = columns
+      .map(c => ({ ...c, name: ProjectDb.slugifyTableName(c.name) }))
+      .filter(c => c.name)
+    if (!cleanCols.length) { setErr('A tabela precisa de pelo menos uma coluna.'); return }
+    const names = cleanCols.map(c => c.name)
+    if (new Set(names).size !== names.length) { setErr('Não pode haver duas colunas com o mesmo nome.'); return }
+    setSaving(true)
+    try {
+      await ProjectDb.updateTableColumns(project.id, table.id, cleanCols)
+      onSaved()
+    } catch (e) {
+      setErr(e.message)
+    }
+    setSaving(false)
+  }
+
+  return (
+    <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 10, padding: 12, marginBottom: 14 }}>
+      {/* Avisar antes de confundir alguém que apague uma coluna e os dados
+          dessa coluna "desapareçam" das linhas já guardadas — na verdade
+          ficam guardados, só deixam de aparecer. */}
+      <p style={{ margin: '0 0 10px', fontSize: 12, color: colors.subtle, lineHeight: 1.5 }}>
+        Se removeres ou renomeares uma coluna, os dados que já lá estavam ficam guardados mas deixam de aparecer nas linhas.
+      </p>
+      <ColumnsEditor columns={columns} setCol={setCol} removeCol={removeCol} />
+      <button type="button" onClick={addCol} style={{ background: 'none', border: 'none', color: colors.blue, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', padding: 0, fontFamily: 'inherit', marginBottom: 12, display: 'block' }}>
+        + Adicionar coluna
+      </button>
+
+      {err && <p style={{ margin: '0 0 10px', fontSize: 12.5, color: colors.red }}>{err}</p>}
+
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button type="button" onClick={handleSave} disabled={saving} style={{ background: colors.blue, color: '#fff', border: 'none', borderRadius: 7, padding: '7px 14px', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: saving ? 0.7 : 1 }}>
+          {saving ? 'A guardar…' : 'Guardar colunas'}
+        </button>
+        <button type="button" onClick={onCancel} style={{ background: 'none', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 7, padding: '7px 14px', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+          Cancelar
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function DataTableCard({ project, table, expanded, onToggleExpand, onChanged }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [editingColumns, setEditingColumns] = useState(false)
   const [busy, setBusy] = useState(false)
 
   async function handleTogglePublic() {
@@ -2047,20 +2138,36 @@ function DataTableCard({ project, table, expanded, onToggleExpand, onChanged }) 
               do Gustavo depois de criar uma tabela e não conseguir ver o
               que lá tinha posto sem abrir o formulário de novo. */}
           <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: colors.subtle, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 }}>Colunas</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {table.columns.map(c => (
-                <span key={c.name} style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 5,
-                  background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 7,
-                  padding: '4px 9px', fontSize: 12,
-                }}>
-                  <code style={{ color: colors.text, fontWeight: 600 }}>{c.name}</code>
-                  <span style={{ color: colors.subtle }}>{ProjectDb.COLUMN_TYPES.find(t => t.value === c.type)?.label || c.type}</span>
-                  {c.required && <span style={{ color: colors.blue, fontWeight: 700 }}>*</span>}
-                </span>
-              ))}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: colors.subtle, textTransform: 'uppercase', letterSpacing: 0.6 }}>Colunas</div>
+              {!editingColumns && (
+                <button type="button" onClick={() => setEditingColumns(true)} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', color: colors.blue, fontSize: 11.5, fontWeight: 600, cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}>
+                  <Pencil size={11} /> Editar colunas
+                </button>
+              )}
             </div>
+            {editingColumns ? (
+              <EditColumnsForm
+                project={project}
+                table={table}
+                onSaved={() => { setEditingColumns(false); onChanged() }}
+                onCancel={() => setEditingColumns(false)}
+              />
+            ) : (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {table.columns.map(c => (
+                  <span key={c.name} style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                    background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 7,
+                    padding: '4px 9px', fontSize: 12,
+                  }}>
+                    <code style={{ color: colors.text, fontWeight: 600 }}>{c.name}</code>
+                    <span style={{ color: colors.subtle }}>{ProjectDb.COLUMN_TYPES.find(t => t.value === c.type)?.label || c.type}</span>
+                    {c.required && <span style={{ color: colors.blue, fontWeight: 700 }}>*</span>}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           <RowsPanel project={project} table={table} onChanged={onChanged} />
@@ -2097,11 +2204,11 @@ function DataTableCard({ project, table, expanded, onToggleExpand, onChanged }) 
 
 function RowsPanel({ project, table, onChanged }) {
   const [rows, setRows] = useState(null)
-  const [showForm, setShowForm] = useState(false)
-  // null = a criar linha nova; um id = a editar essa linha existente.
-  const [editingId, setEditingId] = useState(null)
-  const [form, setForm] = useState({})
-  const [saving, setSaving] = useState(false)
+  // Rascunho da linha nova em baixo da grelha — só vai para o servidor
+  // quando tem pelo menos um campo preenchido e se clica em guardar/Enter
+  // na última célula, para não martelar a API com linhas vazias a cada clique.
+  const [draft, setDraft] = useState({})
+  const [savingRowId, setSavingRowId] = useState(null)
   const [err, setErr] = useState(null)
 
   async function load() {
@@ -2112,28 +2219,34 @@ function RowsPanel({ project, table, onChanged }) {
   }
   useEffect(() => { load() }, [table.id])
 
-  function openNewForm() {
-    setEditingId(null); setForm({}); setErr(null); setShowForm(true)
-  }
-  function openEditForm(row) {
-    setEditingId(row.id); setForm({ ...row.data }); setErr(null); setShowForm(true)
-  }
-
-  async function handleSave() {
-    setErr(null); setSaving(true)
+  async function handleCellCommit(row, colName, value) {
+    if (row.data[colName] === value || (!row.data[colName] && !value)) return
+    setErr(null); setSavingRowId(row.id)
     try {
-      if (editingId) await ProjectDb.updateRow(project.id, table.id, editingId, form)
-      else await ProjectDb.insertRow(project.id, table.id, form)
-      setForm({}); setShowForm(false); setEditingId(null)
+      await ProjectDb.updateRow(project.id, table.id, row.id, { [colName]: value })
       await load(); onChanged()
     } catch (e) { setErr(e.message) }
-    setSaving(false)
+    setSavingRowId(null)
+  }
+
+  function hasDraftContent() {
+    return table.columns.some(c => draft[c.name] !== undefined && draft[c.name] !== '')
+  }
+
+  async function handleSaveDraft() {
+    if (!hasDraftContent()) return
+    setErr(null); setSavingRowId('draft')
+    try {
+      await ProjectDb.insertRow(project.id, table.id, draft)
+      setDraft({})
+      await load(); onChanged()
+    } catch (e) { setErr(e.message) }
+    setSavingRowId(null)
   }
 
   async function handleDeleteRow(rowId) {
     try {
       await ProjectDb.deleteRow(project.id, table.id, rowId)
-      if (editingId === rowId) { setShowForm(false); setEditingId(null) }
       await load(); onChanged()
     } catch {}
   }
@@ -2191,90 +2304,97 @@ function RowsPanel({ project, table, onChanged }) {
 
   if (rows === null) return <p style={{ fontSize: 12.5, color: colors.subtle, margin: 0 }}>A carregar linhas…</p>
 
-  // Nomes de coluna como cabeçalho, não só os valores em fila — para
-  // parecer uma app com dados a sério, não uma lista de debug.
+  const cellStyle = { padding: '8px 10px', fontSize: 12.5, color: colors.text, borderBottom: `1px solid ${colors.border}`, borderRight: `1px solid ${colors.border}`, verticalAlign: 'middle' }
+  const cellInputStyle = { width: '100%', border: 'none', background: 'transparent', color: colors.text, fontSize: 12.5, fontFamily: 'inherit', padding: '4px 5px', borderRadius: 5, outline: 'none' }
+
+  // Grelha estilo Excel: cabeçalho destacado, linhas com divisórias verticais
+  // e horizontais (sem isso parecia uma lista corrida, difícil de ler célula
+  // a célula), e a célula em edição ganha fundo e contorno ao ganhar foco.
   return (
     <div>
-      {rows.length === 0 ? (
-        <p style={{ fontSize: 12.5, color: colors.subtle, margin: '0 0 12px' }}>Ainda sem dados nesta tabela.</p>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
-          {rows.map(r => (
-            <div
-              key={r.id}
-              onClick={() => openEditForm(r)}
-              style={{ display: 'flex', alignItems: 'center', gap: 10, background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 8, padding: '8px 10px', cursor: 'pointer' }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = colors.borderBright}
-              onMouseLeave={e => e.currentTarget.style.borderColor = colors.border}
-            >
-              <div style={{ flex: 1, minWidth: 0, display: 'flex', flexWrap: 'wrap', gap: '2px 14px' }}>
-                {table.columns.map(c => {
-                  const v = r.data[c.name]
-                  if (v === undefined || v === '') return null
-                  return (
-                    <span key={c.name} style={{ fontSize: 12.5, color: colors.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 220 }}>
-                      <span style={{ color: colors.subtle }}>{c.name}: </span>
-                      {typeof v === 'boolean' ? (v ? 'Sim' : 'Não') : String(v)}
-                    </span>
-                  )
-                })}
-              </div>
-              <Pencil size={12} color={colors.subtle} style={{ flexShrink: 0 }} />
-              <button type="button" onClick={e => { e.stopPropagation(); handleDeleteRow(r.id) }} style={{ background: 'none', border: 'none', color: colors.subtle, cursor: 'pointer', padding: 2, flexShrink: 0 }}><Trash2 size={13} /></button>
-            </div>
-          ))}
-        </div>
-      )}
+      <style>{`
+        .db-grid input:focus { background: var(--color-glass-hover); box-shadow: inset 0 0 0 1.5px ${colors.blue}; }
+        .db-grid tbody tr:not(.db-grid-draft):hover { background: var(--color-glass); }
+      `}</style>
+      <div className="db-grid" style={{ overflowX: 'auto', border: `1px solid ${colors.border}`, borderRadius: 8, marginBottom: 10 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: table.columns.length * 130 + 40 }}>
+          <thead>
+            <tr style={{ background: colors.card }}>
+              {table.columns.map(c => (
+                <th key={c.name} style={{ padding: '9px 10px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: colors.text, textTransform: 'uppercase', letterSpacing: 0.4, borderBottom: `1px solid ${colors.borderBright}`, borderRight: `1px solid ${colors.border}`, whiteSpace: 'nowrap' }}>
+                  {c.name}{c.required && ' *'}
+                </th>
+              ))}
+              <th style={{ width: 32, borderBottom: `1px solid ${colors.borderBright}` }} />
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(r => (
+              <tr key={r.id} style={{ background: savingRowId === r.id ? 'var(--color-glass)' : 'transparent' }}>
+                {table.columns.map(c => (
+                  <td key={c.name} style={cellStyle}>
+                    {c.type === 'boolean' ? (
+                      <input type="checkbox" checked={!!r.data[c.name]} onChange={e => handleCellCommit(r, c.name, e.target.checked)} />
+                    ) : (
+                      <input
+                        type={c.type === 'number' ? 'number' : c.type === 'date' ? 'date' : 'text'}
+                        defaultValue={r.data[c.name] ?? ''}
+                        key={`${r.id}-${c.name}-${r.data[c.name]}`}
+                        onBlur={e => handleCellCommit(r, c.name, e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') e.target.blur() }}
+                        style={cellInputStyle}
+                      />
+                    )}
+                  </td>
+                ))}
+                <td style={{ ...cellStyle, borderRight: 'none', textAlign: 'center' }}>
+                  <button type="button" onClick={() => handleDeleteRow(r.id)} style={{ background: 'none', border: 'none', color: colors.subtle, cursor: 'pointer', padding: 2 }}><Trash2 size={13} /></button>
+                </td>
+              </tr>
+            ))}
+            {/* Linha de rascunho sempre visível no fim, com fundo próprio
+                para se distinguir claramente das linhas já guardadas —
+                escreve-se nela como numa folha de cálculo e só vai para o
+                servidor quando tiver pelo menos um valor. */}
+            <tr className="db-grid-draft" style={{ background: 'var(--color-glass)' }}>
+              {table.columns.map((c, idx) => (
+                <td key={c.name} style={{ ...cellStyle, borderBottom: 'none' }}>
+                  {c.type === 'boolean' ? (
+                    <input type="checkbox" checked={!!draft[c.name]} onChange={e => setDraft(d => ({ ...d, [c.name]: e.target.checked }))} />
+                  ) : (
+                    <input
+                      type={c.type === 'number' ? 'number' : c.type === 'date' ? 'date' : 'text'}
+                      value={draft[c.name] ?? ''}
+                      placeholder={idx === 0 ? '+ nova linha' : ''}
+                      onChange={e => setDraft(d => ({ ...d, [c.name]: e.target.value }))}
+                      onKeyDown={e => { if (e.key === 'Enter') handleSaveDraft() }}
+                      onBlur={() => { if (hasDraftContent()) handleSaveDraft() }}
+                      style={{ ...cellInputStyle, color: colors.subtle }}
+                    />
+                  )}
+                </td>
+              ))}
+              <td style={{ ...cellStyle, borderBottom: 'none', borderRight: 'none', textAlign: 'center' }}>
+                {savingRowId === 'draft' && <span style={{ fontSize: 10, color: colors.subtle }}>…</span>}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-      {showForm ? (
-        <div style={{ background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 8, padding: 12 }}>
-          {editingId && (
-            <p style={{ margin: '0 0 10px', fontSize: 11.5, color: colors.subtle, fontWeight: 600 }}>A editar linha existente</p>
-          )}
-          {table.columns.map(c => (
-            <div key={c.name} style={{ marginBottom: 8 }}>
-              <label style={{ fontSize: 10.5, fontWeight: 600, color: colors.subtle, textTransform: 'uppercase', letterSpacing: 0.4, display: 'block', marginBottom: 4 }}>
-                {c.name}{c.required && ' *'}
-              </label>
-              {c.type === 'boolean' ? (
-                <input type="checkbox" checked={!!form[c.name]} onChange={e => setForm(f => ({ ...f, [c.name]: e.target.checked }))} />
-              ) : (
-                <input
-                  type={c.type === 'number' ? 'number' : c.type === 'date' ? 'date' : 'text'}
-                  value={form[c.name] ?? ''}
-                  onChange={e => setForm(f => ({ ...f, [c.name]: e.target.value }))}
-                  style={{ ...inputStyle, padding: '7px 10px', fontSize: 13 }}
-                  {...inputHandlers}
-                />
-              )}
-            </div>
-          ))}
-          {err && <p style={{ margin: '0 0 8px', fontSize: 12, color: colors.red }}>{err}</p>}
-          <div style={{ display: 'flex', gap: 6 }}>
-            <button type="button" onClick={handleSave} disabled={saving} style={{ background: colors.blue, color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-              {saving ? 'A guardar…' : editingId ? 'Guardar alterações' : 'Guardar linha'}
-            </button>
-            <button type="button" onClick={() => { setShowForm(false); setEditingId(null); setErr(null) }} style={{ background: 'none', border: `1px solid ${colors.border}`, borderRadius: 6, padding: '6px 14px', fontSize: 12.5, fontWeight: 600, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit' }}>
-              Cancelar
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-          <button type="button" onClick={openNewForm} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: `1px dashed ${colors.border}`, borderRadius: 7, padding: '7px 12px', fontSize: 12.5, fontWeight: 600, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit' }}>
-            <PlusCircle size={13} /> Adicionar linha
+      {err && <p style={{ margin: '0 0 10px', fontSize: 12, color: colors.red }}>{err}</p>}
+
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <button type="button" onClick={() => fileInputRef.current?.click()} disabled={importing} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: `1px solid ${colors.border}`, borderRadius: 7, padding: '7px 12px', fontSize: 12.5, fontWeight: 600, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit' }}>
+          <Upload size={13} /> {importing ? 'A importar…' : 'Importar CSV'}
+        </button>
+        <input ref={fileInputRef} type="file" accept=".csv,text/csv" onChange={handleImportCsv} style={{ display: 'none' }} />
+        {rows.length > 0 && (
+          <button type="button" onClick={handleExportCsv} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: `1px solid ${colors.border}`, borderRadius: 7, padding: '7px 12px', fontSize: 12.5, fontWeight: 600, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit' }}>
+            <Download size={13} /> Exportar CSV
           </button>
-          <button type="button" onClick={() => fileInputRef.current?.click()} disabled={importing} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: `1px solid ${colors.border}`, borderRadius: 7, padding: '7px 12px', fontSize: 12.5, fontWeight: 600, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit' }}>
-            <Upload size={13} /> {importing ? 'A importar…' : 'Importar CSV'}
-          </button>
-          <input ref={fileInputRef} type="file" accept=".csv,text/csv" onChange={handleImportCsv} style={{ display: 'none' }} />
-          {rows.length > 0 && (
-            <button type="button" onClick={handleExportCsv} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: `1px solid ${colors.border}`, borderRadius: 7, padding: '7px 12px', fontSize: 12.5, fontWeight: 600, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit' }}>
-              <Download size={13} /> Exportar CSV
-            </button>
-          )}
-        </div>
-      )}
+        )}
+      </div>
       {importMsg && <p style={{ margin: '8px 0 0', fontSize: 12, color: colors.subtle }}>{importMsg}</p>}
     </div>
   )

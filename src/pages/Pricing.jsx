@@ -134,6 +134,10 @@ const PLANS = [
 /* Tabela comparativa — três cards lado a lado obrigam a decorar o que muda
    de um para o outro. Uma tabela deixa comparar linha a linha de relance.
    A conta escola fica fora: não é self-serve, é vendida à instituição. */
+/* Os números de utilizações de IA (msgs, x vezes) saíram daqui. Viviam
+   também em cada cartão, repetidos, e só confundiam numa página de vendas.
+   Ficam só o que é capacidade real (armazenamento, projetos) e o que é
+   uma funcionalidade a mais, não uma quantidade. */
 const COMPARE_ROWS = [
   { label: 'Ficheiros de prova', free: false, plus: '250MB', pro: '1GB' },
   { label: 'Projetos', free: '3', plus: '15', pro: 'Ilimitados' },
@@ -295,7 +299,7 @@ export default function Pricing() {
             className={`pricing-period-btn${annual ? ' is-active' : ''}`}
             onClick={() => setAnnual(true)}
           >
-            Anual <span className="pricing-period-badge">2 meses grátis</span>
+            Anual
           </button>
         </div>
 
@@ -320,7 +324,10 @@ export default function Pricing() {
                   {plan.period && <span className="pricing-period">{annual && plan.priceAnnual ? '/ano' : plan.period}</span>}
                 </div>
                 {annual && plan.annualEquivalent ? (
-                  <p className="pricing-annual-note">equivale a {plan.annualEquivalent}</p>
+                  <p className="pricing-annual-note pricing-annual-note--with-badge">
+                    equivale a {plan.annualEquivalent}
+                    <span className="pricing-period-badge pricing-period-badge--card">2 meses grátis</span>
+                  </p>
                 ) : plan.weeklyNote ? (
                   /* Ao dia os cêntimos não dizem nada a ninguém; à semana
                      já se compara com alguma coisa real. É a mesma conta,

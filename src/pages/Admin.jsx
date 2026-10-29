@@ -14,6 +14,7 @@ import { StarIcon as Star } from '@solar-icons/react/bold/star'
 import { ShieldCheckIcon as Shield } from '@solar-icons/react/bold/shield-check'
 import { Chart2Icon as BarChart2 } from '@solar-icons/react/bold/chart-2'
 import { MapPointIcon as MapPin } from '@solar-icons/react/bold/map-point'
+import { PhoneIcon as Phone } from '@solar-icons/react/bold/phone'
 import { CalendarIcon as Calendar } from '@solar-icons/react/bold/calendar'
 import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
@@ -57,7 +58,7 @@ const C = {
 // authenticated only has column-level SELECT grant on these (no email — that
 // comes from admin_get_users() instead) since migration 033; select('*')
 // fails outright and silently returns no rows.
-const PROFILE_COLUMNS = 'id, username, total_xp, created_at, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, project_draft, signup_country, signup_city, signup_referrer, signup_utm_source, last_active_at, last_action, plan, account_type, organization_id, stripe_customer_id, occupation'
+const PROFILE_COLUMNS = 'id, username, total_xp, created_at, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, project_draft, signup_country, signup_city, signup_referrer, signup_utm_source, last_active_at, last_action, plan, account_type, organization_id, stripe_customer_id, occupation, phone, heard_from, intended_use, pap_timing'
 
 const FETCH_PAGE_SIZE = 1000
 
@@ -1465,6 +1466,64 @@ function ProjectsTab({ projects, users, onDeleteProject }) {
 }
 
 // ─── SIGNUPS TAB ────────────────────────────────────────────
+const HEARD_FROM_LABELS = { tiktok: 'TikTok', instagram: 'Instagram', boca_a_boca: 'Boca a boca', outro: 'Outro' }
+const INTENT_LABELS = {
+  pap: 'PAP / projeto final', trabalho_escola: 'Trabalhos', projetos_pessoais: 'Projetos pessoais', explorar: 'A explorar',
+  organizar: 'Organizar trabalho', portfolio: 'Portefólio', freelance: 'Freelance',
+}
+const PAP_TIMING_LABELS = { este_ano: 'Este ano letivo', proximo_ano: 'Só para o ano', nao_sei: 'Ainda não sabe' }
+
+function OnboardingSummary({ users }) {
+  const withAnswers = users.filter(u => u.heard_from || u.occupation || (u.intended_use && u.intended_use.length))
+  const total = withAnswers.length || 1
+
+  const heardFromCounts = {}
+  const occupationCounts = {}
+  const papTimingCounts = {}
+  withAnswers.forEach(u => {
+    if (u.heard_from) heardFromCounts[u.heard_from] = (heardFromCounts[u.heard_from] || 0) + 1
+    if (u.occupation) occupationCounts[u.occupation] = (occupationCounts[u.occupation] || 0) + 1
+    if (u.pap_timing) papTimingCounts[u.pap_timing] = (papTimingCounts[u.pap_timing] || 0) + 1
+  })
+
+  const colors = [C.blue, C.green, C.purple, C.yellow, C.red]
+
+  return (
+    <div style={{
+      display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16,
+      padding: 16, background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, marginBottom: 16,
+    }}>
+      <div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', marginBottom: 10 }}>Como ouviram falar</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {Object.entries(heardFromCounts).sort((a, b) => b[1] - a[1]).map(([k, v], i) => (
+            <MiniBar key={k} label={HEARD_FROM_LABELS[k] || k} value={v} total={total} color={colors[i % colors.length]} />
+          ))}
+          {Object.keys(heardFromCounts).length === 0 && <span style={{ fontSize: 12, color: C.subtle }}>Sem respostas ainda</span>}
+        </div>
+      </div>
+      <div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', marginBottom: 10 }}>Ocupação</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {Object.entries(occupationCounts).sort((a, b) => b[1] - a[1]).map(([k, v], i) => (
+            <MiniBar key={k} label={k} value={v} total={total} color={colors[i % colors.length]} />
+          ))}
+          {Object.keys(occupationCounts).length === 0 && <span style={{ fontSize: 12, color: C.subtle }}>Sem respostas ainda</span>}
+        </div>
+      </div>
+      <div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', marginBottom: 10 }}>Quando é a PAP</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {Object.entries(papTimingCounts).sort((a, b) => b[1] - a[1]).map(([k, v], i) => (
+            <MiniBar key={k} label={PAP_TIMING_LABELS[k] || k} value={v} total={total} color={colors[i % colors.length]} />
+          ))}
+          {Object.keys(papTimingCounts).length === 0 && <span style={{ fontSize: 12, color: C.subtle }}>Sem respostas ainda</span>}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function SignupsTab({ signups, users }) {
   const [filter, setFilter] = useState('')
   const [view, setView] = useState('waitlist')
@@ -1513,6 +1572,8 @@ function SignupsTab({ signups, users }) {
         <span style={{ fontSize: 12, color: C.muted }}>{filtered.length} resultado{filtered.length !== 1 ? 's' : ''}</span>
       </div>
 
+      {view === 'registered' && <OnboardingSummary users={users} />}
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {filtered.map((s, i) => {
           const date = new Date(s.created_at)
@@ -1552,12 +1613,34 @@ function SignupsTab({ signups, users }) {
                   {isNew && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: C.blueSoft, color: C.blue }}>novo</span>}
                 </div>
                 <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{s.email}</div>
+                {view === 'registered' && (s.heard_from || s.occupation || (s.intended_use && s.intended_use.length) || s.pap_timing) && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
+                    {s.heard_from && (
+                      <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 6, background: C.blueSoft, color: C.blue }}>{HEARD_FROM_LABELS[s.heard_from] || s.heard_from}</span>
+                    )}
+                    {s.occupation && (
+                      <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 6, background: C.bgAlt, color: C.muted }}>{s.occupation}</span>
+                    )}
+                    {(s.intended_use || []).map(id => (
+                      <span key={id} style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 6, background: C.bgAlt, color: C.muted }}>{INTENT_LABELS[id] || id}</span>
+                    ))}
+                    {s.pap_timing && (
+                      <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 6, background: C.bgAlt, color: C.muted }}>{PAP_TIMING_LABELS[s.pap_timing] || s.pap_timing}</span>
+                    )}
+                  </div>
+                )}
               </div>
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
                 {(country || city) && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end', marginBottom: 2 }}>
                     <MapPin size={11} color={C.muted} />
                     <span style={{ fontSize: 12, color: C.muted }}>{[city, country].filter(Boolean).join(', ')}</span>
+                  </div>
+                )}
+                {view === 'registered' && s.phone && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end', marginBottom: 2 }}>
+                    <Phone size={11} color={C.muted} />
+                    <span style={{ fontSize: 12, color: C.muted }}>{s.phone}</span>
                   </div>
                 )}
                 {referrer && (

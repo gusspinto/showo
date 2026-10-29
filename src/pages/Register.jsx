@@ -427,25 +427,35 @@ export default function Register() {
     const { data, error: err } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: {
-        full_name: name.trim(),
-        company: needsCompany ? company.trim() : null,
-        school: needsSchool ? school.trim() : null,
-        pending_occupation: needsOccupation ? occupation : null,
-        account_type: needsClassCode ? 'school' : 'individual',
-        pending_class_code: needsClassCode ? classCode.trim() : null,
-        pending_invite_code: needsInviteCode ? inviteCode.trim() : null,
-        pending_school: needsSchool ? school.trim() : null,
-        pending_partner_token: isPartnerFlow ? partnerToken : null,
-        pending_phone: phone || null,
-        // Capturados já aqui (não depois) porque sobrevivem em user_metadata
-        // mesmo que a confirmação de email demore. Lidos do localStorage
-        // (gravado na primeira página vista, em App.jsx) e não de
-        // document.referrer/da URL atual — quem navegou dentro do Showo antes
-        // de chegar aqui já perdeu os dois.
-        pending_signup_referrer: localStorage.getItem('showo_referrer') || document.referrer || 'direct',
-        pending_signup_utm_source: localStorage.getItem('showo_utm_source') || new URLSearchParams(window.location.search).get('utm_source') || null,
-      } },
+      options: {
+        // Sem isto, quem confirma clicando no link do email (não no mesmo
+        // separador onde ficou à espera) caía no site URL por omissão ("/"),
+        // que manda logo para /dashboard sem olhar a projetos — ao contrário
+        // de quem entra por Google, que passa sempre por /welcome e vai para
+        // /novo se ainda não tiver nenhum. /welcome funciona para qualquer
+        // conta nova, não só Google: sem intent nem flag de role por
+        // escolher, segue direto para goToDashboardOrNovo().
+        emailRedirectTo: `${window.location.origin}/welcome`,
+        data: {
+          full_name: name.trim(),
+          company: needsCompany ? company.trim() : null,
+          school: needsSchool ? school.trim() : null,
+          pending_occupation: needsOccupation ? occupation : null,
+          account_type: needsClassCode ? 'school' : 'individual',
+          pending_class_code: needsClassCode ? classCode.trim() : null,
+          pending_invite_code: needsInviteCode ? inviteCode.trim() : null,
+          pending_school: needsSchool ? school.trim() : null,
+          pending_partner_token: isPartnerFlow ? partnerToken : null,
+          pending_phone: phone || null,
+          // Capturados já aqui (não depois) porque sobrevivem em user_metadata
+          // mesmo que a confirmação de email demore. Lidos do localStorage
+          // (gravado na primeira página vista, em App.jsx) e não de
+          // document.referrer/da URL atual — quem navegou dentro do Showo antes
+          // de chegar aqui já perdeu os dois.
+          pending_signup_referrer: localStorage.getItem('showo_referrer') || document.referrer || 'direct',
+          pending_signup_utm_source: localStorage.getItem('showo_utm_source') || new URLSearchParams(window.location.search).get('utm_source') || null,
+        },
+      },
     })
     if (err) {
       setLoading(false)
