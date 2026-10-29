@@ -370,7 +370,7 @@ function buildDay8({ firstName, unsubscribeUrl, code, dia, daysToDefense, isProf
       html: wrapEmail(
         greeting(firstName) +
         urgencyBand(dia, code, daysToDefense) +
-        headline('Alguém vai decidir confiar em ti antes de falares') +
+        headline('Alguém vai decidir confiar em ti antes de sequer falares') +
         paragraph('Um cliente, um recrutador, um colega, decide muito antes da primeira reunião, só a partir do que encontra sobre ti online. Um perfil organizado faz essa decisão a teu favor, sem teres de estar presente.') +
         paragraph(`Com ${esc(code)}: 4,49€/mês em vez de 8,99€ no Plus, durante 6 meses.`, true) +
         cta(`${APP}/pricing`, 'Quero que decidam a meu favor'),
@@ -501,7 +501,7 @@ function buildDay12({ firstName, unsubscribeUrl, code, dia, daysToDefense }: Day
       greeting(firstName) +
       urgencyBand(dia, code, daysToDefense) +
       headline('Ainda estás a pensar?') +
-      paragraph(`${esc(code)} dá 4,49€/mês durante 6 meses no Plus, em vez de 8,99€.`) +
+      paragraph(`${esc(code)} dá 4,49€/mês durante 6 meses no Plus.`) +
       paragraph('Se estavas à espera do momento certo, é este.', true) +
       cta(`${APP}/pricing`, 'Usar o desconto antes que acabe'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
