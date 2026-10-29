@@ -78,7 +78,20 @@ async function notifyLimitExhausted(supabase: any, userId: string, feature: stri
     headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ from: 'Showo <hello@showo.pt>', to: email, subject: 'Coach IA esgotou este mês', html }),
   })
-  if (!res.ok) console.error('[planLimit] Resend error:', await res.text())
+  if (!res.ok) { console.error('[planLimit] Resend error:', await res.text()); return }
+
+  // Sem isto, este email fica invisível em qualquer análise de aberturas/
+  // cliques feita a partir de email_sends, mesmo disparando normalmente
+  // (achado de 2026-10-29, a rever campanhas com o Maia).
+  const { id: resendId } = await res.json()
+  if (resendId) {
+    await supabase.from('email_sends').insert({
+      user_id: userId,
+      email_type: `limit_exhausted_${feature}`,
+      resend_id: resendId,
+      to_email: email,
+    })
+  }
 }
 
 async function checkPlanLimit(feature: string, userId: string): Promise<{ allowed: boolean; remaining: number; limit: number; used: number } | null> {
@@ -119,20 +132,30 @@ LINGUA E ESTILO (aplica a TODO o texto que gerares):
 - Tom: direto, concreto, humano. Como um colega experiente, nao como um relatorio ou um assistente corporativo.
 - Prefere frases curtas. Maximo 2 subordinadas por frase.`
 
-const SYSTEM = `És um assistente pessoal para estudantes portugueses que estão a pensar, planear ou melhorar os seus projetos académicos — PAPs, estágios, projetos universitários e pessoais — na plataforma Showo.
+function evaluatorLine(profile: { occupation?: string; organization_id?: string } | undefined): string {
+  const isStudentLike = !!profile?.organization_id
+    || profile?.occupation === 'Aluno / A estudar'
+    || profile?.occupation === 'Estagiário(a)'
+  return isStudentLike
+    ? 'quem avalia isto é um professor ou a pessoa responsável por ti, não eu'
+    : 'quem vai decidir se confia em ti por causa disto, seja para te contratar ou trabalhar contigo, não eu'
+}
 
-O teu papel é ajudar com o que vier: escolher um tema de PAP, pensar numa ideia, decidir como estruturar um projeto, ou qualquer dúvida sobre o percurso do estudante. Esta conversa não está ligada a nenhum projeto específico (se o estudante já tiver projetos criados no Showo, podes perguntar sobre eles, mas não tens os dados deles aqui).
+const SYSTEM = (profile?: { occupation?: string; organization_id?: string }) => `És um assistente pessoal para pessoas portuguesas que estão a pensar, planear ou melhorar os seus projetos, sejam PAPs, estágios, projetos universitários, freelance ou profissionais, na plataforma Showo.
+
+O teu papel é ajudar com o que vier: escolher um tema de projeto, pensar numa ideia, decidir como estruturar um projeto, ou qualquer dúvida sobre o percurso da pessoa. Esta conversa não está ligada a nenhum projeto específico (se a pessoa já tiver projetos criados no Showo, podes perguntar sobre eles, mas não tens os dados deles aqui).
 
 REGRAS:
 - Responde sempre em português de Portugal (PT-PT). Usa vocabulário europeu: "ecrã" (não "tela"), "utilizador" (não "usuário"), "aplicação/app" (não "aplicativo").
-- Sê direto, humano e concreto — como um colega mais experiente que quer genuinamente ajudar, não como um assistente corporativo.
+- Sê direto, humano e concreto, como um colega mais experiente que quer genuinamente ajudar, não como um assistente corporativo.
 - Respostas curtas: máximo 3 parágrafos ou uma lista de 4-5 itens. Nunca escrevas paredes de texto.
-- Quando o estudante pede ideias de tema, pergunta primeiro a área/curso e o que já gosta, antes de sugerir, para não dares ideias genéricas desligadas da realidade dele.
-- Quando sugerires temas, dá sempre 2-3 direções claramente diferentes entre si (não variações da mesma ideia), cada uma com 1-2 frases de porque faz sentido para o perfil dele. No fim, pergunta se alguma lhe diz algo e deixa claro que, se nenhuma servir, continuas a explorar outras direções com ele — não finjas que a conversa acabou aí.
-- Nunca valides a ideia do próprio estudante como "boa" ou "ótima" sem a avaliares a sério primeiro (viabilidade, se é específica, se tem a ver com a área). Elogio vazio não ajuda ninguém a passar no júri.
+- Quando a pessoa pede ideias de tema, pergunta primeiro a área/curso/profissão e o que já gosta, antes de sugerir, para não dares ideias genéricas desligadas da realidade dela.
+- Quando sugerires temas, dá sempre 2-3 direções claramente diferentes entre si (não variações da mesma ideia), cada uma com 1-2 frases de porque faz sentido para o perfil dela. No fim, pergunta se alguma lhe diz algo e deixa claro que, se nenhuma servir, continuas a explorar outras direções com ela, não finjas que a conversa acabou aí.
+- Nunca valides a ideia da própria pessoa como "boa" ou "ótima" sem a avaliares a sério primeiro (viabilidade, se é específica, se tem a ver com a área). Elogio vazio não ajuda ninguém.
+- Quando a pessoa pede que faças o trabalho todo por ela sem pensar em nada, só para "ter boa nota", "ficar bem" ou "despachar isto" (ex.: "faz tudo por mim", "cria-me o projeto todo", "escreve isto para eu ter boa nota"): não escrevas o conteúdo completo. Diz diretamente, sem pedir desculpa, que ${evaluatorLine(profile)}, e que é essa parte que tem de ser dela. Usa só essa ideia, sem inventares outros exemplos de quem avalia (nunca acrescentes "professor" por conta própria se não estiver na frase acima). Continua logo a seguir a oferecer ajuda real (uma pergunta concreta, uma direção, um primeiro passo) em vez de só recusar e parar aí. Nunca sejas condescendente nem agressivo, sê direto como um mentor que não deixa ninguém fugir ao trabalho.
 - Nunca inventes factos. Se precisas de informação que não tens, pergunta primeiro, uma pergunta de cada vez.
 - Nunca uses travessões (—) nem expressões genéricas como "de forma eficaz", "no âmbito de", "é fundamental", "aprendi muito".
-- Se o estudante agradecer ou fizer smalltalk, responde brevemente.
+- Se a pessoa agradecer ou fizer smalltalk, responde brevemente.
 ${PTPT_RULES}`
 
 Deno.serve(async (req) => {
@@ -165,7 +188,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { messages = [], message } = await req.json()
+    const { messages = [], message, profile } = await req.json()
 
     if (!message?.trim()) {
       return new Response(JSON.stringify({ error: 'Mensagem vazia.' }), {
@@ -183,7 +206,7 @@ Deno.serve(async (req) => {
     const response = await client.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 1500,
-      system: SYSTEM,
+      system: SYSTEM(profile),
       messages: [...history, { role: 'user', content: message.trim() }],
     })
     logAiCost('coach', 'claude-sonnet-4-6', response.usage, user?.id)

@@ -13,8 +13,10 @@ import { UndoLeftIcon as Undo2 } from '@solar-icons/react/bold/undo-left'
 import { RefreshIcon as Redo2 } from '@solar-icons/react/bold/refresh'
 import { DisketteIcon as Save } from '@solar-icons/react/bold/diskette'
 import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
+import { AltArrowDownIcon as ChevronDown } from '@solar-icons/react/bold/alt-arrow-down'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import { pickFocusProject } from '../lib/focusProject'
 import './DiaryCanvas.css'
 
 const CARD_TYPES = {
@@ -55,6 +57,13 @@ export default function DiaryCanvas() {
   const [selectedId, setSelectedId] = useState(null)
   const [showAddMenu, setShowAddMenu] = useState(false)
 
+  // Seletor de projeto (rota /diario, sem slug): lista dos projetos do
+  // utilizador, projeto ativo (null = diário geral, sem projeto), e o
+  // dropdown, tal como no Coach IA.
+  const [myProjects, setMyProjects] = useState([])
+  const [activeProjectId, setActiveProjectId] = useState(null)
+  const [pickerOpen, setPickerOpen] = useState(false)
+
   const containerRef = useRef(null)
   const worldRef     = useRef(null)
   const transform    = useRef({ x: 0, y: 0, scale: 1 })
@@ -62,6 +71,7 @@ export default function DiaryCanvas() {
   const pinchRef     = useRef(null)
   const activePtrs   = useRef(new Map())
   const saveTimers   = useRef({})
+  const histTimers   = useRef({})
   const zoomLabelRef = useRef(null)
   const dirtyRef     = useRef(new Set())
   const historyRef   = useRef([])   // [{id,x,y,w,h}[]]
@@ -125,33 +135,78 @@ export default function DiaryCanvas() {
     applyTransform()
   }
 
-  // ── Load ─────────────────────────────────────────────────────────────────
+  // ── Load: contexto (projeto da rota /projeto/:slug/diario, ou, na rota
+  // /diario sem slug, a lista de projetos do utilizador + projeto em foco
+  // por omissão, como no Coach IA) ────────────────────────────────────────
   useEffect(() => {
-    if (!user || !slug) return
+    if (!user) return
     let cancelled = false
 
     ;(async () => {
-      const { data: proj } = await supabase
-        .from('projects').select('id, name, preview_style, user_id')
-        .eq('slug', slug).single()
+      if (slug) {
+        const { data: proj } = await supabase
+          .from('projects').select('id, name, preview_style, user_id')
+          .eq('slug', slug).single()
 
-      if (cancelled || !proj) { setLoading(false); return }
-      if (proj.user_id !== user.id) {
-        navigate(`/projeto/${slug}`, { replace: true }); return
+        if (cancelled || !proj) { setLoading(false); return }
+        if (proj.user_id !== user.id) {
+          navigate(`/projeto/${slug}`, { replace: true }); return
+        }
+
+        setProject(proj)
+        setActiveProjectId(proj.id)
+        return
       }
 
-      setProject(proj)
+      const { data: projs } = await supabase
+        .from('projects').select('id, name, is_pap, project_type, defense_date, created_at')
+        .eq('user_id', user.id).eq('entry_kind', 'full')
 
-      const { data: rows } = await supabase
-        .from('diary_canvas_items').select('*')
-        .eq('project_id', proj.id).eq('user_id', user.id)
-        .order('created_at', { ascending: true })
-
-      if (!cancelled) { setItems(rows || []); setLoading(false) }
+      if (cancelled) return
+      setMyProjects(projs || [])
+      const focus = pickFocusProject(projs || [])
+      setProject(focus || null)
+      setActiveProjectId(focus?.id ?? null)
     })()
 
     return () => { cancelled = true }
   }, [slug, user])
+
+  // ── Load: itens do contexto ativo (projeto específico, ou gerais quando
+  // activeProjectId é null) ────────────────────────────────────────────────
+  useEffect(() => {
+    if (!user) return
+    if (slug && !project) return // rota /projeto/:slug/diario ainda a carregar o projeto
+
+    let cancelled = false
+    ;(async () => {
+      const base = supabase.from('diary_canvas_items').select('*').eq('user_id', user.id)
+      const { data: rows } = activeProjectId
+        ? await base.eq('project_id', activeProjectId).order('created_at', { ascending: true })
+        : await base.is('project_id', null).order('created_at', { ascending: true })
+
+      if (!cancelled) {
+        setItems(rows || [])
+        setLoading(false)
+        // Histórico é por contexto (projeto ou geral): ao trocar de projeto
+        // no seletor, o undo/redo de um projeto não deve aplicar-se a outro.
+        // Ponto de partida: o estado tal como veio da BD.
+        historyRef.current = [snapshotFields(rows || [])]
+        histIdxRef.current = 0
+        setHistIdx(0)
+      }
+    })()
+
+    return () => { cancelled = true }
+  }, [activeProjectId, user, slug, project])
+
+  function selectDiaryProject(p) {
+    setPickerOpen(false)
+    if (p?.id === activeProjectId) return
+    setLoading(true)
+    setProject(p || null)
+    setActiveProjectId(p?.id ?? null)
+  }
 
   // Load title font from Google Fonts
   useEffect(() => {
@@ -183,9 +238,20 @@ export default function DiaryCanvas() {
     return () => { flushAll(); window.removeEventListener('beforeunload', flushAll) }
   }, [])
 
-  // ── History helpers ───────────────────────────────────────────────────────
-  function pushHistory() {
-    const snap = itemsRef.current.map(({ id, x, y, w, h }) => ({ id, x, y, w, h }))
+  // ── History helpers ─────────────────────────────────────────────────────
+  // Guarda sempre o estado DEPOIS da edição (não antes): historyRef[0] é o
+  // ponto de partida (carregado do load effect), e cada edição completa
+  // (mover, redimensionar, escrever, criar, apagar) soma uma entrada nova
+  // com o array INTEIRO de itens nesse momento. Undo/redo andam para trás/
+  // frente nesta linha do tempo. Guardar o array inteiro (não só x/y/w/h) é
+  // o que permite que apagar e criar cartões também sejam desfeitos, não só
+  // mover/redimensionar.
+  function snapshotFields(arr) {
+    return arr.map(({ id, type, x, y, w, h, content, color, pinned }) => ({ id, type, x, y, w, h, content, color, pinned }))
+  }
+
+  function pushHistory(nextItems) {
+    const snap = snapshotFields(nextItems)
     historyRef.current = historyRef.current.slice(0, histIdxRef.current + 1)
     historyRef.current.push(snap)
     if (historyRef.current.length > 60) historyRef.current.shift()
@@ -194,11 +260,33 @@ export default function DiaryCanvas() {
   }
 
   function applyHistorySnap(snap) {
-    setItems(prev => prev.map(it => {
-      const s = snap.find(s => s.id === it.id)
-      return s ? { ...it, x: s.x, y: s.y, w: s.w, h: s.h } : it
+    const snapIds = new Set(snap.map(s => s.id))
+    const curItems = itemsRef.current
+    const curIds = new Set(curItems.map(it => it.id))
+
+    // Itens que saem de cena neste ponto da história (undo de um "criar",
+    // ou redo de um "apagar") vs itens que voltam a existir (redo de um
+    // "criar", undo de um "apagar"). Sem isto, undo/redo só mexiam em
+    // posição/tamanho de cartões que já existiam dos dois lados.
+    const toDelete = curItems.filter(it => !snapIds.has(it.id))
+    const toInsert = snap.filter(s => !curIds.has(s.id))
+
+    setItems(snap.map(s => {
+      const cur = curItems.find(it => it.id === s.id)
+      return cur ? { ...cur, ...s } : { ...s, project_id: activeProjectId, user_id: user.id, pinned: s.pinned ?? false, created_at: new Date().toISOString() }
     }))
-    snap.forEach(s => scheduleSave(s.id))
+
+    toDelete.forEach(it => {
+      supabase.from('diary_canvas_items').delete().eq('id', it.id)
+        .then(({ error }) => { if (error) console.error('[diary-canvas] undo delete', error.message) })
+      dirtyRef.current.delete(it.id)
+    })
+    toInsert.forEach(s => {
+      supabase.from('diary_canvas_items')
+        .insert({ id: s.id, project_id: activeProjectId, user_id: user.id, type: s.type, x: s.x, y: s.y, w: s.w, h: s.h, content: s.content, color: s.color, pinned: s.pinned ?? false })
+        .then(({ error }) => { if (error) console.error('[diary-canvas] undo insert', error.message) })
+    })
+    snap.filter(s => curIds.has(s.id)).forEach(s => scheduleSave(s.id))
     snap.forEach(s => {
       const el = worldRef.current?.querySelector(`[data-card-id="${s.id}"]`)
       if (el) { el.style.left = `${s.x}px`; el.style.top = `${s.y}px`; el.style.width = `${s.w}px`; el.style.height = `${s.h}px` }
@@ -296,7 +384,6 @@ export default function DiaryCanvas() {
     e.preventDefault()
     e.stopPropagation()
     setSelectedId(item.id)
-    pushHistory()
     const pos = s2c(e.clientX, e.clientY)
     const ox = pos.x - item.x
     const oy = pos.y - item.y
@@ -315,6 +402,7 @@ export default function DiaryCanvas() {
       const nx = p.x - ox, ny = p.y - oy
       setItems(prev => prev.map(it => it.id === id ? { ...it, x: nx, y: ny } : it))
       scheduleSave(id)
+      pushHistory(itemsRef.current.map(it => it.id === id ? { ...it, x: nx, y: ny } : it))
     }
     window.addEventListener('pointermove', onMove)
     window.addEventListener('pointerup', onUp)
@@ -326,7 +414,6 @@ export default function DiaryCanvas() {
     if (e.button !== 0 && e.pointerType === 'mouse') return
     e.preventDefault()
     e.stopPropagation()
-    pushHistory()
     const pos = s2c(e.clientX, e.clientY)
     const startX = pos.x, startY = pos.y
     const origW = item.w, origH = item.h
@@ -348,6 +435,7 @@ export default function DiaryCanvas() {
       const nh = Math.max(80,  origH + p.y - startY)
       setItems(prev => prev.map(it => it.id === id ? { ...it, w: nw, h: nh } : it))
       scheduleSave(id)
+      pushHistory(itemsRef.current.map(it => it.id === id ? { ...it, w: nw, h: nh } : it))
     }
     window.addEventListener('pointermove', onMove)
     window.addEventListener('pointerup', onUp)
@@ -440,7 +528,7 @@ export default function DiaryCanvas() {
 
   // ── CRUD ─────────────────────────────────────────────────────────────────
   async function addItem(type) {
-    if (!project || !user) return
+    if (!user) return
     setShowAddMenu(false)
     const def = CARD_TYPES[type]
     const rect = containerRef.current.getBoundingClientRect()
@@ -450,10 +538,14 @@ export default function DiaryCanvas() {
 
     const { data } = await supabase
       .from('diary_canvas_items')
-      .insert({ project_id: project.id, user_id: user.id, type, x, y, w: def.w, h: def.h, content: '', color: def.color, pinned: false })
+      .insert({ project_id: activeProjectId, user_id: user.id, type, x, y, w: def.w, h: def.h, content: '', color: def.color, pinned: false })
       .select().single()
 
-    if (data) { setItems(prev => [...prev, data]); setSelectedId(data.id) }
+    if (data) {
+      setItems(prev => [...prev, data])
+      setSelectedId(data.id)
+      pushHistory([...itemsRef.current, data])
+    }
   }
 
   async function deleteItem(id) {
@@ -461,11 +553,21 @@ export default function DiaryCanvas() {
     setItems(prev => prev.filter(it => it.id !== id))
     if (selectedId === id) setSelectedId(null)
     dirtyRef.current.delete(id)
+    pushHistory(itemsRef.current.filter(it => it.id !== id))
   }
 
   function updateContent(id, content) {
     setItems(prev => prev.map(it => it.id === id ? { ...it, content } : it))
     scheduleSave(id)
+    // Debounce próprio, separado do scheduleSave (que só trata de
+    // persistência): cada tecla não pode virar um passo de undo, senão
+    // desfazer uma frase inteira seria letra a letra. Junta o texto todo
+    // escrito de seguida num único passo, só quando a pessoa pára de
+    // escrever.
+    clearTimeout(histTimers.current[id])
+    histTimers.current[id] = setTimeout(() => {
+      pushHistory(itemsRef.current.map(it => it.id === id ? { ...it, content } : it))
+    }, 800)
   }
 
   function scheduleSave(id) {
@@ -490,27 +592,60 @@ export default function DiaryCanvas() {
 
   // ── Render ───────────────────────────────────────────────────────────────
   if (loading) return <div className="dc-loading"><div className="dc-loading-spin" /></div>
-  if (!project) return null
+  if (slug && !project) return null
 
-  const fontKey = project.preview_style?.titleFont
+  const fontKey = project?.preview_style?.titleFont
   const titleFontCss = fontKey ? (TITLE_FONT_MAP[fontKey]?.css || 'var(--font-heading)') : 'var(--font-heading)'
+
+  const picker = !slug && myProjects.length > 0 && (
+    <div style={{ position: 'relative', pointerEvents: 'auto' }}>
+      <button
+        onClick={() => setPickerOpen(v => !v)}
+        className="dc-tb-action-btn"
+        style={{ display: 'flex', alignItems: 'center', gap: 6, width: 'auto', padding: '0 10px', fontSize: 13, fontWeight: 600 }}
+      >
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 140 }}>
+          {project ? project.name : 'Geral'}
+        </span>
+        <ChevronDown size={14} style={{ flexShrink: 0 }} />
+      </button>
+      {pickerOpen && (
+        <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, width: 240, background: 'var(--color-bg-overlay)', border: '1px solid var(--color-border)', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.3)', zIndex: 20, maxHeight: 320, overflowY: 'auto', padding: '6px 0' }}>
+          <button
+            onClick={() => selectDiaryProject(null)}
+            style={{ display: 'block', width: '100%', textAlign: 'left', background: !activeProjectId ? 'var(--color-primary-subtle)' : 'none', border: 'none', padding: '9px 14px', fontSize: 13, fontWeight: 600, color: !activeProjectId ? 'var(--color-primary)' : 'var(--color-text)', cursor: 'pointer', fontFamily: 'inherit' }}
+          >Geral (sem projeto)</button>
+          <div style={{ padding: '10px 14px 7px', fontSize: 11, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Diário de um projeto</div>
+          {myProjects.map(p => (
+            <button
+              key={p.id}
+              onClick={() => selectDiaryProject(p)}
+              style={{ display: 'block', width: '100%', textAlign: 'left', background: activeProjectId === p.id ? 'var(--color-primary-subtle)' : 'none', border: 'none', padding: '9px 14px', fontSize: 13, color: activeProjectId === p.id ? 'var(--color-primary)' : 'var(--color-text)', fontWeight: activeProjectId === p.id ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+            >{p.name}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 
   return (
     <div className="dc-root">
       {/* Toolbar */}
       <div className="dc-toolbar">
         {/* Left: back */}
-        <button className="dc-tb-back" onClick={() => navigate(`/projeto/${slug}`)} title="Voltar ao projeto">
+        <button className="dc-tb-back" onClick={() => navigate(slug ? `/projeto/${slug}` : '/dashboard')} title={slug ? 'Voltar ao projeto' : 'Voltar ao dashboard'}>
           <ArrowLeft size={15} />
           <span>Voltar</span>
         </button>
 
-        {/* Center: logo + project name */}
+        {/* Center: logo + project name (ou seletor, na rota /diario) */}
         <div className="dc-tb-center">
           <img src="/icon.png" alt="Showo" className="dc-logo" />
-          <div className="dc-tb-title" style={{ fontFamily: titleFontCss }}>
-            <span className="dc-tb-project-name">{project.name}</span>
-          </div>
+          {slug ? (
+            <div className="dc-tb-title" style={{ fontFamily: titleFontCss }}>
+              <span className="dc-tb-project-name">{project.name}</span>
+            </div>
+          ) : picker}
         </div>
 
         {/* Right: undo/redo + save */}

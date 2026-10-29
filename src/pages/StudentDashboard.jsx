@@ -30,12 +30,14 @@ import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/
 import { UploadIcon as Upload } from '@solar-icons/react/bold/upload'
 import { ClipboardTextIcon as ClipboardCheck } from '@solar-icons/react/bold/clipboard-text'
 import { BookBookmarkIcon as BookMarked } from '@solar-icons/react/bold/book-bookmark'
+import { FireIcon as Fire } from '@solar-icons/react/bold/fire'
 import { Button, Card, SectionLabel, Modal, Select } from '../components/ui'
 import { PlanGateModal } from '../components/PlanGate'
 import { useAuth } from '../context/AuthContext'
 import { featureUsed, getPlan } from '../lib/plans'
 import ExportProjectsModal from '../components/ExportProjectsModal'
 import { ShareStoryModal } from '../components/ShareStoryModal'
+import FeaturedSpotlightModal from '../components/dashboard/FeaturedSpotlightModal'
 
 // ProjectPulse removed — focus project now shown as auto-pinned card
 import JournalComposer from '../components/dashboard/JournalComposer'
@@ -46,6 +48,7 @@ import { ActivityPanel } from '../components/dashboard/RhythmPanel'
 import WeeklyRecap, { shouldShowRecap, RecapsPanel } from '../components/dashboard/WeeklyRecap'
 import WeeklyPostCard from '../components/dashboard/WeeklyPostCard'
 import WeeklyRecapTeaser from '../components/dashboard/WeeklyRecapTeaser'
+import LimitNudgeBanner from '../components/dashboard/LimitNudgeBanner'
 import SegmentedTabs from '../components/SegmentedTabs'
 import WeeklyCheckin, { shouldShowCheckin } from '../components/dashboard/WeeklyCheckin'
 import AddReminderModal from '../components/dashboard/AddReminderModal'
@@ -55,6 +58,7 @@ import {
   computeReportCoverage, computeWeekStreak, buildWeeklyActivity, computeEngagementSignal,
   timeAgoLabel, startOfDay,
 } from '../lib/journal'
+import { pickFocusProject, daysUntil } from '../lib/focusProject'
 import './Dashboard.css'          // modais e toast partilhados (namespace dash-*)
 import './StudentDashboard.css'
 
@@ -83,28 +87,9 @@ function toISO(d) {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
 }
 
-function daysUntil(dateStr) {
-  if (!dateStr) return null
-  return Math.ceil((new Date(dateStr + 'T00:00:00') - startOfDay(new Date())) / 86400000)
-}
-
-/* Qual é "o projeto" do aluno neste momento: a PAP ganha sempre, depois quem
-   tem defesa mais próxima, depois o mais recente. */
-function pickFocusProject(projects) {
-  if (!projects.length) return null
-  const rank = p => {
-    let r = 0
-    if (p.is_pap || p.project_type === 'pap') r += 100
-    const d = daysUntil(p.defense_date)
-    if (d != null && d >= 0) r += 50 - Math.min(49, d / 4)
-    return r
-  }
-  return [...projects].sort((a, b) => {
-    const diff = rank(b) - rank(a)
-    if (diff !== 0) return diff
-    return new Date(b.created_at) - new Date(a.created_at)
-  })[0]
-}
+// daysUntil e pickFocusProject vivem em lib/focusProject.js, a Navbar
+// precisa da mesma lógica para o atalho do Diário na sidebar, e as duas
+// nunca podem escolher projetos em foco diferentes.
 
 /* ── JoinTurmaStudentModal ─────────────────────────────────────────────── */
 function JoinTurmaStudentModal({ onClose, onJoined }) {
@@ -143,6 +128,16 @@ function JoinTurmaStudentModal({ onClose, onJoined }) {
    StudentDashboard
    ══════════════════════════════════════════════════════════════════════════ */
 
+// Mensagens do popup de upgrade quando aberto a partir do LimitNudgeBanner,
+// uma por feature de IA que pode ficar quase esgotada no plano grátis.
+const NUDGE_UPGRADE_MESSAGES = {
+  coach: { title: 'Continua a falar com o Coach IA', body: 'O Coach ajuda a melhorar o projeto frase a frase. Com o Plus tens muito mais conversas por mês.' },
+  createProject: { title: 'Cria mais projetos com IA', body: 'Com o Plus tens muito mais criações de projeto com IA por mês.' },
+  defense: { title: 'Continua a preparar a defesa', body: 'Com o Plus tens muito mais perguntas de defesa por mês, geradas a partir do teu projeto real.' },
+  narrative: { title: 'Continua a gerar a narrativa do projeto', body: 'Com o Plus tens muito mais narrativas por mês, para apresentares o projeto todo pronto.' },
+  exportPptx: { title: 'Exporta mais vezes para PowerPoint', body: 'Com o Plus tens muito mais exportações por mês, prontas a apresentar.' },
+}
+
 export default function StudentDashboard({ user, profile }) {
   const navigate = useNavigate()
   const location = useLocation()
@@ -171,34 +166,50 @@ export default function StudentDashboard({ user, profile }) {
   const [showExportModal, setShowExportModal] = useState(false)
   const [shareProject, setShareProject] = useState(null)
 
-  // Logged once per month, purely for the admin funnel view — not tied to
-  // the dismiss state, so it fires even if the banner was already dismissed
-  // earlier and reappears because a different feature ran low.
-  useEffect(() => {
-    if (planId !== 'free' || !aiUsage) return
-    const NUDGE_FEATURES = ['coach', 'createProject', 'defense', 'narrative', 'exportPptx']
-    const hasSignal = NUDGE_FEATURES.some(f => {
+  // Sinal de limite quase esgotado (>=70% usado), plano grátis. Dá a mesma
+  // feature a dois sítios: o evento nudge_shown (funil do Admin, já existia)
+  // e a faixa LimitNudgeBanner abaixo, que antes não existia, o evento
+  // disparava mas não havia nenhum elemento na página a mostrar isto à
+  // pessoa.
+  const NUDGE_FEATURES = ['coach', 'createProject', 'defense', 'narrative', 'exportPptx']
+  const nudgeSignal = useMemo(() => {
+    if (planId !== 'free' || !aiUsage) return null
+    for (const f of NUDGE_FEATURES) {
       const limit = getPlan(planId).ai[f]
-      if (!(limit > 0)) return false
+      if (!(limit > 0)) continue
       // Sobre o que já foi usado, não sobre o que resta — com limites de 1x
       // (Defesa IA, Narrativa IA), "resta 1" é indistinguível de "nunca usou
       // nada", o que disparava o aviso "estás quase a esgotar" para quem
       // ainda não tinha tocado em nenhuma feature de IA.
       const used = featureUsed(f, aiUsage)
-      return used > 0 && used >= limit * 0.7
-    })
-    if (!hasSignal) return
+      if (used > 0 && used >= limit * 0.7) return { feature: f, used, limit }
+    }
+    return null
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [planId, aiUsage])
+
+  useEffect(() => {
+    if (!nudgeSignal) return
     const shownKey = `showo_nudge_shown_${user.id}_${new Date().toISOString().slice(0, 7)}`
     try {
       if (localStorage.getItem(shownKey)) return
       localStorage.setItem(shownKey, '1')
     } catch { /* ignore */ }
     logFunnelEvent('nudge_shown')
-  }, [planId, aiUsage, user.id, logFunnelEvent])
+  }, [nudgeSignal, user.id, logFunnelEvent])
+
+  const [nudgeBannerDismissed, setNudgeBannerDismissed] = useState(
+    () => !!localStorage.getItem(`showo_nudge_banner_dismissed_${user.id}_${new Date().toISOString().slice(0, 7)}`)
+  )
 
   /* ── UI ── */
   const [tutorialPotentialSeen, setTutorialPotentialSeen] = useState(() => !!localStorage.getItem(`showo_tut_potential_${user.id}`))
   const [recapTeaserDismissed, setRecapTeaserDismissed] = useState(() => !!localStorage.getItem(`showo_recap_teaser_dismissed_${user.id}`))
+  // "Em destaque" (spotlight do Explorar/Home, calculado por get_featured_projects):
+  // featuredProjectIds alimenta o selo fixo na linha do projeto; o popup só
+  // aparece uma vez na vida da conta, controlado por profiles.featured_popup_seen_at.
+  const [featuredProjectIds, setFeaturedProjectIds] = useState(() => new Set())
+  const [featuredPopupProject, setFeaturedPopupProject] = useState(null)
   const [composerKind, setComposerKind] = useState(null)
   // A que projeto pertence o "Registar" que está aberto. Sem isto, o
   // composer ficava sempre agarrado a focusFull (o projeto em foco
@@ -286,6 +297,30 @@ export default function StudentDashboard({ user, profile }) {
     }
     load()
   }, [user.id])
+
+  /* ── "Em destaque": cruza o spotlight do Explorar/Home (get_featured_projects)
+     com os projetos do próprio utilizador. Alimenta o selo fixo na linha do
+     projeto; na primeira vez que algum projeto próprio aparece ali, e só
+     nessa primeira vez na vida da conta (featured_popup_seen_at), mostra o
+     popup de parabéns. */
+  useEffect(() => {
+    if (!projects.length) return
+    supabase.rpc('get_featured_projects', { p_limit: 2, p_weeks: 12 }).then(({ data, error }) => {
+      if (error || !data) return
+      const myIds = new Set(projects.map(p => p.id))
+      const mine = data.filter(d => myIds.has(d.id))
+      setFeaturedProjectIds(new Set(mine.map(d => d.id)))
+      if (mine.length && !profile?.featured_popup_seen_at) {
+        setFeaturedPopupProject(mine[0])
+      }
+    })
+  }, [projects, profile?.featured_popup_seen_at])
+
+  async function markFeaturedPopupSeen() {
+    if (!user?.id || profile?.featured_popup_seen_at) return
+    await supabase.from('profiles').update({ featured_popup_seen_at: new Date().toISOString() }).eq('id', user.id)
+    refreshProfile?.()
+  }
 
   const focusProject = useMemo(() => pickFocusProject(projects), [projects])
 
@@ -741,7 +776,9 @@ export default function StudentDashboard({ user, profile }) {
           message={
             showUpgradeModal === 'weeklyRecap'
               ? { title: 'O que recebes com o Plus', body: 'Um recap automático toda a segunda, gerado a partir do teu diário.', feature: 'weeklyRecap' }
-              : { title: 'Experimenta o Plus', body: 'Mais análises de IA, mais defesa, mais espaço para o teu portefólio.', feature: 'genericUpgrade' }
+              : NUDGE_UPGRADE_MESSAGES[showUpgradeModal]
+                ? { ...NUDGE_UPGRADE_MESSAGES[showUpgradeModal], feature: showUpgradeModal }
+                : { title: 'Experimenta o Plus', body: 'Mais análises de IA, mais defesa, mais espaço para o teu portefólio.', feature: 'genericUpgrade' }
           }
           onClose={() => setShowUpgradeModal(false)}
         />
@@ -749,6 +786,13 @@ export default function StudentDashboard({ user, profile }) {
 
       {shareProject && (
         <ShareStoryModal project={shareProject} onClose={() => setShareProject(null)} />
+      )}
+
+      {featuredPopupProject && (
+        <FeaturedSpotlightModal
+          project={featuredPopupProject}
+          onClose={() => { setFeaturedPopupProject(null); markFeaturedPopupSeen() }}
+        />
       )}
 
       {showRecap && (
@@ -819,8 +863,14 @@ export default function StudentDashboard({ user, profile }) {
             Em desktop o CTA vive na sidebar (Navbar.jsx, junto ao sino) —
             aqui é só mobile, onde a sidebar não aparece. Pedido do Gustavo,
             à imagem do cartão "Desbloquear Premium" do StudyFetch. Só para
-            quem está no plano Grátis. */}
-        {planId === 'free' && (
+            quem está no plano Grátis.
+            Para quem também vê a faixa do LinkedIn (WeeklyRecapTeaser, mais
+            abaixo) este cartão fica de fora enquanto ela estiver visível:
+            as duas são o mesmo convite a pagar, ter as duas ao mesmo tempo
+            no topo do mobile ficava repetitivo, apontado pelo Gustavo.
+            Continua a aparecer para contas de escola (sem faixa do LinkedIn)
+            e para quem já dispensou a faixa. */}
+        {planId === 'free' && (isSchoolAccount || recapTeaserDismissed) && (
           <div className="sdb-upgrade-card sdb-panel sdb-panel--brand">
             <div>
               <p className="sdb-upgrade-card-title">Experimenta o Plus</p>
@@ -1015,6 +1065,23 @@ export default function StudentDashboard({ user, profile }) {
             )}
 
             {dashTab === 'projetos' && <>
+
+            {/* WeeklyRecapTeaser já vive na coluna da Agenda (sdb-o-recap,
+                mais abaixo), não aqui — manter as duas em sítios diferentes
+                duplicava a faixa na mesma página. */}
+            {!isSchoolAccount && planId === 'free' && recapTeaserDismissed && nudgeSignal && !nudgeBannerDismissed && (
+              <LimitNudgeBanner
+                userId={user.id}
+                feature={nudgeSignal.feature}
+                used={nudgeSignal.used}
+                limit={nudgeSignal.limit}
+                onDismiss={() => setNudgeBannerDismissed(true)}
+                onUpgrade={() => {
+                  logFunnelEvent('nudge_clicked', nudgeSignal.feature)
+                  setShowUpgradeModal(nudgeSignal.feature)
+                }}
+              />
+            )}
 
             {myInterests.length > 0 && (
               <section className="sdb-panel sdb-panel--tint sdb-o-recruiter sdb-opportunity">
@@ -1214,6 +1281,7 @@ export default function StudentDashboard({ user, profile }) {
                       onToggleFeatured={toggleFeatured}
                       canFeature={canFeature}
                       onToggleDashboardPin={toggleDashboardPinned}
+                      isSpotlighted={featuredProjectIds.has(p.id)}
                     />
                   ))}
                   {collabProjects.map(p => (
@@ -1222,6 +1290,7 @@ export default function StudentDashboard({ user, profile }) {
                       onEdit={() => navigate(`/projeto/${p.slug}`)}
                       onCopy={() => copyProjectLink(p.slug)}
                       copied={copiedSlug === p.slug}
+                      isSpotlighted={featuredProjectIds.has(p.id)}
                     />
                   ))}
                 </ul>
@@ -1339,7 +1408,7 @@ function PotentialTutorial({ potential, onDismiss }) {
 
 /* ── Linha de projeto (portfólio) ─────────────────────────────────────────── */
 
-function ProjectRow({ project, shared, onOpen, onEdit, onCopy, copied, onDelete, onToggleFeatured, canFeature, onToggleDashboardPin }) {
+function ProjectRow({ project, shared, onOpen, onEdit, onCopy, copied, onDelete, onToggleFeatured, canFeature, onToggleDashboardPin, isSpotlighted }) {
   const [confirm, setConfirm] = useState(false)
 
   return (
@@ -1352,6 +1421,7 @@ function ProjectRow({ project, shared, onOpen, onEdit, onCopy, copied, onDelete,
         <span className="sdb-projrow-name">
           {project.name}
           {shared && <span className="sdb-projrow-tag">partilhado</span>}
+          {isSpotlighted && <span className="sdb-projrow-spotlight"><Fire size={11} /> Em destaque</span>}
         </span>
         <span className="sdb-projrow-area">{project.area || 'Sem área definida'}</span>
       </button>

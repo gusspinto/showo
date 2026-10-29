@@ -8,6 +8,7 @@ import { toWebP } from '../lib/imageOptimize'
 import { getVisitorCity } from '../lib/geolocation'
 import { useIsMobile } from '../lib/useIsMobile'
 import { calculateScore, looksLikeSpam } from '../lib/score'
+import { computeReportCoverage } from '../lib/journal'
 import { containsProfanity } from '../lib/profanity'
 import { hasPlaceholder } from '../lib/textQuality'
 import { topLanguages, commitSpanMonths, repoAgeMonths } from '../lib/social'
@@ -29,6 +30,7 @@ import { useTheme } from '../context/ThemeContext'
 // à parte para não entrar no bundle de todas as visitas a um projeto, quando
 // a esmagadora maioria nunca abre este modo.
 const DefenseMode = lazy(() => import('../components/DefenseMode'))
+const ReportPanel = lazy(() => import('../components/dashboard/ReportPanel'))
 import ProjectComments from '../components/ProjectComments'
 import ProjectTimeline from '../components/ProjectTimeline'
 import ProjectTimelineBadge from '../components/ProjectTimelineBadge'
@@ -1117,9 +1119,14 @@ export default function ProjectPage() {
   const { slug } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
-  const { user, profile, loading: authLoading, checkGate, consumeAI } = useAuth()
+  const { user, profile, loading: authLoading, checkGate, consumeAI, refreshProfile } = useAuth()
   const [project, setProject] = useState(() => location.state?.projectData ?? null)
   const [projectJournalEntries, setProjectJournalEntries] = useState([])
+  const [showReport, setShowReport] = useState(false)
+  const reportCoverage = useMemo(
+    () => computeReportCoverage(project ?? {}, projectJournalEntries),
+    [project, projectJournalEntries],
+  )
   const [loading, setLoading] = useState(!location.state?.projectData)
   const [copied, setCopied] = useState(false)
   const [score, setScore] = useState(0)
@@ -1369,7 +1376,15 @@ export default function ProjectPage() {
     juryHydrated.current = true
   }, [project])
 
-  // Spotlight tour: only on ?tour=1 (dev) or when the user just created their very first project
+  // Spotlight tour: ?tour=1 (dev), sempre que a pessoa acaba de criar um
+  // projeto, ou (novo, pedido do Gustavo) a primeira vez que abre QUALQUER
+  // projeto sem nunca ter visto o tour. Antes só disparava "no primeiro
+  // projeto de sempre" (count===1), o que significava que praticamente
+  // ninguém via isto, porque a maioria já tinha pelo menos um projeto antes
+  // desta funcionalidade existir, ou cria o segundo/terceiro projeto sem
+  // nunca ter visto o tour no primeiro. A criação continua a mostrar
+  // sempre (isNewProject, sem condição de "já viu"); quem só abre projetos
+  // antigos é apanhado pelo !profile.tour_seen_at, uma única vez.
   const tourCheckedRef = useRef(false)
   useEffect(() => {
     if (!project?.id || !profile?.id) return
@@ -1380,23 +1395,25 @@ export default function ProjectPage() {
     const params = new URLSearchParams(window.location.search)
     const isTourParam = params.get('tour') === '1'
     const isNewProject = !!location.state?.newProject
+    const neverSeenTour = !profile.tour_seen_at
 
     function triggerTour() {
       if (showLaunchOverlay) tourPendingRef.current = true
       else setShowTour(true)
     }
 
-    if (isTourParam) { triggerTour(); return }
-    if (!isNewProject) return
-
-    // Only show for their very first project
-    supabase
-      .from('projects')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', profile.id)
-      .then(({ count }) => { if (count === 1) triggerTour() })
+    if (isTourParam || isNewProject || neverSeenTour) triggerTour()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project?.id, profile?.id])
+
+  // Grava a primeira vez que o tour fecha (concluído ou saltado, tanto faz
+  // para este efeito), para o gate "nunca viu" acima não voltar a disparar
+  // ao abrir outro projeto antigo na mesma conta.
+  function markTourSeen() {
+    if (!user?.id || profile?.tour_seen_at) return
+    supabase.from('profiles').update({ tour_seen_at: new Date().toISOString() }).eq('id', user.id)
+      .then(() => refreshProfile?.())
+  }
 
   // Class-defined evaluation criteria (fetched when the page is opened from a turma)
   const [classCriteria, setClassCriteria] = useState([])   // [{id, name, weight}]
@@ -1482,7 +1499,7 @@ export default function ProjectPage() {
     setCoachInput('')
     setCoachLoading(true)
     try {
-      const reply = await chatProjectCoach({ project: { ...project, journal: projectJournalEntries, teacher_feedback: teacherFeedback }, messages: coachMessages, message: msg })
+      const reply = await chatProjectCoach({ project: { ...project, journal: projectJournalEntries, teacher_feedback: teacherFeedback }, messages: coachMessages, message: msg, profile })
       consumeAI('coach')
       const now = new Date().toISOString()
       setCoachMessages(prev => [...prev, { role: 'assistant', content: reply }])
@@ -1679,6 +1696,7 @@ export default function ProjectPage() {
         onShareStory: () => setShowStoryModal(true),
         onDefense: project.project_type === 'pap' ? () => setDefenseMode(true) : null,
         onAnalyze: handleAIClick,
+        onReport: () => setShowReport(true),
         onInvite: isOwner ? () => { setShowInvite(true); document.body.style.overflow = 'hidden' } : null,
         // "Colega" só faz sentido em contexto de turma — numa conta
         // individual, quem convidas não é necessariamente um "colega".
@@ -2835,6 +2853,18 @@ export default function ProjectPage() {
         </Suspense>
       )}
 
+      {showReport && (
+        <Suspense fallback={null}>
+          <ReportPanel
+            project={project}
+            entries={projectJournalEntries}
+            coverage={reportCoverage}
+            onClose={() => setShowReport(false)}
+            onDraftSaved={(draft, at) => setProject(p => ({ ...p, report_draft: draft, report_updated_at: at }))}
+          />
+        </Suspense>
+      )}
+
       {showStoryModal && <ShareStoryModal project={project} onClose={() => setShowStoryModal(false)} />}
 
       {showConfetti && <Confetti />}
@@ -2864,20 +2894,33 @@ export default function ProjectPage() {
               padding: '36px 32px 28px',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-              <Check size={22} color="var(--color-success)" />
-              <h2 style={{
-                margin: 0,
-                fontFamily: 'var(--font-heading)',
-                fontSize: 22,
-                fontWeight: 400,
-                color: 'var(--color-text)',
-                letterSpacing: '-0.5px',
-                lineHeight: 1.2,
-              }}>
-                O teu projeto está no ar
-              </h2>
-            </div>
+            {(() => {
+              // Secções = definição de ativação usada em todo o resto do
+              // produto (CLAUDE.md, emails de onboarding). Até agora este
+              // popup dizia "está no ar, partilha" mesmo com 0 secções,
+              // dizendo a quem acabou de começar que já tinha acabado.
+              // Confirmado contra a BD: 446 de 527 projetos nunca tiveram
+              // um registo sequer, é o momento de maior atenção da pessoa
+              // e estava a mandá-la embora satisfeita, em vez de a guiar.
+              const sectionsCount = Array.isArray(previewBlocks) ? previewBlocks.length : 0
+              const isActivated = sectionsCount >= 3
+              return (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                  <Check size={22} color={isActivated ? 'var(--color-success)' : 'var(--color-warning)'} />
+                  <h2 style={{
+                    margin: 0,
+                    fontFamily: 'var(--font-heading)',
+                    fontSize: 22,
+                    fontWeight: 400,
+                    color: 'var(--color-text)',
+                    letterSpacing: '-0.5px',
+                    lineHeight: 1.2,
+                  }}>
+                    {isActivated ? 'O teu projeto está no ar' : 'O teu projeto está criado'}
+                  </h2>
+                </div>
+              )
+            })()}
 
             {location.state?.clearedFields?.length > 0 ? (
               <p style={{
@@ -2891,6 +2934,19 @@ export default function ProjectPage() {
                 padding: '10px 12px',
               }}>
                 A IA não tinha a certeza sobre {location.state.clearedFields.join(', ')} — ficou em branco. Preenche quando quiseres.
+              </p>
+            ) : (Array.isArray(previewBlocks) ? previewBlocks.length : 0) < 3 ? (
+              <p style={{
+                margin: '0 0 24px',
+                fontSize: 14,
+                color: 'var(--color-warning)',
+                lineHeight: 1.6,
+                background: 'var(--color-warning-subtle)',
+                border: '1px solid var(--color-warning-subtle)',
+                borderRadius: 8,
+                padding: '10px 12px',
+              }}>
+                Falta a parte que conta: com menos de 3 secções, quem vir o link ainda não percebe o que fizeste. Volta a editar antes de partilhar.
               </p>
             ) : (
               <p style={{
@@ -2947,9 +3003,17 @@ export default function ProjectPage() {
               </button>
             </div>
 
-            {/* CTA button */}
+            {/* CTA button: dispara sempre o tour guiado (score, editar,
+                diário, IA, etc.), igual ao clique fora do popup. Antes
+                saltava o tour de vez para quem tinha <3 secções e ia
+                direto para o editor, o que tirava a esta maioria
+                precisamente o guia que lhes explica onde está tudo. */}
             <button
-              onClick={() => { setShowLaunchOverlay(false); window.history.replaceState({}, ''); if (tourPendingRef.current) { tourPendingRef.current = false; setShowTour(true) } }}
+              onClick={() => {
+                setShowLaunchOverlay(false)
+                window.history.replaceState({}, '')
+                if (tourPendingRef.current) { tourPendingRef.current = false; setShowTour(true) }
+              }}
               style={{
                 display: 'block',
                 width: '100%',
@@ -2967,7 +3031,7 @@ export default function ProjectPage() {
               onMouseEnter={e => { e.currentTarget.style.opacity = '0.88' }}
               onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
             >
-              Ver a minha página
+              {(Array.isArray(previewBlocks) ? previewBlocks.length : 0) < 3 ? 'Completar o projeto' : 'Ver a minha página'}
             </button>
 
             {!user && (
@@ -3007,7 +3071,7 @@ export default function ProjectPage() {
         <ProjectTour
           isPap={isPap}
           onClose={(completed) => {
-            setShowTour(false); setTourMenuOpen(false)
+            setShowTour(false); setTourMenuOpen(false); markTourSeen()
             // Só arranca a cadeia de sugestões quando a pessoa vê o tour até
             // ao fim ("Começar") — saltar o tour não implica querer mais
             // prompts a seguir. Não reinicia se já havia progresso guardado.
@@ -4412,7 +4476,13 @@ export default function ProjectPage() {
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: '-0.2px', color: colors.text }}>Como subir o score</div>
                     <div style={{ fontSize: 12, color: colors.muted, marginTop: 3 }}>
-                      {pct === 100 ? 'Perfil completo — bom trabalho.' : `${goodCount} de ${fq.length} campos · toca para editar`}
+                      {/* pct===100 só mede os 9 campos de texto, não as secções
+                          publicadas (ativação, preview_blocks). Dizer "perfil
+                          completo" quando ainda faltam secções era falso e
+                          enganava quem via isto como "já está pronto". */}
+                      {pct === 100
+                        ? (previewBlocks.length >= 3 ? 'Perfil completo, bom trabalho.' : 'Dados completos. Falta publicar as secções.')
+                        : `${goodCount} de ${fq.length} campos · toca para editar`}
                     </div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
@@ -5798,10 +5868,16 @@ export default function ProjectPage() {
             const pct = Math.round((goodCount / fieldQuality.length) * 100)
 
             const isComplete = pct === 100
+            // pct só mede os 9 campos de texto (PROFILE_SCORE_FIELDS), não as
+            // secções publicadas (ativação, preview_blocks). "Perfil completo"
+            // só é verdade quando as duas coisas batem certo, senão isto
+            // mandava quem ainda não tinha nada publicado para o diário em
+            // vez de a mandar completar o próprio projeto.
+            const isActivated = previewBlocks.length >= 3
             return (
               <div className="proj-card" style={isComplete ? {} : {}}>
-                {isComplete ? (
-                  /* ── Completude 100%: redirect focus to diary ── */
+                {isComplete && isActivated ? (
+                  /* ── Completude 100% e ativado: redirect focus to diary ── */
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{
@@ -5825,6 +5901,35 @@ export default function ProjectPage() {
                       }}
                     >
                       Abrir diário do projeto →
+                    </button>
+                  </div>
+                ) : isComplete ? (
+                  /* ── Completude 100% mas ainda sem 3 secções publicadas:
+                      falta mesmo a parte que conta, manda completar o
+                      projeto, não o diário. ── */
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{
+                        width: 30, height: 30, borderRadius: 8, flexShrink: 0,
+                        background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <Sparkles size={14} color="#f59e0b" />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: colors.text, marginBottom: 1 }}>Dados completos, falta publicar</div>
+                        <div style={{ fontSize: 11, color: colors.subtle, lineHeight: 1.4 }}>Com menos de 3 secções, quem vir o link ainda não percebe o que fizeste.</div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => { setPreviewEditing(true); setWsExpanded(true) }}
+                      style={{
+                        width: '100%', padding: '7px 0', border: '1px solid rgba(245,158,11,0.25)',
+                        borderRadius: 8, background: 'rgba(245,158,11,0.07)', color: '#f59e0b',
+                        fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                      }}
+                    >
+                      Completar o projeto →
                     </button>
                   </div>
                 ) : (

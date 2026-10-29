@@ -29,6 +29,13 @@ const TYPE_LABELS: Record<string, string> = {
 // sério (relatório de PAP com imagens, apresentação completa). Tem de ficar
 // alinhado com MAX_TOTAL_MB em src/pages/NewProject.jsx.
 const MAX_TOTAL_BYTES = 20 * 1024 * 1024
+// O modo "light" (Biblioteca, sem criar projeto, ver mais abaixo) só precisa
+// de um resumo + competências, nunca de ler o ficheiro com todo o detalhe
+// visual. Cada MB a mais aqui é tokens de entrada pagos à API, e é esta
+// chamada que mais custou em IA no plano grátis em outubro de 2026 (achado
+// ao rever despesas com o Gustavo). Cap mais apertado para esta via, sem
+// mexer no limite da análise a sério (import normal, para criar projeto).
+const MAX_TOTAL_BYTES_LIGHT = 5 * 1024 * 1024
 const MAX_FILES = 5
 const MAX_TEXT_PER_FILE = 24_000           // caracteres, depois de extraído
 
@@ -193,7 +200,8 @@ Deno.serve(async (req) => {
 
       const bytes = b64ToBytes(b64)
       totalBytes += bytes.length
-      if (totalBytes > MAX_TOTAL_BYTES) {
+      const maxBytes = light ? MAX_TOTAL_BYTES_LIGHT : MAX_TOTAL_BYTES
+      if (totalBytes > maxBytes) {
         skipped.push({ name, reason: 'demasiado grande' })
         continue
       }
@@ -242,7 +250,7 @@ Deno.serve(async (req) => {
     if (content.length === 0) {
       const reasons = skipped.map(s => s.reason)
       const msg = reasons.includes('demasiado grande')
-        ? 'O ficheiro é demasiado grande (máx. 20 MB). Comprime-o ou exporta como PDF.'
+        ? `O ficheiro é demasiado grande (máx. ${light ? '5' : '20'} MB). Comprime-o ou exporta como PDF.`
         : reasons.includes('formato não suportado')
         ? 'Formato não suportado. Aceita PDF, Word, PowerPoint, imagens e texto.'
         : 'Não conseguimos ler o conteúdo deste ficheiro. Exporta como PDF e tenta outra vez.'

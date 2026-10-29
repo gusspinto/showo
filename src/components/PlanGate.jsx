@@ -5,12 +5,26 @@ import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { getPlan, nextPaidPlan, planHighlights } from '../lib/plans'
+import { TESTIMONIALS } from './TestimonialsMarquee'
 
-const LinkedInMark = ({ size = 14 }) => (
-  <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" aria-hidden="true">
-    <path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.55C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.72C24 .77 23.2 0 22.22 0z"/>
-  </svg>
-)
+// Mesmo testemunho da Pricing/Home, sem inventar nada — só escolhido para
+// soar relevante à feature que bloqueou a pessoa. Fora dos casos abaixo,
+// cai no primeiro da lista partilhada.
+const FEATURE_TESTIMONIAL_NAME = {
+  defense: 'Rita Sousa',
+  defenseTraining: 'Rita Sousa',
+  exportPptx: 'Rita Sousa',
+}
+// Ordena a lista toda a começar pelo testemunho mais relevante à feature —
+// os outros seguem-se, para o carrossel ter por onde rodar em vez de mostrar
+// sempre o mesmo. Nenhum é inventado, são os mesmos da Pricing/Home.
+function orderTestimonials(feature) {
+  const list = TESTIMONIALS.filter(t => t.popup !== false)
+  const wanted = FEATURE_TESTIMONIAL_NAME[feature]
+  const i = list.findIndex(t => t.name === wanted)
+  if (i <= 0) return list
+  return [list[i], ...list.slice(0, i), ...list.slice(i + 1)]
+}
 
 // Preview real do que se recebe, pedido do Gustavo depois do teaser do
 // recap semanal ("eles têm de ter uma preview do que vai realmente ver se
@@ -73,36 +87,38 @@ function DefensePreview() {
   )
 }
 
-// Só o post de LinkedIn, pedido do Gustavo depois de ver o pop-up com
-// email + números + citação + prazo, tudo junto: "muita informação e
-// principalmente não compreensível". Um cartão só, a coisa mais concreta
-// e reconhecível que a feature desbloqueia, sem repetir a mesma frase de
-// exemplo em duas molduras diferentes.
 function RecapPreview() {
-  const { profile } = useAuth()
-  const name = profile?.full_name || 'O teu nome'
-  const initial = profile?.full_name ? profile.full_name.trim()[0].toUpperCase() : 'S'
   return (
     <div>
-      {/* padding-right para nunca ficar por baixo do X de fechar, que é
-          posicionado absoluto no canto do modal; margin-top para abrir
-          distância clara da mesma zona (pedido do Gustavo: "ainda está em
-          cima", depois de ver o rótulo perto de mais do botão). */}
-      <p style={{ margin: '22px 26px 10px 0', fontSize: 9, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-        Post de LinkedIn pronto a publicar
+      <p style={{ margin: '0 0 6px', fontSize: 9, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+        O email que recebes, toda a segunda
       </p>
-      <div style={{ background: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 13px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 9 }}>
-          <span style={{ width: 32, height: 32, borderRadius: '50%', background: '#1a60c8', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 13, fontWeight: 800 }}>{initial}</span>
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 12.5, fontWeight: 700, color: '#1a1a1a' }}>{name}</div>
-            <div style={{ fontSize: 10.5, color: '#5a5a5a' }}>via Showo · agora</div>
+      <div style={{ background: '#03060d', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 14px 14px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
+        <span style={{ width: 20, height: 20, borderRadius: 6, background: '#1a60c8', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 9.5, fontWeight: 800 }}>S</span>
+        <span style={{ fontSize: 9.5, color: '#93a4c0' }}>Showo <span style={{ color: '#93a4c0' }}>hello@showo.pt</span></span>
+      </div>
+      <p style={{ margin: '0 0 10px', color: '#eef2f8', fontSize: 13.5, lineHeight: 1.3, fontWeight: 700 }}>5 registos na semana passada</p>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+        {[['5', 'registos'], ['4', 'dias ativos'], ['3', 'semanas', '#f0a500']].map(([v, l, c]) => (
+          <div key={l} style={{ flex: 1, minWidth: 0, padding: '8px 4px', textAlign: 'center', borderRadius: 7, background: '#0e1729', border: '1px solid #1e3050' }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: c || '#eef2f8', lineHeight: 1 }}>{v}</div>
+            <div style={{ fontSize: 8.5, color: '#a3b4ce', marginTop: 3 }}>{l}</div>
           </div>
-          <span style={{ marginLeft: 'auto', color: '#0A66C2', flexShrink: 0, display: 'flex' }}><LinkedInMark size={16} /></span>
-        </div>
-        <p style={{ margin: 0, color: '#1a1a1a', fontSize: 12.5, lineHeight: 1.5 }}>
-          Decidi simplificar o fluxo do DragBuild depois de testar com duas pessoas que acharam confuso.
+        ))}
+      </div>
+      {/* Mesma escolha do email real (pickHighlight em send-weekly-recap):
+          excerto real por baixo dos números, sem aspas nem itálico, barra
+          lateral, não cartão de testemunho centrado. */}
+      <div style={{ borderLeft: '3px solid #2a4275', padding: '1px 0 1px 10px', marginBottom: 10 }}>
+        <p style={{ margin: '0 0 2px', color: '#93a4c0', fontSize: 9.5 }}>Decisão em DragBuild</p>
+        <p style={{ margin: 0, color: '#c3cede', fontSize: 11.5, lineHeight: 1.45 }}>
+          Decidi simplificar o fluxo depois de testar com duas pessoas que acharam confuso.
         </p>
+      </div>
+      <p style={{ margin: 0, color: '#c3cede', fontSize: 11.5, lineHeight: 1.5 }}>
+        Faltam <strong style={{ color: '#eef2f8' }}>12 dias</strong> para a defesa.
+      </p>
       </div>
     </div>
   )
@@ -112,18 +128,20 @@ function FeaturePreview({ feature }) {
   const kind = FEATURE_PREVIEW_KIND[feature] || 'coach'
   const label = {
     coach: 'Preview real do Coach IA',
+    recap: 'Preview real do recap semanal',
     vagas: 'Preview real das vagas de estágio',
     defense: 'Preview real da preparação de defesa',
   }[kind]
   return (
     <div className="plan-gate-fade">
-      {/* O recap não repete o rótulo aqui: a RecapPreview já tem o seu
-          próprio, "o email que recebes, toda a segunda", que já diz o
-          suficiente sem duplicar a ideia de "preview real" duas vezes. */}
-      {label && <p style={{ margin: '0 0 10px', fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>}
+      <p style={{ margin: '0 0 14px', fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
       {kind === 'coach' && <CoachPreview />}
       {kind === 'vagas' && <VagasPreview />}
       {kind === 'defense' && <DefensePreview />}
+      {/* Era RecapPreview + LinkedInPostPreview empilhados, duas previews
+          diferentes no mesmo bloco ("isto é o email ou o LinkedIn?"). Com o
+          pop-up a passar a uma coluna só, ficava longo demais, cortado ao
+          email real, que é a prova direta da feature paga. */}
       {kind === 'recap' && <RecapPreview />}
     </div>
   )
@@ -174,30 +192,32 @@ const C = {
   // (pedido do Gustavo: "o que ganhas" mesmo em cima de "quanto custa"),
   // não centrado como cabeçalho, versão que fica quando há upgrade a
   // oferecer.
-  titleRight: { margin: 'var(--sp-2) 0 10px', fontSize: '1.3rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)', lineHeight: 1.25 },
-  // Preenche o espaço entre o título e os botões com benefícios reais
-  // (planHighlights, dados dos planos), em vez de ficar vazio no desktop
-  // enquanto a coluna da esquerda, mais alta, não chega ao fundo.
+  titleRight: { margin: 'var(--sp-2) 0 4px', fontSize: '1.3rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)', lineHeight: 1.25 },
+  // Frase curta a ligar o título à lista de benefícios logo a seguir, só
+  // para não ficar espaço em branco entre os dois, nada mais.
+  subtitleRight: { margin: '0 0 4px', fontSize: '0.85rem', color: 'var(--color-text-secondary)' },
   highlights: { display: 'flex', flexDirection: 'column', gap: '10px', margin: 'var(--sp-2) 0' },
   highlightItem: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '10px', fontSize: '0.88rem' },
-  highlightLabel: { color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '7px' },
+  highlightLabel: { color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '7px', flexShrink: 0 },
   highlightCheck: { color: 'var(--color-success)', fontWeight: 800, flexShrink: 0 },
-  highlightValue: { color: 'var(--color-primary)', fontWeight: 700, whiteSpace: 'nowrap' },
+  // Sem nowrap: a "10 → 100 por mês" cortava no mobile, a coluna ficou
+  // mais estreita do que no layout antigo de duas colunas.
+  highlightValue: { color: 'var(--color-primary)', fontWeight: 700, textAlign: 'right' },
   msg:   { margin: 0, fontSize: '0.98rem', color: 'var(--color-text-secondary)', lineHeight: 1.6, maxWidth: '420px' },
-  body: { display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)', padding: 'var(--sp-6) var(--sp-8)' },
-  // Um cartão só para "o que ganhas" (benefícios + periodicidade + preço),
-  // em vez de três blocos soltos com ritmos diferentes (lista nua, pílulas
-  // soltas, cartão tintado) — pedido do Gustavo.
-  benefitsCard: {
-    display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)',
-    background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)',
+  body: { display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)', padding: 'var(--sp-8)' },
+  // .sdb-panel--tint do Dashboard — o bloco de apoio à marca, tinta subtil,
+  // não uma faixa azul cheia. É o mesmo painel que o resto da app usa para
+  // "isto é importante mas não é O botão principal".
+  upsell: {
+    display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)',
+    background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-muted)',
     borderRadius: 'var(--radius-lg)', padding: 'var(--sp-5)',
   },
-  upsellDivider: { height: 1, background: 'var(--color-border)' },
   periodToggle: {
     display: 'flex', gap: '3px', width: 'fit-content',
+    padding: '3px', marginBottom: 'var(--sp-3)',
     background: 'var(--color-bg)', border: '1px solid var(--color-border)',
-    padding: '3px', borderRadius: 'var(--radius-full)',
+    borderRadius: 'var(--radius-full)',
   },
   periodBtn: (active) => ({
     display: 'flex', alignItems: 'center', gap: '5px',
@@ -217,6 +237,49 @@ const C = {
   upsellPrice: { fontSize: '1.3rem', fontWeight: 700, color: 'var(--color-text)' },
   upsellPeriod: { fontWeight: 500, fontSize: '0.8rem', color: 'var(--color-text-secondary)' },
   errorText: { margin: 0, fontSize: '0.78rem', color: 'var(--color-error)' },
+  // .sdb-panel simples — mesmo cartão neutro que qualquer painel do
+  // Dashboard, só para o testemunho não se confundir visualmente com o
+  // bloco do preço (que é o único a usar a tinta da marca).
+  testimonial: {
+    display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)',
+    // Não estica até à altura da coluna do preço: a caixa fica só do tamanho do
+    // conteúdo, sem espaço vazio entre o testemunho e a autoria.
+    alignSelf: 'start',
+    background: 'var(--color-surface)', border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius-lg)', padding: 'var(--sp-5)',
+  },
+  // Sem corte: o testemunho inteiro aparece. Para o modal não saltar a cada
+  // rotação, todos os testemunhos ficam empilhados na mesma célula da grelha
+  // (testimonialStack) e só o ativo é visível — a altura é a do mais longo.
+  testimonialStack: { display: 'grid' },
+  testimonialQuote: {
+    margin: 0, fontSize: '0.95rem', color: 'var(--color-text)', lineHeight: 1.55,
+    gridArea: '1 / 1',
+  },
+  testimonialFooter: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' },
+  testimonialPerson: { display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 },
+  // Contorno de 1px neutro (preto no claro, branco no escuro, via --color-text),
+  // para a foto não se fundir com o cartão nem apanhar a cor da superfície.
+  testimonialPhoto: {
+    width: '36px', height: '36px', borderRadius: 'var(--radius-full)', objectFit: 'cover', flexShrink: 0,
+    outline: '1px solid color-mix(in srgb, var(--color-text) 10%, transparent)', outlineOffset: '-1px',
+  },
+  testimonialName: { fontSize: '0.84rem', fontWeight: 700, color: 'var(--color-text)' },
+  // Antes cortava com "..." (1 linha, depois 2) e ainda ficava ilegível
+  // ("Universidade da Maia e..."). Sem clamp nenhum agora — o cargo embrulha
+  // por inteiro, por mais linhas que precisar.
+  testimonialRole: {
+    fontSize: '0.7rem', color: 'var(--color-text-secondary)', lineHeight: 1.35,
+  },
+  testimonialDots: { display: 'flex', gap: '5px', flexShrink: 0 },
+  testimonialDot: (active) => ({
+    width: active ? '14px' : '5px', height: '5px', borderRadius: '3px',
+    /* Preto no modo claro, branco no escuro (var(--color-text)). A
+       diferença entre ativo e inativo fica na largura, não na cor. */
+    background: 'var(--color-text)',
+    opacity: active ? 1 : 0.3,
+    transition: 'width 0.25s ease, background 0.25s ease',
+  }),
   // Invertido (var(--color-text)/var(--color-bg)), não azul — o mesmo botão
   // "cheio" que a Home, o Login e o Registo já usam. O azul fica reservado
   // à faixa do plano em cima, não ao botão de ação.
@@ -230,6 +293,14 @@ const C = {
     width: '100%', padding: '15px 18px', borderRadius: 'var(--radius-full)',
     border: '1px solid var(--color-border)', background: 'transparent', color: 'var(--color-text)',
     fontWeight: 600, fontSize: '0.96rem', cursor: 'pointer', fontFamily: 'var(--font-body)',
+  },
+  // "Pedir aos pais para pagar" não é um botão igual ao principal, é uma
+  // alternativa para quem não tem cartão. Em link, não em botão cheio,
+  // para só haver uma ação a competir visualmente com "Passar a X agora".
+  ctaLink: {
+    width: '100%', padding: '8px 18px', border: 'none', background: 'transparent',
+    color: 'var(--color-text-secondary)', fontWeight: 600, fontSize: '0.84rem',
+    cursor: 'pointer', fontFamily: 'var(--font-body)', textDecoration: 'underline',
   },
   dismiss: {
     background: 'none', border: 'none', cursor: 'pointer', padding: '4px', alignSelf: 'center',
@@ -289,6 +360,20 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
   // aqui, essa feature volta a aparecer, mas só na lista, não duplicada.
   const highlights = upgrade ? planHighlights(planId, upgrade) : []
 
+  // Carrossel de testemunhos, a começar no mais relevante à feature que
+  // bloqueou a pessoa — pedido do Gustavo depois de ver o pop-up do
+  // StudyFetch, onde os testemunhos mudam sozinhos em vez de ficar um só
+  // fixo a olhar para a pessoa.
+  const orderedTestimonials = orderTestimonials(feature)
+  const [tIdx, setTIdx] = useState(0)
+  useEffect(() => {
+    if (!upgrade || orderedTestimonials.length < 2) return
+    const id = setInterval(() => setTIdx(i => (i + 1) % orderedTestimonials.length), 5000)
+    return () => clearInterval(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [upgrade, orderedTestimonials.length])
+  const testimonial = upgrade ? orderedTestimonials[tIdx] : null
+
   // Registo do funil: quando alguém vê mesmo o pop-up de upgrade (não o nudge
   // leve do Dashboard, que já tinha isto). Só regista quando há oferta de
   // upgrade a mostrar — sem `upgrade` é só a mensagem de limite sem CTA.
@@ -302,11 +387,24 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
     if (!upgrade) return
     setLoading(true)
     setCheckoutError('')
+    // Faltava aqui: Pricing.jsx já registava checkout_started no seu próprio
+    // botão, mas este popup (o caminho principal, disparado sempre que
+    // alguém bate num limite real, 190 vezes este mês) nunca registava
+    // nada. O funil do Admin mostrava quase ninguém a avançar depois de ver
+    // a oferta, mas estava só a contar o caminho secundário (página /pricing
+    // à parte), não este. Mesmo buraco de medição que o "0% clicaram no
+    // nudge" já tinha revelado.
+    logFunnelEvent('checkout_started', feature)
     try {
       const returnPath = `${location.pathname}${location.search}`
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { plan: upgrade.id, period: annual ? 'annual' : 'monthly', returnPath },
-      })
+      // O anual vai por create-annual-checkout (pagamento único, com
+      // Multibanco e MB WAY): Multibanco/MB WAY não funcionam em
+      // mode:'subscription' no Stripe, confirmado por teste direto na API.
+      // O mensal continua por create-checkout (subscrição, só cartão).
+      const { data, error } = await supabase.functions.invoke(
+        annual ? 'create-annual-checkout' : 'create-checkout',
+        { body: annual ? { plan: upgrade.id, returnPath } : { plan: upgrade.id, period: 'monthly', returnPath } },
+      )
       if (error || !data?.url) { setCheckoutError('Erro ao iniciar pagamento. Tenta novamente.'); return }
       window.location.href = data.url
     } catch {
@@ -323,6 +421,9 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
   // pronta, em vez de redirecionar logo o próprio browser.
   async function handleAskParents() {
     if (!upgrade) return
+    // Também é um início de checkout real (mesma sessão Stripe, só muda o
+    // canal), por isso regista igual ao handleUpgrade.
+    logFunnelEvent('checkout_started', feature)
     // Aberto já, síncrono com o clique — se esperasse pelo fetch antes de
     // abrir, o Safari (e por vezes o Chrome) trata a nova aba como popup
     // não pedido pelo utilizador e bloqueia-a em silêncio, sem erro nenhum
@@ -332,9 +433,10 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
     setCheckoutError('')
     try {
       const returnPath = `${location.pathname}${location.search}`
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { plan: upgrade.id, period: annual ? 'annual' : 'monthly', returnPath },
-      })
+      const { data, error } = await supabase.functions.invoke(
+        annual ? 'create-annual-checkout' : 'create-checkout',
+        { body: annual ? { plan: upgrade.id, returnPath } : { plan: upgrade.id, period: 'monthly', returnPath } },
+      )
       if (error || !data?.url) {
         win?.close()
         setCheckoutError('Erro ao preparar o pedido. Tenta novamente.')
@@ -383,43 +485,35 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
                   posição via grid-area para o topo da coluna dos botões —
                   sem duplicar JSX para cada tamanho de ecrã. */}
               {/* Só a preview (FeaturePreview) fica na coluna da direita. Título,
-                  lista de benefícios e preço ficam todos juntos à esquerda,
-                  "o que ganhas" inteiro mesmo em cima de "quanto custa", não
-                  partido a meio entre as duas colunas. Testemunho tirado
-                  daqui: o popup já tem uma prova concreta (a preview da
-                  feature, à direita), um segundo bloco de confiança por
-                  baixo só repetia a decisão com mais scroll, sem acrescentar
-                  nada que ajudasse a decidir mais depressa. */}
+                  lista de benefícios, preço e testemunho ficam todos juntos à
+                  esquerda, "o que ganhas" inteiro mesmo em cima de "quanto
+                  custa", não partido a meio entre as duas colunas. */}
               <div className="plan-gate-title-block">
                 <FeaturePreview feature={feature} />
               </div>
 
               <div className="plan-gate-col-left">
                 <p style={C.titleRight}>{title}</p>
-                {/* Um cartão só, não lista solta + pílulas soltas + cartão de
-                    preço, cada um com o seu próprio ritmo visual (pedido do
-                    Gustavo: "esta estranha"). O destaque (preço) continua
-                    separado por dentro do mesmo cartão, não por fora. */}
-                <div style={C.benefitsCard}>
-                  {highlights.length > 0 && (
-                    <ul style={{ ...C.highlights, listStyle: 'none', padding: 0, margin: 0 }}>
-                      {highlights.map(h => (
-                        <li key={h.label} style={C.highlightItem}>
-                          <span style={C.highlightLabel}><span style={C.highlightCheck}>✓</span>{h.label}</span>
-                          <span style={C.highlightValue}>{h.value}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  <div style={C.upsellDivider} />
-                  {upgrade.priceLabelAnnual && (
-                    <div style={C.periodToggle} role="group" aria-label="Periodicidade do pagamento">
-                      <button type="button" style={C.periodBtn(!annual)} onClick={() => setAnnual(false)}>Mensal</button>
-                      <button type="button" style={C.periodBtn(annual)} onClick={() => setAnnual(true)}>
-                        Anual <span style={C.periodBadge}>2 meses grátis</span>
-                      </button>
-                    </div>
-                  )}
+                <p style={C.subtitleRight}>Escolhe como queres continuar.</p>
+                {highlights.length > 0 && (
+                  <ul style={{ ...C.highlights, listStyle: 'none', padding: 0 }}>
+                    {highlights.map(h => (
+                      <li key={h.label} style={C.highlightItem}>
+                        <span style={C.highlightLabel}><span style={C.highlightCheck}>✓</span>{h.label}</span>
+                        <span style={C.highlightValue}>{h.value}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {upgrade.priceLabelAnnual && (
+                  <div style={{ ...C.periodToggle, margin: '0 auto 12px' }} role="group" aria-label="Periodicidade do pagamento">
+                    <button type="button" style={C.periodBtn(!annual)} onClick={() => setAnnual(false)}>Mensal</button>
+                    <button type="button" style={C.periodBtn(annual)} onClick={() => setAnnual(true)}>
+                      Anual <span style={C.periodBadge}>2 meses grátis</span>
+                    </button>
+                  </div>
+                )}
+                <div style={C.upsell}>
                   <div style={C.upsellHead}>
                     <span style={C.upsellName}>{upgrade.name}</span>
                     <span style={C.upsellPrice}>
@@ -428,6 +522,35 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
                     </span>
                   </div>
                 </div>
+
+                {testimonial && (
+                  <div style={C.testimonial}>
+                    <div style={C.testimonialStack}>
+                      {orderedTestimonials.map((t, i) => (
+                        <p
+                          key={i}
+                          style={{ ...C.testimonialQuote, visibility: i === tIdx ? 'visible' : 'hidden' }}
+                          className={i === tIdx ? 'plan-gate-fade' : undefined}
+                          aria-hidden={i !== tIdx}
+                        >“{t.quote}”</p>
+                      ))}
+                    </div>
+                    <div style={C.testimonialFooter}>
+                      <div style={C.testimonialPerson}>
+                        <img src={testimonial.photo} alt="" style={C.testimonialPhoto} />
+                        <div style={{ minWidth: 0 }}>
+                          <div style={C.testimonialName}>{testimonial.name}</div>
+                          <div style={C.testimonialRole}>{testimonial.role}</div>
+                        </div>
+                      </div>
+                    </div>
+                    {orderedTestimonials.length > 1 && (
+                      <div style={{ ...C.testimonialDots, justifyContent: 'center' }}>
+                        {orderedTestimonials.map((_, i) => <span key={i} style={C.testimonialDot(i === tIdx)} />)}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="plan-gate-col-right">
@@ -436,7 +559,7 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
                   <button style={C.ctaPrimary} className="plan-gate-cta-primary" disabled={loading || askingParents} onClick={handleUpgrade}>
                     {loading ? 'A abrir…' : `Passar a ${upgrade.name} agora`}
                   </button>
-                  <button style={C.ctaSecondary} disabled={loading || askingParents} onClick={handleAskParents}>
+                  <button style={C.ctaLink} disabled={loading || askingParents} onClick={handleAskParents}>
                     {askingParents ? 'A preparar…' : 'Pedir aos pais para pagar'}
                   </button>
                 </div>

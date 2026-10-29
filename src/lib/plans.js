@@ -52,7 +52,7 @@ export const PLANS = {
   free: {
     id: 'free',
     name: 'Grátis',
-    maxProjects: 3,
+    maxProjects: 2,
     ai: {
       createProject: 3,
       interviewProject: 3,
@@ -217,7 +217,9 @@ export function planHighlights(fromPlanId, toPlan) {
   if (toPlan.ai.exportPptx > from.ai.exportPptx) {
     items.push({ label: 'Exportar PowerPoint', value: `${fmt(from.ai.exportPptx)} → ${fmt(toPlan.ai.exportPptx)} por mês` })
   }
-  return items.slice(0, 4)
+  // Era 4, reduzido no pop-up de upgrade, pedido do Gustavo para ficar
+  // mais simples: só os 3 benefícios mais fortes, não a lista toda.
+  return items.slice(0, 3)
 }
 
 export function remainingUses(planId, feature, usageMap) {
@@ -255,7 +257,7 @@ export const PLAN_GATE_MESSAGES = {
     body: plan === 'school' || plan === 'school_pro'
       ? `A conta escolar permite até ${getPlan(plan).maxProjects} projetos. Fala com o teu professor sobre o plano da escola.`
       : plan === 'free'
-        ? 'Já tens 3 projetos — o máximo do plano Grátis. Com o Plus tens 15 projetos e muito mais IA.'
+        ? 'Já tens 2 projetos, o máximo do plano Grátis. Com o Plus tens 15 projetos e muito mais IA.'
         : `O plano ${getPlan(plan).name} permite até ${getPlan(plan).maxProjects} projetos. Faz upgrade para teres mais.`,
   }),
   createProject: (plan) => ({

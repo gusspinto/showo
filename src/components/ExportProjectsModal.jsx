@@ -285,7 +285,7 @@ export default function ExportProjectsModal({ onClose }) {
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 10, padding: '12px 14px', fontSize: 13, lineHeight: 1.5, color: 'var(--color-text)' }}>
                   <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 1, color: 'var(--color-warning)' }} />
                   <span>
-                    {skippedCount === 1 ? '1 projeto não foi copiado' : `${skippedCount} projetos não foram copiados`}: a conta de destino atingiu o limite do plano {exportResult?.dest_plan === 'free' ? 'Grátis (3 projetos)' : 'Build (10 projetos)'}. Faz upgrade para continuar.
+                    {skippedCount === 1 ? '1 projeto não foi copiado' : `${skippedCount} projetos não foram copiados`}: a conta de destino atingiu o limite do plano {exportResult?.dest_plan === 'free' ? 'Grátis (2 projetos)' : 'Plus (15 projetos)'}. Faz upgrade para continuar.
                   </span>
                 </div>
               )}

@@ -458,7 +458,10 @@
     flex: 1;
     min-width: 0;
     max-width: none;
-    overflow: hidden;
+    /* Sem overflow:hidden aqui: o título já tem o seu próprio
+       overflow/ellipsis (.dc-tb-title), e esconder o que sai daqui
+       também escondia o dropdown do seletor de projeto, maior que
+       a toolbar. */
   }
   .dc-tb-title { font-size: 12px; width: 100%; }
   .dc-tb-spacer { display: none; }

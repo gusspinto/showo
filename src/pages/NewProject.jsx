@@ -210,7 +210,7 @@ function b64ToBytes(b64) {
 
 export default function NewProject() {
   const navigate = useNavigate()
-  const { user, profile, checkGate, consumeAI } = useAuth()
+  const { user, profile, checkGate, consumeAI, logFunnelEvent } = useAuth()
   const { toast, show: showToast } = useToast()
 
   /* Passos: choose → describe | loading → review → submitting
@@ -220,7 +220,10 @@ export default function NewProject() {
   const [step, setStep] = useState('choose')
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { trackEvent('novo_viewed', { logged_in: !!user }) }, [])
+  useEffect(() => {
+    trackEvent('novo_viewed', { logged_in: !!user })
+    if (user?.id) logFunnelEvent('novo_viewed')
+  }, [])
 
   /* As edge functions de IA exigem sessão. Sem conta, o fluxo dava erro
      genérico já dentro do passo de análise — depois de o aluno escrever a
@@ -310,6 +313,7 @@ export default function NewProject() {
   function startManual() {
     if (requireAccount('/novo')) return
     trackEvent('novo_manual_started')
+    logFunnelEvent('novo_manual_started')
     setForm({ name: description.trim().slice(0, 60), project_type: projectType })
     setError(null)
     setIsManual(true)
@@ -341,9 +345,11 @@ export default function NewProject() {
       setForm({ ...(data?.prefill ?? {}), project_type: projectType })
       setIsManual(false)
       trackEvent('novo_ai_generate_result', { ok: true })
+      logFunnelEvent('novo_ai_generate_result', 'ok')
       setStep('review')
     } catch (err) {
       trackEvent('novo_ai_generate_result', { ok: false, reason: err.message || 'unknown' })
+      logFunnelEvent('novo_ai_generate_result', 'fail')
       setError(
         err.message === 'generate_failed' || !err.message
           ? 'Não foi possível gerar agora. Podes tentar de novo, ou preencher o projeto à mão.'
@@ -554,6 +560,10 @@ export default function NewProject() {
   /* ── Criar ── */
   async function handleSubmit() {
     if (requireAccount('/novo')) return
+    // Só se aplica a página própria: um anexo não conta para o limite do
+    // plano (parent_project_id faz o enforce_max_projects ignorá-lo), e
+    // chamar isto aqui bloquearia anexos sem necessidade.
+    if (!(presentation === 'attachment' && parentId) && !(await guardProjectCount())) return
     setStep('submitting')
     setError(null)
     let aiResult = {}
@@ -582,6 +592,7 @@ export default function NewProject() {
       })
       if (user?.id) localStorage.setItem(`edit_token_${project.slug}`, project.edit_token)
       trackEvent('project_created', { manual: isManual, attachment: asAttachment })
+      if (user?.id) logFunnelEvent('project_created', isManual ? 'manual' : 'ai')
 
       // Veio de um ficheiro? Anexa o original ao projeto — fica transferível
       // e serve de fonte. Não bloqueia a navegação.

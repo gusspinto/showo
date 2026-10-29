@@ -61,6 +61,7 @@ import { Book2Icon as BookOpen } from '@solar-icons/react/bold/book-2'
 import { BugIcon as Bug } from '@solar-icons/react/bold/bug'
 import { CheckReadIcon as CheckRead } from '@solar-icons/react/bold/check-read'
 import { TrashBinMinimalisticIcon as TrashBin } from '@solar-icons/react/bold/trash-bin-minimalistic'
+import { DocumentTextIcon as FileText } from '@solar-icons/react/bold/document-text'
 
 // Strip emoji characters from notification messages coming from the DB
 function stripEmoji(str) {
@@ -1198,6 +1199,11 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                       <Sparkles size={16} /> {extras.aiScore != null ? 'Ver análise IA' : 'Análise IA'}
                     </button>
                   )}
+                  {extras.onReport && (
+                    <button className="mobile-drawer-btn" onClick={() => { extras.onReport(); setOpen(false) }}>
+                      <FileText size={16} /> Relatório
+                    </button>
+                  )}
                   {extras.showCertificate && (
                     <button className="mobile-drawer-btn" onClick={() => { navigate(`/certificado/${extras.slug}`); setOpen(false) }}>
                       <Trophy size={16} /> Certificado
@@ -1592,6 +1598,11 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 <Trophy size={18} /> Certificado
               </button>
             )}
+            {extras.onReport && (
+              <button className="mob-nav-btn" onClick={() => { extras.onReport(); setProjMenuOpen(false) }}>
+                <FileText size={18} /> Relatório
+              </button>
+            )}
             {extras.onTogglePublicView && (
               <button className="mob-nav-btn" style={{ color: extras.viewAsPublic ? 'var(--color-text)' : undefined }}
                 onClick={() => { extras.onTogglePublicView(); setProjMenuOpen(false) }}>
@@ -1726,9 +1737,29 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           ) : (
             /* ── ALUNO sidebar ── */
             <>
+              {/* Mesa de trabalho: tudo o que é o trabalho do próprio aluno
+                  (projeto, diário, coach, biblioteca, turmas) num só grupo.
+                  Biblioteca e Turmas estavam soltas sem título nenhum antes
+                  disto, apontado pelo Gustavo. Mantém-se "Mesa de trabalho"
+                  (uma mudança anterior para "Espaço de trabalho" foi revertida
+                  a pedido dele). O item "Dashboard" tinha passado a "Projetos",
+                  voltou a "Dashboard", termo mais familiar para quem já usa
+                  outras apps. */}
+              {!collapsed && showLabels && <span className="sb-label">Mesa de trabalho</span>}
+
               {user && (
                 <button className={`sb-item${isActive('/dashboard') ? ' active' : ''}`} onClick={() => navigate('/dashboard')}>
                   <LayoutDashboard size={16} />{!collapsed && showLabels && <span>Dashboard</span>}
+                </button>
+              )}
+              {user && (
+                <button className={`sb-item${location.pathname === '/diario' ? ' active' : ''}`} onClick={() => navigate('/diario')}>
+                  <BookOpen size={16} />{!collapsed && showLabels && <span>Diário</span>}
+                </button>
+              )}
+              {user && (
+                <button className={`sb-item${isActive('/coach') ? ' active' : ''}`} onClick={() => navigate('/coach')}>
+                  <Bot size={16} />{!collapsed && showLabels && <span>Coach IA</span>}
                 </button>
               )}
               {user && (
@@ -1741,24 +1772,15 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   <Users2 size={16} />{!collapsed && showLabels && <span>Turmas</span>}
                 </button>
               )}
-              {showEstagios && (
-                <button className={`sb-item${isActive('/vagas') ? ' active' : ''}`} onClick={() => navigate('/vagas')}>
-                  <Briefcase size={16} />{!collapsed && showLabels && <span>Vagas</span>}
-                </button>
-              )}
-              <button className={`sb-item${isActive('/explorar') ? ' active' : ''}`} onClick={() => navigate('/explorar')}>
-                <Compass size={16} />{!collapsed && showLabels && <span>Explorar</span>}
-              </button>
-              {user && (
-                <button className={`sb-item${isActive('/coach') ? ' active' : ''}`} onClick={() => navigate('/coach')}>
-                  <Bot size={16} />{!collapsed && showLabels && <span>Coach IA</span>}
-                </button>
-              )}
 
               {user && (
                 <>
                   <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
                   {!collapsed && showLabels && <span className="sb-label">Comunidade</span>}
+
+                  <button className={`sb-item${isActive('/explorar') ? ' active' : ''}`} onClick={() => navigate('/explorar')}>
+                    <Compass size={16} />{!collapsed && showLabels && <span>Explorar</span>}
+                  </button>
 
                   <button className={`sb-item${isActive('/mensagens') ? ' active' : ''}`} onClick={() => navigate('/mensagens')}
                     style={{ position: 'relative' }}>
@@ -1769,11 +1791,22 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                       </span>
                     )}
                   </button>
+
+                  {showEstagios && (
+                    <button className={`sb-item${isActive('/vagas') ? ' active' : ''}`} onClick={() => navigate('/vagas')}>
+                      <Briefcase size={16} />{!collapsed && showLabels && <span>Vagas</span>}
+                    </button>
+                  )}
                 </>
               )}
 
-
+              {/* Conta: tudo o que é sobre a relação com o Showo em si
+                  (pagar mais, aprender a usar a app), não é trabalho nem
+                  comunidade. Planos e Aprende a usar também estavam soltos
+                  sem título, mesmo pedido. Sem gate de user, tal como já
+                  era antes (visível a visitante não autenticado). */}
               <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
+              {!collapsed && showLabels && <span className="sb-label">Conta</span>}
 
               {!isSchoolAccount && (
                 <button className={`sb-item${isActive('/pricing') ? ' active' : ''}`} onClick={() => navigate('/pricing')} title="Planos">
@@ -2062,6 +2095,12 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               <span className="pmf-tooltip">{extras.analyzingAI ? 'A analisar…' : 'Análise IA'}</span>
             </button>
           )}
+          {extras.onReport && (
+            <button className="pmf-btn" aria-label="Relatório" onClick={extras.onReport}>
+              <FileText size={16} />
+              <span className="pmf-tooltip">Relatório</span>
+            </button>
+          )}
           {extras.showCertificate && (
             <button className="pmf-btn" aria-label="Certificado" onClick={() => navigate(`/certificado/${extras.slug}`)}>
               <Trophy size={16} />
@@ -2184,9 +2223,25 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 </>
               ) : (
                 <>
+                  {/* Mesmos três grupos da sidebar de desktop (Mesa de
+                      trabalho / Comunidade / Conta), o menu mobile tinha
+                      ficado sem as etiquetas e sem Coach IA/Vagas quando
+                      essa reorganização aconteceu no desktop, apontado
+                      pelo Gustavo ao rever a dev. */}
+                  {user && <span className="mob-nav-section-label">Mesa de trabalho</span>}
                   {user && (
                     <button className={`mob-nav-btn${isActive('/dashboard') ? ' active' : ''}`} onClick={() => { navigate('/dashboard'); setMenuOpen(false) }}>
                       <LayoutDashboard size={18} /> Dashboard
+                    </button>
+                  )}
+                  {user && (
+                    <button className={`mob-nav-btn${location.pathname === '/diario' ? ' active' : ''}`} onClick={() => { navigate('/diario'); setMenuOpen(false) }}>
+                      <BookOpen size={18} /> Diário
+                    </button>
+                  )}
+                  {user && (
+                    <button className={`mob-nav-btn${isActive('/coach') ? ' active' : ''}`} onClick={() => { navigate('/coach'); setMenuOpen(false) }}>
+                      <Bot size={18} /> Coach IA
                     </button>
                   )}
                   {user && (
@@ -2207,6 +2262,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                       <BookOpen size={18} /> Aprende a usar
                     </button>
                   )}
+                  {user && <span className="mob-nav-section-label">Comunidade</span>}
                   <button className={`mob-nav-btn${isActive('/explorar') ? ' active' : ''}`} onClick={() => { navigate('/explorar'); setMenuOpen(false) }}>
                     <Compass size={18} /> Explorar
                   </button>
@@ -2217,7 +2273,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   )}
                   {user && (
                     <>
-                      <span className="mob-nav-section-label">Comunidade</span>
                       {/* Faltava aqui — o ramo "aluno" deste menu nunca
                           verificava isSchoolAccount, só o ramo "professor"
                           lá em cima tinha Turmas. Contas de escola ficavam
@@ -2232,6 +2287,12 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                         <MessageSquare size={18} /> Mensagens
                         {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-text)', color: 'var(--color-bg)', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
                       </button>
+                      {showEstagios && (
+                        <button className={`mob-nav-btn${isActive('/vagas') ? ' active' : ''}`} onClick={() => { navigate('/vagas'); setMenuOpen(false) }}>
+                          <Briefcase size={18} /> Vagas
+                        </button>
+                      )}
+                      <span className="mob-nav-section-label">Conta</span>
                       <button className={`mob-nav-btn${isActive('/pricing') ? ' active' : ''}`} onClick={() => { navigate('/pricing'); setMenuOpen(false) }}>
                         <Sparkles size={18} /> Planos
                       </button>
