@@ -511,14 +511,14 @@ function buildDay12({ firstName, unsubscribeUrl, code, dia, daysToDefense }: Day
 }
 
 function buildDay13({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayBuilderCtx): Built {
-  const subject = 'Penúltimo email. Vale a pena ler este.'
+  const subject = 'Falta só mais um email depois deste'
   return {
     subject,
     html: wrapEmail(
       greeting(firstName) +
       urgencyBand(dia, code, daysToDefense) +
-      headline('Falta pouco para este ciclo de emails acabar') +
-      paragraph(`Depois de amanhã deixas de receber estes emails diários. O código ${esc(code)} continua disponível, mas se querias experimentar o Plus enquanto ainda tens isto fresco na cabeça, entra no Plus a 4,49€/mês em vez de 8,99€.`, true) +
+      headline('Amanhã é o último email que te mando') +
+      paragraph(`Se ainda tens isto fresco na cabeça, aproveita agora. Com ${esc(code)}, o Plus fica a 4,49€/mês nos primeiros 6 meses.`, true) +
       cta(`${APP}/pricing`, 'Entrar no Plus agora'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
@@ -527,14 +527,14 @@ function buildDay13({ firstName, unsubscribeUrl, code, dia, daysToDefense }: Day
 }
 
 function buildDay14({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayBuilderCtx): Built {
-  const subject = 'Última vez que te escrevo sobre isto'
+  const subject = 'Último email, prometido'
   return {
     subject,
     html: wrapEmail(
       greeting(firstName) +
       urgencyBand(dia, code, daysToDefense) +
-      headline('Este é o último email desta série') +
-      paragraph(`Não vais receber mais nenhum destes. O código ${esc(code)} continua disponível até dezembro, se quiseres entrar no Plus a 4,49€/mês em vez de 8,99€, durante 6 meses.`, true) +
+      headline('É este, não te escrevo mais sobre isto') +
+      paragraph(`Se quiseres entrar, o código ${esc(code)} ainda funciona: 4,49€/mês nos primeiros 6 meses do Plus. Depois disto, fica só o recap semanal, nada de diário.`, true) +
       cta(`${APP}/pricing`, 'Usar o desconto'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
