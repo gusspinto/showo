@@ -511,15 +511,15 @@ function buildDay12({ firstName, unsubscribeUrl, code, dia, daysToDefense }: Day
 }
 
 function buildDay13({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayBuilderCtx): Built {
-  const subject = 'Falta só mais um email depois deste'
+  const subject = 'Reta final, falta pouco'
   return {
     subject,
     html: wrapEmail(
       greeting(firstName) +
       urgencyBand(dia, code, daysToDefense) +
-      headline('Amanhã é o último email que te mando') +
-      paragraph(`Se ainda tens isto fresco na cabeça, aproveita agora. Com ${esc(code)}, o Plus fica a 4,49€/mês nos primeiros 6 meses.`, true) +
-      cta(`${APP}/pricing`, 'Entrar no Plus agora'),
+      headline('É agora ou nunca mais vais ter esta cabeça fresca') +
+      paragraph(`Amanhã fecha este ciclo. Com ${esc(code)}, o Plus fica a 4,49€/mês nos primeiros 6 meses, aproveita enquanto ainda estás a pensar nisto.`, true) +
+      cta(`${APP}/pricing`, 'Entrar já, antes que arrefeça'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
     ),
@@ -527,15 +527,15 @@ function buildDay13({ firstName, unsubscribeUrl, code, dia, daysToDefense }: Day
 }
 
 function buildDay14({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayBuilderCtx): Built {
-  const subject = 'Último email, prometido'
+  const subject = 'Última chamada'
   return {
     subject,
     html: wrapEmail(
       greeting(firstName) +
       urgencyBand(dia, code, daysToDefense) +
-      headline('É este, não te escrevo mais sobre isto') +
-      paragraph(`Se quiseres entrar, o código ${esc(code)} ainda funciona: 4,49€/mês nos primeiros 6 meses do Plus. Depois disto, fica só o recap semanal, nada de diário.`, true) +
-      cta(`${APP}/pricing`, 'Usar o desconto'),
+      headline('O código ainda está quentinho, aproveita agora') +
+      paragraph(`${esc(code)} dá 4,49€/mês nos primeiros 6 meses do Plus. Não é o fim de nada, és só tu a decidir se queres levar isto a sério a partir de hoje.`, true) +
+      cta(`${APP}/pricing`, 'Usar o desconto agora'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
     ),
