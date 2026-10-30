@@ -30,7 +30,7 @@ import { checkRateLimit, getCorsHeaders, getAuthUser } from '../_shared/rateLimi
 
 const COLUMN_TYPES = new Set(['text', 'number', 'boolean', 'date'])
 const MAX_COLUMNS = 12
-const MANAGEMENT_ACTIONS = new Set(['list_tables', 'create_table', 'delete_table', 'toggle_public', 'get_api_key', 'regen_api_key'])
+const MANAGEMENT_ACTIONS = new Set(['list_tables', 'create_table', 'update_table_columns', 'delete_table', 'toggle_public', 'get_api_key', 'regen_api_key'])
 const DATA_ACTIONS = new Set(['list_rows', 'insert_row', 'update_row', 'delete_row'])
 // Sem sessão nem chave nenhuma — é o que a página pública do projeto chama
 // para saber que tabelas existem e mostrar um "API ativa" a qualquer
@@ -174,6 +174,21 @@ Deno.serve(async (req) => {
         return json({ error: 'Não foi possível criar a tabela.' }, 500)
       }
       return json({ table: created })
+    }
+
+    if (action === 'update_table_columns') {
+      const tableId = String(body.tableId ?? '')
+      const columns = Array.isArray(body.columns) ? body.columns : []
+      const { data: table } = await sb.from('project_data_tables').select('id, project_id').eq('id', tableId).single()
+      if (!table || table.project_id !== projectId) return json({ error: 'Tabela não encontrada.' }, 404)
+      if (!columns.length || columns.length > MAX_COLUMNS) return json({ error: `Entre 1 e ${MAX_COLUMNS} colunas.` }, 400)
+      if (!columns.every(validColumnDef)) return json({ error: 'Uma ou mais colunas têm forma inválida (nome/tipo).' }, 400)
+      const names = columns.map((c: { name: string }) => c.name)
+      if (new Set(names).size !== names.length) return json({ error: 'Não pode haver duas colunas com o mesmo nome.' }, 400)
+
+      const { data: updated, error } = await sb.from('project_data_tables').update({ columns }).eq('id', tableId).select().single()
+      if (error) { console.error('[project-db] update_table_columns', error.message); return json({ error: 'Não foi possível atualizar as colunas.' }, 500) }
+      return json({ table: updated })
     }
 
     if (action === 'toggle_public') {

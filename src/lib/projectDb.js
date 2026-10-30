@@ -33,6 +33,7 @@ export const listTables   = (projectId) => call({ action: 'list_tables', project
  * tabelas existem, sem nunca expor tabelas privadas nem a chave real. */
 export const listPublicTables = (projectId) => call({ action: 'list_public_tables', projectId })
 export const createTable  = (projectId, name, label, columns) => call({ action: 'create_table', projectId, name, label, columns })
+export const updateTableColumns = (projectId, tableId, columns) => call({ action: 'update_table_columns', projectId, tableId, columns })
 export const deleteTable  = (projectId, tableId) => call({ action: 'delete_table', projectId, tableId })
 export const toggleTablePublic = (projectId, tableId, isPublic) => call({ action: 'toggle_public', projectId, tableId, isPublic })
 export const getApiKey    = (projectId) => call({ action: 'get_api_key', projectId })

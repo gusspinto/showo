@@ -139,6 +139,10 @@ const PLANS = [
 /* Tabela comparativa — três cards lado a lado obrigam a decorar o que muda
    de um para o outro. Uma tabela deixa comparar linha a linha de relance.
    A conta escola fica fora: não é self-serve, é vendida à instituição. */
+/* Os números de utilizações de IA (msgs, x vezes) saíram daqui. Viviam
+   também em cada cartão, repetidos, e só confundiam numa página de vendas.
+   Ficam só o que é capacidade real (armazenamento, projetos) e o que é
+   uma funcionalidade a mais, não uma quantidade. */
 const COMPARE_ROWS = [
   { label: 'Ficheiros de prova', free: false, plus: '250MB', pro: '1GB' },
   { label: 'Projetos', free: '3', plus: '15', pro: 'Ilimitados' },
@@ -300,7 +304,7 @@ export default function Pricing() {
             className={`pricing-period-btn${annual ? ' is-active' : ''}`}
             onClick={() => setAnnual(true)}
           >
-            Anual <span className="pricing-period-badge">2 meses grátis</span>
+            Anual
           </button>
         </div>
 
