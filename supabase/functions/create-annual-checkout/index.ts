@@ -79,6 +79,10 @@ Deno.serve(async (req) => {
       customer: customerId,
       mode: 'payment',
       allow_promotion_codes: true,
+      // locale 'pt' = português europeu. Sem isto saía em português do
+      // Brasil por deteção automática errada (confirmado no create-checkout
+      // com uma screenshot real, mesmo problema aqui).
+      locale: 'pt',
       payment_method_types: ['card', 'multibanco', 'mb_way'],
       line_items: [{
         price_data: {

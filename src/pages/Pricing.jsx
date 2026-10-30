@@ -63,6 +63,12 @@ const PLANS = [
     id: 'plus',
     name: 'Plus',
     priceMonthly: '€8,99',
+    // Cupão SHOWO_ONBOARDING_2026, 50%/6 meses, aplica-se sozinho no
+    // checkout desde que o create-checkout passou a aplicar o desconto
+    // automaticamente. Sem isto aqui, quem vem direto à pricing (sem
+    // passar pelo email) via o preço cheio e nunca sabe que o desconto
+    // existe até já estar no Stripe.
+    priceMonthlyDiscounted: '€4,49',
     priceAnnual: '€89,90',
     annualEquivalent: '€7,49/mês',
     period: '/mês',
@@ -99,6 +105,7 @@ const PLANS = [
     id: 'pro',
     name: 'Pro',
     priceMonthly: '€17,99',
+    priceMonthlyDiscounted: '€8,99',
     priceAnnual: '€179,90',
     annualEquivalent: '€14,99/mês',
     period: '/mês',
@@ -314,11 +321,19 @@ export default function Pricing() {
                 </div>
 
                 <div className="pricing-price">
+                  {!annual && plan.priceMonthlyDiscounted && (
+                    <span className="pricing-amount-old">{plan.priceMonthly}</span>
+                  )}
                   <span className="pricing-amount">
-                    {annual && plan.priceAnnual ? plan.priceAnnual : plan.priceMonthly ?? plan.price}
+                    {annual && plan.priceAnnual
+                      ? plan.priceAnnual
+                      : plan.priceMonthlyDiscounted ?? plan.priceMonthly ?? plan.price}
                   </span>
                   {plan.period && <span className="pricing-period">{annual && plan.priceAnnual ? '/ano' : plan.period}</span>}
                 </div>
+                {!annual && plan.priceMonthlyDiscounted && (
+                  <p className="pricing-discount-note">-50% nos primeiros 6 meses, já aplicado ao continuares</p>
+                )}
                 {annual && plan.annualEquivalent ? (
                   <p className="pricing-annual-note">equivale a {plan.annualEquivalent}</p>
                 ) : plan.weeklyNote ? (

@@ -152,9 +152,20 @@
   color: var(--color-text-secondary);
 }
 
-.pricing-price { display: flex; align-items: baseline; gap: 3px; margin: 22px 0 14px; }
+.pricing-price { display: flex; align-items: baseline; gap: 7px; margin: 22px 0 6px; }
 .pricing-amount { font-size: 34px; font-weight: 800; letter-spacing: -1.2px; line-height: 1; }
+.pricing-amount-old {
+  font-size: var(--text-lg); font-weight: 600;
+  color: var(--color-text-tertiary);
+  text-decoration: line-through;
+  text-decoration-color: var(--color-text-tertiary);
+}
 .pricing-period { font-size: var(--text-base); color: var(--color-text-tertiary); font-weight: 600; }
+.pricing-discount-note {
+  margin: 0 0 14px;
+  font-size: var(--text-sm); font-weight: 700;
+  color: var(--color-primary);
+}
 
 .pricing-cta {
   display: flex; align-items: center; justify-content: center; gap: 7px;
