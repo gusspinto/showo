@@ -330,7 +330,7 @@ export default function Pricing() {
                   {plan.period && <span className="pricing-period">{annual && plan.priceAnnual ? '/ano' : plan.period}</span>}
                 </div>
                 {!annual && plan.priceMonthlyDiscounted && (
-                  <p className="pricing-discount-note">-50% nos primeiros 6 meses, já aplicado ao continuares</p>
+                  <p className="pricing-discount-note">-50% nos primeiros 6 meses · código válido até 18 dez</p>
                 )}
                 {annual && plan.annualEquivalent ? (
                   <p className="pricing-annual-note">equivale a {plan.annualEquivalent}</p>
