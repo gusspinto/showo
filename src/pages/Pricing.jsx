@@ -73,7 +73,6 @@ const PLANS = [
     annualEquivalent: '€7,49/mês',
     period: '/mês',
     positioning: 'Não pares a meio do caminho.',
-    weeklyNote: 'pouco mais de €2 por semana',
     cta: 'Começar com o Plus',
     ctaVariant: 'primary',
     popular: true,
@@ -110,7 +109,6 @@ const PLANS = [
     annualEquivalent: '€14,99/mês',
     period: '/mês',
     positioning: 'Chega à conversa com prova, não com promessas.',
-    weeklyNote: 'pouco mais de €4 por semana',
     cta: 'Ir para Pro',
     ctaVariant: 'primary',
     inherits: 'Plus',
@@ -336,11 +334,6 @@ export default function Pricing() {
                 )}
                 {annual && plan.annualEquivalent ? (
                   <p className="pricing-annual-note">equivale a {plan.annualEquivalent}</p>
-                ) : plan.weeklyNote ? (
-                  /* Ao dia os cêntimos não dizem nada a ninguém; à semana
-                     já se compara com alguma coisa real. É a mesma conta,
-                     não uma promessa nova. */
-                  <p className="pricing-annual-note">{plan.weeklyNote}</p>
                 ) : null}
                 {isCurrent ? (
                   <div className="pricing-current"><Check size={14} /> Plano atual</div>
