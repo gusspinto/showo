@@ -75,10 +75,13 @@ export default function WeeklyRecapTeaser({ userId, onDismiss, onUpgrade }) {
         }
       `}</style>
 
+      {/* width/height/minHeight explícitos: a regra global de mobile
+          (button { min-height: 44px }) esticava este botão só-ícone para
+          um retângulo alto e estreito à volta do X. */}
       <button
         onClick={dismiss}
         aria-label="Dispensar"
-        style={{ position: 'absolute', top: 10, right: 10, background: 'var(--on-fill)', border: 'none', borderRadius: 7, cursor: 'pointer', color: 'var(--on-dim)', padding: 6, display: 'flex', zIndex: 1 }}
+        style={{ position: 'absolute', top: 10, right: 10, width: 26, height: 26, minHeight: 26, background: 'var(--on-fill)', border: 'none', borderRadius: 7, cursor: 'pointer', color: 'var(--on-dim)', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}
       ><X size={12} /></button>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, paddingRight: 24 }}>

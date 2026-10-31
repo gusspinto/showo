@@ -1427,8 +1427,14 @@
   .sdb-grid { grid-template-columns: minmax(0, 1fr) 280px; }
 }
 
+/* Cópia mobile do recap do LinkedIn, acima da saudação, escondida em
+   desktop, onde só a cópia dentro de sdb-col (sdb-o-recap) existe. */
+.sdb-recap-top { display: none; }
+
 @media (max-width: 900px) {
   .sdb-page { padding: var(--sp-5) var(--sp-4) var(--sp-16); }
+  .sdb-recap-top { display: block; margin-bottom: var(--sp-5); }
+  .sdb-o-recap { display: none; }
 
   /* Em mobile, a elevação superfície/fundo já separa os cards sem bordas.
      Tirar a borda dá um look mais nativo (iOS/Android) e menos "painel web". */

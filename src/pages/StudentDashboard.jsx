@@ -834,6 +834,19 @@ export default function StudentDashboard({ user, profile }) {
 
       <div className={`sdb-page${isEmptyState ? ' sdb-page--empty' : ''}`}>
 
+        {/* ══════════════ RECAP DO LINKEDIN (só mobile, acima de tudo) ══════════════
+            Pedido do Gustavo: em ecrã estreito isto fica acima até da saudação,
+            não só acima da Agenda. Em desktop continua só na coluna lateral
+            (sdb-o-recap, mais abaixo), esta cópia fica escondida por CSS a
+            partir de 900px (ver .sdb-recap-top). Mesmo componente, mesmo
+            `recapTeaserDismissed`, por isso dispensar aqui também esconde a
+            cópia de desktop. */}
+        {!isSchoolAccount && planId === 'free' && !recapTeaserDismissed && (
+          <div className="sdb-recap-top">
+            <WeeklyRecapTeaser userId={user.id} onDismiss={() => setRecapTeaserDismissed(true)} onUpgrade={() => setShowUpgradeModal('weeklyRecap')} />
+          </div>
+        )}
+
         {/* ══════════════ CABEÇALHO DO DIA ══════════════ */}
         <header className="sdb-hero">
           <div className="sdb-hero-main">
