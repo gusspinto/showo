@@ -128,6 +128,15 @@
 }
 .mcal-day.selected .mcal-dot { background: #fff; }
 .mcal-day-num { font-size: var(--text-sm); font-weight: 600; line-height: 1; }
+/* Dia já selecionado e sem nada marcado: o número vira um "+" amarelo,
+   atalho para abrir o composer de lembrete sem ter de ir ao botão lá
+   em baixo. Cor diferente do azul do "selecionado" de propósito, para ler
+   como uma ação (criar), não como mais um estado de seleção. */
+.mcal-day.selected.is-add {
+  background: var(--color-warning);
+  box-shadow: 0 0 0 1px var(--color-warning), 0 4px 14px -2px var(--color-warning-subtle);
+}
+.mcal-day-add { color: #fff; }
 
 .mcal-dots {
   display: flex; gap: 2px; align-items: center;

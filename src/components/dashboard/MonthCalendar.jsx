@@ -106,17 +106,28 @@ export default function MonthCalendar({ events = [], onAddReminder, onEventClick
           {WEEKDAYS.map((w, i) => <span key={i}>{w}</span>)}
         </div>
 
-        {/* Day grid */}
+        {/* Day grid. Um dia já selecionado e sem eventos troca o número por
+            um "+" amarelo: um atalho para adicionar lembrete sem ter de
+            encontrar o botão lá em baixo, pedido do Gustavo. O primeiro
+            toque seleciona o dia (como sempre); como já está selecionado e
+            vazio, o segundo toque no mesmo círculo já é "adicionar". */}
         <div className="mcal-grid">
           {monthGrid.map(({ date, outside }, i) => {
             const key = date.toDateString()
             const dayEvents = eventsByDay[key] || []
             const isToday = key === todayKey
             const isSelected = key === selectedDay
+            const isAddShortcut = isSelected && dayEvents.length === 0
             return (
-              <button key={i} onClick={() => setSelectedDay(key)} tabIndex={pickerOpen ? -1 : 0}
-                className={`mcal-day${outside ? ' outside' : ''}${isToday ? ' today' : ''}${isSelected ? ' selected' : ''}`}>
-                <span className="mcal-day-num">{date.getDate()}</span>
+              <button key={i} tabIndex={pickerOpen ? -1 : 0}
+                onClick={() => isAddShortcut ? onAddReminder?.(date) : setSelectedDay(key)}
+                aria-label={isAddShortcut ? `Adicionar lembrete, ${date.getDate()}` : undefined}
+                className={`mcal-day${outside ? ' outside' : ''}${isToday ? ' today' : ''}${isSelected ? ' selected' : ''}${isAddShortcut ? ' is-add' : ''}`}>
+                {isAddShortcut ? (
+                  <Plus size={13} className="mcal-day-add" />
+                ) : (
+                  <span className="mcal-day-num">{date.getDate()}</span>
+                )}
                 {dayEvents.length > 0 && (
                   <span className="mcal-dots">
                     {dayEvents.slice(0, 3).map((e, i) => (
