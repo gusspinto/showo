@@ -13,6 +13,12 @@ import { forwardRef } from 'react'
    verdade, mais fino e mais curto do que o anel/cabo para não competir
    com eles, outro detalhe que a versão da biblioteca não tinha.
 
+   Quarta passagem (pedido do Gustavo): cabo mais curto, para a lupa
+   parecer maior sem mudar o raio outra vez; e o reflexo trocado por um
+   arco de circunferência verdadeiro (A, não uma curva Q à mão), segue a
+   mesma curvatura do anel por fora, lê melhor como vidro do que a curva
+   solta da versão anterior.
+
    Mesma API (prop size + passthrough), para não obrigar a mexer em nenhum
    sítio que já usa <Search />. */
 export const MagnifierIcon = forwardRef(({ size = 24, style, ...props }, ref) => {
@@ -34,8 +40,8 @@ export const MagnifierIcon = forwardRef(({ size = 24, style, ...props }, ref) =>
         d="M18.8 10A8.8 8.8 0 1 0 1.2 10A8.8 8.8 0 1 0 18.8 10ZM16.4 10A6.4 6.4 0 1 0 3.6 10A6.4 6.4 0 1 0 16.4 10Z"
         fill="currentColor"
       />
-      <path d="M7.1 5.9Q5.6 6.9 5.6 8.6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-      <line x1="16.3" y1="16.3" x2="22.3" y2="22.3" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+      <path d="M7.8 5.6A3.6 3.6 0 0 0 5.1 8.9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <line x1="16.3" y1="16.3" x2="20.9" y2="20.9" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
     </svg>
   )
 })
