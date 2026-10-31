@@ -98,14 +98,14 @@ export default function ShowoMascot({ size = 96, className, style, animated = tr
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      {/* Interior dos olhos: cor de superfície do tema, por baixo dos anéis */}
-      <path d={INTERIOR_LEFT} fill="var(--color-surface)" />
-      <path d={INTERIOR_RIGHT} fill="var(--color-surface)" />
-
       {/* Anéis dos olhos */}
       <path d={RING_BLUE} fill={BLUE} />
       <path d={RING_RED} fill={RED} />
       <path d={RING_RED_ACCENT} fill={RED} />
+
+      {/* Interior dos olhos: cor de superfície do tema, por cima dos anéis para abrir o buraco */}
+      <path d={INTERIOR_LEFT} fill="var(--color-surface)" />
+      <path d={INTERIOR_RIGHT} fill="var(--color-surface)" />
 
       {/* Sobrancelhas */}
       <path d={EYEBROW_LEFT} fill="var(--color-text)" />
