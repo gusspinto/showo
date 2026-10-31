@@ -1,6 +1,13 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 /* ══════════════════════════════════════════════════════════════════════════
+   PAUSADO em 2026-10-31 (migração 220, cron.unschedule), a pedido do
+   Gustavo: nunca disparou em 30 dias, e o maior streak de diário de
+   qualquer utilizador real (fora de contas de teste) em toda a história da
+   plataforma foi 2 dias, o limiar mínimo aqui é 5. Código e função ficam,
+   só o cron foi desligado. Candidato a reativar se o send-diary-return-nudge
+   conseguir trazer gente de volta ao diário com regularidade suficiente.
+
    NUDGE DE STREAK DIÁRIA — todos os dias, 19:00 UTC
    ──────────────────────────────────────────────────────────────────────────
    O recap semanal (send-weekly-recap) já existia; isto é o par diário, pedido
