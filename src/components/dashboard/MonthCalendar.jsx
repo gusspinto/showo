@@ -167,30 +167,23 @@ export default function MonthCalendar({ events = [], onAddReminder, onEventClick
           marcada. Sem eventos, o "+" amarelo na própria grelha já resolve
           adicionar um lembrete, por isso o cabeçalho "Sábado, 31 de
           Outubro" + botão "+ Lembrete" + "Sem eventos." era três formas de
-          dizer a mesma coisa vazia, pedido do Gustavo para tirar. Com
-          eventos já marcados, o "+" da grelha deixa de aparecer (o dia já
-          não está vazio), por isso o botão "+ Lembrete" aqui continua a
-          fazer sentido para adicionar mais um nesse dia. */}
+          dizer a mesma coisa vazia, pedido do Gustavo para tirar. O botão
+          "+ Lembrete" também saiu daqui (não fazia sentido com o atalho da
+          grelha já ali ao lado); em troca, cada linha agora abre para
+          editar/remover ao clicar (onEventClick), o que faltava por
+          completo antes. */}
       {selectedEvents.length > 0 && (
         <div className="mcal-panel">
-          <div className="mcal-panel-header">
-            <span className="mcal-panel-date">
-              {selectedDate.toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' })}
-            </span>
-            <button className="mcal-add-btn" onClick={() => onAddReminder?.(selectedDate)}>
-              <Plus size={12} /> Lembrete
-            </button>
-          </div>
+          <span className="mcal-panel-date">
+            {selectedDate.toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' })}
+          </span>
           <div className="mcal-events">
             {selectedEvents.map((e, i) => (
-              <div key={i} className="mcal-event" onClick={() => onEventClick?.(e)}
+              <button key={i} className="mcal-event" onClick={() => onEventClick?.(e)}
                 style={{ background: urgencyBg(e.date, todayISO) }}>
-                <span className="mcal-event-bar" style={{ background: eventTypeColor(e.type) }} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="mcal-event-title">{e.title}</div>
-                  {e.subtitle && <div className="mcal-event-sub">{e.subtitle}</div>}
-                </div>
-              </div>
+                <div className="mcal-event-title">{e.title}</div>
+                {e.subtitle && <div className="mcal-event-sub">{e.subtitle}</div>}
+              </button>
             ))}
           </div>
         </div>

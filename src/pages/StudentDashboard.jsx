@@ -160,7 +160,6 @@ export default function StudentDashboard({ user, profile }) {
   const [reminders, setReminders] = useState([])
   const [myInterests, setMyInterests] = useState([])
   const [icsToken, setIcsToken] = useState(null)
-  const [googleConnected, setGoogleConnected] = useState(null)
   const [orgName, setOrgName] = useState(null)
   const [schoolClasses, setSchoolClasses] = useState([])
   const [showExportModal, setShowExportModal] = useState(false)
@@ -227,6 +226,7 @@ export default function StudentDashboard({ user, profile }) {
   )
   const [showReport, setShowReport] = useState(false)
   const [showAddReminder, setShowAddReminder] = useState(null)
+  const [editingReminder, setEditingReminder] = useState(null)
   const [showCalendarSync, setShowCalendarSync] = useState(false)
   const [showRecap, setShowRecap] = useState(false)
   const [showCheckin, setShowCheckin] = useState(false)
@@ -436,9 +436,6 @@ export default function StudentDashboard({ user, profile }) {
 
     supabase.rpc('get_my_ics_token')
       .then(({ data }) => { if (data) setIcsToken(data) })
-
-    supabase.from('google_calendar_tokens').select('connected_at').eq('user_id', user.id).maybeSingle()
-      .then(({ data }) => setGoogleConnected(!!data))
   }, [user.id])
 
   /* ── Feedback do professor ── */
@@ -632,6 +629,13 @@ export default function StudentDashboard({ user, profile }) {
 
   function handleEventClick(e) {
     if (e.type === 'defense' && e.slug) navigate(`/projeto/${e.slug}`)
+    // Clicar num lembrete já marcado não fazia nada, o Gustavo apontou isto.
+    // O id do evento no calendário é "r-<id-real>" (calendarEvents), por
+    // isso tira-se o prefixo para encontrar o lembrete completo em reminders.
+    if (e.type === 'reminder') {
+      const reminder = reminders.find(r => r.id === e.id.replace(/^r-/, ''))
+      if (reminder) setEditingReminder(reminder)
+    }
   }
 
   /* ── Painéis partilhados (reposicionados em empty state) ── */
@@ -741,6 +745,15 @@ export default function StudentDashboard({ user, profile }) {
           initialDate={showAddReminder instanceof Date ? showAddReminder : new Date()}
           onClose={() => setShowAddReminder(null)}
           onCreated={r => setReminders(prev => [...prev, r].sort((a, b) => (a.reminder_date < b.reminder_date ? -1 : 1)))}
+        />
+      )}
+      {editingReminder && (
+        <AddReminderModal
+          userId={user.id}
+          editing={editingReminder}
+          onClose={() => setEditingReminder(null)}
+          onSaved={r => setReminders(prev => prev.map(x => x.id === r.id ? r : x))}
+          onDeleted={id => setReminders(prev => prev.filter(x => x.id !== id))}
         />
       )}
       {showCalendarSync && (
