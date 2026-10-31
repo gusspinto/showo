@@ -461,9 +461,16 @@ export default function Coach() {
                     title="Conversas"
                     style={{ display: 'none', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, minHeight: 0, background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 9, color: C.muted, cursor: 'pointer', flexShrink: 0 }}
                   ><HistoryIcon size={16} /></button>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <ShowoMascot size={34} />
-                  </div>
+                  {/* Sem conversa ainda, o mascote grande do ecrã vazio (mais
+                      abaixo) já é o "rosto" da página, repeti-lo aqui em
+                      cima ficava com dois ao mesmo tempo, apontado pelo
+                      Gustavo. Com conversa a decorrer, o mascote grande some,
+                      e este do cabeçalho volta a ser o único. */}
+                  {!isEmpty && (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <ShowoMascot size={34} />
+                    </div>
+                  )}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 17, fontWeight: 700, color: C.text }}>Coach IA</div>
                     <div style={{ fontSize: 12, color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeProject ? `A falar sobre: ${activeProject.name}` : 'Conselho sobre o teu percurso'}</div>

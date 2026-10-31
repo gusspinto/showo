@@ -1759,7 +1759,9 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               )}
               {user && (
                 <button className={`sb-item${isActive('/coach') ? ' active' : ''}`} onClick={() => navigate('/coach')}>
-                  <ShowoMascot size={16} />{!collapsed && showLabels && <span>Coach IA</span>}
+                  <ShowoMascot size={16} animated={false} monochrome
+                    color={isActive('/coach') ? 'var(--color-primary)' : 'var(--color-text-tertiary)'} />
+                  {!collapsed && showLabels && <span>Coach IA</span>}
                 </button>
               )}
               {user && (
@@ -2241,7 +2243,8 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   )}
                   {user && (
                     <button className={`mob-nav-btn${isActive('/coach') ? ' active' : ''}`} onClick={() => { navigate('/coach'); setMenuOpen(false) }}>
-                      <ShowoMascot size={18} /> Coach IA
+                      <ShowoMascot size={18} animated={false} monochrome
+                        color={isActive('/coach') ? 'var(--color-primary)' : 'var(--color-text-tertiary)'} /> Coach IA
                     </button>
                   )}
                   {user && (
