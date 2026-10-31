@@ -1,31 +1,32 @@
 import { useEffect, useRef, useState } from 'react'
 
-/* Mascote do Showo: uma "janela" desenhada à mão, não um retângulo
-   geométrico perfeito. Dois traços soltos (um só de cima, outro que faz
-   esquerda+baixo+direita) que não se tocam no canto superior direito: o
-   espaço entre eles é de propósito, o mesmo "ar" que já existe no ícone
-   original do Showo (favicon.png/icon.png), onde a moldura nunca fecha
-   num quadrado perfeito. Pedido do Gustavo, depois de testar uma versão
-   com as 3 cores da marca (moldura + janela branca) e preferir esta:
-   mais simples, mais "desenhada à mão", uma cor só.
+/* Mascote do Showo, versão "óculos": dois olhos de formas diferentes (um
+   círculo azul, um quadrado arredondado dourado) ligados por uma pequena
+   ponte azul, com uma boca vermelha por baixo. As 3 cores da marca
+   presentes, cada uma com o seu papel (não a competir pelo mesmo espaço
+   como as versões anteriores tentaram). Desenhado pelo Gustavo, replicado
+   aqui com fidelidade depois de várias direções descartadas (moldura de 3
+   cores, blob com mordida, pilha de cartões, etc.).
 
-   Olhos: duas elipses cheias, sem pupila, mesma cor do traço. Piscam
-   sozinhos de vez em quando e seguem o rato num raio pequeno, só quando
-   animated=true (a sidebar pede animated=false, estático). */
+   Pupila do círculo e do quadrado usam a mesma cor do respetivo anel, o
+   interior de ambos é escuro (cor de superfície, não transparente, para
+   funcionar em qualquer fundo da app).
 
-const STROKE_W = 2.3
+   Pisca sozinho de vez em quando (as pupilas encolhem na vertical) e
+   seguem o rato num raio pequeno, só quando animated=true (a sidebar pede
+   animated=false, estático). */
 
-const PATH_SIDES = 'M4.3 4.8 C3.3 9 3.2 15.5 3.8 20 C9 20.9 16 20.8 20.3 20.1 C20.9 16.5 21 11.5 20.9 8.5'
-const PATH_TOP = 'M5.4 3.6 C10 2.9 13.5 2.9 16.3 3.3'
+const BLUE = '#3B82F6'
+const GOLD = '#D4A017'
+const RED = '#D14D4D'
+const DARK = '#1c2430'
 
-export default function ShowoMascot({ size = 96, className, style, animated = true, color = 'var(--color-primary, #3B82F6)' }) {
+export default function ShowoMascot({ size = 96, className, style, animated = true }) {
   const rootRef = useRef(null)
   const [blink, setBlink] = useState(false)
   const [look, setLook] = useState({ x: 0, y: 0 })
 
   // Pisca sozinho: intervalo aleatório entre 2.5s e 6s, pisca dura 120ms.
-  // Desligado quando animated=false (ex: item da sidebar, pedido do
-  // Gustavo para ficar estático ali).
   useEffect(() => {
     if (!animated) return
     let timeout
@@ -41,7 +42,7 @@ export default function ShowoMascot({ size = 96, className, style, animated = tr
     return () => clearTimeout(timeout)
   }, [animated])
 
-  // Olhos seguem o rato, raio pequeno, só quando o mascote está no ecrã.
+  // Pupilas seguem o rato, raio pequeno, só quando o mascote está no ecrã.
   useEffect(() => {
     if (!animated) return
     let raf = null
@@ -58,7 +59,7 @@ export default function ShowoMascot({ size = 96, className, style, animated = tr
         const dx = e.clientX - cx
         const dy = e.clientY - cy
         const dist = Math.hypot(dx, dy) || 1
-        const maxOffset = 0.8 // unidades do viewBox
+        const maxOffset = 0.5 // unidades do viewBox, raio pequeno (as pupilas já são pequenas)
         const scale = Math.min(1, dist / 220)
         setLook({ x: (dx / dist) * maxOffset * scale, y: (dy / dist) * maxOffset * scale })
       })
@@ -67,10 +68,7 @@ export default function ShowoMascot({ size = 96, className, style, animated = tr
     return () => { window.removeEventListener('mousemove', onMove); if (raf) cancelAnimationFrame(raf) }
   }, [animated])
 
-  const eyeCx1 = 9.4 + look.x
-  const eyeCx2 = 15 + look.x
-  const eyeCy1 = 12.3 + look.y
-  const eyeCy2 = 12.1 + look.y
+  const pupilRy = blink ? 0.2 : 1.7
 
   return (
     <svg
@@ -78,15 +76,24 @@ export default function ShowoMascot({ size = 96, className, style, animated = tr
       className={className}
       style={style}
       width={size}
-      height={size * (27 / 24)}
-      viewBox="0 0 24 27"
+      height={size * (24 / 32)}
+      viewBox="0 0 32 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <path d={PATH_SIDES} stroke={color} strokeWidth={STROKE_W} strokeLinecap="round" strokeLinejoin="round" />
-      <path d={PATH_TOP} stroke={color} strokeWidth={STROKE_W} strokeLinecap="round" strokeLinejoin="round" />
-      <ellipse cx={eyeCx1} cy={eyeCy1} rx={1.5} ry={blink ? 0.15 : 1.9} fill={color} />
-      <ellipse cx={eyeCx2} cy={eyeCy2} rx={1.5} ry={blink ? 0.15 : 1.9} fill={color} />
+      {/* Olho esquerdo: círculo azul */}
+      <circle cx="7.5" cy="9.5" r="6.3" fill={DARK} stroke={BLUE} strokeWidth="3" />
+      <ellipse cx={7.5 + look.x} cy={9.5 + look.y} rx={1.7} ry={pupilRy} fill={BLUE} />
+
+      {/* Olho direito: quadrado arredondado dourado */}
+      <rect x="17.5" y="3.2" width="12.5" height="12.5" rx="4" fill={DARK} stroke={GOLD} strokeWidth="3" />
+      <ellipse cx={23.7 + look.x} cy={9.4 + look.y} rx={1.7} ry={pupilRy} fill={GOLD} />
+
+      {/* Ponte: liga os dois olhos, por cima de ambos para nunca ficar tapada */}
+      <path d="M13.5 8.3 C15.5 8 16.8 9 17.5 10.3" fill="none" stroke={BLUE} strokeWidth="2.6" strokeLinecap="round" />
+
+      {/* Boca */}
+      <rect x="12.5" y="20" width="8" height="2.1" rx="1.05" fill={RED} />
     </svg>
   )
 }
