@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { AltArrowLeftIcon as ChevronLeft } from '@solar-icons/react/bold/alt-arrow-left'
 import { AltArrowRightIcon as ChevronRight } from '@solar-icons/react/bold/alt-arrow-right'
 import { PlusIcon as Plus } from '../icons/PlusIcon'
+import MonthYearPicker from './MonthYearPicker'
 
 const WEEKDAYS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
 const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
@@ -17,9 +18,17 @@ function eventTypeColor(type) {
   }
 }
 
+// Alcance do rolo de mês/ano: 3 anos para trás, 5 para a frente, a partir
+// do ano de hoje (não do mês em navegação), para o intervalo não andar a
+// deslizar sozinho enquanto a pessoa navega com as setinhas.
+const nowYear = new Date().getFullYear()
+const PICKER_MIN_YEAR = nowYear - 3
+const PICKER_MAX_YEAR = nowYear + 5
+
 export default function MonthCalendar({ events = [], onAddReminder, onEventClick }) {
   const [cursor, setCursor] = useState(() => { const d = new Date(); d.setDate(1); return d })
   const [selectedDay, setSelectedDay] = useState(() => new Date().toDateString())
+  const [pickerOpen, setPickerOpen] = useState(false)
 
   const monthGrid = useMemo(() => {
     const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1)
@@ -57,19 +66,31 @@ export default function MonthCalendar({ events = [], onAddReminder, onEventClick
     <div className="mcal">
       {/* Header: mês centrado entre as setas, ao estilo widget de calendário
           do iOS, título único em foco, sem botões de texto a competir com ele.
-          Tocar no título salta para o mês e o dia de hoje. */}
+          Tocar no título abre o rolo de mês/ano (MonthYearPicker), para não
+          ser preciso clicar várias vezes nas setinhas para ir longe. */}
       <div className="mcal-header">
         <button onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}
           className="mcal-nav-btn" aria-label="Mês anterior"><ChevronLeft size={15} /></button>
         <button
-          className="mcal-title"
-          onClick={() => { const t = new Date(); t.setDate(1); setCursor(t); setSelectedDay(new Date().toDateString()) }}
-          title="Ir para hoje"
+          className={`mcal-title${pickerOpen ? ' is-open' : ''}`}
+          onClick={() => setPickerOpen(v => !v)}
+          aria-expanded={pickerOpen}
         >
           {MONTHS[cursor.getMonth()]} <span className="mcal-year">{cursor.getFullYear()}</span>
         </button>
         <button onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}
           className="mcal-nav-btn" aria-label="Mês seguinte"><ChevronRight size={15} /></button>
+
+        {pickerOpen && (
+          <MonthYearPicker
+            month={cursor.getMonth() + 1}
+            year={cursor.getFullYear()}
+            minYear={PICKER_MIN_YEAR}
+            maxYear={PICKER_MAX_YEAR}
+            onChange={(month, year) => setCursor(new Date(year, month - 1, 1))}
+            onClose={() => setPickerOpen(false)}
+          />
+        )}
       </div>
 
       {/* Weekday labels */}

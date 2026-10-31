@@ -31,7 +31,7 @@ function parseDateStr(value) {
    scroll com a roda do rato por vezes anda pouco de mais por tick e o
    "mandatory" devolve à posição de origem, parecendo que não faz nada;
    clicar funciona sempre, scroll ou toque continuam a funcionar em paralelo. */
-function WheelColumn({ items, selectedIndex, onSettle, width, itemHeight, visibleRows, fontSize }) {
+export function WheelColumn({ items, selectedIndex, onSettle, width, itemHeight, visibleRows, fontSize }) {
   const ref = useRef(null)
   const settleTimer = useRef(null)
   const programmatic = useRef(false)
