@@ -174,11 +174,15 @@ Deno.serve(async (req) => {
       try {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('full_name, coach_nudge_sent_at, coach_nudge_opted_out')
+          .select('full_name, coach_nudge_sent_at, coach_nudge_opted_out, onboarding_sequence_step, onboarding_opted_out')
           .eq('id', c.userId)
           .maybeSingle()
         if (!testUserId) {
           if (!profile || profile.coach_nudge_sent_at || profile.coach_nudge_opted_out) continue
+          // Quem está a meio do onboarding já recebe 1 email por dia dessa
+          // sequência. Confirmado contra a BD em 2026-10-31 que isto
+          // estava a empilhar com este nudge no mesmo dia ("parece spam").
+          if (profile.onboarding_sequence_step != null && profile.onboarding_sequence_step < 14 && !profile.onboarding_opted_out) continue
         }
 
         const email = emailById.get(c.userId)

@@ -147,9 +147,17 @@ Deno.serve(async (req) => {
 
         const { data: profile } = await supabase
           .from('profiles')
-          .select('full_name')
+          .select('full_name, onboarding_sequence_step, onboarding_opted_out')
           .eq('id', userId)
           .maybeSingle()
+
+        // Quem está a meio do onboarding já recebe 1 email por dia dessa
+        // sequência (send-onboarding-sequence). Confirmado contra a BD em
+        // 2026-10-31 que isto estava a empilhar com este nudge no mesmo
+        // dia ("parece spam"). Mesma regra do send-saturday-nudge.
+        if (profile?.onboarding_sequence_step != null && profile.onboarding_sequence_step < 14 && !profile.onboarding_opted_out) {
+          skipped++; continue
+        }
 
         // Projeto mais ativo no período, para dar nome e link ao email.
         const countByProject: Record<string, number> = {}

@@ -21,7 +21,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
    primeiro passo já é "carrega um ficheiro" (não uma folha em branco) —
    quem já tem projeto vai direto para ele, a continuar, não a recomeçar.
 
-   Corre sozinho via pg_cron toda segunda-feira às 9h UTC (job
+   Corre sozinho via pg_cron toda segunda-feira às 16h UTC (job
    "send-weekly-checkin" — ver select * from cron.job). Tem opt-out (link
    no rodapé do email, checkin-unsubscribe/) e limite de MAX_CONSECUTIVE_SENDS
    tentativas seguidas sem a pessoa voltar, para nunca virar spam permanente.
@@ -267,7 +267,7 @@ Deno.serve(async (req) => {
       page++
     }
 
-    const PROFILE_COLS = 'id, full_name, role, weekly_checkin_email_sent_at, created_at, weekly_checkin_opted_out, weekly_checkin_streak'
+    const PROFILE_COLS = 'id, full_name, role, weekly_checkin_email_sent_at, created_at, weekly_checkin_opted_out, weekly_checkin_streak, onboarding_sequence_step, onboarding_opted_out'
     let profilesQuery = supabase
       .from('profiles')
       .select(PROFILE_COLS)
@@ -281,6 +281,10 @@ Deno.serve(async (req) => {
     const dormant = (profiles ?? []).filter(p => {
       if (testUserId) return p.id === testUserId
       if (p.weekly_checkin_opted_out) return false
+      // Quem está a meio do onboarding já recebe 1 email por dia dessa
+      // sequência. Confirmado contra a BD em 2026-10-31 que isto estava a
+      // empilhar com o check-in semanal no mesmo dia ("parece spam").
+      if (p.onboarding_sequence_step != null && p.onboarding_sequence_step < 14 && !p.onboarding_opted_out) return false
       const last = lastSignIn.get(p.id)
       const isDormant = !last || new Date(last) < dormantSince
       const notCoolingDown = !p.weekly_checkin_email_sent_at || new Date(p.weekly_checkin_email_sent_at) < cooldownSince
@@ -414,5 +418,6 @@ Deno.serve(async (req) => {
   }
 })
 
-/* ── Já agendado (migração 147) ── cron.job "send-weekly-checkin", toda
-   segunda 9h UTC. Para pausar: select cron.unschedule('send-weekly-checkin'). */
+/* ── Já agendado (migração 147, horário reajustado na 217) ── cron.job
+   "send-weekly-checkin", toda segunda 16h UTC. Para pausar: select
+   cron.unschedule('send-weekly-checkin'). */

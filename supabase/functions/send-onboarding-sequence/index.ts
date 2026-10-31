@@ -655,6 +655,29 @@ Deno.serve(async (req) => {
         const built = builder({ firstName, unsubscribeUrl, hasProject, projectState, code: discountCode, dia: step + 1, daysToDefense, isProfessional: isProfessionalOccupation(p.occupation) })
         const emailType = `onboarding_day${step + 1}`
 
+        // Rede de segurança contra reenvio do mesmo dia: se o update de
+        // onboarding_sequence_step abaixo falhar depois de um envio anterior
+        // (timeout, queda de rede a meio do loop), o profile fica parado
+        // nesse step e o cron do dia seguinte tentava mandar o MESMO dia
+        // outra vez (aconteceu a um user real em produção, onboarding_day7
+        // em 28/10 e 29/10). Confirmar aqui, mesmo que o step já devesse ter
+        // avançado, é a única garantia real, já que envio e update do step
+        // não são atómicos.
+        if (!testUserId) {
+          const { data: alreadySent } = await supabase
+            .from('email_sends')
+            .select('id')
+            .eq('user_id', p.id)
+            .eq('email_type', emailType)
+            .limit(1)
+          if (alreadySent?.length) {
+            await supabase.from('profiles')
+              .update({ onboarding_sequence_step: step + 1, onboarding_sequence_sent_at: now.toISOString() })
+              .eq('id', p.id)
+            continue
+          }
+        }
+
         const res = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },

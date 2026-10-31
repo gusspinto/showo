@@ -17,8 +17,9 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
    plan='free' (ainda não comprou), continuous_cycle_opted_out=false, e
    cooldown de 6 dias desde o último envio (continuous_cycle_sent_at).
 
-   Corre 1x por semana via pg_cron, à quinta às 10h, longe da segunda
-   (recap semanal) e do cron diário de onboarding, para não parecer spam.
+   Corre 1x por semana via pg_cron, à quinta às 16h UTC (reajustado na
+   migração 217, antes corria à mesma hora que o onboarding diário, 10h,
+   colisão direta descoberta a partir de uma queixa real de spam).
 
    Modo de teste: { test_user_id, force_step } no corpo, mesmo padrão das
    outras sequências.

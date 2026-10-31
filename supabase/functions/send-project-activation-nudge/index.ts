@@ -197,12 +197,22 @@ Deno.serve(async (req) => {
     const userIds = [...new Set(incompleteRaw.map(p => p.user_id))]
     const { data: profiles } = await supabase
       .from('profiles')
-      .select('id, full_name, activation_nudge_opted_out')
+      .select('id, full_name, activation_nudge_opted_out, onboarding_sequence_step, onboarding_opted_out')
       .in('id', userIds)
     const profileById = new Map((profiles ?? []).map(p => [p.id, p]))
+    // Quem está a meio da sequência de onboarding já recebe 1 email por dia
+    // dessa sequência (send-onboarding-sequence). Empilhar este por cima,
+    // no mesmo dia, foi confirmado contra a BD em 2026-10-31 a acontecer de
+    // facto (queixa real de "parece spam"). Mesma regra que o
+    // send-saturday-nudge e o send-continuous-cycle já aplicam.
+    const inActiveOnboarding = (prof: { onboarding_sequence_step?: number | null; onboarding_opted_out?: boolean } | undefined) =>
+      !!prof && prof.onboarding_sequence_step != null && prof.onboarding_sequence_step < 14 && !prof.onboarding_opted_out
     const incomplete = testProjectId
       ? incompleteRaw
-      : incompleteRaw.filter(p => !profileById.get(p.user_id)?.activation_nudge_opted_out)
+      : incompleteRaw.filter(p => {
+          const prof = profileById.get(p.user_id)
+          return !prof?.activation_nudge_opted_out && !inActiveOnboarding(prof)
+        })
     const nameById = new Map((profiles ?? []).map(p => [p.id, p.full_name]))
 
     const emailById = new Map<string, string>()
