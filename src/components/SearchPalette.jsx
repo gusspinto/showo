@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { MagnifierIcon as Search } from '@solar-icons/react/outline/magnifier'
+import { MagnifierIcon as Search } from './icons/MagnifierIcon'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { UserIcon as User } from '@solar-icons/react/bold/user'
 import { LayersIcon as Layers } from '@solar-icons/react/bold/layers'
