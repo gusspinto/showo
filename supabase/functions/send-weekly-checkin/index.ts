@@ -21,9 +21,13 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
    primeiro passo já é "carrega um ficheiro" (não uma folha em branco) —
    quem já tem projeto vai direto para ele, a continuar, não a recomeçar.
 
-   Corre sozinho via pg_cron toda segunda-feira às 16h UTC (job
-   "send-weekly-checkin" — ver select * from cron.job). Tem opt-out (link
-   no rodapé do email, checkin-unsubscribe/) e limite de MAX_CONSECUTIVE_SENDS
+   Corre sozinho via pg_cron todo domingo às 16h UTC (job
+   "send-weekly-checkin", ver select * from cron.job), movido da segunda
+   na migração 221 a pedido do Gustavo: segunda tinha 4 campanhas
+   diferentes empilhadas na mesma manhã, esta é a de maior volume de longe
+   (178/semana contra <20/semana das outras três), e não há nenhuma razão
+   lógica para ser segunda especificamente. Tem opt-out (link no rodapé do
+   email, checkin-unsubscribe/) e limite de MAX_CONSECUTIVE_SENDS
    tentativas seguidas sem a pessoa voltar, para nunca virar spam permanente.
    ══════════════════════════════════════════════════════════════════════════ */
 
@@ -418,6 +422,6 @@ Deno.serve(async (req) => {
   }
 })
 
-/* ── Já agendado (migração 147, horário reajustado na 217) ── cron.job
-   "send-weekly-checkin", toda segunda 16h UTC. Para pausar: select
-   cron.unschedule('send-weekly-checkin'). */
+/* Já agendado (migração 147, horário reajustado na 217, movido de segunda
+   para domingo na 221) via cron.job "send-weekly-checkin", todo domingo
+   16h UTC. Para pausar: select cron.unschedule('send-weekly-checkin'). */
