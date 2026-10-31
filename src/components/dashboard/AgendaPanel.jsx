@@ -1,11 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { PlusIcon as Plus } from '../icons/PlusIcon'
 import { RefreshCircleIcon as CalendarSync } from '@solar-icons/react/bold/refresh-circle'
-import { CalendarMinimalisticIcon as CalendarDays } from '@solar-icons/react/bold/calendar-minimalistic'
-import { AltArrowDownIcon as ChevronDown } from '@solar-icons/react/bold/alt-arrow-down'
 import MonthCalendar from './MonthCalendar'
-
-const DOW = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D']
 
 const TYPE_LABEL = { task: 'Tarefa', reminder: 'Lembrete', defense: 'Defesa' }
 
@@ -25,30 +21,10 @@ function dayLabel(iso, todayISO, tomorrowISO) {
 export default function AgendaPanel({
   events, googleConnected, onAddReminder, onSync, onEventClick,
 }) {
-  const [showMonth, setShowMonth] = useState(
-    () => localStorage.getItem('agenda-showMonth') !== 'false'
-  )
-
   const today = new Date(); today.setHours(0, 0, 0, 0)
   const todayISO = toISO(today)
   const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1)
   const tomorrowISO = toISO(tomorrow)
-
-  /* Faixa de 7 dias a partir de hoje — dá o contexto da semana num relance,
-     sem gastar a altura de uma grelha mensal numa coluna estreita. */
-  const week = useMemo(() => {
-    return Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(today); d.setDate(d.getDate() + i)
-      const iso = toISO(d)
-      return {
-        iso,
-        day: d.getDate(),
-        dow: DOW[(d.getDay() + 6) % 7],
-        count: events.filter(e => e.date === iso).length,
-        isToday: i === 0,
-      }
-    })
-  }, [events, todayISO])
 
   /* Só o que ainda está à frente, e só até 30 dias — uma agenda que mostra
      coisas de daqui a três meses deixa de ser uma agenda. */
@@ -67,8 +43,6 @@ export default function AgendaPanel({
     return groups
   }, [events, todayISO])
 
-  const todayCount = events.filter(e => e.date === todayISO).length
-
   return (
     <section className="sdb-panel sdb-agenda">
       <header className="sdb-panel-head">
@@ -81,76 +55,44 @@ export default function AgendaPanel({
         </div>
       </header>
 
-      <p className="sdb-agenda-today">
-        {todayCount === 0
-          ? 'Nada marcado para hoje.'
-          : `${todayCount} ${todayCount === 1 ? 'coisa marcada' : 'coisas marcadas'} para hoje.`}
-      </p>
+      <MonthCalendar
+        events={events}
+        onAddReminder={onAddReminder}
+        onEventClick={onEventClick}
+      />
 
-      <div className="sdb-week">
-        {week.map(d => (
-          <div key={d.iso} className={`sdb-week-day${d.isToday ? ' is-today' : ''}`}>
-            <span className="sdb-week-dow">{d.dow}</span>
-            <span className="sdb-week-num">{d.day}</span>
-            <span className="sdb-week-dots">
-              {Array.from({ length: Math.min(d.count, 3) }).map((_, i) => (
-                <span key={i} className="sdb-week-dot" />
-              ))}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      {upcoming.length === 0 ? (
-        <div className="sdb-agenda-empty">
-          <p>Sem prazos nos próximos 30 dias.</p>
-          <button className="sdb-linkbtn sdb-linkbtn--strong" onClick={onSync}>
-            Sincronizar o teu calendário
-          </button>
-        </div>
-      ) : (
-        <ul className="sdb-agenda-list">
-          {upcoming.slice(0, 4).map(group => (
-            <li key={group.date} className="sdb-agenda-group">
-              <span className={`sdb-agenda-date${group.date === todayISO ? ' is-today' : ''}`}>
-                {dayLabel(group.date, todayISO, tomorrowISO)}
-              </span>
-              {group.items.map(e => (
-                <button key={e.id} className={`sdb-agenda-item sdb-agenda-item--${e.type}`}
-                  onClick={() => onEventClick?.(e)}>
-                  <span className="sdb-agenda-bar" />
-                  <span className="sdb-agenda-body">
-                    <span className="sdb-agenda-title">{e.title}</span>
-                    <span className="sdb-agenda-sub">
-                      {TYPE_LABEL[e.type]}{e.subtitle ? ` · ${e.subtitle}` : ''}
+      {upcoming.length > 0 && (
+        <div className="sdb-agenda-upcoming">
+          <span className="sdb-agenda-upcoming-label">Próximos</span>
+          <ul className="sdb-agenda-list">
+            {upcoming.slice(0, 4).map(group => (
+              <li key={group.date} className="sdb-agenda-group">
+                <span className={`sdb-agenda-date${group.date === todayISO ? ' is-today' : ''}`}>
+                  {dayLabel(group.date, todayISO, tomorrowISO)}
+                </span>
+                {group.items.map(e => (
+                  <button key={e.id} className={`sdb-agenda-item sdb-agenda-item--${e.type}`}
+                    onClick={() => onEventClick?.(e)}>
+                    <span className="sdb-agenda-bar" />
+                    <span className="sdb-agenda-body">
+                      <span className="sdb-agenda-title">{e.title}</span>
+                      <span className="sdb-agenda-sub">
+                        {TYPE_LABEL[e.type]}{e.subtitle ? ` · ${e.subtitle}` : ''}
+                      </span>
                     </span>
-                  </span>
-                </button>
-              ))}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <button className={`sdb-agenda-toggle${showMonth ? ' is-open' : ''}`}
-        onClick={() => setShowMonth(v => { const next = !v; localStorage.setItem('agenda-showMonth', String(next)); return next })}
-        aria-expanded={showMonth}>
-        <CalendarDays size={13} />
-        {showMonth ? 'Fechar mês' : 'Ver o mês'}
-        <ChevronDown size={13} className="sdb-agenda-chev" />
-      </button>
-
-      {showMonth && (
-        <div className="sdb-agenda-month">
-          <MonthCalendar
-            events={events}
-            onAddReminder={onAddReminder}
-            onEventClick={onEventClick}
-          />
+                  </button>
+                ))}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
-      {googleConnected === false && upcoming.length > 0 && (
+      {upcoming.length === 0 && googleConnected !== false && (
+        <p className="sdb-agenda-note sdb-agenda-note--empty">Sem prazos nos próximos 30 dias.</p>
+      )}
+
+      {googleConnected === false && (
         <p className="sdb-agenda-note">
           Ainda não está ligado ao Google Calendar.
           {' '}<button className="sdb-linkbtn" onClick={onSync}>Ligar agora</button>

@@ -1305,6 +1305,19 @@ export default function StudentDashboard({ user, profile }) {
           {/* ── Coluna de contexto ── */}
           <div className="sdb-col">
 
+            {/* Por cima da Agenda, não na coluna principal: o Gustavo não
+                gostou do cartão largo ali, competia com o resto do
+                dashboard. O WeeklyRecapTeaser já está desenhado para esta
+                largura (empilhado), não é o mesmo componente adaptado à
+                força. Mesma ordem em mobile, logo antes da Agenda
+                (sdb-o-recap tem o mesmo `order`, 8, e vem antes dela no
+                DOM, por isso aparece primeiro no empate). */}
+            {!isSchoolAccount && planId === 'free' && !recapTeaserDismissed && (
+              <div className="sdb-o-recap">
+                <WeeklyRecapTeaser userId={user.id} onDismiss={() => setRecapTeaserDismissed(true)} onUpgrade={() => setShowUpgradeModal('weeklyRecap')} />
+              </div>
+            )}
+
             {/* Só mostramos a Agenda nas duas tabs para contas B2C, que não
                 têm pílula nenhuma (dashTab fica sempre 'projetos'). Nas
                 contas de escola, a Agenda aparece só na tab Turma — tê-la
@@ -1319,19 +1332,6 @@ export default function StudentDashboard({ user, profile }) {
                   onSync={() => setShowCalendarSync(true)}
                   onEventClick={handleEventClick}
                 />
-              </div>
-            )}
-
-            {/* Por baixo da Agenda, não na coluna principal: o Gustavo não
-                gostou do cartão largo ali, competia com o resto do
-                dashboard. O WeeklyRecapTeaser já está desenhado para esta
-                largura (empilhado), não é o mesmo componente adaptado à
-                força. Mesma ordem em mobile, logo a seguir à Agenda
-                (sdb-o-recap tem o mesmo `order`, 8, e vem depois dela no
-                DOM). */}
-            {!isSchoolAccount && planId === 'free' && !recapTeaserDismissed && (
-              <div className="sdb-o-recap">
-                <WeeklyRecapTeaser userId={user.id} onDismiss={() => setRecapTeaserDismissed(true)} onUpgrade={() => setShowUpgradeModal('weeklyRecap')} />
               </div>
             )}
 

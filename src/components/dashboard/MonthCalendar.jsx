@@ -3,7 +3,7 @@ import { AltArrowLeftIcon as ChevronLeft } from '@solar-icons/react/bold/alt-arr
 import { AltArrowRightIcon as ChevronRight } from '@solar-icons/react/bold/alt-arrow-right'
 import { PlusIcon as Plus } from '../icons/PlusIcon'
 
-const WEEKDAYS = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D']
+const WEEKDAYS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
 const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
 
 // Três cores, todas da família da marca (e do ícone do Showo): a defesa é
@@ -17,7 +17,7 @@ function eventTypeColor(type) {
   }
 }
 
-export default function MonthCalendar({ events = [], onAddReminder, onEventClick, onSync }) {
+export default function MonthCalendar({ events = [], onAddReminder, onEventClick }) {
   const [cursor, setCursor] = useState(() => { const d = new Date(); d.setDate(1); return d })
   const [selectedDay, setSelectedDay] = useState(() => new Date().toDateString())
 
@@ -55,18 +55,21 @@ export default function MonthCalendar({ events = [], onAddReminder, onEventClick
 
   return (
     <div className="mcal">
-      {/* Header */}
+      {/* Header: mês centrado entre as setas, ao estilo widget de calendário
+          do iOS, título único em foco, sem botões de texto a competir com ele.
+          Tocar no título salta para o mês e o dia de hoje. */}
       <div className="mcal-header">
-        <div>
-          <div className="mcal-month">{MONTHS[cursor.getMonth()]}</div>
-          <div className="mcal-year">{cursor.getFullYear()}</div>
-        </div>
-        <div className="mcal-nav">
-          {onSync && <button onClick={onSync} className="mcal-sync-btn" title="Sincronizar com Google / Apple / Outlook">Sync</button>}
-          <button onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))} className="mcal-nav-btn"><ChevronLeft size={14} /></button>
-          <button onClick={() => { const t = new Date(); t.setDate(1); setCursor(t); setSelectedDay(new Date().toDateString()) }} className="mcal-today-btn">Hoje</button>
-          <button onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))} className="mcal-nav-btn"><ChevronRight size={14} /></button>
-        </div>
+        <button onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}
+          className="mcal-nav-btn" aria-label="Mês anterior"><ChevronLeft size={15} /></button>
+        <button
+          className="mcal-title"
+          onClick={() => { const t = new Date(); t.setDate(1); setCursor(t); setSelectedDay(new Date().toDateString()) }}
+          title="Ir para hoje"
+        >
+          {MONTHS[cursor.getMonth()]} <span className="mcal-year">{cursor.getFullYear()}</span>
+        </button>
+        <button onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}
+          className="mcal-nav-btn" aria-label="Mês seguinte"><ChevronRight size={15} /></button>
       </div>
 
       {/* Weekday labels */}

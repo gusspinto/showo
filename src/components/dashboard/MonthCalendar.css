@@ -1,85 +1,93 @@
-/* Calendário mensal — vive dentro do painel da Agenda, por isso não traz
-   chrome próprio (nem fundo, nem borda): seria um cartão dentro de um cartão.
-   Todos os valores vêm dos tokens, para falar a mesma língua do resto. */
+/* Calendário mensal: vive dentro do painel da Agenda, por isso não traz
+   chrome próprio (nem fundo, nem borda), seria um cartão dentro de um cartão.
+   Todos os valores vêm dos tokens, para falar a mesma língua do resto.
+
+   Base: o widget de calendário do iOS (mês centrado entre setas, dia
+   selecionado como um círculo cheio com glow). Toque do Showo: os pontos de
+   cor por tipo de evento (defesa/tarefa/lembrete) e o painel do dia
+   selecionado por baixo, que o widget da Apple não tem. */
 
 .mcal { color: var(--color-text); }
 
 .mcal-header {
   display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: var(--sp-3);
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
 }
-.mcal-month {
+.mcal-title {
+  flex: 1;
+  display: flex; align-items: baseline; justify-content: center; gap: 6px;
+  background: none; border: none; padding: 4px 8px;
+  border-radius: var(--radius-sm);
   font-family: var(--font-heading);
-  font-size: var(--text-md); font-weight: 400; letter-spacing: -0.2px;
+  font-size: var(--text-md); font-weight: 600; letter-spacing: -0.2px;
   color: var(--color-text); text-transform: capitalize;
-}
-.mcal-year {
-  font-size: var(--text-2xs); font-weight: 700; color: var(--color-text-tertiary);
-  letter-spacing: 0.08em;
-}
-.mcal-nav { display: flex; gap: 4px; align-items: center; }
-.mcal-nav-btn, .mcal-today-btn, .mcal-sync-btn {
-  background: var(--color-primary-subtle); border: none;
-  color: var(--color-text-secondary);
-  border-radius: var(--radius-sm); cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  font-family: inherit; font-weight: 600;
+  cursor: pointer;
   transition: background var(--duration-fast);
 }
-.mcal-nav-btn { width: 26px; height: 26px; }
-.mcal-today-btn {
-  font-size: var(--text-xs); padding: 0 10px; height: 26px;
-  color: var(--color-primary);
+.mcal-title:hover { background: var(--color-primary-subtle); }
+.mcal-year {
+  font-family: inherit;
+  font-size: var(--text-md); font-weight: 400;
+  color: var(--color-text-tertiary);
 }
-.mcal-sync-btn {
-  font-size: var(--text-2xs); padding: 0 8px; height: 26px;
-  color: var(--color-primary); font-weight: 800;
-  letter-spacing: 0.08em; text-transform: uppercase;
+.mcal-nav-btn {
+  width: 28px; height: 28px; flex-shrink: 0;
+  background: var(--color-primary-subtle); border: none;
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-full); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background var(--duration-fast);
 }
-.mcal-nav-btn:hover, .mcal-today-btn:hover, .mcal-sync-btn:hover {
-  background: var(--color-primary-muted);
-}
+.mcal-nav-btn:hover { background: var(--color-primary-muted); color: var(--color-primary); }
 
 .mcal-weekdays {
   display: grid; grid-template-columns: repeat(7, 1fr);
-  gap: 2px; margin-bottom: 4px;
+  gap: 2px; margin-bottom: 6px;
 }
 .mcal-weekdays span {
-  text-align: center; font-size: 9px; font-weight: 800;
-  color: var(--color-text-tertiary); letter-spacing: 0.06em;
+  text-align: center; font-size: 10px; font-weight: 700;
+  color: var(--color-text-tertiary); letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .mcal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
 .mcal-day {
-  height: 30px;
+  height: 38px;
   position: relative;
   background: transparent;
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-full);
   cursor: pointer;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding: 0; gap: 1px;
+  padding: 0; gap: 2px;
   color: var(--color-text-secondary);
-  transition: background var(--duration-fast), color var(--duration-fast);
+  transition: background var(--duration-fast), color var(--duration-fast), box-shadow var(--duration-fast);
   font-family: inherit;
 }
 .mcal-day:hover { background: var(--color-primary-subtle); }
 .mcal-day.outside { color: var(--color-text-tertiary); opacity: 0.35; }
-.mcal-day.today { background: var(--color-primary-muted); color: var(--color-primary); }
+.mcal-day.today { color: var(--color-primary); }
 .mcal-day.today .mcal-day-num { font-weight: 800; }
-.mcal-day.selected { background: var(--color-primary); color: #fff; }
+/* Dia escolhido: círculo cheio com glow suave, como o indicador do widget do
+   iOS, é o único elemento com cor forte na grelha, para saltar à vista. */
+.mcal-day.selected {
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow: 0 0 0 1px var(--color-primary), 0 4px 14px -2px var(--color-primary-muted);
+}
 .mcal-day.selected .mcal-dot { background: #fff; }
 .mcal-day-num { font-size: var(--text-sm); font-weight: 600; line-height: 1; }
 
 .mcal-dots {
   display: flex; gap: 2px; align-items: center;
-  position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
+  height: 4px;
 }
 .mcal-dot { width: 4px; height: 4px; border-radius: 50%; display: inline-block; }
 
 /* Painel do dia selecionado */
 .mcal-panel {
-  margin-top: var(--sp-3); padding-top: var(--sp-3);
+  margin-top: var(--sp-4); padding-top: var(--sp-3);
   border-top: 1px solid var(--color-border);
 }
 .mcal-panel-header {
