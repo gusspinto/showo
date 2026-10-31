@@ -18,11 +18,13 @@ function eventTypeColor(type) {
   }
 }
 
-// Alcance do rolo de mês/ano: 3 anos para trás, 5 para a frente, a partir
-// do ano de hoje (não do mês em navegação), para o intervalo não andar a
-// deslizar sozinho enquanto a pessoa navega com as setinhas.
+// Alcance do rolo de mês/ano: do ano de hoje até 5 à frente, sem anos para
+// trás, pedido do Gustavo (é uma agenda para planear o que vem a seguir, não
+// para consultar anos já passados). A partir do ano de hoje, não do mês em
+// navegação, para o intervalo não andar a deslizar sozinho enquanto a
+// pessoa navega com as setinhas.
 const nowYear = new Date().getFullYear()
-const PICKER_MIN_YEAR = nowYear - 3
+const PICKER_MIN_YEAR = nowYear
 const PICKER_MAX_YEAR = nowYear + 5
 
 export default function MonthCalendar({ events = [], onAddReminder, onEventClick }) {
@@ -67,10 +69,14 @@ export default function MonthCalendar({ events = [], onAddReminder, onEventClick
       {/* Header: mês centrado entre as setas, ao estilo widget de calendário
           do iOS, título único em foco, sem botões de texto a competir com ele.
           Tocar no título abre o rolo de mês/ano (MonthYearPicker), para não
-          ser preciso clicar várias vezes nas setinhas para ir longe. */}
+          ser preciso clicar várias vezes nas setinhas para ir longe. Enquanto
+          o rolo está aberto, as setinhas desaparecem (não fazem sentido com
+          o rolo também a mudar o mês) e a grelha por baixo fica desfocada,
+          para o foco ficar só no rolo. */}
       <div className="mcal-header">
         <button onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}
-          className="mcal-nav-btn" aria-label="Mês anterior"><ChevronLeft size={15} /></button>
+          className={`mcal-nav-btn${pickerOpen ? ' is-hidden' : ''}`} tabIndex={pickerOpen ? -1 : 0}
+          aria-label="Mês anterior"><ChevronLeft size={15} /></button>
         <button
           className={`mcal-title${pickerOpen ? ' is-open' : ''}`}
           onClick={() => setPickerOpen(v => !v)}
@@ -79,7 +85,8 @@ export default function MonthCalendar({ events = [], onAddReminder, onEventClick
           {MONTHS[cursor.getMonth()]} <span className="mcal-year">{cursor.getFullYear()}</span>
         </button>
         <button onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}
-          className="mcal-nav-btn" aria-label="Mês seguinte"><ChevronRight size={15} /></button>
+          className={`mcal-nav-btn${pickerOpen ? ' is-hidden' : ''}`} tabIndex={pickerOpen ? -1 : 0}
+          aria-label="Mês seguinte"><ChevronRight size={15} /></button>
 
         {pickerOpen && (
           <MonthYearPicker
@@ -93,32 +100,34 @@ export default function MonthCalendar({ events = [], onAddReminder, onEventClick
         )}
       </div>
 
-      {/* Weekday labels */}
-      <div className="mcal-weekdays">
-        {WEEKDAYS.map((w, i) => <span key={i}>{w}</span>)}
-      </div>
+      <div className={`mcal-body${pickerOpen ? ' is-blurred' : ''}`} aria-hidden={pickerOpen}>
+        {/* Weekday labels */}
+        <div className="mcal-weekdays">
+          {WEEKDAYS.map((w, i) => <span key={i}>{w}</span>)}
+        </div>
 
-      {/* Day grid */}
-      <div className="mcal-grid">
-        {monthGrid.map(({ date, outside }, i) => {
-          const key = date.toDateString()
-          const dayEvents = eventsByDay[key] || []
-          const isToday = key === todayKey
-          const isSelected = key === selectedDay
-          return (
-            <button key={i} onClick={() => setSelectedDay(key)}
-              className={`mcal-day${outside ? ' outside' : ''}${isToday ? ' today' : ''}${isSelected ? ' selected' : ''}`}>
-              <span className="mcal-day-num">{date.getDate()}</span>
-              {dayEvents.length > 0 && (
-                <span className="mcal-dots">
-                  {dayEvents.slice(0, 3).map((e, i) => (
-                    <span key={i} className="mcal-dot" style={{ background: eventTypeColor(e.type) }} />
-                  ))}
-                </span>
-              )}
-            </button>
-          )
-        })}
+        {/* Day grid */}
+        <div className="mcal-grid">
+          {monthGrid.map(({ date, outside }, i) => {
+            const key = date.toDateString()
+            const dayEvents = eventsByDay[key] || []
+            const isToday = key === todayKey
+            const isSelected = key === selectedDay
+            return (
+              <button key={i} onClick={() => setSelectedDay(key)} tabIndex={pickerOpen ? -1 : 0}
+                className={`mcal-day${outside ? ' outside' : ''}${isToday ? ' today' : ''}${isSelected ? ' selected' : ''}`}>
+                <span className="mcal-day-num">{date.getDate()}</span>
+                {dayEvents.length > 0 && (
+                  <span className="mcal-dots">
+                    {dayEvents.slice(0, 3).map((e, i) => (
+                      <span key={i} className="mcal-dot" style={{ background: eventTypeColor(e.type) }} />
+                    ))}
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       {/* Selected day panel */}

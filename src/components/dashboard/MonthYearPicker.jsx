@@ -12,6 +12,10 @@ export default function MonthYearPicker({ month, year, minYear, maxYear, onChang
   const visibleRows = 5
   const years = []
   for (let y = minYear; y <= maxYear; y++) years.push(y)
+  // Se as setinhas já tiverem levado para um ano fora do alcance do rolo
+  // (ex: antes de nowYear, que já não está nos anos listados), não deixa
+  // o índice ficar negativo, prende ao extremo mais próximo.
+  const yearIndex = Math.min(years.length - 1, Math.max(0, year - minYear))
 
   return (
     <>
@@ -27,7 +31,7 @@ export default function MonthYearPicker({ month, year, minYear, maxYear, onChang
         />
         <WheelColumn
           items={years.map(String)}
-          selectedIndex={year - minYear}
+          selectedIndex={yearIndex}
           onSettle={i => onChange(month, years[i])}
           width={66}
           itemHeight={itemHeight} visibleRows={visibleRows} fontSize={14.5}

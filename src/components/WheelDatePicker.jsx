@@ -24,6 +24,13 @@ function parseDateStr(value) {
   return { day: d, month: m, year: y }
 }
 
+// Cadência fixa da roda do rato/trackpad: um item por "passo", sempre com a
+// mesma pausa entre passos, para o ritmo do rolo não depender da velocidade
+// de scroll configurada no rato/trackpad de cada pessoa (nalguns passava 15-20
+// itens de uma vez). O toque (mobile) não passa por aqui, continua a usar o
+// scroll+snap nativo, que já anda a um ritmo natural.
+const WHEEL_STEP_MS = 130
+
 /* Uma coluna de "rolo" — scroll nativo com scroll-snap, sem biblioteca
    nenhuma. O valor selecionado é sempre o que fica centrado atrás da faixa
    do meio; o próprio scroll-snap do browser trata do "encaixar" ao soltar.
@@ -36,6 +43,7 @@ export function WheelColumn({ items, selectedIndex, onSettle, width, itemHeight,
   const settleTimer = useRef(null)
   const programmatic = useRef(false)
   const mounted = useRef(false)
+  const wheelLocked = useRef(false)
   const pad = (itemHeight * (visibleRows - 1)) / 2
 
   useEffect(() => {
@@ -61,6 +69,30 @@ export function WheelColumn({ items, selectedIndex, onSettle, width, itemHeight,
       if (clamped !== selectedIndex) onSettle(clamped)
     }, 120)
   }
+
+  // Roda do rato/trackpad: ignora o deltaY (varia de máquina para máquina) e
+  // avança sempre um item por passo, travado por WHEEL_STEP_MS, é o que dá
+  // o "peso" igual para toda a gente. preventDefault precisa de um listener
+  // nativo com passive:false; o onWheel do React regista como passivo e o
+  // preventDefault seria ignorado (e o scroll nativo, mais rápido, ganhava).
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    function onWheel(e) {
+      e.preventDefault()
+      if (wheelLocked.current || e.deltaY === 0) return
+      const dir = e.deltaY > 0 ? 1 : -1
+      const next = Math.min(items.length - 1, Math.max(0, selectedIndex + dir))
+      if (next === selectedIndex) return
+      wheelLocked.current = true
+      programmatic.current = true
+      el.scrollTo({ top: next * itemHeight, behavior: 'smooth' })
+      onSettle(next)
+      setTimeout(() => { wheelLocked.current = false; programmatic.current = false }, WHEEL_STEP_MS)
+    }
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => el.removeEventListener('wheel', onWheel)
+  }, [selectedIndex, items.length, itemHeight, onSettle])
 
   return (
     <div

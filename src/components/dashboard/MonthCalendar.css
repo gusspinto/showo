@@ -19,11 +19,15 @@
 }
 /* justify-self: center, não width:100%/flex:1, senão o botão (e o hover
    por trás dele) esticava à largura da coluna do meio inteira, em vez de
-   abraçar só o texto "Outubro 2026". */
+   abraçar só o texto "Outubro 2026". min-height: 0 é o mesmo fix do
+   .mcal-nav-btn/.mcal-add-btn: é um <button>, por isso herdava o
+   min-height:44px global de touch target em mobile, o que esticava o
+   fundo do hover na vertical e descentrava o texto lá dentro. */
 .mcal-title {
   justify-self: center;
-  display: flex; align-items: baseline; gap: 6px;
-  background: none; border: none; padding: 4px 10px;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 0;
+  background: none; border: none; padding: 5px 10px;
   border-radius: var(--radius-sm);
   font-family: var(--font-heading);
   font-size: var(--text-md); font-weight: 600; letter-spacing: -0.2px;
@@ -49,6 +53,20 @@
   transition: background var(--duration-fast);
 }
 .mcal-nav-btn:hover { background: var(--color-primary-muted); color: var(--color-primary); }
+/* Com o rolo de mês/ano aberto, as setinhas deixam de fazer sentido (o
+   mês já muda pelo rolo) e ficam a competir com ele. opacity, não
+   display:none, para o grid do cabeçalho não saltar de posição. */
+.mcal-nav-btn.is-hidden { opacity: 0; pointer-events: none; }
+
+/* Grelha do mês + dias da semana: fica desfocada atrás do rolo quando ele
+   abre, para o olho ir direto ao rolo e ao título por cima dele, em vez de
+   competir com os números todos da grelha. */
+.mcal-body { transition: filter var(--duration-normal); }
+.mcal-body.is-blurred {
+  filter: blur(5px);
+  pointer-events: none;
+  user-select: none;
+}
 
 /* ── Rolo de mês/ano (MonthYearPicker), aberto ao tocar no título ── */
 .mcal-picker-backdrop {
