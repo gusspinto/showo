@@ -1759,7 +1759,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               )}
               {user && (
                 <button className={`sb-item${isActive('/coach') ? ' active' : ''}`} onClick={() => navigate('/coach')}>
-                  <ShowoMascot size={16} animated={false} />
+                  <ShowoMascot size={22} animated={false} colored={isActive('/coach')} />
                   {!collapsed && showLabels && <span>Coach IA</span>}
                 </button>
               )}
@@ -2242,7 +2242,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   )}
                   {user && (
                     <button className={`mob-nav-btn${isActive('/coach') ? ' active' : ''}`} onClick={() => { navigate('/coach'); setMenuOpen(false) }}>
-                      <ShowoMascot size={18} animated={false} /> Coach IA
+                      <ShowoMascot size={22} animated={false} colored={isActive('/coach')} /> Coach IA
                     </button>
                   )}
                   {user && (

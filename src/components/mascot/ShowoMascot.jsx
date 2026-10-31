@@ -34,7 +34,7 @@ const CHEVRON = 'M971 1008C971.275 1021.35 973.377 1034.67 973.961 1048C974.175 
 const PUPIL_LEFT_CENTER = { x: 713.7, y: 897.9 }
 const PUPIL_RIGHT_CENTER = { x: 1415.7, y: 897.9 }
 
-export default function ShowoMascot({ size = 96, className, style, animated = true }) {
+export default function ShowoMascot({ size = 96, className, style, animated = true, colored = true }) {
   const rootRef = useRef(null)
   const [blink, setBlink] = useState(false)
   const [look, setLook] = useState({ x: 0, y: 0 })
@@ -87,6 +87,12 @@ export default function ShowoMascot({ size = 96, className, style, animated = tr
     return `translate(${center.x + look.x} ${center.y + look.y}) scale(1 ${scaleY}) translate(${-center.x} ${-center.y})`
   }
 
+  // Cinza neutro quando não está colorido (ex: item da sidebar fora da página
+  // do Coach), cores da marca quando colored=true (dentro do Coach, ou ativo).
+  const ringBlue = colored ? BLUE : 'var(--color-text-secondary)'
+  const ringRed = colored ? RED : 'var(--color-text-secondary)'
+  const gold = colored ? GOLD : 'var(--color-text-secondary)'
+
   return (
     <svg
       ref={rootRef}
@@ -99,9 +105,9 @@ export default function ShowoMascot({ size = 96, className, style, animated = tr
       xmlns="http://www.w3.org/2000/svg"
     >
       {/* Anéis dos olhos */}
-      <path d={RING_BLUE} fill={BLUE} />
-      <path d={RING_RED} fill={RED} />
-      <path d={RING_RED_ACCENT} fill={RED} />
+      <path d={RING_BLUE} fill={ringBlue} />
+      <path d={RING_RED} fill={ringRed} />
+      <path d={RING_RED_ACCENT} fill={ringRed} />
 
       {/* Interior dos olhos: cor de superfície do tema, por cima dos anéis para abrir o buraco */}
       <path d={INTERIOR_LEFT} fill="var(--color-surface)" />
@@ -112,7 +118,7 @@ export default function ShowoMascot({ size = 96, className, style, animated = tr
       <path d={EYEBROW_RIGHT} fill="var(--color-text)" />
 
       {/* Nariz / boca em ">" */}
-      <path d={CHEVRON} fill={GOLD} />
+      <path d={CHEVRON} fill={gold} />
 
       {/* Pupilas, animadas */}
       <path d={PUPIL_LEFT} fill="var(--color-text)" transform={pupilTransform(PUPIL_LEFT_CENTER)} />
