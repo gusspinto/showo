@@ -13,12 +13,17 @@ function toISO(d) {
 }
 
 // Três cores, todas da família da marca (e do ícone do Showo): a defesa é
-// vermelha, as tarefas azul, os lembretes pessoais o teal de apoio.
+// vermelha, as tarefas azul, os lembretes pessoais o teal de apoio. O teal
+// do resto do site (--color-accent, #1a8a7a) é escuro de mais para um ponto
+// de 4px em cima de um círculo escuro, quase não se via, por isso o ponto e
+// a barrinha do calendário usam este teal mais claro só aqui, sem mexer no
+// token global (usado em sítios bem mais visíveis, onde já tem contraste).
+const REMINDER_DOT_COLOR = '#2dd4bf'
 function eventTypeColor(type) {
   switch (type) {
     case 'defense':  return 'var(--color-error)'
     case 'task':     return 'var(--color-info)'
-    case 'reminder': return 'var(--color-accent)'
+    case 'reminder': return REMINDER_DOT_COLOR
     default:         return 'var(--color-primary)'
   }
 }
