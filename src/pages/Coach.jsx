@@ -7,7 +7,7 @@ import { PlanGateModal, AiUsageBadge } from '../components/PlanGate'
 import { chatGlobalCoach } from '../lib/chatGlobalCoach'
 import { chatProjectCoach } from '../lib/chatProjectCoach'
 import { renderMd } from '../lib/renderMd'
-import { BotIcon as Bot } from '@solar-icons/react/bold/bot'
+import ShowoMascot from '../components/mascot/ShowoMascot'
 import { AltArrowDownIcon as ChevronDown } from '@solar-icons/react/bold/alt-arrow-down'
 import { PlaneIcon as Send } from '@solar-icons/react/bold/plane'
 import { ClipboardListIcon as HistoryIcon } from '@solar-icons/react/bold/clipboard-list'
@@ -461,8 +461,8 @@ export default function Coach() {
                     title="Conversas"
                     style={{ display: 'none', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, minHeight: 0, background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 9, color: C.muted, cursor: 'pointer', flexShrink: 0 }}
                   ><HistoryIcon size={16} /></button>
-                  <div style={{ width: 38, height: 38, borderRadius: 11, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Bot size={19} color="var(--color-primary)" />
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <ShowoMascot size={34} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 17, fontWeight: 700, color: C.text }}>Coach IA</div>
@@ -487,8 +487,8 @@ export default function Coach() {
                 // ecrã de "nova conversa" do ChatGPT/Claude), em vez de deixar
                 // um vazio enorme entre a saudação e a caixa lá em baixo.
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20, paddingBottom: '10vh' }}>
-                  <div style={{ width: 52, height: 52, borderRadius: 15, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Bot size={26} color="var(--color-primary)" />
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <ShowoMascot size={56} />
                   </div>
                   <p style={{ margin: 0, maxWidth: 440, textAlign: 'center', fontSize: 14, color: C.muted, lineHeight: 1.6 }}>{greeting}</p>
                   <div style={{ width: '100%', maxWidth: 480 }}>{inputBar}</div>

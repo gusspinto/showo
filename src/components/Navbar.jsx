@@ -28,7 +28,7 @@ import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/
 import { UserPlusRoundedIcon as UserPlus } from '@solar-icons/react/bold/user-plus-rounded'
 import { Widget4Icon as LayoutDashboard } from '@solar-icons/react/bold/widget-4'
 import { ClipboardListIcon as ClipboardList } from '@solar-icons/react/bold/clipboard-list'
-import { BotIcon as Bot } from '@solar-icons/react/bold/bot'
+import ShowoMascot from './mascot/ShowoMascot'
 import { PlusIcon as Plus } from './icons/PlusIcon'
 import { CompassIcon as Compass } from '@solar-icons/react/bold/compass'
 import { LibraryIcon } from '@solar-icons/react/bold/library'
@@ -1759,7 +1759,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               )}
               {user && (
                 <button className={`sb-item${isActive('/coach') ? ' active' : ''}`} onClick={() => navigate('/coach')}>
-                  <Bot size={16} />{!collapsed && showLabels && <span>Coach IA</span>}
+                  <ShowoMascot size={16} />{!collapsed && showLabels && <span>Coach IA</span>}
                 </button>
               )}
               {user && (
@@ -2241,7 +2241,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   )}
                   {user && (
                     <button className={`mob-nav-btn${isActive('/coach') ? ' active' : ''}`} onClick={() => { navigate('/coach'); setMenuOpen(false) }}>
-                      <Bot size={18} /> Coach IA
+                      <ShowoMascot size={18} /> Coach IA
                     </button>
                   )}
                   {user && (
