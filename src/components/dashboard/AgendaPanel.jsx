@@ -1,5 +1,4 @@
 import { useMemo } from 'react'
-import { PlusIcon as Plus } from '../icons/PlusIcon'
 import { RefreshCircleIcon as CalendarSync } from '@solar-icons/react/bold/refresh-circle'
 import MonthCalendar from './MonthCalendar'
 
@@ -45,14 +44,16 @@ export default function AgendaPanel({
 
   return (
     <section className="sdb-panel sdb-agenda">
+      {/* O "+" genérico de lembrete saiu daqui: o "+" amarelo na própria
+          grelha (dia selecionado e vazio) e o "+ Lembrete" do painel do dia
+          (dia com eventos) já cobrem os dois casos, pedido do Gustavo. Sem
+          ele a competir por espaço, o botão de sincronizar passa a pílula
+          com texto, não só um ícone escondido no canto. */}
       <header className="sdb-panel-head">
         <span className="sdb-eyebrow">Agenda</span>
-        <div className="sdb-panel-head-actions">
-          <button className="sdb-icon-btn sdb-icon-btn--quiet" onClick={() => onAddReminder()}
-            title="Novo lembrete" aria-label="Novo lembrete"><Plus size={15} /></button>
-          <button className="sdb-icon-btn sdb-icon-btn--quiet" onClick={onSync}
-            title="Sincronizar calendário" aria-label="Sincronizar calendário"><CalendarSync size={15} /></button>
-        </div>
+        <button className="sdb-sync-btn" onClick={onSync}>
+          <CalendarSync size={14} /> Sincronizar
+        </button>
       </header>
 
       <MonthCalendar

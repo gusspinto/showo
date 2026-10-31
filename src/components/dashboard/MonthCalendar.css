@@ -168,11 +168,6 @@
   transition: background var(--duration-fast);
 }
 .mcal-add-btn:hover { background: var(--color-primary-muted); }
-
-.mcal-empty {
-  font-size: var(--text-xs); color: var(--color-text-tertiary);
-  text-align: center; padding: var(--sp-2) 0;
-}
 .mcal-events { display: flex; flex-direction: column; gap: 5px; }
 .mcal-event {
   display: flex; align-items: center; gap: var(--sp-2);

@@ -7,6 +7,11 @@ import MonthYearPicker from './MonthYearPicker'
 const WEEKDAYS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
 const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
 
+function toISO(d) {
+  const p = n => (n < 10 ? '0' + n : String(n))
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
+}
+
 // Três cores, todas da família da marca (e do ícone do Showo): a defesa é
 // vermelha, as tarefas azul, os lembretes pessoais o teal de apoio.
 function eventTypeColor(type) {
@@ -16,6 +21,17 @@ function eventTypeColor(type) {
     case 'reminder': return 'var(--color-accent)'
     default:         return 'var(--color-primary)'
   }
+}
+
+// Fundo da linha do evento por urgência (dias até à data), pedido do
+// Gustavo: mais de 10 dias fica azul (longe), até 10 dias amarelo (a
+// aproximar-se), até 5 dias vermelho (urgente). A cor do tipo de evento
+// (eventTypeColor) continua só na barrinha à esquerda, não aqui.
+function urgencyBg(dateStr, todayISO) {
+  const days = Math.round((new Date(dateStr + 'T00:00:00') - new Date(todayISO + 'T00:00:00')) / 86400000)
+  if (days <= 5) return 'var(--color-error-subtle)'
+  if (days <= 10) return 'var(--color-warning-subtle)'
+  return 'var(--color-primary-subtle)'
 }
 
 // Alcance do rolo de mês/ano: do ano de hoje até 5 à frente, sem anos para
@@ -61,6 +77,7 @@ export default function MonthCalendar({ events = [], onAddReminder, onEventClick
   }, [events])
 
   const todayKey = new Date().toDateString()
+  const todayISO = toISO(new Date())
   const selectedEvents = eventsByDay[selectedDay] || []
   const selectedDate = new Date(selectedDay)
 
@@ -141,22 +158,28 @@ export default function MonthCalendar({ events = [], onAddReminder, onEventClick
         </div>
       </div>
 
-      {/* Selected day panel */}
-      <div className="mcal-panel">
-        <div className="mcal-panel-header">
-          <span className="mcal-panel-date">
-            {selectedDate.toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' })}
-          </span>
-          <button className="mcal-add-btn" onClick={() => onAddReminder?.(selectedDate)}>
-            <Plus size={12} /> Lembrete
-          </button>
-        </div>
-        {selectedEvents.length === 0 ? (
-          <div className="mcal-empty">Sem eventos.</div>
-        ) : (
+      {/* Painel do dia selecionado: só aparece quando há mesmo alguma coisa
+          marcada. Sem eventos, o "+" amarelo na própria grelha já resolve
+          adicionar um lembrete, por isso o cabeçalho "Sábado, 31 de
+          Outubro" + botão "+ Lembrete" + "Sem eventos." era três formas de
+          dizer a mesma coisa vazia, pedido do Gustavo para tirar. Com
+          eventos já marcados, o "+" da grelha deixa de aparecer (o dia já
+          não está vazio), por isso o botão "+ Lembrete" aqui continua a
+          fazer sentido para adicionar mais um nesse dia. */}
+      {selectedEvents.length > 0 && (
+        <div className="mcal-panel">
+          <div className="mcal-panel-header">
+            <span className="mcal-panel-date">
+              {selectedDate.toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </span>
+            <button className="mcal-add-btn" onClick={() => onAddReminder?.(selectedDate)}>
+              <Plus size={12} /> Lembrete
+            </button>
+          </div>
           <div className="mcal-events">
             {selectedEvents.map((e, i) => (
-              <div key={i} className="mcal-event" onClick={() => onEventClick?.(e)}>
+              <div key={i} className="mcal-event" onClick={() => onEventClick?.(e)}
+                style={{ background: urgencyBg(e.date, todayISO) }}>
                 <span className="mcal-event-bar" style={{ background: eventTypeColor(e.type) }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="mcal-event-title">{e.title}</div>
@@ -165,8 +188,8 @@ export default function MonthCalendar({ events = [], onAddReminder, onEventClick
               </div>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }
