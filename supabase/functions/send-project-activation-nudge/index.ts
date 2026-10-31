@@ -15,12 +15,16 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
    Mesmo raciocínio que já levou a send-continuous-cycle a ser separada de
    send-onboarding-sequence.
 
-   Audiência: projetos entry_kind='full', criados há 24-48h, com menos de 3
+   Audiência: projetos entry_kind='full', criados há 24-100h, com menos de 3
    itens em preview_blocks, ainda sem activation_nudge_sent_at (migração
    205). Um email por projeto, nunca repete. Aplica-se a todos os planos,
    ativação não depende de pagar.
 
-   Corre 1x por dia via pg_cron, para apanhar a janela de 24-48h com folga.
+   Corre 3x por semana via pg_cron (segunda, quarta, sexta), reduzido de
+   diário em 2026-10-31 a pedido do Gustavo (reduzir o número de crons que
+   verificam todos os dias). A janela alargou de 24-48h para 24-100h para
+   cobrir com folga o maior intervalo entre corridas (sexta a segunda, 3
+   dias) sem perder ninguém a meio.
 
    Modo de teste: { test_project_id } no corpo, mesmo padrão das outras
    sequências.
@@ -173,7 +177,7 @@ Deno.serve(async (req) => {
       .eq('entry_kind', 'full')
       .is('activation_nudge_sent_at', null)
       .lte('created_at', new Date(Date.now() - 24 * 3600000).toISOString())
-      .gte('created_at', new Date(Date.now() - 48 * 3600000).toISOString())
+      .gte('created_at', new Date(Date.now() - 100 * 3600000).toISOString())
     if (testProjectId) {
       projectsQuery = supabase
         .from('projects')

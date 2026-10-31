@@ -7,11 +7,15 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
    na vida e nunca voltam. Não é problema de qualidade da IA (as respostas
    são boas), é falta de gatilho a trazer a pessoa de volta.
 
-   Este cron corre 1x por dia, encontra quem teve EXATAMENTE 1 sessão
-   (projeto OU geral, nunca as duas ao mesmo tempo) há 3-21 dias e nunca
-   recebeu este lembrete, e manda um email que cita a própria pergunta que
-   a pessoa fez, para ser concreto em vez de genérico ("da última vez
-   falámos sobre X" bate muito mais forte que "volta a usar o Coach").
+   Este cron corre 1x por semana (reduzido de diário em 2026-10-31 a
+   pedido do Gustavo, para ter menos crons a verificar todos os dias), e
+   encontra quem teve EXATAMENTE 1 sessão (projeto OU geral, nunca as duas
+   ao mesmo tempo) há 3-21 dias e nunca recebeu este lembrete, e manda um
+   email que cita a própria pergunta que a pessoa fez, para ser concreto em
+   vez de genérico ("da última vez falámos sobre X" bate muito mais forte
+   que "volta a usar o Coach"). A janela de 3-21 dias (18 dias de margem)
+   já é larga o suficiente para o cron semanal nunca perder ninguém, só
+   atrasar o envio em até 7 dias dentro dessa janela.
 
    Envia uma única vez por sempre (coach_nudge_sent_at), não é recorrente
    como o ciclo contínuo, isto é um empurrão pontual, não uma campanha.

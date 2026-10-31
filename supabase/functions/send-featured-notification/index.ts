@@ -140,10 +140,13 @@ Deno.serve(async (req) => {
 
         const { data: profile } = await supabase
           .from('profiles')
-          .select('full_name, featured_notification_opted_out')
+          .select('full_name, featured_notification_opted_out, onboarding_sequence_step, onboarding_opted_out')
           .eq('id', row.user_id)
           .single()
         if (!testProjectId && profile?.featured_notification_opted_out) { skipped++; continue }
+        // Quem está a meio do onboarding já recebe 1 email por dia dessa
+        // sequência. Mesma regra aplicada às outras campanhas em 2026-10-31.
+        if (!testProjectId && profile?.onboarding_sequence_step != null && profile.onboarding_sequence_step < 14 && !profile.onboarding_opted_out) { skipped++; continue }
 
         const { data: userData, error: userErr } = await supabase.auth.admin.getUserById(row.user_id)
         if (userErr || !userData?.user?.email) continue
@@ -225,10 +228,13 @@ Deno.serve(async (req) => {
 
           const { data: profile } = await supabase
             .from('profiles')
-            .select('full_name, featured_notification_opted_out')
+            .select('full_name, featured_notification_opted_out, onboarding_sequence_step, onboarding_opted_out')
             .eq('id', proj.user_id)
             .single()
           if (profile?.featured_notification_opted_out) continue
+          // Quem está a meio do onboarding já recebe 1 email por dia dessa
+          // sequência. Mesma regra aplicada às outras campanhas em 2026-10-31.
+          if (profile?.onboarding_sequence_step != null && profile.onboarding_sequence_step < 14 && !profile.onboarding_opted_out) continue
 
           const { data: userData } = await supabase.auth.admin.getUserById(proj.user_id)
           if (!userData?.user?.email) continue
