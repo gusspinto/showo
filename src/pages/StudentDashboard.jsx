@@ -1340,7 +1340,6 @@ export default function StudentDashboard({ user, profile }) {
               <div className="sdb-o-agenda">
                 <AgendaPanel
                   events={calendarEvents}
-                  googleConnected={googleConnected}
                   onAddReminder={date => setShowAddReminder(date instanceof Date ? date : new Date())}
                   onSync={() => setShowCalendarSync(true)}
                   onEventClick={handleEventClick}

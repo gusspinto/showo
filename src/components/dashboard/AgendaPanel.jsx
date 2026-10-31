@@ -18,7 +18,7 @@ function dayLabel(iso, todayISO, tomorrowISO) {
 }
 
 export default function AgendaPanel({
-  events, googleConnected, onAddReminder, onSync, onEventClick,
+  events, onAddReminder, onSync, onEventClick,
 }) {
   const today = new Date(); today.setHours(0, 0, 0, 0)
   const todayISO = toISO(today)
@@ -89,15 +89,8 @@ export default function AgendaPanel({
         </div>
       )}
 
-      {upcoming.length === 0 && googleConnected !== false && (
+      {upcoming.length === 0 && (
         <p className="sdb-agenda-note sdb-agenda-note--empty">Sem prazos nos próximos 30 dias.</p>
-      )}
-
-      {googleConnected === false && (
-        <p className="sdb-agenda-note">
-          Ainda não está ligado ao Google Calendar.
-          {' '}<button className="sdb-linkbtn" onClick={onSync}>Ligar agora</button>
-        </p>
       )}
     </section>
   )

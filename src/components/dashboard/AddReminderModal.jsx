@@ -9,7 +9,13 @@ function toISODate(d) {
 
 export default function AddReminderModal({ userId, initialDate, onClose, onCreated }) {
   const [title, setTitle] = useState('')
-  const [date, setDate] = useState(toISODate(initialDate || new Date()))
+  // A data já vem escolhida de onde este modal é aberto (o "+" da grelha do
+  // calendário ou o "+ Lembrete" do dia selecionado): não há mais um sítio
+  // a abrir este modal sem já se saber o dia, por isso deixou de fazer
+  // sentido pedir a data outra vez aqui dentro, pedido do Gustavo.
+  const date = toISODate(initialDate || new Date())
+  const dateLabel = new Date(date + 'T00:00:00')
+    .toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' })
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState('')
@@ -38,15 +44,13 @@ export default function AddReminderModal({ userId, initialDate, onClose, onCreat
   return (
     <Modal onClose={onClose} title="Novo lembrete">
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+        <p style={{ margin: '-4px 0 0', fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', textTransform: 'capitalize' }}>
+          {dateLabel}
+        </p>
         <div>
           <SectionLabel>Título</SectionLabel>
           <input value={title} onChange={e => setTitle(e.target.value)} required autoFocus
             placeholder="Estudar para o teste de matemática" style={inputStyle} />
-        </div>
-        <div>
-          <SectionLabel>Data</SectionLabel>
-          <input type="date" value={date} onChange={e => setDate(e.target.value)} required
-            style={{ ...inputStyle, height: 44, WebkitAppearance: 'none', appearance: 'none', colorScheme: 'dark' }} />
         </div>
         <div>
           <SectionLabel>Notas (opcional)</SectionLabel>
