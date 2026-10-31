@@ -50,12 +50,12 @@ export default function AddReminderModal({ userId, initialDate, onClose, onCreat
         <div>
           <SectionLabel>Título</SectionLabel>
           <input value={title} onChange={e => setTitle(e.target.value)} required autoFocus
-            placeholder="Estudar para o teste de matemática" style={inputStyle} />
+            placeholder="Terminar a próxima secção do projeto" style={inputStyle} />
         </div>
         <div>
           <SectionLabel>Notas (opcional)</SectionLabel>
           <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3}
-            placeholder="Capítulos 4 e 5" style={{ ...inputStyle, resize: 'none', lineHeight: 1.5 }} />
+            placeholder="O que falta fazer" style={{ ...inputStyle, resize: 'none', lineHeight: 1.5 }} />
         </div>
         {err && <p style={{ color: 'var(--color-error)', fontSize: 'var(--text-sm)', margin: 0 }}>{err}</p>}
         <Button type="submit" disabled={saving || !title.trim()} loading={saving} fullWidth>
