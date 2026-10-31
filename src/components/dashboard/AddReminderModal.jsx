@@ -69,11 +69,9 @@ export default function AddReminderModal({ userId, initialDate, editing, onClose
   }
 
   return (
-    <Modal onClose={onClose} title={editing ? 'Editar lembrete' : 'Novo lembrete'}>
+    <Modal onClose={onClose} title={editing ? 'Editar lembrete' : 'Novo lembrete'}
+      subtitle={<span style={{ textTransform: 'capitalize' }}>{dateLabel}</span>}>
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
-        <p style={{ margin: '-4px 0 0', fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', textTransform: 'capitalize' }}>
-          {dateLabel}
-        </p>
         <div>
           <SectionLabel>Título</SectionLabel>
           <input value={title} onChange={e => setTitle(e.target.value)} required autoFocus
