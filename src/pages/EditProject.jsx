@@ -8,7 +8,7 @@ import SegmentedTabs from '../components/SegmentedTabs'
 import { useAuth } from '../context/AuthContext'
 import { useSidebar } from '../context/SidebarContext'
 import { LockKeyholeIcon as Lock } from '@solar-icons/react/bold/lock-keyhole'
-import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
+import { MagnifierIcon as Search } from '../components/icons/MagnifierIcon'
 import { GalleryWideIcon as Image } from '@solar-icons/react/bold/gallery-wide'
 import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
 import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
@@ -510,6 +510,11 @@ export default function EditProject() {
       <style>{`
         @keyframes spin{to{transform:rotate(360deg)}}
         @media(max-width:600px){.ep-2col{grid-template-columns:1fr!important;}}
+        /* Tablet (iPad): a sidebar já ocupa ~80-250px, por isso o espaço
+           real para o formulário é bem menor do que no desktop, mesmo a
+           768-900px de largura de ecrã. As 3 colunas (Curso/Ano/Escola)
+           ficavam espremidas demais aí. */
+        @media (min-width: 601px) and (max-width: 900px) { .ep-2col { grid-template-columns: 1fr 1fr !important; } }
         .ep-layout { display: flex; flex-direction: column; gap: 18px; align-items: stretch; }
         /* Preenche a barra toda, como as pílulas do resto da app (página do
            projeto, painel de workspace) — não uma pílula pequena a boiar

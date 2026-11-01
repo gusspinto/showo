@@ -28,7 +28,7 @@ import { GraphNewUpIcon as TrendingUp } from '@solar-icons/react/bold/graph-new-
 import { ChatRoundLineIcon as MessageSquare } from '@solar-icons/react/bold/chat-round-line'
 import { StarIcon as Star } from '@solar-icons/react/bold/star'
 import { LetterIcon as Mail } from '@solar-icons/react/bold/letter'
-import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
+import { MagnifierIcon as Search } from '../components/icons/MagnifierIcon'
 import { TrashBinMinimalisticIcon as Trash2 } from '@solar-icons/react/bold/trash-bin-minimalistic'
 import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
 import { CalendarIcon as Calendar } from '@solar-icons/react/bold/calendar'
