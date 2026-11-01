@@ -468,7 +468,7 @@ export default function Coach() {
                       e este do cabeçalho volta a ser o único. */}
                   {!isEmpty && (
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <ShowoMascot size={34} />
+                      <ShowoMascot size={44} />
                     </div>
                   )}
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -495,7 +495,7 @@ export default function Coach() {
                 // um vazio enorme entre a saudação e a caixa lá em baixo.
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20, paddingBottom: '10vh' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <ShowoMascot size={56} />
+                    <ShowoMascot size={76} />
                   </div>
                   <p style={{ margin: 0, maxWidth: 440, textAlign: 'center', fontSize: 14, color: C.muted, lineHeight: 1.6 }}>{greeting}</p>
                   <div style={{ width: '100%', maxWidth: 480 }}>{inputBar}</div>
@@ -536,8 +536,8 @@ export default function Coach() {
                       }}>{m.role === 'assistant' ? renderMd(m.content) : m.content}</div>
                     ))}
                     {loading && (
-                      <div style={{ alignSelf: 'flex-start', background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: '14px 14px 14px 4px', padding: '10px 16px', display: 'flex', gap: 5, alignItems: 'center' }}>
-                        {[0, 1, 2].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: C.muted, animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />)}
+                      <div style={{ alignSelf: 'flex-start', background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: '14px 14px 14px 4px', padding: '10px 16px', display: 'flex', alignItems: 'center' }}>
+                        <ShowoMascot size={30} loading />
                       </div>
                     )}
                     <div ref={bottomRef} />

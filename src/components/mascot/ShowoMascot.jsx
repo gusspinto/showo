@@ -13,8 +13,13 @@ import { useEffect, useRef, useState } from 'react'
    Prop `colored`: false usa cinza neutro nos 3 círculos (ex: item da
    sidebar fora da página do Coach), true usa as cores da marca.
 
-   Pupilas isoladas em <g> próprio para animar (piscar + seguir o rato) sem
-   alterar a forma do traço original. */
+   Prop `loading`: pulsa os 3 círculos em sequência (azul, vermelho,
+   dourado), reaproveitando a ideia original do Gustavo de "3 pontos a
+   carregar" como indicador de "a pensar" do Coach, em vez do indicador
+   genérico de 3 bolinhas cinzentas que estava lá antes.
+
+   Pupilas com `style.transition` no transform para um seguimento do rato
+   mais suave e natural (antes saltava de frame a frame sem suavização). */
 
 const BLUE = '#1b77f4'
 const RED = '#d34040'
@@ -31,7 +36,7 @@ const PUPIL_GOLD = 'M1341 882.468C1321.25 886.195 1311.21 908.298 1304.6 925C129
 const PUPIL_RED_CENTER = { x: 898.3, y: 994.4 }
 const PUPIL_GOLD_CENTER = { x: 1346, y: 996.4 }
 
-export default function ShowoMascot({ size = 96, className, style, animated = true, colored = true }) {
+export default function ShowoMascot({ size = 96, className, style, animated = true, colored = true, loading = false }) {
   const rootRef = useRef(null)
   const [blink, setBlink] = useState(false)
   const [look, setLook] = useState({ x: 0, y: 0 })
@@ -69,24 +74,44 @@ export default function ShowoMascot({ size = 96, className, style, animated = tr
         const dx = e.clientX - cx
         const dy = e.clientY - cy
         const dist = Math.hypot(dx, dy) || 1
-        const maxOffset = 12 // unidades do viewBox original (escala ~1200), raio pequeno
+        // Raio de movimento da pupila dentro do círculo: o círculo tem
+        // ~197 unidades de raio e a pupila ~58x123, sobra mais espaço na
+        // horizontal do que na vertical antes de a pupila sair do círculo.
+        const maxOffsetX = 70
+        const maxOffsetY = 34
         const scale = Math.min(1, dist / 220)
-        setLook({ x: (dx / dist) * maxOffset * scale, y: (dy / dist) * maxOffset * scale })
+        setLook({ x: (dx / dist) * maxOffsetX * scale, y: (dy / dist) * maxOffsetY * scale })
       })
     }
     window.addEventListener('mousemove', onMove)
     return () => { window.removeEventListener('mousemove', onMove); if (raf) cancelAnimationFrame(raf) }
   }, [animated])
 
-  const scaleY = blink ? 0.12 : 1
+  // Durante o loading os círculos pulsam sozinhos, por isso o olhar/piscar
+  // param (não faz sentido a pupila seguir o rato ao mesmo tempo que o
+  // círculo está a crescer e encolher).
+  const effectiveLook = loading ? { x: 0, y: 0 } : look
+  const scaleY = !loading && blink ? 0.12 : 1
 
   function pupilTransform(center) {
-    return `translate(${center.x + look.x} ${center.y + look.y}) scale(1 ${scaleY}) translate(${-center.x} ${-center.y})`
+    return `translate(${center.x + effectiveLook.x} ${center.y + effectiveLook.y}) scale(1 ${scaleY}) translate(${-center.x} ${-center.y})`
   }
 
   const blue = colored ? BLUE : 'var(--color-text-secondary)'
   const red = colored ? RED : 'var(--color-text-secondary)'
   const gold = colored ? GOLD : 'var(--color-text-secondary)'
+
+  const pupilStyle = { transition: 'transform 0.16s cubic-bezier(0.22,1,0.36,1)' }
+
+  function circleStyle(delay) {
+    if (!loading) return undefined
+    return {
+      transformBox: 'fill-box',
+      transformOrigin: 'center',
+      animation: 'showoMascotPulse 1.05s ease-in-out infinite',
+      animationDelay: `${delay}s`,
+    }
+  }
 
   return (
     <svg
@@ -99,12 +124,15 @@ export default function ShowoMascot({ size = 96, className, style, animated = tr
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <path d={CIRCLE_BLUE} fill={blue} />
-      <path d={CIRCLE_RED} fill={red} />
-      <path d={CIRCLE_GOLD} fill={gold} />
+      {loading && (
+        <style>{`@keyframes showoMascotPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.22); } }`}</style>
+      )}
+      <path d={CIRCLE_BLUE} fill={blue} style={circleStyle(0)} />
+      <path d={CIRCLE_RED} fill={red} style={circleStyle(0.15)} />
+      <path d={CIRCLE_GOLD} fill={gold} style={circleStyle(0.3)} />
 
-      <path d={PUPIL_RED} fill="#000000" transform={pupilTransform(PUPIL_RED_CENTER)} />
-      <path d={PUPIL_GOLD} fill="#000000" transform={pupilTransform(PUPIL_GOLD_CENTER)} />
+      <path d={PUPIL_RED} fill="#000000" transform={pupilTransform(PUPIL_RED_CENTER)} style={pupilStyle} />
+      <path d={PUPIL_GOLD} fill="#000000" transform={pupilTransform(PUPIL_GOLD_CENTER)} style={pupilStyle} />
     </svg>
   )
 }
