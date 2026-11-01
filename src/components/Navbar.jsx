@@ -1630,6 +1630,11 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           className="sb-collapse-toggle"
           onClick={toggleSidebar}
           title={collapsed ? 'Expandir menu' : 'Colapsar menu'}
+          /* "Criar projeto" passou para o topo da sidebar do aluno, por
+             cima do primeiro item normal — o botão de colapsar, fixo a
+             68px do topo, ficava por cima dele. Só desce quando esse
+             botão está mesmo ali (branch do aluno com showCreateCta). */
+          style={!isRecruiter && !isTeacher && showCreateCta ? { top: 124 } : undefined}
         >
           <ChevronRight size={12} style={{ transform: collapsed ? 'none' : 'rotate(180deg)', transition: 'transform 0.2s' }} />
         </button>
