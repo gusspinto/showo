@@ -7,7 +7,7 @@ import { PlanGateModal, AiUsageBadge } from '../components/PlanGate'
 import { chatGlobalCoach } from '../lib/chatGlobalCoach'
 import { chatProjectCoach } from '../lib/chatProjectCoach'
 import { renderMd } from '../lib/renderMd'
-import ShowoMascot from '../components/mascot/ShowoMascot'
+import { BotIcon as Bot } from '@solar-icons/react/bold/bot'
 import { AltArrowDownIcon as ChevronDown } from '@solar-icons/react/bold/alt-arrow-down'
 import { PlaneIcon as Send } from '@solar-icons/react/bold/plane'
 import { ClipboardListIcon as HistoryIcon } from '@solar-icons/react/bold/clipboard-list'
@@ -461,16 +461,9 @@ export default function Coach() {
                     title="Conversas"
                     style={{ display: 'none', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, minHeight: 0, background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 9, color: C.muted, cursor: 'pointer', flexShrink: 0 }}
                   ><HistoryIcon size={16} /></button>
-                  {/* Sem conversa ainda, o mascote grande do ecrã vazio (mais
-                      abaixo) já é o "rosto" da página, repeti-lo aqui em
-                      cima ficava com dois ao mesmo tempo, apontado pelo
-                      Gustavo. Com conversa a decorrer, o mascote grande some,
-                      e este do cabeçalho volta a ser o único. */}
-                  {!isEmpty && (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <ShowoMascot size={44} />
-                    </div>
-                  )}
+                  <div style={{ width: 38, height: 38, borderRadius: 11, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Bot size={19} color="var(--color-primary)" />
+                  </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 17, fontWeight: 700, color: C.text }}>Coach IA</div>
                     <div style={{ fontSize: 12, color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeProject ? `A falar sobre: ${activeProject.name}` : 'Conselho sobre o teu percurso'}</div>
@@ -494,8 +487,8 @@ export default function Coach() {
                 // ecrã de "nova conversa" do ChatGPT/Claude), em vez de deixar
                 // um vazio enorme entre a saudação e a caixa lá em baixo.
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20, paddingBottom: '10vh' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <ShowoMascot size={76} waving />
+                  <div style={{ width: 52, height: 52, borderRadius: 15, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Bot size={26} color="var(--color-primary)" />
                   </div>
                   <p style={{ margin: 0, maxWidth: 440, textAlign: 'center', fontSize: 14, color: C.muted, lineHeight: 1.6 }}>{greeting}</p>
                   <div style={{ width: '100%', maxWidth: 480 }}>{inputBar}</div>
@@ -536,8 +529,8 @@ export default function Coach() {
                       }}>{m.role === 'assistant' ? renderMd(m.content) : m.content}</div>
                     ))}
                     {loading && (
-                      <div style={{ alignSelf: 'flex-start', background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: '14px 14px 14px 4px', padding: '10px 16px', display: 'flex', alignItems: 'center' }}>
-                        <ShowoMascot size={30} loading />
+                      <div style={{ alignSelf: 'flex-start', background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: '14px 14px 14px 4px', padding: '10px 16px', display: 'flex', gap: 5, alignItems: 'center' }}>
+                        {[0, 1, 2].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: C.muted, animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />)}
                       </div>
                     )}
                     <div ref={bottomRef} />
