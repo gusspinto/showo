@@ -115,19 +115,28 @@ export default function ShowoMascot({ size = 96, className, style, animated = tr
 
   const pupilStyle = { transition: 'transform 0.16s cubic-bezier(0.22,1,0.36,1)' }
 
-  function circleStyle(delay) {
-    if (!loading) return undefined
+  function circleStyle(loadingDelay, greetDelay) {
+    if (!loading && !waving) return undefined
     return {
       transformBox: 'fill-box',
       transformOrigin: 'center',
-      animation: 'showoMascotPulse 1.05s ease-in-out infinite',
-      animationDelay: `${delay}s`,
+      animation: loading
+        ? 'showoMascotPulse 1.05s ease-in-out infinite'
+        : 'showoMascotGreet 4.4s ease-in-out infinite',
+      animationDelay: `${loading ? loadingDelay : greetDelay}s`,
     }
   }
 
   const handStyle = waving
-    ? { transformOrigin: `${HAND_PIVOT.x}px ${HAND_PIVOT.y}px`, animation: 'showoMascotWave 3.6s cubic-bezier(0.33,1.5,0.4,1) infinite' }
-    : circleStyle(0)
+    ? { transformOrigin: `${HAND_PIVOT.x}px ${HAND_PIVOT.y}px`, animation: 'showoMascotWave 4.4s ease-in-out infinite' }
+    : circleStyle(0, 0)
+
+  // A acenar, a mão precisa de mais espaço à volta (o braço roda à volta
+  // do pulso, chega a sair da moldura apertada usada nos outros estados).
+  const viewBox = waving
+    ? '263.166 679.486 1426.494 645.304'
+    : '333.166 749.486 1286.494 505.304'
+  const [, , vbW, vbH] = viewBox.split(' ').map(Number)
 
   return (
     <svg
@@ -135,8 +144,8 @@ export default function ShowoMascot({ size = 96, className, style, animated = tr
       className={className}
       style={style}
       width={size}
-      height={size * (505.304 / 1286.494)}
-      viewBox="333.166 749.486 1286.494 505.304"
+      height={size * (vbH / vbW)}
+      viewBox={viewBox}
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -146,17 +155,26 @@ export default function ShowoMascot({ size = 96, className, style, animated = tr
       {waving && (
         <style>{`@keyframes showoMascotWave {
           0% { transform: rotate(0deg); }
-          8% { transform: rotate(22deg); }
-          16% { transform: rotate(-12deg); }
-          24% { transform: rotate(20deg); }
-          32% { transform: rotate(-8deg); }
-          40% { transform: rotate(14deg); }
-          48%, 100% { transform: rotate(0deg); }
+          12% { transform: rotate(10deg); }
+          24% { transform: rotate(-6deg); }
+          36% { transform: rotate(9deg); }
+          48% { transform: rotate(-4deg); }
+          58% { transform: rotate(5deg); }
+          68%, 100% { transform: rotate(0deg); }
+        }
+        @keyframes showoMascotGreet {
+          0% { transform: scale(1); }
+          12% { transform: scale(1.05); }
+          24% { transform: scale(1); }
+          36% { transform: scale(1.05); }
+          48% { transform: scale(1); }
+          58% { transform: scale(1.02); }
+          68%, 100% { transform: scale(1); }
         }`}</style>
       )}
       <path d={waving ? HAND_BLUE : CIRCLE_BLUE} fill={blue} style={handStyle} />
-      <path d={CIRCLE_RED} fill={red} style={circleStyle(0.15)} />
-      <path d={CIRCLE_GOLD} fill={gold} style={circleStyle(0.3)} />
+      <path d={CIRCLE_RED} fill={red} style={circleStyle(0.15, 0.1)} />
+      <path d={CIRCLE_GOLD} fill={gold} style={circleStyle(0.3, 0.18)} />
 
       <path d={PUPIL_RED} fill="#000000" transform={pupilTransform(PUPIL_RED_CENTER)} style={pupilStyle} />
       <path d={PUPIL_GOLD} fill="#000000" transform={pupilTransform(PUPIL_GOLD_CENTER)} style={pupilStyle} />
