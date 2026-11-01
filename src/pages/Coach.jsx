@@ -495,7 +495,7 @@ export default function Coach() {
                 // um vazio enorme entre a saudação e a caixa lá em baixo.
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20, paddingBottom: '10vh' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <ShowoMascot size={76} />
+                    <ShowoMascot size={76} waving />
                   </div>
                   <p style={{ margin: 0, maxWidth: 440, textAlign: 'center', fontSize: 14, color: C.muted, lineHeight: 1.6 }}>{greeting}</p>
                   <div style={{ width: '100%', maxWidth: 480 }}>{inputBar}</div>

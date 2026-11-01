@@ -3,8 +3,9 @@ import { useEffect, useRef, useState } from 'react'
 /* Mascote do Showo, traço exato desenhado pelo Gustavo (Canva, vetorizado
    com autotracer.org). Os paths abaixo são os pontos originais do ficheiro
    exportado, apenas recortados à área da mascote, sem redesenho à mão: 3
-   círculos em sequência (azul, vermelho, dourado, a seguir a ordem das
-   cores da marca), o azul sem olho, vermelho e dourado com pupila preta.
+   formas em sequência a seguir a ordem das cores da marca (azul, vermelho,
+   dourado), vermelho e dourado com pupila preta, azul sem olho (virou mão,
+   ver prop `waving` abaixo).
 
    A sombra suave sob as pupilas do ficheiro original foi deixada de fora,
    não existe sombra em mais nenhum sítio da app (visual plano), por
@@ -18,6 +19,11 @@ import { useEffect, useRef, useState } from 'react'
    carregar" como indicador de "a pensar" do Coach, em vez do indicador
    genérico de 3 bolinhas cinzentas que estava lá antes.
 
+   Prop `waving`: o círculo azul (o único sem pupila) virou uma mão, ideia
+   do Gustavo para aproveitar essa forma "parada". Roda à volta do pulso
+   (o bico na base da mão, único ponto que fica fixo) num pequeno vaivém,
+   3 acenos e depois pausa, antes de repetir.
+
    Pupilas com `style.transition` no transform para um seguimento do rato
    mais suave e natural (antes saltava de frame a frame sem suavização). */
 
@@ -25,18 +31,21 @@ const BLUE = '#1b77f4'
 const RED = '#d34040'
 const GOLD = '#f6a900'
 
-const CIRCLE_BLUE = 'M550 867.514C534.501 868.488 519.766 870.286 505 875.541C469.347 888.23 439.421 918.328 426.865 954C408.119 1007.26 424.256 1069.09 469 1104.33C482.676 1115.1 498.336 1122.67 515 1127.42C526.208 1130.62 539.286 1133.39 551 1132.79C566.549 1131.99 582.216 1130.18 597 1124.91C634.193 1111.64 664.088 1081.3 676.921 1044C701.537 972.458 660.554 892.044 587 872.151C575.332 868.995 562.112 866.753 550 867.514z'
-const CIRCLE_RED = 'M888 806.424C874.146 808.243 860.605 808.987 847 812.745C807.403 823.683 772.136 846.843 746.449 879C696.319 941.756 691.509 1032.32 732.453 1101C746.888 1125.21 767.156 1144.95 790 1161.14C807.288 1173.4 827.505 1182.25 848 1187.52C871.621 1193.6 896.772 1195.61 921 1192.71C985.806 1184.96 1043.28 1145.69 1072.63 1087C1086.24 1059.78 1092.36 1029.24 1092.95 999C1094.66 909.885 1028.11 831.287 943 811.116C925.814 807.043 905.637 804.109 888 806.424z'
-const CIRCLE_GOLD = 'M1337 765.424C1326.4 766.816 1315.59 766.589 1305 768.464C1258.34 776.727 1213.65 799.533 1180.09 833.089C1094.74 918.434 1088.56 1061.16 1167.3 1153C1184.67 1173.26 1205.8 1190.86 1229 1204.13C1276.53 1231.3 1331.3 1239.33 1385 1231.71C1498.78 1215.58 1585.95 1106.97 1580.96 993C1579.86 967.793 1575.57 942.824 1567.06 919C1540.83 845.593 1475.84 788.508 1400 771.349C1386.35 768.262 1372.91 766.863 1359 765.911C1351.61 765.404 1344.43 764.449 1337 765.424z'
-const PUPIL_RED = 'M893 882.468C872.858 886.274 861.092 911.38 855.721 929C842.071 973.774 841.054 1024.09 855.026 1069C861.785 1090.73 877.124 1123.21 905 1117.62C923.902 1113.83 934.238 1091.06 940.388 1075C957.644 1029.93 955.062 976.708 942.512 931C936.62 909.542 919.672 877.427 893 882.468z'
-const PUPIL_GOLD = 'M1341 882.468C1321.25 886.195 1311.21 908.298 1304.6 925C1295.63 947.685 1293 972.817 1293 997C1293 1021.49 1295.22 1045.46 1302.44 1069C1308.93 1090.2 1324.86 1123.06 1352 1117.62C1371.22 1113.77 1381.44 1091.32 1387.8 1075C1395.69 1054.73 1398.1 1032.51 1399.04 1011C1400.21 984.174 1397.69 957.935 1390.14 932C1384 910.904 1367.95 877.383 1341 882.468z'
+const HAND_BLUE = 'M645 1076C641.435 1063.88 633.053 1052.23 627.258 1041C613.996 1015.3 600.179 989.861 587.247 964C573.45 936.41 557.133 909.991 534 889.171C495.046 854.112 428.676 831.554 385 872.09C377.85 878.727 371.904 886.477 367.17 895C360.745 906.567 356.772 919.008 354.424 932C348.166 966.637 353.228 1003.51 366.452 1036C374.897 1056.74 386.49 1076.14 396.742 1096C407.927 1117.67 418.601 1139.76 430.576 1161C433.334 1165.89 435.54 1171.07 438.262 1175.98C439.354 1177.95 440.573 1180.19 443.105 1180.29C448.541 1180.5 456.41 1174.61 461 1172C472.718 1165.35 484.948 1159.27 497 1153.25C525.261 1139.11 552.923 1123.75 581 1109.26C602.28 1098.27 624.323 1088.07 645 1076z'
+const CIRCLE_RED = 'M883 806.424C868.821 808.287 854.861 809.899 841 813.745C819.797 819.628 799.773 830.664 782 843.428C768.608 853.046 757.263 864.365 746.753 877C683.008 953.636 691.278 1072.38 763 1140.96C807.085 1183.12 867.397 1199.56 927 1191.72C953.957 1188.17 981.595 1177.87 1004 1162.41C1018.5 1152.41 1032.1 1141.35 1043.71 1128C1078.44 1088.09 1094.53 1035.52 1090.91 983C1086.33 916.488 1043.11 855.526 984 825.969C961.085 814.512 936.4 808.66 911 806.911C901.713 806.271 892.317 805.201 883 806.424z'
+const CIRCLE_GOLD = 'M1357 765.424C1339.46 767.728 1322.25 768.596 1305 773.289C1269.98 782.815 1236.96 800.817 1210 825.17C1188.11 844.944 1171.56 868.189 1157.69 894C1120.91 962.463 1125.71 1051.25 1163.87 1118C1182.62 1150.78 1210.16 1178.79 1242 1198.95C1291.05 1230.01 1349.06 1239.79 1406 1231.71C1482.13 1220.92 1548.51 1167.8 1580.88 1099C1597.96 1062.7 1604.66 1020.92 1601.91 981C1595 880.66 1518.63 793.44 1421 771.349C1406.68 768.11 1392.62 766.601 1378 765.961C1370.9 765.65 1364.15 764.486 1357 765.424z'
+const PUPIL_RED = 'M883 882.518C862.552 886.886 851.01 911.891 845.589 930C832.174 974.821 831.912 1023.03 844.86 1068C851.185 1089.97 867.058 1123.22 895 1117.62C914.032 1113.81 925.002 1090.36 930.946 1074C947.29 1029.02 945.425 976.362 932.421 931C926.361 909.857 909.976 876.754 883 882.518z'
+const PUPIL_GOLD = 'M1362 882.468C1342.94 886.064 1333.5 907.068 1326.72 923C1321.35 935.623 1318.68 949.484 1316.73 963C1311.68 998.063 1313.57 1033.93 1323.58 1068C1329.92 1089.59 1345.41 1122.51 1373 1117.67C1392.27 1114.29 1403.01 1091.3 1409.19 1075C1426.16 1030.19 1424.36 976.36 1411.14 931C1404.95 909.752 1388.85 877.401 1362 882.468z'
 
 // Centro aproximado de cada pupila no espaço do path original, usado como
 // ponto de ancoragem para o piscar (scaleY) e o seguir-o-rato (translate).
-const PUPIL_RED_CENTER = { x: 898.3, y: 994.4 }
-const PUPIL_GOLD_CENTER = { x: 1346, y: 996.4 }
+const PUPIL_RED_CENTER = { x: 888.4, y: 994.3 }
+const PUPIL_GOLD_CENTER = { x: 1361, y: 989.3 }
 
-export default function ShowoMascot({ size = 96, className, style, animated = true, colored = true, loading = false }) {
+// Ponto fixo (o "pulso") à volta do qual a mão roda ao acenar.
+const HAND_PIVOT = { x: 450, y: 1178 }
+
+export default function ShowoMascot({ size = 96, className, style, animated = true, colored = true, loading = false, waving = false }) {
   const rootRef = useRef(null)
   const [blink, setBlink] = useState(false)
   const [look, setLook] = useState({ x: 0, y: 0 })
@@ -113,21 +122,36 @@ export default function ShowoMascot({ size = 96, className, style, animated = tr
     }
   }
 
+  const handStyle = waving
+    ? { transformOrigin: `${HAND_PIVOT.x}px ${HAND_PIVOT.y}px`, animation: 'showoMascotWave 4s ease-in-out infinite' }
+    : circleStyle(0)
+
   return (
     <svg
       ref={rootRef}
       className={className}
       style={style}
       width={size}
-      height={size * (519.881 / 1222.831)}
-      viewBox="378.119 734.449 1222.831 519.881"
+      height={size * (505.304 / 1286.494)}
+      viewBox="333.166 749.486 1286.494 505.304"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
       {loading && (
         <style>{`@keyframes showoMascotPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.22); } }`}</style>
       )}
-      <path d={CIRCLE_BLUE} fill={blue} style={circleStyle(0)} />
+      {waving && (
+        <style>{`@keyframes showoMascotWave {
+          0% { transform: rotate(0deg); }
+          5% { transform: rotate(16deg); }
+          10% { transform: rotate(-10deg); }
+          15% { transform: rotate(16deg); }
+          20% { transform: rotate(-10deg); }
+          25% { transform: rotate(16deg); }
+          32%, 100% { transform: rotate(0deg); }
+        }`}</style>
+      )}
+      <path d={HAND_BLUE} fill={blue} style={handStyle} />
       <path d={CIRCLE_RED} fill={red} style={circleStyle(0.15)} />
       <path d={CIRCLE_GOLD} fill={gold} style={circleStyle(0.3)} />
 
