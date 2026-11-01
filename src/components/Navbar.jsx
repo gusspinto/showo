@@ -1737,6 +1737,19 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           ) : (
             /* ── ALUNO sidebar ── */
             <>
+              {/* Criar projeto no topo de tudo, acima de "Mesa de trabalho".
+                  Pedido do Gustavo, é a ação mais importante da sidebar e
+                  estava escondida lá em baixo, depois de "Conta". */}
+              {user && showCreateCta && (
+                <div className="sb-create-wrap visible" style={{ marginBottom: 6 }}>
+                  <div className="sb-create-inner">
+                    <button className="sb-create gradient-cta" onMouseMove={handleGradientMove} onMouseLeave={handleGradientLeave} onClick={() => navigate('/novo')}>
+                      <Plus size={14} />{!collapsed && showLabels && <span>Criar projeto</span>}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Mesa de trabalho: tudo o que é o trabalho do próprio aluno
                   (projeto, diário, coach, biblioteca, turmas) num só grupo.
                   Biblioteca e Turmas estavam soltas sem título nenhum antes
@@ -1818,16 +1831,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               <button className={`sb-item${isActive('/aprende') ? ' active' : ''}`} onClick={() => navigate('/aprende')} title="Aprende a usar">
                 <BookMarked size={16} />{!collapsed && showLabels && <span>Aprende a usar</span>}
               </button>
-
-              {user && showCreateCta && (
-                <div className="sb-create-wrap visible">
-                  <div className="sb-create-inner">
-                    <button className="sb-create gradient-cta" onMouseMove={handleGradientMove} onMouseLeave={handleGradientLeave} onClick={() => navigate('/novo')}>
-                      <Plus size={14} />{!collapsed && showLabels && <span>Criar projeto</span>}
-                    </button>
-                  </div>
-                </div>
-              )}
             </>
           )}
 
