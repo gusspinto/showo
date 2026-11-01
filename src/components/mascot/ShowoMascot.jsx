@@ -19,10 +19,12 @@ import { useEffect, useRef, useState } from 'react'
    carregar" como indicador de "a pensar" do Coach, em vez do indicador
    genérico de 3 bolinhas cinzentas que estava lá antes.
 
-   Prop `waving`: o círculo azul (o único sem pupila) virou uma mão, ideia
-   do Gustavo para aproveitar essa forma "parada". Roda à volta do pulso
-   (o bico na base da mão, único ponto que fica fixo) num pequeno vaivém,
-   3 acenos e depois pausa, antes de repetir.
+   Prop `waving`: só no ecrã de nova conversa do Coach. Troca o círculo
+   azul liso (sidebar, cabeçalho com conversa aberta) pela mão (ideia do
+   Gustavo para aproveitar essa forma "sem olho"), a acenar à volta do
+   pulso (o bico na base da mão, único ponto que fica fixo) num pequeno
+   vaivém com um bocadinho de "bounce", 3 acenos e depois pausa, antes de
+   repetir. Fora da nova conversa continua um círculo parado, sem mão.
 
    Pupilas com `style.transition` no transform para um seguimento do rato
    mais suave e natural (antes saltava de frame a frame sem suavização). */
@@ -32,6 +34,7 @@ const RED = '#d34040'
 const GOLD = '#f6a900'
 
 const HAND_BLUE = 'M645 1076C641.435 1063.88 633.053 1052.23 627.258 1041C613.996 1015.3 600.179 989.861 587.247 964C573.45 936.41 557.133 909.991 534 889.171C495.046 854.112 428.676 831.554 385 872.09C377.85 878.727 371.904 886.477 367.17 895C360.745 906.567 356.772 919.008 354.424 932C348.166 966.637 353.228 1003.51 366.452 1036C374.897 1056.74 386.49 1076.14 396.742 1096C407.927 1117.67 418.601 1139.76 430.576 1161C433.334 1165.89 435.54 1171.07 438.262 1175.98C439.354 1177.95 440.573 1180.19 443.105 1180.29C448.541 1180.5 456.41 1174.61 461 1172C472.718 1165.35 484.948 1159.27 497 1153.25C525.261 1139.11 552.923 1123.75 581 1109.26C602.28 1098.27 624.323 1088.07 645 1076z'
+const CIRCLE_BLUE = 'M550 867.514C534.501 868.488 519.766 870.286 505 875.541C469.347 888.23 439.421 918.328 426.865 954C408.119 1007.26 424.256 1069.09 469 1104.33C482.676 1115.1 498.336 1122.67 515 1127.42C526.208 1130.62 539.286 1133.39 551 1132.79C566.549 1131.99 582.216 1130.18 597 1124.91C634.193 1111.64 664.088 1081.3 676.921 1044C701.537 972.458 660.554 892.044 587 872.151C575.332 868.995 562.112 866.753 550 867.514z'
 const CIRCLE_RED = 'M883 806.424C868.821 808.287 854.861 809.899 841 813.745C819.797 819.628 799.773 830.664 782 843.428C768.608 853.046 757.263 864.365 746.753 877C683.008 953.636 691.278 1072.38 763 1140.96C807.085 1183.12 867.397 1199.56 927 1191.72C953.957 1188.17 981.595 1177.87 1004 1162.41C1018.5 1152.41 1032.1 1141.35 1043.71 1128C1078.44 1088.09 1094.53 1035.52 1090.91 983C1086.33 916.488 1043.11 855.526 984 825.969C961.085 814.512 936.4 808.66 911 806.911C901.713 806.271 892.317 805.201 883 806.424z'
 const CIRCLE_GOLD = 'M1357 765.424C1339.46 767.728 1322.25 768.596 1305 773.289C1269.98 782.815 1236.96 800.817 1210 825.17C1188.11 844.944 1171.56 868.189 1157.69 894C1120.91 962.463 1125.71 1051.25 1163.87 1118C1182.62 1150.78 1210.16 1178.79 1242 1198.95C1291.05 1230.01 1349.06 1239.79 1406 1231.71C1482.13 1220.92 1548.51 1167.8 1580.88 1099C1597.96 1062.7 1604.66 1020.92 1601.91 981C1595 880.66 1518.63 793.44 1421 771.349C1406.68 768.11 1392.62 766.601 1378 765.961C1370.9 765.65 1364.15 764.486 1357 765.424z'
 const PUPIL_RED = 'M883 882.518C862.552 886.886 851.01 911.891 845.589 930C832.174 974.821 831.912 1023.03 844.86 1068C851.185 1089.97 867.058 1123.22 895 1117.62C914.032 1113.81 925.002 1090.36 930.946 1074C947.29 1029.02 945.425 976.362 932.421 931C926.361 909.857 909.976 876.754 883 882.518z'
@@ -123,7 +126,7 @@ export default function ShowoMascot({ size = 96, className, style, animated = tr
   }
 
   const handStyle = waving
-    ? { transformOrigin: `${HAND_PIVOT.x}px ${HAND_PIVOT.y}px`, animation: 'showoMascotWave 4s ease-in-out infinite' }
+    ? { transformOrigin: `${HAND_PIVOT.x}px ${HAND_PIVOT.y}px`, animation: 'showoMascotWave 3.6s cubic-bezier(0.33,1.5,0.4,1) infinite' }
     : circleStyle(0)
 
   return (
@@ -143,15 +146,15 @@ export default function ShowoMascot({ size = 96, className, style, animated = tr
       {waving && (
         <style>{`@keyframes showoMascotWave {
           0% { transform: rotate(0deg); }
-          5% { transform: rotate(16deg); }
-          10% { transform: rotate(-10deg); }
-          15% { transform: rotate(16deg); }
-          20% { transform: rotate(-10deg); }
-          25% { transform: rotate(16deg); }
-          32%, 100% { transform: rotate(0deg); }
+          8% { transform: rotate(22deg); }
+          16% { transform: rotate(-12deg); }
+          24% { transform: rotate(20deg); }
+          32% { transform: rotate(-8deg); }
+          40% { transform: rotate(14deg); }
+          48%, 100% { transform: rotate(0deg); }
         }`}</style>
       )}
-      <path d={HAND_BLUE} fill={blue} style={handStyle} />
+      <path d={waving ? HAND_BLUE : CIRCLE_BLUE} fill={blue} style={handStyle} />
       <path d={CIRCLE_RED} fill={red} style={circleStyle(0.15)} />
       <path d={CIRCLE_GOLD} fill={gold} style={circleStyle(0.3)} />
 
