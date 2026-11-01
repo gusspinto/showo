@@ -523,7 +523,12 @@ export function InviteInbox({ userId, sidebar = false, collapsed = false, flat =
                 ? { position: 'fixed', left: collapsed ? 80 : 248, bottom: 16, transition: 'left 0.25s cubic-bezier(0.22,1,0.36,1)' }
                 : { position: 'absolute', top: 'calc(100% + 8px)', right: 0 }
               ),
-              background: 'color-mix(in srgb, var(--color-bg) 82%, transparent)', border: `1px solid var(--color-border)`,
+              // 82% ficava transparente demais na sidebar de tablet (iPad):
+              // o calendário por trás lia-se claramente por baixo das
+              // notificações, mesmo com o blur. Subido para 94%, o mesmo
+              // problema já tinha sido corrigido no mobile (.notif-drop
+              // abaixo de 600px), faltava aqui.
+              background: 'color-mix(in srgb, var(--color-bg) 94%, transparent)', border: `1px solid var(--color-border)`,
               borderRadius: 14, padding: '8px',
               boxShadow: '0 8px 40px rgba(0,0,0,0.45)',
               backdropFilter: 'blur(18px) saturate(1.4)', WebkitBackdropFilter: 'blur(18px) saturate(1.4)',
