@@ -116,8 +116,8 @@ APRENDIZAGENS: ${f(project.learnings) || '(vazio)'}
 ━━━━━━━━━━━━━━━━━━━━━━${diaryBlock}${feedbackBlock}${defenseBlock}
 
 CRITÉRIOS DE AVALIAÇÃO:
-- "forte": conteúdo específico, claro, com exemplos ou números concretos. Impressiona um júri.
-- "médio": conteúdo presente mas genérico, vago, ou demasiado curto para ser convincente.
+- "forte": conteúdo específico, claro, com exemplos ou números concretos, E bem organizado. Impressiona um júri.
+- "médio": conteúdo presente mas genérico, vago, demasiado curto para ser convincente, OU extenso mas confuso (ver regra 11).
 - "fraco": vazio, uma frase só, ou informação que não diz nada de útil.
 
 REGRAS:
@@ -131,6 +131,7 @@ REGRAS:
 8. O "score_hint" identifica o campo com maior gap e o que acrescentar em 1 frase
 9. Se conciso: cada feedback em 1-2 frases curtas
 10. Para "technologies": avalia se o estudante justificou as escolhas E se mencionou custos ou comparou alternativas. Se so listou nomes sem justificacao, e "medio". Se incluiu custos e razoes de escolha, e "forte".
+11. Extensao nao e qualidade. Um campo longo mas confuso (frases soltas sem ligacao, listas numeradas que recomecam do 1 mais do que uma vez, paragrafos repetidos ou conteudo de outro campo colado ali, ideias misturadas sem ordem) nunca e "forte", no maximo "medio", mesmo que o conteudo em si seja relevante. Um texto assim num portefolio real afasta quem le, por isso aponta isso diretamente no feedback ("este texto esta confuso, nao organizado") e o tip tem de pedir para reescrever mais curto e direto, nunca so para "acrescentar mais detalhe".
 
 Responde APENAS com JSON valido. NAO uses markdown, NAO uses blocos de codigo com crases, NAO incluas texto antes ou depois do JSON.
 
