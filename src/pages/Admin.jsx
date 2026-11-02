@@ -1837,7 +1837,7 @@ function SignupsTab({ signups, users }) {
 }
 
 // ─── ORGS TAB (school organizations) ────────────────────
-function OrgsTab() {
+function OrgsTab({ users }) {
   const [orgs, setOrgs] = useState([])
   const [loadingOrgs, setLoadingOrgs] = useState(true)
   const [name, setName] = useState('')
@@ -1856,6 +1856,12 @@ function OrgsTab() {
     borderRadius: 8, padding: '9px 12px', fontSize: 13, color: 'var(--color-text)',
     outline: 'none', fontFamily: 'inherit', width: '100%', boxSizing: 'border-box',
   }
+
+  // "Quantos alunos tem esta escola" não existia em lado nenhum aqui, a
+  // pergunta mais óbvia ao gerir escolas. users já vem carregado no
+  // Admin (users prop), por isso é só contar, sem query nova nenhuma.
+  const studentCountByOrg = {}
+  ;(users || []).forEach(u => { if (u.organization_id) studentCountByOrg[u.organization_id] = (studentCountByOrg[u.organization_id] || 0) + 1 })
 
   useEffect(() => {
     supabase.from('organizations').select('*').order('created_at', { ascending: false }).then(({ data }) => {
@@ -1991,6 +1997,9 @@ function OrgsTab() {
                   <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{o.email_domain ? `@${o.email_domain}` : 'Sem domínio · entrada por código de turma'}</div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: 12, color: studentCountByOrg[o.id] ? C.text : C.subtle, fontWeight: studentCountByOrg[o.id] ? 700 : 500 }}>
+                    {studentCountByOrg[o.id] || 0} aluno{studentCountByOrg[o.id] === 1 ? '' : 's'}
+                  </span>
                   <span style={{
                     padding: '3px 10px', borderRadius: 99, fontSize: 12, fontWeight: 700,
                     background: PLAN_COLORS[o.plan] + '22', color: PLAN_COLORS[o.plan],
@@ -2551,7 +2560,7 @@ export default function Admin() {
               />
             )}
             {tab === 'signups' && <SignupsTab signups={signups} users={users} />}
-            {tab === 'orgs' && <OrgsTab />}
+            {tab === 'orgs' && <OrgsTab users={users} />}
             {tab === 'invites' && (
               <InvitesTab
                 codes={codes}
