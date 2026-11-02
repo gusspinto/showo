@@ -2018,6 +2018,7 @@ function OrgsTab({ users }) {
 
 // ─── INVITES TAB (professor access codes) ────────────────────
 function InvitesTab({ codes, loading, onGenerate, generating, onToggleActive }) {
+  const navigate = useNavigate()
   const [label, setLabel] = useState('')
   const [maxUses, setMaxUses] = useState('') // empty = ilimitado
   const [orgId, setOrgId] = useState('')
@@ -2143,7 +2144,10 @@ function InvitesTab({ codes, loading, onGenerate, generating, onToggleActive }) 
                   <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 4 }}>
                     {c.redeemers.map(r => (
                       <div key={r.user_id} style={{ fontSize: 12, color: C.muted, display: 'flex', justifyContent: 'space-between' }}>
-                        <span>{r.name}</span>
+                        <span
+                          onClick={() => r.username && navigate(`/u/${r.username}`)}
+                          style={{ cursor: r.username ? 'pointer' : 'default', color: r.username ? C.blue : C.muted }}
+                        >{r.name}</span>
                         <span style={{ color: C.subtle }}>{new Date(r.redeemed_at).toLocaleDateString('pt-PT')}</span>
                       </div>
                     ))}
@@ -2290,16 +2294,17 @@ export default function Admin() {
 
     const userIds = [...new Set(redemptions.map(r => r.user_id))]
     let nameMap = {}
+    let usernameMap = {}
     if (userIds.length) {
       const { data: profs } = await supabase.from('profiles').select('id, full_name, username').in('id', userIds)
-      ;(profs || []).forEach(p => { nameMap[p.id] = p.full_name || p.username || 'Utilizador' })
+      ;(profs || []).forEach(p => { nameMap[p.id] = p.full_name || p.username || 'Utilizador'; usernameMap[p.id] = p.username })
     }
 
     setCodes(rows.map(c => ({
       ...c,
       redeemers: redemptions
         .filter(r => r.code_id === c.id)
-        .map(r => ({ user_id: r.user_id, redeemed_at: r.redeemed_at, name: nameMap[r.user_id] })),
+        .map(r => ({ user_id: r.user_id, redeemed_at: r.redeemed_at, name: nameMap[r.user_id], username: usernameMap[r.user_id] })),
     })))
     setCodesLoading(false)
     setCodesLoaded(true)
