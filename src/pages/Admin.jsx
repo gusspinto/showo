@@ -455,16 +455,19 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
   const [filterAccountType, setFilterAccountType] = useState('all')
   const [range, setRange] = useState(TIME_RANGES[1])
   // Sub-separadores dentro do Overview: a página tinha 8 secções todas
-  // empilhadas na vertical, obrigava a rolar imenso e misturava tudo (daí
-  // a sensação de "confusão"). O período e os 5 KPIs hero ficam sempre
-  // visíveis (resposta rápida), o resto só mostra o que estiver escolhido.
+  // empilhadas na vertical, obrigava a rolar imenso e misturava tudo. A
+  // primeira divisão (por tipo de dado: "Funis & Engagement" vs "Gráficos")
+  // ainda confundia, porque juntava coisas sem ligação real entre si.
+  // Reorganizado por PERGUNTA que cada separador responde, não por tipo de
+  // dado: cada gráfico/funil vive dentro do tema a que pertence (ex: o
+  // funil de upgrade vai para Negócio, não para um bucket genérico de
+  // "funis"). O período e os 5 KPIs hero ficam sempre visíveis.
   const [subTab, setSubTab] = useState('crescimento')
   const OVERVIEW_SUBTABS = [
     { id: 'crescimento', label: 'Crescimento' },
+    { id: 'produto', label: 'Produto' },
     { id: 'negocio', label: 'Negócio' },
-    { id: 'funis', label: 'Funis & Engagement' },
-    { id: 'graficos', label: 'Gráficos' },
-    { id: 'pessoas', label: 'Projetos & Users' },
+    { id: 'pessoas', label: 'Pessoas' },
   ]
 
   // Contagens de utilizadores ativos vêm agregadas do servidor (nunca linhas
@@ -835,6 +838,10 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
           abaixo já tinham. Antes eram só título+legenda soltos a flutuar
           sobre o fundo, sem nenhum contentor visual, o que destoava do
           resto da página e dava sensação de "tudo à solta". */}
+      {/* Reorganizado por PERGUNTA, não por tipo de dado: cada separador
+          junta o estado atual + o gráfico + o funil + a repartição que
+          respondem à MESMA pergunta, em vez de separar "gráficos" e
+          "funis" num bucket genérico sem ligação entre si. */}
       {subTab === 'crescimento' && <>
       <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px', marginBottom: 20 }}>
         <h3 style={{ margin: '0 0 2px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Crescimento · agora</h3>
@@ -842,16 +849,66 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))', gap: 12 }}>
           <StatCard icon={<User size={20} />} label="Utilizadores" value={totalUsers} color={C.blue} sub={`+${newUsersWeek} semana · +${newUsersMonth} mês`} />
           <StatCard icon={<Folder size={20} />} label="Projetos" value={totalProjects} color={C.green} sub={`+${newThisWeek} semana · ${usersWithoutProjects} sem projeto`} />
-          <StatCard icon={<BarChart2 size={20} />} label="Ativos (semana)" value={activeThisWeek} color={activeThisWeek > 0 ? C.green : C.red} sub={`${activeThisMonth} mês · ${neverActive} nunca`} />
           <StatCard icon={<Star size={20} />} label="Score médio" value={avgScore} color={C.yellow} sub={`${scores.length} com score`} />
           <StatCard icon={<School size={20} />} label="Alunos de escola" value={planCounts.school + planCounts.school_pro} color={C.purple} sub={`${planCounts.school} Escola Plus · ${planCounts.school_pro} Escola Pro`} />
         </div>
       </div>
 
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16, marginBottom: 24 }}>
+        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
+          <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Registos por semana</h3>
+          <p style={{ margin: '0 0 10px', fontSize: 11, color: C.subtle }}>Últimas {numWeeks} semanas</p>
+          <BarChart data={regWeeks} color={C.blue} height={110} />
+        </div>
+        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
+          <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Projetos por semana</h3>
+          <p style={{ margin: '0 0 10px', fontSize: 11, color: C.subtle }}>Últimas {numWeeks} semanas</p>
+          <BarChart data={projWeeks} color={C.green} height={110} />
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16, marginBottom: 24 }}>
+        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
+          <h3 style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Por role</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {Object.entries(roleCounts).sort((a, b) => b[1] - a[1]).map(([role, count]) => (
+              <MiniBar key={role} label={role} value={count} total={totalUsers} color={role === 'professor' ? C.green : role === 'empresa' ? C.yellow : C.blue} />
+            ))}
+          </div>
+        </div>
+        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
+          <h3 style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Por país</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {topCountries.length > 0 ? topCountries.map(([country, count]) => (
+              <MiniBar key={country} label={country} value={count} total={totalUsers} color={C.blue} />
+            )) : <span style={{ fontSize: 12, color: C.subtle }}>Sem dados ainda</span>}
+          </div>
+        </div>
+        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
+          <h3 style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Origem (referrer)</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {topReferrers.length > 0 ? topReferrers.map(([ref, count]) => (
+              <MiniBar key={ref} label={ref} value={count} total={totalUsers} color={C.purple} />
+            )) : <span style={{ fontSize: 12, color: C.subtle }}>Sem dados ainda</span>}
+          </div>
+        </div>
+        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
+          <h3 style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Por UTM source</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {topUtmSources.length > 0 ? topUtmSources.map(([utm, count]) => (
+              <MiniBar key={utm} label={utm} value={count} total={totalUsers} color={C.orange} />
+            )) : <span style={{ fontSize: 12, color: C.subtle }}>Sem dados ainda, só regista a partir de agora</span>}
+          </div>
+        </div>
+      </div>
+      </>}
+
+      {subTab === 'produto' && <>
       <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px', marginBottom: 20 }}>
         <h3 style={{ margin: '0 0 2px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Produto · agora</h3>
         <p style={{ margin: '0 0 14px', fontSize: 11, color: C.subtle }}>Uso real do que já está construído, não só criação de conta.</p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))', gap: 12 }}>
+          <StatCard icon={<BarChart2 size={20} />} label="Ativos (semana)" value={activeThisWeek} color={activeThisWeek > 0 ? C.green : C.red} sub={`${activeThisMonth} mês · ${neverActive} nunca`} />
           <StatCard
             icon={<Calendar size={20} />}
             label="Projetos com diário"
@@ -861,6 +918,39 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
           />
           <StatCard icon={<Folder size={20} />} label="Com 3+ secções" value={activatedUserIds.size} color={activatedUserIds.size > 0 ? C.green : C.muted} sub="definição de ativação do CLAUDE.md" />
           <StatCard icon={<User size={20} />} label="Sem projeto nenhum" value={usersWithoutProjects} color={usersWithoutProjects > totalUsers * 0.5 ? C.red : C.muted} sub={`${Math.round((usersWithoutProjects / (totalUsers || 1)) * 100)}% da base`} />
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: 16, marginBottom: 24, alignItems: 'start' }}>
+      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px' }}>
+        <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Funil até ao primeiro projeto {periodLabel}</h3>
+        <p style={{ margin: '0 0 18px', fontSize: 11, color: C.subtle }}>Onde as pessoas desistem entre entrar em "Criar projeto" e teres mesmo um projeto criado.</p>
+        <FunnelFlow steps={[
+          { label: 'Viram "Criar projeto"', value: novoViewed, icon: <Folder size={14} />, color: C.yellow },
+          { label: 'Começaram a preencher', value: novoStarted, icon: <ArrowRight2 size={14} />, color: C.blue },
+          { label: 'Criaram o projeto', value: projectCreated, icon: <Check size={14} />, color: C.green },
+        ]} />
+      </div>
+      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px', opacity: loadingActivity ? 0.5 : 1, transition: 'opacity 0.15s' }}>
+        <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Atividade diária</h3>
+        <p style={{ margin: '0 0 10px', fontSize: 11, color: C.subtle }}>Users ativos / dia ({numDays} dias)</p>
+        <SparkLine data={dauData} labels={dauLabels} color={C.green} height={100} />
+      </div>
+      </div>
+
+      {/* Engagement/retenção: ações reais depois do login, não só "entrou".
+          Sem isto, alguém com o separador aberto sem fazer nada aparecia
+          igual a alguém a usar a app a sério. */}
+      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px', marginBottom: 24 }}>
+        <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Engagement {periodLabel}</h3>
+        <p style={{ margin: '0 0 18px', fontSize: 11, color: C.subtle }}>Ações reais depois do login, não logins em si. Um separador aberto sem fazer nada não conta aqui.</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))', gap: 14 }}>
+          <StatCard icon={<BarChart2 size={20} />} label="Abriram o dashboard" value={dashboardViewed} color={C.blue} />
+          <StatCard icon={<Folder size={20} />} label="Abriram um projeto" value={projectOpenedTotal} color={C.green} sub={`${projectOpenedOwn} próprio · ${projectOpenedOther} de outros`} />
+          <StatCard icon={<Calendar size={20} />} label="Escreveram no diário" value={diaryEntryCreated} color={C.yellow} />
+          <StatCard icon={<HelpCircle size={20} />} label="Usaram o Coach IA" value={coachMessageSent} color={C.purple} />
+          <StatCard icon={<Copy size={20} />} label="Partilharam o link" value={projectShared} color={projectShared > 0 ? C.green : C.muted} />
+          <StatCard icon={<Search size={20} />} label="Navegaram o Explorar" value={exploreViewed} color={C.blue} />
         </div>
       </div>
       </>}
@@ -892,15 +982,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
           ))}
         </div>
       )}
-      </>}
 
-      {subTab === 'funis' && <>
-      {/* Os 3 blocos de processo (funis + engagement) lado a lado em grid,
-          não um por baixo do outro, são do mesmo tipo de informação
-          (passos de um processo), ficam mais fáceis de comparar lado a
-          lado do que a rolar a página toda. */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: 16, marginBottom: 24, alignItems: 'start' }}>
-      {/* Funil de conversão */}
       <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px' }}>
         <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Funil de conversão {periodLabel}</h3>
         <p style={{ margin: '0 0 18px', fontSize: 11, color: C.subtle }}>Do limite atingido ao início do checkout — dados reais, não estimativa. A % é a taxa de passagem entre passos.</p>
@@ -934,98 +1016,6 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
             ))}
           </div>
         )}
-      </div>
-
-      {/* Funil até ao primeiro projeto */}
-      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px' }}>
-        <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Funil até ao primeiro projeto {periodLabel}</h3>
-        <p style={{ margin: '0 0 18px', fontSize: 11, color: C.subtle }}>Onde as pessoas desistem entre entrar em "Criar projeto" e teres mesmo um projeto criado. Começou a registar agora, os números só ficam úteis daqui a uns dias.</p>
-        <FunnelFlow steps={[
-          { label: 'Viram "Criar projeto"', value: novoViewed, icon: <Folder size={14} />, color: C.yellow },
-          { label: 'Começaram a preencher', value: novoStarted, icon: <ArrowRight2 size={14} />, color: C.blue },
-          { label: 'Criaram o projeto', value: projectCreated, icon: <Check size={14} />, color: C.green },
-        ]} />
-      </div>
-
-      {/* Engagement/retenção: ações reais depois do login, não só "entrou".
-          Sem isto, alguém com o separador aberto sem fazer nada aparecia
-          igual a alguém a usar a app a sério. */}
-      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px' }}>
-        <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Engagement {periodLabel}</h3>
-        <p style={{ margin: '0 0 18px', fontSize: 11, color: C.subtle }}>Ações reais depois do login, não logins em si. Um separador aberto sem fazer nada não conta aqui.</p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))', gap: 14 }}>
-          <StatCard icon={<BarChart2 size={20} />} label="Abriram o dashboard" value={dashboardViewed} color={C.blue} />
-          <StatCard icon={<Folder size={20} />} label="Abriram um projeto" value={projectOpenedTotal} color={C.green} sub={`${projectOpenedOwn} próprio · ${projectOpenedOther} de outros`} />
-          <StatCard icon={<Calendar size={20} />} label="Escreveram no diário" value={diaryEntryCreated} color={C.yellow} />
-          <StatCard icon={<HelpCircle size={20} />} label="Usaram o Coach IA" value={coachMessageSent} color={C.purple} />
-          <StatCard icon={<Copy size={20} />} label="Partilharam o link" value={projectShared} color={projectShared > 0 ? C.green : C.muted} />
-          <StatCard icon={<Search size={20} />} label="Navegaram o Explorar" value={exploreViewed} color={C.blue} />
-        </div>
-      </div>
-      </div>
-      </>}
-
-      {subTab === 'graficos' && <>
-      {/* Charts row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16, marginBottom: 24 }}>
-        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
-          <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Registos por semana</h3>
-          <p style={{ margin: '0 0 10px', fontSize: 11, color: C.subtle }}>Últimas {numWeeks} semanas</p>
-          <BarChart data={regWeeks} color={C.blue} height={110} />
-        </div>
-        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px', opacity: loadingActivity ? 0.5 : 1, transition: 'opacity 0.15s' }}>
-          <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Atividade diária</h3>
-          <p style={{ margin: '0 0 10px', fontSize: 11, color: C.subtle }}>Users ativos / dia ({numDays} dias)</p>
-          <SparkLine data={dauData} labels={dauLabels} color={C.green} height={100} />
-        </div>
-        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
-          <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Projetos por semana</h3>
-          <p style={{ margin: '0 0 10px', fontSize: 11, color: C.subtle }}>Últimas {numWeeks} semanas</p>
-          <BarChart data={projWeeks} color={C.green} height={110} />
-        </div>
-      </div>
-
-      {/* Breakdowns row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16, marginBottom: 24 }}>
-        {/* Roles */}
-        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
-          <h3 style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Por role</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {Object.entries(roleCounts).sort((a, b) => b[1] - a[1]).map(([role, count]) => (
-              <MiniBar key={role} label={role} value={count} total={totalUsers} color={role === 'professor' ? C.green : role === 'empresa' ? C.yellow : C.blue} />
-            ))}
-          </div>
-        </div>
-
-        {/* Countries */}
-        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
-          <h3 style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Por país</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {topCountries.length > 0 ? topCountries.map(([country, count]) => (
-              <MiniBar key={country} label={country} value={count} total={totalUsers} color={C.blue} />
-            )) : <span style={{ fontSize: 12, color: C.subtle }}>Sem dados ainda</span>}
-          </div>
-        </div>
-
-        {/* Referrers */}
-        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
-          <h3 style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Origem (referrer)</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {topReferrers.length > 0 ? topReferrers.map(([ref, count]) => (
-              <MiniBar key={ref} label={ref} value={count} total={totalUsers} color={C.purple} />
-            )) : <span style={{ fontSize: 12, color: C.subtle }}>Sem dados ainda</span>}
-          </div>
-        </div>
-
-        {/* UTM source */}
-        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
-          <h3 style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Por UTM source</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {topUtmSources.length > 0 ? topUtmSources.map(([utm, count]) => (
-              <MiniBar key={utm} label={utm} value={count} total={totalUsers} color={C.orange} />
-            )) : <span style={{ fontSize: 12, color: C.subtle }}>Sem dados ainda — só regista a partir de agora</span>}
-          </div>
-        </div>
       </div>
       </>}
 
