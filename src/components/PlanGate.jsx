@@ -10,6 +10,7 @@ import { LinkIcon } from '@solar-icons/react/bold/link'
 import { PresentationGraphIcon as ExportIcon } from '@solar-icons/react/bold/presentation-graph'
 import { AltArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/alt-arrow-right'
 import { CheckCircleIcon as CheckCircle } from '@solar-icons/react/bold/check-circle'
+import { LikeIcon as ThumbUp } from '@solar-icons/react/bold/like'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { getPlan, nextPaidPlan, planHighlights, fullAnnualPrice } from '../lib/plans'
@@ -86,28 +87,37 @@ function DefensePreview() {
   )
 }
 
-// Segunda volta (a primeira ainda tinha 2 mensagens ao mesmo tempo: os
-// números de atividade E o excerto do diário, 5 linhas de texto a competir
-// mesmo dentro de "3 elementos"). O cartão da sidebar (WeeklyRecapTeaser) já
-// mostra os números; o que só este preview mostra é o excerto em si, a prova
-// mais forte que existe. Fica só essa uma ideia: cabeçalho + excerto.
-function RecapPreview() {
+// Logótipo do LinkedIn, mesmo usado em WeeklyRecapTeaser.jsx (o cartão da
+// sidebar que abre este pop-up já usa a cor/ícone do LinkedIn, "mostra
+// provas reais"). O pop-up estava a mostrar o email em vez do post de
+// LinkedIn, mensagem diferente da prometida pelo cartão que o abre, pedido
+// do Gustavo para alinhar as duas.
+const LinkedInMark = ({ size = 13 }) => (
+  <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" aria-hidden="true">
+    <path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.55C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.72C24 .77 23.2 0 22.22 0z"/>
+  </svg>
+)
+
+// Fundo branco de propósito: é uma réplica de um post real do LinkedIn, não
+// uma superfície da Showo, por isso não segue a paleta da marca aqui (a
+// moldura "Preview real" à volta já deixa claro que é um exemplo). 3
+// elementos: cabeçalho (avatar+nome+marca), texto do post, barra de reação.
+// Sem nome de projeto inventado no texto (confundia, "de onde vem esse
+// nome?"), fica genérico ("o projeto").
+function LinkedInPostPreview() {
   return (
-    <div>
-      <p style={{ margin: '0 0 6px', fontSize: 9, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-        O email que recebes, toda a segunda
+    <div style={{ background: '#fff', borderRadius: 10, padding: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
+        <span style={{ width: 24, height: 24, borderRadius: '50%', background: '#3B82F6', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 10, fontWeight: 800 }}>S</span>
+        <span style={{ fontSize: 10.5, fontWeight: 700, color: '#1a1a1a', flex: 1, minWidth: 0 }}>A tua página</span>
+        <span style={{ color: '#0A66C2', flexShrink: 0 }}><LinkedInMark size={13} /></span>
+      </div>
+      <p style={{ margin: 0, fontSize: 11.5, color: '#1a1a1a', lineHeight: 1.5 }}>
+        Esta semana avancei o projeto: melhorei a explicação do problema que resolve e simplifiquei o fluxo, depois de testar com duas pessoas que acharam confuso.
       </p>
-      <div style={{ background: '#1C2333', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '14px 16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12 }}>
-          <span style={{ width: 20, height: 20, borderRadius: 6, background: '#3B82F6', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 9.5, fontWeight: 800 }}>S</span>
-          <span style={{ fontSize: 9.5, color: 'rgba(255,255,255,0.5)' }}>Showo · hello@showo.pt</span>
-        </div>
-        {/* Mesma escolha do email real (pickHighlight em send-weekly-recap):
-            excerto real do diário, não um testemunho inventado. */}
-        <p style={{ margin: '0 0 4px', color: 'rgba(255,255,255,0.5)', fontSize: 9.5, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Decisão em DragBuild</p>
-        <p style={{ margin: 0, color: '#fff', fontSize: 13, lineHeight: 1.5 }}>
-          Decidi simplificar o fluxo depois de testar com duas pessoas que acharam confuso.
-        </p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 8, paddingTop: 7, borderTop: '1px solid #eee' }}>
+        <ThumbUp size={11} color="#0A66C2" />
+        <span style={{ fontSize: 9.5, color: '#767676' }}>Gostei · Comentar · Partilhar</span>
       </div>
     </div>
   )
@@ -117,7 +127,7 @@ function FeaturePreview({ feature }) {
   const kind = FEATURE_PREVIEW_KIND[feature] || 'coach'
   const label = {
     coach: 'Preview real do Coach IA',
-    recap: 'Preview real do recap semanal',
+    recap: 'O post que o Showo escreve por ti',
     vagas: 'Preview real das vagas de estágio',
     defense: 'Preview real da preparação de defesa',
   }[kind]
@@ -127,11 +137,12 @@ function FeaturePreview({ feature }) {
       {kind === 'coach' && <CoachPreview />}
       {kind === 'vagas' && <VagasPreview />}
       {kind === 'defense' && <DefensePreview />}
-      {/* Era RecapPreview + LinkedInPostPreview empilhados, duas previews
-          diferentes no mesmo bloco ("isto é o email ou o LinkedIn?"). Com o
-          pop-up a passar a uma coluna só, ficava longo demais, cortado ao
-          email real, que é a prova direta da feature paga. */}
-      {kind === 'recap' && <RecapPreview />}
+      {/* Era RecapPreview (email) + LinkedInPostPreview empilhados, duas
+          previews diferentes no mesmo bloco ("isto é o email ou o
+          LinkedIn?"). O cartão que abre este pop-up (WeeklyRecapTeaser, na
+          sidebar) já promete "provas reais" com a cor/ícone do LinkedIn,
+          por isso fica só o post, que é o que o cartão prometeu. */}
+      {kind === 'recap' && <LinkedInPostPreview />}
     </div>
   )
 }
