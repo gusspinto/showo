@@ -2567,7 +2567,10 @@ export default function Admin() {
                     <tbody>
                       {ambassadors.map(a => (
                         <tr key={a.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
-                          <td style={{ padding: '10px 14px' }}>{a.profiles?.username || a.profiles?.full_name || a.user_id.slice(0, 8)}</td>
+                          <td
+                            onClick={() => a.profiles?.username && navigate(`/u/${a.profiles.username}`)}
+                            style={{ padding: '10px 14px', cursor: a.profiles?.username ? 'pointer' : 'default', color: a.profiles?.username ? 'var(--color-primary)' : 'inherit' }}
+                          >{a.profiles?.username || a.profiles?.full_name || a.user_id.slice(0, 8)}</td>
                           <td style={{ padding: '10px 14px', fontFamily: 'monospace' }}>{a.referral_code}</td>
                           <td style={{ padding: '10px 14px' }}>
                             {a.stripe_coupon_id ? (
