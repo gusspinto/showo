@@ -222,6 +222,17 @@ export function planHighlights(fromPlanId, toPlan) {
   return items.slice(0, 3)
 }
 
+// Preço cheio se o anual fosse pago mês a mês (mensal × 12), para mostrar
+// riscado ao lado do preço anual real. Pedido do Gustavo: a poupança fica
+// visível no próprio preço, em vez de só dita por texto ("2 meses grátis").
+// Mesmo cálculo partilhado pelo pop-up de upgrade (PlanGate) e pela
+// Pricing, para nunca desalinhar entre os dois sítios.
+export function fullAnnualPrice(monthlyLabel) {
+  const n = parseFloat(String(monthlyLabel).replace('€', '').replace(',', '.'))
+  if (!Number.isFinite(n)) return null
+  return `€${(n * 12).toFixed(2).replace('.', ',')}`
+}
+
 export function remainingUses(planId, feature, usageMap) {
   const limit = getPlan(planId).ai[feature]
   if (limit === Infinity) return Infinity

@@ -9,6 +9,7 @@ import { InfoCircleIcon as InfoCircle } from '@solar-icons/react/linear/info-cir
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
+import { fullAnnualPrice } from '../lib/plans'
 import TestimonialsMarquee from '../components/TestimonialsMarquee'
 import './Pricing.css'
 
@@ -318,16 +319,19 @@ export default function Pricing() {
                 </div>
 
                 <div className="pricing-price">
+                  {/* Preço cheio riscado (mensal × 12), para a poupança do
+                      anual aparecer no próprio preço, não só em texto
+                      ("2 meses grátis"), que saiu daqui. */}
+                  {annual && plan.priceAnnual && plan.priceMonthly && (
+                    <span className="pricing-amount-old">{fullAnnualPrice(plan.priceMonthly)}</span>
+                  )}
                   <span className="pricing-amount">
                     {annual && plan.priceAnnual ? plan.priceAnnual : plan.priceMonthly ?? plan.price}
                   </span>
                   {plan.period && <span className="pricing-period">{annual && plan.priceAnnual ? '/ano' : plan.period}</span>}
                 </div>
                 {annual && plan.annualEquivalent ? (
-                  <p className="pricing-annual-note pricing-annual-note--with-badge">
-                    equivale a {plan.annualEquivalent}
-                    <span className="pricing-period-badge pricing-period-badge--card">2 meses grátis</span>
-                  </p>
+                  <p className="pricing-annual-note">equivale a {plan.annualEquivalent}</p>
                 ) : plan.weeklyNote ? (
                   /* Ao dia os cêntimos não dizem nada a ninguém; à semana
                      já se compara com alguma coisa real. É a mesma conta,

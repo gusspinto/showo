@@ -4,27 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { getPlan, nextPaidPlan, planHighlights } from '../lib/plans'
-import { TESTIMONIALS } from './TestimonialsMarquee'
-
-// Mesmo testemunho da Pricing/Home, sem inventar nada — só escolhido para
-// soar relevante à feature que bloqueou a pessoa. Fora dos casos abaixo,
-// cai no primeiro da lista partilhada.
-const FEATURE_TESTIMONIAL_NAME = {
-  defense: 'Rita Sousa',
-  defenseTraining: 'Rita Sousa',
-  exportPptx: 'Rita Sousa',
-}
-// Ordena a lista toda a começar pelo testemunho mais relevante à feature —
-// os outros seguem-se, para o carrossel ter por onde rodar em vez de mostrar
-// sempre o mesmo. Nenhum é inventado, são os mesmos da Pricing/Home.
-function orderTestimonials(feature) {
-  const list = TESTIMONIALS.filter(t => t.popup !== false)
-  const wanted = FEATURE_TESTIMONIAL_NAME[feature]
-  const i = list.findIndex(t => t.name === wanted)
-  if (i <= 0) return list
-  return [list[i], ...list.slice(0, i), ...list.slice(i + 1)]
-}
+import { getPlan, nextPaidPlan, planHighlights, fullAnnualPrice } from '../lib/plans'
 
 // Preview real do que se recebe, pedido do Gustavo depois do teaser do
 // recap semanal ("eles têm de ter uma preview do que vai realmente ver se
@@ -42,16 +22,15 @@ const FEATURE_PREVIEW_KIND = {
   defenseTraining: 'defense',
 }
 
+// Só 2 balões (pedido → resultado), não 3: a resposta intermédia "sim, por
+// favor" não acrescentava nada a provar, só altura ao pop-up.
 function CoachPreview() {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <div style={{ alignSelf: 'flex-start', maxWidth: '85%', background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: '12px 12px 12px 4px', padding: '9px 12px', fontSize: 12.5, color: 'var(--color-text)', lineHeight: 1.5 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ alignSelf: 'flex-start', maxWidth: '85%', background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: '12px 12px 12px 4px', padding: '8px 11px', fontSize: 12, color: 'var(--color-text)', lineHeight: 1.45 }}>
         Faltam exemplos concretos na secção de resultados. Queres que escreva um rascunho?
       </div>
-      <div style={{ alignSelf: 'flex-end', maxWidth: '70%', background: 'var(--color-primary)', borderRadius: '12px 12px 4px 12px', padding: '9px 12px', fontSize: 12.5, color: '#fff' }}>
-        sim, por favor
-      </div>
-      <div style={{ alignSelf: 'flex-start', maxWidth: '85%', background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: '12px 12px 12px 4px', padding: '9px 12px', fontSize: 12.5, color: 'var(--color-text)', lineHeight: 1.5 }}>
+      <div style={{ alignSelf: 'flex-start', maxWidth: '85%', background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: '12px 12px 12px 4px', padding: '8px 11px', fontSize: 12, color: 'var(--color-text)', lineHeight: 1.45 }}>
         Pronto. Já tens um texto específico ao teu projeto, pronto a colar.
       </div>
     </div>
@@ -134,7 +113,7 @@ function FeaturePreview({ feature }) {
   }[kind]
   return (
     <div className="plan-gate-fade">
-      <p style={{ margin: '0 0 14px', fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
+      <p style={{ margin: '0 0 10px', fontSize: 10, fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
       {kind === 'coach' && <CoachPreview />}
       {kind === 'vagas' && <VagasPreview />}
       {kind === 'defense' && <DefensePreview />}
@@ -227,59 +206,16 @@ const C = {
     fontWeight: 700, fontSize: '0.72rem', cursor: 'pointer', fontFamily: 'var(--font-body)',
     boxShadow: active ? 'var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.06))' : 'none',
   }),
-  periodBadge: {
-    padding: '1px 6px', borderRadius: 'var(--radius-full)',
-    backgroundImage: 'var(--brand-gradient)', color: '#fff',
-    fontSize: '9px', fontWeight: 800, letterSpacing: '0.01em',
-  },
   upsellHead: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '8px' },
   upsellName: { fontSize: '1.15rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)' },
   upsellPrice: { fontSize: '1.3rem', fontWeight: 700, color: 'var(--color-text)' },
+  // Preço cheio riscado (mensal × 12), ao lado do preço anual real.
+  upsellPriceOld: {
+    fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-tertiary)',
+    textDecoration: 'line-through', marginRight: '6px',
+  },
   upsellPeriod: { fontWeight: 500, fontSize: '0.8rem', color: 'var(--color-text-secondary)' },
   errorText: { margin: 0, fontSize: '0.78rem', color: 'var(--color-error)' },
-  // .sdb-panel simples — mesmo cartão neutro que qualquer painel do
-  // Dashboard, só para o testemunho não se confundir visualmente com o
-  // bloco do preço (que é o único a usar a tinta da marca).
-  testimonial: {
-    display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)',
-    // Não estica até à altura da coluna do preço: a caixa fica só do tamanho do
-    // conteúdo, sem espaço vazio entre o testemunho e a autoria.
-    alignSelf: 'start',
-    background: 'var(--color-surface)', border: '1px solid var(--color-border)',
-    borderRadius: 'var(--radius-lg)', padding: 'var(--sp-5)',
-  },
-  // Sem corte: o testemunho inteiro aparece. Para o modal não saltar a cada
-  // rotação, todos os testemunhos ficam empilhados na mesma célula da grelha
-  // (testimonialStack) e só o ativo é visível — a altura é a do mais longo.
-  testimonialStack: { display: 'grid' },
-  testimonialQuote: {
-    margin: 0, fontSize: '0.95rem', color: 'var(--color-text)', lineHeight: 1.55,
-    gridArea: '1 / 1',
-  },
-  testimonialFooter: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' },
-  testimonialPerson: { display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 },
-  // Contorno de 1px neutro (preto no claro, branco no escuro, via --color-text),
-  // para a foto não se fundir com o cartão nem apanhar a cor da superfície.
-  testimonialPhoto: {
-    width: '36px', height: '36px', borderRadius: 'var(--radius-full)', objectFit: 'cover', flexShrink: 0,
-    outline: '1px solid color-mix(in srgb, var(--color-text) 10%, transparent)', outlineOffset: '-1px',
-  },
-  testimonialName: { fontSize: '0.84rem', fontWeight: 700, color: 'var(--color-text)' },
-  // Antes cortava com "..." (1 linha, depois 2) e ainda ficava ilegível
-  // ("Universidade da Maia e..."). Sem clamp nenhum agora — o cargo embrulha
-  // por inteiro, por mais linhas que precisar.
-  testimonialRole: {
-    fontSize: '0.7rem', color: 'var(--color-text-secondary)', lineHeight: 1.35,
-  },
-  testimonialDots: { display: 'flex', gap: '5px', flexShrink: 0 },
-  testimonialDot: (active) => ({
-    width: active ? '14px' : '5px', height: '5px', borderRadius: '3px',
-    /* Preto no modo claro, branco no escuro (var(--color-text)). A
-       diferença entre ativo e inativo fica na largura, não na cor. */
-    background: 'var(--color-text)',
-    opacity: active ? 1 : 0.3,
-    transition: 'width 0.25s ease, background 0.25s ease',
-  }),
   // Invertido (var(--color-text)/var(--color-bg)), não azul — o mesmo botão
   // "cheio" que a Home, o Login e o Registo já usam. O azul fica reservado
   // à faixa do plano em cima, não ao botão de ação.
@@ -359,20 +295,6 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
   // pedido do Gustavo, repetia a lista de benefícios ao lado). Sem exclude
   // aqui, essa feature volta a aparecer, mas só na lista, não duplicada.
   const highlights = upgrade ? planHighlights(planId, upgrade) : []
-
-  // Carrossel de testemunhos, a começar no mais relevante à feature que
-  // bloqueou a pessoa — pedido do Gustavo depois de ver o pop-up do
-  // StudyFetch, onde os testemunhos mudam sozinhos em vez de ficar um só
-  // fixo a olhar para a pessoa.
-  const orderedTestimonials = orderTestimonials(feature)
-  const [tIdx, setTIdx] = useState(0)
-  useEffect(() => {
-    if (!upgrade || orderedTestimonials.length < 2) return
-    const id = setInterval(() => setTIdx(i => (i + 1) % orderedTestimonials.length), 5000)
-    return () => clearInterval(id)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [upgrade, orderedTestimonials.length])
-  const testimonial = upgrade ? orderedTestimonials[tIdx] : null
 
   // Registo do funil: quando alguém vê mesmo o pop-up de upgrade (não o nudge
   // leve do Dashboard, que já tinha isto). Só regista quando há oferta de
@@ -508,49 +430,24 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
                 {upgrade.priceLabelAnnual && (
                   <div style={{ ...C.periodToggle, margin: '0 auto 12px' }} role="group" aria-label="Periodicidade do pagamento">
                     <button type="button" style={C.periodBtn(!annual)} onClick={() => setAnnual(false)}>Mensal</button>
-                    <button type="button" style={C.periodBtn(annual)} onClick={() => setAnnual(true)}>
-                      Anual <span style={C.periodBadge}>2 meses grátis</span>
-                    </button>
+                    <button type="button" style={C.periodBtn(annual)} onClick={() => setAnnual(true)}>Anual</button>
                   </div>
                 )}
                 <div style={C.upsell}>
                   <div style={C.upsellHead}>
                     <span style={C.upsellName}>{upgrade.name}</span>
                     <span style={C.upsellPrice}>
+                      {/* Preço riscado = mensal × 12, para a poupança do anual
+                          aparecer no próprio preço, não só em texto ("2 meses
+                          grátis"). Substitui a pílula do toggle acima. */}
+                      {annual && upgrade.priceLabelAnnual && (
+                        <span style={C.upsellPriceOld}>{fullAnnualPrice(upgrade.priceLabel)}</span>
+                      )}
                       {annual && upgrade.priceLabelAnnual ? upgrade.priceLabelAnnual : upgrade.priceLabel}
                       <span style={C.upsellPeriod}>{annual && upgrade.priceLabelAnnual ? '/ano' : upgrade.period}</span>
                     </span>
                   </div>
                 </div>
-
-                {testimonial && (
-                  <div style={C.testimonial}>
-                    <div style={C.testimonialStack}>
-                      {orderedTestimonials.map((t, i) => (
-                        <p
-                          key={i}
-                          style={{ ...C.testimonialQuote, visibility: i === tIdx ? 'visible' : 'hidden' }}
-                          className={i === tIdx ? 'plan-gate-fade' : undefined}
-                          aria-hidden={i !== tIdx}
-                        >“{t.quote}”</p>
-                      ))}
-                    </div>
-                    <div style={C.testimonialFooter}>
-                      <div style={C.testimonialPerson}>
-                        <img src={testimonial.photo} alt="" style={C.testimonialPhoto} />
-                        <div style={{ minWidth: 0 }}>
-                          <div style={C.testimonialName}>{testimonial.name}</div>
-                          <div style={C.testimonialRole}>{testimonial.role}</div>
-                        </div>
-                      </div>
-                    </div>
-                    {orderedTestimonials.length > 1 && (
-                      <div style={{ ...C.testimonialDots, justifyContent: 'center' }}>
-                        {orderedTestimonials.map((_, i) => <span key={i} style={C.testimonialDot(i === tIdx)} />)}
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
 
               <div className="plan-gate-col-right">
