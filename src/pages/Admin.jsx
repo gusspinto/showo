@@ -441,6 +441,7 @@ function generateMeetingSummary(users, projects, activityStats, range) {
 }
 
 function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSummary, realSubscriberIds }) {
+  const navigate = useNavigate()
   const [userSearch, setUserSearch] = useState('')
   const [showLimitUsers, setShowLimitUsers] = useState(false)
   const [showSubscribers, setShowSubscribers] = useState(false)
@@ -512,8 +513,13 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
 
   // MRR a partir de quem realmente paga agora (preço de lista, sem promoções
   // aplicadas) — não é o valor exato faturado, mas dá o pulso do negócio sem
-  // depender do Stripe estar acessível aqui.
-  const mrrEstimate = realPlusCount * 4.99 + realProCount * 9.99
+  // depender do Stripe estar acessível aqui. Lido de getPlan, não hardcoded:
+  // estava fixo em 4,99/9,99 (preços antigos), desatualizado há pelo menos
+  // uma subida de preço (real é 8,99/17,99, ver src/lib/plans.js), o que
+  // subavaliava o MRR real em quase metade.
+  const plusPrice = parseFloat(getPlan('plus').priceLabel.replace('€', '').replace(',', '.'))
+  const proPrice = parseFloat(getPlan('pro').priceLabel.replace('€', '').replace(',', '.'))
+  const mrrEstimate = realPlusCount * plusPrice + realProCount * proPrice
 
   const billingMap = {}
   ;(billingSummary || []).forEach(row => { billingMap[row.event] = row })
@@ -660,7 +666,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
 
   // Sorted & filtered users
   const uq = userSearch.toLowerCase()
-  const sortedUsers = [...users]
+  const filteredUsers = [...users]
     .filter(u => !uq || (u.full_name || '').toLowerCase().includes(uq) || (u.email || '').toLowerCase().includes(uq) || (u.signup_country || '').toLowerCase().includes(uq) || (u.role || '').toLowerCase().includes(uq))
     .filter(u => filterRole === 'all' || (u.role || 'aluno') === filterRole)
     .filter(u => filterAccountType === 'all' || (u.account_type || 'individual') === filterAccountType)
@@ -673,7 +679,8 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
       if (sort === 'inactive') return (projectCountMap[a.id] || 0) - (projectCountMap[b.id] || 0)
       return new Date(b.created_at) - new Date(a.created_at)
     })
-    .slice(0, 15)
+  const filteredUsersCount = filteredUsers.length
+  const sortedUsers = filteredUsers.slice(0, 15)
 
   const recentProjects = [...projects]
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
@@ -697,34 +704,13 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
 
   return (
     <div>
-      {/* Time range selector + export */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
-        <div style={{ display: 'flex', gap: 4 }}>
-          {TIME_RANGES.map(r => (
-            <button
-              key={r.id}
-              onClick={() => setRange(r)}
-              style={{
-                padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600,
-                fontFamily: 'inherit', cursor: 'pointer', border: 'none',
-                background: range.id === r.id ? C.blue : C.bgAlt,
-                color: range.id === r.id ? '#fff' : C.muted,
-                transition: 'all 0.15s',
-              }}
-            >{r.label}</button>
-          ))}
-        </div>
-        <div style={{ display: 'flex', gap: 6 }}>
-          <button onClick={handleCopySummary} style={{ padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', border: `1px solid ${C.border}`, background: 'transparent', color: C.muted }}>
-            Copiar resumo
-          </button>
-          <button onClick={handleExport} style={{ padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', border: `1px solid ${C.border}`, background: 'transparent', color: C.muted }}>
-            Exportar .md
-          </button>
-        </div>
-      </div>
-
-      {/* Stats row */}
+      {/* Stats row: estado atual, não depende do seletor de período (esse
+          só controla os gráficos e o resumo abaixo). Juntar os dois dava a
+          ideia de que mudar "90 dias" mudava estes números, e não mudava:
+          "Utilizadores", "Assinantes", "MRR" são sempre o total/estado de
+          agora, só as etiquetas "semana"/"mês" eram sempre fixas. */}
+      <h3 style={{ margin: '0 0 2px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Visão geral · agora</h3>
+      <p style={{ margin: '0 0 14px', fontSize: 11, color: C.subtle }}>Estado atual da conta, independente do período escolhido abaixo.</p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))', gap: 14, marginBottom: 24 }}>
         <StatCard icon={<User size={20} />} label="Utilizadores" value={totalUsers} color={C.blue} sub={`+${newUsersWeek} semana · +${newUsersMonth} mês`} />
         <StatCard icon={<Folder size={20} />} label="Projetos" value={totalProjects} color={C.green} sub={`+${newThisWeek} semana · ${usersWithoutProjects} sem projeto`} />
@@ -817,6 +803,38 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
         </div>
       </div>
 
+      {/* Período + export: só afeta os gráficos abaixo e o resumo
+          exportado, nunca a "Visão geral · agora" nem o "Engagement" acima,
+          que são sempre o estado atual. */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, flexWrap: 'wrap', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Período dos gráficos</span>
+          <div style={{ display: 'flex', gap: 4 }}>
+            {TIME_RANGES.map(r => (
+              <button
+                key={r.id}
+                onClick={() => setRange(r)}
+                style={{
+                  padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600,
+                  fontFamily: 'inherit', cursor: 'pointer', border: 'none',
+                  background: range.id === r.id ? C.blue : C.bgAlt,
+                  color: range.id === r.id ? '#fff' : C.muted,
+                  transition: 'all 0.15s',
+                }}
+              >{r.label}</button>
+            ))}
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button onClick={handleCopySummary} style={{ padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', border: `1px solid ${C.border}`, background: 'transparent', color: C.muted }}>
+            Copiar resumo
+          </button>
+          <button onClick={handleExport} style={{ padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', border: `1px solid ${C.border}`, background: 'transparent', color: C.muted }}>
+            Exportar .md
+          </button>
+        </div>
+      </div>
+
       {/* Charts row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16, marginBottom: 24 }}>
         <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
@@ -886,7 +904,13 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
           <h3 style={{ margin: '0 0 16px', fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Projetos recentes</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {recentProjects.map(p => (
-              <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div
+                key={p.id}
+                onClick={() => p.slug && navigate(`/projeto/${p.slug}`)}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: p.slug ? 'pointer' : 'default', padding: 4, margin: -4, borderRadius: 8 }}
+                onMouseEnter={e => { if (p.slug) e.currentTarget.style.background = C.bgAlt }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+              >
                 <div style={{ width: 36, height: 36, borderRadius: 8, background: C.bgAlt, border: `1px solid ${C.border}`, overflow: 'hidden', flexShrink: 0 }}>
                   {p.cover_url
                     ? <img src={p.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -906,7 +930,9 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
         {/* Users list with sort */}
         <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '20px 22px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, gap: 8, flexWrap: 'wrap' }}>
-            <h3 style={{ margin: 0, fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Utilizadores</h3>
+            <h3 style={{ margin: 0, fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>
+              Utilizadores <span style={{ color: C.subtle, fontWeight: 500, textTransform: 'none', letterSpacing: 0 }}>· a mostrar {sortedUsers.length} de {filteredUsersCount}</span>
+            </h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <div style={{ position: 'relative' }}>
                 <Search size={12} style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: C.muted }} />
@@ -973,11 +999,15 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
               const lastActiveColor = !u.last_active_at ? C.red : isOnline ? C.green : lastSeenH < 24 ? C.green : lastSeenH < 168 ? C.yellow : C.subtle
 
               return (
-                <div key={u.id} style={{
-                  display: 'flex', alignItems: 'stretch', gap: 10, padding: '10px 12px',
-                  background: C.card, border: `1px solid ${isOnline ? 'var(--color-success-subtle)' : diffH < 24 ? 'var(--color-primary-subtle)' : C.border}`,
-                  borderRadius: 8,
-                }}>
+                <div
+                  key={u.id}
+                  onClick={() => u.username && navigate(`/u/${u.username}`)}
+                  style={{
+                    display: 'flex', alignItems: 'stretch', gap: 10, padding: '10px 12px',
+                    background: C.card, border: `1px solid ${isOnline ? 'var(--color-success-subtle)' : diffH < 24 ? 'var(--color-primary-subtle)' : C.border}`,
+                    borderRadius: 8, cursor: u.username ? 'pointer' : 'default',
+                  }}
+                >
                   <div style={{ position: 'relative', alignSelf: 'center' }}>
                     <Avatar name={u.full_name || u.username} color={u.is_admin ? 'var(--color-accent)' : 'var(--color-primary)'} size={36} />
                     {isOnline && <div style={{ position: 'absolute', bottom: 0, right: 0, width: 10, height: 10, borderRadius: '50%', background: C.green, border: '2px solid var(--color-surface)' }} />}
