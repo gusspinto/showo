@@ -94,21 +94,21 @@ function StatCard({ icon, label, value, color = C.blue, sub, onClick }) {
       style={{
         ...C.glassStyle,
         background: C.glass, border: `1px solid ${C.glassBorder}`,
-        borderRadius: 12, padding: '22px 24px',
-        display: 'flex', alignItems: 'flex-start', gap: 16,
+        borderRadius: 12, padding: '18px 20px', minHeight: 96,
+        display: 'flex', alignItems: 'flex-start', gap: 14,
         cursor: onClick ? 'pointer' : 'default',
       }}
     >
       <div style={{
-        width: 44, height: 44, borderRadius: 10, flexShrink: 0,
+        width: 40, height: 40, borderRadius: 9, flexShrink: 0,
         background: color + '18', border: `1px solid ${color}30`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 20,
+        fontSize: 18,
       }}>{icon}</div>
-      <div>
-        <div style={{ fontSize: 26, fontWeight: 400, color, letterSpacing: '-0.5px', lineHeight: 1, fontFamily: 'var(--font-heading)' }}>{value}</div>
-        <div style={{ fontSize: 13, color: onClick ? C.blue : C.muted, fontWeight: 500, marginTop: 4 }}>{label}{onClick ? ' →' : ''}</div>
-        {sub && <div style={{ fontSize: 11, color: C.subtle, marginTop: 3 }}>{sub}</div>}
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 24, fontWeight: 400, color, letterSpacing: '-0.5px', lineHeight: 1, fontFamily: 'var(--font-heading)' }}>{value}</div>
+        <div style={{ fontSize: 12.5, color: onClick ? C.blue : C.muted, fontWeight: 500, marginTop: 4 }}>{label}{onClick ? ' →' : ''}</div>
+        {sub && <div style={{ fontSize: 11, color: C.subtle, marginTop: 3, lineHeight: 1.35 }}>{sub}</div>}
       </div>
     </div>
   )
@@ -479,18 +479,19 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
   )
   const activationRate = users.length > 0 ? Math.round((activatedUserIds.size / users.length) * 1000) / 10 : 0
 
-  // Quantos projetos têm pelo menos uma entrada de diário (de qualquer
-  // tipo). Não vem de `projects` nem `funnel_events`, por isso é um fetch
-  // próprio, leve (só a coluna project_id, sem conteúdo).
-  const [journalProjectIds, setJournalProjectIds] = useState(null)
+  // Quantos projetos têm pelo menos uma entrada de diário. Um select direto
+  // dava sempre 0: project_journal_entries tem RLS "read own or team", o
+  // admin só via as próprias entradas, nunca o total real (mostrava "0%"
+  // com 119 de 773 projetos a sério com diário). RPC com SECURITY DEFINER,
+  // mesmo padrão das outras admin_get_*.
+  const [projectsWithJournal, setProjectsWithJournal] = useState(null)
   useEffect(() => {
     let cancelled = false
-    supabase.from('project_journal_entries').select('project_id').then(({ data }) => {
-      if (!cancelled) setJournalProjectIds(new Set((data || []).map(r => r.project_id)))
+    supabase.rpc('admin_get_journal_coverage').then(({ data }) => {
+      if (!cancelled) setProjectsWithJournal(data?.projects_with_journal ?? 0)
     })
     return () => { cancelled = true }
   }, [])
-  const projectsWithJournal = journalProjectIds?.size ?? null
   const journalRate = projectsWithJournal !== null && projects.length > 0
     ? Math.round((projectsWithJournal / projects.length) * 1000) / 10
     : null
@@ -813,39 +814,50 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
         ))}
       </div>
 
-      <h3 style={{ margin: '0 0 2px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Crescimento · agora</h3>
-      <p style={{ margin: '0 0 14px', fontSize: 11, color: C.subtle }}>Estado atual da conta. Não muda com o período acima, é sempre "agora".</p>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))', gap: 14, marginBottom: 24 }}>
-        <StatCard icon={<User size={20} />} label="Utilizadores" value={totalUsers} color={C.blue} sub={`+${newUsersWeek} semana · +${newUsersMonth} mês`} />
-        <StatCard icon={<Folder size={20} />} label="Projetos" value={totalProjects} color={C.green} sub={`+${newThisWeek} semana · ${usersWithoutProjects} sem projeto`} />
-        <StatCard icon={<BarChart2 size={20} />} label="Ativos (semana)" value={activeThisWeek} color={activeThisWeek > 0 ? C.green : C.red} sub={`${activeThisMonth} mês · ${neverActive} nunca`} />
-        <StatCard icon={<Star size={20} />} label="Score médio" value={avgScore} color={C.yellow} sub={`${scores.length} com score`} />
-        <StatCard icon={<School size={20} />} label="Alunos de escola" value={planCounts.school + planCounts.school_pro} color={C.purple} sub={`${planCounts.school} Escola Plus · ${planCounts.school_pro} Escola Pro`} />
+      {/* As 3 secções seguintes (Crescimento, Produto, Negócio) ficam cada
+          uma dentro de um painel com borda, como os funis/gráficos mais
+          abaixo já tinham. Antes eram só título+legenda soltos a flutuar
+          sobre o fundo, sem nenhum contentor visual, o que destoava do
+          resto da página e dava sensação de "tudo à solta". */}
+      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px', marginBottom: 20 }}>
+        <h3 style={{ margin: '0 0 2px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Crescimento · agora</h3>
+        <p style={{ margin: '0 0 14px', fontSize: 11, color: C.subtle }}>Estado atual da conta. Não muda com o período acima, é sempre "agora".</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))', gap: 12 }}>
+          <StatCard icon={<User size={20} />} label="Utilizadores" value={totalUsers} color={C.blue} sub={`+${newUsersWeek} semana · +${newUsersMonth} mês`} />
+          <StatCard icon={<Folder size={20} />} label="Projetos" value={totalProjects} color={C.green} sub={`+${newThisWeek} semana · ${usersWithoutProjects} sem projeto`} />
+          <StatCard icon={<BarChart2 size={20} />} label="Ativos (semana)" value={activeThisWeek} color={activeThisWeek > 0 ? C.green : C.red} sub={`${activeThisMonth} mês · ${neverActive} nunca`} />
+          <StatCard icon={<Star size={20} />} label="Score médio" value={avgScore} color={C.yellow} sub={`${scores.length} com score`} />
+          <StatCard icon={<School size={20} />} label="Alunos de escola" value={planCounts.school + planCounts.school_pro} color={C.purple} sub={`${planCounts.school} Escola Plus · ${planCounts.school_pro} Escola Pro`} />
+        </div>
       </div>
 
-      <h3 style={{ margin: '0 0 2px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Produto · agora</h3>
-      <p style={{ margin: '0 0 14px', fontSize: 11, color: C.subtle }}>Uso real do que já está construído, não só criação de conta.</p>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))', gap: 14, marginBottom: 24 }}>
-        <StatCard
-          icon={<Calendar size={20} />}
-          label="Projetos com diário"
-          value={journalRate !== null ? `${journalRate}%` : '…'}
-          color={journalRate === null ? C.muted : journalRate >= 50 ? C.green : journalRate >= 20 ? C.yellow : C.red}
-          sub={projectsWithJournal !== null ? `${projectsWithJournal} de ${totalProjects} projetos` : 'a carregar…'}
-        />
-        <StatCard icon={<Folder size={20} />} label="Com 3+ secções" value={activatedUserIds.size} color={activatedUserIds.size > 0 ? C.green : C.muted} sub="definição de ativação do CLAUDE.md" />
-        <StatCard icon={<User size={20} />} label="Sem projeto nenhum" value={usersWithoutProjects} color={usersWithoutProjects > totalUsers * 0.5 ? C.red : C.muted} sub={`${Math.round((usersWithoutProjects / (totalUsers || 1)) * 100)}% da base`} />
+      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px', marginBottom: 20 }}>
+        <h3 style={{ margin: '0 0 2px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Produto · agora</h3>
+        <p style={{ margin: '0 0 14px', fontSize: 11, color: C.subtle }}>Uso real do que já está construído, não só criação de conta.</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))', gap: 12 }}>
+          <StatCard
+            icon={<Calendar size={20} />}
+            label="Projetos com diário"
+            value={journalRate !== null ? `${journalRate}%` : '…'}
+            color={journalRate === null ? C.muted : journalRate >= 50 ? C.green : journalRate >= 20 ? C.yellow : C.red}
+            sub={projectsWithJournal !== null ? `${projectsWithJournal} de ${totalProjects} projetos` : 'a carregar…'}
+          />
+          <StatCard icon={<Folder size={20} />} label="Com 3+ secções" value={activatedUserIds.size} color={activatedUserIds.size > 0 ? C.green : C.muted} sub="definição de ativação do CLAUDE.md" />
+          <StatCard icon={<User size={20} />} label="Sem projeto nenhum" value={usersWithoutProjects} color={usersWithoutProjects > totalUsers * 0.5 ? C.red : C.muted} sub={`${Math.round((usersWithoutProjects / (totalUsers || 1)) * 100)}% da base`} />
+        </div>
       </div>
 
+      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px', marginBottom: 20 }}>
       <h3 style={{ margin: '0 0 2px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Negócio {periodLabel}</h3>
       <p style={{ margin: '0 0 14px', fontSize: 11, color: C.subtle }}>Assinantes e MRR são sempre "agora" (quem paga neste preciso momento); as restantes seguem o período escolhido acima.</p>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))', gap: 14, marginBottom: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))', gap: 12 }}>
         <StatCard icon={<Star size={20} />} label="Assinantes reais" value={paidUsers} color={paidUsers > 0 ? C.green : C.muted} sub={`${realPlusCount} Plus · ${realProCount} Pro · pagam via Stripe`} onClick={paidUsers > 0 ? () => setShowSubscribers(o => !o) : undefined} />
         <StatCard icon={<Star size={20} />} label="MRR real" value={`€${mrrEstimate.toFixed(2)}`} color={mrrEstimate > 0 ? C.green : C.muted} sub="Preço de lista, sem promoções" />
         <StatCard icon={<Star size={20} />} label="Acesso Plus/Pro oferecido" value={grantedUsers} color={C.purple} sub="Professores e ofertas manuais, sem Stripe" />
         <StatCard icon={<Star size={20} />} label="Subscrições novas" value={newSubsInRange} color={newSubsInRange > 0 ? C.green : C.muted} sub={periodLabel} />
         <StatCard icon={<Star size={20} />} label="Cancelamentos" value={churnedInRange} color={churnedInRange > 0 ? C.red : C.muted} sub={periodLabel} />
         <StatCard icon={<Star size={20} />} label="Receita cobrada" value={`€${revenueInRange.toFixed(2)}`} color={revenueInRange > 0 ? C.green : C.muted} sub={`Faturas pagas ${periodLabel}`} />
+      </div>
       </div>
 
       {showSubscribers && realSubscribers.length > 0 && (
