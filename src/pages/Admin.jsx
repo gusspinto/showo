@@ -487,10 +487,22 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
   // Ativação (definição do CLAUDE.md: publicar 1 projeto com 3+ secções E
   // partilhar o link). A parte do "partilhar" só tem dados fiáveis desde
   // que project_shared foi para produção, por isso mostra-se só a parte
-  // que já temos a sério (3+ secções), vem direto de `projects`, nunca
-  // depende do funnel_events novo. Confirmado contra a BD: 11 de 1544 (0,7%).
+  // que já temos a sério (3+ secções).
+  //
+  // BUG encontrado nesta sessão: isto contava preview_blocks.length >= 3,
+  // mas preview_blocks são blocos extra de canvas (notas, destaques) que a
+  // pessoa adiciona manualmente por cima das secções normais, NÃO as
+  // secções em si, essas (problema, solução, público-alvo, etc.) são
+  // "orderedSections" em ProjectPageParts.jsx e aparecem sempre, preview_
+  // blocks ou não. Por isso dava 11 de 1544 (0,7%): quase ninguém mexe
+  // nesses blocos extra, mas 110 projetos (confirmado por SQL) têm 3+
+  // campos reais preenchidos a sério. Corrigido para contar os campos de
+  // conteúdo com 60+ caracteres (mesmo limiar de autoJournal.js), que é o
+  // que realmente aparece ao visitante.
+  const CONTENT_FIELDS = ['problem', 'solution', 'target_audience', 'features', 'technologies', 'challenges', 'results', 'learnings', 'goal']
+  const filledFieldCount = (p) => CONTENT_FIELDS.filter(f => (p[f] || '').trim().length > 60).length
   const activatedUserIds = new Set(
-    projects.filter(p => p.entry_kind === 'full' && Array.isArray(p.preview_blocks) && p.preview_blocks.length >= 3).map(p => p.user_id)
+    projects.filter(p => p.entry_kind === 'full' && filledFieldCount(p) >= 3).map(p => p.user_id)
   )
   const activationRate = users.length > 0 ? Math.round((activatedUserIds.size / users.length) * 1000) / 10 : 0
 
