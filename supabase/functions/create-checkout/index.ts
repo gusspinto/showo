@@ -87,8 +87,9 @@ Deno.serve(async (req) => {
     // pessoa clicasse em "Adicionar código promocional" e o escrevesse à
     // mão no checkout. Ninguém fazia isso (confirmado: 0 resgates do
     // SHOWO50 no Stripe, apesar de estar em todos os emails de onboarding).
-    // Quem vinha de um email a prometer 4,49€ via 8,99€ sem desconto
-    // nenhum e desistia. Agora aplica-se sozinho, sem a pessoa fazer nada.
+    // Quem vinha de um email a prometer 4,49€ chegava ao checkout sem
+    // desconto nenhum e desistia. Agora aplica-se sozinho, sem a pessoa
+    // fazer nada.
     const discountCode = Deno.env.get('ONBOARDING_DISCOUNT_CODE')
     let discounts: Array<{ promotion_code: string }> | undefined
     if (discountCode) {
