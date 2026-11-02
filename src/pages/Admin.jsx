@@ -1672,9 +1672,17 @@ function OnboardingSummary({ users }) {
   )
 }
 
+const SIGNUPS_TAB_PAGE_SIZE = 50
+
 function SignupsTab({ signups, users }) {
+  const navigate = useNavigate()
   const [filter, setFilter] = useState('')
-  const [view, setView] = useState('waitlist')
+  // Waitlist só tem o punhado de contas de antes do lançamento (sem rota
+  // /waitlist ativa há muito, ninguém escreve lá), e "Registados" é que
+  // tem gente de verdade. Abrir sempre em "waitlist" mostrava quase nada
+  // por omissão, escondendo o separador que interessa a um clique.
+  const [view, setView] = useState('registered')
+  const [visibleCount, setVisibleCount] = useState(SIGNUPS_TAB_PAGE_SIZE)
   const q = filter.toLowerCase()
 
   const waitlistFiltered = signups.filter(s =>
@@ -1683,13 +1691,18 @@ function SignupsTab({ signups, users }) {
     (s.city || '').toLowerCase().includes(q)
   )
 
-  const registeredFiltered = users.filter(s =>
+  const registeredFilteredAll = users.filter(s =>
     (s.full_name || '').toLowerCase().includes(q) ||
     (s.email || '').toLowerCase().includes(q) ||
     (s.signup_country || '').toLowerCase().includes(q) ||
     (s.signup_city || '').toLowerCase().includes(q)
   )
+  // Mesma lição das outras tabs: "Registados" pode ter 1500+ linhas,
+  // "waitlist" tem sempre uma mão-cheia, só a primeira precisa de paginar.
+  useEffect(() => { setVisibleCount(SIGNUPS_TAB_PAGE_SIZE) }, [q, view])
+  const registeredFiltered = registeredFilteredAll.slice(0, visibleCount)
 
+  const filteredAll = view === 'waitlist' ? waitlistFiltered : registeredFilteredAll
   const filtered = view === 'waitlist' ? waitlistFiltered : registeredFiltered
 
   return (
@@ -1717,7 +1730,9 @@ function SignupsTab({ signups, users }) {
             { id: 'registered', label: `Registados (${users.length})` },
           ]}
         />
-        <span style={{ fontSize: 12, color: C.muted }}>{filtered.length} resultado{filtered.length !== 1 ? 's' : ''}</span>
+        <span style={{ fontSize: 12, color: C.muted }}>
+          {view === 'registered' ? `a mostrar ${filtered.length} de ${filteredAll.length}` : `${filtered.length} resultado${filtered.length !== 1 ? 's' : ''}`}
+        </span>
       </div>
 
       {view === 'registered' && <OnboardingSummary users={users} />}
@@ -1735,12 +1750,17 @@ function SignupsTab({ signups, users }) {
           const utm = view === 'waitlist' ? s.utm_source : s.signup_utm_source
           const name = s.full_name || s.email || '?'
 
+          const linkable = view === 'registered' && s.username
           return (
-            <div key={s.id || i} style={{
-              display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px',
-              background: C.card, border: `1px solid ${isNew ? 'var(--color-primary-subtle)' : C.border}`,
-              borderRadius: 10, transition: 'border-color 0.15s',
-            }}>
+            <div
+              key={s.id || i}
+              onClick={() => linkable && navigate(`/u/${s.username}`)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px',
+                background: C.card, border: `1px solid ${isNew ? 'var(--color-primary-subtle)' : C.border}`,
+                borderRadius: 10, transition: 'border-color 0.15s', cursor: linkable ? 'pointer' : 'default',
+              }}
+            >
               <div style={{
                 width: 38, height: 38, borderRadius: '50%',
                 background: s.avatar_url ? 'none' : C.blueSoft,
@@ -1803,6 +1823,15 @@ function SignupsTab({ signups, users }) {
           )
         })}
       </div>
+
+      {view === 'registered' && visibleCount < filteredAll.length && (
+        <div style={{ textAlign: 'center', marginTop: 14 }}>
+          <button
+            onClick={() => setVisibleCount(v => v + SIGNUPS_TAB_PAGE_SIZE)}
+            style={{ padding: '8px 18px', borderRadius: 8, fontSize: 12, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', border: `1px solid ${C.border}`, background: C.card, color: C.muted }}
+          >Carregar mais ({filteredAll.length - visibleCount} restantes)</button>
+        </div>
+      )}
     </div>
   )
 }
