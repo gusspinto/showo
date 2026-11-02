@@ -1475,21 +1475,39 @@ function FinanceTab() {
 }
 
 // ─── PROJECTS TAB ───────────────────────────────────────────
+const PROJECTS_TAB_PAGE_SIZE = 50
+const PROJECTS_TAB_SORTS = [
+  { id: 'recent', label: 'Mais recente' },
+  { id: 'score', label: 'Maior score' },
+  { id: 'views', label: 'Mais vistos' },
+]
+
 function ProjectsTab({ projects, users, onDeleteProject }) {
+  const navigate = useNavigate()
   const [search, setSearch] = useState('')
+  const [sort, setSort] = useState('recent')
+  const [visibleCount, setVisibleCount] = useState(PROJECTS_TAB_PAGE_SIZE)
   const [confirm, setConfirm] = useState(null)
 
   const userMap = {}
   users.forEach(u => { userMap[u.id] = u })
 
-  const filtered = projects.filter(p => {
+  const filteredAll = projects.filter(p => {
     const q = search.toLowerCase()
     return (
       (p.name || '').toLowerCase().includes(q) ||
       (p.creator_name || '').toLowerCase().includes(q) ||
       (p.area || '').toLowerCase().includes(q)
     )
+  }).sort((a, b) => {
+    if (sort === 'score') return (b.score || 0) - (a.score || 0)
+    if (sort === 'views') return (b.views || 0) - (a.views || 0)
+    return new Date(b.created_at) - new Date(a.created_at)
   })
+  // projects também pode passar das 700 linhas, mesma lição do Users tab,
+  // paginar em vez de despejar tudo no DOM de uma vez.
+  useEffect(() => { setVisibleCount(PROJECTS_TAB_PAGE_SIZE) }, [search, sort])
+  const filtered = filteredAll.slice(0, visibleCount)
 
   const scoreColor = s => s >= 90 ? C.green : s >= 71 ? C.blue : s >= 40 ? C.yellow : s > 0 ? C.red : C.subtle
 
@@ -1505,16 +1523,22 @@ function ProjectsTab({ projects, users, onDeleteProject }) {
         />
       )}
 
-      <div style={{ marginBottom: 16 }}>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 10, flexWrap: 'wrap', alignItems: 'center' }}>
         <input
           value={search} onChange={e => setSearch(e.target.value)}
           placeholder="Pesquisar por nome, criador ou área…"
           style={{
-            width: '100%', background: C.card, border: `1px solid ${C.border}`,
+            flex: '1 1 260px', background: C.card, border: `1px solid ${C.border}`,
             borderRadius: 10, padding: '10px 14px', color: C.text, fontSize: 14,
             outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
           }}
         />
+        <Select value={sort} onChange={setSort} options={PROJECTS_TAB_SORTS.map(o => ({ value: o.id, label: o.label }))}
+          inputStyle={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: '8px 26px 8px 10px', fontSize: 12 }} />
+      </div>
+
+      <div style={{ fontSize: 12, color: C.subtle, marginBottom: 10 }}>
+        a mostrar {filtered.length} de {filteredAll.length}{search ? ` (${projects.length} no total)` : ''}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -1523,7 +1547,9 @@ function ProjectsTab({ projects, users, onDeleteProject }) {
         )}
         {filtered.map(p => {
           const created = p.created_at ? new Date(p.created_at).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
-          const creator = p.creator_name || userMap[p.user_id]?.full_name || userMap[p.user_id]?.username || 'Anónimo'
+          const creatorUser = userMap[p.user_id]
+          const creator = p.creator_name || creatorUser?.full_name || creatorUser?.username || 'Anónimo'
+          const isPrivate = p.visibility === 'private'
           return (
             <div key={p.id} style={{
               ...C.glassStyle,
@@ -1540,11 +1566,18 @@ function ProjectsTab({ projects, users, onDeleteProject }) {
               </div>
               {/* Info */}
               <div style={{ flex: 1, minWidth: 200 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 2 }}>{p.name}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{p.name}</span>
+                  {isPrivate && <Badge color={C.subtle}>Privado</Badge>}
+                </div>
                 <div style={{ fontSize: 12, color: C.subtle, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><User size={12} /> {creator}</span>
+                  <span
+                    onClick={() => creatorUser?.username && navigate(`/u/${creatorUser.username}`)}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, cursor: creatorUser?.username ? 'pointer' : 'default', color: creatorUser?.username ? C.blue : C.subtle }}
+                  ><User size={12} /> {creator}</span>
                   {p.area && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><MapPin size={12} /> {p.area}</span>}
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Calendar size={12} /> {created}</span>
+                  {p.views > 0 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><BarChart2 size={12} /> {p.views} vistas</span>}
                 </div>
               </div>
               {/* Score */}
@@ -1567,6 +1600,15 @@ function ProjectsTab({ projects, users, onDeleteProject }) {
           )
         })}
       </div>
+
+      {visibleCount < filteredAll.length && (
+        <div style={{ textAlign: 'center', marginTop: 14 }}>
+          <button
+            onClick={() => setVisibleCount(v => v + PROJECTS_TAB_PAGE_SIZE)}
+            style={{ padding: '8px 18px', borderRadius: 8, fontSize: 12, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', border: `1px solid ${C.border}`, background: C.card, color: C.muted }}
+          >Carregar mais ({filteredAll.length - visibleCount} restantes)</button>
+        </div>
+      )}
     </div>
   )
 }
