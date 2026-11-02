@@ -469,6 +469,32 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
     return () => { cancelled = true }
   }, [range.days])
 
+  // Ativação (definição do CLAUDE.md: publicar 1 projeto com 3+ secções E
+  // partilhar o link). A parte do "partilhar" só tem dados fiáveis desde
+  // que project_shared foi para produção, por isso mostra-se só a parte
+  // que já temos a sério (3+ secções), vem direto de `projects`, nunca
+  // depende do funnel_events novo. Confirmado contra a BD: 11 de 1544 (0,7%).
+  const activatedUserIds = new Set(
+    projects.filter(p => p.entry_kind === 'full' && Array.isArray(p.preview_blocks) && p.preview_blocks.length >= 3).map(p => p.user_id)
+  )
+  const activationRate = users.length > 0 ? Math.round((activatedUserIds.size / users.length) * 1000) / 10 : 0
+
+  // Quantos projetos têm pelo menos uma entrada de diário (de qualquer
+  // tipo). Não vem de `projects` nem `funnel_events`, por isso é um fetch
+  // próprio, leve (só a coluna project_id, sem conteúdo).
+  const [journalProjectIds, setJournalProjectIds] = useState(null)
+  useEffect(() => {
+    let cancelled = false
+    supabase.from('project_journal_entries').select('project_id').then(({ data }) => {
+      if (!cancelled) setJournalProjectIds(new Set((data || []).map(r => r.project_id)))
+    })
+    return () => { cancelled = true }
+  }, [])
+  const projectsWithJournal = journalProjectIds?.size ?? null
+  const journalRate = projectsWithJournal !== null && projects.length > 0
+    ? Math.round((projectsWithJournal / projects.length) * 1000) / 10
+    : null
+
   const now = Date.now()
   const totalUsers = users.length
   const totalProjects = projects.length
@@ -765,11 +791,15 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
         </div>
       </div>
 
-      {/* Hero: os 4 números que respondem "como vai o negócio" sem teres
+      {/* Hero: os 5 números que respondem "como vai o negócio" sem teres
           de ler mais nada. Maiores que os restantes de propósito, para
-          não competirem visualmente com dados secundários. */}
+          não competirem visualmente com dados secundários. Ativação vem
+          primeiro de propósito: é o número mais importante e mais mau
+          (0,7% confirmado contra a BD), não deve ficar escondido a meio
+          de uma grelha de cards todos iguais. */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 28 }}>
         {[
+          { label: 'Ativação', value: `${activationRate}%`, color: activationRate >= 20 ? C.green : activationRate >= 5 ? C.yellow : C.red, sub: `${activatedUserIds.size} de ${totalUsers} publicaram 3+ secções` },
           { label: 'Utilizadores', value: totalUsers, color: C.blue, sub: `+${newUsersMonth} no último mês` },
           { label: `Ativos ${periodLabel}`, value: activityStats?.active_range?.length ?? activeThisMonth, color: C.green, sub: `${activityStats?.sessions_range ?? 0} sessões` },
           { label: 'MRR real', value: `€${mrrEstimate.toFixed(2)}`, color: mrrEstimate > 0 ? C.green : C.muted, sub: `${paidUsers} assinante${paidUsers === 1 ? '' : 's'} a pagar via Stripe` },
@@ -791,6 +821,20 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
         <StatCard icon={<BarChart2 size={20} />} label="Ativos (semana)" value={activeThisWeek} color={activeThisWeek > 0 ? C.green : C.red} sub={`${activeThisMonth} mês · ${neverActive} nunca`} />
         <StatCard icon={<Star size={20} />} label="Score médio" value={avgScore} color={C.yellow} sub={`${scores.length} com score`} />
         <StatCard icon={<School size={20} />} label="Alunos de escola" value={planCounts.school + planCounts.school_pro} color={C.purple} sub={`${planCounts.school} Escola Plus · ${planCounts.school_pro} Escola Pro`} />
+      </div>
+
+      <h3 style={{ margin: '0 0 2px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Produto · agora</h3>
+      <p style={{ margin: '0 0 14px', fontSize: 11, color: C.subtle }}>Uso real do que já está construído, não só criação de conta.</p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))', gap: 14, marginBottom: 24 }}>
+        <StatCard
+          icon={<Calendar size={20} />}
+          label="Projetos com diário"
+          value={journalRate !== null ? `${journalRate}%` : '…'}
+          color={journalRate === null ? C.muted : journalRate >= 50 ? C.green : journalRate >= 20 ? C.yellow : C.red}
+          sub={projectsWithJournal !== null ? `${projectsWithJournal} de ${totalProjects} projetos` : 'a carregar…'}
+        />
+        <StatCard icon={<Folder size={20} />} label="Com 3+ secções" value={activatedUserIds.size} color={activatedUserIds.size > 0 ? C.green : C.muted} sub="definição de ativação do CLAUDE.md" />
+        <StatCard icon={<User size={20} />} label="Sem projeto nenhum" value={usersWithoutProjects} color={usersWithoutProjects > totalUsers * 0.5 ? C.red : C.muted} sub={`${Math.round((usersWithoutProjects / (totalUsers || 1)) * 100)}% da base`} />
       </div>
 
       <h3 style={{ margin: '0 0 2px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Negócio {periodLabel}</h3>
@@ -818,8 +862,13 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
         </div>
       )}
 
+      {/* Os 3 blocos de processo (funis + engagement) lado a lado em grid,
+          não um por baixo do outro, são do mesmo tipo de informação
+          (passos de um processo), ficam mais fáceis de comparar lado a
+          lado do que a rolar a página toda. */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: 16, marginBottom: 24, alignItems: 'start' }}>
       {/* Funil de conversão */}
-      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px', marginBottom: 24 }}>
+      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px' }}>
         <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Funil de conversão {periodLabel}</h3>
         <p style={{ margin: '0 0 18px', fontSize: 11, color: C.subtle }}>Do limite atingido ao início do checkout — dados reais, não estimativa. A % é a taxa de passagem entre passos.</p>
         <FunnelFlow steps={[
@@ -855,7 +904,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
       </div>
 
       {/* Funil até ao primeiro projeto */}
-      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px', marginBottom: 24 }}>
+      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px' }}>
         <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Funil até ao primeiro projeto {periodLabel}</h3>
         <p style={{ margin: '0 0 18px', fontSize: 11, color: C.subtle }}>Onde as pessoas desistem entre entrar em "Criar projeto" e teres mesmo um projeto criado. Começou a registar agora, os números só ficam úteis daqui a uns dias.</p>
         <FunnelFlow steps={[
@@ -868,7 +917,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
       {/* Engagement/retenção: ações reais depois do login, não só "entrou".
           Sem isto, alguém com o separador aberto sem fazer nada aparecia
           igual a alguém a usar a app a sério. */}
-      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px', marginBottom: 24 }}>
+      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px' }}>
         <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Engagement {periodLabel}</h3>
         <p style={{ margin: '0 0 18px', fontSize: 11, color: C.subtle }}>Ações reais depois do login, não logins em si. Um separador aberto sem fazer nada não conta aqui.</p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))', gap: 14 }}>
@@ -879,6 +928,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
           <StatCard icon={<Copy size={20} />} label="Partilharam o link" value={projectShared} color={projectShared > 0 ? C.green : C.muted} />
           <StatCard icon={<Search size={20} />} label="Navegaram o Explorar" value={exploreViewed} color={C.blue} />
         </div>
+      </div>
       </div>
 
       {/* Charts row */}
