@@ -94,21 +94,21 @@ function StatCard({ icon, label, value, color = C.blue, sub, onClick }) {
       style={{
         ...C.glassStyle,
         background: C.glass, border: `1px solid ${C.glassBorder}`,
-        borderRadius: 12, padding: '22px 24px',
-        display: 'flex', alignItems: 'flex-start', gap: 16,
+        borderRadius: 12, padding: '18px 20px', minHeight: 96,
+        display: 'flex', alignItems: 'flex-start', gap: 14,
         cursor: onClick ? 'pointer' : 'default',
       }}
     >
       <div style={{
-        width: 44, height: 44, borderRadius: 10, flexShrink: 0,
+        width: 40, height: 40, borderRadius: 9, flexShrink: 0,
         background: color + '18', border: `1px solid ${color}30`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 20,
+        fontSize: 18,
       }}>{icon}</div>
-      <div>
-        <div style={{ fontSize: 26, fontWeight: 400, color, letterSpacing: '-0.5px', lineHeight: 1, fontFamily: 'var(--font-heading)' }}>{value}</div>
-        <div style={{ fontSize: 13, color: onClick ? C.blue : C.muted, fontWeight: 500, marginTop: 4 }}>{label}{onClick ? ' →' : ''}</div>
-        {sub && <div style={{ fontSize: 11, color: C.subtle, marginTop: 3 }}>{sub}</div>}
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 24, fontWeight: 400, color, letterSpacing: '-0.5px', lineHeight: 1, fontFamily: 'var(--font-heading)' }}>{value}</div>
+        <div style={{ fontSize: 12.5, color: onClick ? C.blue : C.muted, fontWeight: 500, marginTop: 4 }}>{label}{onClick ? ' →' : ''}</div>
+        {sub && <div style={{ fontSize: 11, color: C.subtle, marginTop: 3, lineHeight: 1.35 }}>{sub}</div>}
       </div>
     </div>
   )
@@ -441,6 +441,7 @@ function generateMeetingSummary(users, projects, activityStats, range) {
 }
 
 function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSummary, realSubscriberIds }) {
+  const navigate = useNavigate()
   const [userSearch, setUserSearch] = useState('')
   const [showLimitUsers, setShowLimitUsers] = useState(false)
   const [showSubscribers, setShowSubscribers] = useState(false)
@@ -453,6 +454,18 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
   const [filterOccupation, setFilterOccupation] = useState('all')
   const [filterAccountType, setFilterAccountType] = useState('all')
   const [range, setRange] = useState(TIME_RANGES[1])
+  // Sub-separadores dentro do Overview: a página tinha 8 secções todas
+  // empilhadas na vertical, obrigava a rolar imenso e misturava tudo (daí
+  // a sensação de "confusão"). O período e os 5 KPIs hero ficam sempre
+  // visíveis (resposta rápida), o resto só mostra o que estiver escolhido.
+  const [subTab, setSubTab] = useState('crescimento')
+  const OVERVIEW_SUBTABS = [
+    { id: 'crescimento', label: 'Crescimento' },
+    { id: 'negocio', label: 'Negócio' },
+    { id: 'funis', label: 'Funis & Engagement' },
+    { id: 'graficos', label: 'Gráficos' },
+    { id: 'pessoas', label: 'Projetos & Users' },
+  ]
 
   // Contagens de utilizadores ativos vêm agregadas do servidor (nunca linhas
   // cruas de activity_log) — fica correto para sempre, independente de
@@ -467,6 +480,33 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
     })
     return () => { cancelled = true }
   }, [range.days])
+
+  // Ativação (definição do CLAUDE.md: publicar 1 projeto com 3+ secções E
+  // partilhar o link). A parte do "partilhar" só tem dados fiáveis desde
+  // que project_shared foi para produção, por isso mostra-se só a parte
+  // que já temos a sério (3+ secções), vem direto de `projects`, nunca
+  // depende do funnel_events novo. Confirmado contra a BD: 11 de 1544 (0,7%).
+  const activatedUserIds = new Set(
+    projects.filter(p => p.entry_kind === 'full' && Array.isArray(p.preview_blocks) && p.preview_blocks.length >= 3).map(p => p.user_id)
+  )
+  const activationRate = users.length > 0 ? Math.round((activatedUserIds.size / users.length) * 1000) / 10 : 0
+
+  // Quantos projetos têm pelo menos uma entrada de diário. Um select direto
+  // dava sempre 0: project_journal_entries tem RLS "read own or team", o
+  // admin só via as próprias entradas, nunca o total real (mostrava "0%"
+  // com 119 de 773 projetos a sério com diário). RPC com SECURITY DEFINER,
+  // mesmo padrão das outras admin_get_*.
+  const [projectsWithJournal, setProjectsWithJournal] = useState(null)
+  useEffect(() => {
+    let cancelled = false
+    supabase.rpc('admin_get_journal_coverage').then(({ data }) => {
+      if (!cancelled) setProjectsWithJournal(data?.projects_with_journal ?? 0)
+    })
+    return () => { cancelled = true }
+  }, [])
+  const journalRate = projectsWithJournal !== null && projects.length > 0
+    ? Math.round((projectsWithJournal / projects.length) * 1000) / 10
+    : null
 
   const now = Date.now()
   const totalUsers = users.length
@@ -512,14 +552,40 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
 
   // MRR a partir de quem realmente paga agora (preço de lista, sem promoções
   // aplicadas) — não é o valor exato faturado, mas dá o pulso do negócio sem
-  // depender do Stripe estar acessível aqui.
-  const mrrEstimate = realPlusCount * 4.99 + realProCount * 9.99
+  // depender do Stripe estar acessível aqui. Lido de getPlan, não hardcoded:
+  // estava fixo em 4,99/9,99 (preços antigos), desatualizado há pelo menos
+  // uma subida de preço (real é 8,99/17,99, ver src/lib/plans.js), o que
+  // subavaliava o MRR real em quase metade.
+  const plusPrice = parseFloat(getPlan('plus').priceLabel.replace('€', '').replace(',', '.'))
+  const proPrice = parseFloat(getPlan('pro').priceLabel.replace('€', '').replace(',', '.'))
+  const mrrEstimate = realPlusCount * plusPrice + realProCount * proPrice
+
+  // billingSummary/funnelSummary (props) vêm do Admin pai sempre fixos ao
+  // mês atual, o que fazia o seletor de período aqui dentro não mudar nada
+  // destes números (parecia partido). Com p_since aceite nas duas RPCs,
+  // pedimos a versão escalada ao período escolhido, sem tocar no pai.
+  const [rangeBilling, setRangeBilling] = useState(null)
+  const [rangeFunnel, setRangeFunnel] = useState(null)
+  useEffect(() => {
+    let cancelled = false
+    const since = days >= 9999 ? new Date(2020, 0, 1).toISOString() : new Date(now - days * 86400000).toISOString()
+    Promise.all([
+      supabase.rpc('admin_get_billing_summary', { p_since: since }),
+      supabase.rpc('admin_get_funnel_summary', { p_since: since }),
+    ]).then(([b, f]) => {
+      if (cancelled) return
+      setRangeBilling(b.data || [])
+      setRangeFunnel(f.data || [])
+    })
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [days])
 
   const billingMap = {}
-  ;(billingSummary || []).forEach(row => { billingMap[row.event] = row })
-  const newSubsThisMonth = billingMap.subscription_started?.count || 0
-  const churnedThisMonth = billingMap.subscription_churned?.count || 0
-  const revenueThisMonth = (billingMap.payment_succeeded?.total_amount_cents || 0) / 100
+  ;(rangeBilling ?? billingSummary ?? []).forEach(row => { billingMap[row.event] = row })
+  const newSubsInRange = billingMap.subscription_started?.count || 0
+  const churnedInRange = billingMap.subscription_churned?.count || 0
+  const revenueInRange = (billingMap.payment_succeeded?.total_amount_cents || 0) / 100
 
   // Quem bateu mesmo num limite de IA este mês (dados reais de ai_usage, não
   // estimativa) — e o funil desde aí até ao início do checkout. Com uma base
@@ -542,14 +608,31 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
     id, features, user: usersById.get(id),
   }))
 
+  const funnelSource = rangeFunnel ?? funnelSummary ?? []
   const funnelMap = {}
-  ;(funnelSummary || []).forEach(row => { funnelMap[row.event] = (funnelMap[row.event] || 0) + Number(row.count) })
+  ;(funnelSource).forEach(row => { funnelMap[row.event] = (funnelMap[row.event] || 0) + Number(row.count) })
   const nudgeShown = funnelMap.nudge_shown || 0
   const nudgeClicked = funnelMap.nudge_clicked || 0
   const checkoutStarted = funnelMap.checkout_started || 0
   const novoViewed = funnelMap.novo_viewed || 0
   const novoStarted = (funnelMap.novo_manual_started || 0) + (funnelMap.novo_ai_generate_result || 0)
   const projectCreated = funnelMap.project_created || 0
+
+  // Sinais de retenção/engagement, não são um funil sequencial (cada um
+  // é uma ação independente, não um passo depois do outro), por isso
+  // mostram-se como tiles soltos (StatCard), não como FunnelFlow.
+  const dashboardViewed = funnelMap.dashboard_viewed || 0
+  const projectOpenedTotal = funnelMap.project_opened || 0
+  const diaryEntryCreated = funnelMap.diary_entry_created || 0
+  const coachMessageSent = funnelMap.coach_message_sent || 0
+  const projectShared = funnelMap.project_shared || 0
+  const exploreViewed = funnelMap.explore_viewed || 0
+  const projectOpenedByFeature = {}
+  ;(funnelSource).forEach(row => {
+    if (row.event === 'project_opened') projectOpenedByFeature[row.feature] = (projectOpenedByFeature[row.feature] || 0) + Number(row.count)
+  })
+  const projectOpenedOwn = projectOpenedByFeature.own || 0
+  const projectOpenedOther = projectOpenedByFeature.other || 0
 
   // Registrations per week
   const numWeeks = Math.min(Math.ceil(days / 7), 12)
@@ -644,7 +727,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
 
   // Sorted & filtered users
   const uq = userSearch.toLowerCase()
-  const sortedUsers = [...users]
+  const filteredUsers = [...users]
     .filter(u => !uq || (u.full_name || '').toLowerCase().includes(uq) || (u.email || '').toLowerCase().includes(uq) || (u.signup_country || '').toLowerCase().includes(uq) || (u.role || '').toLowerCase().includes(uq))
     .filter(u => filterRole === 'all' || (u.role || 'aluno') === filterRole)
     .filter(u => filterAccountType === 'all' || (u.account_type || 'individual') === filterAccountType)
@@ -657,7 +740,8 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
       if (sort === 'inactive') return (projectCountMap[a.id] || 0) - (projectCountMap[b.id] || 0)
       return new Date(b.created_at) - new Date(a.created_at)
     })
-    .slice(0, 15)
+  const filteredUsersCount = filteredUsers.length
+  const sortedUsers = filteredUsers.slice(0, 15)
 
   const recentProjects = [...projects]
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
@@ -679,24 +763,36 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
     navigator.clipboard.writeText(md)
   }
 
+  // Uma frase só, usada em todos os títulos que dependem do período, para
+  // o seletor do topo parecer mesmo ligado a tudo o que diz "no período":
+  // antes cada bloco tinha a sua própria etiqueta fixa ("mês atual"),
+  // nunca mudava com o seletor, e parecia partido.
+  const periodLabel = range.id === 'all' ? 'em todo o histórico' : `nos últimos ${range.label}`
+
   return (
     <div>
-      {/* Time range selector + export */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
-        <div style={{ display: 'flex', gap: 4 }}>
-          {TIME_RANGES.map(r => (
-            <button
-              key={r.id}
-              onClick={() => setRange(r)}
-              style={{
-                padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600,
-                fontFamily: 'inherit', cursor: 'pointer', border: 'none',
-                background: range.id === r.id ? C.blue : C.bgAlt,
-                color: range.id === r.id ? '#fff' : C.muted,
-                transition: 'all 0.15s',
-              }}
-            >{r.label}</button>
-          ))}
+      {/* Período: o ÚNICO seletor da página, controla tudo o que abaixo diz
+          "no período": funis, engagement, negócio, gráficos e o resumo
+          exportado. Só a secção "agora" (estado atual da conta) fica de
+          fora, e diz isso explicitamente no seu próprio título. */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Período</span>
+          <div style={{ display: 'flex', gap: 4 }}>
+            {TIME_RANGES.map(r => (
+              <button
+                key={r.id}
+                onClick={() => setRange(r)}
+                style={{
+                  padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600,
+                  fontFamily: 'inherit', cursor: 'pointer', border: 'none',
+                  background: range.id === r.id ? C.blue : C.bgAlt,
+                  color: range.id === r.id ? '#fff' : C.muted,
+                  transition: 'all 0.15s',
+                }}
+              >{r.label}</button>
+            ))}
+          </div>
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
           <button onClick={handleCopySummary} style={{ padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', border: `1px solid ${C.border}`, background: 'transparent', color: C.muted }}>
@@ -708,20 +804,79 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
         </div>
       </div>
 
-      {/* Stats row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))', gap: 14, marginBottom: 24 }}>
-        <StatCard icon={<User size={20} />} label="Utilizadores" value={totalUsers} color={C.blue} sub={`+${newUsersWeek} semana · +${newUsersMonth} mês`} />
-        <StatCard icon={<Folder size={20} />} label="Projetos" value={totalProjects} color={C.green} sub={`+${newThisWeek} semana · ${usersWithoutProjects} sem projeto`} />
-        <StatCard icon={<BarChart2 size={20} />} label="Ativos (semana)" value={activeThisWeek} color={activeThisWeek > 0 ? C.green : C.red} sub={`${activeThisMonth} mês · ${neverActive} nunca`} />
-        <StatCard icon={<Star size={20} />} label="Retenção mensal" value={`${retentionRate}%`} color={retentionRate > 30 ? C.green : retentionRate > 10 ? C.yellow : C.red} sub={`${priorUsersReturned}/${priorUsersCount} de quem já cá estava`} />
-        <StatCard icon={<Star size={20} />} label="Score médio" value={avgScore} color={C.yellow} sub={`${scores.length} com score`} />
+      {/* Hero: os 5 números que respondem "como vai o negócio" sem teres
+          de ler mais nada. Maiores que os restantes de propósito, para
+          não competirem visualmente com dados secundários. Ativação vem
+          primeiro de propósito: é o número mais importante e mais mau
+          (0,7% confirmado contra a BD), não deve ficar escondido a meio
+          de uma grelha de cards todos iguais. */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 28 }}>
+        {[
+          { label: 'Ativação', value: `${activationRate}%`, color: activationRate >= 20 ? C.green : activationRate >= 5 ? C.yellow : C.red, sub: `${activatedUserIds.size} de ${totalUsers} publicaram 3+ secções` },
+          { label: 'Utilizadores', value: totalUsers, color: C.blue, sub: `+${newUsersMonth} no último mês` },
+          { label: `Ativos ${periodLabel}`, value: activityStats?.active_range?.length ?? activeThisMonth, color: C.green, sub: `${activityStats?.sessions_range ?? 0} sessões` },
+          { label: 'MRR real', value: `€${mrrEstimate.toFixed(2)}`, color: mrrEstimate > 0 ? C.green : C.muted, sub: `${paidUsers} assinante${paidUsers === 1 ? '' : 's'} a pagar via Stripe` },
+          { label: 'Retenção mensal', value: `${retentionRate}%`, color: retentionRate > 30 ? C.green : retentionRate > 10 ? C.yellow : C.red, sub: `${priorUsersReturned}/${priorUsersCount} de quem já cá estava` },
+        ].map(k => (
+          <div key={k.label} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 14, padding: '20px 22px' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>{k.label}</div>
+            <div style={{ fontSize: 34, fontWeight: 400, color: k.color, letterSpacing: '-0.5px', lineHeight: 1, fontFamily: 'var(--font-heading)' }}>{k.value}</div>
+            <div style={{ fontSize: 12, color: C.subtle, marginTop: 6 }}>{k.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ marginBottom: 20 }}>
+        <SegmentedTabs size="compact" value={subTab} onChange={setSubTab} options={OVERVIEW_SUBTABS} />
+      </div>
+
+      {/* As 3 secções seguintes (Crescimento, Produto, Negócio) ficam cada
+          uma dentro de um painel com borda, como os funis/gráficos mais
+          abaixo já tinham. Antes eram só título+legenda soltos a flutuar
+          sobre o fundo, sem nenhum contentor visual, o que destoava do
+          resto da página e dava sensação de "tudo à solta". */}
+      {subTab === 'crescimento' && <>
+      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px', marginBottom: 20 }}>
+        <h3 style={{ margin: '0 0 2px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Crescimento · agora</h3>
+        <p style={{ margin: '0 0 14px', fontSize: 11, color: C.subtle }}>Estado atual da conta. Não muda com o período acima, é sempre "agora".</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))', gap: 12 }}>
+          <StatCard icon={<User size={20} />} label="Utilizadores" value={totalUsers} color={C.blue} sub={`+${newUsersWeek} semana · +${newUsersMonth} mês`} />
+          <StatCard icon={<Folder size={20} />} label="Projetos" value={totalProjects} color={C.green} sub={`+${newThisWeek} semana · ${usersWithoutProjects} sem projeto`} />
+          <StatCard icon={<BarChart2 size={20} />} label="Ativos (semana)" value={activeThisWeek} color={activeThisWeek > 0 ? C.green : C.red} sub={`${activeThisMonth} mês · ${neverActive} nunca`} />
+          <StatCard icon={<Star size={20} />} label="Score médio" value={avgScore} color={C.yellow} sub={`${scores.length} com score`} />
+          <StatCard icon={<School size={20} />} label="Alunos de escola" value={planCounts.school + planCounts.school_pro} color={C.purple} sub={`${planCounts.school} Escola Plus · ${planCounts.school_pro} Escola Pro`} />
+        </div>
+      </div>
+
+      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px', marginBottom: 20 }}>
+        <h3 style={{ margin: '0 0 2px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Produto · agora</h3>
+        <p style={{ margin: '0 0 14px', fontSize: 11, color: C.subtle }}>Uso real do que já está construído, não só criação de conta.</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))', gap: 12 }}>
+          <StatCard
+            icon={<Calendar size={20} />}
+            label="Projetos com diário"
+            value={journalRate !== null ? `${journalRate}%` : '…'}
+            color={journalRate === null ? C.muted : journalRate >= 50 ? C.green : journalRate >= 20 ? C.yellow : C.red}
+            sub={projectsWithJournal !== null ? `${projectsWithJournal} de ${totalProjects} projetos` : 'a carregar…'}
+          />
+          <StatCard icon={<Folder size={20} />} label="Com 3+ secções" value={activatedUserIds.size} color={activatedUserIds.size > 0 ? C.green : C.muted} sub="definição de ativação do CLAUDE.md" />
+          <StatCard icon={<User size={20} />} label="Sem projeto nenhum" value={usersWithoutProjects} color={usersWithoutProjects > totalUsers * 0.5 ? C.red : C.muted} sub={`${Math.round((usersWithoutProjects / (totalUsers || 1)) * 100)}% da base`} />
+        </div>
+      </div>
+      </>}
+
+      {subTab === 'negocio' && <>
+      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px', marginBottom: 20 }}>
+      <h3 style={{ margin: '0 0 2px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Negócio {periodLabel}</h3>
+      <p style={{ margin: '0 0 14px', fontSize: 11, color: C.subtle }}>Assinantes e MRR são sempre "agora" (quem paga neste preciso momento); as restantes seguem o período escolhido acima.</p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))', gap: 12 }}>
         <StatCard icon={<Star size={20} />} label="Assinantes reais" value={paidUsers} color={paidUsers > 0 ? C.green : C.muted} sub={`${realPlusCount} Plus · ${realProCount} Pro · pagam via Stripe`} onClick={paidUsers > 0 ? () => setShowSubscribers(o => !o) : undefined} />
-        <StatCard icon={<Star size={20} />} label="MRR real" value={`€${mrrEstimate.toFixed(2)}`} color={mrrEstimate > 0 ? C.green : C.muted} sub="Só assinantes Stripe, preço de lista" />
+        <StatCard icon={<Star size={20} />} label="MRR real" value={`€${mrrEstimate.toFixed(2)}`} color={mrrEstimate > 0 ? C.green : C.muted} sub="Preço de lista, sem promoções" />
         <StatCard icon={<Star size={20} />} label="Acesso Plus/Pro oferecido" value={grantedUsers} color={C.purple} sub="Professores e ofertas manuais, sem Stripe" />
-        <StatCard icon={<School size={20} />} label="Alunos de escola" value={planCounts.school + planCounts.school_pro} color={C.purple} sub={`${planCounts.school} Escola Plus · ${planCounts.school_pro} Escola Pro`} />
-        <StatCard icon={<Star size={20} />} label="Subscrições novas" value={newSubsThisMonth} color={newSubsThisMonth > 0 ? C.green : C.muted} sub="Este mês" />
-        <StatCard icon={<Star size={20} />} label="Cancelamentos" value={churnedThisMonth} color={churnedThisMonth > 0 ? C.red : C.muted} sub="Este mês" />
-        <StatCard icon={<Star size={20} />} label="Receita cobrada" value={`€${revenueThisMonth.toFixed(2)}`} color={revenueThisMonth > 0 ? C.green : C.muted} sub="Faturas pagas este mês" />
+        <StatCard icon={<Star size={20} />} label="Subscrições novas" value={newSubsInRange} color={newSubsInRange > 0 ? C.green : C.muted} sub={periodLabel} />
+        <StatCard icon={<Star size={20} />} label="Cancelamentos" value={churnedInRange} color={churnedInRange > 0 ? C.red : C.muted} sub={periodLabel} />
+        <StatCard icon={<Star size={20} />} label="Receita cobrada" value={`€${revenueInRange.toFixed(2)}`} color={revenueInRange > 0 ? C.green : C.muted} sub={`Faturas pagas ${periodLabel}`} />
+      </div>
       </div>
 
       {showSubscribers && realSubscribers.length > 0 && (
@@ -737,10 +892,17 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
           ))}
         </div>
       )}
+      </>}
 
+      {subTab === 'funis' && <>
+      {/* Os 3 blocos de processo (funis + engagement) lado a lado em grid,
+          não um por baixo do outro, são do mesmo tipo de informação
+          (passos de um processo), ficam mais fáceis de comparar lado a
+          lado do que a rolar a página toda. */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: 16, marginBottom: 24, alignItems: 'start' }}>
       {/* Funil de conversão */}
-      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px', marginBottom: 24 }}>
-        <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Funil de conversão · mês atual</h3>
+      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px' }}>
+        <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Funil de conversão {periodLabel}</h3>
         <p style={{ margin: '0 0 18px', fontSize: 11, color: C.subtle }}>Do limite atingido ao início do checkout — dados reais, não estimativa. A % é a taxa de passagem entre passos.</p>
         <FunnelFlow steps={[
           { label: 'Bateram num limite', value: usersAtLimit, onClick: usersAtLimit > 0 ? () => setShowLimitUsers(o => !o) : undefined, icon: <AlertTriangle size={14} />, color: C.red },
@@ -775,8 +937,8 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
       </div>
 
       {/* Funil até ao primeiro projeto */}
-      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px', marginBottom: 24 }}>
-        <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Funil até ao primeiro projeto · mês atual</h3>
+      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px' }}>
+        <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Funil até ao primeiro projeto {periodLabel}</h3>
         <p style={{ margin: '0 0 18px', fontSize: 11, color: C.subtle }}>Onde as pessoas desistem entre entrar em "Criar projeto" e teres mesmo um projeto criado. Começou a registar agora, os números só ficam úteis daqui a uns dias.</p>
         <FunnelFlow steps={[
           { label: 'Viram "Criar projeto"', value: novoViewed, icon: <Folder size={14} />, color: C.yellow },
@@ -785,6 +947,25 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
         ]} />
       </div>
 
+      {/* Engagement/retenção: ações reais depois do login, não só "entrou".
+          Sem isto, alguém com o separador aberto sem fazer nada aparecia
+          igual a alguém a usar a app a sério. */}
+      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px' }}>
+        <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Engagement {periodLabel}</h3>
+        <p style={{ margin: '0 0 18px', fontSize: 11, color: C.subtle }}>Ações reais depois do login, não logins em si. Um separador aberto sem fazer nada não conta aqui.</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))', gap: 14 }}>
+          <StatCard icon={<BarChart2 size={20} />} label="Abriram o dashboard" value={dashboardViewed} color={C.blue} />
+          <StatCard icon={<Folder size={20} />} label="Abriram um projeto" value={projectOpenedTotal} color={C.green} sub={`${projectOpenedOwn} próprio · ${projectOpenedOther} de outros`} />
+          <StatCard icon={<Calendar size={20} />} label="Escreveram no diário" value={diaryEntryCreated} color={C.yellow} />
+          <StatCard icon={<HelpCircle size={20} />} label="Usaram o Coach IA" value={coachMessageSent} color={C.purple} />
+          <StatCard icon={<Copy size={20} />} label="Partilharam o link" value={projectShared} color={projectShared > 0 ? C.green : C.muted} />
+          <StatCard icon={<Search size={20} />} label="Navegaram o Explorar" value={exploreViewed} color={C.blue} />
+        </div>
+      </div>
+      </div>
+      </>}
+
+      {subTab === 'graficos' && <>
       {/* Charts row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16, marginBottom: 24 }}>
         <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
@@ -846,7 +1027,9 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
           </div>
         </div>
       </div>
+      </>}
 
+      {subTab === 'pessoas' && <>
       {/* Bottom row: projects + users */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 24 }}>
         {/* Recent projects */}
@@ -854,7 +1037,13 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
           <h3 style={{ margin: '0 0 16px', fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Projetos recentes</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {recentProjects.map(p => (
-              <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div
+                key={p.id}
+                onClick={() => p.slug && navigate(`/projeto/${p.slug}`)}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: p.slug ? 'pointer' : 'default', padding: 4, margin: -4, borderRadius: 8 }}
+                onMouseEnter={e => { if (p.slug) e.currentTarget.style.background = C.bgAlt }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+              >
                 <div style={{ width: 36, height: 36, borderRadius: 8, background: C.bgAlt, border: `1px solid ${C.border}`, overflow: 'hidden', flexShrink: 0 }}>
                   {p.cover_url
                     ? <img src={p.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -874,7 +1063,9 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
         {/* Users list with sort */}
         <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '20px 22px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, gap: 8, flexWrap: 'wrap' }}>
-            <h3 style={{ margin: 0, fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Utilizadores</h3>
+            <h3 style={{ margin: 0, fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>
+              Utilizadores <span style={{ color: C.subtle, fontWeight: 500, textTransform: 'none', letterSpacing: 0 }}>· a mostrar {sortedUsers.length} de {filteredUsersCount}</span>
+            </h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <div style={{ position: 'relative' }}>
                 <Search size={12} style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: C.muted }} />
@@ -941,11 +1132,15 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
               const lastActiveColor = !u.last_active_at ? C.red : isOnline ? C.green : lastSeenH < 24 ? C.green : lastSeenH < 168 ? C.yellow : C.subtle
 
               return (
-                <div key={u.id} style={{
-                  display: 'flex', alignItems: 'stretch', gap: 10, padding: '10px 12px',
-                  background: C.card, border: `1px solid ${isOnline ? 'var(--color-success-subtle)' : diffH < 24 ? 'var(--color-primary-subtle)' : C.border}`,
-                  borderRadius: 8,
-                }}>
+                <div
+                  key={u.id}
+                  onClick={() => u.username && navigate(`/u/${u.username}`)}
+                  style={{
+                    display: 'flex', alignItems: 'stretch', gap: 10, padding: '10px 12px',
+                    background: C.card, border: `1px solid ${isOnline ? 'var(--color-success-subtle)' : diffH < 24 ? 'var(--color-primary-subtle)' : C.border}`,
+                    borderRadius: 8, cursor: u.username ? 'pointer' : 'default',
+                  }}
+                >
                   <div style={{ position: 'relative', alignSelf: 'center' }}>
                     <Avatar name={u.full_name || u.username} color={u.is_admin ? 'var(--color-accent)' : 'var(--color-primary)'} size={36} />
                     {isOnline && <div style={{ position: 'absolute', bottom: 0, right: 0, width: 10, height: 10, borderRadius: '50%', background: C.green, border: '2px solid var(--color-surface)' }} />}
@@ -988,6 +1183,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
           </div>
         </div>
       </div>
+      </>}
     </div>
   )
 }
@@ -1056,15 +1252,30 @@ function RowMenu({ items }) {
 
 const usersTabCols = '38px minmax(180px,2fr) 90px 90px 130px 40px'
 
+// Esta lista pode ter 1500+ utilizadores. Sem paginação, cada busca ou
+// filtro renderizava a lista toda de uma vez (DOM gigante, scroll lento).
+// Reposta a 50 sempre que o conjunto filtrado muda, não só ao montar.
+const USERS_TAB_PAGE_SIZE = 50
+const USERS_TAB_SORTS = [
+  { id: 'newest', label: 'Mais recente' },
+  { id: 'oldest', label: 'Mais antigo' },
+  { id: 'projects', label: 'Mais projetos' },
+  { id: 'noprojects', label: 'Sem projetos' },
+  { id: 'name', label: 'Nome (A-Z)' },
+]
+
 function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, onResetPassword }) {
+  const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [planFilter, setPlanFilter] = useState('all')
+  const [sort, setSort] = useState('newest')
+  const [visibleCount, setVisibleCount] = useState(USERS_TAB_PAGE_SIZE)
   const [confirm, setConfirm] = useState(null)
 
   const projectCount = {}
   projects.forEach(p => { if (p.user_id) projectCount[p.user_id] = (projectCount[p.user_id] || 0) + 1 })
 
-  const filtered = users.filter(u => {
+  const filteredAll = users.filter(u => {
     const q = search.toLowerCase()
     const matchesSearch = !q || (
       (u.full_name || '').toLowerCase().includes(q) ||
@@ -1073,7 +1284,17 @@ function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, 
     )
     const matchesPlan = planFilter === 'all' || resolvePlanId(u) === planFilter
     return matchesSearch && matchesPlan
+  }).sort((a, b) => {
+    if (sort === 'oldest') return new Date(a.created_at) - new Date(b.created_at)
+    if (sort === 'projects') return (projectCount[b.id] || 0) - (projectCount[a.id] || 0)
+    if (sort === 'noprojects') return (projectCount[a.id] || 0) - (projectCount[b.id] || 0)
+    if (sort === 'name') return (a.full_name || a.username || '').localeCompare(b.full_name || b.username || '')
+    return new Date(b.created_at) - new Date(a.created_at)
   })
+  // users já vem ordenado por created_at desc do servidor. sort client-
+  // side só reordena, nunca perde ninguém, nenhuma query nova.
+  useEffect(() => { setVisibleCount(USERS_TAB_PAGE_SIZE) }, [search, planFilter, sort])
+  const filtered = filteredAll.slice(0, visibleCount)
 
   return (
     <div>
@@ -1133,10 +1354,12 @@ function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, 
             >{f.label}</button>
           ))}
         </div>
+        <Select value={sort} onChange={setSort} options={USERS_TAB_SORTS.map(o => ({ value: o.id, label: o.label }))}
+          inputStyle={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: '8px 26px 8px 10px', fontSize: 12 }} />
       </div>
 
       <div style={{ fontSize: 12, color: C.subtle, marginBottom: 10 }}>
-        {filtered.length} utilizador{filtered.length !== 1 ? 'es' : ''}{planFilter !== 'all' || search ? ` de ${users.length}` : ''}
+        a mostrar {filtered.length} de {filteredAll.length}{planFilter !== 'all' || search ? ` (${users.length} no total)` : ''}
       </div>
 
       <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, overflowX: 'auto', overflowY: 'hidden' }}>
@@ -1170,9 +1393,17 @@ function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, 
               background: u.banned_at ? C.redSoft : (i % 2 === 1 ? C.bgAlt : 'transparent'),
               borderBottom: i === filtered.length - 1 ? 'none' : `1px solid ${C.border}`,
             }}>
-              <Avatar name={name} color={u.is_admin ? 'var(--color-accent)' : 'var(--color-primary)'} size={30} />
+              <div
+                onClick={() => u.username && navigate(`/u/${u.username}`)}
+                style={{ cursor: u.username ? 'pointer' : 'default' }}
+              >
+                <Avatar name={name} color={u.is_admin ? 'var(--color-accent)' : 'var(--color-primary)'} size={30} />
+              </div>
 
-              <div style={{ minWidth: 0 }}>
+              <div
+                onClick={() => u.username && navigate(`/u/${u.username}`)}
+                style={{ minWidth: 0, cursor: u.username ? 'pointer' : 'default' }}
+              >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                   <span style={{ fontSize: 13.5, fontWeight: 700, color: C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
                   {u.is_admin && <Shield size={12} color={C.purple} />}
@@ -1202,6 +1433,15 @@ function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, 
         })}
         </div>
       </div>
+
+      {visibleCount < filteredAll.length && (
+        <div style={{ textAlign: 'center', marginTop: 14 }}>
+          <button
+            onClick={() => setVisibleCount(v => v + USERS_TAB_PAGE_SIZE)}
+            style={{ padding: '8px 18px', borderRadius: 8, fontSize: 12, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', border: `1px solid ${C.border}`, background: C.card, color: C.muted }}
+          >Carregar mais ({filteredAll.length - visibleCount} restantes)</button>
+        </div>
+      )}
     </div>
   )
 }
@@ -1269,7 +1509,11 @@ function FinanceTab() {
   const custoIA = Number(data.ai_cost_usd || 0) * USD_EUR
   const custoFixo = Number(data.fixed_cost_eur || 0)
   const resultado = receita - custoIA - custoFixo
-  const mrr = Number(data.paying_plus || 0) * 4.99 + Number(data.paying_pro || 0) * 9.99
+  // Mesmo bug do MRR do Overview: preços hardcoded (4,99/9,99) desatualizados
+  // em relação aos reais (8,99/17,99, ver src/lib/plans.js). Lido de getPlan.
+  const plusPrice = parseFloat(getPlan('plus').priceLabel.replace('€', '').replace(',', '.'))
+  const proPrice = parseFloat(getPlan('pro').priceLabel.replace('€', '').replace(',', '.'))
+  const mrr = Number(data.paying_plus || 0) * plusPrice + Number(data.paying_pro || 0) * proPrice
   const porFeature = Array.isArray(data.ai_by_feature) ? data.ai_by_feature : []
 
   return (
@@ -1369,21 +1613,39 @@ function FinanceTab() {
 }
 
 // ─── PROJECTS TAB ───────────────────────────────────────────
+const PROJECTS_TAB_PAGE_SIZE = 50
+const PROJECTS_TAB_SORTS = [
+  { id: 'recent', label: 'Mais recente' },
+  { id: 'score', label: 'Maior score' },
+  { id: 'views', label: 'Mais vistos' },
+]
+
 function ProjectsTab({ projects, users, onDeleteProject }) {
+  const navigate = useNavigate()
   const [search, setSearch] = useState('')
+  const [sort, setSort] = useState('recent')
+  const [visibleCount, setVisibleCount] = useState(PROJECTS_TAB_PAGE_SIZE)
   const [confirm, setConfirm] = useState(null)
 
   const userMap = {}
   users.forEach(u => { userMap[u.id] = u })
 
-  const filtered = projects.filter(p => {
+  const filteredAll = projects.filter(p => {
     const q = search.toLowerCase()
     return (
       (p.name || '').toLowerCase().includes(q) ||
       (p.creator_name || '').toLowerCase().includes(q) ||
       (p.area || '').toLowerCase().includes(q)
     )
+  }).sort((a, b) => {
+    if (sort === 'score') return (b.score || 0) - (a.score || 0)
+    if (sort === 'views') return (b.views || 0) - (a.views || 0)
+    return new Date(b.created_at) - new Date(a.created_at)
   })
+  // projects também pode passar das 700 linhas, mesma lição do Users tab,
+  // paginar em vez de despejar tudo no DOM de uma vez.
+  useEffect(() => { setVisibleCount(PROJECTS_TAB_PAGE_SIZE) }, [search, sort])
+  const filtered = filteredAll.slice(0, visibleCount)
 
   const scoreColor = s => s >= 90 ? C.green : s >= 71 ? C.blue : s >= 40 ? C.yellow : s > 0 ? C.red : C.subtle
 
@@ -1399,16 +1661,22 @@ function ProjectsTab({ projects, users, onDeleteProject }) {
         />
       )}
 
-      <div style={{ marginBottom: 16 }}>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 10, flexWrap: 'wrap', alignItems: 'center' }}>
         <input
           value={search} onChange={e => setSearch(e.target.value)}
           placeholder="Pesquisar por nome, criador ou área…"
           style={{
-            width: '100%', background: C.card, border: `1px solid ${C.border}`,
+            flex: '1 1 260px', background: C.card, border: `1px solid ${C.border}`,
             borderRadius: 10, padding: '10px 14px', color: C.text, fontSize: 14,
             outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
           }}
         />
+        <Select value={sort} onChange={setSort} options={PROJECTS_TAB_SORTS.map(o => ({ value: o.id, label: o.label }))}
+          inputStyle={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: '8px 26px 8px 10px', fontSize: 12 }} />
+      </div>
+
+      <div style={{ fontSize: 12, color: C.subtle, marginBottom: 10 }}>
+        a mostrar {filtered.length} de {filteredAll.length}{search ? ` (${projects.length} no total)` : ''}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -1417,7 +1685,9 @@ function ProjectsTab({ projects, users, onDeleteProject }) {
         )}
         {filtered.map(p => {
           const created = p.created_at ? new Date(p.created_at).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
-          const creator = p.creator_name || userMap[p.user_id]?.full_name || userMap[p.user_id]?.username || 'Anónimo'
+          const creatorUser = userMap[p.user_id]
+          const creator = p.creator_name || creatorUser?.full_name || creatorUser?.username || 'Anónimo'
+          const isPrivate = p.visibility === 'private'
           return (
             <div key={p.id} style={{
               ...C.glassStyle,
@@ -1434,11 +1704,18 @@ function ProjectsTab({ projects, users, onDeleteProject }) {
               </div>
               {/* Info */}
               <div style={{ flex: 1, minWidth: 200 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 2 }}>{p.name}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{p.name}</span>
+                  {isPrivate && <Badge color={C.subtle}>Privado</Badge>}
+                </div>
                 <div style={{ fontSize: 12, color: C.subtle, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><User size={12} /> {creator}</span>
+                  <span
+                    onClick={() => creatorUser?.username && navigate(`/u/${creatorUser.username}`)}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, cursor: creatorUser?.username ? 'pointer' : 'default', color: creatorUser?.username ? C.blue : C.subtle }}
+                  ><User size={12} /> {creator}</span>
                   {p.area && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><MapPin size={12} /> {p.area}</span>}
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Calendar size={12} /> {created}</span>
+                  {p.views > 0 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><BarChart2 size={12} /> {p.views} vistas</span>}
                 </div>
               </div>
               {/* Score */}
@@ -1461,6 +1738,15 @@ function ProjectsTab({ projects, users, onDeleteProject }) {
           )
         })}
       </div>
+
+      {visibleCount < filteredAll.length && (
+        <div style={{ textAlign: 'center', marginTop: 14 }}>
+          <button
+            onClick={() => setVisibleCount(v => v + PROJECTS_TAB_PAGE_SIZE)}
+            style={{ padding: '8px 18px', borderRadius: 8, fontSize: 12, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', border: `1px solid ${C.border}`, background: C.card, color: C.muted }}
+          >Carregar mais ({filteredAll.length - visibleCount} restantes)</button>
+        </div>
+      )}
     </div>
   )
 }
@@ -1524,9 +1810,17 @@ function OnboardingSummary({ users }) {
   )
 }
 
+const SIGNUPS_TAB_PAGE_SIZE = 50
+
 function SignupsTab({ signups, users }) {
+  const navigate = useNavigate()
   const [filter, setFilter] = useState('')
-  const [view, setView] = useState('waitlist')
+  // Waitlist só tem o punhado de contas de antes do lançamento (sem rota
+  // /waitlist ativa há muito, ninguém escreve lá), e "Registados" é que
+  // tem gente de verdade. Abrir sempre em "waitlist" mostrava quase nada
+  // por omissão, escondendo o separador que interessa a um clique.
+  const [view, setView] = useState('registered')
+  const [visibleCount, setVisibleCount] = useState(SIGNUPS_TAB_PAGE_SIZE)
   const q = filter.toLowerCase()
 
   const waitlistFiltered = signups.filter(s =>
@@ -1535,13 +1829,18 @@ function SignupsTab({ signups, users }) {
     (s.city || '').toLowerCase().includes(q)
   )
 
-  const registeredFiltered = users.filter(s =>
+  const registeredFilteredAll = users.filter(s =>
     (s.full_name || '').toLowerCase().includes(q) ||
     (s.email || '').toLowerCase().includes(q) ||
     (s.signup_country || '').toLowerCase().includes(q) ||
     (s.signup_city || '').toLowerCase().includes(q)
   )
+  // Mesma lição das outras tabs: "Registados" pode ter 1500+ linhas,
+  // "waitlist" tem sempre uma mão-cheia, só a primeira precisa de paginar.
+  useEffect(() => { setVisibleCount(SIGNUPS_TAB_PAGE_SIZE) }, [q, view])
+  const registeredFiltered = registeredFilteredAll.slice(0, visibleCount)
 
+  const filteredAll = view === 'waitlist' ? waitlistFiltered : registeredFilteredAll
   const filtered = view === 'waitlist' ? waitlistFiltered : registeredFiltered
 
   return (
@@ -1569,7 +1868,9 @@ function SignupsTab({ signups, users }) {
             { id: 'registered', label: `Registados (${users.length})` },
           ]}
         />
-        <span style={{ fontSize: 12, color: C.muted }}>{filtered.length} resultado{filtered.length !== 1 ? 's' : ''}</span>
+        <span style={{ fontSize: 12, color: C.muted }}>
+          {view === 'registered' ? `a mostrar ${filtered.length} de ${filteredAll.length}` : `${filtered.length} resultado${filtered.length !== 1 ? 's' : ''}`}
+        </span>
       </div>
 
       {view === 'registered' && <OnboardingSummary users={users} />}
@@ -1587,12 +1888,17 @@ function SignupsTab({ signups, users }) {
           const utm = view === 'waitlist' ? s.utm_source : s.signup_utm_source
           const name = s.full_name || s.email || '?'
 
+          const linkable = view === 'registered' && s.username
           return (
-            <div key={s.id || i} style={{
-              display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px',
-              background: C.card, border: `1px solid ${isNew ? 'var(--color-primary-subtle)' : C.border}`,
-              borderRadius: 10, transition: 'border-color 0.15s',
-            }}>
+            <div
+              key={s.id || i}
+              onClick={() => linkable && navigate(`/u/${s.username}`)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px',
+                background: C.card, border: `1px solid ${isNew ? 'var(--color-primary-subtle)' : C.border}`,
+                borderRadius: 10, transition: 'border-color 0.15s', cursor: linkable ? 'pointer' : 'default',
+              }}
+            >
               <div style={{
                 width: 38, height: 38, borderRadius: '50%',
                 background: s.avatar_url ? 'none' : C.blueSoft,
@@ -1655,12 +1961,21 @@ function SignupsTab({ signups, users }) {
           )
         })}
       </div>
+
+      {view === 'registered' && visibleCount < filteredAll.length && (
+        <div style={{ textAlign: 'center', marginTop: 14 }}>
+          <button
+            onClick={() => setVisibleCount(v => v + SIGNUPS_TAB_PAGE_SIZE)}
+            style={{ padding: '8px 18px', borderRadius: 8, fontSize: 12, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', border: `1px solid ${C.border}`, background: C.card, color: C.muted }}
+          >Carregar mais ({filteredAll.length - visibleCount} restantes)</button>
+        </div>
+      )}
     </div>
   )
 }
 
 // ─── ORGS TAB (school organizations) ────────────────────
-function OrgsTab() {
+function OrgsTab({ users }) {
   const [orgs, setOrgs] = useState([])
   const [loadingOrgs, setLoadingOrgs] = useState(true)
   const [name, setName] = useState('')
@@ -1679,6 +1994,12 @@ function OrgsTab() {
     borderRadius: 8, padding: '9px 12px', fontSize: 13, color: 'var(--color-text)',
     outline: 'none', fontFamily: 'inherit', width: '100%', boxSizing: 'border-box',
   }
+
+  // "Quantos alunos tem esta escola" não existia em lado nenhum aqui, a
+  // pergunta mais óbvia ao gerir escolas. users já vem carregado no
+  // Admin (users prop), por isso é só contar, sem query nova nenhuma.
+  const studentCountByOrg = {}
+  ;(users || []).forEach(u => { if (u.organization_id) studentCountByOrg[u.organization_id] = (studentCountByOrg[u.organization_id] || 0) + 1 })
 
   useEffect(() => {
     supabase.from('organizations').select('*').order('created_at', { ascending: false }).then(({ data }) => {
@@ -1814,6 +2135,9 @@ function OrgsTab() {
                   <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{o.email_domain ? `@${o.email_domain}` : 'Sem domínio · entrada por código de turma'}</div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: 12, color: studentCountByOrg[o.id] ? C.text : C.subtle, fontWeight: studentCountByOrg[o.id] ? 700 : 500 }}>
+                    {studentCountByOrg[o.id] || 0} aluno{studentCountByOrg[o.id] === 1 ? '' : 's'}
+                  </span>
                   <span style={{
                     padding: '3px 10px', borderRadius: 99, fontSize: 12, fontWeight: 700,
                     background: PLAN_COLORS[o.plan] + '22', color: PLAN_COLORS[o.plan],
@@ -1832,6 +2156,7 @@ function OrgsTab() {
 
 // ─── INVITES TAB (professor access codes) ────────────────────
 function InvitesTab({ codes, loading, onGenerate, generating, onToggleActive }) {
+  const navigate = useNavigate()
   const [label, setLabel] = useState('')
   const [maxUses, setMaxUses] = useState('') // empty = ilimitado
   const [orgId, setOrgId] = useState('')
@@ -1957,7 +2282,10 @@ function InvitesTab({ codes, loading, onGenerate, generating, onToggleActive }) 
                   <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 4 }}>
                     {c.redeemers.map(r => (
                       <div key={r.user_id} style={{ fontSize: 12, color: C.muted, display: 'flex', justifyContent: 'space-between' }}>
-                        <span>{r.name}</span>
+                        <span
+                          onClick={() => r.username && navigate(`/u/${r.username}`)}
+                          style={{ cursor: r.username ? 'pointer' : 'default', color: r.username ? C.blue : C.muted }}
+                        >{r.name}</span>
                         <span style={{ color: C.subtle }}>{new Date(r.redeemed_at).toLocaleDateString('pt-PT')}</span>
                       </div>
                     ))}
@@ -1997,13 +2325,6 @@ export default function Admin() {
   const [newAmbRate, setNewAmbRate] = useState('0.20')
   const [creatingAmb, setCreatingAmb] = useState(false)
   const [provisioningAmbId, setProvisioningAmbId] = useState(null)
-  const [schoolDomains, setSchoolDomains] = useState([])
-  const [schoolDomainsLoaded, setSchoolDomainsLoaded] = useState(false)
-  const [newSchoolName, setNewSchoolName] = useState('')
-  const [newSchoolDomain, setNewSchoolDomain] = useState('')
-  const [addingSchool, setAddingSchool] = useState(false)
-  const [linkClassCode, setLinkClassCode] = useState('')
-  const [linkingSchoolId, setLinkingSchoolId] = useState(null)
 
   // Guard
   useEffect(() => {
@@ -2104,16 +2425,17 @@ export default function Admin() {
 
     const userIds = [...new Set(redemptions.map(r => r.user_id))]
     let nameMap = {}
+    let usernameMap = {}
     if (userIds.length) {
       const { data: profs } = await supabase.from('profiles').select('id, full_name, username').in('id', userIds)
-      ;(profs || []).forEach(p => { nameMap[p.id] = p.full_name || p.username || 'Utilizador' })
+      ;(profs || []).forEach(p => { nameMap[p.id] = p.full_name || p.username || 'Utilizador'; usernameMap[p.id] = p.username })
     }
 
     setCodes(rows.map(c => ({
       ...c,
       redeemers: redemptions
         .filter(r => r.code_id === c.id)
-        .map(r => ({ user_id: r.user_id, redeemed_at: r.redeemed_at, name: nameMap[r.user_id] })),
+        .map(r => ({ user_id: r.user_id, redeemed_at: r.redeemed_at, name: nameMap[r.user_id], username: usernameMap[r.user_id] })),
     })))
     setCodesLoading(false)
     setCodesLoaded(true)
@@ -2235,46 +2557,6 @@ export default function Admin() {
 
   if (authLoading || (!isAdmin && !authLoading)) return null
 
-  const loadSchoolDomains = async () => {
-    const { data } = await supabase.from('school_domains').select('*').order('created_at', { ascending: false })
-    setSchoolDomains(data || [])
-    setSchoolDomainsLoaded(true)
-  }
-
-  const handleAddSchool = async () => {
-    if (!newSchoolName.trim() || !newSchoolDomain.trim()) { showToast('Preenche o nome e domínio'); return }
-    setAddingSchool(true)
-    const domain = newSchoolDomain.trim().toLowerCase().replace(/^@/, '')
-    const { error } = await supabase.from('school_domains').insert({ name: newSchoolName.trim(), domain })
-    setAddingSchool(false)
-    if (error) {
-      showToast(error.message.includes('duplicate') ? 'Este domínio já existe' : 'Erro: ' + error.message)
-      return
-    }
-    setNewSchoolName('')
-    setNewSchoolDomain('')
-    showToast('Escola adicionada')
-    loadSchoolDomains()
-  }
-
-  const handleDeleteSchool = async (id) => {
-    const { error } = await supabase.from('school_domains').delete().eq('id', id)
-    if (error) { showToast('Erro: ' + error.message); return }
-    showToast('Escola removida')
-    setSchoolDomains(prev => prev.filter(s => s.id !== id))
-  }
-
-  const handleLinkClass = async (schoolId) => {
-    if (!linkClassCode.trim()) return
-    const code = linkClassCode.trim().toUpperCase()
-    const { error } = await supabase.from('classes').update({ school_domain_id: schoolId }).eq('code', code)
-    if (error) { showToast('Erro: ' + error.message); return }
-    showToast(`Turma ${code} associada à escola`)
-    setLinkClassCode('')
-    setLinkingSchoolId(null)
-  }
-
-  if (tab === 'schools' && !schoolDomainsLoaded) loadSchoolDomains()
 
   const tabs = [
     { id: 'overview', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><BarChart2 size={14} /> Visão geral</span> },
@@ -2288,7 +2570,6 @@ export default function Admin() {
        email para validar registo institucional, novo no main). Ficam os
        dois, com nomes que dizem o que cada um faz. */
     { id: 'orgs',     label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Shield size={14} /> Organizações</span> },
-    { id: 'schools',  label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><School size={14} /> Domínios de Escola</span> },
     { id: 'ambassadors', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Megaphone size={14} /> Embaixadores</span> },
     { id: 'financas', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Star size={14} /> Finanças</span> },
   ]
@@ -2374,7 +2655,7 @@ export default function Admin() {
               />
             )}
             {tab === 'signups' && <SignupsTab signups={signups} users={users} />}
-            {tab === 'orgs' && <OrgsTab />}
+            {tab === 'orgs' && <OrgsTab users={users} />}
             {tab === 'invites' && (
               <InvitesTab
                 codes={codes}
@@ -2383,65 +2664,6 @@ export default function Admin() {
                 onGenerate={handleGenerateCode}
                 onToggleActive={handleToggleCodeActive}
               />
-            )}
-            {tab === 'schools' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                <div style={{ background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 12, padding: 20 }}>
-                  <h3 style={{ margin: '0 0 6px', fontSize: 15, fontWeight: 700 }}>Adicionar escola</h3>
-                  <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--color-text-secondary)' }}>
-                    O domínio é usado para validar o email dos alunos no registo institucional.
-                  </p>
-                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-                    <div>
-                      <label style={{ fontSize: 12, color: 'var(--color-text-secondary)', display: 'block', marginBottom: 4 }}>Nome da escola</label>
-                      <input value={newSchoolName} onChange={e => setNewSchoolName(e.target.value)} placeholder="Escola Secundária de..." style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-bg)', color: 'var(--color-text)', fontSize: 14, width: 220, fontFamily: 'inherit' }} />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: 12, color: 'var(--color-text-secondary)', display: 'block', marginBottom: 4 }}>Domínio de email</label>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
-                        <span style={{ fontSize: 14, color: 'var(--color-text-secondary)', padding: '8px 2px 8px 12px', background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRight: 'none', borderRadius: '8px 0 0 8px' }}>@</span>
-                        <input value={newSchoolDomain} onChange={e => setNewSchoolDomain(e.target.value.toLowerCase().replace(/[^a-z0-9.-]/g, ''))} placeholder="escola.pt" style={{ padding: '8px 12px', borderRadius: '0 8px 8px 0', border: '1px solid var(--color-border)', background: 'var(--color-bg)', color: 'var(--color-text)', fontSize: 14, width: 160, fontFamily: 'inherit' }} />
-                      </div>
-                    </div>
-                    <button disabled={addingSchool} onClick={handleAddSchool} style={{ padding: '8px 18px', borderRadius: 8, background: 'var(--color-primary)', color: '#fff', border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: addingSchool ? 0.6 : 1, fontFamily: 'inherit' }}>
-                      {addingSchool ? '...' : 'Adicionar'}
-                    </button>
-                  </div>
-                </div>
-
-                {schoolDomains.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--color-text-secondary)', fontSize: 14 }}>
-                    Nenhuma escola registada.
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {schoolDomains.map(s => (
-                      <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 10, padding: '14px 18px' }}>
-                        <School size={18} color="var(--color-primary)" style={{ flexShrink: 0 }} />
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)' }}>{s.name}</div>
-                          <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>@{s.domain}</div>
-                        </div>
-                        <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)', flexShrink: 0 }}>
-                          {new Date(s.created_at).toLocaleDateString('pt-PT')}
-                        </div>
-                        {linkingSchoolId === s.id ? (
-                          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                            <input value={linkClassCode} onChange={e => setLinkClassCode(e.target.value.toUpperCase())} placeholder="Código" maxLength={8} style={{ padding: '6px 8px', borderRadius: 6, border: '1px solid var(--color-border)', background: 'var(--color-bg)', color: 'var(--color-text)', fontSize: 12, width: 80, fontFamily: 'inherit', fontWeight: 700, letterSpacing: '0.05em' }} onKeyDown={e => e.key === 'Enter' && handleLinkClass(s.id)} />
-                            <button onClick={() => handleLinkClass(s.id)} style={{ background: 'var(--color-primary)', border: 'none', borderRadius: 6, padding: '5px 10px', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>OK</button>
-                            <button onClick={() => { setLinkingSchoolId(null); setLinkClassCode('') }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-secondary)', padding: 2, display: 'flex' }}><X size={14} /></button>
-                          </div>
-                        ) : (
-                          <button onClick={() => setLinkingSchoolId(s.id)} title="Associar turma" style={{ background: 'none', border: '1px solid var(--color-border)', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', color: 'var(--color-text-secondary)', fontSize: 11, fontWeight: 600, fontFamily: 'inherit' }}>+ Turma</button>
-                        )}
-                        <button onClick={() => handleDeleteSchool(s.id)} title="Remover escola" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-error)', padding: 4, display: 'flex' }}>
-                          <Trash2 size={15} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
             )}
             {tab === 'financas' && <FinanceTab />}
             {tab === 'ambassadors' && (
@@ -2479,7 +2701,10 @@ export default function Admin() {
                     <tbody>
                       {ambassadors.map(a => (
                         <tr key={a.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
-                          <td style={{ padding: '10px 14px' }}>{a.profiles?.username || a.profiles?.full_name || a.user_id.slice(0, 8)}</td>
+                          <td
+                            onClick={() => a.profiles?.username && navigate(`/u/${a.profiles.username}`)}
+                            style={{ padding: '10px 14px', cursor: a.profiles?.username ? 'pointer' : 'default', color: a.profiles?.username ? 'var(--color-primary)' : 'inherit' }}
+                          >{a.profiles?.username || a.profiles?.full_name || a.user_id.slice(0, 8)}</td>
                           <td style={{ padding: '10px 14px', fontFamily: 'monospace' }}>{a.referral_code}</td>
                           <td style={{ padding: '10px 14px' }}>
                             {a.stripe_coupon_id ? (

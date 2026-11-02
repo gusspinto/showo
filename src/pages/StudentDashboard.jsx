@@ -197,6 +197,14 @@ export default function StudentDashboard({ user, profile }) {
     logFunnelEvent('nudge_shown')
   }, [nudgeSignal, user.id, logFunnelEvent])
 
+  // Uma vez por montagem (não por render): sinal de retenção mais básico
+  // que temos, quem entra no dashboard a sério, não só quem fez login (um
+  // login pode ser separador aberto sem fazer nada).
+  useEffect(() => {
+    logFunnelEvent('dashboard_viewed')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const [nudgeBannerDismissed, setNudgeBannerDismissed] = useState(
     () => !!localStorage.getItem(`showo_nudge_banner_dismissed_${user.id}_${new Date().toISOString().slice(0, 7)}`)
   )
