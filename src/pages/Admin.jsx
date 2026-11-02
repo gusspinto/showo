@@ -1118,15 +1118,30 @@ function RowMenu({ items }) {
 
 const usersTabCols = '38px minmax(180px,2fr) 90px 90px 130px 40px'
 
+// Esta lista pode ter 1500+ utilizadores. Sem paginação, cada busca ou
+// filtro renderizava a lista toda de uma vez (DOM gigante, scroll lento).
+// Reposta a 50 sempre que o conjunto filtrado muda, não só ao montar.
+const USERS_TAB_PAGE_SIZE = 50
+const USERS_TAB_SORTS = [
+  { id: 'newest', label: 'Mais recente' },
+  { id: 'oldest', label: 'Mais antigo' },
+  { id: 'projects', label: 'Mais projetos' },
+  { id: 'noprojects', label: 'Sem projetos' },
+  { id: 'name', label: 'Nome (A-Z)' },
+]
+
 function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, onResetPassword }) {
+  const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [planFilter, setPlanFilter] = useState('all')
+  const [sort, setSort] = useState('newest')
+  const [visibleCount, setVisibleCount] = useState(USERS_TAB_PAGE_SIZE)
   const [confirm, setConfirm] = useState(null)
 
   const projectCount = {}
   projects.forEach(p => { if (p.user_id) projectCount[p.user_id] = (projectCount[p.user_id] || 0) + 1 })
 
-  const filtered = users.filter(u => {
+  const filteredAll = users.filter(u => {
     const q = search.toLowerCase()
     const matchesSearch = !q || (
       (u.full_name || '').toLowerCase().includes(q) ||
@@ -1135,7 +1150,17 @@ function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, 
     )
     const matchesPlan = planFilter === 'all' || resolvePlanId(u) === planFilter
     return matchesSearch && matchesPlan
+  }).sort((a, b) => {
+    if (sort === 'oldest') return new Date(a.created_at) - new Date(b.created_at)
+    if (sort === 'projects') return (projectCount[b.id] || 0) - (projectCount[a.id] || 0)
+    if (sort === 'noprojects') return (projectCount[a.id] || 0) - (projectCount[b.id] || 0)
+    if (sort === 'name') return (a.full_name || a.username || '').localeCompare(b.full_name || b.username || '')
+    return new Date(b.created_at) - new Date(a.created_at)
   })
+  // users já vem ordenado por created_at desc do servidor. sort client-
+  // side só reordena, nunca perde ninguém, nenhuma query nova.
+  useEffect(() => { setVisibleCount(USERS_TAB_PAGE_SIZE) }, [search, planFilter, sort])
+  const filtered = filteredAll.slice(0, visibleCount)
 
   return (
     <div>
@@ -1195,10 +1220,12 @@ function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, 
             >{f.label}</button>
           ))}
         </div>
+        <Select value={sort} onChange={setSort} options={USERS_TAB_SORTS.map(o => ({ value: o.id, label: o.label }))}
+          inputStyle={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: '8px 26px 8px 10px', fontSize: 12 }} />
       </div>
 
       <div style={{ fontSize: 12, color: C.subtle, marginBottom: 10 }}>
-        {filtered.length} utilizador{filtered.length !== 1 ? 'es' : ''}{planFilter !== 'all' || search ? ` de ${users.length}` : ''}
+        a mostrar {filtered.length} de {filteredAll.length}{planFilter !== 'all' || search ? ` (${users.length} no total)` : ''}
       </div>
 
       <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, overflowX: 'auto', overflowY: 'hidden' }}>
@@ -1232,9 +1259,17 @@ function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, 
               background: u.banned_at ? C.redSoft : (i % 2 === 1 ? C.bgAlt : 'transparent'),
               borderBottom: i === filtered.length - 1 ? 'none' : `1px solid ${C.border}`,
             }}>
-              <Avatar name={name} color={u.is_admin ? 'var(--color-accent)' : 'var(--color-primary)'} size={30} />
+              <div
+                onClick={() => u.username && navigate(`/u/${u.username}`)}
+                style={{ cursor: u.username ? 'pointer' : 'default' }}
+              >
+                <Avatar name={name} color={u.is_admin ? 'var(--color-accent)' : 'var(--color-primary)'} size={30} />
+              </div>
 
-              <div style={{ minWidth: 0 }}>
+              <div
+                onClick={() => u.username && navigate(`/u/${u.username}`)}
+                style={{ minWidth: 0, cursor: u.username ? 'pointer' : 'default' }}
+              >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                   <span style={{ fontSize: 13.5, fontWeight: 700, color: C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
                   {u.is_admin && <Shield size={12} color={C.purple} />}
@@ -1264,6 +1299,15 @@ function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, 
         })}
         </div>
       </div>
+
+      {visibleCount < filteredAll.length && (
+        <div style={{ textAlign: 'center', marginTop: 14 }}>
+          <button
+            onClick={() => setVisibleCount(v => v + USERS_TAB_PAGE_SIZE)}
+            style={{ padding: '8px 18px', borderRadius: 8, fontSize: 12, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', border: `1px solid ${C.border}`, background: C.card, color: C.muted }}
+          >Carregar mais ({filteredAll.length - visibleCount} restantes)</button>
+        </div>
+      )}
     </div>
   )
 }
