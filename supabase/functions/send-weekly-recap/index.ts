@@ -1,7 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 /* ══════════════════════════════════════════════════════════════════════════
-   RECAP SEMANAL POR EMAIL, segundas, 08:00 UTC
+   RECAP SEMANAL POR EMAIL, segundas, 06:00 UTC (reajustado na migração 217)
    ──────────────────────────────────────────────────────────────────────────
    O recap já existia dentro da app, mas só o via quem já lá estava. O email
    é o que traz de volta quem não está, o mesmo princípio que o Duolingo usa
@@ -232,15 +232,20 @@ Deno.serve(async (req) => {
     // PLAN_ALIASES em src/lib/plans.js.)
     const { data: candidates, error: candErr } = await supabase
       .from('profiles')
-      .select('id, full_name, plan, organization_id, weekly_recap_email_sent_at')
+      .select('id, full_name, plan, organization_id, weekly_recap_email_sent_at, onboarding_sequence_step, onboarding_opted_out')
       .eq('weekly_recap_email_opt_in', true)
       .or('plan.eq.build,plan.eq.launch,organization_id.not.is.null')
 
     if (candErr) throw candErr
 
-    const pending = (candidates ?? []).filter(p =>
-      !p.weekly_recap_email_sent_at || new Date(p.weekly_recap_email_sent_at) < thisMonday
-    )
+    const pending = (candidates ?? []).filter(p => {
+      if (!(!p.weekly_recap_email_sent_at || new Date(p.weekly_recap_email_sent_at) < thisMonday)) return false
+      // Quem está a meio do onboarding já recebe 1 email por dia dessa
+      // sequência. Confirmado contra a BD em 2026-10-31 que isto estava a
+      // empilhar com o recap semanal no mesmo dia ("parece spam").
+      if (p.onboarding_sequence_step != null && p.onboarding_sequence_step < 14 && !p.onboarding_opted_out) return false
+      return true
+    })
     if (!pending.length) {
       return new Response(JSON.stringify({ ok: true, sent: 0 }), { headers: corsHeaders })
     }

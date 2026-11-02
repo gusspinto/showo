@@ -171,19 +171,43 @@ Deno.serve(async (req) => {
 
     const userIds = testUserId ? [testUserId] : [...byUser.keys()]
 
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('id, full_name, marketing_campaign_opted_out, saturday_nudge_sent_at, created_at')
-      .in('id', userIds)
-    const profileById = new Map((profiles ?? []).map(p => [p.id, p]))
+    // .in() com centenas de UUIDs de uma vez gera um URL enorme (GET do
+    // PostgREST) que pode ultrapassar o limite do proxy e falhar, sem
+    // lançar exceção visível se não se verificar `error` explicitamente.
+    // Foi exatamente isto que aconteceu em produção: desde que a base de
+    // projetos 'full' cresceu para as centenas, esta função respondia
+    // sempre candidates:0, porque `profiles` vinha null e profileById
+    // ficava vazio, excluindo toda a gente sem erro nenhum a aparecer.
+    // Corrigido com lotes de 150 ids e verificação de erro em cada chamada.
+    const CHUNK_SIZE = 150
+    function chunk<T>(arr: T[], size: number): T[][] {
+      const out: T[][] = []
+      for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size))
+      return out
+    }
+
+    const profiles: any[] = []
+    for (const batch of chunk(userIds, CHUNK_SIZE)) {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, marketing_campaign_opted_out, saturday_nudge_sent_at, created_at')
+        .in('id', batch)
+      if (error) throw error
+      profiles.push(...(data ?? []))
+    }
+    const profileById = new Map(profiles.map(p => [p.id, p]))
 
     const cutoff48h = new Date(Date.now() - 48 * 3600000).toISOString()
-    const { data: recentEntries } = await supabase
-      .from('project_journal_entries')
-      .select('user_id')
-      .gte('created_at', cutoff48h)
-      .in('user_id', userIds)
-    const activeUserIds = new Set((recentEntries ?? []).map(e => e.user_id))
+    const activeUserIds = new Set<string>()
+    for (const batch of chunk(userIds, CHUNK_SIZE)) {
+      const { data, error } = await supabase
+        .from('project_journal_entries')
+        .select('user_id')
+        .gte('created_at', cutoff48h)
+        .in('user_id', batch)
+      if (error) throw error
+      for (const e of data ?? []) activeUserIds.add(e.user_id)
+    }
 
     const sixDaysAgo = new Date(Date.now() - 6 * 24 * 3600000).toISOString()
     const candidates = userIds.filter(uid => {

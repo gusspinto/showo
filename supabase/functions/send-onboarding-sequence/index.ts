@@ -303,7 +303,7 @@ function buildDay4({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayB
       urgencyBand(dia, code, daysToDefense) +
       headline('Há sempre um detalhe que só se vê a tempo de o corrigir') +
       paragraph('Imagina apresentares o projeto e ninguém encontrar a falha que tu já tinhas resolvido semanas antes. É a diferença entre seres apanhado de surpresa ou chegar preparado.') +
-      paragraph(`No Plus, a análise de IA está sempre disponível, não só uma vez por mês. Com ${esc(code)}: 4,49€/mês em vez de 8,99€, durante 6 meses.`, true) +
+      paragraph(`No Plus, a análise de IA está sempre disponível, não só uma vez por mês. Com ${esc(code)}: 4,49€/mês, durante 6 meses.`, true) +
       cta(`${APP}/pricing`, 'Quero chegar sempre preparado'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
@@ -320,7 +320,7 @@ function buildDay5({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayB
       urgencyBand(dia, code, daysToDefense) +
       headline('Há quem mostre um projeto. Tu mostras um percurso.') +
       paragraph('Toda a segunda, o recap do Plus transforma o que fizeste num post pronto. Quando um recrutador compara candidatos, um projeto parado e um que cresce toda a semana não pesam o mesmo.') +
-      paragraph(`Com ${esc(code)}: 4,49€/mês em vez de 8,99€, durante 6 meses.`, true) +
+      paragraph(`Com ${esc(code)}: 4,49€/mês, durante 6 meses.`, true) +
       cta(`${APP}/pricing`, 'Quero mostrar o percurso, não só o resultado'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
@@ -337,7 +337,7 @@ function buildDay6({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayB
       urgencyBand(dia, code, daysToDefense) +
       headline('É sempre a meio da noite que a dúvida aparece') +
       paragraph('A pergunta que te prende o projeto não escolhe hora, e normalmente não é nos primeiros dias que aparece. No Plus, o Coach IA está lá nesse momento, não só enquanto ainda tens mensagens sobrando.') +
-      paragraph(`Com ${esc(code)}: 4,49€/mês em vez de 8,99€, durante 6 meses.`, true) +
+      paragraph(`Com ${esc(code)}: 4,49€/mês, durante 6 meses.`, true) +
       cta(`${APP}/pricing`, 'Quero nunca ficar preso sozinho'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
@@ -354,7 +354,7 @@ function buildDay7({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayB
       urgencyBand(dia, code, daysToDefense) +
       headline('A paz de decidir agora, não daqui a um mês') +
       paragraph('Se já sabes que vais usar o Showo a sério, decidir agora poupa-te a dúvida de "será que ainda vale a pena" lá mais para a frente.') +
-      paragraph(`Com ${esc(code)}: 4,49€/mês em vez de 8,99€, durante 6 meses.`, true) +
+      paragraph(`Com ${esc(code)}: 4,49€/mês, durante 6 meses.`, true) +
       cta(`${APP}/pricing`, 'Decidir agora e seguir em frente'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
@@ -372,7 +372,7 @@ function buildDay8({ firstName, unsubscribeUrl, code, dia, daysToDefense, isProf
         urgencyBand(dia, code, daysToDefense) +
         headline('Alguém vai decidir confiar em ti antes de sequer falares') +
         paragraph('Um cliente, um recrutador, um colega, decide muito antes da primeira reunião, só a partir do que encontra sobre ti online. Um perfil organizado faz essa decisão a teu favor, sem teres de estar presente.') +
-        paragraph(`Com ${esc(code)}: 4,49€/mês em vez de 8,99€ no Plus, durante 6 meses.`, true) +
+        paragraph(`Com ${esc(code)}: 4,49€/mês no Plus, durante 6 meses.`, true) +
         cta(`${APP}/pricing`, 'Quero que decidam a meu favor'),
         `Dia ${dia} de ${TOTAL_DAYS}`,
         unsubscribeUrl,
@@ -387,7 +387,7 @@ function buildDay8({ firstName, unsubscribeUrl, code, dia, daysToDefense, isProf
       urgencyBand(dia, code, daysToDefense) +
       headline('Alguém vai ser visto primeiro. Porque não tu?') +
       paragraph('Há vagas reais de estágio e primeiro emprego dentro do Showo, com candidatura direta a partir do teu perfil. Quem está lá dentro candidata-se antes de a vaga aparecer em todo o lado.') +
-      paragraph(`Com ${esc(code)}: 4,49€/mês em vez de 8,99€ no Plus, durante 6 meses.`, true) +
+      paragraph(`Com ${esc(code)}: 4,49€/mês no Plus, durante 6 meses.`, true) +
       cta(`${APP}/vagas`, 'Ver as vagas antes dos outros'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
@@ -438,7 +438,7 @@ function buildDay10({ firstName, unsubscribeUrl, code, dia, daysToDefense, isPro
         urgencyBand(dia, code, daysToDefense) +
         headline('Esse segundo de silêncio não precisa de acontecer') +
         paragraph('O Showo gera as perguntas prováveis a partir do teu diário real, com respostas já pensadas antes de entrares na sala. A diferença entre hesitar e responder sem pestanejar decide-se antes da entrevista, não durante.') +
-        paragraph(`Feature do Plus. Com ${esc(code)}: 4,49€/mês em vez de 8,99€, durante 6 meses.`, true) +
+        paragraph(`Feature do Plus. Com ${esc(code)}: 4,49€/mês, durante 6 meses.`, true) +
         cta(`${APP}/pricing`, 'Quero chegar sem hesitar'),
         `Dia ${dia} de ${TOTAL_DAYS}`,
         unsubscribeUrl,
@@ -453,7 +453,7 @@ function buildDay10({ firstName, unsubscribeUrl, code, dia, daysToDefense, isPro
       urgencyBand(dia, code, daysToDefense) +
       headline('Esse segundo de silêncio não precisa de acontecer') +
       paragraph('O Showo gera as perguntas prováveis do júri a partir do teu diário real, com respostas já pensadas antes de entrares na sala. A diferença entre hesitar e responder sem pestanejar decide-se antes da defesa, não durante.') +
-      paragraph(`Feature do Plus. Com ${esc(code)}: 4,49€/mês em vez de 8,99€, durante 6 meses.`, true) +
+      paragraph(`Feature do Plus. Com ${esc(code)}: 4,49€/mês, durante 6 meses.`, true) +
       cta(`${APP}/pricing`, 'Quero chegar sem hesitar'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
@@ -470,7 +470,7 @@ function buildDay11({ firstName, unsubscribeUrl, code, dia, daysToDefense, isPro
         greeting(firstName) +
         urgencyBand(dia, code, daysToDefense) +
         headline('O tempo que alguém olha para um perfil é curto. Conta.') +
-        paragraph(`Um link que mostra meses de consistência num olhar, não um PDF que ninguém abre até ao fim. Com ${esc(code)}: 4,49€/mês em vez de 8,99€ no Plus, durante 6 meses.`, true) +
+        paragraph(`Um link que mostra meses de consistência num olhar, não um PDF que ninguém abre até ao fim. Com ${esc(code)}: 4,49€/mês no Plus, durante 6 meses.`, true) +
         cta(`${APP}/pricing`, 'Quero ser lembrado, não esquecido'),
         `Dia ${dia} de ${TOTAL_DAYS}`,
         unsubscribeUrl,
@@ -485,7 +485,7 @@ function buildDay11({ firstName, unsubscribeUrl, code, dia, daysToDefense, isPro
       urgencyBand(dia, code, daysToDefense) +
       headline('O tempo que um recrutador olha para um perfil é curto. Conta.') +
       quote('Era esta a ferramenta que me faltava para os meus estudos. Bastante alinhado com as necessidades dos alunos.', 'Maria Eduarda, Estudante da Computação e Engenharia de Software, Natixis') +
-      paragraph(`Um link que mostra meses de consistência num olhar, não um PDF que ninguém abre até ao fim. Com ${esc(code)}: 4,49€/mês em vez de 8,99€ no Plus, durante 6 meses.`, true) +
+      paragraph(`Um link que mostra meses de consistência num olhar, não um PDF que ninguém abre até ao fim. Com ${esc(code)}: 4,49€/mês no Plus, durante 6 meses.`, true) +
       cta(`${APP}/pricing`, 'Quero ser lembrado, não esquecido'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
@@ -654,6 +654,29 @@ Deno.serve(async (req) => {
         const builder = DAY_BUILDERS[step]
         const built = builder({ firstName, unsubscribeUrl, hasProject, projectState, code: discountCode, dia: step + 1, daysToDefense, isProfessional: isProfessionalOccupation(p.occupation) })
         const emailType = `onboarding_day${step + 1}`
+
+        // Rede de segurança contra reenvio do mesmo dia: se o update de
+        // onboarding_sequence_step abaixo falhar depois de um envio anterior
+        // (timeout, queda de rede a meio do loop), o profile fica parado
+        // nesse step e o cron do dia seguinte tentava mandar o MESMO dia
+        // outra vez (aconteceu a um user real em produção, onboarding_day7
+        // em 28/10 e 29/10). Confirmar aqui, mesmo que o step já devesse ter
+        // avançado, é a única garantia real, já que envio e update do step
+        // não são atómicos.
+        if (!testUserId) {
+          const { data: alreadySent } = await supabase
+            .from('email_sends')
+            .select('id')
+            .eq('user_id', p.id)
+            .eq('email_type', emailType)
+            .limit(1)
+          if (alreadySent?.length) {
+            await supabase.from('profiles')
+              .update({ onboarding_sequence_step: step + 1, onboarding_sequence_sent_at: now.toISOString() })
+              .eq('id', p.id)
+            continue
+          }
+        }
 
         const res = await fetch('https://api.resend.com/emails', {
           method: 'POST',

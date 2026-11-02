@@ -17,8 +17,9 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
    plan='free' (ainda não comprou), continuous_cycle_opted_out=false, e
    cooldown de 6 dias desde o último envio (continuous_cycle_sent_at).
 
-   Corre 1x por semana via pg_cron, à quinta às 10h, longe da segunda
-   (recap semanal) e do cron diário de onboarding, para não parecer spam.
+   Corre 1x por semana via pg_cron, à quinta às 16h UTC (reajustado na
+   migração 217, antes corria à mesma hora que o onboarding diário, 10h,
+   colisão direta descoberta a partir de uma queixa real de spam).
 
    Modo de teste: { test_user_id, force_step } no corpo, mesmo padrão das
    outras sequências.
@@ -125,7 +126,7 @@ function buildWeek0({ firstName, unsubscribeUrl, code, daysToDefense }: { firstN
       offerBand(code, daysToDefense) +
       headline('1 análise de IA por mês chega para experimentar, não para usar a sério') +
       paragraph('O plano Grátis existe para testares o Showo sem compromisso. Mas se já estás a usar o projeto a sério, 1 análise por mês esgota-se rápido.') +
-      paragraph(`No Plus são 10 análises por mês, 15 projetos, e 100 mensagens de Coach IA, a 4,49€/mês com o código ${esc(code)}, em vez de 8,99€.`, true) +
+      paragraph(`No Plus são 10 análises por mês, 15 projetos, e 100 mensagens de Coach IA, a 4,49€/mês com o código ${esc(code)}.`, true) +
       cta(`${APP}/pricing`, 'Ver o plano Plus'),
       unsubscribeUrl,
     ),
@@ -140,7 +141,7 @@ function buildWeek1({ firstName, unsubscribeUrl, code, daysToDefense }: { firstN
       offerBand(code, daysToDefense) +
       headline('10 mensagens de Coach IA por mês não dão muito espaço') +
       paragraph('Cada dúvida sobre o projeto, cada revisão de texto, conta para esse limite. No Plus são 100 por mês, dez vezes mais apoio ao longo do tempo, não só nos primeiros dias.') +
-      paragraph(`Com o código ${esc(code)}, 4,49€/mês em vez de 8,99€, durante os primeiros 6 meses.`, true) +
+      paragraph(`Com o código ${esc(code)}, 4,49€/mês durante os primeiros 6 meses.`, true) +
       cta(`${APP}/pricing`, 'Passar a 100 mensagens por mês'),
       unsubscribeUrl,
     ),

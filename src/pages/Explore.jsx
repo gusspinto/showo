@@ -17,6 +17,9 @@ import { Book2Icon as BookOpen } from '@solar-icons/react/bold/book-2'
 import { FireIcon as Fire } from '@solar-icons/react/bold/fire'
 import { Tuning2Icon as SlidersHorizontal } from '@solar-icons/react/bold/tuning-2'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
+import { BoltIcon as Bolt } from '@solar-icons/react/bold/bolt'
+import { ChatDotsIcon as ChatDots } from '@solar-icons/react/bold/chat-dots'
+import { ClipboardTextIcon as ClipboardText } from '@solar-icons/react/bold/clipboard-text'
 import { Select } from '../components/ui'
 import SegmentedTabs from '../components/SegmentedTabs'
 import './Explore.css'
@@ -201,14 +204,39 @@ export default function Explore() {
   // havendo projetos públicos suficientes.
   useEffect(() => {
     supabase.rpc('get_featured_projects', { p_limit: 2, p_weeks: 12 })
-      .then(({ data }) => { if (data) setFeaturedList(data) })
+      .then(async ({ data }) => {
+        if (!data) return
+        // get_featured_projects não devolve ai_feedback nem liga a
+        // coach_messages/weekly_recaps, por isso os badges Plus calculados
+        // para a grid principal (abaixo) nunca chegavam aos cartões desta
+        // secção. Reparado pelo Gustavo (print do "Smart Resumes" em
+        // destaque sem o chip de Análise IA). Resolve com a mesma lógica,
+        // só para os 1-2 ids desta lista.
+        const ids = data.map(p => p.id)
+        const [{ data: feedbackRows }, { data: coachRows }, { data: recapRows }] = await Promise.all([
+          supabase.from('projects').select('id, ai_feedback').in('id', ids),
+          supabase.from('coach_messages').select('project_id').in('project_id', ids),
+          supabase.from('weekly_recaps').select('project_id').in('project_id', ids),
+        ])
+        const feedbackIds = new Set((feedbackRows ?? []).filter(r => r.ai_feedback).map(r => r.id))
+        const coachIds = new Set((coachRows ?? []).map(r => r.project_id))
+        const recapIds = new Set((recapRows ?? []).map(r => r.project_id))
+        setFeaturedList(data.map(p => ({
+          ...p,
+          plusFeatures: [
+            feedbackIds.has(p.id) && 'ai_analysis',
+            coachIds.has(p.id) && 'coach',
+            recapIds.has(p.id) && 'recap',
+          ].filter(Boolean),
+        })))
+      })
   }, [])
 
   useEffect(() => {
     async function load() {
       const { data, error } = await supabase
         .from('projects')
-        .select('id,name,slug,area,creator_name,course,school_year,ai_tagline,project_type,is_pap,score,created_at,technologies,tech_stack,views,cover_url,user_id,tags,preview_style')
+        .select('id,name,slug,area,creator_name,course,school_year,ai_tagline,project_type,is_pap,score,created_at,technologies,tech_stack,views,cover_url,user_id,tags,preview_style,ai_feedback')
         .or('visibility.eq.public,visibility.is.null')
         // Itens da Biblioteca (ficheiro + nome, sem ficha nenhuma) nunca
         // aparecem aqui — já vêm 'private' desde a origem, isto é só
@@ -220,11 +248,16 @@ export default function Explore() {
         .limit(300)
 
       if (!error && data) {
-        const { data: availProfs } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('available_for_work', true)
+        const projectIds = data.map(p => p.id)
+
+        const [{ data: availProfs }, { data: coachRows }, { data: recapRows }] = await Promise.all([
+          supabase.from('profiles').select('id').eq('available_for_work', true),
+          supabase.from('coach_messages').select('project_id').in('project_id', projectIds),
+          supabase.from('weekly_recaps').select('project_id').in('project_id', projectIds),
+        ])
         const availIds = new Set(availProfs?.map(p => p.id) ?? [])
+        const coachIds = new Set(coachRows?.map(r => r.project_id) ?? [])
+        const recapIds = new Set(recapRows?.map(r => r.project_id) ?? [])
 
         let viewCache = {}
         try { viewCache = JSON.parse(localStorage.getItem(VIEWS_KEY) || '{}') } catch {}
@@ -233,7 +266,11 @@ export default function Explore() {
           const fresh = p.views ?? 0
           const best = Math.max(cached, fresh)
           viewCache[p.slug] = best
-          return { ...p, views: best, available_for_work: availIds.has(p.user_id) }
+          const plusFeatures = []
+          if (p.ai_feedback) plusFeatures.push('ai_analysis')
+          if (coachIds.has(p.id)) plusFeatures.push('coach')
+          if (recapIds.has(p.id)) plusFeatures.push('recap')
+          return { ...p, views: best, available_for_work: availIds.has(p.user_id), plusFeatures }
         })
         try { localStorage.setItem(VIEWS_KEY, JSON.stringify(viewCache)) } catch {}
         setProjects(merged)
@@ -542,6 +579,25 @@ export default function Explore() {
                     <div className="explore-featured-body">
                       <h3 className="explore-card-name">{project.name}</h3>
                       {project.ai_tagline && <p className="explore-card-tagline">{project.ai_tagline}</p>}
+                      {project.plusFeatures?.length > 0 && (
+                        <div className="explore-plus-badges">
+                          {project.plusFeatures.includes('ai_analysis') && (
+                            <span className="explore-plus-chip" title="Análise de IA feita">
+                              <Bolt size={10} /> Análise IA
+                            </span>
+                          )}
+                          {project.plusFeatures.includes('coach') && (
+                            <span className="explore-plus-chip" title="Usou o Coach IA">
+                              <ChatDots size={10} /> Coach IA
+                            </span>
+                          )}
+                          {project.plusFeatures.includes('recap') && (
+                            <span className="explore-plus-chip" title="Recap semanal gerado">
+                              <ClipboardText size={10} /> Recap
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -634,6 +690,27 @@ export default function Explore() {
                         </>
                       )}
                     </div>
+
+                    {/* Plus feature badges */}
+                    {project.plusFeatures?.length > 0 && (
+                      <div className="explore-plus-badges">
+                        {project.plusFeatures.includes('ai_analysis') && (
+                          <span className="explore-plus-chip" title="Análise de IA feita">
+                            <Bolt size={10} /> Análise IA
+                          </span>
+                        )}
+                        {project.plusFeatures.includes('coach') && (
+                          <span className="explore-plus-chip" title="Usou o Coach IA">
+                            <ChatDots size={10} /> Coach IA
+                          </span>
+                        )}
+                        {project.plusFeatures.includes('recap') && (
+                          <span className="explore-plus-chip" title="Recap semanal gerado">
+                            <ClipboardText size={10} /> Recap
+                          </span>
+                        )}
+                      </div>
+                    )}
 
                     {/* Name + tagline */}
                     <div>

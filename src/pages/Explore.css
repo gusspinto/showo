@@ -533,6 +533,29 @@ body.light .explore-card-cover img {
   font-weight: 600;
 }
 
+/* Chips de features Plus usadas no projeto (análise IA, coach, recap):
+   sinalizam ao utilizador grátis o que o Plus desbloqueia. */
+.explore-plus-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.explore-plus-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
+  border-radius: 5px;
+  padding: 2px 6px 2px 5px;
+  white-space: nowrap;
+}
+
 .explore-card-name {
   margin: 0 0 6px;
   font-size: 16px;
