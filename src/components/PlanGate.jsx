@@ -2,9 +2,29 @@ import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
+import { Widget4Icon as ProjectsIcon } from '@solar-icons/react/bold/widget-4'
+import { ChatRoundLineIcon as CoachIcon } from '@solar-icons/react/bold/chat-round-line'
+import { LetterIcon as RecapIcon } from '@solar-icons/react/bold/letter'
+import { CaseIcon as InternshipsIcon } from '@solar-icons/react/bold/case'
+import { LinkIcon } from '@solar-icons/react/bold/link'
+import { PresentationGraphIcon as ExportIcon } from '@solar-icons/react/bold/presentation-graph'
+import { AltArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/alt-arrow-right'
+import { CheckCircleIcon as CheckCircle } from '@solar-icons/react/bold/check-circle'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { getPlan, nextPaidPlan, planHighlights, fullAnnualPrice } from '../lib/plans'
+
+// Mapeia a chave que planHighlights() devolve (string, lib/plans.js não sabe
+// de React) para o ícone a mostrar, mesma convenção de ícones que a
+// sidebar/Pricing já usam para estes conceitos (Dashboard, Coach, Vagas).
+const HIGHLIGHT_ICONS = {
+  projects: ProjectsIcon,
+  coach: CoachIcon,
+  recap: RecapIcon,
+  internships: InternshipsIcon,
+  link: LinkIcon,
+  export: ExportIcon,
+}
 
 // Preview real do que se recebe, pedido do Gustavo depois do teaser do
 // recap semanal ("eles têm de ter uma preview do que vai realmente ver se
@@ -175,13 +195,38 @@ const C = {
   // Frase curta a ligar o título à lista de benefícios logo a seguir, só
   // para não ficar espaço em branco entre os dois, nada mais.
   subtitleRight: { margin: '0 0 4px', fontSize: '0.85rem', color: 'var(--color-text-secondary)' },
-  highlights: { display: 'flex', flexDirection: 'column', gap: '10px', margin: 'var(--sp-2) 0' },
-  highlightItem: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '10px', fontSize: '0.88rem' },
-  highlightLabel: { color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '7px', flexShrink: 0 },
-  highlightCheck: { color: 'var(--color-success)', fontWeight: 800, flexShrink: 0 },
-  // Sem nowrap: a "10 → 100 por mês" cortava no mobile, a coluna ficou
-  // mais estreita do que no layout antigo de duas colunas.
-  highlightValue: { color: 'var(--color-primary)', fontWeight: 700, textAlign: 'right' },
+  // Painel próprio (fundo + borda), não texto solto a flutuar no espaço em
+  // branco, pedido do Gustavo depois de achar a lista "vazia, só números
+  // ali para dizer que há diferença". Cada linha tem o seu ícone (não um
+  // check genérico repetido 3x) e separador fino entre linhas em vez de
+  // gap grande, para ler como um bloco, não 3 frases soltas.
+  highlights: {
+    display: 'flex', flexDirection: 'column',
+    background: 'var(--color-surface)', border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius-lg)', margin: 'var(--sp-2) 0', overflow: 'hidden',
+  },
+  highlightItem: (isLast) => ({
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px',
+    fontSize: '0.88rem', padding: '11px 14px',
+    borderBottom: isLast ? 'none' : '1px solid var(--color-border)',
+  }),
+  highlightLabel: { color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '9px', flexShrink: 0, fontWeight: 600 },
+  highlightIconWrap: {
+    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+    width: '26px', height: '26px', borderRadius: '8px',
+    background: 'var(--color-primary-subtle)', color: 'var(--color-primary)',
+  },
+  // O "antes" pequeno e apagado, o "depois" grande e na cor da marca, o
+  // mesmo tratamento que o preço riscado já usa para a poupança anual,
+  // consistente dentro do mesmo pop-up.
+  highlightStat: { display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 },
+  highlightFrom: { color: 'var(--color-text-tertiary)', fontWeight: 600, fontSize: '0.82rem' },
+  highlightArrow: { color: 'var(--color-text-tertiary)', flexShrink: 0, display: 'flex' },
+  highlightTo: { color: 'var(--color-primary)', fontWeight: 800, whiteSpace: 'nowrap' },
+  highlightIncluded: {
+    display: 'flex', alignItems: 'center', gap: '5px',
+    color: 'var(--color-success)', fontWeight: 700, fontSize: '0.82rem',
+  },
   msg:   { margin: 0, fontSize: '0.98rem', color: 'var(--color-text-secondary)', lineHeight: 1.6, maxWidth: '420px' },
   body: { display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)', padding: 'var(--sp-8)' },
   // .sdb-panel--tint do Dashboard — o bloco de apoio à marca, tinta subtil,
@@ -419,12 +464,26 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
                 <p style={C.subtitleRight}>Escolhe como queres continuar.</p>
                 {highlights.length > 0 && (
                   <ul style={{ ...C.highlights, listStyle: 'none', padding: 0 }}>
-                    {highlights.map(h => (
-                      <li key={h.label} style={C.highlightItem}>
-                        <span style={C.highlightLabel}><span style={C.highlightCheck}>✓</span>{h.label}</span>
-                        <span style={C.highlightValue}>{h.value}</span>
-                      </li>
-                    ))}
+                    {highlights.map((h, i) => {
+                      const Icon = HIGHLIGHT_ICONS[h.icon]
+                      return (
+                        <li key={h.label} style={C.highlightItem(i === highlights.length - 1)}>
+                          <span style={C.highlightLabel}>
+                            {Icon && <span style={C.highlightIconWrap}><Icon size={14} /></span>}
+                            {h.label}
+                          </span>
+                          {h.from ? (
+                            <span style={C.highlightStat}>
+                              <span style={C.highlightFrom}>{h.from}</span>
+                              <span style={C.highlightArrow}><ArrowRight size={11} /></span>
+                              <span style={C.highlightTo}>{h.to}{h.suffix}</span>
+                            </span>
+                          ) : (
+                            <span style={C.highlightIncluded}><CheckCircle size={14} />{h.to}</span>
+                          )}
+                        </li>
+                      )
+                    })}
                   </ul>
                 )}
                 {upgrade.priceLabelAnnual && (
