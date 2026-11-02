@@ -40,7 +40,7 @@ function sessionPreview(msgs) {
 
 export default function Coach() {
   const navigate = useNavigate()
-  const { user, profile, checkGate, consumeAI } = useAuth()
+  const { user, profile, checkGate, consumeAI, logFunnelEvent } = useAuth()
   const isMobile = useIsMobile()
 
   const [myProjects, setMyProjects] = useState([])
@@ -227,6 +227,7 @@ export default function Coach() {
         ? await chatProjectCoach({ project: activeProject, messages, message: msg, profile })
         : await chatGlobalCoach({ messages, message: msg, profile })
       consumeAI('coach')
+      logFunnelEvent('coach_message_sent', activeProject ? 'project' : 'global')
       setMessages(prev => [...prev, { role: 'assistant', content: reply }])
       setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
       const sid = sessionId || crypto.randomUUID()

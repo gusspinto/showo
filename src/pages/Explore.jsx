@@ -139,7 +139,7 @@ function PeopleSkeleton() {
 export default function Explore() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { profile, user } = useAuth()
+  const { profile, user, logFunnelEvent } = useAuth()
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [featuredList, setFeaturedList] = useState([])
@@ -193,6 +193,14 @@ export default function Explore() {
   // atrás de um perfil) — handleTabChange só carrega ao clicar na aba.
   useEffect(() => {
     if (tab === 'pessoas') loadPeople()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Sinal de engagement: alguém a navegar o Explorar a sério, não só
+  // online com o separador aberto. logFunnelEvent já ignora visitantes
+  // sem conta (checa `user` lá dentro), por isso é seguro chamar sempre.
+  useEffect(() => {
+    logFunnelEvent('explore_viewed')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

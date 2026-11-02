@@ -1119,7 +1119,7 @@ export default function ProjectPage() {
   const { slug } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
-  const { user, profile, loading: authLoading, checkGate, consumeAI, refreshProfile } = useAuth()
+  const { user, profile, loading: authLoading, checkGate, consumeAI, refreshProfile, logFunnelEvent } = useAuth()
   const [project, setProject] = useState(() => location.state?.projectData ?? null)
   const [projectJournalEntries, setProjectJournalEntries] = useState([])
   const [showReport, setShowReport] = useState(false)
@@ -1154,6 +1154,16 @@ export default function ProjectPage() {
     })
     return () => { cancelled = true }
   }, [project?.id, profile?.role])
+
+  // Sinal de retenção/engagement: alguém abriu um projeto a sério (próprio
+  // ou de outra pessoa), não só "fez login". feature distingue dono de
+  // visitante, para o funil no Admin conseguir separar "voltei ao meu
+  // projeto" de "fui ver o de outra pessoa" (Explorar).
+  useEffect(() => {
+    if (!project?.id) return
+    logFunnelEvent('project_opened', user?.id === project.user_id ? 'own' : 'other')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project?.id])
   const [ownerProfile, setOwnerProfile] = useState(null)
   const [aiFeedback, setAiFeedback] = useState(null)
   const [analyzingAI, setAnalyzingAI] = useState(false)
@@ -1501,6 +1511,7 @@ export default function ProjectPage() {
     try {
       const reply = await chatProjectCoach({ project: { ...project, journal: projectJournalEntries, teacher_feedback: teacherFeedback }, messages: coachMessages, message: msg, profile })
       consumeAI('coach')
+      logFunnelEvent('coach_message_sent', 'project')
       const now = new Date().toISOString()
       setCoachMessages(prev => [...prev, { role: 'assistant', content: reply }])
       setTimeout(() => coachBottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
@@ -2139,6 +2150,10 @@ export default function ProjectPage() {
     navigator.clipboard.writeText(pageUrl).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
+      // Metade da definição de ativação (CLAUDE.md): publicar 3+ secções
+      // E partilhar o link. Sem este evento não há forma de medir a
+      // segunda metade, só a primeira (score/secções).
+      logFunnelEvent('project_shared')
     })
   }
 
@@ -2984,6 +2999,7 @@ export default function ProjectPage() {
                   navigator.clipboard.writeText(`${window.location.origin}/projeto/${project.slug}`)
                   setLaunchCopied(true)
                   setTimeout(() => setLaunchCopied(false), 2500)
+                  logFunnelEvent('project_shared', 'launch')
                 }}
                 style={{
                   background: launchCopied ? 'var(--color-success-subtle)' : 'var(--color-bg-alt)',
@@ -3173,6 +3189,7 @@ export default function ProjectPage() {
                   navigator.clipboard.writeText(`${window.location.origin}/p/${project.slug}`)
                   triggerToast('Link copiado!')
                   setMilestoneCard(null)
+                  logFunnelEvent('project_shared', 'milestone')
                 }}
                 style={{
                   flex: 1,
@@ -4160,6 +4177,7 @@ export default function ProjectPage() {
                 navigator.clipboard.writeText(`${window.location.origin}/p/${project.slug}`)
                 triggerToast('Link copiado!')
                 advancePostTourStage('done')
+                logFunnelEvent('project_shared', 'post_tour')
               }
             }}
             onDismiss={() => advancePostTourStage(postTourStage === '3' ? 'done' : String(Number(postTourStage) + 1))}
