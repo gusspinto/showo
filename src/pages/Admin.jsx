@@ -454,6 +454,18 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
   const [filterOccupation, setFilterOccupation] = useState('all')
   const [filterAccountType, setFilterAccountType] = useState('all')
   const [range, setRange] = useState(TIME_RANGES[1])
+  // Sub-separadores dentro do Overview: a página tinha 8 secções todas
+  // empilhadas na vertical, obrigava a rolar imenso e misturava tudo (daí
+  // a sensação de "confusão"). O período e os 5 KPIs hero ficam sempre
+  // visíveis (resposta rápida), o resto só mostra o que estiver escolhido.
+  const [subTab, setSubTab] = useState('crescimento')
+  const OVERVIEW_SUBTABS = [
+    { id: 'crescimento', label: 'Crescimento' },
+    { id: 'negocio', label: 'Negócio' },
+    { id: 'funis', label: 'Funis & Engagement' },
+    { id: 'graficos', label: 'Gráficos' },
+    { id: 'pessoas', label: 'Projetos & Users' },
+  ]
 
   // Contagens de utilizadores ativos vêm agregadas do servidor (nunca linhas
   // cruas de activity_log) — fica correto para sempre, independente de
@@ -814,11 +826,16 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
         ))}
       </div>
 
+      <div style={{ marginBottom: 20 }}>
+        <SegmentedTabs size="compact" value={subTab} onChange={setSubTab} options={OVERVIEW_SUBTABS} />
+      </div>
+
       {/* As 3 secções seguintes (Crescimento, Produto, Negócio) ficam cada
           uma dentro de um painel com borda, como os funis/gráficos mais
           abaixo já tinham. Antes eram só título+legenda soltos a flutuar
           sobre o fundo, sem nenhum contentor visual, o que destoava do
           resto da página e dava sensação de "tudo à solta". */}
+      {subTab === 'crescimento' && <>
       <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px', marginBottom: 20 }}>
         <h3 style={{ margin: '0 0 2px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Crescimento · agora</h3>
         <p style={{ margin: '0 0 14px', fontSize: 11, color: C.subtle }}>Estado atual da conta. Não muda com o período acima, é sempre "agora".</p>
@@ -846,7 +863,9 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
           <StatCard icon={<User size={20} />} label="Sem projeto nenhum" value={usersWithoutProjects} color={usersWithoutProjects > totalUsers * 0.5 ? C.red : C.muted} sub={`${Math.round((usersWithoutProjects / (totalUsers || 1)) * 100)}% da base`} />
         </div>
       </div>
+      </>}
 
+      {subTab === 'negocio' && <>
       <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px', marginBottom: 20 }}>
       <h3 style={{ margin: '0 0 2px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Negócio {periodLabel}</h3>
       <p style={{ margin: '0 0 14px', fontSize: 11, color: C.subtle }}>Assinantes e MRR são sempre "agora" (quem paga neste preciso momento); as restantes seguem o período escolhido acima.</p>
@@ -873,7 +892,9 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
           ))}
         </div>
       )}
+      </>}
 
+      {subTab === 'funis' && <>
       {/* Os 3 blocos de processo (funis + engagement) lado a lado em grid,
           não um por baixo do outro, são do mesmo tipo de informação
           (passos de um processo), ficam mais fáceis de comparar lado a
@@ -942,7 +963,9 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
         </div>
       </div>
       </div>
+      </>}
 
+      {subTab === 'graficos' && <>
       {/* Charts row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16, marginBottom: 24 }}>
         <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
@@ -1004,7 +1027,9 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
           </div>
         </div>
       </div>
+      </>}
 
+      {subTab === 'pessoas' && <>
       {/* Bottom row: projects + users */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 24 }}>
         {/* Recent projects */}
@@ -1158,6 +1183,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
           </div>
         </div>
       </div>
+      </>}
     </div>
   )
 }
