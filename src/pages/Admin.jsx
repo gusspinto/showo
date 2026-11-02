@@ -521,11 +521,32 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
   const proPrice = parseFloat(getPlan('pro').priceLabel.replace('€', '').replace(',', '.'))
   const mrrEstimate = realPlusCount * plusPrice + realProCount * proPrice
 
+  // billingSummary/funnelSummary (props) vêm do Admin pai sempre fixos ao
+  // mês atual, o que fazia o seletor de período aqui dentro não mudar nada
+  // destes números (parecia partido). Com p_since aceite nas duas RPCs,
+  // pedimos a versão escalada ao período escolhido, sem tocar no pai.
+  const [rangeBilling, setRangeBilling] = useState(null)
+  const [rangeFunnel, setRangeFunnel] = useState(null)
+  useEffect(() => {
+    let cancelled = false
+    const since = days >= 9999 ? new Date(2020, 0, 1).toISOString() : new Date(now - days * 86400000).toISOString()
+    Promise.all([
+      supabase.rpc('admin_get_billing_summary', { p_since: since }),
+      supabase.rpc('admin_get_funnel_summary', { p_since: since }),
+    ]).then(([b, f]) => {
+      if (cancelled) return
+      setRangeBilling(b.data || [])
+      setRangeFunnel(f.data || [])
+    })
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [days])
+
   const billingMap = {}
-  ;(billingSummary || []).forEach(row => { billingMap[row.event] = row })
-  const newSubsThisMonth = billingMap.subscription_started?.count || 0
-  const churnedThisMonth = billingMap.subscription_churned?.count || 0
-  const revenueThisMonth = (billingMap.payment_succeeded?.total_amount_cents || 0) / 100
+  ;(rangeBilling ?? billingSummary ?? []).forEach(row => { billingMap[row.event] = row })
+  const newSubsInRange = billingMap.subscription_started?.count || 0
+  const churnedInRange = billingMap.subscription_churned?.count || 0
+  const revenueInRange = (billingMap.payment_succeeded?.total_amount_cents || 0) / 100
 
   // Quem bateu mesmo num limite de IA este mês (dados reais de ai_usage, não
   // estimativa) — e o funil desde aí até ao início do checkout. Com uma base
@@ -548,8 +569,9 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
     id, features, user: usersById.get(id),
   }))
 
+  const funnelSource = rangeFunnel ?? funnelSummary ?? []
   const funnelMap = {}
-  ;(funnelSummary || []).forEach(row => { funnelMap[row.event] = (funnelMap[row.event] || 0) + Number(row.count) })
+  ;(funnelSource).forEach(row => { funnelMap[row.event] = (funnelMap[row.event] || 0) + Number(row.count) })
   const nudgeShown = funnelMap.nudge_shown || 0
   const nudgeClicked = funnelMap.nudge_clicked || 0
   const checkoutStarted = funnelMap.checkout_started || 0
@@ -567,7 +589,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
   const projectShared = funnelMap.project_shared || 0
   const exploreViewed = funnelMap.explore_viewed || 0
   const projectOpenedByFeature = {}
-  ;(funnelSummary || []).forEach(row => {
+  ;(funnelSource).forEach(row => {
     if (row.event === 'project_opened') projectOpenedByFeature[row.feature] = (projectOpenedByFeature[row.feature] || 0) + Number(row.count)
   })
   const projectOpenedOwn = projectOpenedByFeature.own || 0
@@ -702,28 +724,84 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
     navigator.clipboard.writeText(md)
   }
 
+  // Uma frase só, usada em todos os títulos que dependem do período, para
+  // o seletor do topo parecer mesmo ligado a tudo o que diz "no período":
+  // antes cada bloco tinha a sua própria etiqueta fixa ("mês atual"),
+  // nunca mudava com o seletor, e parecia partido.
+  const periodLabel = range.id === 'all' ? 'em todo o histórico' : `nos últimos ${range.label}`
+
   return (
     <div>
-      {/* Stats row: estado atual, não depende do seletor de período (esse
-          só controla os gráficos e o resumo abaixo). Juntar os dois dava a
-          ideia de que mudar "90 dias" mudava estes números, e não mudava:
-          "Utilizadores", "Assinantes", "MRR" são sempre o total/estado de
-          agora, só as etiquetas "semana"/"mês" eram sempre fixas. */}
-      <h3 style={{ margin: '0 0 2px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Visão geral · agora</h3>
-      <p style={{ margin: '0 0 14px', fontSize: 11, color: C.subtle }}>Estado atual da conta, independente do período escolhido abaixo.</p>
+      {/* Período: o ÚNICO seletor da página, controla tudo o que abaixo diz
+          "no período": funis, engagement, negócio, gráficos e o resumo
+          exportado. Só a secção "agora" (estado atual da conta) fica de
+          fora, e diz isso explicitamente no seu próprio título. */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Período</span>
+          <div style={{ display: 'flex', gap: 4 }}>
+            {TIME_RANGES.map(r => (
+              <button
+                key={r.id}
+                onClick={() => setRange(r)}
+                style={{
+                  padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600,
+                  fontFamily: 'inherit', cursor: 'pointer', border: 'none',
+                  background: range.id === r.id ? C.blue : C.bgAlt,
+                  color: range.id === r.id ? '#fff' : C.muted,
+                  transition: 'all 0.15s',
+                }}
+              >{r.label}</button>
+            ))}
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button onClick={handleCopySummary} style={{ padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', border: `1px solid ${C.border}`, background: 'transparent', color: C.muted }}>
+            Copiar resumo
+          </button>
+          <button onClick={handleExport} style={{ padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', border: `1px solid ${C.border}`, background: 'transparent', color: C.muted }}>
+            Exportar .md
+          </button>
+        </div>
+      </div>
+
+      {/* Hero: os 4 números que respondem "como vai o negócio" sem teres
+          de ler mais nada. Maiores que os restantes de propósito, para
+          não competirem visualmente com dados secundários. */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 28 }}>
+        {[
+          { label: 'Utilizadores', value: totalUsers, color: C.blue, sub: `+${newUsersMonth} no último mês` },
+          { label: `Ativos ${periodLabel}`, value: activityStats?.active_range?.length ?? activeThisMonth, color: C.green, sub: `${activityStats?.sessions_range ?? 0} sessões` },
+          { label: 'MRR real', value: `€${mrrEstimate.toFixed(2)}`, color: mrrEstimate > 0 ? C.green : C.muted, sub: `${paidUsers} assinante${paidUsers === 1 ? '' : 's'} a pagar via Stripe` },
+          { label: 'Retenção mensal', value: `${retentionRate}%`, color: retentionRate > 30 ? C.green : retentionRate > 10 ? C.yellow : C.red, sub: `${priorUsersReturned}/${priorUsersCount} de quem já cá estava` },
+        ].map(k => (
+          <div key={k.label} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 14, padding: '20px 22px' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>{k.label}</div>
+            <div style={{ fontSize: 34, fontWeight: 400, color: k.color, letterSpacing: '-0.5px', lineHeight: 1, fontFamily: 'var(--font-heading)' }}>{k.value}</div>
+            <div style={{ fontSize: 12, color: C.subtle, marginTop: 6 }}>{k.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      <h3 style={{ margin: '0 0 2px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Crescimento · agora</h3>
+      <p style={{ margin: '0 0 14px', fontSize: 11, color: C.subtle }}>Estado atual da conta. Não muda com o período acima, é sempre "agora".</p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))', gap: 14, marginBottom: 24 }}>
         <StatCard icon={<User size={20} />} label="Utilizadores" value={totalUsers} color={C.blue} sub={`+${newUsersWeek} semana · +${newUsersMonth} mês`} />
         <StatCard icon={<Folder size={20} />} label="Projetos" value={totalProjects} color={C.green} sub={`+${newThisWeek} semana · ${usersWithoutProjects} sem projeto`} />
         <StatCard icon={<BarChart2 size={20} />} label="Ativos (semana)" value={activeThisWeek} color={activeThisWeek > 0 ? C.green : C.red} sub={`${activeThisMonth} mês · ${neverActive} nunca`} />
-        <StatCard icon={<Star size={20} />} label="Retenção mensal" value={`${retentionRate}%`} color={retentionRate > 30 ? C.green : retentionRate > 10 ? C.yellow : C.red} sub={`${priorUsersReturned}/${priorUsersCount} de quem já cá estava`} />
         <StatCard icon={<Star size={20} />} label="Score médio" value={avgScore} color={C.yellow} sub={`${scores.length} com score`} />
-        <StatCard icon={<Star size={20} />} label="Assinantes reais" value={paidUsers} color={paidUsers > 0 ? C.green : C.muted} sub={`${realPlusCount} Plus · ${realProCount} Pro · pagam via Stripe`} onClick={paidUsers > 0 ? () => setShowSubscribers(o => !o) : undefined} />
-        <StatCard icon={<Star size={20} />} label="MRR real" value={`€${mrrEstimate.toFixed(2)}`} color={mrrEstimate > 0 ? C.green : C.muted} sub="Só assinantes Stripe, preço de lista" />
-        <StatCard icon={<Star size={20} />} label="Acesso Plus/Pro oferecido" value={grantedUsers} color={C.purple} sub="Professores e ofertas manuais, sem Stripe" />
         <StatCard icon={<School size={20} />} label="Alunos de escola" value={planCounts.school + planCounts.school_pro} color={C.purple} sub={`${planCounts.school} Escola Plus · ${planCounts.school_pro} Escola Pro`} />
-        <StatCard icon={<Star size={20} />} label="Subscrições novas" value={newSubsThisMonth} color={newSubsThisMonth > 0 ? C.green : C.muted} sub="Este mês" />
-        <StatCard icon={<Star size={20} />} label="Cancelamentos" value={churnedThisMonth} color={churnedThisMonth > 0 ? C.red : C.muted} sub="Este mês" />
-        <StatCard icon={<Star size={20} />} label="Receita cobrada" value={`€${revenueThisMonth.toFixed(2)}`} color={revenueThisMonth > 0 ? C.green : C.muted} sub="Faturas pagas este mês" />
+      </div>
+
+      <h3 style={{ margin: '0 0 2px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Negócio {periodLabel}</h3>
+      <p style={{ margin: '0 0 14px', fontSize: 11, color: C.subtle }}>Assinantes e MRR são sempre "agora" (quem paga neste preciso momento); as restantes seguem o período escolhido acima.</p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))', gap: 14, marginBottom: 24 }}>
+        <StatCard icon={<Star size={20} />} label="Assinantes reais" value={paidUsers} color={paidUsers > 0 ? C.green : C.muted} sub={`${realPlusCount} Plus · ${realProCount} Pro · pagam via Stripe`} onClick={paidUsers > 0 ? () => setShowSubscribers(o => !o) : undefined} />
+        <StatCard icon={<Star size={20} />} label="MRR real" value={`€${mrrEstimate.toFixed(2)}`} color={mrrEstimate > 0 ? C.green : C.muted} sub="Preço de lista, sem promoções" />
+        <StatCard icon={<Star size={20} />} label="Acesso Plus/Pro oferecido" value={grantedUsers} color={C.purple} sub="Professores e ofertas manuais, sem Stripe" />
+        <StatCard icon={<Star size={20} />} label="Subscrições novas" value={newSubsInRange} color={newSubsInRange > 0 ? C.green : C.muted} sub={periodLabel} />
+        <StatCard icon={<Star size={20} />} label="Cancelamentos" value={churnedInRange} color={churnedInRange > 0 ? C.red : C.muted} sub={periodLabel} />
+        <StatCard icon={<Star size={20} />} label="Receita cobrada" value={`€${revenueInRange.toFixed(2)}`} color={revenueInRange > 0 ? C.green : C.muted} sub={`Faturas pagas ${periodLabel}`} />
       </div>
 
       {showSubscribers && realSubscribers.length > 0 && (
@@ -742,7 +820,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
 
       {/* Funil de conversão */}
       <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px', marginBottom: 24 }}>
-        <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Funil de conversão · mês atual</h3>
+        <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Funil de conversão {periodLabel}</h3>
         <p style={{ margin: '0 0 18px', fontSize: 11, color: C.subtle }}>Do limite atingido ao início do checkout — dados reais, não estimativa. A % é a taxa de passagem entre passos.</p>
         <FunnelFlow steps={[
           { label: 'Bateram num limite', value: usersAtLimit, onClick: usersAtLimit > 0 ? () => setShowLimitUsers(o => !o) : undefined, icon: <AlertTriangle size={14} />, color: C.red },
@@ -778,7 +856,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
 
       {/* Funil até ao primeiro projeto */}
       <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px', marginBottom: 24 }}>
-        <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Funil até ao primeiro projeto · mês atual</h3>
+        <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Funil até ao primeiro projeto {periodLabel}</h3>
         <p style={{ margin: '0 0 18px', fontSize: 11, color: C.subtle }}>Onde as pessoas desistem entre entrar em "Criar projeto" e teres mesmo um projeto criado. Começou a registar agora, os números só ficam úteis daqui a uns dias.</p>
         <FunnelFlow steps={[
           { label: 'Viram "Criar projeto"', value: novoViewed, icon: <Folder size={14} />, color: C.yellow },
@@ -791,7 +869,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
           Sem isto, alguém com o separador aberto sem fazer nada aparecia
           igual a alguém a usar a app a sério. */}
       <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px', marginBottom: 24 }}>
-        <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Engagement · mês atual</h3>
+        <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Engagement {periodLabel}</h3>
         <p style={{ margin: '0 0 18px', fontSize: 11, color: C.subtle }}>Ações reais depois do login, não logins em si. Um separador aberto sem fazer nada não conta aqui.</p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))', gap: 14 }}>
           <StatCard icon={<BarChart2 size={20} />} label="Abriram o dashboard" value={dashboardViewed} color={C.blue} />
@@ -800,38 +878,6 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
           <StatCard icon={<HelpCircle size={20} />} label="Usaram o Coach IA" value={coachMessageSent} color={C.purple} />
           <StatCard icon={<Copy size={20} />} label="Partilharam o link" value={projectShared} color={projectShared > 0 ? C.green : C.muted} />
           <StatCard icon={<Search size={20} />} label="Navegaram o Explorar" value={exploreViewed} color={C.blue} />
-        </div>
-      </div>
-
-      {/* Período + export: só afeta os gráficos abaixo e o resumo
-          exportado, nunca a "Visão geral · agora" nem o "Engagement" acima,
-          que são sempre o estado atual. */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, flexWrap: 'wrap', gap: 8 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Período dos gráficos</span>
-          <div style={{ display: 'flex', gap: 4 }}>
-            {TIME_RANGES.map(r => (
-              <button
-                key={r.id}
-                onClick={() => setRange(r)}
-                style={{
-                  padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600,
-                  fontFamily: 'inherit', cursor: 'pointer', border: 'none',
-                  background: range.id === r.id ? C.blue : C.bgAlt,
-                  color: range.id === r.id ? '#fff' : C.muted,
-                  transition: 'all 0.15s',
-                }}
-              >{r.label}</button>
-            ))}
-          </div>
-        </div>
-        <div style={{ display: 'flex', gap: 6 }}>
-          <button onClick={handleCopySummary} style={{ padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', border: `1px solid ${C.border}`, background: 'transparent', color: C.muted }}>
-            Copiar resumo
-          </button>
-          <button onClick={handleExport} style={{ padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', border: `1px solid ${C.border}`, background: 'transparent', color: C.muted }}>
-            Exportar .md
-          </button>
         </div>
       </div>
 
