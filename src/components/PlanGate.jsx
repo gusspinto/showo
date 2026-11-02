@@ -86,13 +86,11 @@ function DefensePreview() {
   )
 }
 
-// Redesenhado a seguir à skill da marca (visual-brand-showo): a versão
-// anterior usava uma paleta própria (#03060d, #1a60c8, #f0a500...) que não é
-// a da marca (#1C2333/#3B82F6/branco/preto), e tinha 5 elementos visuais a
-// competir (cabeçalho, 3 caixas de números, citação, linha da defesa) acima
-// do limite de 3 da skill. Agora: cabeçalho, número em destaque + estatística
-// inline, excerto do diário. 3 elementos, cores da marca, mensagem legível
-// em 2 segundos.
+// Segunda volta (a primeira ainda tinha 2 mensagens ao mesmo tempo: os
+// números de atividade E o excerto do diário, 5 linhas de texto a competir
+// mesmo dentro de "3 elementos"). O cartão da sidebar (WeeklyRecapTeaser) já
+// mostra os números; o que só este preview mostra é o excerto em si, a prova
+// mais forte que existe. Fica só essa uma ideia: cabeçalho + excerto.
 function RecapPreview() {
   return (
     <div>
@@ -104,18 +102,12 @@ function RecapPreview() {
           <span style={{ width: 20, height: 20, borderRadius: 6, background: '#3B82F6', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 9.5, fontWeight: 800 }}>S</span>
           <span style={{ fontSize: 9.5, color: 'rgba(255,255,255,0.5)' }}>Showo · hello@showo.pt</span>
         </div>
-        <p style={{ margin: '0 0 3px', color: '#fff', fontSize: 16, lineHeight: 1.25, fontWeight: 700 }}>5 registos esta semana</p>
-        <p style={{ margin: '0 0 12px', color: 'rgba(255,255,255,0.55)', fontSize: 11 }}>
-          4 dias ativos · 3ª semana seguida
-        </p>
         {/* Mesma escolha do email real (pickHighlight em send-weekly-recap):
             excerto real do diário, não um testemunho inventado. */}
-        <div style={{ borderLeft: '2px solid #3B82F6', padding: '1px 0 1px 10px' }}>
-          <p style={{ margin: '0 0 2px', color: 'rgba(255,255,255,0.5)', fontSize: 9.5 }}>Decisão em DragBuild</p>
-          <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)', fontSize: 11.5, lineHeight: 1.45 }}>
-            Decidi simplificar o fluxo depois de testar com duas pessoas que acharam confuso.
-          </p>
-        </div>
+        <p style={{ margin: '0 0 4px', color: 'rgba(255,255,255,0.5)', fontSize: 9.5, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Decisão em DragBuild</p>
+        <p style={{ margin: 0, color: '#fff', fontSize: 13, lineHeight: 1.5 }}>
+          Decidi simplificar o fluxo depois de testar com duas pessoas que acharam confuso.
+        </p>
       </div>
     </div>
   )
