@@ -1375,7 +1375,11 @@ function FinanceTab() {
   const custoIA = Number(data.ai_cost_usd || 0) * USD_EUR
   const custoFixo = Number(data.fixed_cost_eur || 0)
   const resultado = receita - custoIA - custoFixo
-  const mrr = Number(data.paying_plus || 0) * 4.99 + Number(data.paying_pro || 0) * 9.99
+  // Mesmo bug do MRR do Overview: preços hardcoded (4,99/9,99) desatualizados
+  // em relação aos reais (8,99/17,99, ver src/lib/plans.js). Lido de getPlan.
+  const plusPrice = parseFloat(getPlan('plus').priceLabel.replace('€', '').replace(',', '.'))
+  const proPrice = parseFloat(getPlan('pro').priceLabel.replace('€', '').replace(',', '.'))
+  const mrr = Number(data.paying_plus || 0) * plusPrice + Number(data.paying_pro || 0) * proPrice
   const porFeature = Array.isArray(data.ai_by_feature) ? data.ai_by_feature : []
 
   return (
