@@ -97,6 +97,7 @@ const FEATURE_LABELS_PT: Record<string, string> = {
   defenseTraining: 'Treino de defesa',
   coverLetter: 'Carta de apresentação',
   exportPptx: 'Exportar PowerPoint',
+  generateImage: 'Gerar imagens',
 }
 
 const UPGRADE_TARGET: Record<string, { name: string; blurb: string } | null> = {

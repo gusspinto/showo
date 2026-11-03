@@ -14,6 +14,7 @@ export const PLANS = {
       analyzeProject: 15,
       coverLetter: 0,
       exportPptx: 20,
+      generateImage: 0,
     },
     career: {
       internshipPage: false,
@@ -31,7 +32,8 @@ export const PLANS = {
     ai: {
       createProject: 30,
       interviewProject: 30,
-      coach: 300,
+      // Mesma correção do Pro (ver 231): estava em 300, margem negativa.
+      coach: 80,
       defense: 25,
       defenseTraining: 25,
       diaryReport: 10,
@@ -39,6 +41,7 @@ export const PLANS = {
       analyzeProject: 25,
       coverLetter: 25,
       exportPptx: Infinity,
+      generateImage: 15,
     },
     career: {
       internshipPage: true,
@@ -64,6 +67,7 @@ export const PLANS = {
       analyzeProject: 1,
       coverLetter: 0,
       exportPptx: 3,
+      generateImage: 0,
     },
     career: {
       internshipPage: false,
@@ -84,7 +88,12 @@ export const PLANS = {
     ai: {
       createProject: 15,
       interviewProject: 15,
-      coach: 100,
+      // Baixado de 100 para 30 (2026-11-03): no pior caso de custo real por
+      // mensagem já visto ($0,068), 100 mensagens sozinhas quase esgotavam
+      // toda a margem do preço do Plus. 30 fecha ~79% de margem no caso
+      // médio e ~55% no pior caso, e é 3x o limite do Grátis (10), proporção
+      // que se vende melhor do que um salto pequeno.
+      coach: 30,
       defense: 10,
       defenseTraining: 5,
       diaryReport: 5,
@@ -92,6 +101,9 @@ export const PLANS = {
       analyzeProject: 10,
       coverLetter: 5,
       exportPptx: 15,
+      // Imagens (capas de projeto): limite calculado com margem real a
+      // ~$0,011/imagem (GPT Image, tier baixo). Ver migração 230.
+      generateImage: 5,
     },
     career: {
       internshipPage: true,
@@ -112,7 +124,12 @@ export const PLANS = {
     ai: {
       createProject: 30,
       interviewProject: 30,
-      coach: 300,
+      // Baixado de 300 para 80 (2026-11-03): tinha ficado esquecido quando
+      // o do Plus desceu para 30. No pior caso de custo real por mensagem
+      // ($0,068), 300 mensagens sozinhas custavam mais do que o preço todo
+      // do plano, margem negativa. 80 fecha ~70% de margem no caso médio
+      // e ~39% no pior caso. Ver migração 231.
+      coach: 80,
       defense: 25,
       defenseTraining: 25,
       diaryReport: 10,
@@ -120,6 +137,7 @@ export const PLANS = {
       analyzeProject: 25,
       coverLetter: 25,
       exportPptx: Infinity,
+      generateImage: 15,
     },
     career: {
       internshipPage: true,
@@ -249,6 +267,7 @@ export const AI_FEATURE_LABELS = {
   defenseTraining: 'Treino de defesa',
   coverLetter: 'Carta de apresentação',
   exportPptx: 'Exportar PowerPoint',
+  generateImage: 'Gerar imagens',
 }
 
 export const PLAN_GATE_MESSAGES = {
@@ -271,7 +290,7 @@ export const PLAN_GATE_MESSAGES = {
   coach: (plan) => ({
     title: 'Limite do Coach IA atingido',
     body: plan === 'free'
-      ? 'Já usaste as 10 mensagens do Coach este mês. Com o Plus tens 100 por mês — continua exatamente de onde paraste.'
+      ? 'Já usaste as 10 mensagens do Coach este mês. Com o Plus tens 30 por mês, continua exatamente de onde paraste.'
       : `Chegaste ao limite de mensagens do Coach este mês no plano ${getPlan(plan).name}. Faz upgrade para teres mais.`,
   }),
   defense: (plan) => ({
@@ -333,5 +352,11 @@ export const PLAN_GATE_MESSAGES = {
   projectFiles: () => ({
     title: 'Ficheiros do projeto',
     body: 'Anexa PDFs, Word, PowerPoint ou imagens como prova.',
+  }),
+  generateImage: (plan) => ({
+    title: 'Gerar imagens com IA',
+    body: plan === 'free' || plan === 'school'
+      ? 'Gerar imagens com IA está disponível a partir do plano Plus (5 por mês).'
+      : `Já usaste as imagens deste mês no plano ${getPlan(plan).name}. Faz upgrade para teres mais.`,
   }),
 }

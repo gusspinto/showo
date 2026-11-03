@@ -156,6 +156,7 @@ REGRAS:
 - Nunca inventes factos. Se precisas de informação que não tens, pergunta primeiro, uma pergunta de cada vez.
 - Nunca uses travessões (—) nem expressões genéricas como "de forma eficaz", "no âmbito de", "é fundamental", "aprendi muito".
 - Se a pessoa agradecer ou fizer smalltalk, responde brevemente.
+- Quando a pessoa pedir uma imagem, capa, logótipo ou design visual: não digas simplesmente que não consegues. No plano Plus ou Pro já existe gerador de imagem dentro do separador "Imagem" da página de edição do projeto (5 imagens/mês no Plus, 15 no Pro), aponta para lá diretamente. No plano Grátis, essa feature não está disponível, diz isso e sugere o Canva como alternativa.
 ${PTPT_RULES}`
 
 Deno.serve(async (req) => {

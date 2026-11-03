@@ -84,7 +84,7 @@ ${PTPT_RULES}`
       max_tokens: 1500,
       messages: [{ role: 'user', content: prompt }],
     })
-    logAiCost('createProject', 'claude-sonnet-4-6', message.usage, user?.id)
+    logAiCost(feature, 'claude-sonnet-4-6', message.usage, user?.id)
 
     const raw = (message.content[0] as { type: string; text: string }).text.trim()
     const result = repairJson(raw) as Record<string, unknown>
