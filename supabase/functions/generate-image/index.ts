@@ -103,7 +103,26 @@ Deno.serve(async (req) => {
       cost_usd: costUsd,
     })
 
-    return new Response(JSON.stringify({ image_b64: b64 }), {
+    // Grava sempre no historico (generated_images, migração 234), mesmo que
+    // a pessoa nunca a use como capa. Antes disto, gerar e só descarregar
+    // ou copiar perdia a imagem para sempre ao sair da página.
+    let imageUrl: string | null = null
+    try {
+      const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0))
+      const path = `generated/${user.id}/${Date.now()}.png`
+      const { error: upErr } = await supabase.storage.from('covers').upload(path, bytes, { contentType: 'image/png', upsert: true })
+      if (!upErr) {
+        const { data: pub } = supabase.storage.from('covers').getPublicUrl(path)
+        imageUrl = pub.publicUrl
+        await supabase.from('generated_images').insert({ user_id: user.id, prompt: safePrompt, image_url: imageUrl })
+      } else {
+        console.error('[generate-image] upload para historico falhou:', upErr.message)
+      }
+    } catch (e) {
+      console.error('[generate-image] erro a gravar historico:', e)
+    }
+
+    return new Response(JSON.stringify({ image_b64: b64, image_url: imageUrl }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (err) {

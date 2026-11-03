@@ -583,6 +583,11 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
   const [rangeFunnel, setRangeFunnel] = useState(null)
   const [projectShares, setProjectShares] = useState(null)
   const [showShares, setShowShares] = useState(false)
+  // Detalhe por pessoa de quem iniciou checkout (admin_get_checkout_funnel,
+  // migração 233), separado do "nudge" do Dashboard porque são dois
+  // mecanismos diferentes, nunca deviam ter aparecido no mesmo funil.
+  const [checkoutFunnel, setCheckoutFunnel] = useState(null)
+  const [showCheckoutUsers, setShowCheckoutUsers] = useState(false)
   useEffect(() => {
     let cancelled = false
     const since = days >= 9999 ? new Date(2020, 0, 1).toISOString() : new Date(now - days * 86400000).toISOString()
@@ -590,11 +595,13 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
       supabase.rpc('admin_get_billing_summary', { p_since: since }),
       supabase.rpc('admin_get_funnel_summary', { p_since: since }),
       supabase.rpc('admin_get_project_shares', { p_since: since }),
-    ]).then(([b, f, s]) => {
+      supabase.rpc('admin_get_checkout_funnel', { p_since: since }),
+    ]).then(([b, f, s, c]) => {
       if (cancelled) return
       setRangeBilling(b.data || [])
       setRangeFunnel(f.data || [])
       setProjectShares(s.data || [])
+      setCheckoutFunnel(c.data || [])
     })
     return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1058,14 +1065,27 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
         </div>
       )}
 
+      {/* Dois blocos, não um "funil" só: "Viram/clicaram no nudge" (banner
+          do Dashboard, LimitNudgeBanner) e "Bateram num limite → checkout"
+          (PlanGateModal, disparado em qualquer feature) são dois mecanismos
+          independentes. Mostrá-los lado a lado como passos 1→2→3→4 dava
+          números sem ligação real entre si (ex: 0 cliques no nudge e 37
+          checkouts no mesmo período), confuso, apontado pelo Gustavo. */}
       <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px' }}>
-        <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Funil de conversão {periodLabel}</h3>
-        <p style={{ margin: '0 0 18px', fontSize: 11, color: C.subtle }}>Do limite atingido ao início do checkout — dados reais, não estimativa. A % é a taxa de passagem entre passos.</p>
+        <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Nudge do Dashboard {periodLabel}</h3>
+        <p style={{ margin: '0 0 18px', fontSize: 11, color: C.subtle }}>O banner leve que aparece no Dashboard a quem está perto do limite. A % é a taxa de passagem entre passos.</p>
         <FunnelFlow steps={[
-          { label: 'Bateram num limite', value: usersAtLimit, onClick: usersAtLimit > 0 ? () => setShowLimitUsers(o => !o) : undefined, icon: <AlertTriangle size={14} />, color: C.red },
           { label: 'Viram o nudge', value: nudgeShown, icon: <Megaphone size={14} />, color: C.yellow },
           { label: 'Clicaram no nudge', value: nudgeClicked, icon: <Check size={14} />, color: C.blue },
-          { label: 'Iniciaram checkout', value: checkoutStarted, icon: <Star size={14} />, color: C.green },
+        ]} />
+      </div>
+
+      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px' }}>
+        <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Limite atingido → checkout {periodLabel}</h3>
+        <p style={{ margin: '0 0 18px', fontSize: 11, color: C.subtle }}>Do limite atingido em qualquer feature ao início do checkout (modal de upgrade), dados reais, não estimativa.</p>
+        <FunnelFlow steps={[
+          { label: 'Bateram num limite', value: usersAtLimit, onClick: usersAtLimit > 0 ? () => setShowLimitUsers(o => !o) : undefined, icon: <AlertTriangle size={14} />, color: C.red },
+          { label: 'Iniciaram checkout', value: checkoutStarted, onClick: checkoutStarted > 0 ? () => setShowCheckoutUsers(o => !o) : undefined, icon: <Star size={14} />, color: C.green },
         ]} />
         {showLimitUsers && usersAtLimitList.length > 0 && (
           <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -1088,6 +1108,26 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
               <span key={f} style={{ fontSize: 11, padding: '3px 9px', borderRadius: 99, background: C.bgAlt, color: C.muted }}>
                 {AI_FEATURE_LABELS[f] || f}: {n}
               </span>
+            ))}
+          </div>
+        )}
+        {showCheckoutUsers && (checkoutFunnel || []).length > 0 && (
+          <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: C.subtle, textTransform: 'uppercase', letterSpacing: 0.5 }}>Quem iniciou checkout</span>
+            {checkoutFunnel.map((row, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12.5 }}>
+                <Avatar name={row.full_name || row.username || '?'} size={22} />
+                <span style={{ fontWeight: 600, color: C.text }}>{row.full_name || row.username || 'Utilizador removido'}</span>
+                <span style={{ color: C.subtle, fontSize: 11 }}>{AI_FEATURE_LABELS[row.feature] || row.feature || '—'}</span>
+                <span style={{ color: C.subtle, fontSize: 11 }}>{new Date(row.created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}</span>
+                <span style={{
+                  marginLeft: 'auto', fontSize: 10.5, fontWeight: 700, padding: '3px 9px', borderRadius: 99,
+                  background: row.completed ? 'var(--color-success-subtle, rgba(34,197,94,0.15))' : C.bgAlt,
+                  color: row.completed ? 'var(--color-success, #22c55e)' : C.muted,
+                }}>
+                  {row.completed ? 'Pagou' : 'Não completou'}
+                </span>
+              </div>
             ))}
           </div>
         )}

@@ -840,7 +840,7 @@ export default function App() {
               <Route path="/biblioteca"    element={<Biblioteca />}  />
               <Route path="/vagas"         element={<Vagas />}       />
               <Route path="/coach"         element={<Coach />}       />
-              <Route path="/imagem"        element={<GenerateImage />} />
+              <Route path="/imagens"       element={<GenerateImage />} />
               <Route path="/pipeline"      element={<Pipeline />}    />
               <Route path="/settings"      element={<Settings />}    />
               <Route path="/u/:username"   element={<UserProfile />} />

@@ -43,7 +43,7 @@ REGRAS:
 - Nunca inventes factos sobre o projeto. Se precisas de informação que não está acima, pergunta primeiro, uma pergunta de cada vez.
 - Nunca uses travessões (—) nem expressões genéricas como "de forma eficaz", "no âmbito de", "é fundamental", "aprendi muito".
 - Se a pessoa agradecer ou fizer smalltalk, responde brevemente e redireciona para o projeto.
-- Quando a pessoa pedir uma imagem, capa, logótipo ou design visual: não digas simplesmente que não consegues. No plano Plus ou Pro já existe gerador de imagem, acessível direto no separador "Imagem" da barra lateral (5 imagens/mês no Plus, 15 no Pro); para pôr a imagem gerada como capa deste projeto, é só escolher o projeto certo nesse separador. No plano Grátis, essa feature não está disponível, diz isso e sugere o Canva como alternativa.
+- Quando a pessoa pedir uma imagem, capa, logótipo ou design visual: não digas simplesmente que não consegues. No plano Plus ou Pro já existe gerador de imagem, acessível direto no separador "Imagens" da barra lateral (5 imagens/mês no Plus, 15 no Pro); para pôr a imagem gerada como capa deste projeto, é só escolher o projeto certo nesse separador. No plano Grátis, essa feature não está disponível, diz isso e sugere o Canva como alternativa.
 ${PTPT_RULES}`
 
 Deno.serve(async (req) => {

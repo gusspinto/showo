@@ -1769,8 +1769,8 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   mesma feature (Plus/Pro), sem ser preciso abrir um projeto
                   primeiro. */}
               {user && (
-                <button className={`sb-item${isActive('/imagem') ? ' active' : ''}`} onClick={() => navigate('/imagem')}>
-                  <ImageIcon size={16} />{!collapsed && showLabels && <span>Imagem</span>}
+                <button className={`sb-item${isActive('/imagens') ? ' active' : ''}`} onClick={() => navigate('/imagens')}>
+                  <ImageIcon size={16} />{!collapsed && showLabels && <span>Imagens</span>}
                 </button>
               )}
               {user && (
@@ -2256,8 +2256,8 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                     </button>
                   )}
                   {user && (
-                    <button className={`mob-nav-btn${isActive('/imagem') ? ' active' : ''}`} onClick={() => { navigate('/imagem'); setMenuOpen(false) }}>
-                      <ImageIcon size={18} /> Imagem
+                    <button className={`mob-nav-btn${isActive('/imagens') ? ' active' : ''}`} onClick={() => { navigate('/imagens'); setMenuOpen(false) }}>
+                      <ImageIcon size={18} /> Imagens
                     </button>
                   )}
                   {user && (
