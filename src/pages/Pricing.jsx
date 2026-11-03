@@ -96,6 +96,7 @@ const PLANS = [
           { label: 'Coach IA', value: '30 msgs' },
           { label: 'Toda a IA', value: '5x mais que o Grátis', subitems: ['Criar projeto', 'Entrevista guiada', 'Análise', 'Relatório', 'Narrativa IA'] },
           { label: 'Treino para entrevistas', value: 'novo', tip: 'A IA simula a banca ou o entrevistador, antecipa as perguntas difíceis e sugere respostas. Inclui também uma carta de apresentação gerada a partir do teu trabalho.' },
+          { label: 'Gerar imagens com IA', value: 'novo', tip: 'Descreve a capa ou ilustração que queres e a IA gera-a na hora, pronta a usar no projeto ou a descarregar. 5 imagens por mês.' },
         ],
       },
     ],
@@ -128,8 +129,9 @@ const PLANS = [
         label: 'IA',
         ai: true,
         items: [
-          { label: 'Coach IA', value: '80 msgs' },
+          { label: 'Coach IA', value: '50 msgs' },
           { label: 'Toda a IA', value: 'dobro do Plus', subitems: ['Criar projeto', 'Entrevista guiada', 'Análise', 'Relatório', 'Narrativa IA', 'Treino para entrevistas', 'Carta de apresentação'] },
+          { label: 'Gerar imagens com IA', value: '15/mês', tip: 'Descreve a capa ou ilustração que queres e a IA gera-a na hora, pronta a usar no projeto ou a descarregar.' },
         ],
       },
     ],
@@ -146,7 +148,7 @@ const PLANS = [
 const COMPARE_ROWS = [
   { label: 'Ficheiros de prova', free: false, plus: '250MB', pro: '1GB' },
   { label: 'Projetos', free: '2', plus: '15', pro: 'Ilimitados' },
-  { label: 'Coach IA', free: '10 msgs', plus: '30 msgs', pro: '80 msgs' },
+  { label: 'Coach IA', free: '10 msgs', plus: '30 msgs', pro: '50 msgs' },
   { label: 'Criar projeto com IA', free: '3x', plus: '15x', pro: '30x' },
   { label: 'Entrevista guiada', free: '3x', plus: '15x', pro: '30x' },
   { label: 'Análise de projeto', free: '1x', plus: '10x', pro: '25x' },
