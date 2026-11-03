@@ -213,7 +213,7 @@ export default function EditProject() {
   const { slug } = useParams()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { user, profile } = useAuth()
+  const { user, profile, checkGate, planId } = useAuth()
   const isSchoolAccount = profile?.account_type === 'school'
   const { setExtras } = useSidebar()
   const [project, setProject] = useState(null)
@@ -339,6 +339,52 @@ export default function EditProject() {
 
   function set(key, value) {
     setForm(f => ({ ...f, [key]: value }))
+  }
+
+  // Geração de imagem de capa com IA (Plus/Pro). Reusa o mesmo storage e
+  // fluxo de cover_url do upload manual, só troca a origem do ficheiro.
+  const [genPrompt, setGenPrompt] = useState('')
+  const [generating, setGenerating] = useState(false)
+  const [genError, setGenError] = useState(null)
+  const [genGateMsg, setGenGateMsg] = useState(null)
+  const generateImageGate = checkGate('generateImage')
+
+  function b64ToBlob(b64, mime) {
+    const bin = atob(b64)
+    const bytes = new Uint8Array(bin.length)
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+    return new Blob([bytes], { type: mime })
+  }
+
+  async function handleGenerateImage() {
+    if (!genPrompt.trim()) { setGenError('Descreve o que queres na imagem.'); return }
+    setGenerating(true)
+    setGenError(null)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-image`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({ prompt: genPrompt.trim() }),
+      })
+      const body = await res.json()
+      if (!res.ok) { setGenError(body.error || 'Não foi possível gerar a imagem.'); setGenerating(false); return }
+      set('cover_url', '__uploading__')
+      const blob = b64ToBlob(body.image_b64, 'image/png')
+      const path = `${project.slug}-ia-${Date.now()}.png`
+      const { error: upErr } = await supabase.storage.from('covers').upload(path, blob, { upsert: true, contentType: 'image/png' })
+      if (upErr) throw upErr
+      const { data: { publicUrl } } = supabase.storage.from('covers').getPublicUrl(path)
+      set('cover_url', publicUrl)
+      setGenPrompt('')
+    } catch {
+      set('cover_url', '')
+      setGenError('Não foi possível gerar a imagem. Tenta novamente.')
+    }
+    setGenerating(false)
   }
 
   async function handleCoverImage(e) {
@@ -861,6 +907,52 @@ export default function EditProject() {
                     </div>
                   )}
                   <input ref={coverInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleCoverImage} style={{ display: 'none' }} />
+
+                  <div style={{ marginTop: 20, paddingTop: 20, borderTop: `1px solid ${colors.border}` }}>
+                    <h3 style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 700 }}>Gerar com IA</h3>
+                    {generateImageGate.allowed ? (
+                      <>
+                        <p style={{ margin: '0 0 10px', fontSize: 12, color: colors.muted, lineHeight: 1.5 }}>
+                          Descreve a capa que queres. Tens {generateImageGate.remaining} de {generateImageGate.limit} este mês.
+                        </p>
+                        <textarea
+                          value={genPrompt}
+                          onChange={e => setGenPrompt(e.target.value)}
+                          placeholder="Ex: capa minimalista para um projeto de PAP sobre gestão de tarefas, tons de azul"
+                          rows={3}
+                          disabled={generating}
+                          style={{ ...inputStyle, resize: 'vertical', marginBottom: 10 }}
+                        />
+                        {genError && <p style={{ margin: '0 0 10px', fontSize: 12, color: colors.red }}>{genError}</p>}
+                        <button
+                          type="button"
+                          onClick={handleGenerateImage}
+                          disabled={generating || !genPrompt.trim()}
+                          style={{
+                            padding: '9px 18px', fontSize: 13, fontWeight: 700, fontFamily: 'inherit',
+                            border: 'none', borderRadius: 8, cursor: generating ? 'default' : 'pointer',
+                            background: colors.blue, color: '#fff', opacity: generating || !genPrompt.trim() ? 0.6 : 1,
+                          }}
+                        >{generating ? 'A gerar...' : 'Gerar imagem'}</button>
+                      </>
+                    ) : (
+                      <>
+                        <UpsellGate
+                          feature="generateImage"
+                          title={generateImageGate.message?.title || 'Gerar imagens com IA'}
+                          body={generateImageGate.message?.body}
+                          onUpgrade={() => setGenGateMsg(generateImageGate.message)}
+                        />
+                        {genGateMsg && (
+                          <PlanGateModal
+                            message={genGateMsg}
+                            forcedPlan={planThatUnlocks('generateImage', planId)}
+                            onClose={() => setGenGateMsg(null)}
+                          />
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
               )}
 

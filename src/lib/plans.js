@@ -284,7 +284,7 @@ export const PLAN_GATE_MESSAGES = {
   coach: (plan) => ({
     title: 'Limite do Coach IA atingido',
     body: plan === 'free'
-      ? 'Já usaste as 10 mensagens do Coach este mês. Com o Plus tens 100 por mês — continua exatamente de onde paraste.'
+      ? 'Já usaste as 10 mensagens do Coach este mês. Com o Plus tens 30 por mês, continua exatamente de onde paraste.'
       : `Chegaste ao limite de mensagens do Coach este mês no plano ${getPlan(plan).name}. Faz upgrade para teres mais.`,
   }),
   defense: (plan) => ({
@@ -346,5 +346,11 @@ export const PLAN_GATE_MESSAGES = {
   projectFiles: () => ({
     title: 'Ficheiros do projeto',
     body: 'Anexa PDFs, Word, PowerPoint ou imagens como prova.',
+  }),
+  generateImage: (plan) => ({
+    title: 'Gerar imagens com IA',
+    body: plan === 'free' || plan === 'school'
+      ? 'Gerar imagens com IA está disponível a partir do plano Plus (5 por mês).'
+      : `Já usaste as imagens deste mês no plano ${getPlan(plan).name}. Faz upgrade para teres mais.`,
   }),
 }
