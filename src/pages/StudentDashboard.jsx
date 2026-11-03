@@ -50,6 +50,7 @@ import WeeklyPostCard from '../components/dashboard/WeeklyPostCard'
 import WeeklyRecapTeaser from '../components/dashboard/WeeklyRecapTeaser'
 import LimitNudgeBanner from '../components/dashboard/LimitNudgeBanner'
 import DiaryNudgeBanner from '../components/dashboard/DiaryNudgeBanner'
+import FeaturedWeekBanner from '../components/dashboard/FeaturedWeekBanner'
 import SegmentedTabs from '../components/SegmentedTabs'
 import WeeklyCheckin, { shouldShowCheckin } from '../components/dashboard/WeeklyCheckin'
 import AddReminderModal from '../components/dashboard/AddReminderModal'
@@ -235,6 +236,10 @@ export default function StudentDashboard({ user, profile }) {
   // aparece uma vez na vida da conta, controlado por profiles.featured_popup_seen_at.
   const [featuredProjectIds, setFeaturedProjectIds] = useState(() => new Set())
   const [featuredPopupProject, setFeaturedPopupProject] = useState(null)
+  // Notificação in-app recorrente (diferente do popup acima, que só dispara
+  // uma vez na vida da conta): volta a aparecer em CADA semana nova de
+  // destaque, comparando featured_weeks.week_start com profiles.featured_week_seen.
+  const [featuredWeekNotice, setFeaturedWeekNotice] = useState(null)
   const [composerKind, setComposerKind] = useState(null)
   // A que projeto pertence o "Registar" que está aberto. Sem isto, o
   // composer ficava sempre agarrado a focusFull (o projeto em foco
@@ -340,6 +345,41 @@ export default function StudentDashboard({ user, profile }) {
       }
     })
   }, [projects, profile?.featured_popup_seen_at])
+
+  useEffect(() => {
+    if (!projects.length) return
+    let cancelled = false
+    async function load() {
+      const { data, error } = await supabase
+        .from('featured_weeks')
+        .select('project_id, week_start')
+        .order('week_start', { ascending: false })
+        .limit(1)
+      if (cancelled || error || !data?.length) return
+      const latestWeek = data[0].week_start
+      const { data: rows } = await supabase
+        .from('featured_weeks')
+        .select('project_id')
+        .eq('week_start', latestWeek)
+      if (cancelled || !rows) return
+      const myIds = new Set(projects.map(p => p.id))
+      const mine = rows.filter(r => myIds.has(r.project_id))
+      if (mine.length && profile?.featured_week_seen !== latestWeek) {
+        const proj = projects.find(p => p.id === mine[0].project_id)
+        setFeaturedWeekNotice({ weekStart: latestWeek, projectName: proj?.name || 'projeto' })
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [projects, profile?.featured_week_seen])
+
+  async function markFeaturedWeekSeen() {
+    if (!user?.id || !featuredWeekNotice) return
+    const weekStart = featuredWeekNotice.weekStart
+    setFeaturedWeekNotice(null)
+    await supabase.from('profiles').update({ featured_week_seen: weekStart }).eq('id', user.id)
+    refreshProfile?.()
+  }
 
   async function markFeaturedPopupSeen() {
     if (!user?.id || profile?.featured_popup_seen_at) return
@@ -1105,6 +1145,13 @@ export default function StudentDashboard({ user, profile }) {
                   logFunnelEvent('nudge_clicked', nudgeSignal.feature)
                   setShowUpgradeModal(nudgeSignal.feature)
                 }}
+              />
+            )}
+
+            {featuredWeekNotice && (
+              <FeaturedWeekBanner
+                projectName={featuredWeekNotice.projectName}
+                onDismiss={markFeaturedWeekSeen}
               />
             )}
 
