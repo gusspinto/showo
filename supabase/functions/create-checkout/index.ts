@@ -109,6 +109,10 @@ Deno.serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
+      // locale 'pt' = português europeu no Stripe. Sem isto o checkout
+      // saía em português do Brasil ("você", "se inscrever") por deteção
+      // automática errada, confirmado numa screenshot real de teste.
+      locale: 'pt',
       // discounts e allow_promotion_codes não podem ir os dois ao mesmo
       // tempo (o Stripe recusa). Com desconto encontrado, aplica-se
       // sozinho; sem desconto, deixa a pessoa escrever um código à mão.
