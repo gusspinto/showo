@@ -84,7 +84,11 @@ export const PLANS = {
     ai: {
       createProject: 15,
       interviewProject: 15,
-      coach: 100,
+      // Baixado de 100 para 20 (2026-11-03): no pior caso de custo real por
+      // mensagem já visto ($0,068), 100 mensagens sozinhas quase esgotavam
+      // toda a margem do preço do Plus. 20 fecha os 80% de margem pedidos,
+      // calculado com custos médios reais, não só o pior caso.
+      coach: 20,
       defense: 10,
       defenseTraining: 5,
       diaryReport: 5,
