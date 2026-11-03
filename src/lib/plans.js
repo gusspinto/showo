@@ -78,6 +78,7 @@ export const PLANS = {
     id: 'plus',
     name: 'Plus',
     priceLabel: '€8,99',
+    priceLabelDiscounted: '€4,49',
     priceLabelAnnual: '€89,90',
     period: '/mês',
     maxProjects: 15,
@@ -106,6 +107,7 @@ export const PLANS = {
     id: 'pro',
     name: 'Pro',
     priceLabel: '€17,99',
+    priceLabelDiscounted: '€8,99',
     priceLabelAnnual: '€179,90',
     period: '/mês',
     maxProjects: Infinity,
@@ -235,6 +237,11 @@ export function planHighlights(fromPlanId, toPlan) {
 // visível no próprio preço, em vez de só dita por texto ("2 meses grátis").
 // Mesmo cálculo partilhado pelo pop-up de upgrade (PlanGate) e pela
 // Pricing, para nunca desalinhar entre os dois sítios.
+// Texto da promoção de lançamento (código SHOWO50, aplicado automaticamente
+// no checkout mensal via ONBOARDING_DISCOUNT_CODE). Uma só fonte de verdade
+// para a Pricing e o pop-up de upgrade não desalinharem a data ou o desconto.
+export const ONBOARDING_DISCOUNT_NOTE = '-50% nos primeiros 6 meses · código válido até 18 dez'
+
 export function fullAnnualPrice(monthlyLabel) {
   const n = parseFloat(String(monthlyLabel).replace('€', '').replace(',', '.'))
   if (!Number.isFinite(n)) return null

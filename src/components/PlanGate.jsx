@@ -13,7 +13,7 @@ import { CheckCircleIcon as CheckCircle } from '@solar-icons/react/bold/check-ci
 import { LikeIcon as ThumbUp } from '@solar-icons/react/bold/like'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { getPlan, nextPaidPlan, planHighlights, fullAnnualPrice } from '../lib/plans'
+import { getPlan, nextPaidPlan, planHighlights, fullAnnualPrice, ONBOARDING_DISCOUNT_NOTE } from '../lib/plans'
 
 // Mapeia a chave que planHighlights() devolve (string, lib/plans.js não sabe
 // de React) para o ícone a mostrar, mesma convenção de ícones que a
@@ -261,6 +261,7 @@ const C = {
     textDecoration: 'line-through', marginRight: '6px',
   },
   upsellPeriod: { fontWeight: 500, fontSize: '0.8rem', color: 'var(--color-text-secondary)' },
+  upsellDiscountNote: { margin: 0, fontSize: '0.74rem', fontWeight: 500, color: 'var(--color-text-secondary)' },
   errorText: { margin: 0, fontSize: '0.78rem', color: 'var(--color-error)' },
   // Invertido (var(--color-text)/var(--color-bg)), não azul — o mesmo botão
   // "cheio" que a Home, o Login e o Registo já usam. O azul fica reservado
@@ -497,16 +498,27 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
                   <div style={C.upsellHead}>
                     <span style={C.upsellName}>{upgrade.name}</span>
                     <span style={C.upsellPrice}>
-                      {/* Preço riscado = mensal × 12, para a poupança do anual
-                          aparecer no próprio preço, não só em texto ("2 meses
-                          grátis"). Substitui a pílula do toggle acima. */}
+                      {/* Preço riscado: mensal × 12 no anual (poupança no
+                          próprio preço, não só em texto "2 meses grátis"),
+                          ou o preço cheio no mensal, com o SHOWO50 por baixo
+                          (aplicado sozinho no checkout, sem a pessoa fazer nada). */}
                       {annual && upgrade.priceLabelAnnual && (
                         <span style={C.upsellPriceOld}>{fullAnnualPrice(upgrade.priceLabel)}</span>
                       )}
-                      {annual && upgrade.priceLabelAnnual ? upgrade.priceLabelAnnual : upgrade.priceLabel}
+                      {!annual && upgrade.priceLabelDiscounted && (
+                        <span style={C.upsellPriceOld}>{upgrade.priceLabel}</span>
+                      )}
+                      {annual && upgrade.priceLabelAnnual
+                        ? upgrade.priceLabelAnnual
+                        : !annual && upgrade.priceLabelDiscounted
+                          ? upgrade.priceLabelDiscounted
+                          : upgrade.priceLabel}
                       <span style={C.upsellPeriod}>{annual && upgrade.priceLabelAnnual ? '/ano' : upgrade.period}</span>
                     </span>
                   </div>
+                  {!annual && upgrade.priceLabelDiscounted && (
+                    <p style={C.upsellDiscountNote}>{ONBOARDING_DISCOUNT_NOTE}</p>
+                  )}
                 </div>
               </div>
 

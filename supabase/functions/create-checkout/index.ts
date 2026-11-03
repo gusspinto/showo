@@ -83,6 +83,24 @@ Deno.serve(async (req) => {
         .eq('id', user.id)
     }
 
+    // Antes disto, o desconto do código de onboarding só aparecia se a
+    // pessoa clicasse em "Adicionar código promocional" e o escrevesse à
+    // mão no checkout. Ninguém fazia isso (confirmado: 0 resgates do
+    // SHOWO50 no Stripe, apesar de estar em todos os emails de onboarding).
+    // Quem vinha de um email a prometer 4,49€ chegava ao checkout sem
+    // desconto nenhum e desistia. Agora aplica-se sozinho, sem a pessoa
+    // fazer nada.
+    const discountCode = Deno.env.get('ONBOARDING_DISCOUNT_CODE')
+    let discounts: Array<{ promotion_code: string }> | undefined
+    if (discountCode) {
+      try {
+        const promos = await stripe.promotionCodes.list({ code: discountCode, active: true, limit: 1 })
+        if (promos.data[0]) discounts = [{ promotion_code: promos.data[0].id }]
+      } catch (e) {
+        console.error('[create-checkout] falha ao procurar código promocional:', e)
+      }
+    }
+
     // Códigos de desconto (promocionais e de embaixadoras) agora valem para
     // mensal e anual. Antes só entravam no mensal — o Stripe só restringe
     // coupons por produto, não por price, e mensal/anual partilham o mesmo
@@ -91,7 +109,10 @@ Deno.serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
-      allow_promotion_codes: true,
+      // discounts e allow_promotion_codes não podem ir os dois ao mesmo
+      // tempo (o Stripe recusa). Com desconto encontrado, aplica-se
+      // sozinho; sem desconto, deixa a pessoa escrever um código à mão.
+      ...(discounts ? { discounts } : { allow_promotion_codes: true }),
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: successUrl,
       cancel_url: cancelUrl,
