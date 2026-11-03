@@ -32,6 +32,12 @@ export default function GenerateImage() {
   const [coverProjectId, setCoverProjectId] = useState('')
   const [usingAsCover, setUsingAsCover] = useState(false)
   const [coverDone, setCoverDone] = useState(false)
+  // Histórico (generated_images, migração 234): o generate-image grava lá
+  // toda a imagem gerada, mesmo que a pessoa só descarregue ou copie, nunca
+  // use como capa, antes disto essa imagem perdia-se ao sair da página.
+  const [history, setHistory] = useState([])
+  const [loadingHistory, setLoadingHistory] = useState(true)
+  const [downloadingId, setDownloadingId] = useState(null)
   const gate = checkGate('generateImage')
 
   useEffect(() => {
@@ -44,6 +50,33 @@ export default function GenerateImage() {
       .order('created_at', { ascending: false })
       .then(({ data }) => setMyProjects(data || []))
   }, [user])
+
+  function loadHistory() {
+    if (!user) return
+    supabase.from('generated_images').select('id, prompt, image_url, created_at').eq('user_id', user.id)
+      .order('created_at', { ascending: false }).limit(30)
+      .then(({ data }) => { setHistory(data || []); setLoadingHistory(false) })
+  }
+  useEffect(loadHistory, [user])
+
+  async function handleDownloadFromHistory(item) {
+    setDownloadingId(item.id)
+    try {
+      const res = await fetch(item.image_url)
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `showo-imagem-${item.id}.png`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+    } catch {
+      setGenError('Não foi possível descarregar esta imagem.')
+    }
+    setDownloadingId(null)
+  }
 
   function b64ToBlob(b64, mime) {
     const bin = atob(b64)
@@ -71,6 +104,7 @@ export default function GenerateImage() {
       if (!res.ok) { setGenError(body.error || 'Não foi possível gerar a imagem.'); setGenerating(false); return }
       const blob = b64ToBlob(body.image_b64, 'image/png')
       setPreview({ blob, url: URL.createObjectURL(blob) })
+      loadHistory()
     } catch {
       setGenError('Não foi possível gerar a imagem. Tenta novamente.')
     }
@@ -235,6 +269,30 @@ export default function GenerateImage() {
                 </div>
               )}
             </>
+          )}
+
+          {!loadingHistory && history.length > 0 && (
+            <div style={{ marginTop: 32, paddingTop: 22, borderTop: `1px solid ${C.border}` }}>
+              <h2 style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 700, color: C.text }}>Imagens anteriores</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10 }}>
+                {history.map(item => (
+                  <div key={item.id} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <img
+                      src={item.image_url}
+                      alt={item.prompt || 'Imagem gerada'}
+                      title={item.prompt || ''}
+                      style={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'cover', borderRadius: 8, border: `1px solid ${C.border}`, display: 'block' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadFromHistory(item)}
+                      disabled={downloadingId === item.id}
+                      style={{ padding: '5px 8px', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', border: `1px solid ${C.border}`, borderRadius: 6, cursor: downloadingId === item.id ? 'default' : 'pointer', background: 'transparent', color: C.muted, opacity: downloadingId === item.id ? 0.6 : 1 }}
+                    >{downloadingId === item.id ? 'A descarregar...' : 'Descarregar'}</button>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </div>
       </div>
