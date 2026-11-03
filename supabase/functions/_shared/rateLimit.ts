@@ -150,7 +150,7 @@ async function notifyLimitExhausted(
     <table border="0" cellspacing="0" cellpadding="0" align="center" style="margin:0 auto 28px;">
       <tr>
         <td align="center" style="background:#4a93f9;border-radius:8px;">
-          <a href="https://showo.pt/pricing" target="_blank" style="display:inline-block;padding:12px 36px;font-family:Arial,sans-serif;font-size:14px;font-weight:700;color:#ffffff;text-decoration:none;">Ver o plano ${target.name}</a>
+          <a href="https://showo.pt/pricing" target="_blank" style="display:inline-block;padding:12px 36px;font-family:Arial,sans-serif;font-size:14px;font-weight:700;color:#ffffff;text-decoration:none;">Continuar sem esperar pelo próximo mês</a>
         </td>
       </tr>
     </table>

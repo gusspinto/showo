@@ -173,7 +173,7 @@ type DayBuilderCtx = {
 
 function buildDay1({ firstName, unsubscribeUrl, hasProject, projectState, code, dia, daysToDefense }: DayBuilderCtx): Built {
   if (projectState === 'incomplete') {
-    const subject = 'O teu projeto está criado, mas falta a parte que conta'
+    const subject = 'Isto falta ao teu projeto antes de o partilhares'
     return {
       subject,
       html: wrapEmail(
@@ -190,7 +190,7 @@ function buildDay1({ firstName, unsubscribeUrl, hasProject, projectState, code, 
     }
   }
   if (!hasProject) {
-    const subject = 'O teu primeiro projeto demora 2 minutos a criar'
+    const subject = 'Em 2 minutos deixas de ter zero projetos'
     return {
       subject,
       html: wrapEmail(
@@ -206,7 +206,7 @@ function buildDay1({ firstName, unsubscribeUrl, hasProject, projectState, code, 
       ),
     }
   }
-  const subject = 'A diferença entre isto e abrir o ChatGPT outra vez'
+  const subject = 'Toda a vez que abres o ChatGPT, começas do zero outra vez'
   return {
     subject,
     html: wrapEmail(
@@ -225,7 +225,7 @@ function buildDay1({ firstName, unsubscribeUrl, hasProject, projectState, code, 
 
 function buildDay2({ firstName, unsubscribeUrl, hasProject, projectState, code, dia, daysToDefense }: DayBuilderCtx): Built {
   if (projectState === 'incomplete') {
-    const subject = 'O que falta para isto deixar de ser um rascunho'
+    const subject = 'Um recrutador vê rascunho onde tu vês trabalho feito'
     return {
       subject,
       html: wrapEmail(
@@ -242,7 +242,7 @@ function buildDay2({ firstName, unsubscribeUrl, hasProject, projectState, code, 
     }
   }
   if (!hasProject) {
-    const subject = 'Não sabes o que mostrar? Nem precisa de estar acabado'
+    const subject = 'O que já tens chega para começar'
     return {
       subject,
       html: wrapEmail(
@@ -258,7 +258,7 @@ function buildDay2({ firstName, unsubscribeUrl, hasProject, projectState, code, 
       ),
     }
   }
-  const subject = 'O teu GitHub também pode contar a história'
+  const subject = 'Os teus commits já são a tua história, falta só ligá-los'
   return {
     subject,
     html: wrapEmail(
@@ -276,7 +276,7 @@ function buildDay2({ firstName, unsubscribeUrl, hasProject, projectState, code, 
 }
 
 function buildDay3({ firstName, unsubscribeUrl, hasProject, projectState, code, dia, daysToDefense }: DayBuilderCtx): Built {
-  const subject = 'Não inventamos números só para parecer impressionante'
+  const subject = 'Rafael e Rita não inventaram isto por nós'
   return {
     subject,
     html: wrapEmail(
@@ -295,7 +295,7 @@ function buildDay3({ firstName, unsubscribeUrl, hasProject, projectState, code, 
 }
 
 function buildDay4({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayBuilderCtx): Built {
-  const subject = 'O detalhe que ninguém mais vai apontar antes de ti'
+  const subject = 'A falha que o júri não devia encontrar primeiro'
   return {
     subject,
     html: wrapEmail(
@@ -312,7 +312,7 @@ function buildDay4({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayB
 }
 
 function buildDay5({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayBuilderCtx): Built {
-  const subject = 'Enquanto uns mostram um projeto parado, tu mostras um a crescer'
+  const subject = 'Um recrutador nota quando um projeto não para de crescer'
   return {
     subject,
     html: wrapEmail(
@@ -329,7 +329,7 @@ function buildDay5({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayB
 }
 
 function buildDay6({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayBuilderCtx): Built {
-  const subject = 'O momento em que ficas sem ninguém a quem perguntar'
+  const subject = 'Aquele momento em que não sabes a quem perguntar'
   return {
     subject,
     html: wrapEmail(
@@ -346,7 +346,7 @@ function buildDay6({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayB
 }
 
 function buildDay7({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayBuilderCtx): Built {
-  const subject = 'Já estás a meio do caminho'
+  const subject = 'Falta menos do que pensas para isto ficar pronto'
   return {
     subject,
     html: wrapEmail(
@@ -494,7 +494,7 @@ function buildDay11({ firstName, unsubscribeUrl, code, dia, daysToDefense, isPro
 }
 
 function buildDay12({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayBuilderCtx): Built {
-  const subject = 'Ainda estás a pensar? É este o momento'
+  const subject = 'A dúvida que tens agora, tinha-la há 2 semanas?'
   return {
     subject,
     html: wrapEmail(
@@ -511,7 +511,7 @@ function buildDay12({ firstName, unsubscribeUrl, code, dia, daysToDefense }: Day
 }
 
 function buildDay13({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayBuilderCtx): Built {
-  const subject = 'Reta final, falta pouco'
+  const subject = 'Amanhã isto já não existe'
   return {
     subject,
     html: wrapEmail(
@@ -527,7 +527,7 @@ function buildDay13({ firstName, unsubscribeUrl, code, dia, daysToDefense }: Day
 }
 
 function buildDay14({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayBuilderCtx): Built {
-  const subject = 'Última chamada'
+  const subject = 'O código expira hoje'
   return {
     subject,
     html: wrapEmail(
