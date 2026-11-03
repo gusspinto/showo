@@ -93,7 +93,7 @@ const PLANS = [
         label: 'IA',
         ai: true,
         items: [
-          { label: 'Coach IA', value: '100 msgs' },
+          { label: 'Coach IA', value: '30 msgs' },
           { label: 'Toda a IA', value: '5x mais que o Grátis', subitems: ['Criar projeto', 'Entrevista guiada', 'Análise', 'Relatório', 'Narrativa IA'] },
           { label: 'Treino para entrevistas', value: 'novo', tip: 'A IA simula a banca ou o entrevistador, antecipa as perguntas difíceis e sugere respostas. Inclui também uma carta de apresentação gerada a partir do teu trabalho.' },
         ],
@@ -145,8 +145,8 @@ const PLANS = [
    uma funcionalidade a mais, não uma quantidade. */
 const COMPARE_ROWS = [
   { label: 'Ficheiros de prova', free: false, plus: '250MB', pro: '1GB' },
-  { label: 'Projetos', free: '3', plus: '15', pro: 'Ilimitados' },
-  { label: 'Coach IA', free: '10 msgs', plus: '100 msgs', pro: '300 msgs' },
+  { label: 'Projetos', free: '2', plus: '15', pro: 'Ilimitados' },
+  { label: 'Coach IA', free: '10 msgs', plus: '30 msgs', pro: '300 msgs' },
   { label: 'Criar projeto com IA', free: '3x', plus: '15x', pro: '30x' },
   { label: 'Entrevista guiada', free: '3x', plus: '15x', pro: '30x' },
   { label: 'Análise de projeto', free: '1x', plus: '10x', pro: '25x' },
