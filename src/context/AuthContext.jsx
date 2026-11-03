@@ -393,9 +393,9 @@ export function AuthProvider({ children }) {
 
   // Best-effort funnel tracking (nudge shown/clicked, checkout started) —
   // never blocks the UI if it fails, this is purely for the admin funnel view.
-  function logFunnelEvent(event, feature = null) {
+  function logFunnelEvent(event, feature = null, projectId = null) {
     if (!user) return
-    supabase.from('funnel_events').insert({ user_id: user.id, event, feature }).then(() => {})
+    supabase.from('funnel_events').insert({ user_id: user.id, event, feature, project_id: projectId }).then(() => {})
   }
 
   return (

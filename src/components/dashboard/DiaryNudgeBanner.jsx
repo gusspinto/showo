@@ -1,16 +1,18 @@
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { Book2Icon as BookOpen } from '@solar-icons/react/bold/book-2'
+import { weekStartISO } from '../../lib/journal'
 
 /* Faixa que lembra de escrever no diário quando a última entrada real (não
    "auto", essas são geradas pela plataforma, não escritas pela pessoa) tem
    mais de 7 dias. Pedido explícito do Gustavo: in-app, nunca por email,
    porque os emails já foram tentados e não resolveram o problema de 92% dos
    utilizadores só escreverem no dia de criação do projeto (achado desta
-   sessão). Mesmo padrão visual do LimitNudgeBanner, dispensa diária. */
+   sessão). Mesmo padrão visual do LimitNudgeBanner, dispensa semanal (não
+   diária, combinado para não virar ruído: 1x por semana no máximo). */
 
 export default function DiaryNudgeBanner({ projectName, daysSince, onDismiss, onWrite }) {
   function dismiss() {
-    try { localStorage.setItem(`showo_diary_remind_${new Date().toISOString().slice(0, 10)}`, '1') } catch { /* ignore */ }
+    try { localStorage.setItem(`showo_diary_remind_${weekStartISO()}`, '1') } catch { /* ignore */ }
     onDismiss()
   }
 

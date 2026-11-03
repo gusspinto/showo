@@ -58,7 +58,7 @@ import CalendarSyncModal from '../components/dashboard/CalendarSyncModal'
 import '../components/dashboard/MonthCalendar.css'
 import {
   computeReportCoverage, computeWeekStreak, buildWeeklyActivity, computeEngagementSignal,
-  timeAgoLabel, startOfDay,
+  timeAgoLabel, startOfDay, weekStartISO,
 } from '../lib/journal'
 import { pickFocusProject, daysUntil } from '../lib/focusProject'
 import './Dashboard.css'          // modais e toast partilhados (namespace dash-*)
@@ -253,7 +253,7 @@ export default function StudentDashboard({ user, profile }) {
   const [dashTab, setDashTab] = useState('projetos')
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [diaryReminderDismissed, setDiaryReminderDismissed] = useState(
-    () => localStorage.getItem(`showo_diary_remind_${new Date().toISOString().slice(0,10)}`) === '1'
+    () => localStorage.getItem(`showo_diary_remind_${weekStartISO()}`) === '1'
   )
   const [showReport, setShowReport] = useState(false)
   const [showAddReminder, setShowAddReminder] = useState(null)
