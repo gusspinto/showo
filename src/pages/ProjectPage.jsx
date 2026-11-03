@@ -1919,16 +1919,18 @@ export default function ProjectPage() {
   useEffect(() => {
     if (!project) return
     if (authLoading) return
-    if (!user?.id) return
-    // Logged-in users: only real owner skips view count. Token is irrelevant when authenticated.
-    const isOwner = !!(project.user_id && user.id === project.user_id)
+    // Visitantes anónimos (sem conta) também contam agora. Achado desta
+    // sessão: a maioria de quem recebe um link partilhado não tem conta no
+    // Showo, e `if (!user?.id) return` aqui andava a excluir essas visitas
+    // por completo, de sempre. Só o dono real continua a não contar.
+    const isOwner = !!(user?.id && project.user_id && user.id === project.user_id)
     if (isOwner) return
 
     const viewKey = `viewed_${project.slug}`
     if (!sessionStorage.getItem(viewKey)) {
       sessionStorage.setItem(viewKey, '1')
       // keepalive ensures the POST reaches the DB even if the user refreshes immediately
-      fetch(`${supabaseUrl}/rest/v1/rpc/increment_project_views`, {
+      fetch(`${supabaseUrl}/rest/v1/rpc/log_project_view`, {
         method: 'POST',
         keepalive: true,
         headers: {
@@ -1936,7 +1938,7 @@ export default function ProjectPage() {
           apikey: supabaseAnonKey,
           Authorization: `Bearer ${supabaseAnonKey}`,
         },
-        body: JSON.stringify({ project_id: project.id }),
+        body: JSON.stringify({ p_project_id: project.id, p_viewer_id: user?.id ?? null }),
       })
       setProject(prev => prev ? { ...prev, views: (prev.views ?? 0) + 1 } : prev)
     }

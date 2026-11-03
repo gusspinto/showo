@@ -979,7 +979,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
       {showShares && shareRows.length > 0 && (
         <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px', marginBottom: 24 }}>
           <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Partilhas de projetos {periodLabel}</h3>
-          <p style={{ margin: '0 0 14px', fontSize: 11, color: C.subtle }}>Clique real em "copiar link". Não prova que alguém abriu o link, só que a pessoa o copiou.</p>
+          <p style={{ margin: '0 0 14px', fontSize: 11, color: C.subtle }}>"Aberto depois" conta qualquer visita real ao projeto (mesmo sem conta) nos 30 dias a seguir à partilha. Não prova que foi a pessoa a quem o link foi enviado, só que o projeto teve uma visita real depois.</p>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10, marginBottom: 16 }}>
             <StatCard icon={<Copy size={18} />} label="Partilhas" value={shareRows.length} color={C.green} />
@@ -1016,7 +1016,12 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
                 ) : (
                   <span style={{ color: C.muted, fontStyle: 'italic' }}>projeto (anterior ao tracking)</span>
                 )}
-                <span style={{ marginLeft: 'auto', fontSize: 11, color: C.muted }}>{SHARE_CONTEXT_LABELS[r.context] || r.context}</span>
+                {r.project_id && (
+                  <span style={{ fontSize: 10.5, fontWeight: 700, padding: '3px 8px', borderRadius: 100, background: r.opened_after ? `${C.green}22` : `${C.muted}22`, color: r.opened_after ? C.green : C.muted }}>
+                    {r.opened_after ? 'Aberto depois' : 'Sem abertura detetada'}
+                  </span>
+                )}
+                <span style={{ marginLeft: r.project_id ? 0 : 'auto', fontSize: 11, color: C.muted }}>{SHARE_CONTEXT_LABELS[r.context] || r.context}</span>
                 <span style={{ fontSize: 11, color: C.subtle, minWidth: 90, textAlign: 'right' }}>{new Date(r.created_at).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
               </div>
             ))}
