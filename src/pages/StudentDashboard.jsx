@@ -49,6 +49,7 @@ import WeeklyRecap, { shouldShowRecap, RecapsPanel } from '../components/dashboa
 import WeeklyPostCard from '../components/dashboard/WeeklyPostCard'
 import WeeklyRecapTeaser from '../components/dashboard/WeeklyRecapTeaser'
 import LimitNudgeBanner from '../components/dashboard/LimitNudgeBanner'
+import DiaryNudgeBanner from '../components/dashboard/DiaryNudgeBanner'
 import SegmentedTabs from '../components/SegmentedTabs'
 import WeeklyCheckin, { shouldShowCheckin } from '../components/dashboard/WeeklyCheckin'
 import AddReminderModal from '../components/dashboard/AddReminderModal'
@@ -209,6 +210,22 @@ export default function StudentDashboard({ user, profile }) {
   const [nudgeBannerDismissed, setNudgeBannerDismissed] = useState(
     () => !!localStorage.getItem(`showo_nudge_banner_dismissed_${user.id}_${new Date().toISOString().slice(0, 7)}`)
   )
+
+  // Sinal para lembrar de escrever no diário. "auto" são entradas geradas
+  // pela plataforma quando a pessoa preenche uma secção, não contam como
+  // ela ter escrito nada a sério. Se só essas existirem, o alerta conta a
+  // partir da criação do projeto, não da entrada automática.
+  const diaryNudgeSignal = useMemo(() => {
+    if (!focusProject) return null
+    const realEntries = activityEntries.filter(e => e.kind !== 'auto')
+    const lastDate = realEntries.length
+      ? new Date(Math.max(...realEntries.map(e => new Date(e.created_at).getTime())))
+      : focusProject.created_at ? new Date(focusProject.created_at) : null
+    if (!lastDate) return null
+    const daysSince = Math.floor((Date.now() - lastDate.getTime()) / 86400000)
+    if (daysSince < 7) return null
+    return { daysSince, projectName: focusProject.name || 'projeto' }
+  }, [activityEntries, focusProject])
 
   /* ── UI ── */
   const [tutorialPotentialSeen, setTutorialPotentialSeen] = useState(() => !!localStorage.getItem(`showo_tut_potential_${user.id}`))
@@ -1087,6 +1104,19 @@ export default function StudentDashboard({ user, profile }) {
                 onUpgrade={() => {
                   logFunnelEvent('nudge_clicked', nudgeSignal.feature)
                   setShowUpgradeModal(nudgeSignal.feature)
+                }}
+              />
+            )}
+
+            {diaryNudgeSignal && !diaryReminderDismissed && (
+              <DiaryNudgeBanner
+                projectName={diaryNudgeSignal.projectName}
+                daysSince={diaryNudgeSignal.daysSince}
+                onDismiss={() => setDiaryReminderDismissed(true)}
+                onWrite={() => {
+                  logFunnelEvent('diary_nudge_clicked')
+                  setComposerProject(focusFull)
+                  setComposerKind('update')
                 }}
               />
             )}
