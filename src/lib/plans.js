@@ -124,12 +124,14 @@ export const PLANS = {
     ai: {
       createProject: 30,
       interviewProject: 30,
-      // Baixado de 300 para 80 (2026-11-03): tinha ficado esquecido quando
-      // o do Plus desceu para 30. No pior caso de custo real por mensagem
-      // ($0,068), 300 mensagens sozinhas custavam mais do que o preço todo
-      // do plano, margem negativa. 80 fecha ~70% de margem no caso médio
-      // e ~39% no pior caso. Ver migração 231.
-      coach: 80,
+      // Baixado de 300 para 80, depois para 50 (2026-11-03). O cupão
+      // SHOWO_ONBOARDING_2026 (-50%, primeiros 6 meses) baixa o preço real
+      // do Pro para ~€9, e nesse preço 80 dava margem negativa no pior caso
+      // de custo real por mensagem já visto ($0,068). A 50, o pior caso com
+      // desconto fecha em ~0% (nem lucro nem prejuízo), nunca negativo, e
+      // sem desconto fica bem acima disso. Progressão 10 (Grátis) / 30
+      // (Plus) / 50 (Pro) também vende melhor do que 10/30/40.
+      coach: 50,
       defense: 25,
       defenseTraining: 25,
       diaryReport: 10,
