@@ -341,12 +341,18 @@ export default function EditProject() {
     setForm(f => ({ ...f, [key]: value }))
   }
 
-  // Geração de imagem de capa com IA (Plus/Pro). Reusa o mesmo storage e
-  // fluxo de cover_url do upload manual, só troca a origem do ficheiro.
+  // Geração de imagem com IA (Plus/Pro). Fica como preview à parte até a
+  // pessoa decidir o que fazer com ela, não vira logo a capa do projeto:
+  // só cria o ficheiro na storage se a pessoa clicar "Usar como capa". Dá
+  // também para descarregar ou copiar sem isso, pedido do Gustavo depois
+  // de a feature só servir para capa e nada mais.
   const [genPrompt, setGenPrompt] = useState('')
   const [generating, setGenerating] = useState(false)
   const [genError, setGenError] = useState(null)
   const [genGateMsg, setGenGateMsg] = useState(null)
+  const [genPreview, setGenPreview] = useState(null) // { blob, url }
+  const [genCopied, setGenCopied] = useState(false)
+  const [genUsingAsCover, setGenUsingAsCover] = useState(false)
   const generateImageGate = checkGate('generateImage')
 
   function b64ToBlob(b64, mime) {
@@ -360,6 +366,9 @@ export default function EditProject() {
     if (!genPrompt.trim()) { setGenError('Descreve o que queres na imagem.'); return }
     setGenerating(true)
     setGenError(null)
+    if (genPreview?.url) URL.revokeObjectURL(genPreview.url)
+    setGenPreview(null)
+    setGenCopied(false)
     try {
       const { data: { session } } = await supabase.auth.getSession()
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-image`, {
@@ -372,19 +381,53 @@ export default function EditProject() {
       })
       const body = await res.json()
       if (!res.ok) { setGenError(body.error || 'Não foi possível gerar a imagem.'); setGenerating(false); return }
-      set('cover_url', '__uploading__')
       const blob = b64ToBlob(body.image_b64, 'image/png')
-      const path = `${project.slug}-ia-${Date.now()}.png`
-      const { error: upErr } = await supabase.storage.from('covers').upload(path, blob, { upsert: true, contentType: 'image/png' })
-      if (upErr) throw upErr
-      const { data: { publicUrl } } = supabase.storage.from('covers').getPublicUrl(path)
-      set('cover_url', publicUrl)
-      setGenPrompt('')
+      setGenPreview({ blob, url: URL.createObjectURL(blob) })
     } catch {
-      set('cover_url', '')
       setGenError('Não foi possível gerar a imagem. Tenta novamente.')
     }
     setGenerating(false)
+  }
+
+  function handleDownloadImage() {
+    if (!genPreview) return
+    const a = document.createElement('a')
+    a.href = genPreview.url
+    a.download = `${project.slug}-ia-${Date.now()}.png`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+  }
+
+  async function handleCopyImage() {
+    if (!genPreview) return
+    try {
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': genPreview.blob })])
+      setGenCopied(true)
+      setTimeout(() => setGenCopied(false), 2000)
+    } catch {
+      setGenError('O teu navegador não permite copiar a imagem. Descarrega-a em alternativa.')
+    }
+  }
+
+  async function handleUseAsCover() {
+    if (!genPreview) return
+    setGenUsingAsCover(true)
+    try {
+      set('cover_url', '__uploading__')
+      const path = `${project.slug}-ia-${Date.now()}.png`
+      const { error: upErr } = await supabase.storage.from('covers').upload(path, genPreview.blob, { upsert: true, contentType: 'image/png' })
+      if (upErr) throw upErr
+      const { data: { publicUrl } } = supabase.storage.from('covers').getPublicUrl(path)
+      set('cover_url', publicUrl)
+      URL.revokeObjectURL(genPreview.url)
+      setGenPreview(null)
+      setGenPrompt('')
+    } catch {
+      set('cover_url', '')
+      setGenError('Não foi possível usar esta imagem como capa. Tenta novamente.')
+    }
+    setGenUsingAsCover(false)
   }
 
   async function handleCoverImage(e) {
@@ -934,6 +977,30 @@ export default function EditProject() {
                             background: colors.blue, color: '#fff', opacity: generating || !genPrompt.trim() ? 0.6 : 1,
                           }}
                         >{generating ? 'A gerar...' : 'Gerar imagem'}</button>
+
+                        {genPreview && (
+                          <div style={{ marginTop: 16 }}>
+                            <img src={genPreview.url} alt="Imagem gerada" style={{ width: '100%', borderRadius: 10, border: `1px solid ${colors.border}`, display: 'block' }} />
+                            <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+                              <button
+                                type="button"
+                                onClick={handleUseAsCover}
+                                disabled={genUsingAsCover}
+                                style={{ padding: '8px 14px', fontSize: 12.5, fontWeight: 700, fontFamily: 'inherit', border: 'none', borderRadius: 8, cursor: genUsingAsCover ? 'default' : 'pointer', background: colors.blue, color: '#fff', opacity: genUsingAsCover ? 0.6 : 1 }}
+                              >{genUsingAsCover ? 'A usar...' : 'Usar como capa'}</button>
+                              <button
+                                type="button"
+                                onClick={handleDownloadImage}
+                                style={{ padding: '8px 14px', fontSize: 12.5, fontWeight: 600, fontFamily: 'inherit', border: `1px solid ${colors.border}`, borderRadius: 8, cursor: 'pointer', background: 'transparent', color: colors.text }}
+                              >Descarregar</button>
+                              <button
+                                type="button"
+                                onClick={handleCopyImage}
+                                style={{ padding: '8px 14px', fontSize: 12.5, fontWeight: 600, fontFamily: 'inherit', border: `1px solid ${colors.border}`, borderRadius: 8, cursor: 'pointer', background: 'transparent', color: colors.text }}
+                              >{genCopied ? 'Copiada!' : 'Copiar imagem'}</button>
+                            </div>
+                          </div>
+                        )}
                       </>
                     ) : (
                       <>
