@@ -183,7 +183,7 @@ function buildDay1({ firstName, unsubscribeUrl, hasProject, projectState, code, 
         paragraph('Um projeto com só uma ou duas secções ainda não diz muito a quem o vê, professor, recrutador, ou tu próprio dentro de 6 meses.') +
         paragraph('Volta e acrescenta pelo menos mais uma secção: o problema que resolveste, as decisões que tomaste, ou os resultados. É nessa altura que o portefólio começa a valer a pena partilhar.') +
         paragraph(`Já agora: o código ${esc(code)} dá 50% no Plus durante os primeiros 6 meses.`, true) +
-        cta(`${APP}/dashboard`, 'Completar o meu projeto'),
+        cta(`${APP}/dashboard`, 'Acabar a parte que falta'),
         `Dia ${dia} de ${TOTAL_DAYS}`,
         unsubscribeUrl,
       ),
@@ -200,7 +200,7 @@ function buildDay1({ firstName, unsubscribeUrl, hasProject, projectState, code, 
         paragraph('Não precisa de estar pronto nem perfeito. Sobe um PDF, um PowerPoint, ou descreve em duas frases o que já fizeste, a IA trata do resto.') +
         paragraph('A partir daí, a IA já lê o diário do projeto antes de responder, sem teres de explicar tudo outra vez sempre que perguntas algo.') +
         paragraph(`E já que estás a começar: o código ${esc(code)} dá 50% no Plus durante os primeiros 6 meses, sempre que decidires avançar.`, true) +
-        cta(`${APP}/novo`, 'Começar agora, 2 minutos'),
+        cta(`${APP}/novo`, 'Criar o primeiro projeto agora'),
         `Dia ${dia} de ${TOTAL_DAYS}`,
         unsubscribeUrl,
       ),
@@ -216,7 +216,7 @@ function buildDay1({ firstName, unsubscribeUrl, hasProject, projectState, code, 
       paragraph('Sempre que abres o ChatGPT para falar do teu projeto, tens de explicar tudo outra vez.') +
       paragraph('No Showo a IA lê o diário do projeto antes de responder. Continuas a mesma conversa, com contexto acumulado desde o primeiro dia.') +
       paragraph(`Se quiseres testar a fundo, o código ${esc(code)} dá 50% no Plus durante os primeiros 6 meses.`, true) +
-      cta(`${APP}/dashboard`, 'Continuar a conversa com a IA'),
+      cta(`${APP}/dashboard`, 'Nunca mais repetir isto'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
     ),
@@ -235,7 +235,7 @@ function buildDay2({ firstName, unsubscribeUrl, hasProject, projectState, code, 
         paragraph('Não é o design nem a quantidade de texto, é mostrar o processo: o que decidiste, porquê, e o que aprendeste pelo caminho.') +
         paragraph('Volta ao teu projeto e acrescenta essa parte, mesmo que em poucas frases. É isso que faz alguém ficar a ler até ao fim.') +
         paragraph(`${esc(code)} dá 50% no Plus durante os primeiros 6 meses, para quando quiseres mais do que isto.`, true) +
-        cta(`${APP}/dashboard`, 'Voltar ao meu projeto'),
+        cta(`${APP}/dashboard`, 'Não ser visto como amador'),
         `Dia ${dia} de ${TOTAL_DAYS}`,
         unsubscribeUrl,
       ),
@@ -252,7 +252,7 @@ function buildDay2({ firstName, unsubscribeUrl, hasProject, projectState, code, 
         paragraph('PAP a meio, estágio em curso, um projeto pessoal, até trabalho de faculdade. Não precisa de estar pronto nem de ser impressionante, o que interessa é mostrar o processo real, não só o resultado final.') +
         paragraph('Sobe o que já tens e a IA ajuda a organizar isso numa página que faz sentido.') +
         paragraph(`Entretanto, guarda o código ${esc(code)}: dá 50% no Plus durante os primeiros 6 meses, para quando quiseres mais.`, true) +
-        cta(`${APP}/novo`, 'Ver o meu projeto em 2 minutos'),
+        cta(`${APP}/novo`, 'Mostrar isto agora'),
         `Dia ${dia} de ${TOTAL_DAYS}`,
         unsubscribeUrl,
       ),
@@ -268,7 +268,7 @@ function buildDay2({ firstName, unsubscribeUrl, hasProject, projectState, code, 
       paragraph('Liga o repositório e os commits entram sozinhos no diário do projeto, ao lado das tuas notas.') +
       paragraph('Quando o portfólio estiver pronto, publicas direto no LinkedIn, sem exportar nada à mão.') +
       paragraph(`Já agora, o código ${esc(code)} dá 50% no Plus durante os primeiros 6 meses.`, true) +
-      cta(`${APP}/dashboard`, 'Ligar o GitHub ao meu projeto'),
+      cta(`${APP}/dashboard`, 'Ligar o GitHub já'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
     ),
@@ -287,7 +287,7 @@ function buildDay3({ firstName, unsubscribeUrl, hasProject, projectState, code, 
       quote('Para alguém que fez PAP e queria usá-la para exposição, esta app é um gamechanger para estudantes na mesma situação.', 'Rafael Matos, Estudante de Engenharia Informática da Universidade de Aveiro') +
       quote('Na minha opinião, um dos pontos mais fortes da plataforma é a Defesa. A organização e preparação torna tudo mais interativo e envolvente.', 'Rita Sousa, Estudante na Escola Profissional Bento de Jesus Caraça') +
       paragraph(`Se quiseres resultados assim, o código ${esc(code)} dá 50% no Plus durante os primeiros 6 meses.`, true) +
-      (projectState === 'incomplete' ? cta(`${APP}/dashboard`, 'Completar o meu projeto') : hasProject ? cta(`${APP}/dashboard`, 'Quero o mesmo resultado') : cta(`${APP}/novo`, 'Quero começar agora')),
+      (projectState === 'incomplete' ? cta(`${APP}/dashboard`, 'Dar ao meu projeto esse resultado') : hasProject ? cta(`${APP}/dashboard`, 'Ter o mesmo resultado') : cta(`${APP}/novo`, 'Testar isto agora')),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
     ),
@@ -304,7 +304,7 @@ function buildDay4({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayB
       headline('Há sempre um detalhe que só se vê a tempo de o corrigir') +
       paragraph('Imagina apresentares o projeto e ninguém encontrar a falha que tu já tinhas resolvido semanas antes. É a diferença entre seres apanhado de surpresa ou chegar preparado.') +
       paragraph(`No Plus, a análise de IA está sempre disponível, não só uma vez por mês. Com ${esc(code)}: 4,49€/mês, durante 6 meses.`, true) +
-      cta(`${APP}/pricing`, 'Quero chegar sempre preparado'),
+      cta(`${APP}/pricing`, 'Encontrar a falha antes do júri a encontrar'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
     ),
@@ -321,7 +321,7 @@ function buildDay5({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayB
       headline('Há quem mostre um projeto. Tu mostras um percurso.') +
       paragraph('Toda a segunda, o recap do Plus transforma o que fizeste num post pronto. Quando um recrutador compara candidatos, um projeto parado e um que cresce toda a semana não pesam o mesmo.') +
       paragraph(`Com ${esc(code)}: 4,49€/mês, durante 6 meses.`, true) +
-      cta(`${APP}/pricing`, 'Quero mostrar o percurso, não só o resultado'),
+      cta(`${APP}/pricing`, 'Mostrar que isto está vivo'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
     ),
@@ -338,7 +338,7 @@ function buildDay6({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayB
       headline('É sempre a meio da noite que a dúvida aparece') +
       paragraph('A pergunta que te prende o projeto não escolhe hora, e normalmente não é nos primeiros dias que aparece. No Plus, o Coach IA está lá nesse momento, não só enquanto ainda tens mensagens sobrando.') +
       paragraph(`Com ${esc(code)}: 4,49€/mês, durante 6 meses.`, true) +
-      cta(`${APP}/pricing`, 'Quero nunca ficar preso sozinho'),
+      cta(`${APP}/pricing`, 'Ter resposta a qualquer hora'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
     ),
@@ -355,7 +355,7 @@ function buildDay7({ firstName, unsubscribeUrl, code, dia, daysToDefense }: DayB
       headline('A paz de decidir agora, não daqui a um mês') +
       paragraph('Se já sabes que vais usar o Showo a sério, decidir agora poupa-te a dúvida de "será que ainda vale a pena" lá mais para a frente.') +
       paragraph(`Com ${esc(code)}: 4,49€/mês, durante 6 meses.`, true) +
-      cta(`${APP}/pricing`, 'Decidir agora e seguir em frente'),
+      cta(`${APP}/pricing`, 'Decidir antes que a cabeça arrefeça'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
     ),
@@ -373,7 +373,7 @@ function buildDay8({ firstName, unsubscribeUrl, code, dia, daysToDefense, isProf
         headline('Alguém vai decidir confiar em ti antes de sequer falares') +
         paragraph('Um cliente, um recrutador, um colega, decide muito antes da primeira reunião, só a partir do que encontra sobre ti online. Um perfil organizado faz essa decisão a teu favor, sem teres de estar presente.') +
         paragraph(`Com ${esc(code)}: 4,49€/mês no Plus, durante 6 meses.`, true) +
-        cta(`${APP}/pricing`, 'Quero que decidam a meu favor'),
+        cta(`${APP}/pricing`, 'Ser o escolhido'),
         `Dia ${dia} de ${TOTAL_DAYS}`,
         unsubscribeUrl,
       ),
@@ -388,7 +388,7 @@ function buildDay8({ firstName, unsubscribeUrl, code, dia, daysToDefense, isProf
       headline('Alguém vai ser visto primeiro. Porque não tu?') +
       paragraph('Há vagas reais de estágio e primeiro emprego dentro do Showo, com candidatura direta a partir do teu perfil. Quem está lá dentro candidata-se antes de a vaga aparecer em todo o lado.') +
       paragraph(`Com ${esc(code)}: 4,49€/mês no Plus, durante 6 meses.`, true) +
-      cta(`${APP}/vagas`, 'Ver as vagas antes dos outros'),
+      cta(`${APP}/vagas`, 'Garantir esta vaga'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
     ),
@@ -406,7 +406,7 @@ function buildDay9({ firstName, unsubscribeUrl, code, dia, daysToDefense, isProf
         headline('Compara o que custa, não o que parece custar') +
         paragraph('0,15€ por dia é o preço do Plus. O preço de chegares a uma oportunidade sem nada pronto para mostrar, esse não se paga em dinheiro.') +
         paragraph(`Com ${esc(code)}, o Plus fica a 4,49€/mês durante 6 meses.`, true) +
-        cta(`${APP}/pricing`, 'Não quero correr esse risco'),
+        cta(`${APP}/pricing`, 'Não chegar sem nada pronto'),
         `Dia ${dia} de ${TOTAL_DAYS}`,
         unsubscribeUrl,
       ),
@@ -421,7 +421,7 @@ function buildDay9({ firstName, unsubscribeUrl, code, dia, daysToDefense, isProf
       headline('Compara o que custa, não o que parece custar') +
       paragraph('0,15€ por dia é o preço do Plus. O preço de chegar à defesa, à entrevista ou à entrega sem teres aproveitado o tempo todo, esse não se paga em dinheiro.') +
       paragraph(`Com ${esc(code)}, o Plus fica a 4,49€/mês durante 6 meses.`, true) +
-      cta(`${APP}/pricing`, 'Não quero correr esse risco'),
+      cta(`${APP}/pricing`, 'Não chegar sem preparação'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
     ),
@@ -439,7 +439,7 @@ function buildDay10({ firstName, unsubscribeUrl, code, dia, daysToDefense, isPro
         headline('Esse segundo de silêncio não precisa de acontecer') +
         paragraph('O Showo gera as perguntas prováveis a partir do teu diário real, com respostas já pensadas antes de entrares na sala. A diferença entre hesitar e responder sem pestanejar decide-se antes da entrevista, não durante.') +
         paragraph(`Feature do Plus. Com ${esc(code)}: 4,49€/mês, durante 6 meses.`, true) +
-        cta(`${APP}/pricing`, 'Quero chegar sem hesitar'),
+        cta(`${APP}/pricing`, 'Responder sem hesitar'),
         `Dia ${dia} de ${TOTAL_DAYS}`,
         unsubscribeUrl,
       ),
@@ -454,7 +454,7 @@ function buildDay10({ firstName, unsubscribeUrl, code, dia, daysToDefense, isPro
       headline('Esse segundo de silêncio não precisa de acontecer') +
       paragraph('O Showo gera as perguntas prováveis do júri a partir do teu diário real, com respostas já pensadas antes de entrares na sala. A diferença entre hesitar e responder sem pestanejar decide-se antes da defesa, não durante.') +
       paragraph(`Feature do Plus. Com ${esc(code)}: 4,49€/mês, durante 6 meses.`, true) +
-      cta(`${APP}/pricing`, 'Quero chegar sem hesitar'),
+      cta(`${APP}/pricing`, 'Responder sem hesitar'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
     ),
@@ -471,7 +471,7 @@ function buildDay11({ firstName, unsubscribeUrl, code, dia, daysToDefense, isPro
         urgencyBand(dia, code, daysToDefense) +
         headline('O tempo que alguém olha para um perfil é curto. Conta.') +
         paragraph(`Um link que mostra meses de consistência num olhar, não um PDF que ninguém abre até ao fim. Com ${esc(code)}: 4,49€/mês no Plus, durante 6 meses.`, true) +
-        cta(`${APP}/pricing`, 'Quero ser lembrado, não esquecido'),
+        cta(`${APP}/pricing`, 'Ser impossível de esquecer'),
         `Dia ${dia} de ${TOTAL_DAYS}`,
         unsubscribeUrl,
       ),
@@ -486,7 +486,7 @@ function buildDay11({ firstName, unsubscribeUrl, code, dia, daysToDefense, isPro
       headline('O tempo que um recrutador olha para um perfil é curto. Conta.') +
       quote('Era esta a ferramenta que me faltava para os meus estudos. Bastante alinhado com as necessidades dos alunos.', 'Maria Eduarda, Estudante da Computação e Engenharia de Software, Natixis') +
       paragraph(`Um link que mostra meses de consistência num olhar, não um PDF que ninguém abre até ao fim. Com ${esc(code)}: 4,49€/mês no Plus, durante 6 meses.`, true) +
-      cta(`${APP}/pricing`, 'Quero ser lembrado, não esquecido'),
+      cta(`${APP}/pricing`, 'Ser impossível de esquecer'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
     ),
@@ -503,7 +503,7 @@ function buildDay12({ firstName, unsubscribeUrl, code, dia, daysToDefense }: Day
       headline('Ainda estás a pensar?') +
       paragraph(`${esc(code)} dá 4,49€/mês durante 6 meses no Plus.`) +
       paragraph('Se estavas à espera do momento certo, é este.', true) +
-      cta(`${APP}/pricing`, 'Usar o desconto antes que acabe'),
+      cta(`${APP}/pricing`, 'Usar os 4,49€/mês agora'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
     ),
@@ -519,7 +519,7 @@ function buildDay13({ firstName, unsubscribeUrl, code, dia, daysToDefense }: Day
       urgencyBand(dia, code, daysToDefense) +
       headline('É agora ou nunca mais vais ter esta cabeça fresca') +
       paragraph(`Amanhã fecha este ciclo. Com ${esc(code)}, o Plus fica a 4,49€/mês nos primeiros 6 meses, aproveita enquanto ainda estás a pensar nisto.`, true) +
-      cta(`${APP}/pricing`, 'Entrar já, antes que arrefeça'),
+      cta(`${APP}/pricing`, 'Fechar isto antes de amanhã'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
     ),
@@ -535,7 +535,7 @@ function buildDay14({ firstName, unsubscribeUrl, code, dia, daysToDefense }: Day
       urgencyBand(dia, code, daysToDefense) +
       headline('O código ainda está quentinho, aproveita agora') +
       paragraph(`${esc(code)} dá 4,49€/mês nos primeiros 6 meses do Plus. Não é o fim de nada, és só tu a decidir se queres levar isto a sério a partir de hoje.`, true) +
-      cta(`${APP}/pricing`, 'Usar o desconto agora'),
+      cta(`${APP}/pricing`, 'Usar antes da meia-noite'),
       `Dia ${dia} de ${TOTAL_DAYS}`,
       unsubscribeUrl,
     ),
