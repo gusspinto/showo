@@ -32,7 +32,8 @@ export const PLANS = {
     ai: {
       createProject: 30,
       interviewProject: 30,
-      coach: 300,
+      // Mesma correção do Pro (ver 231): estava em 300, margem negativa.
+      coach: 80,
       defense: 25,
       defenseTraining: 25,
       diaryReport: 10,
@@ -123,7 +124,12 @@ export const PLANS = {
     ai: {
       createProject: 30,
       interviewProject: 30,
-      coach: 300,
+      // Baixado de 300 para 80 (2026-11-03): tinha ficado esquecido quando
+      // o do Plus desceu para 30. No pior caso de custo real por mensagem
+      // ($0,068), 300 mensagens sozinhas custavam mais do que o preço todo
+      // do plano, margem negativa. 80 fecha ~70% de margem no caso médio
+      // e ~39% no pior caso. Ver migração 231.
+      coach: 80,
       defense: 25,
       defenseTraining: 25,
       diaryReport: 10,
