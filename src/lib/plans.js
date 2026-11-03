@@ -14,6 +14,7 @@ export const PLANS = {
       analyzeProject: 15,
       coverLetter: 0,
       exportPptx: 20,
+      generateImage: 0,
     },
     career: {
       internshipPage: false,
@@ -39,6 +40,7 @@ export const PLANS = {
       analyzeProject: 25,
       coverLetter: 25,
       exportPptx: Infinity,
+      generateImage: 15,
     },
     career: {
       internshipPage: true,
@@ -64,6 +66,7 @@ export const PLANS = {
       analyzeProject: 1,
       coverLetter: 0,
       exportPptx: 3,
+      generateImage: 0,
     },
     career: {
       internshipPage: false,
@@ -97,6 +100,9 @@ export const PLANS = {
       analyzeProject: 10,
       coverLetter: 5,
       exportPptx: 15,
+      // Imagens (capas de projeto): limite calculado com margem real a
+      // ~$0,011/imagem (GPT Image, tier baixo). Ver migração 230.
+      generateImage: 5,
     },
     career: {
       internshipPage: true,
@@ -125,6 +131,7 @@ export const PLANS = {
       analyzeProject: 25,
       coverLetter: 25,
       exportPptx: Infinity,
+      generateImage: 15,
     },
     career: {
       internshipPage: true,
@@ -254,6 +261,7 @@ export const AI_FEATURE_LABELS = {
   defenseTraining: 'Treino de defesa',
   coverLetter: 'Carta de apresentação',
   exportPptx: 'Exportar PowerPoint',
+  generateImage: 'Gerar imagens',
 }
 
 export const PLAN_GATE_MESSAGES = {
