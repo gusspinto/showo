@@ -2153,7 +2153,7 @@ export default function ProjectPage() {
       // Metade da definição de ativação (CLAUDE.md): publicar 3+ secções
       // E partilhar o link. Sem este evento não há forma de medir a
       // segunda metade, só a primeira (score/secções).
-      logFunnelEvent('project_shared')
+      logFunnelEvent('project_shared', 'copy_link', project?.id)
     })
   }
 
@@ -2999,7 +2999,7 @@ export default function ProjectPage() {
                   navigator.clipboard.writeText(`${window.location.origin}/projeto/${project.slug}`)
                   setLaunchCopied(true)
                   setTimeout(() => setLaunchCopied(false), 2500)
-                  logFunnelEvent('project_shared', 'launch')
+                  logFunnelEvent('project_shared', 'launch', project?.id)
                 }}
                 style={{
                   background: launchCopied ? 'var(--color-success-subtle)' : 'var(--color-bg-alt)',
@@ -3189,7 +3189,7 @@ export default function ProjectPage() {
                   navigator.clipboard.writeText(`${window.location.origin}/p/${project.slug}`)
                   triggerToast('Link copiado!')
                   setMilestoneCard(null)
-                  logFunnelEvent('project_shared', 'milestone')
+                  logFunnelEvent('project_shared', 'milestone', project?.id)
                 }}
                 style={{
                   flex: 1,
@@ -4177,7 +4177,7 @@ export default function ProjectPage() {
                 navigator.clipboard.writeText(`${window.location.origin}/p/${project.slug}`)
                 triggerToast('Link copiado!')
                 advancePostTourStage('done')
-                logFunnelEvent('project_shared', 'post_tour')
+                logFunnelEvent('project_shared', 'post_tour', project?.id)
               }
             }}
             onDismiss={() => advancePostTourStage(postTourStage === '3' ? 'done' : String(Number(postTourStage) + 1))}

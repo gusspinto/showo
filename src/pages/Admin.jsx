@@ -581,16 +581,20 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
   // pedimos a versão escalada ao período escolhido, sem tocar no pai.
   const [rangeBilling, setRangeBilling] = useState(null)
   const [rangeFunnel, setRangeFunnel] = useState(null)
+  const [projectShares, setProjectShares] = useState(null)
+  const [showShares, setShowShares] = useState(false)
   useEffect(() => {
     let cancelled = false
     const since = days >= 9999 ? new Date(2020, 0, 1).toISOString() : new Date(now - days * 86400000).toISOString()
     Promise.all([
       supabase.rpc('admin_get_billing_summary', { p_since: since }),
       supabase.rpc('admin_get_funnel_summary', { p_since: since }),
-    ]).then(([b, f]) => {
+      supabase.rpc('admin_get_project_shares', { p_since: since }),
+    ]).then(([b, f, s]) => {
       if (cancelled) return
       setRangeBilling(b.data || [])
       setRangeFunnel(f.data || [])
+      setProjectShares(s.data || [])
     })
     return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -641,6 +645,12 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
   const diaryEntryCreated = funnelMap.diary_entry_created || 0
   const coachMessageSent = funnelMap.coach_message_sent || 0
   const projectShared = funnelMap.project_shared || 0
+  const shareRows = projectShares || []
+  const uniqueSharers = new Set(shareRows.map(r => r.user_id)).size
+  const uniqueSharedProjects = new Set(shareRows.filter(r => r.project_id).map(r => r.project_id)).size
+  const SHARE_CONTEXT_LABELS = { copy_link: 'Botão de copiar', launch: 'Lançamento', milestone: 'Marco', post_tour: 'Tour inicial' }
+  const sharesByContext = {}
+  shareRows.forEach(r => { sharesByContext[r.context] = (sharesByContext[r.context] || 0) + 1 })
   const exploreViewed = funnelMap.explore_viewed || 0
   const projectOpenedByFeature = {}
   ;(funnelSource).forEach(row => {
@@ -961,10 +971,58 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
           <StatCard icon={<Folder size={20} />} label="Abriram um projeto" value={projectOpenedTotal} color={C.green} sub={`${projectOpenedOwn} próprio · ${projectOpenedOther} de outros`} />
           <StatCard icon={<Calendar size={20} />} label="Escreveram no diário" value={diaryEntryCreated} color={C.yellow} />
           <StatCard icon={<HelpCircle size={20} />} label="Usaram o Coach IA" value={coachMessageSent} color={C.purple} />
-          <StatCard icon={<Copy size={20} />} label="Partilharam o link" value={projectShared} color={projectShared > 0 ? C.green : C.muted} />
+          <StatCard icon={<Copy size={20} />} label="Partilharam o link" value={projectShared} color={projectShared > 0 ? C.green : C.muted} onClick={shareRows.length > 0 ? () => setShowShares(o => !o) : undefined} />
           <StatCard icon={<Search size={20} />} label="Navegaram o Explorar" value={exploreViewed} color={C.blue} />
         </div>
       </div>
+
+      {showShares && shareRows.length > 0 && (
+        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px', marginBottom: 24 }}>
+          <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Partilhas de projetos {periodLabel}</h3>
+          <p style={{ margin: '0 0 14px', fontSize: 11, color: C.subtle }}>Clique real em "copiar link". Não prova que alguém abriu o link, só que a pessoa o copiou.</p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10, marginBottom: 16 }}>
+            <StatCard icon={<Copy size={18} />} label="Partilhas" value={shareRows.length} color={C.green} />
+            <StatCard icon={<User size={18} />} label="Pessoas diferentes" value={uniqueSharers} color={C.blue} />
+            <StatCard icon={<Folder size={18} />} label="Projetos diferentes" value={uniqueSharedProjects} color={C.purple} />
+          </div>
+
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+            {Object.entries(sharesByContext).sort((a, b) => b[1] - a[1]).map(([ctx, count]) => (
+              <span key={ctx} style={{ fontSize: 11, fontWeight: 600, padding: '5px 10px', borderRadius: 100, background: C.glassBorder, color: C.subtle }}>
+                {SHARE_CONTEXT_LABELS[ctx] || ctx}: <span style={{ color: C.text, fontWeight: 700 }}>{count}</span>
+              </span>
+            ))}
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 420, overflowY: 'auto' }}>
+            {shareRows.slice(0, 100).map((r, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12.5, padding: '6px 4px', borderBottom: i < shareRows.length - 1 ? `1px solid ${C.glassBorder}` : 'none' }}>
+                <Avatar name={r.full_name || r.username || '?'} size={22} />
+                <span
+                  style={{ fontWeight: 600, color: C.text, cursor: r.username ? 'pointer' : 'default' }}
+                  onClick={() => r.username && navigate(`/u/${r.username}`)}
+                >
+                  {r.full_name || r.username || 'Utilizador removido'}
+                </span>
+                <span style={{ color: C.subtle }}>partilhou</span>
+                {r.project_slug ? (
+                  <span
+                    style={{ fontWeight: 600, color: C.blue, cursor: 'pointer' }}
+                    onClick={() => navigate(`/projeto/${r.project_slug}`)}
+                  >
+                    {r.project_name || 'projeto'}
+                  </span>
+                ) : (
+                  <span style={{ color: C.muted, fontStyle: 'italic' }}>projeto (anterior ao tracking)</span>
+                )}
+                <span style={{ marginLeft: 'auto', fontSize: 11, color: C.muted }}>{SHARE_CONTEXT_LABELS[r.context] || r.context}</span>
+                <span style={{ fontSize: 11, color: C.subtle, minWidth: 90, textAlign: 'right' }}>{new Date(r.created_at).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       </>}
 
       {subTab === 'negocio' && <>

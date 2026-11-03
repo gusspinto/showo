@@ -49,6 +49,8 @@ import WeeklyRecap, { shouldShowRecap, RecapsPanel } from '../components/dashboa
 import WeeklyPostCard from '../components/dashboard/WeeklyPostCard'
 import WeeklyRecapTeaser from '../components/dashboard/WeeklyRecapTeaser'
 import LimitNudgeBanner from '../components/dashboard/LimitNudgeBanner'
+import DiaryNudgeBanner from '../components/dashboard/DiaryNudgeBanner'
+import FeaturedWeekBanner from '../components/dashboard/FeaturedWeekBanner'
 import SegmentedTabs from '../components/SegmentedTabs'
 import WeeklyCheckin, { shouldShowCheckin } from '../components/dashboard/WeeklyCheckin'
 import AddReminderModal from '../components/dashboard/AddReminderModal'
@@ -56,7 +58,7 @@ import CalendarSyncModal from '../components/dashboard/CalendarSyncModal'
 import '../components/dashboard/MonthCalendar.css'
 import {
   computeReportCoverage, computeWeekStreak, buildWeeklyActivity, computeEngagementSignal,
-  timeAgoLabel, startOfDay,
+  timeAgoLabel, startOfDay, weekStartISO,
 } from '../lib/journal'
 import { pickFocusProject, daysUntil } from '../lib/focusProject'
 import './Dashboard.css'          // modais e toast partilhados (namespace dash-*)
@@ -209,6 +211,22 @@ export default function StudentDashboard({ user, profile }) {
     () => !!localStorage.getItem(`showo_nudge_banner_dismissed_${user.id}_${new Date().toISOString().slice(0, 7)}`)
   )
 
+  // Sinal para lembrar de escrever no diário. "auto" são entradas geradas
+  // pela plataforma quando a pessoa preenche uma secção, não contam como
+  // ela ter escrito nada a sério. Se só essas existirem, o alerta conta a
+  // partir da criação do projeto, não da entrada automática.
+  const diaryNudgeSignal = useMemo(() => {
+    if (!focusProject) return null
+    const realEntries = activityEntries.filter(e => e.kind !== 'auto')
+    const lastDate = realEntries.length
+      ? new Date(Math.max(...realEntries.map(e => new Date(e.created_at).getTime())))
+      : focusProject.created_at ? new Date(focusProject.created_at) : null
+    if (!lastDate) return null
+    const daysSince = Math.floor((Date.now() - lastDate.getTime()) / 86400000)
+    if (daysSince < 7) return null
+    return { daysSince, projectName: focusProject.name || 'projeto' }
+  }, [activityEntries, focusProject])
+
   /* ── UI ── */
   const [tutorialPotentialSeen, setTutorialPotentialSeen] = useState(() => !!localStorage.getItem(`showo_tut_potential_${user.id}`))
   const [recapTeaserDismissed, setRecapTeaserDismissed] = useState(() => !!localStorage.getItem(`showo_recap_teaser_dismissed_${user.id}`))
@@ -217,6 +235,10 @@ export default function StudentDashboard({ user, profile }) {
   // aparece uma vez na vida da conta, controlado por profiles.featured_popup_seen_at.
   const [featuredProjectIds, setFeaturedProjectIds] = useState(() => new Set())
   const [featuredPopupProject, setFeaturedPopupProject] = useState(null)
+  // Notificação in-app recorrente (diferente do popup acima, que só dispara
+  // uma vez na vida da conta): volta a aparecer em CADA semana nova de
+  // destaque, comparando featured_weeks.week_start com profiles.featured_week_seen.
+  const [featuredWeekNotice, setFeaturedWeekNotice] = useState(null)
   const [composerKind, setComposerKind] = useState(null)
   // A que projeto pertence o "Registar" que está aberto. Sem isto, o
   // composer ficava sempre agarrado a focusFull (o projeto em foco
@@ -230,7 +252,7 @@ export default function StudentDashboard({ user, profile }) {
   const [dashTab, setDashTab] = useState('projetos')
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [diaryReminderDismissed, setDiaryReminderDismissed] = useState(
-    () => localStorage.getItem(`showo_diary_remind_${new Date().toISOString().slice(0,10)}`) === '1'
+    () => localStorage.getItem(`showo_diary_remind_${weekStartISO()}`) === '1'
   )
   const [showReport, setShowReport] = useState(false)
   const [showAddReminder, setShowAddReminder] = useState(null)
@@ -323,6 +345,41 @@ export default function StudentDashboard({ user, profile }) {
       }
     })
   }, [projects, profile?.featured_popup_seen_at])
+
+  useEffect(() => {
+    if (!projects.length) return
+    let cancelled = false
+    async function load() {
+      const { data, error } = await supabase
+        .from('featured_weeks')
+        .select('project_id, week_start')
+        .order('week_start', { ascending: false })
+        .limit(1)
+      if (cancelled || error || !data?.length) return
+      const latestWeek = data[0].week_start
+      const { data: rows } = await supabase
+        .from('featured_weeks')
+        .select('project_id')
+        .eq('week_start', latestWeek)
+      if (cancelled || !rows) return
+      const myIds = new Set(projects.map(p => p.id))
+      const mine = rows.filter(r => myIds.has(r.project_id))
+      if (mine.length && profile?.featured_week_seen !== latestWeek) {
+        const proj = projects.find(p => p.id === mine[0].project_id)
+        setFeaturedWeekNotice({ weekStart: latestWeek, projectName: proj?.name || 'projeto' })
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [projects, profile?.featured_week_seen])
+
+  async function markFeaturedWeekSeen() {
+    if (!user?.id || !featuredWeekNotice) return
+    const weekStart = featuredWeekNotice.weekStart
+    setFeaturedWeekNotice(null)
+    await supabase.from('profiles').update({ featured_week_seen: weekStart }).eq('id', user.id)
+    refreshProfile?.()
+  }
 
   async function markFeaturedPopupSeen() {
     if (!user?.id || profile?.featured_popup_seen_at) return
@@ -1113,6 +1170,26 @@ export default function StudentDashboard({ user, profile }) {
                 onUpgrade={() => {
                   logFunnelEvent('nudge_clicked', nudgeSignal.feature)
                   setShowUpgradeModal(nudgeSignal.feature)
+                }}
+              />
+            )}
+
+            {featuredWeekNotice && (
+              <FeaturedWeekBanner
+                projectName={featuredWeekNotice.projectName}
+                onDismiss={markFeaturedWeekSeen}
+              />
+            )}
+
+            {diaryNudgeSignal && !diaryReminderDismissed && (
+              <DiaryNudgeBanner
+                projectName={diaryNudgeSignal.projectName}
+                daysSince={diaryNudgeSignal.daysSince}
+                onDismiss={() => setDiaryReminderDismissed(true)}
+                onWrite={() => {
+                  logFunnelEvent('diary_nudge_clicked')
+                  setComposerProject(focusFull)
+                  setComposerKind('update')
                 }}
               />
             )}
