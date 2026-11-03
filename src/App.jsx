@@ -101,6 +101,7 @@ const Dashboard    = lazyPage(() => import('./pages/Dashboard'))
 const Biblioteca   = lazyPage(() => import('./pages/Biblioteca'))
 const Vagas        = lazyPage(() => import('./pages/Vagas'))
 const Coach         = lazyPage(() => import('./pages/Coach'))
+const GenerateImage = lazyPage(() => import('./pages/GenerateImage'))
 const Pipeline      = lazyPage(() => import('./pages/Pipeline'))
 const Settings     = lazyPage(() => import('./pages/Settings'))
 const UserProfile  = lazyPage(() => import('./pages/UserProfile'))
@@ -839,6 +840,7 @@ export default function App() {
               <Route path="/biblioteca"    element={<Biblioteca />}  />
               <Route path="/vagas"         element={<Vagas />}       />
               <Route path="/coach"         element={<Coach />}       />
+              <Route path="/imagem"        element={<GenerateImage />} />
               <Route path="/pipeline"      element={<Pipeline />}    />
               <Route path="/settings"      element={<Settings />}    />
               <Route path="/u/:username"   element={<UserProfile />} />
