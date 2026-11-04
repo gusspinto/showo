@@ -604,6 +604,11 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
   // assinatura de uma já existente.
   const [aiCostBreakdown, setAiCostBreakdown] = useState(null)
   const [expandedAiCostUsers, setExpandedAiCostUsers] = useState(() => new Set())
+  // Funil de ativação real (migração 244): registo -> 1º projeto -> 3+
+  // secções preenchidas -> partilha do link. É a definição de "ativação"
+  // já registada no CLAUDE.md. Pedido antes de otimizar conteúdo, paywall
+  // ou retenção, porque sem este número qualquer coisa a jusante é às cegas.
+  const [activationFunnel, setActivationFunnel] = useState(null)
   useEffect(() => {
     let cancelled = false
     const since = days >= 9999 ? new Date(2020, 0, 1).toISOString() : new Date(now - days * 86400000).toISOString()
@@ -615,7 +620,8 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
       supabase.rpc('admin_get_checkout_redirects', { p_since: since }),
       supabase.rpc('admin_get_ai_cost_by_user', { p_since: since }),
       supabase.rpc('admin_get_ai_cost_breakdown', { p_since: since }),
-    ]).then(([b, f, s, c, r, ac, acb]) => {
+      supabase.rpc('admin_get_activation_funnel', { p_since: since }),
+    ]).then(([b, f, s, c, r, ac, acb, af]) => {
       if (cancelled) return
       setRangeBilling(b.data || [])
       setRangeFunnel(f.data || [])
@@ -624,10 +630,27 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
       setAiCostByUser(ac.data || [])
       setAiCostBreakdown(acb.data || [])
       setCheckoutRedirects(r.data || [])
+      setActivationFunnel(af.data || [])
     })
     return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [days])
+
+  // Funil de ativação: conta em cada etapa e tempo mediano registo->ativação
+  // (em horas), só entre quem já ativou (quem ainda não ativou não tem
+  // duração para entrar na mediana, fica só a contar como "não chegou lá").
+  const activationRows = activationFunnel || []
+  const signedUp = activationRows.length
+  const createdProject = activationRows.filter(r => r.first_project_at).length
+  const activated = activationRows.filter(r => r.activated_at).length
+  const sharedLink = activationRows.filter(r => r.shared_at).length
+  const activationHours = activationRows
+    .filter(r => r.activated_at)
+    .map(r => (new Date(r.activated_at).getTime() - new Date(r.signup_at).getTime()) / 3600000)
+    .sort((a, b) => a - b)
+  const medianActivationHours = activationHours.length
+    ? activationHours[Math.floor(activationHours.length / 2)]
+    : null
 
   const billingMap = {}
   ;(rangeBilling ?? billingSummary ?? []).forEach(row => { billingMap[row.event] = row })
@@ -1111,6 +1134,22 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
           ))}
         </div>
       )}
+
+      {/* Funil de ativação real (registo -> 1º projeto -> 3+ secções
+          preenchidas -> partilha do link), a própria definição de
+          "ativação" do CLAUDE.md. Pedido antes de otimizar conteúdo,
+          paywall ou retenção: sem saber onde as pessoas desistem, qualquer
+          otimização a jusante é às cegas. */}
+      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px' }}>
+        <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Ativação {periodLabel}</h3>
+        <p style={{ margin: '0 0 18px', fontSize: 11, color: C.subtle }}>Registo → 1º projeto → 3+ secções preenchidas → partilhou o link. {medianActivationHours !== null ? `Tempo mediano até ativar: ${medianActivationHours < 1 ? `${Math.round(medianActivationHours * 60)}min` : `${medianActivationHours.toFixed(1)}h`}.` : 'Ainda ninguém ativou neste período.'}</p>
+        <FunnelFlow steps={[
+          { label: 'Registaram-se', value: signedUp, icon: <Check size={14} />, color: C.blue },
+          { label: 'Criaram projeto', value: createdProject, icon: <Check size={14} />, color: C.yellow },
+          { label: '3+ secções', value: activated, icon: <Check size={14} />, color: C.green },
+          { label: 'Partilharam o link', value: sharedLink, icon: <Check size={14} />, color: C.red },
+        ]} />
+      </div>
 
       {/* Dois blocos, não um "funil" só: "Viram/clicaram no nudge" (banner
           do Dashboard, LimitNudgeBanner) e "Bateram num limite → checkout"
