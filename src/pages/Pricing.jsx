@@ -84,6 +84,7 @@ const PLANS = [
         label: 'Mais',
         items: [
           { label: '15 projetos' },
+          { label: 'Gerar imagens com IA', value: 'novo', tip: 'Descreve a capa ou ilustração que queres e a IA gera-a na hora, pronta a usar no projeto ou a descarregar. 5 imagens por mês.' },
           { label: 'Sincronização com o GitHub', icon: 'github', tip: 'O teu diário atualiza-se sozinho a cada push, sem teres de voltar cá para escrever nada.' },
           { label: 'Ficheiros de prova', value: '250MB', tip: 'Anexa PDFs, Word, PowerPoint ou imagens, qualquer ficheiro que prove o trabalho. Escolhes o que aparece na página pública.' },
           { label: 'Assistente semanal', tip: 'Todas as semanas recebes um email com o que avançaste, o que ficou parado e o que vem a seguir, sem teres de ir à procura.' },
@@ -97,7 +98,6 @@ const PLANS = [
           { label: 'Coach IA', value: '30 msgs' },
           { label: 'Toda a IA', value: '5x mais que o Grátis', subitems: ['Criar projeto', 'Entrevista guiada', 'Análise', 'Relatório', 'Narrativa IA'] },
           { label: 'Treino para entrevistas', value: 'novo', tip: 'A IA simula a banca ou o entrevistador, antecipa as perguntas difíceis e sugere respostas. Inclui também uma carta de apresentação gerada a partir do teu trabalho.' },
-          { label: 'Gerar imagens com IA', value: 'novo', tip: 'Descreve a capa ou ilustração que queres e a IA gera-a na hora, pronta a usar no projeto ou a descarregar. 5 imagens por mês.' },
         ],
       },
     ],
@@ -120,6 +120,7 @@ const PLANS = [
         label: 'Mais',
         items: [
           { label: 'Projetos ilimitados' },
+          { label: 'Gerar imagens com IA', value: '15/mês', tip: 'Descreve a capa ou ilustração que queres e a IA gera-a na hora, pronta a usar no projeto ou a descarregar.' },
           { label: 'Exportar PowerPoint', value: 'sem limite' },
           { label: 'Ficheiros de prova', value: '1GB', tip: 'Anexa PDFs, Word, PowerPoint ou imagens, qualquer ficheiro que prove o trabalho. Escolhes o que aparece na página pública.' },
           { label: 'Link à tua medida', tip: 'Tira o código aleatório do link do teu projeto e escolhe o teu próprio texto.' },
@@ -132,7 +133,6 @@ const PLANS = [
         items: [
           { label: 'Coach IA', value: '50 msgs' },
           { label: 'Toda a IA', value: 'dobro do Plus', subitems: ['Criar projeto', 'Entrevista guiada', 'Análise', 'Relatório', 'Narrativa IA', 'Treino para entrevistas', 'Carta de apresentação'] },
-          { label: 'Gerar imagens com IA', value: '15/mês', tip: 'Descreve a capa ou ilustração que queres e a IA gera-a na hora, pronta a usar no projeto ou a descarregar.' },
         ],
       },
     ],
@@ -149,6 +149,7 @@ const PLANS = [
 const COMPARE_ROWS = [
   { label: 'Ficheiros de prova', free: false, plus: '250MB', pro: '1GB' },
   { label: 'Projetos', free: '2', plus: '15', pro: 'Ilimitados' },
+  { label: 'Gerar imagens com IA', free: false, plus: '5x/mês', pro: '15x/mês' },
   { label: 'Coach IA', free: '10 msgs', plus: '30 msgs', pro: '50 msgs' },
   { label: 'Criar projeto com IA', free: '3x', plus: '15x', pro: '30x' },
   { label: 'Entrevista guiada', free: '3x', plus: '15x', pro: '30x' },
