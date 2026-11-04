@@ -1769,8 +1769,8 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   mesma feature (Plus/Pro), sem ser preciso abrir um projeto
                   primeiro. */}
               {user && (
-                <button className={`sb-item${isActive('/estudio') ? ' active' : ''}`} onClick={() => navigate('/estudio')}>
-                  <ImageIcon size={16} />{!collapsed && showLabels && <span>Estúdio</span>}
+                <button className={`sb-item${isActive('/gerador-ia') ? ' active' : ''}`} onClick={() => navigate('/gerador-ia')}>
+                  <ImageIcon size={16} />{!collapsed && showLabels && <span>Gerador IA</span>}
                 </button>
               )}
               {user && (
@@ -2256,8 +2256,8 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                     </button>
                   )}
                   {user && (
-                    <button className={`mob-nav-btn${isActive('/estudio') ? ' active' : ''}`} onClick={() => { navigate('/estudio'); setMenuOpen(false) }}>
-                      <ImageIcon size={18} /> Estúdio
+                    <button className={`mob-nav-btn${isActive('/gerador-ia') ? ' active' : ''}`} onClick={() => { navigate('/gerador-ia'); setMenuOpen(false) }}>
+                      <ImageIcon size={18} /> Gerador IA
                     </button>
                   )}
                   {user && (
