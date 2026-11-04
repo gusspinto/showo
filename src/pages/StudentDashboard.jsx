@@ -49,7 +49,6 @@ import WeeklyRecap, { shouldShowRecap, RecapsPanel } from '../components/dashboa
 import WeeklyPostCard from '../components/dashboard/WeeklyPostCard'
 import WeeklyRecapTeaser from '../components/dashboard/WeeklyRecapTeaser'
 import LimitNudgeBanner from '../components/dashboard/LimitNudgeBanner'
-import DiaryNudgeBanner from '../components/dashboard/DiaryNudgeBanner'
 import FeaturedWeekBanner from '../components/dashboard/FeaturedWeekBanner'
 import SegmentedTabs from '../components/SegmentedTabs'
 import WeeklyCheckin, { shouldShowCheckin } from '../components/dashboard/WeeklyCheckin'
@@ -58,7 +57,7 @@ import CalendarSyncModal from '../components/dashboard/CalendarSyncModal'
 import '../components/dashboard/MonthCalendar.css'
 import {
   computeReportCoverage, computeWeekStreak, buildWeeklyActivity, computeEngagementSignal,
-  timeAgoLabel, startOfDay, weekStartISO,
+  timeAgoLabel, startOfDay,
 } from '../lib/journal'
 import { pickFocusProject, daysUntil } from '../lib/focusProject'
 import './Dashboard.css'          // modais e toast partilhados (namespace dash-*)
@@ -235,9 +234,6 @@ export default function StudentDashboard({ user, profile }) {
   // turma nenhuma para mostrar, por isso o dashboard fica como sempre foi.
   const [dashTab, setDashTab] = useState('projetos')
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
-  const [diaryReminderDismissed, setDiaryReminderDismissed] = useState(
-    () => localStorage.getItem(`showo_diary_remind_${weekStartISO()}`) === '1'
-  )
   const [showReport, setShowReport] = useState(false)
   const [showAddReminder, setShowAddReminder] = useState(null)
   const [editingReminder, setEditingReminder] = useState(null)
@@ -372,22 +368,6 @@ export default function StudentDashboard({ user, profile }) {
   }
 
   const focusProject = useMemo(() => pickFocusProject(projects), [projects])
-
-  // Sinal para lembrar de escrever no diário. "auto" são entradas geradas
-  // pela plataforma quando a pessoa preenche uma secção, não contam como
-  // ela ter escrito nada a sério. Se só essas existirem, o alerta conta a
-  // partir da criação do projeto, não da entrada automática.
-  const diaryNudgeSignal = useMemo(() => {
-    if (!focusProject) return null
-    const realEntries = activityEntries.filter(e => e.kind !== 'auto')
-    const lastDate = realEntries.length
-      ? new Date(Math.max(...realEntries.map(e => new Date(e.created_at).getTime())))
-      : focusProject.created_at ? new Date(focusProject.created_at) : null
-    if (!lastDate) return null
-    const daysSince = Math.floor((Date.now() - lastDate.getTime()) / 86400000)
-    if (daysSince < 7) return null
-    return { daysSince, projectName: focusProject.name || 'projeto' }
-  }, [activityEntries, focusProject])
 
   /* ── Projeto em foco: linha completa + diário ──
      Os campos longos só são precisos para este projeto, por isso não vale a
@@ -1178,19 +1158,6 @@ export default function StudentDashboard({ user, profile }) {
               <FeaturedWeekBanner
                 projectName={featuredWeekNotice.projectName}
                 onDismiss={markFeaturedWeekSeen}
-              />
-            )}
-
-            {diaryNudgeSignal && !diaryReminderDismissed && (
-              <DiaryNudgeBanner
-                projectName={diaryNudgeSignal.projectName}
-                daysSince={diaryNudgeSignal.daysSince}
-                onDismiss={() => setDiaryReminderDismissed(true)}
-                onWrite={() => {
-                  logFunnelEvent('diary_nudge_clicked')
-                  setComposerProject(focusFull)
-                  setComposerKind('update')
-                }}
               />
             )}
 
