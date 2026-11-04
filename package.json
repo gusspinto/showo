@@ -43,7 +43,6 @@
     "vitest": "^5.0.1"
   },
   "overrides": {
-    "image-size": "^2.0.4",
-    "satori": "0.33.5"
+    "image-size": "^2.0.4"
   }
 }
