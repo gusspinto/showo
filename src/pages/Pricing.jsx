@@ -71,6 +71,10 @@ const PLANS = [
     priceMonthlyDiscounted: '€4,49',
     priceAnnual: '€89,90',
     annualEquivalent: '€7,49/mês',
+    // Mesmo cupão SHOWO_ONBOARDING_2026, -50% aplicado ao pagamento único
+    // anual (create-annual-checkout). €89,90/2 = €44,95.
+    priceAnnualDiscounted: '€44,95',
+    annualEquivalentDiscounted: '€3,75/mês',
     period: '/mês',
     positioning: 'Não pares a meio do caminho.',
     cta: 'Começar com o Plus',
@@ -108,6 +112,9 @@ const PLANS = [
     priceMonthlyDiscounted: '€8,99',
     priceAnnual: '€179,90',
     annualEquivalent: '€14,99/mês',
+    // €179,90/2 = €89,95.
+    priceAnnualDiscounted: '€89,95',
+    annualEquivalentDiscounted: '€7,50/mês',
     period: '/mês',
     positioning: 'Chega à conversa com prova, não com promessas.',
     cta: 'Ir para Pro',
@@ -334,18 +341,24 @@ export default function Pricing() {
                   {!annual && plan.priceMonthlyDiscounted && (
                     <span className="pricing-amount-old">{plan.priceMonthly}</span>
                   )}
+                  {annual && plan.priceAnnualDiscounted && (
+                    <span className="pricing-amount-old">{plan.priceAnnual}</span>
+                  )}
                   <span className="pricing-amount">
                     {annual && plan.priceAnnual
-                      ? plan.priceAnnual
-                      : plan.priceMonthlyDiscounted ?? plan.priceMonthly ?? plan.price}
+                      ? (plan.priceAnnualDiscounted ?? plan.priceAnnual)
+                      : (plan.priceMonthlyDiscounted ?? plan.priceMonthly ?? plan.price)}
                   </span>
                   {plan.period && <span className="pricing-period">{annual && plan.priceAnnual ? '/ano' : plan.period}</span>}
                 </div>
                 {!annual && plan.priceMonthlyDiscounted && (
                   <p className="pricing-discount-note">-50% nos primeiros 6 meses · código válido até 18 dez</p>
                 )}
+                {annual && plan.priceAnnualDiscounted && (
+                  <p className="pricing-discount-note">-50% no primeiro ano · código válido até 18 dez</p>
+                )}
                 {annual && plan.annualEquivalent ? (
-                  <p className="pricing-annual-note">equivale a {plan.annualEquivalent}</p>
+                  <p className="pricing-annual-note">equivale a {plan.annualEquivalentDiscounted ?? plan.annualEquivalent}</p>
                 ) : null}
                 {isCurrent ? (
                   <div className="pricing-current"><Check size={14} /> Plano atual</div>
