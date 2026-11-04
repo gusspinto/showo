@@ -8,6 +8,15 @@ const SUPABASE_KEY = process.env.VITE_SUPABASE_ANON_KEY
 const interRegular = fetch(new URL('./fonts/Inter-Regular.ttf', import.meta.url)).then(r => r.arrayBuffer())
 const interBold = fetch(new URL('./fonts/Inter-Bold.ttf', import.meta.url)).then(r => r.arrayBuffer())
 
+// satori (a lib que gera o SVG, via @vercel/og) tem uma vulnerabilidade
+// conhecida de escaping incorreto do texto ao serializar para SVG
+// (GHSA-wx4j-mvgx-mqwp). name/area vêm do próprio utilizador (nome do
+// projeto), por isso tiram-se aqui os carateres que permitiriam fugir do
+// nó de texto, em vez de depender só da lib para isso.
+function stripSvgBreakout(v) {
+  return String(v ?? '').replace(/[<>&]/g, '')
+}
+
 export default async function handler(req) {
   const { searchParams } = new URL(req.url)
   const slug = searchParams.get('slug') || ''
@@ -24,8 +33,8 @@ export default async function handler(req) {
       )
       const [p] = await r.json()
       if (p) {
-        name = p.name
-        area = p.area || ''
+        name = stripSvgBreakout(p.name)
+        area = stripSvgBreakout(p.area || '')
 
         const tr = await fetch(
           `${SUPABASE_URL}/rest/v1/project_data_tables?project_id=eq.${p.id}&is_public=eq.true&select=id`,
