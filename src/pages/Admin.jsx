@@ -599,6 +599,10 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
   // sem depender de correr SQL à mão sempre que a dúvida voltar a aparecer.
   const [aiCostByUser, setAiCostByUser] = useState(null)
   const [showAiCostUsers, setShowAiCostUsers] = useState(false)
+  // Onde cada pessoa gasta mais (migração 241), separado do total (240)
+  // pelo mesmo motivo do funil de checkout: função nova em vez de mudar a
+  // assinatura de uma já existente.
+  const [aiCostBreakdown, setAiCostBreakdown] = useState(null)
   useEffect(() => {
     let cancelled = false
     const since = days >= 9999 ? new Date(2020, 0, 1).toISOString() : new Date(now - days * 86400000).toISOString()
@@ -609,13 +613,15 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
       supabase.rpc('admin_get_checkout_funnel', { p_since: since }),
       supabase.rpc('admin_get_checkout_redirects', { p_since: since }),
       supabase.rpc('admin_get_ai_cost_by_user', { p_since: since }),
-    ]).then(([b, f, s, c, r, ac]) => {
+      supabase.rpc('admin_get_ai_cost_breakdown', { p_since: since }),
+    ]).then(([b, f, s, c, r, ac, acb]) => {
       if (cancelled) return
       setRangeBilling(b.data || [])
       setRangeFunnel(f.data || [])
       setProjectShares(s.data || [])
       setCheckoutFunnel(c.data || [])
       setAiCostByUser(ac.data || [])
+      setAiCostBreakdown(acb.data || [])
       setCheckoutRedirects(r.data || [])
     })
     return () => { cancelled = true }
@@ -1236,15 +1242,37 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
             </div>
             {showAiCostUsers && (
               <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {aiCostByUser.map((row, i) => (
-                  <div key={row.user_id || i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12.5, padding: '4px 0', borderBottom: i < aiCostByUser.length - 1 ? `1px solid ${C.border}` : 'none' }}>
-                    <Avatar name={row.full_name || row.username || '?'} size={20} />
-                    <span style={{ fontWeight: 600, color: C.text }}>{row.full_name || row.username || 'Utilizador removido'}</span>
-                    <span style={{ color: C.subtle, fontSize: 11 }}>{PLAN_LABELS[row.plan] || row.plan}</span>
-                    <span style={{ color: C.subtle, fontSize: 11 }}>{row.calls} chamada{Number(row.calls) === 1 ? '' : 's'}</span>
-                    <span style={{ marginLeft: 'auto', fontWeight: 700, color: C.text }}>${Number(row.total_usd).toFixed(3)}</span>
+                {aiCostByUser.map((row, i) => {
+                  const u = usersById.get(row.user_id)
+                  const daysOld = u?.created_at ? Math.floor((now - new Date(u.created_at).getTime()) / 86400000) : null
+                  const perFeature = (aiCostBreakdown || [])
+                    .filter(b => b.user_id === row.user_id)
+                    .sort((a, b) => Number(b.total_usd) - Number(a.total_usd))
+                  const topFeature = perFeature[0]
+                  return (
+                  <div key={row.user_id || i} style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '6px 0', borderBottom: i < aiCostByUser.length - 1 ? `1px solid ${C.border}` : 'none' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12.5 }}>
+                      <Avatar name={row.full_name || row.username || '?'} size={20} />
+                      <span style={{ fontWeight: 600, color: C.text }}>{row.full_name || row.username || 'Utilizador removido'}</span>
+                      <span style={{ color: C.subtle, fontSize: 11 }}>{PLAN_LABELS[row.plan] || row.plan}</span>
+                      {topFeature && (
+                        <span style={{ fontSize: 10.5, fontWeight: 600, padding: '2px 8px', borderRadius: 99, background: C.bgAlt, color: C.muted }}>
+                          mais gasto em {AI_FEATURE_LABELS[topFeature.feature] || topFeature.feature}
+                        </span>
+                      )}
+                      <span style={{ marginLeft: 'auto', fontWeight: 700, color: C.text }}>${Number(row.total_usd).toFixed(3)}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 10.5, color: C.subtle, paddingLeft: 30, flexWrap: 'wrap' }}>
+                      {u?.email && <span>{u.email}</span>}
+                      {daysOld !== null && <span>conta há {daysOld === 0 ? 'hoje' : `${daysOld}d`}</span>}
+                      <span>{row.calls} chamada{Number(row.calls) === 1 ? '' : 's'} no total</span>
+                      {perFeature.map(f => (
+                        <span key={f.feature}>{AI_FEATURE_LABELS[f.feature] || f.feature}: {f.calls}x (${Number(f.total_usd).toFixed(3)})</span>
+                      ))}
+                    </div>
                   </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </>
