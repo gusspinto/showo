@@ -100,10 +100,10 @@ function cta(href: string, label: string) {
 function buildEmail(firstName: string | undefined, featureLabel: string, unsubscribeUrl: string) {
   const subject = `Deixaste o ${featureLabel} a meio`
   const html = wrapEmail(
-    greeting(firstName) +
-    headline(`Deixaste o ${esc(featureLabel)} a meio`) +
-    paragraph(`Esgotaste o limite deste mês em "${esc(featureLabel)}" e ainda não voltaste. O limite renova sozinho no início do próximo mês, mas se quiseres continuar agora, o Plus ou o Pro dão muito mais por mês.`) +
-    paragraph('Não é só mais limite, é não perderes o fio ao que estavas a fazer.', true) +
+    row(`<span style="color:#888888;font-size:16px;line-height:1.4;">${firstName ? esc(firstName) + ',' : ''}</span>`) +
+    `<tr><td style="padding:0 0 18px;color:#f0f0f0;font-size:28px;line-height:1.25;font-weight:800;letter-spacing:-0.01em;">Deixaste o<br/>${esc(featureLabel)} a meio</td></tr>` +
+    `<tr><td style="padding:0 0 10px;color:#cccccc;font-size:17px;line-height:1.5;font-weight:600;">Esgotaste o limite deste mês. O limite renova sozinho, mas não precisas de esperar.</td></tr>` +
+    `<tr><td style="padding:0 0 28px;color:#999999;font-size:15px;line-height:1.6;">Com o Plus ou o Pro continuas agora mesmo, sem perder o fio ao que estavas a fazer.</td></tr>` +
     cta(`${APP}/pricing`, 'Ver planos'),
     unsubscribeUrl,
   )
