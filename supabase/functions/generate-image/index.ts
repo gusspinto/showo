@@ -46,10 +46,28 @@ Deno.serve(async (req) => {
     })
   }
 
+  const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+
+  // checkPlanLimit já consumiu a unidade do mês antes de sabermos se a
+  // OpenAI vai responder bem (tem de ser assim, para dois pedidos em
+  // paralelo não passarem ambos do limite). Se a geração falhar depois
+  // disso, a pessoa perdia a unidade sem nunca ter recebido nada em troca,
+  // achado de 2026-11-03 (créditos esgotados na OpenAI a comer o limite do
+  // Showo). Devolve a unidade nesses casos.
+  async function refundUsage() {
+    try {
+      const month = new Date().toISOString().slice(0, 7)
+      await supabase.rpc('decrement_ai_usage', { p_user_id: user!.id, p_feature: 'generateImage', p_month: month })
+    } catch (e) {
+      console.error('[generate-image] refund failed:', e)
+    }
+  }
+
   try {
     const { prompt } = await req.json()
     const safePrompt = String(prompt ?? '').trim().slice(0, 1000)
     if (!safePrompt) {
+      await refundUsage()
       return new Response(JSON.stringify({ error: 'Descreve o que queres na imagem.' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
@@ -73,6 +91,7 @@ Deno.serve(async (req) => {
     if (!res.ok) {
       const errText = await res.text()
       console.error('[generate-image] OpenAI error:', res.status, errText.slice(0, 500))
+      await refundUsage()
       return new Response(JSON.stringify({ error: 'Não foi possível gerar a imagem. Tenta novamente.' }), {
         status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
@@ -82,6 +101,7 @@ Deno.serve(async (req) => {
     const b64 = data?.data?.[0]?.b64_json
     if (!b64) {
       console.error('[generate-image] resposta sem imagem:', JSON.stringify(data).slice(0, 300))
+      await refundUsage()
       return new Response(JSON.stringify({ error: 'A IA não devolveu uma imagem. Tenta novamente.' }), {
         status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
@@ -93,7 +113,6 @@ Deno.serve(async (req) => {
       ? null // modelo de imagem nao usa preco por token igual ao texto, nao inventar um numero a partir disto
       : OPENAI_IMAGE_PRICE_USD
 
-    const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
     await supabase.from('ai_costs').insert({
       user_id: user.id,
       feature: 'generateImage',
@@ -127,6 +146,7 @@ Deno.serve(async (req) => {
     })
   } catch (err) {
     console.error('[generate-image]', err)
+    await refundUsage()
     return new Response(JSON.stringify({ error: 'Erro interno. Tenta novamente.' }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
