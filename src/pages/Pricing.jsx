@@ -148,6 +148,7 @@ const PLANS = [
 const COMPARE_ROWS = [
   { label: 'Ficheiros de prova', free: false, plus: '250MB', pro: '1GB' },
   { label: 'Projetos', free: '2', plus: '15', pro: 'Ilimitados' },
+  { label: 'Gerar imagens com IA', free: false, plus: '5x/mês', pro: '15x/mês' },
   { label: 'Coach IA', free: '10 msgs', plus: '30 msgs', pro: '50 msgs' },
   { label: 'Criar projeto com IA', free: '3x', plus: '15x', pro: '30x' },
   { label: 'Entrevista guiada', free: '3x', plus: '15x', pro: '30x' },
