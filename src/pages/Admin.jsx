@@ -1247,7 +1247,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
                   const daysOld = u?.created_at ? Math.floor((now - new Date(u.created_at).getTime()) / 86400000) : null
                   const perFeature = (aiCostBreakdown || [])
                     .filter(b => b.user_id === row.user_id)
-                    .sort((a, b) => Number(b.total_usd) - Number(a.total_usd))
+                    .sort((a, b) => Number(b.calls) - Number(a.calls))
                   const topFeature = perFeature[0]
                   return (
                   <div key={row.user_id || i} style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '6px 0', borderBottom: i < aiCostByUser.length - 1 ? `1px solid ${C.border}` : 'none' }}>
@@ -1257,7 +1257,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
                       <span style={{ color: C.subtle, fontSize: 11 }}>{PLAN_LABELS[row.plan] || row.plan}</span>
                       {topFeature && (
                         <span style={{ fontSize: 10.5, fontWeight: 600, padding: '2px 8px', borderRadius: 99, background: C.bgAlt, color: C.muted }}>
-                          mais gasto em {AI_FEATURE_LABELS[topFeature.feature] || topFeature.feature}
+                          mais usado: {AI_FEATURE_LABELS[topFeature.feature] || topFeature.feature} ({topFeature.calls}x)
                         </span>
                       )}
                       <span style={{ marginLeft: 'auto', fontWeight: 700, color: C.text }}>${Number(row.total_usd).toFixed(3)}</span>
