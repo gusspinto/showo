@@ -84,6 +84,11 @@ export const PLANS = {
     priceLabel: '€8,99',
     priceLabelDiscounted: '€4,49',
     priceLabelAnnual: '€89,90',
+    // Mesmo cupão SHOWO_ONBOARDING_2026 (-50%), aplicado ao anual também
+    // (create-annual-checkout). €89,90/2 = €44,95. Antes disto, o anual
+    // mostrava o preço riscado errado (mensal×12, sem ligação nenhuma ao
+    // cupão) e o preço cheio como se já fosse o preço com desconto.
+    priceLabelAnnualDiscounted: '€44,95',
     period: '/mês',
     maxProjects: 15,
     ai: {
@@ -121,6 +126,8 @@ export const PLANS = {
     priceLabel: '€17,99',
     priceLabelDiscounted: '€8,99',
     priceLabelAnnual: '€179,90',
+    // €179,90/2 = €89,95.
+    priceLabelAnnualDiscounted: '€89,95',
     period: '/mês',
     maxProjects: Infinity,
     ai: {
@@ -252,21 +259,17 @@ export function planHighlights(fromPlanId, toPlan) {
   return items.slice(0, 3)
 }
 
-// Preço cheio se o anual fosse pago mês a mês (mensal × 12), para mostrar
-// riscado ao lado do preço anual real. Pedido do Gustavo: a poupança fica
-// visível no próprio preço, em vez de só dita por texto ("2 meses grátis").
-// Mesmo cálculo partilhado pelo pop-up de upgrade (PlanGate) e pela
-// Pricing, para nunca desalinhar entre os dois sítios.
 // Texto da promoção de lançamento (código SHOWO50, aplicado automaticamente
 // no checkout mensal via ONBOARDING_DISCOUNT_CODE). Uma só fonte de verdade
 // para a Pricing e o pop-up de upgrade não desalinharem a data ou o desconto.
 export const ONBOARDING_DISCOUNT_NOTE = '-50% nos primeiros 6 meses · código válido até 18 dez'
 
-export function fullAnnualPrice(monthlyLabel) {
-  const n = parseFloat(String(monthlyLabel).replace('€', '').replace(',', '.'))
-  if (!Number.isFinite(n)) return null
-  return `€${(n * 12).toFixed(2).replace('.', ',')}`
-}
+// Mesma nota para o anual, que é pagamento único (não faz sentido falar em
+// "primeiros 6 meses" para uma só cobrança). Gustavo apontou que o anual
+// nunca aplicava este desconto, nem no preço mostrado nem no checkout real
+// (create-annual-checkout só tinha allow_promotion_codes, a pessoa tinha de
+// escrever o código à mão, 0 resgates confirmados no Stripe).
+export const ANNUAL_ONBOARDING_DISCOUNT_NOTE = '-50% no primeiro ano · código válido até 18 dez'
 
 export function remainingUses(planId, feature, usageMap) {
   const limit = getPlan(planId).ai[feature]
