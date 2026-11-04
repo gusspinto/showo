@@ -603,6 +603,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
   // pelo mesmo motivo do funil de checkout: função nova em vez de mudar a
   // assinatura de uma já existente.
   const [aiCostBreakdown, setAiCostBreakdown] = useState(null)
+  const [expandedAiCostUsers, setExpandedAiCostUsers] = useState(() => new Set())
   useEffect(() => {
     let cancelled = false
     const since = days >= 9999 ? new Date(2020, 0, 1).toISOString() : new Date(now - days * 86400000).toISOString()
@@ -1249,9 +1250,17 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
                     .filter(b => b.user_id === row.user_id)
                     .sort((a, b) => Number(b.calls) - Number(a.calls))
                   const topFeature = perFeature[0]
+                  const isOpen = expandedAiCostUsers.has(row.user_id)
                   return (
                   <div key={row.user_id || i} style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '6px 0', borderBottom: i < aiCostByUser.length - 1 ? `1px solid ${C.border}` : 'none' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12.5 }}>
+                    <div
+                      onClick={() => setExpandedAiCostUsers(prev => {
+                        const next = new Set(prev)
+                        if (next.has(row.user_id)) next.delete(row.user_id); else next.add(row.user_id)
+                        return next
+                      })}
+                      style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12.5, cursor: 'pointer' }}
+                    >
                       <Avatar name={row.full_name || row.username || '?'} size={20} />
                       <span style={{ fontWeight: 600, color: C.text }}>{row.full_name || row.username || 'Utilizador removido'}</span>
                       <span style={{ color: C.subtle, fontSize: 11 }}>{PLAN_LABELS[row.plan] || row.plan}</span>
@@ -1261,15 +1270,26 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
                         </span>
                       )}
                       <span style={{ marginLeft: 'auto', fontWeight: 700, color: C.text }}>${Number(row.total_usd).toFixed(3)}</span>
+                      <span style={{ color: C.subtle, fontSize: 10 }}>{isOpen ? '▲' : '▼'}</span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 10.5, color: C.subtle, paddingLeft: 30, flexWrap: 'wrap' }}>
-                      {u?.email && <span>{u.email}</span>}
-                      {daysOld !== null && <span>conta há {daysOld === 0 ? 'hoje' : `${daysOld}d`}</span>}
-                      <span>{row.calls} chamada{Number(row.calls) === 1 ? '' : 's'} no total</span>
-                      {perFeature.map(f => (
-                        <span key={f.feature}>{AI_FEATURE_LABELS[f.feature] || f.feature}: {f.calls}x (${Number(f.total_usd).toFixed(3)})</span>
-                      ))}
-                    </div>
+                    {isOpen && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingLeft: 30 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 10.5, color: C.subtle, flexWrap: 'wrap' }}>
+                          {u?.email && <span>{u.email}</span>}
+                          {daysOld !== null && <span>conta há {daysOld === 0 ? 'hoje' : `${daysOld}d`}</span>}
+                          <span>{row.calls} chamada{Number(row.calls) === 1 ? '' : 's'} no total</span>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                          {perFeature.map(f => (
+                            <div key={f.feature} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: C.text }}>
+                              <span style={{ flex: '0 0 160px' }}>{AI_FEATURE_LABELS[f.feature] || f.feature}</span>
+                              <span style={{ color: C.subtle }}>{f.calls}x</span>
+                              <span style={{ marginLeft: 'auto', color: C.subtle }}>${Number(f.total_usd).toFixed(3)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                   )
                 })}
