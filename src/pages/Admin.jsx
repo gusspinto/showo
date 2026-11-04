@@ -593,6 +593,12 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
   // também apanha cliques que falharam a meio. checkout_redirected só
   // dispara depois do Stripe responder com uma sessão válida.
   const [checkoutRedirects, setCheckoutRedirects] = useState(null)
+  // Custo de IA por utilizador este mês (migração 240), pedido depois de
+  // discutir o pior caso teórico do Pro (esgotar todas as features de IA no
+  // mesmo mês): dá para ver se isso é teórico ou já está a acontecer a sério,
+  // sem depender de correr SQL à mão sempre que a dúvida voltar a aparecer.
+  const [aiCostByUser, setAiCostByUser] = useState(null)
+  const [showAiCostUsers, setShowAiCostUsers] = useState(false)
   useEffect(() => {
     let cancelled = false
     const since = days >= 9999 ? new Date(2020, 0, 1).toISOString() : new Date(now - days * 86400000).toISOString()
@@ -602,12 +608,14 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
       supabase.rpc('admin_get_project_shares', { p_since: since }),
       supabase.rpc('admin_get_checkout_funnel', { p_since: since }),
       supabase.rpc('admin_get_checkout_redirects', { p_since: since }),
-    ]).then(([b, f, s, c, r]) => {
+      supabase.rpc('admin_get_ai_cost_by_user', { p_since: since }),
+    ]).then(([b, f, s, c, r, ac]) => {
       if (cancelled) return
       setRangeBilling(b.data || [])
       setRangeFunnel(f.data || [])
       setProjectShares(s.data || [])
       setCheckoutFunnel(c.data || [])
+      setAiCostByUser(ac.data || [])
       setCheckoutRedirects(r.data || [])
     })
     return () => { cancelled = true }
@@ -1208,6 +1216,38 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
               )
             })}
           </div>
+        )}
+      </div>
+
+      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px' }}>
+        <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Custo de IA por utilizador {periodLabel}</h3>
+        <p style={{ margin: '0 0 14px', fontSize: 11, color: C.subtle }}>Quem gasta mais em IA este mês, custo real (dólares), não estimativa. Serve para ver se algum limite de plano está perto de dar prejuízo a sério, não só na teoria.</p>
+        {(aiCostByUser || []).length === 0 ? (
+          <p style={{ margin: 0, fontSize: 12, color: C.subtle }}>Sem custos registados neste período.</p>
+        ) : (
+          <>
+            <div
+              onClick={() => setShowAiCostUsers(o => !o)}
+              style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 12.5, color: C.text, fontWeight: 600 }}
+            >
+              Top {Math.min(20, aiCostByUser.length)} por custo total ($
+              {aiCostByUser.reduce((s, r) => s + Number(r.total_usd || 0), 0).toFixed(2)} no total)
+              <span style={{ color: C.subtle, fontWeight: 400 }}>{showAiCostUsers ? '▲' : '▼'}</span>
+            </div>
+            {showAiCostUsers && (
+              <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {aiCostByUser.map((row, i) => (
+                  <div key={row.user_id || i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12.5, padding: '4px 0', borderBottom: i < aiCostByUser.length - 1 ? `1px solid ${C.border}` : 'none' }}>
+                    <Avatar name={row.full_name || row.username || '?'} size={20} />
+                    <span style={{ fontWeight: 600, color: C.text }}>{row.full_name || row.username || 'Utilizador removido'}</span>
+                    <span style={{ color: C.subtle, fontSize: 11 }}>{PLAN_LABELS[row.plan] || row.plan}</span>
+                    <span style={{ color: C.subtle, fontSize: 11 }}>{row.calls} chamada{Number(row.calls) === 1 ? '' : 's'}</span>
+                    <span style={{ marginLeft: 'auto', fontWeight: 700, color: C.text }}>${Number(row.total_usd).toFixed(3)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
       </>}
