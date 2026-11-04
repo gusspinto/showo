@@ -316,6 +316,17 @@ Deno.serve(async (req) => {
   const corsHeaders = getCorsHeaders(req)
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
+  // Sem isto, qualquer um com o URL da função corria uma query pesada
+  // (200 projetos + diário + likes, com service role, sem RLS) e disparava
+  // emails para os admins, sem precisar de sessão nenhuma. Achado numa
+  // revisão de segurança (2026-11-04): a função nem sequer tinha cron a
+  // chamá-la, estava só exposta e esquecida.
+  const cronSecret = Deno.env.get('CRON_SECRET')
+  const provided = req.headers.get('x-cron-secret')
+  if (!cronSecret || provided !== cronSecret) {
+    return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: corsHeaders })
+  }
+
   try {
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,

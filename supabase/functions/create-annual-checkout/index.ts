@@ -1,5 +1,5 @@
 import Stripe from 'npm:stripe@17.7.0'
-import { getAuthUser, getCorsHeaders } from '../_shared/rateLimit.ts'
+import { getAuthUser, getCorsHeaders, checkRateLimit } from '../_shared/rateLimit.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 // Checkout de pagamento único para o plano anual, em vez da subscrição que
@@ -16,6 +16,13 @@ Deno.serve(async (req) => {
   if (!user) {
     return new Response(JSON.stringify({ error: 'Autenticação necessária.' }), {
       status: 401, headers: { ...cors, 'Content-Type': 'application/json' },
+    })
+  }
+
+  const allowed = await checkRateLimit(req, 'create-annual-checkout', 10)
+  if (!allowed) {
+    return new Response(JSON.stringify({ error: 'Demasiados pedidos. Tenta mais tarde.' }), {
+      status: 429, headers: { ...cors, 'Content-Type': 'application/json' },
     })
   }
 
