@@ -266,6 +266,11 @@ export default function Pricing() {
         { body: annual ? { plan: plan.id } : { plan: plan.id, period: 'monthly' } },
       )
       if (fnErr || !data?.url) { setError('Erro ao iniciar pagamento. Tenta novamente.'); return }
+      // Só agora é que se confirma que o Stripe respondeu com uma sessão
+      // válida, por isso só agora se regista quem chegou mesmo ao checkout
+      // (checkout_started, acima, só sabe que a pessoa clicou, não que o
+      // pedido teve sucesso).
+      logFunnelEvent('checkout_redirected', plan.id)
       window.location.href = data.url
     } catch {
       setError('Erro ao iniciar pagamento. Tenta novamente.')

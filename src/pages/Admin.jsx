@@ -588,6 +588,11 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
   // mecanismos diferentes, nunca deviam ter aparecido no mesmo funil.
   const [checkoutFunnel, setCheckoutFunnel] = useState(null)
   const [showCheckoutUsers, setShowCheckoutUsers] = useState(false)
+  // Quem realmente chegou ao Stripe (migração 239), não só quem clicou no
+  // botão: checkout_started dispara antes do pedido ao servidor, por isso
+  // também apanha cliques que falharam a meio. checkout_redirected só
+  // dispara depois do Stripe responder com uma sessão válida.
+  const [checkoutRedirects, setCheckoutRedirects] = useState(null)
   useEffect(() => {
     let cancelled = false
     const since = days >= 9999 ? new Date(2020, 0, 1).toISOString() : new Date(now - days * 86400000).toISOString()
@@ -596,12 +601,14 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
       supabase.rpc('admin_get_funnel_summary', { p_since: since }),
       supabase.rpc('admin_get_project_shares', { p_since: since }),
       supabase.rpc('admin_get_checkout_funnel', { p_since: since }),
-    ]).then(([b, f, s, c]) => {
+      supabase.rpc('admin_get_checkout_redirects', { p_since: since }),
+    ]).then(([b, f, s, c, r]) => {
       if (cancelled) return
       setRangeBilling(b.data || [])
       setRangeFunnel(f.data || [])
       setProjectShares(s.data || [])
       setCheckoutFunnel(c.data || [])
+      setCheckoutRedirects(r.data || [])
     })
     return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -640,6 +647,31 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
   const nudgeShown = funnelMap.nudge_shown || 0
   const nudgeClicked = funnelMap.nudge_clicked || 0
   const checkoutStarted = funnelMap.checkout_started || 0
+  // checkout_started é só o clique no botão de pagar (pode falhar a meio,
+  // ex. Stripe fora do ar); checkout_redirected (migração 239) só conta
+  // quando o pedido teve sucesso e a pessoa chegou mesmo à sessão do Stripe.
+  const checkoutRedirected = funnelMap.checkout_redirected || 0
+  // checkout_redirected só começou a ser registado a partir desta data
+  // (migração 239, 2026-11-04). Linhas de checkout_started anteriores a
+  // isto nunca vão ter par, não porque falharam, mas porque na altura não
+  // havia este evento ainda, mostrar "não chegou" nessas seria enganador.
+  const CHECKOUT_REDIRECT_TRACKING_SINCE = new Date('2026-11-04T00:00:00Z').getTime()
+  // Para saber, pessoa a pessoa, quem chegou ao Stripe: casa cada linha de
+  // checkout_started com um evento checkout_redirected da mesma pessoa e
+  // feature, nos 5 min seguintes (tempo de sobra para a resposta do Stripe).
+  const redirectsByUser = new Map() // user_id -> [{feature, created_at}]
+  ;(checkoutRedirects || []).forEach(r => {
+    const existing = redirectsByUser.get(r.user_id) || []
+    redirectsByUser.set(r.user_id, [...existing, r])
+  })
+  function reachedStripe(row) {
+    const candidates = redirectsByUser.get(row.user_id) || []
+    const startedAt = new Date(row.created_at).getTime()
+    return candidates.some(r => {
+      const t = new Date(r.created_at).getTime()
+      return r.feature === row.feature && t >= startedAt && t - startedAt <= 5 * 60 * 1000
+    })
+  }
   const novoViewed = funnelMap.novo_viewed || 0
   const novoStarted = (funnelMap.novo_manual_started || 0) + (funnelMap.novo_ai_generate_result || 0)
   const projectCreated = funnelMap.project_created || 0
@@ -1082,10 +1114,11 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
 
       <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px' }}>
         <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Limite atingido → checkout {periodLabel}</h3>
-        <p style={{ margin: '0 0 18px', fontSize: 11, color: C.subtle }}>Do limite atingido em qualquer feature ao início do checkout (modal de upgrade), dados reais, não estimativa.</p>
+        <p style={{ margin: '0 0 18px', fontSize: 11, color: C.subtle }}>Do limite atingido em qualquer feature ao clique em pagar (Pricing ou pop-up de upgrade). "Clicaram em pagar" conta o clique, mesmo que o pedido falhe a meio; "Chegaram ao Stripe" só conta quem recebeu mesmo a sessão de pagamento. Dados reais, não estimativa.</p>
         <FunnelFlow steps={[
           { label: 'Bateram num limite', value: usersAtLimit, onClick: usersAtLimit > 0 ? () => setShowLimitUsers(o => !o) : undefined, icon: <AlertTriangle size={14} />, color: C.red },
-          { label: 'Iniciaram checkout', value: checkoutStarted, onClick: checkoutStarted > 0 ? () => setShowCheckoutUsers(o => !o) : undefined, icon: <Star size={14} />, color: C.green },
+          { label: 'Clicaram em pagar', value: checkoutStarted, onClick: checkoutStarted > 0 ? () => setShowCheckoutUsers(o => !o) : undefined, icon: <Star size={14} />, color: C.yellow },
+          { label: 'Chegaram ao Stripe', value: checkoutRedirected, icon: <Check size={14} />, color: C.green },
         ]} />
         {showLimitUsers && usersAtLimitList.length > 0 && (
           <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -1113,7 +1146,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
         )}
         {showCheckoutUsers && (checkoutFunnel || []).length > 0 && (
           <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <span style={{ fontSize: 10, fontWeight: 700, color: C.subtle, textTransform: 'uppercase', letterSpacing: 0.5 }}>Quem iniciou checkout</span>
+            <span style={{ fontSize: 10, fontWeight: 700, color: C.subtle, textTransform: 'uppercase', letterSpacing: 0.5 }}>Quem clicou em pagar</span>
             {checkoutFunnel.map((row, i) => {
               // admin_get_checkout_funnel só devolve o essencial (nome,
               // feature, data, se pagou), o resto vem do que a página já
@@ -1133,6 +1166,8 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
               // Não é suposto substituir o julgamento, é só destacar quem tem
               // mais probabilidade de responder a um contacto direto.
               const worthContacting = !row.completed && daysSinceLogin !== null && daysSinceLogin <= 14 && hasRealWork
+              const trackedForRedirect = new Date(row.created_at).getTime() >= CHECKOUT_REDIRECT_TRACKING_SINCE
+              const reached = reachedStripe(row)
               return (
               <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '6px 0', borderBottom: i < checkoutFunnel.length - 1 ? `1px solid ${C.border}` : 'none' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12.5 }}>
@@ -1145,13 +1180,22 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
                       Vale a pena contactar
                     </span>
                   )}
-                  <span style={{
-                    marginLeft: 'auto', fontSize: 10.5, fontWeight: 700, padding: '3px 9px', borderRadius: 99,
-                    background: row.completed ? 'var(--color-success-subtle, rgba(34,197,94,0.15))' : C.bgAlt,
-                    color: row.completed ? 'var(--color-success, #22c55e)' : C.muted,
-                  }}>
-                    {row.completed ? 'Pagou' : 'Não completou'}
-                  </span>
+                  <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{
+                      fontSize: 10.5, fontWeight: 700, padding: '3px 9px', borderRadius: 99,
+                      background: !trackedForRedirect ? C.bgAlt : reached ? C.bgAlt : 'var(--color-warning-subtle)',
+                      color: !trackedForRedirect ? C.subtle : reached ? C.muted : 'var(--color-warning)',
+                    }}>
+                      {!trackedForRedirect ? 'Sem dado (anterior a 4/11)' : reached ? 'Chegou ao Stripe' : 'Não chegou ao Stripe'}
+                    </span>
+                    <span style={{
+                      fontSize: 10.5, fontWeight: 700, padding: '3px 9px', borderRadius: 99,
+                      background: row.completed ? 'var(--color-success-subtle, rgba(34,197,94,0.15))' : C.bgAlt,
+                      color: row.completed ? 'var(--color-success, #22c55e)' : C.muted,
+                    }}>
+                      {row.completed ? 'Pagou' : 'Não completou'}
+                    </span>
+                  </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 10.5, color: C.subtle, paddingLeft: 32, flexWrap: 'wrap' }}>
                   {u?.email && <span>{u.email}</span>}

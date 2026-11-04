@@ -406,6 +406,9 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
         { body: annual ? { plan: upgrade.id, returnPath } : { plan: upgrade.id, period: 'monthly', returnPath } },
       )
       if (error || !data?.url) { setCheckoutError('Erro ao iniciar pagamento. Tenta novamente.'); return }
+      // Confirmação real de que chegou ao Stripe (o pedido teve sucesso),
+      // distinto de checkout_started acima que só sabe que houve clique.
+      logFunnelEvent('checkout_redirected', feature)
       window.location.href = data.url
     } catch {
       setCheckoutError('Erro ao iniciar pagamento. Tenta novamente.')
@@ -445,6 +448,9 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
       // Segunda tentativa depois do Gustavo apontar que continuava a soar a
       // burla — "ajudas-me a pagar?" e explicar que é "direto pelo Stripe"
       // não é como ninguém fala mesmo. O mais curto e direto possível.
+      // Mesma confirmação real do handleUpgrade: o pedido ao Stripe teve
+      // sucesso, só muda o canal (WhatsApp em vez de redirect direto).
+      logFunnelEvent('checkout_redirected', feature)
       const msg = `Olá! Podes pagar isto por mim? É para o Showo, o portefólio que ando a fazer: ${data.url}`
       const waUrl = `https://wa.me/?text=${encodeURIComponent(msg)}`
       if (win) win.location.href = waUrl
