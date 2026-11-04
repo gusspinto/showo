@@ -1114,21 +1114,45 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
         {showCheckoutUsers && (checkoutFunnel || []).length > 0 && (
           <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 6 }}>
             <span style={{ fontSize: 10, fontWeight: 700, color: C.subtle, textTransform: 'uppercase', letterSpacing: 0.5 }}>Quem iniciou checkout</span>
-            {checkoutFunnel.map((row, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12.5 }}>
-                <Avatar name={row.full_name || row.username || '?'} size={22} />
-                <span style={{ fontWeight: 600, color: C.text }}>{row.full_name || row.username || 'Utilizador removido'}</span>
-                <span style={{ color: C.subtle, fontSize: 11 }}>{AI_FEATURE_LABELS[row.feature] || row.feature || '—'}</span>
-                <span style={{ color: C.subtle, fontSize: 11 }}>{new Date(row.created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}</span>
-                <span style={{
-                  marginLeft: 'auto', fontSize: 10.5, fontWeight: 700, padding: '3px 9px', borderRadius: 99,
-                  background: row.completed ? 'var(--color-success-subtle, rgba(34,197,94,0.15))' : C.bgAlt,
-                  color: row.completed ? 'var(--color-success, #22c55e)' : C.muted,
-                }}>
-                  {row.completed ? 'Pagou' : 'Não completou'}
-                </span>
+            {checkoutFunnel.map((row, i) => {
+              const daysOld = row.signup_at ? Math.floor((now - new Date(row.signup_at).getTime()) / 86400000) : null
+              const daysSinceLogin = row.last_sign_in_at ? Math.floor((now - new Date(row.last_sign_in_at).getTime()) / 86400000) : null
+              const hasRealWork = (row.project_count || 0) > 0 && (row.best_score || 0) >= 30
+              // "Vale a pena contactar": ainda ativo (entrou há <=14 dias) e
+              // tem trabalho real feito (não só uma conta criada e nada mais).
+              // Não é suposto substituir o julgamento, é só destacar quem tem
+              // mais probabilidade de responder a um contacto direto.
+              const worthContacting = !row.completed && daysSinceLogin !== null && daysSinceLogin <= 14 && hasRealWork
+              return (
+              <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '6px 0', borderBottom: i < checkoutFunnel.length - 1 ? `1px solid ${C.border}` : 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12.5 }}>
+                  <Avatar name={row.full_name || row.username || '?'} size={22} />
+                  <span style={{ fontWeight: 600, color: C.text }}>{row.full_name || row.username || 'Utilizador removido'}</span>
+                  <span style={{ color: C.subtle, fontSize: 11 }}>{AI_FEATURE_LABELS[row.feature] || row.feature || '—'}</span>
+                  <span style={{ color: C.subtle, fontSize: 11 }}>{new Date(row.created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}</span>
+                  {worthContacting && (
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: 'var(--color-warning-subtle)', color: 'var(--color-warning)' }}>
+                      Vale a pena contactar
+                    </span>
+                  )}
+                  <span style={{
+                    marginLeft: 'auto', fontSize: 10.5, fontWeight: 700, padding: '3px 9px', borderRadius: 99,
+                    background: row.completed ? 'var(--color-success-subtle, rgba(34,197,94,0.15))' : C.bgAlt,
+                    color: row.completed ? 'var(--color-success, #22c55e)' : C.muted,
+                  }}>
+                    {row.completed ? 'Pagou' : 'Não completou'}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 10.5, color: C.subtle, paddingLeft: 32, flexWrap: 'wrap' }}>
+                  {row.email && <span>{row.email}</span>}
+                  {daysOld !== null && <span>conta há {daysOld === 0 ? 'hoje' : `${daysOld}d`}</span>}
+                  <span>{daysSinceLogin === null ? 'nunca voltou a entrar' : daysSinceLogin === 0 ? 'entrou hoje' : `entrou há ${daysSinceLogin}d`}</span>
+                  <span>{row.project_count} projeto{row.project_count === 1 ? '' : 's'}{row.best_score ? ` (melhor: ${row.best_score})` : ''}</span>
+                  <span>plano atual: <strong style={{ color: C.text }}>{PLAN_LABELS[row.current_plan] || row.current_plan}</strong></span>
+                </div>
               </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
