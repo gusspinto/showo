@@ -9,6 +9,7 @@ import { InfoCircleIcon as InfoCircle } from '@solar-icons/react/linear/info-cir
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
+import { fullAnnualPrice, ONBOARDING_DISCOUNT_NOTE } from '../lib/plans'
 import TestimonialsMarquee from '../components/TestimonialsMarquee'
 import './Pricing.css'
 
@@ -325,21 +326,34 @@ export default function Pricing() {
                 </div>
 
                 <div className="pricing-price">
-                  {!annual && plan.priceMonthlyDiscounted && (
+                  {/* Preço cheio riscado (mensal × 12), para a poupança do
+                      anual aparecer no próprio preço, não só em texto
+                      ("2 meses grátis"), que saiu daqui. No mensal, o preço
+                      riscado é o SHOWO50 (-50%, aplicado sozinho no checkout). */}
+                  {annual && plan.priceAnnual && plan.priceMonthly && (
+                    <span className="pricing-amount-old">{fullAnnualPrice(plan.priceMonthly)}</span>
+                  )}
+                  {!annual && plan.priceMonthlyDiscounted && plan.priceMonthly && (
                     <span className="pricing-amount-old">{plan.priceMonthly}</span>
                   )}
                   <span className="pricing-amount">
                     {annual && plan.priceAnnual
                       ? plan.priceAnnual
-                      : plan.priceMonthlyDiscounted ?? plan.priceMonthly ?? plan.price}
+                      : !annual && plan.priceMonthlyDiscounted
+                        ? plan.priceMonthlyDiscounted
+                        : plan.priceMonthly ?? plan.price}
                   </span>
                   {plan.period && <span className="pricing-period">{annual && plan.priceAnnual ? '/ano' : plan.period}</span>}
                 </div>
-                {!annual && plan.priceMonthlyDiscounted && (
-                  <p className="pricing-discount-note">-50% nos primeiros 6 meses · código válido até 18 dez</p>
-                )}
                 {annual && plan.annualEquivalent ? (
                   <p className="pricing-annual-note">equivale a {plan.annualEquivalent}</p>
+                ) : !annual && plan.priceMonthlyDiscounted ? (
+                  <p className="pricing-discount-note">{ONBOARDING_DISCOUNT_NOTE}</p>
+                ) : plan.weeklyNote ? (
+                  /* Ao dia os cêntimos não dizem nada a ninguém; à semana
+                     já se compara com alguma coisa real. É a mesma conta,
+                     não uma promessa nova. */
+                  <p className="pricing-annual-note">{plan.weeklyNote}</p>
                 ) : null}
                 {isCurrent ? (
                   <div className="pricing-current"><Check size={14} /> Plano atual</div>
