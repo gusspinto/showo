@@ -124,9 +124,16 @@ Deno.serve(async (req) => {
     if (!resendKey) throw new Error('RESEND_API_KEY not configured')
 
     let testUserId: string | null = null
+    let testFeature: string | null = null
     try {
       const body = await req.json()
       if (typeof body?.test_user_id === 'string') testUserId = body.test_user_id
+      // Em teste, a pessoa pode nunca ter batido num limite a sério este
+      // mês (achado ao testar: sem isto, o modo de teste nunca envia nada
+      // se o candidato não esgotou nenhuma feature de verdade). Deixa
+      // forçar qual feature simular, para ver o email real antes de
+      // disparar o cron a sério.
+      if (typeof body?.test_feature === 'string') testFeature = body.test_feature
     } catch { /* corpo vazio é normal na chamada do cron */ }
 
     const supabase = createClient(
@@ -156,6 +163,10 @@ Deno.serve(async (req) => {
       if (limit != null && limit > 0 && row.used >= limit) {
         hitLimitFeature.set(row.user_id, row.feature)
       }
+    }
+
+    if (testUserId && testFeature) {
+      hitLimitFeature.set(testUserId, testFeature)
     }
 
     if (!hitLimitFeature.size) {
