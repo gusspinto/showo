@@ -82,7 +82,13 @@ export const PLANS = {
     id: 'plus',
     name: 'Plus',
     priceLabel: '€8,99',
+    priceLabelDiscounted: '€4,49',
     priceLabelAnnual: '€89,90',
+    // Mesmo cupão SHOWO_ONBOARDING_2026 (-50%), aplicado ao anual também
+    // (create-annual-checkout). €89,90/2 = €44,95. Antes disto, o anual
+    // mostrava o preço riscado errado (mensal×12, sem ligação nenhuma ao
+    // cupão) e o preço cheio como se já fosse o preço com desconto.
+    priceLabelAnnualDiscounted: '€44,95',
     period: '/mês',
     maxProjects: 15,
     ai: {
@@ -118,7 +124,10 @@ export const PLANS = {
     id: 'pro',
     name: 'Pro',
     priceLabel: '€17,99',
+    priceLabelDiscounted: '€8,99',
     priceLabelAnnual: '€179,90',
+    // €179,90/2 = €89,95.
+    priceLabelAnnualDiscounted: '€89,95',
     period: '/mês',
     maxProjects: Infinity,
     ai: {
@@ -213,6 +222,14 @@ export function planThatUnlocks(feature, planId) {
 // upgrade com benefícios concretos em vez de espaço vazio ao lado dos botões
 // (pedido do Gustavo, o utilizador "não consegue perceber os benefícios reais").
 // Dados reais dos planos, não uma lista inventada, só o que de facto melhora.
+//
+// `from`/`to`/`suffix` em vez de uma string já formatada ("2 → 15"): o
+// pop-up (PlanGate.jsx) estava a desenhar isto como texto solto a flutuar,
+// sem nada a segurar visualmente, pedido do Gustavo para ficar com mais
+// cuidado. Com os valores separados, o "antes" pode ficar pequeno/riscado e
+// o "depois" em destaque, como já acontece no preço anual. `icon` é só uma
+// chave (string), não um componente: este ficheiro não sabe de React, quem
+// usa é que resolve para o ícone.
 export function planHighlights(fromPlanId, toPlan) {
   const from = getPlan(fromPlanId)
   if (!toPlan) return []
@@ -220,27 +237,39 @@ export function planHighlights(fromPlanId, toPlan) {
   const items = []
 
   if (toPlan.maxProjects > from.maxProjects) {
-    items.push({ label: 'Projetos', value: `${fmt(from.maxProjects)} → ${fmt(toPlan.maxProjects)}` })
+    items.push({ label: 'Projetos', icon: 'projects', from: fmt(from.maxProjects), to: fmt(toPlan.maxProjects) })
   }
   if (toPlan.ai.coach > from.ai.coach) {
-    items.push({ label: 'Coach IA', value: `${fmt(from.ai.coach)} → ${fmt(toPlan.ai.coach)} por mês` })
+    items.push({ label: 'Coach IA', icon: 'coach', from: fmt(from.ai.coach), to: fmt(toPlan.ai.coach), suffix: '/mês' })
   }
   if (toPlan.career.weeklyRecap && !from.career.weeklyRecap) {
-    items.push({ label: 'Recap semanal automático', value: 'incluído' })
+    items.push({ label: 'Recap semanal automático', icon: 'recap', to: 'incluído' })
   }
   if (toPlan.career.internshipPage && !from.career.internshipPage) {
-    items.push({ label: 'Vagas de estágio', value: 'incluído' })
+    items.push({ label: 'Vagas de estágio', icon: 'internships', to: 'incluído' })
   }
   if (toPlan.career.cleanLink && !from.career.cleanLink) {
-    items.push({ label: 'Link limpo, sem /u/...', value: 'incluído' })
+    items.push({ label: 'Link limpo, sem /u/...', icon: 'link', to: 'incluído' })
   }
   if (toPlan.ai.exportPptx > from.ai.exportPptx) {
-    items.push({ label: 'Exportar PowerPoint', value: `${fmt(from.ai.exportPptx)} → ${fmt(toPlan.ai.exportPptx)} por mês` })
+    items.push({ label: 'Exportar PowerPoint', icon: 'export', from: fmt(from.ai.exportPptx), to: fmt(toPlan.ai.exportPptx), suffix: '/mês' })
   }
   // Era 4, reduzido no pop-up de upgrade, pedido do Gustavo para ficar
   // mais simples: só os 3 benefícios mais fortes, não a lista toda.
   return items.slice(0, 3)
 }
+
+// Texto da promoção de lançamento (código SHOWO50, aplicado automaticamente
+// no checkout mensal via ONBOARDING_DISCOUNT_CODE). Uma só fonte de verdade
+// para a Pricing e o pop-up de upgrade não desalinharem a data ou o desconto.
+export const ONBOARDING_DISCOUNT_NOTE = '-50% nos primeiros 6 meses · código válido até 18 dez'
+
+// Mesma nota para o anual, que é pagamento único (não faz sentido falar em
+// "primeiros 6 meses" para uma só cobrança). Gustavo apontou que o anual
+// nunca aplicava este desconto, nem no preço mostrado nem no checkout real
+// (create-annual-checkout só tinha allow_promotion_codes, a pessoa tinha de
+// escrever o código à mão, 0 resgates confirmados no Stripe).
+export const ANNUAL_ONBOARDING_DISCOUNT_NOTE = '-50% no primeiro ano · código válido até 18 dez'
 
 export function remainingUses(planId, feature, usageMap) {
   const limit = getPlan(planId).ai[feature]

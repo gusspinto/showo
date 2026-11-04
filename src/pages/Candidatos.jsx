@@ -7,7 +7,7 @@ import { StarIcon as Star } from '@solar-icons/react/bold/star'
 import { UsersGroupRoundedIcon as Users } from '@solar-icons/react/bold/users-group-rounded'
 import { ChatRoundLineIcon as MessageSquare } from '@solar-icons/react/bold/chat-round-line'
 import { TrashBinMinimalisticIcon as Trash2 } from '@solar-icons/react/bold/trash-bin-minimalistic'
-import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
+import { MagnifierIcon as Search } from '../components/icons/MagnifierIcon'
 import { CaseIcon as Briefcase } from '@solar-icons/react/bold/case'
 
 const C = {

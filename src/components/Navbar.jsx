@@ -41,7 +41,7 @@ import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
 import { CaseIcon as Briefcase } from '@solar-icons/react/bold/case'
 import { UsersGroupTwoRoundedIcon as Users2 } from '@solar-icons/react/bold/users-group-two-rounded'
 import { Buildings2Icon as Building2 } from '@solar-icons/react/bold/buildings-2'
-import { MagnifierIcon as Search } from '@solar-icons/react/outline/magnifier'
+import { MagnifierIcon as Search } from './icons/MagnifierIcon'
 import { StarIcon as Star } from '@solar-icons/react/bold/star'
 import { ChatRoundLineIcon as MessageSquare } from '@solar-icons/react/bold/chat-round-line'
 import { Widget5Icon as Kanban } from '@solar-icons/react/bold/widget-5'
@@ -524,7 +524,12 @@ export function InviteInbox({ userId, sidebar = false, collapsed = false, flat =
                 ? { position: 'fixed', left: collapsed ? 80 : 248, bottom: 16, transition: 'left 0.25s cubic-bezier(0.22,1,0.36,1)' }
                 : { position: 'absolute', top: 'calc(100% + 8px)', right: 0 }
               ),
-              background: 'color-mix(in srgb, var(--color-bg) 82%, transparent)', border: `1px solid var(--color-border)`,
+              // 82% ficava transparente demais na sidebar de tablet (iPad):
+              // o calendário por trás lia-se claramente por baixo das
+              // notificações, mesmo com o blur. Subido para 94%, o mesmo
+              // problema já tinha sido corrigido no mobile (.notif-drop
+              // abaixo de 600px), faltava aqui.
+              background: 'color-mix(in srgb, var(--color-bg) 94%, transparent)', border: `1px solid var(--color-border)`,
               borderRadius: 14, padding: '8px',
               boxShadow: '0 8px 40px rgba(0,0,0,0.45)',
               backdropFilter: 'blur(18px) saturate(1.4)', WebkitBackdropFilter: 'blur(18px) saturate(1.4)',
@@ -1631,6 +1636,11 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           className="sb-collapse-toggle"
           onClick={toggleSidebar}
           title={collapsed ? 'Expandir menu' : 'Colapsar menu'}
+          /* "Criar projeto" passou para o topo da sidebar do aluno, por
+             cima do primeiro item normal — o botão de colapsar, fixo a
+             68px do topo, ficava por cima dele. Só desce quando esse
+             botão está mesmo ali (branch do aluno com showCreateCta). */
+          style={!isRecruiter && !isTeacher && showCreateCta ? { top: 124 } : undefined}
         >
           <ChevronRight size={12} style={{ transform: collapsed ? 'none' : 'rotate(180deg)', transition: 'transform 0.2s' }} />
         </button>
@@ -1738,6 +1748,19 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           ) : (
             /* ── ALUNO sidebar ── */
             <>
+              {/* Criar projeto no topo de tudo, acima de "Mesa de trabalho".
+                  Pedido do Gustavo, é a ação mais importante da sidebar e
+                  estava escondida lá em baixo, depois de "Conta". */}
+              {user && showCreateCta && (
+                <div className="sb-create-wrap visible" style={{ marginBottom: 6 }}>
+                  <div className="sb-create-inner">
+                    <button className="sb-create gradient-cta" onMouseMove={handleGradientMove} onMouseLeave={handleGradientLeave} onClick={() => navigate('/novo')}>
+                      <Plus size={14} />{!collapsed && showLabels && <span>Criar projeto</span>}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Mesa de trabalho: tudo o que é o trabalho do próprio aluno
                   (projeto, diário, coach, biblioteca, turmas) num só grupo.
                   Biblioteca e Turmas estavam soltas sem título nenhum antes
@@ -1828,16 +1851,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               <button className={`sb-item${isActive('/aprende') ? ' active' : ''}`} onClick={() => navigate('/aprende')} title="Aprende a usar">
                 <BookMarked size={16} />{!collapsed && showLabels && <span>Aprende a usar</span>}
               </button>
-
-              {user && showCreateCta && (
-                <div className="sb-create-wrap visible">
-                  <div className="sb-create-inner">
-                    <button className="sb-create gradient-cta" onMouseMove={handleGradientMove} onMouseLeave={handleGradientLeave} onClick={() => navigate('/novo')}>
-                      <Plus size={14} />{!collapsed && showLabels && <span>Criar projeto</span>}
-                    </button>
-                  </div>
-                </div>
-              )}
             </>
           )}
 

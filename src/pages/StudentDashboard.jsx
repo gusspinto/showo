@@ -49,7 +49,6 @@ import WeeklyRecap, { shouldShowRecap, RecapsPanel } from '../components/dashboa
 import WeeklyPostCard from '../components/dashboard/WeeklyPostCard'
 import WeeklyRecapTeaser from '../components/dashboard/WeeklyRecapTeaser'
 import LimitNudgeBanner from '../components/dashboard/LimitNudgeBanner'
-import DiaryNudgeBanner from '../components/dashboard/DiaryNudgeBanner'
 import FeaturedWeekBanner from '../components/dashboard/FeaturedWeekBanner'
 import SegmentedTabs from '../components/SegmentedTabs'
 import WeeklyCheckin, { shouldShowCheckin } from '../components/dashboard/WeeklyCheckin'
@@ -58,7 +57,7 @@ import CalendarSyncModal from '../components/dashboard/CalendarSyncModal'
 import '../components/dashboard/MonthCalendar.css'
 import {
   computeReportCoverage, computeWeekStreak, buildWeeklyActivity, computeEngagementSignal,
-  timeAgoLabel, startOfDay, weekStartISO,
+  timeAgoLabel, startOfDay,
 } from '../lib/journal'
 import { pickFocusProject, daysUntil } from '../lib/focusProject'
 import './Dashboard.css'          // modais e toast partilhados (namespace dash-*)
@@ -162,7 +161,6 @@ export default function StudentDashboard({ user, profile }) {
   const [reminders, setReminders] = useState([])
   const [myInterests, setMyInterests] = useState([])
   const [icsToken, setIcsToken] = useState(null)
-  const [googleConnected, setGoogleConnected] = useState(null)
   const [orgName, setOrgName] = useState(null)
   const [schoolClasses, setSchoolClasses] = useState([])
   const [showExportModal, setShowExportModal] = useState(false)
@@ -236,11 +234,9 @@ export default function StudentDashboard({ user, profile }) {
   // turma nenhuma para mostrar, por isso o dashboard fica como sempre foi.
   const [dashTab, setDashTab] = useState('projetos')
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
-  const [diaryReminderDismissed, setDiaryReminderDismissed] = useState(
-    () => localStorage.getItem(`showo_diary_remind_${weekStartISO()}`) === '1'
-  )
   const [showReport, setShowReport] = useState(false)
   const [showAddReminder, setShowAddReminder] = useState(null)
+  const [editingReminder, setEditingReminder] = useState(null)
   const [showCalendarSync, setShowCalendarSync] = useState(false)
   const [showRecap, setShowRecap] = useState(false)
   const [showCheckin, setShowCheckin] = useState(false)
@@ -373,22 +369,6 @@ export default function StudentDashboard({ user, profile }) {
 
   const focusProject = useMemo(() => pickFocusProject(projects), [projects])
 
-  // Sinal para lembrar de escrever no diário. "auto" são entradas geradas
-  // pela plataforma quando a pessoa preenche uma secção, não contam como
-  // ela ter escrito nada a sério. Se só essas existirem, o alerta conta a
-  // partir da criação do projeto, não da entrada automática.
-  const diaryNudgeSignal = useMemo(() => {
-    if (!focusProject) return null
-    const realEntries = activityEntries.filter(e => e.kind !== 'auto')
-    const lastDate = realEntries.length
-      ? new Date(Math.max(...realEntries.map(e => new Date(e.created_at).getTime())))
-      : focusProject.created_at ? new Date(focusProject.created_at) : null
-    if (!lastDate) return null
-    const daysSince = Math.floor((Date.now() - lastDate.getTime()) / 86400000)
-    if (daysSince < 7) return null
-    return { daysSince, projectName: focusProject.name || 'projeto' }
-  }, [activityEntries, focusProject])
-
   /* ── Projeto em foco: linha completa + diário ──
      Os campos longos só são precisos para este projeto, por isso não vale a
      pena arrastá-los na listagem toda. */
@@ -501,9 +481,6 @@ export default function StudentDashboard({ user, profile }) {
 
     supabase.rpc('get_my_ics_token')
       .then(({ data }) => { if (data) setIcsToken(data) })
-
-    supabase.from('google_calendar_tokens').select('connected_at').eq('user_id', user.id).maybeSingle()
-      .then(({ data }) => setGoogleConnected(!!data))
   }, [user.id])
 
   /* ── Feedback do professor ── */
@@ -697,6 +674,13 @@ export default function StudentDashboard({ user, profile }) {
 
   function handleEventClick(e) {
     if (e.type === 'defense' && e.slug) navigate(`/projeto/${e.slug}`)
+    // Clicar num lembrete já marcado não fazia nada, o Gustavo apontou isto.
+    // O id do evento no calendário é "r-<id-real>" (calendarEvents), por
+    // isso tira-se o prefixo para encontrar o lembrete completo em reminders.
+    if (e.type === 'reminder') {
+      const reminder = reminders.find(r => r.id === e.id.replace(/^r-/, ''))
+      if (reminder) setEditingReminder(reminder)
+    }
   }
 
   /* ── Painéis partilhados (reposicionados em empty state) ── */
@@ -808,6 +792,15 @@ export default function StudentDashboard({ user, profile }) {
           onCreated={r => setReminders(prev => [...prev, r].sort((a, b) => (a.reminder_date < b.reminder_date ? -1 : 1)))}
         />
       )}
+      {editingReminder && (
+        <AddReminderModal
+          userId={user.id}
+          editing={editingReminder}
+          onClose={() => setEditingReminder(null)}
+          onSaved={r => setReminders(prev => prev.map(x => x.id === r.id ? r : x))}
+          onDeleted={id => setReminders(prev => prev.filter(x => x.id !== id))}
+        />
+      )}
       {showCalendarSync && (
         <CalendarSyncModal
           userId={user.id} icsToken={icsToken}
@@ -898,6 +891,19 @@ export default function StudentDashboard({ user, profile }) {
       )}
 
       <div className={`sdb-page${isEmptyState ? ' sdb-page--empty' : ''}`}>
+
+        {/* ══════════════ RECAP DO LINKEDIN (só mobile, acima de tudo) ══════════════
+            Pedido do Gustavo: em ecrã estreito isto fica acima até da saudação,
+            não só acima da Agenda. Em desktop continua só na coluna lateral
+            (sdb-o-recap, mais abaixo), esta cópia fica escondida por CSS a
+            partir de 900px (ver .sdb-recap-top). Mesmo componente, mesmo
+            `recapTeaserDismissed`, por isso dispensar aqui também esconde a
+            cópia de desktop. */}
+        {!isSchoolAccount && planId === 'free' && !recapTeaserDismissed && (
+          <div className="sdb-recap-top">
+            <WeeklyRecapTeaser userId={user.id} onDismiss={() => setRecapTeaserDismissed(true)} onUpgrade={() => setShowUpgradeModal('weeklyRecap')} />
+          </div>
+        )}
 
         {/* ══════════════ CABEÇALHO DO DIA ══════════════ */}
         <header className="sdb-hero">
@@ -1155,19 +1161,6 @@ export default function StudentDashboard({ user, profile }) {
               />
             )}
 
-            {diaryNudgeSignal && !diaryReminderDismissed && (
-              <DiaryNudgeBanner
-                projectName={diaryNudgeSignal.projectName}
-                daysSince={diaryNudgeSignal.daysSince}
-                onDismiss={() => setDiaryReminderDismissed(true)}
-                onWrite={() => {
-                  logFunnelEvent('diary_nudge_clicked')
-                  setComposerProject(focusFull)
-                  setComposerKind('update')
-                }}
-              />
-            )}
-
             {myInterests.length > 0 && (
               <section className="sdb-panel sdb-panel--tint sdb-o-recruiter sdb-opportunity">
                 <header className="sdb-panel-head">
@@ -1390,6 +1383,19 @@ export default function StudentDashboard({ user, profile }) {
           {/* ── Coluna de contexto ── */}
           <div className="sdb-col">
 
+            {/* Por cima da Agenda, não na coluna principal: o Gustavo não
+                gostou do cartão largo ali, competia com o resto do
+                dashboard. O WeeklyRecapTeaser já está desenhado para esta
+                largura (empilhado), não é o mesmo componente adaptado à
+                força. Mesma ordem em mobile, logo antes da Agenda
+                (sdb-o-recap tem o mesmo `order`, 8, e vem antes dela no
+                DOM, por isso aparece primeiro no empate). */}
+            {!isSchoolAccount && planId === 'free' && !recapTeaserDismissed && (
+              <div className="sdb-o-recap">
+                <WeeklyRecapTeaser userId={user.id} onDismiss={() => setRecapTeaserDismissed(true)} onUpgrade={() => setShowUpgradeModal('weeklyRecap')} />
+              </div>
+            )}
+
             {/* Só mostramos a Agenda nas duas tabs para contas B2C, que não
                 têm pílula nenhuma (dashTab fica sempre 'projetos'). Nas
                 contas de escola, a Agenda aparece só na tab Turma — tê-la
@@ -1399,24 +1405,10 @@ export default function StudentDashboard({ user, profile }) {
               <div className="sdb-o-agenda">
                 <AgendaPanel
                   events={calendarEvents}
-                  googleConnected={googleConnected}
                   onAddReminder={date => setShowAddReminder(date instanceof Date ? date : new Date())}
                   onSync={() => setShowCalendarSync(true)}
                   onEventClick={handleEventClick}
                 />
-              </div>
-            )}
-
-            {/* Por baixo da Agenda, não na coluna principal: o Gustavo não
-                gostou do cartão largo ali, competia com o resto do
-                dashboard. O WeeklyRecapTeaser já está desenhado para esta
-                largura (empilhado), não é o mesmo componente adaptado à
-                força. Mesma ordem em mobile, logo a seguir à Agenda
-                (sdb-o-recap tem o mesmo `order`, 8, e vem depois dela no
-                DOM). */}
-            {!isSchoolAccount && planId === 'free' && !recapTeaserDismissed && (
-              <div className="sdb-o-recap">
-                <WeeklyRecapTeaser userId={user.id} onDismiss={() => setRecapTeaserDismissed(true)} onUpgrade={() => setShowUpgradeModal('weeklyRecap')} />
               </div>
             )}
 

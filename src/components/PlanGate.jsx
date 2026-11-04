@@ -2,28 +2,29 @@ import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
+import { Widget4Icon as ProjectsIcon } from '@solar-icons/react/bold/widget-4'
+import { ChatRoundLineIcon as CoachIcon } from '@solar-icons/react/bold/chat-round-line'
+import { LetterIcon as RecapIcon } from '@solar-icons/react/bold/letter'
+import { CaseIcon as InternshipsIcon } from '@solar-icons/react/bold/case'
+import { LinkIcon } from '@solar-icons/react/bold/link'
+import { PresentationGraphIcon as ExportIcon } from '@solar-icons/react/bold/presentation-graph'
+import { AltArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/alt-arrow-right'
+import { CheckCircleIcon as CheckCircle } from '@solar-icons/react/bold/check-circle'
+import { LikeIcon as ThumbUp } from '@solar-icons/react/bold/like'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { getPlan, nextPaidPlan, planHighlights } from '../lib/plans'
-import { TESTIMONIALS } from './TestimonialsMarquee'
+import { getPlan, nextPaidPlan, planHighlights, ONBOARDING_DISCOUNT_NOTE, ANNUAL_ONBOARDING_DISCOUNT_NOTE } from '../lib/plans'
 
-// Mesmo testemunho da Pricing/Home, sem inventar nada — só escolhido para
-// soar relevante à feature que bloqueou a pessoa. Fora dos casos abaixo,
-// cai no primeiro da lista partilhada.
-const FEATURE_TESTIMONIAL_NAME = {
-  defense: 'Rita Sousa',
-  defenseTraining: 'Rita Sousa',
-  exportPptx: 'Rita Sousa',
-}
-// Ordena a lista toda a começar pelo testemunho mais relevante à feature —
-// os outros seguem-se, para o carrossel ter por onde rodar em vez de mostrar
-// sempre o mesmo. Nenhum é inventado, são os mesmos da Pricing/Home.
-function orderTestimonials(feature) {
-  const list = TESTIMONIALS.filter(t => t.popup !== false)
-  const wanted = FEATURE_TESTIMONIAL_NAME[feature]
-  const i = list.findIndex(t => t.name === wanted)
-  if (i <= 0) return list
-  return [list[i], ...list.slice(0, i), ...list.slice(i + 1)]
+// Mapeia a chave que planHighlights() devolve (string, lib/plans.js não sabe
+// de React) para o ícone a mostrar, mesma convenção de ícones que a
+// sidebar/Pricing já usam para estes conceitos (Dashboard, Coach, Vagas).
+const HIGHLIGHT_ICONS = {
+  projects: ProjectsIcon,
+  coach: CoachIcon,
+  recap: RecapIcon,
+  internships: InternshipsIcon,
+  link: LinkIcon,
+  export: ExportIcon,
 }
 
 // Preview real do que se recebe, pedido do Gustavo depois do teaser do
@@ -42,16 +43,15 @@ const FEATURE_PREVIEW_KIND = {
   defenseTraining: 'defense',
 }
 
+// Só 2 balões (pedido → resultado), não 3: a resposta intermédia "sim, por
+// favor" não acrescentava nada a provar, só altura ao pop-up.
 function CoachPreview() {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <div style={{ alignSelf: 'flex-start', maxWidth: '85%', background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: '12px 12px 12px 4px', padding: '9px 12px', fontSize: 12.5, color: 'var(--color-text)', lineHeight: 1.5 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ alignSelf: 'flex-start', maxWidth: '85%', background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: '12px 12px 12px 4px', padding: '8px 11px', fontSize: 12, color: 'var(--color-text)', lineHeight: 1.45 }}>
         Faltam exemplos concretos na secção de resultados. Queres que escreva um rascunho?
       </div>
-      <div style={{ alignSelf: 'flex-end', maxWidth: '70%', background: 'var(--color-primary)', borderRadius: '12px 12px 4px 12px', padding: '9px 12px', fontSize: 12.5, color: '#fff' }}>
-        sim, por favor
-      </div>
-      <div style={{ alignSelf: 'flex-start', maxWidth: '85%', background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: '12px 12px 12px 4px', padding: '9px 12px', fontSize: 12.5, color: 'var(--color-text)', lineHeight: 1.5 }}>
+      <div style={{ alignSelf: 'flex-start', maxWidth: '85%', background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: '12px 12px 12px 4px', padding: '8px 11px', fontSize: 12, color: 'var(--color-text)', lineHeight: 1.45 }}>
         Pronto. Já tens um texto específico ao teu projeto, pronto a colar.
       </div>
     </div>
@@ -87,38 +87,37 @@ function DefensePreview() {
   )
 }
 
-function RecapPreview() {
+// Logótipo do LinkedIn, mesmo usado em WeeklyRecapTeaser.jsx (o cartão da
+// sidebar que abre este pop-up já usa a cor/ícone do LinkedIn, "mostra
+// provas reais"). O pop-up estava a mostrar o email em vez do post de
+// LinkedIn, mensagem diferente da prometida pelo cartão que o abre, pedido
+// do Gustavo para alinhar as duas.
+const LinkedInMark = ({ size = 13 }) => (
+  <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" aria-hidden="true">
+    <path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.55C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.72C24 .77 23.2 0 22.22 0z"/>
+  </svg>
+)
+
+// Fundo branco de propósito: é uma réplica de um post real do LinkedIn, não
+// uma superfície da Showo, por isso não segue a paleta da marca aqui (a
+// moldura "Preview real" à volta já deixa claro que é um exemplo). 3
+// elementos: cabeçalho (avatar+nome+marca), texto do post, barra de reação.
+// Sem nome de projeto inventado no texto (confundia, "de onde vem esse
+// nome?"), fica genérico ("o projeto").
+function LinkedInPostPreview() {
   return (
-    <div>
-      <p style={{ margin: '0 0 6px', fontSize: 9, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-        O email que recebes, toda a segunda
+    <div style={{ background: '#fff', borderRadius: 10, padding: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
+        <span style={{ width: 24, height: 24, borderRadius: '50%', background: '#3B82F6', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 10, fontWeight: 800 }}>S</span>
+        <span style={{ fontSize: 10.5, fontWeight: 700, color: '#1a1a1a', flex: 1, minWidth: 0 }}>A tua página</span>
+        <span style={{ color: '#0A66C2', flexShrink: 0 }}><LinkedInMark size={13} /></span>
+      </div>
+      <p style={{ margin: 0, fontSize: 11.5, color: '#1a1a1a', lineHeight: 1.5 }}>
+        Esta semana avancei o projeto: melhorei a explicação do problema que resolve e simplifiquei o fluxo, depois de testar com duas pessoas que acharam confuso.
       </p>
-      <div style={{ background: '#03060d', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 14px 14px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
-        <span style={{ width: 20, height: 20, borderRadius: 6, background: '#1a60c8', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 9.5, fontWeight: 800 }}>S</span>
-        <span style={{ fontSize: 9.5, color: '#93a4c0' }}>Showo <span style={{ color: '#93a4c0' }}>hello@showo.pt</span></span>
-      </div>
-      <p style={{ margin: '0 0 10px', color: '#eef2f8', fontSize: 13.5, lineHeight: 1.3, fontWeight: 700 }}>5 registos na semana passada</p>
-      <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
-        {[['5', 'registos'], ['4', 'dias ativos'], ['3', 'semanas', '#f0a500']].map(([v, l, c]) => (
-          <div key={l} style={{ flex: 1, minWidth: 0, padding: '8px 4px', textAlign: 'center', borderRadius: 7, background: '#0e1729', border: '1px solid #1e3050' }}>
-            <div style={{ fontSize: 16, fontWeight: 700, color: c || '#eef2f8', lineHeight: 1 }}>{v}</div>
-            <div style={{ fontSize: 8.5, color: '#a3b4ce', marginTop: 3 }}>{l}</div>
-          </div>
-        ))}
-      </div>
-      {/* Mesma escolha do email real (pickHighlight em send-weekly-recap):
-          excerto real por baixo dos números, sem aspas nem itálico, barra
-          lateral, não cartão de testemunho centrado. */}
-      <div style={{ borderLeft: '3px solid #2a4275', padding: '1px 0 1px 10px', marginBottom: 10 }}>
-        <p style={{ margin: '0 0 2px', color: '#93a4c0', fontSize: 9.5 }}>Decisão em DragBuild</p>
-        <p style={{ margin: 0, color: '#c3cede', fontSize: 11.5, lineHeight: 1.45 }}>
-          Decidi simplificar o fluxo depois de testar com duas pessoas que acharam confuso.
-        </p>
-      </div>
-      <p style={{ margin: 0, color: '#c3cede', fontSize: 11.5, lineHeight: 1.5 }}>
-        Faltam <strong style={{ color: '#eef2f8' }}>12 dias</strong> para a defesa.
-      </p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 8, paddingTop: 7, borderTop: '1px solid #eee' }}>
+        <ThumbUp size={11} color="#0A66C2" />
+        <span style={{ fontSize: 9.5, color: '#767676' }}>Gostei · Comentar · Partilhar</span>
       </div>
     </div>
   )
@@ -128,21 +127,22 @@ function FeaturePreview({ feature }) {
   const kind = FEATURE_PREVIEW_KIND[feature] || 'coach'
   const label = {
     coach: 'Preview real do Coach IA',
-    recap: 'Preview real do recap semanal',
+    recap: 'O post que o Showo escreve por ti',
     vagas: 'Preview real das vagas de estágio',
     defense: 'Preview real da preparação de defesa',
   }[kind]
   return (
     <div className="plan-gate-fade">
-      <p style={{ margin: '0 0 14px', fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
+      <p style={{ margin: '0 0 10px', fontSize: 10, fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
       {kind === 'coach' && <CoachPreview />}
       {kind === 'vagas' && <VagasPreview />}
       {kind === 'defense' && <DefensePreview />}
-      {/* Era RecapPreview + LinkedInPostPreview empilhados, duas previews
-          diferentes no mesmo bloco ("isto é o email ou o LinkedIn?"). Com o
-          pop-up a passar a uma coluna só, ficava longo demais, cortado ao
-          email real, que é a prova direta da feature paga. */}
-      {kind === 'recap' && <RecapPreview />}
+      {/* Era RecapPreview (email) + LinkedInPostPreview empilhados, duas
+          previews diferentes no mesmo bloco ("isto é o email ou o
+          LinkedIn?"). O cartão que abre este pop-up (WeeklyRecapTeaser, na
+          sidebar) já promete "provas reais" com a cor/ícone do LinkedIn,
+          por isso fica só o post, que é o que o cartão prometeu. */}
+      {kind === 'recap' && <LinkedInPostPreview />}
     </div>
   )
 }
@@ -196,13 +196,38 @@ const C = {
   // Frase curta a ligar o título à lista de benefícios logo a seguir, só
   // para não ficar espaço em branco entre os dois, nada mais.
   subtitleRight: { margin: '0 0 4px', fontSize: '0.85rem', color: 'var(--color-text-secondary)' },
-  highlights: { display: 'flex', flexDirection: 'column', gap: '10px', margin: 'var(--sp-2) 0' },
-  highlightItem: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '10px', fontSize: '0.88rem' },
-  highlightLabel: { color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '7px', flexShrink: 0 },
-  highlightCheck: { color: 'var(--color-success)', fontWeight: 800, flexShrink: 0 },
-  // Sem nowrap: a "10 → 100 por mês" cortava no mobile, a coluna ficou
-  // mais estreita do que no layout antigo de duas colunas.
-  highlightValue: { color: 'var(--color-primary)', fontWeight: 700, textAlign: 'right' },
+  // Painel próprio (fundo + borda), não texto solto a flutuar no espaço em
+  // branco, pedido do Gustavo depois de achar a lista "vazia, só números
+  // ali para dizer que há diferença". Cada linha tem o seu ícone (não um
+  // check genérico repetido 3x) e separador fino entre linhas em vez de
+  // gap grande, para ler como um bloco, não 3 frases soltas.
+  highlights: {
+    display: 'flex', flexDirection: 'column',
+    background: 'var(--color-surface)', border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius-lg)', margin: 'var(--sp-2) 0', overflow: 'hidden',
+  },
+  highlightItem: (isLast) => ({
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px',
+    fontSize: '0.88rem', padding: '11px 14px',
+    borderBottom: isLast ? 'none' : '1px solid var(--color-border)',
+  }),
+  highlightLabel: { color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '9px', flexShrink: 0, fontWeight: 600 },
+  highlightIconWrap: {
+    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+    width: '26px', height: '26px', borderRadius: '8px',
+    background: 'var(--color-primary-subtle)', color: 'var(--color-primary)',
+  },
+  // O "antes" pequeno e apagado, o "depois" grande e na cor da marca, o
+  // mesmo tratamento que o preço riscado já usa para a poupança anual,
+  // consistente dentro do mesmo pop-up.
+  highlightStat: { display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 },
+  highlightFrom: { color: 'var(--color-text-tertiary)', fontWeight: 600, fontSize: '0.82rem' },
+  highlightArrow: { color: 'var(--color-text-tertiary)', flexShrink: 0, display: 'flex' },
+  highlightTo: { color: 'var(--color-primary)', fontWeight: 800, whiteSpace: 'nowrap' },
+  highlightIncluded: {
+    display: 'flex', alignItems: 'center', gap: '5px',
+    color: 'var(--color-success)', fontWeight: 700, fontSize: '0.82rem',
+  },
   msg:   { margin: 0, fontSize: '0.98rem', color: 'var(--color-text-secondary)', lineHeight: 1.6, maxWidth: '420px' },
   body: { display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)', padding: 'var(--sp-8)' },
   // .sdb-panel--tint do Dashboard — o bloco de apoio à marca, tinta subtil,
@@ -227,59 +252,17 @@ const C = {
     fontWeight: 700, fontSize: '0.72rem', cursor: 'pointer', fontFamily: 'var(--font-body)',
     boxShadow: active ? 'var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.06))' : 'none',
   }),
-  periodBadge: {
-    padding: '1px 6px', borderRadius: 'var(--radius-full)',
-    backgroundImage: 'var(--brand-gradient)', color: '#fff',
-    fontSize: '9px', fontWeight: 800, letterSpacing: '0.01em',
-  },
   upsellHead: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '8px' },
   upsellName: { fontSize: '1.15rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)' },
   upsellPrice: { fontSize: '1.3rem', fontWeight: 700, color: 'var(--color-text)' },
+  // Preço cheio riscado (mensal × 12), ao lado do preço anual real.
+  upsellPriceOld: {
+    fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-tertiary)',
+    textDecoration: 'line-through', marginRight: '6px',
+  },
   upsellPeriod: { fontWeight: 500, fontSize: '0.8rem', color: 'var(--color-text-secondary)' },
+  upsellDiscountNote: { margin: 0, fontSize: '0.74rem', fontWeight: 500, color: 'var(--color-text-secondary)' },
   errorText: { margin: 0, fontSize: '0.78rem', color: 'var(--color-error)' },
-  // .sdb-panel simples — mesmo cartão neutro que qualquer painel do
-  // Dashboard, só para o testemunho não se confundir visualmente com o
-  // bloco do preço (que é o único a usar a tinta da marca).
-  testimonial: {
-    display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)',
-    // Não estica até à altura da coluna do preço: a caixa fica só do tamanho do
-    // conteúdo, sem espaço vazio entre o testemunho e a autoria.
-    alignSelf: 'start',
-    background: 'var(--color-surface)', border: '1px solid var(--color-border)',
-    borderRadius: 'var(--radius-lg)', padding: 'var(--sp-5)',
-  },
-  // Sem corte: o testemunho inteiro aparece. Para o modal não saltar a cada
-  // rotação, todos os testemunhos ficam empilhados na mesma célula da grelha
-  // (testimonialStack) e só o ativo é visível — a altura é a do mais longo.
-  testimonialStack: { display: 'grid' },
-  testimonialQuote: {
-    margin: 0, fontSize: '0.95rem', color: 'var(--color-text)', lineHeight: 1.55,
-    gridArea: '1 / 1',
-  },
-  testimonialFooter: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' },
-  testimonialPerson: { display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 },
-  // Contorno de 1px neutro (preto no claro, branco no escuro, via --color-text),
-  // para a foto não se fundir com o cartão nem apanhar a cor da superfície.
-  testimonialPhoto: {
-    width: '36px', height: '36px', borderRadius: 'var(--radius-full)', objectFit: 'cover', flexShrink: 0,
-    outline: '1px solid color-mix(in srgb, var(--color-text) 10%, transparent)', outlineOffset: '-1px',
-  },
-  testimonialName: { fontSize: '0.84rem', fontWeight: 700, color: 'var(--color-text)' },
-  // Antes cortava com "..." (1 linha, depois 2) e ainda ficava ilegível
-  // ("Universidade da Maia e..."). Sem clamp nenhum agora — o cargo embrulha
-  // por inteiro, por mais linhas que precisar.
-  testimonialRole: {
-    fontSize: '0.7rem', color: 'var(--color-text-secondary)', lineHeight: 1.35,
-  },
-  testimonialDots: { display: 'flex', gap: '5px', flexShrink: 0 },
-  testimonialDot: (active) => ({
-    width: active ? '14px' : '5px', height: '5px', borderRadius: '3px',
-    /* Preto no modo claro, branco no escuro (var(--color-text)). A
-       diferença entre ativo e inativo fica na largura, não na cor. */
-    background: 'var(--color-text)',
-    opacity: active ? 1 : 0.3,
-    transition: 'width 0.25s ease, background 0.25s ease',
-  }),
   // Invertido (var(--color-text)/var(--color-bg)), não azul — o mesmo botão
   // "cheio" que a Home, o Login e o Registo já usam. O azul fica reservado
   // à faixa do plano em cima, não ao botão de ação.
@@ -359,20 +342,6 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
   // pedido do Gustavo, repetia a lista de benefícios ao lado). Sem exclude
   // aqui, essa feature volta a aparecer, mas só na lista, não duplicada.
   const highlights = upgrade ? planHighlights(planId, upgrade) : []
-
-  // Carrossel de testemunhos, a começar no mais relevante à feature que
-  // bloqueou a pessoa — pedido do Gustavo depois de ver o pop-up do
-  // StudyFetch, onde os testemunhos mudam sozinhos em vez de ficar um só
-  // fixo a olhar para a pessoa.
-  const orderedTestimonials = orderTestimonials(feature)
-  const [tIdx, setTIdx] = useState(0)
-  useEffect(() => {
-    if (!upgrade || orderedTestimonials.length < 2) return
-    const id = setInterval(() => setTIdx(i => (i + 1) % orderedTestimonials.length), 5000)
-    return () => clearInterval(id)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [upgrade, orderedTestimonials.length])
-  const testimonial = upgrade ? orderedTestimonials[tIdx] : null
 
   // Registo do funil: quando alguém vê mesmo o pop-up de upgrade (não o nudge
   // leve do Dashboard, que já tinha isto). Só regista quando há oferta de
@@ -503,60 +472,65 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
                 <p style={C.subtitleRight}>Escolhe como queres continuar.</p>
                 {highlights.length > 0 && (
                   <ul style={{ ...C.highlights, listStyle: 'none', padding: 0 }}>
-                    {highlights.map(h => (
-                      <li key={h.label} style={C.highlightItem}>
-                        <span style={C.highlightLabel}><span style={C.highlightCheck}>✓</span>{h.label}</span>
-                        <span style={C.highlightValue}>{h.value}</span>
-                      </li>
-                    ))}
+                    {highlights.map((h, i) => {
+                      const Icon = HIGHLIGHT_ICONS[h.icon]
+                      return (
+                        <li key={h.label} style={C.highlightItem(i === highlights.length - 1)}>
+                          <span style={C.highlightLabel}>
+                            {Icon && <span style={C.highlightIconWrap}><Icon size={14} /></span>}
+                            {h.label}
+                          </span>
+                          {h.from ? (
+                            <span style={C.highlightStat}>
+                              <span style={C.highlightFrom}>{h.from}</span>
+                              <span style={C.highlightArrow}><ArrowRight size={11} /></span>
+                              <span style={C.highlightTo}>{h.to}{h.suffix}</span>
+                            </span>
+                          ) : (
+                            <span style={C.highlightIncluded}><CheckCircle size={14} />{h.to}</span>
+                          )}
+                        </li>
+                      )
+                    })}
                   </ul>
                 )}
                 {upgrade.priceLabelAnnual && (
                   <div style={{ ...C.periodToggle, margin: '0 auto 12px' }} role="group" aria-label="Periodicidade do pagamento">
                     <button type="button" style={C.periodBtn(!annual)} onClick={() => setAnnual(false)}>Mensal</button>
-                    <button type="button" style={C.periodBtn(annual)} onClick={() => setAnnual(true)}>
-                      Anual <span style={C.periodBadge}>2 meses grátis</span>
-                    </button>
+                    <button type="button" style={C.periodBtn(annual)} onClick={() => setAnnual(true)}>Anual</button>
                   </div>
                 )}
                 <div style={C.upsell}>
                   <div style={C.upsellHead}>
                     <span style={C.upsellName}>{upgrade.name}</span>
                     <span style={C.upsellPrice}>
-                      {annual && upgrade.priceLabelAnnual ? upgrade.priceLabelAnnual : upgrade.priceLabel}
+                      {/* Preço riscado: SHOWO50 (-50%, aplicado sozinho no
+                          checkout), tanto no mensal como no anual. Antes
+                          disto, o riscado do anual era mensal×12 (poupança
+                          de pagar anual, sem ligação ao cupão) e o preço
+                          cheio aparecia como se já tivesse desconto, o
+                          cupão nunca se aplicava no anual, nem aqui nem no
+                          checkout real (create-annual-checkout). */}
+                      {annual && upgrade.priceLabelAnnualDiscounted && (
+                        <span style={C.upsellPriceOld}>{upgrade.priceLabelAnnual}</span>
+                      )}
+                      {!annual && upgrade.priceLabelDiscounted && (
+                        <span style={C.upsellPriceOld}>{upgrade.priceLabel}</span>
+                      )}
+                      {annual && upgrade.priceLabelAnnual
+                        ? (upgrade.priceLabelAnnualDiscounted ?? upgrade.priceLabelAnnual)
+                        : !annual && upgrade.priceLabelDiscounted
+                          ? upgrade.priceLabelDiscounted
+                          : upgrade.priceLabel}
                       <span style={C.upsellPeriod}>{annual && upgrade.priceLabelAnnual ? '/ano' : upgrade.period}</span>
                     </span>
                   </div>
+                  {annual && upgrade.priceLabelAnnualDiscounted ? (
+                    <p style={C.upsellDiscountNote}>{ANNUAL_ONBOARDING_DISCOUNT_NOTE}</p>
+                  ) : !annual && upgrade.priceLabelDiscounted ? (
+                    <p style={C.upsellDiscountNote}>{ONBOARDING_DISCOUNT_NOTE}</p>
+                  ) : null}
                 </div>
-
-                {testimonial && (
-                  <div style={C.testimonial}>
-                    <div style={C.testimonialStack}>
-                      {orderedTestimonials.map((t, i) => (
-                        <p
-                          key={i}
-                          style={{ ...C.testimonialQuote, visibility: i === tIdx ? 'visible' : 'hidden' }}
-                          className={i === tIdx ? 'plan-gate-fade' : undefined}
-                          aria-hidden={i !== tIdx}
-                        >“{t.quote}”</p>
-                      ))}
-                    </div>
-                    <div style={C.testimonialFooter}>
-                      <div style={C.testimonialPerson}>
-                        <img src={testimonial.photo} alt="" style={C.testimonialPhoto} />
-                        <div style={{ minWidth: 0 }}>
-                          <div style={C.testimonialName}>{testimonial.name}</div>
-                          <div style={C.testimonialRole}>{testimonial.role}</div>
-                        </div>
-                      </div>
-                    </div>
-                    {orderedTestimonials.length > 1 && (
-                      <div style={{ ...C.testimonialDots, justifyContent: 'center' }}>
-                        {orderedTestimonials.map((_, i) => <span key={i} style={C.testimonialDot(i === tIdx)} />)}
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
 
               <div className="plan-gate-col-right">
