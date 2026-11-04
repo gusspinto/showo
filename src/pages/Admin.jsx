@@ -1115,9 +1115,19 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
           <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 6 }}>
             <span style={{ fontSize: 10, fontWeight: 700, color: C.subtle, textTransform: 'uppercase', letterSpacing: 0.5 }}>Quem iniciou checkout</span>
             {checkoutFunnel.map((row, i) => {
-              const daysOld = row.signup_at ? Math.floor((now - new Date(row.signup_at).getTime()) / 86400000) : null
-              const daysSinceLogin = row.last_sign_in_at ? Math.floor((now - new Date(row.last_sign_in_at).getTime()) / 86400000) : null
-              const hasRealWork = (row.project_count || 0) > 0 && (row.best_score || 0) >= 30
+              // admin_get_checkout_funnel só devolve o essencial (nome,
+              // feature, data, se pagou), o resto vem do que a página já
+              // carrega noutro sítio (users/projects), para não depender de
+              // mudar a assinatura dessa função outra vez (ficou presa no
+              // cache do PostgREST da última vez, 2026-11-04).
+              const u = usersById.get(row.user_id)
+              const ownProjects = projects.filter(p => p.user_id === row.user_id && p.entry_kind === 'full')
+              const projectCount = ownProjects.length
+              const bestScore = ownProjects.length ? Math.max(...ownProjects.map(p => p.score || 0)) : 0
+              const daysOld = u?.created_at ? Math.floor((now - new Date(u.created_at).getTime()) / 86400000) : null
+              const lastLogin = u?.auth_last_sign_in || u?.last_active_at
+              const daysSinceLogin = lastLogin ? Math.floor((now - new Date(lastLogin).getTime()) / 86400000) : null
+              const hasRealWork = projectCount > 0 && bestScore >= 30
               // "Vale a pena contactar": ainda ativo (entrou há <=14 dias) e
               // tem trabalho real feito (não só uma conta criada e nada mais).
               // Não é suposto substituir o julgamento, é só destacar quem tem
@@ -1144,11 +1154,11 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
                   </span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 10.5, color: C.subtle, paddingLeft: 32, flexWrap: 'wrap' }}>
-                  {row.email && <span>{row.email}</span>}
+                  {u?.email && <span>{u.email}</span>}
                   {daysOld !== null && <span>conta há {daysOld === 0 ? 'hoje' : `${daysOld}d`}</span>}
                   <span>{daysSinceLogin === null ? 'nunca voltou a entrar' : daysSinceLogin === 0 ? 'entrou hoje' : `entrou há ${daysSinceLogin}d`}</span>
-                  <span>{row.project_count} projeto{row.project_count === 1 ? '' : 's'}{row.best_score ? ` (melhor: ${row.best_score})` : ''}</span>
-                  <span>plano atual: <strong style={{ color: C.text }}>{PLAN_LABELS[row.current_plan] || row.current_plan}</strong></span>
+                  <span>{projectCount} projeto{projectCount === 1 ? '' : 's'}{bestScore ? ` (melhor: ${bestScore})` : ''}</span>
+                  <span>plano atual: <strong style={{ color: C.text }}>{PLAN_LABELS[u?.plan] || u?.plan || 'free'}</strong></span>
                 </div>
               </div>
               )
