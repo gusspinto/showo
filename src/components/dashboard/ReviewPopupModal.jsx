@@ -39,10 +39,10 @@ export default function ReviewPopupModal({ userId, projectId, onClose }) {
           <p style={{ margin: 0 }}>Obrigado a sério. Leio tudo o que escreves aqui.</p>
         ) : (
           <>
-            <p style={{ margin: 0, color: 'var(--color-text-secondary)', fontSize: 13 }}>
+            <p style={{ margin: 0, fontSize: 18, fontWeight: 700, lineHeight: 1.35 }}>
               Sou eu, o Gustavo, o fundador do Showo.
             </p>
-            <p style={{ margin: 0 }}>
+            <p style={{ margin: 0, color: 'var(--color-text-secondary)' }}>
               Vi que o teu projeto está a ficar com bom aspeto e gostava mesmo de saber a tua opinião sincera, boa ou má.
             </p>
 
