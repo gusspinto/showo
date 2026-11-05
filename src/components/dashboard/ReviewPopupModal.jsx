@@ -33,14 +33,17 @@ export default function ReviewPopupModal({ userId, projectId, onClose }) {
   }
 
   return (
-    <Modal onClose={onClose} title="Como está a correr?">
+    <Modal onClose={onClose} title="Posso pedir-te um favor?">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)', alignItems: 'flex-start' }}>
         {status === 'done' ? (
-          <p style={{ margin: 0 }}>Obrigado! Isto ajuda-nos bastante.</p>
+          <p style={{ margin: 0 }}>Obrigado a sério. Leio tudo o que escreves aqui.</p>
         ) : (
           <>
+            <p style={{ margin: 0, color: 'var(--color-text-secondary)', fontSize: 13 }}>
+              Sou eu, o Gustavo, o fundador do Showo.
+            </p>
             <p style={{ margin: 0 }}>
-              O teu projeto já está a dar resultado. Como avalias a tua experiência com o Showo até agora?
+              Vi que o teu projeto está a ficar com bom aspeto e gostava mesmo de saber a tua opinião sincera, boa ou má.
             </p>
 
             <div style={{ display: 'flex', gap: 4 }}>
@@ -70,7 +73,7 @@ export default function ReviewPopupModal({ userId, projectId, onClose }) {
               rows={3}
               value={message}
               onChange={e => setMessage(e.target.value)}
-              placeholder="Opcional: conta-nos em uma frase o que mais gostaste (podemos usar isto, com a tua permissão, para mostrar a outras pessoas)."
+              placeholder="O que gostaste, o que te chateou, o que mudavas. Escreve à vontade. Só te pergunto se posso mostrar isto a mais alguém se um dia pedir."
               style={{ width: '100%' }}
             />
 
@@ -79,7 +82,7 @@ export default function ReviewPopupModal({ userId, projectId, onClose }) {
             )}
 
             <Button fullWidth onClick={handleSubmit} disabled={!rating || status === 'sending'}>
-              {status === 'sending' ? 'A enviar…' : 'Enviar'}
+              {status === 'sending' ? 'A enviar...' : 'Enviar'}
             </Button>
           </>
         )}
