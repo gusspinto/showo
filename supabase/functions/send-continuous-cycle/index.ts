@@ -95,6 +95,23 @@ function cta(href: string, label: string) {
   return `<tr><td style="padding:0 0 24px;"><a href="${href}" style="display:inline-block;background:#2B7EF5;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:12px 24px;border-radius:10px;">${esc(label)}</a></td></tr>`
 }
 
+function bulletList(items: Array<[string, string]>) {
+  const rows = items.map(([free, plus]) => `
+    <tr>
+      <td style="padding:7px 0;color:#666666;font-size:14px;line-height:1.4;border-bottom:1px solid #1c1c1c;">${free}</td>
+      <td style="padding:7px 0 7px 16px;color:#f0f0f0;font-size:14px;font-weight:600;line-height:1.4;border-bottom:1px solid #1c1c1c;">${plus}</td>
+    </tr>`).join('')
+  return `<tr><td style="padding:0 0 24px;">
+    <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="padding:0 0 6px;color:#555555;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Grátis</td>
+        <td style="padding:0 0 6px 16px;color:#2B7EF5;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Plus</td>
+      </tr>
+      ${rows}
+    </table>
+  </td></tr>`
+}
+
 // Mesmo princípio do urgencyBand do onboarding: quando a pessoa tem um
 // projeto com defense_date real no futuro, usa-se esse prazo em vez da
 // oferta genérica, é urgência verdadeira, não fabricada por nós. Forma
@@ -122,11 +139,17 @@ function buildWeek0({ firstName, unsubscribeUrl, code, daysToDefense }: { firstN
   return {
     subject: 'Gastaste a tua análise do mês? Ficas sem IA até ao próximo',
     html: wrapEmail(
-      greeting(firstName) +
+      row(`<span style="color:#888888;font-size:16px;line-height:1.4;">${firstName ? esc(firstName) + ',' : ''}</span>`) +
       offerBand(code, daysToDefense) +
-      headline('Ficas sem a análise de IA até ao mês que vem') +
-      paragraph('O plano Grátis dá 1 análise por mês, pensada para testares o Showo, não para acompanhares o projeto ao longo do tempo. Se já a usaste, o teu projeto evoluiu e já não tens como pedir à IA outra opinião, só esperar o mês renovar.') +
-      paragraph(`No Plus são 10 por mês, sem esperares um mês inteiro entre cada uma, a 4,49€/mês com o código ${esc(code)}.`, true) +
+      `<tr><td style="padding:0 0 18px;color:#f0f0f0;font-size:28px;line-height:1.25;font-weight:800;letter-spacing:-0.01em;">Ficas sem a análise<br/>de IA até ao mês que vem</td></tr>` +
+      `<tr><td style="padding:0 0 10px;color:#cccccc;font-size:17px;line-height:1.5;font-weight:600;">O Grátis dá 1 análise por mês, para testares, não para acompanhares o projeto ao longo do tempo.</td></tr>` +
+      `<tr><td style="padding:0 0 22px;color:#999999;font-size:15px;line-height:1.6;">Se já a usaste, o teu projeto evoluiu e já não tens como pedir à IA outra opinião, só esperar o mês renovar.</td></tr>` +
+      bulletList([
+        ['1 análise/mês', '10 análises/mês'],
+        ['3 projetos', '15 projetos'],
+        ['10 mensagens de Coach', '30 mensagens de Coach'],
+      ]) +
+      paragraph(`A 4,49€/mês com o código ${esc(code)}.`, true) +
       cta(`${APP}/pricing`, 'Não esperar o mês todo'),
       unsubscribeUrl,
     ),
