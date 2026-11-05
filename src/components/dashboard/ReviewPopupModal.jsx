@@ -47,7 +47,9 @@ export default function ReviewPopupModal({ userId, projectId, onClose }) {
               Sou eu, o Gustavo, o fundador do Showo.
             </p>
             <p style={{ margin: 0, color: 'var(--color-text-secondary)' }}>
-              Vi que o teu projeto está a ficar com bom aspeto. Somos uma equipa pequena a construir isto do zero, e a tua opinião sincera, boa ou má, ajuda-nos mesmo a decidir o que vem a seguir.
+              Vi que o teu projeto está a ficar com bom aspeto.<br />
+              Somos uma equipa pequena a construir isto do zero.<br />
+              A tua opinião sincera, boa ou má, ajuda-nos mesmo a decidir o que vem a seguir.
             </p>
 
             <div style={{ display: 'flex', gap: 4 }}>
