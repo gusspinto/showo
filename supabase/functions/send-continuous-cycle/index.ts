@@ -158,14 +158,14 @@ function buildWeek0({ firstName, unsubscribeUrl, code, daysToDefense }: { firstN
 
 function buildWeek1({ firstName, unsubscribeUrl, code, daysToDefense }: { firstName?: string; unsubscribeUrl: string; code: string; daysToDefense: number | null; isProfessional: boolean }): Built {
   return {
-    subject: '100 mensagens por mês. 10 vezes mais espaço para pensar em voz alta',
+    subject: '30 mensagens por mês. 3 vezes mais espaço para pensar em voz alta',
     html: wrapEmail(
       greeting(firstName) +
       offerBand(code, daysToDefense) +
       headline('10 mensagens de Coach IA por mês não dão muito espaço') +
-      paragraph('Cada dúvida sobre o projeto, cada revisão de texto, conta para esse limite. No Plus são 100 por mês, dez vezes mais apoio ao longo do tempo, não só nos primeiros dias.') +
+      paragraph('Cada dúvida sobre o projeto, cada revisão de texto, conta para esse limite. No Plus são 30 por mês, o triplo de apoio ao longo do tempo, não só nos primeiros dias.') +
       paragraph(`Com o código ${esc(code)}, 4,49€/mês durante os primeiros 6 meses.`, true) +
-      cta(`${APP}/pricing`, 'Passar a 100 mensagens por mês'),
+      cta(`${APP}/pricing`, 'Passar a 30 mensagens por mês'),
       unsubscribeUrl,
     ),
   }
