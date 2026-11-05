@@ -10,12 +10,15 @@ import { supabase } from '../../lib/supabase'
    projeto já tem score >= 71, para pedir no momento em que a pessoa já viu
    o produto a dar resultado. Guarda em public.testimonials, curado depois
    pelo admin (approved_for_marketing) antes de ser usado em Stories/marketing.
+   consent_public é a resposta explícita da checkbox, não dá à conta
+   automaticamente permissão: a curadoria do admin continua por cima disso.
    ══════════════════════════════════════════════════════════════════════════ */
 
 export default function ReviewPopupModal({ userId, projectId, onClose }) {
   const [rating, setRating] = useState(0)
   const [hoverRating, setHoverRating] = useState(0)
   const [message, setMessage] = useState('')
+  const [consentPublic, setConsentPublic] = useState(false)
   const [status, setStatus] = useState('idle') // idle | sending | done | error
 
   async function handleSubmit() {
@@ -26,6 +29,7 @@ export default function ReviewPopupModal({ userId, projectId, onClose }) {
       project_id: projectId,
       rating,
       message: message.trim() || null,
+      consent_public: consentPublic,
     })
     if (error) { setStatus('error'); return }
     setStatus('done')
@@ -43,7 +47,7 @@ export default function ReviewPopupModal({ userId, projectId, onClose }) {
               Sou eu, o Gustavo, o fundador do Showo.
             </p>
             <p style={{ margin: 0, color: 'var(--color-text-secondary)' }}>
-              Vi que o teu projeto está a ficar com bom aspeto e gostava mesmo de saber a tua opinião sincera, boa ou má.
+              Vi que o teu projeto está a ficar com bom aspeto. Somos uma equipa pequena a construir isto do zero, e a tua opinião sincera, boa ou má, ajuda-nos mesmo a decidir o que vem a seguir.
             </p>
 
             <div style={{ display: 'flex', gap: 4 }}>
@@ -73,9 +77,19 @@ export default function ReviewPopupModal({ userId, projectId, onClose }) {
               rows={3}
               value={message}
               onChange={e => setMessage(e.target.value)}
-              placeholder="O que gostaste, o que te chateou, o que mudavas. Escreve à vontade. Só te pergunto se posso mostrar isto a mais alguém se um dia pedir."
+              placeholder="O que gostaste, o que te chateou, o que mudavas."
               style={{ width: '100%' }}
             />
+
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13, color: 'var(--color-text-secondary)', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={consentPublic}
+                onChange={e => setConsentPublic(e.target.checked)}
+                style={{ marginTop: 2, cursor: 'pointer' }}
+              />
+              Podes usar isto como testemunho, para mostrar a outras pessoas o que o Showo faz de verdade.
+            </label>
 
             {status === 'error' && (
               <p style={{ margin: 0, color: 'var(--color-error)', fontSize: 13 }}>Erro ao enviar. Tenta de novo.</p>
