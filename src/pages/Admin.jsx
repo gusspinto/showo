@@ -548,6 +548,14 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
   const priorUsersCount = priorUserIds.size
   const priorUsersReturned = [...activeMonthIds].filter(id => priorUserIds.has(id)).length
   const retentionRate = priorUsersCount > 0 ? Math.round((priorUsersReturned / priorUsersCount) * 100) : 0
+
+  // Mesmo raciocínio da retenção mensal, mas na janela de 7 dias: só conta
+  // quem já cá estava antes dos últimos 7 dias, para não inflacionar com
+  // o crescimento da própria semana.
+  const priorUserIdsWeek = new Set(users.filter(u => new Date(u.created_at).getTime() < weekAgo).map(u => u.id))
+  const priorUsersCountWeek = priorUserIdsWeek.size
+  const priorUsersReturnedWeek = [...activeWeekIds].filter(id => priorUserIdsWeek.has(id)).length
+  const retentionRateWeek = priorUsersCountWeek > 0 ? Math.round((priorUsersReturnedWeek / priorUsersCountWeek) * 100) : 0
   const planCounts = { free: 0, school: 0, school_pro: 0, plus: 0, pro: 0 }
   users.forEach(u => { const p = resolvePlanId(u); planCounts[p] = (planCounts[p] || 0) + 1 })
 
@@ -919,6 +927,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
           { label: `Ativos ${periodLabel}`, value: activityStats?.active_range?.length ?? activeThisMonth, color: C.green, sub: `${activityStats?.sessions_range ?? 0} sessões` },
           { label: 'MRR real', value: `€${mrrEstimate.toFixed(2)}`, color: mrrEstimate > 0 ? C.green : C.muted, sub: `${paidUsers} assinante${paidUsers === 1 ? '' : 's'} a pagar via Stripe` },
           { label: 'Retenção mensal', value: `${retentionRate}%`, color: retentionRate > 30 ? C.green : retentionRate > 10 ? C.yellow : C.red, sub: `${priorUsersReturned}/${priorUsersCount} de quem já cá estava` },
+          { label: 'Retenção semanal', value: `${retentionRateWeek}%`, color: retentionRateWeek > 30 ? C.green : retentionRateWeek > 10 ? C.yellow : C.red, sub: `${priorUsersReturnedWeek}/${priorUsersCountWeek} de quem já cá estava` },
         ].map(k => (
           <div key={k.label} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 14, padding: '20px 22px' }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>{k.label}</div>
