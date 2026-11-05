@@ -95,6 +95,23 @@ function cta(href: string, label: string) {
   return `<tr><td style="padding:0 0 24px;"><a href="${href}" style="display:inline-block;background:#2B7EF5;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:12px 24px;border-radius:10px;">${esc(label)}</a></td></tr>`
 }
 
+function bulletList(items: Array<[string, string]>) {
+  const rows = items.map(([free, plus]) => `
+    <tr>
+      <td style="padding:7px 0;color:#666666;font-size:14px;line-height:1.4;border-bottom:1px solid #1c1c1c;">${free}</td>
+      <td style="padding:7px 0 7px 16px;color:#f0f0f0;font-size:14px;font-weight:600;line-height:1.4;border-bottom:1px solid #1c1c1c;">${plus}</td>
+    </tr>`).join('')
+  return `<tr><td style="padding:0 0 24px;">
+    <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="padding:0 0 6px;color:#555555;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Grátis</td>
+        <td style="padding:0 0 6px 16px;color:#2B7EF5;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Plus</td>
+      </tr>
+      ${rows}
+    </table>
+  </td></tr>`
+}
+
 // Mesmo princípio do urgencyBand do onboarding: quando a pessoa tem um
 // projeto com defense_date real no futuro, usa-se esse prazo em vez da
 // oferta genérica, é urgência verdadeira, não fabricada por nós. Forma
@@ -122,11 +139,17 @@ function buildWeek0({ firstName, unsubscribeUrl, code, daysToDefense }: { firstN
   return {
     subject: 'Gastaste a tua análise do mês? Ficas sem IA até ao próximo',
     html: wrapEmail(
-      greeting(firstName) +
+      row(`<span style="color:#888888;font-size:16px;line-height:1.4;">${firstName ? esc(firstName) + ',' : ''}</span>`) +
       offerBand(code, daysToDefense) +
-      headline('Ficas sem a análise de IA até ao mês que vem') +
-      paragraph('O plano Grátis dá 1 análise por mês, pensada para testares o Showo, não para acompanhares o projeto ao longo do tempo. Se já a usaste, o teu projeto evoluiu e já não tens como pedir à IA outra opinião, só esperar o mês renovar.') +
-      paragraph(`No Plus são 10 por mês, sem esperares um mês inteiro entre cada uma, a 4,49€/mês com o código ${esc(code)}.`, true) +
+      `<tr><td style="padding:0 0 18px;color:#f0f0f0;font-size:28px;line-height:1.25;font-weight:800;letter-spacing:-0.01em;">Ficas sem a análise<br/>de IA até ao mês que vem</td></tr>` +
+      `<tr><td style="padding:0 0 10px;color:#cccccc;font-size:17px;line-height:1.5;font-weight:600;">O Grátis dá 1 análise por mês, para testares, não para acompanhares o projeto ao longo do tempo.</td></tr>` +
+      `<tr><td style="padding:0 0 22px;color:#999999;font-size:15px;line-height:1.6;">Se já a usaste, o teu projeto evoluiu e já não tens como pedir à IA outra opinião, só esperar o mês renovar.</td></tr>` +
+      bulletList([
+        ['1 análise/mês', '10 análises/mês'],
+        ['3 projetos', '15 projetos'],
+        ['10 mensagens de Coach', '30 mensagens de Coach'],
+      ]) +
+      paragraph(`A 4,49€/mês com o código ${esc(code)}.`, true) +
       cta(`${APP}/pricing`, 'Não esperar o mês todo'),
       unsubscribeUrl,
     ),
@@ -135,14 +158,14 @@ function buildWeek0({ firstName, unsubscribeUrl, code, daysToDefense }: { firstN
 
 function buildWeek1({ firstName, unsubscribeUrl, code, daysToDefense }: { firstName?: string; unsubscribeUrl: string; code: string; daysToDefense: number | null; isProfessional: boolean }): Built {
   return {
-    subject: '100 mensagens por mês. 10 vezes mais espaço para pensar em voz alta',
+    subject: '30 mensagens por mês. 3 vezes mais espaço para pensar em voz alta',
     html: wrapEmail(
       greeting(firstName) +
       offerBand(code, daysToDefense) +
       headline('10 mensagens de Coach IA por mês não dão muito espaço') +
-      paragraph('Cada dúvida sobre o projeto, cada revisão de texto, conta para esse limite. No Plus são 100 por mês, dez vezes mais apoio ao longo do tempo, não só nos primeiros dias.') +
+      paragraph('Cada dúvida sobre o projeto, cada revisão de texto, conta para esse limite. No Plus são 30 por mês, o triplo de apoio ao longo do tempo, não só nos primeiros dias.') +
       paragraph(`Com o código ${esc(code)}, 4,49€/mês durante os primeiros 6 meses.`, true) +
-      cta(`${APP}/pricing`, 'Passar a 100 mensagens por mês'),
+      cta(`${APP}/pricing`, 'Passar a 30 mensagens por mês'),
       unsubscribeUrl,
     ),
   }
