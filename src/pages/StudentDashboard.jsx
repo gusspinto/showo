@@ -331,12 +331,13 @@ export default function StudentDashboard({ user, profile }) {
     })
   }, [projects, profile?.featured_popup_seen_at])
 
-  /* ── Pop-up de avaliação: primeiro projeto com score >= 71 ("Quase
-     profissional", mesmo threshold de Dashboard.jsx/Ranking.jsx), uma
-     única vez na vida da conta. */
+  /* ── Pop-up de avaliação: primeiro projeto com score >= 51 ("A ganhar
+     forma", mesmo threshold de Dashboard.jsx/Ranking.jsx), uma única vez
+     na vida da conta. 71 (medido em produção: 3 de 806 projetos) era
+     demasiado raro para servir de gatilho. */
   useEffect(() => {
     if (!projects.length || profile?.review_popup_seen_at) return
-    const qualifies = projects.find(p => (p.score ?? 0) >= 71)
+    const qualifies = projects.find(p => (p.score ?? 0) >= 51)
     if (qualifies) setReviewPopupProject(qualifies)
   }, [projects, profile?.review_popup_seen_at])
 
