@@ -38,6 +38,7 @@ import { featureUsed, getPlan } from '../lib/plans'
 import ExportProjectsModal from '../components/ExportProjectsModal'
 import { ShareStoryModal } from '../components/ShareStoryModal'
 import FeaturedSpotlightModal from '../components/dashboard/FeaturedSpotlightModal'
+import ReviewPopupModal from '../components/dashboard/ReviewPopupModal'
 
 // ProjectPulse removed — focus project now shown as auto-pinned card
 import JournalComposer from '../components/dashboard/JournalComposer'
@@ -218,6 +219,10 @@ export default function StudentDashboard({ user, profile }) {
   // aparece uma vez na vida da conta, controlado por profiles.featured_popup_seen_at.
   const [featuredProjectIds, setFeaturedProjectIds] = useState(() => new Set())
   const [featuredPopupProject, setFeaturedPopupProject] = useState(null)
+  // Pop-up de avaliação (checklist de growth, sugestão do Savvy Growth):
+  // dispara uma única vez na vida da conta, quando algum projeto já tem
+  // score >= 71, controlado por profiles.review_popup_seen_at.
+  const [reviewPopupProject, setReviewPopupProject] = useState(null)
   // Notificação in-app recorrente (diferente do popup acima, que só dispara
   // uma vez na vida da conta): volta a aparecer em CADA semana nova de
   // destaque, comparando featured_weeks.week_start com profiles.featured_week_seen.
@@ -325,6 +330,21 @@ export default function StudentDashboard({ user, profile }) {
       }
     })
   }, [projects, profile?.featured_popup_seen_at])
+
+  /* ── Pop-up de avaliação: primeiro projeto com score >= 71 ("Quase
+     profissional", mesmo threshold de Dashboard.jsx/Ranking.jsx), uma
+     única vez na vida da conta. */
+  useEffect(() => {
+    if (!projects.length || profile?.review_popup_seen_at) return
+    const qualifies = projects.find(p => (p.score ?? 0) >= 71)
+    if (qualifies) setReviewPopupProject(qualifies)
+  }, [projects, profile?.review_popup_seen_at])
+
+  async function markReviewPopupSeen() {
+    if (!user?.id || profile?.review_popup_seen_at) return
+    await supabase.from('profiles').update({ review_popup_seen_at: new Date().toISOString() }).eq('id', user.id)
+    refreshProfile?.()
+  }
 
   useEffect(() => {
     if (!projects.length) return
@@ -850,6 +870,14 @@ export default function StudentDashboard({ user, profile }) {
         <FeaturedSpotlightModal
           project={featuredPopupProject}
           onClose={() => { setFeaturedPopupProject(null); markFeaturedPopupSeen() }}
+        />
+      )}
+
+      {reviewPopupProject && (
+        <ReviewPopupModal
+          userId={user.id}
+          projectId={reviewPopupProject.id}
+          onClose={async () => { setReviewPopupProject(null); await markReviewPopupSeen() }}
         />
       )}
 
