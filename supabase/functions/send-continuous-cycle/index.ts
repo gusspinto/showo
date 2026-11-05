@@ -120,14 +120,14 @@ type Built = { subject: string; html: string }
 // exata de outro email já foi um erro corrigido nesta sequência).
 function buildWeek0({ firstName, unsubscribeUrl, code, daysToDefense }: { firstName?: string; unsubscribeUrl: string; code: string; daysToDefense: number | null; isProfessional: boolean }): Built {
   return {
-    subject: 'Ainda no plano Grátis? Eis o que estás a perder',
+    subject: 'Gastaste a tua análise do mês? Ficas sem IA até ao próximo',
     html: wrapEmail(
       greeting(firstName) +
       offerBand(code, daysToDefense) +
-      headline('1 análise de IA por mês chega para experimentar, não para usar a sério') +
-      paragraph('O plano Grátis existe para testares o Showo sem compromisso. Mas se já estás a usar o projeto a sério, 1 análise por mês esgota-se rápido.') +
-      paragraph(`No Plus são 10 análises por mês, 15 projetos, e 100 mensagens de Coach IA, a 4,49€/mês com o código ${esc(code)}.`, true) +
-      cta(`${APP}/pricing`, 'Ver o plano Plus'),
+      headline('Ficas sem a análise de IA até ao mês que vem') +
+      paragraph('O plano Grátis dá 1 análise por mês, pensada para testares o Showo, não para acompanhares o projeto ao longo do tempo. Se já a usaste, o teu projeto evoluiu e já não tens como pedir à IA outra opinião, só esperar o mês renovar.') +
+      paragraph(`No Plus são 10 por mês, sem esperares um mês inteiro entre cada uma, a 4,49€/mês com o código ${esc(code)}.`, true) +
+      cta(`${APP}/pricing`, 'Não esperar o mês todo'),
       unsubscribeUrl,
     ),
   }
