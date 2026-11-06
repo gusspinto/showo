@@ -211,7 +211,10 @@ const C = {
     fontSize: '0.88rem', padding: '11px 14px',
     borderBottom: isLast ? 'none' : '1px solid var(--color-border)',
   }),
-  highlightLabel: { color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '9px', flexShrink: 0, fontWeight: 600 },
+  // flexShrink/minWidth: 0: sem isto, no mobile, o rótulo nunca encolhia e
+  // empurrava o valor ("Incluído") para fora do cartão, cortado e ilegível.
+  // Agora o rótulo é que quebra para 2 linhas se precisar, o valor nunca.
+  highlightLabel: { color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '9px', flexShrink: 1, minWidth: 0, fontWeight: 600 },
   highlightIconWrap: {
     display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
     width: '26px', height: '26px', borderRadius: '8px',
@@ -225,7 +228,7 @@ const C = {
   highlightArrow: { color: 'var(--color-text-tertiary)', flexShrink: 0, display: 'flex' },
   highlightTo: { color: 'var(--color-primary)', fontWeight: 800, whiteSpace: 'nowrap' },
   highlightIncluded: {
-    display: 'flex', alignItems: 'center', gap: '5px',
+    display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0, whiteSpace: 'nowrap',
     color: 'var(--color-success)', fontWeight: 700, fontSize: '0.82rem',
   },
   msg:   { margin: 0, fontSize: '0.98rem', color: 'var(--color-text-secondary)', lineHeight: 1.6, maxWidth: '420px' },

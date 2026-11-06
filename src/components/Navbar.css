@@ -155,12 +155,18 @@
   max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .nb-topbar-account-plan { font-size: 10.5px; color: var(--color-text-tertiary); }
+/* Mesmo fundo do dropdown de notificações (.notif-drop, Navbar.jsx):
+   cor da página a 94% + blur com saturação, não var(--color-surface) sólido
+   (esse ficava opaco, sem o "vidro fosco" que o resto da app já usa para
+   coisas a flutuar por cima do conteúdo). */
 .nb-topbar-menu {
   position: absolute; top: calc(100% + 8px); right: 0;
-  background: var(--color-surface); border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-bg) 94%, transparent);
+  border: 1px solid var(--color-border);
   border-radius: 12px; padding: 6px; min-width: 180px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-  backdrop-filter: blur(16px);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.45);
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
   z-index: 99;
 }
 .nb-topbar-menu-item {
