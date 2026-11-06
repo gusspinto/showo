@@ -791,10 +791,14 @@ function UserChip({ user, profile, onClick, onProfile, onSettings, onSignOut, on
           <div style={{ position: 'fixed', inset: 0, zIndex: 98 }} onClick={() => setOpen(false)} />
           <div style={{
             position: 'absolute', top: 'calc(100% + 8px)', right: 0,
-            background: 'var(--color-surface)', border: `1px solid ${C.border}`,
+            // Mesmo vidro fosco do dropdown de notificações (.notif-drop) e
+            // do nb-topbar-menu: var(--color-surface) sólido não deixava o
+            // blur aparecer.
+            background: 'color-mix(in srgb, var(--color-bg) 94%, transparent)',
+            border: `1px solid ${C.border}`,
             borderRadius: 12, padding: '6px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-            backdropFilter: 'blur(16px)',
+            boxShadow: '0 8px 40px rgba(0,0,0,0.45)',
+            backdropFilter: 'blur(18px) saturate(1.4)', WebkitBackdropFilter: 'blur(18px) saturate(1.4)',
             zIndex: 99, minWidth: 160,
           }}>
             {onCreateProject && (
@@ -1915,9 +1919,11 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                       <>
                         <div style={{
                           position: 'fixed', left: 80, bottom: 16, zIndex: 199,
-                          background: 'var(--color-surface)', border: '1px solid var(--color-border)',
+                          background: 'color-mix(in srgb, var(--color-bg) 94%, transparent)',
+                          border: '1px solid var(--color-border)',
                           borderRadius: 12, padding: 6, minWidth: 150,
-                          boxShadow: '0 8px 32px rgba(0,0,0,0.4)', backdropFilter: 'blur(16px)',
+                          boxShadow: '0 8px 40px rgba(0,0,0,0.45)',
+                          backdropFilter: 'blur(18px) saturate(1.4)', WebkitBackdropFilter: 'blur(18px) saturate(1.4)',
                         }}>
                           <button
                             onClick={() => { navigate(profileUrl); setSbProfileMenuOpen(false) }}
