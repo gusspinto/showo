@@ -288,12 +288,80 @@ function LibBuildingRow({ item, onOpen, onDelete, removing, editing, onSetState,
   )
 }
 
+/* Pré-visualização ao clicar num tile: as competências/tech stack que a
+   IA tirou do projeto (hoje só visíveis, parcialmente, no próprio tile
+   dos "Adicionados") ficam todas aqui, iguais para as 3 secções, antes de
+   se decidir abrir o projeto a sério. Pedido do Gustavo: ver a info do
+   portefólio sem sair da Biblioteca. */
+function LibPreviewModal({ item, onClose, onOpenItem }) {
+  const isLibrary = item.entry_kind === 'library'
+  const isImage = item.library_file_type?.startsWith('image/')
+  const cover = isLibrary
+    ? (isImage ? item._signedFileUrl : item._signedThumbUrl)
+    : item.cover_url
+  const ft = isLibrary ? fileTypeStyle(item.library_file_type) : null
+  const subtitle = item.ai_tagline || item.library_description || null
+  const competencias = [...(item.skills || []), ...(item.library_skills || [])]
+  const tecnologias = item.tech_stack || []
+
+  return (
+    <Modal onClose={onClose} width={440}>
+      <div className="lib-preview-cover" style={!cover ? { background: ft ? `color-mix(in srgb, ${ft.color} 16%, var(--color-bg-alt))` : 'var(--color-bg-alt)' } : undefined}>
+        {cover ? (
+          <img src={cover} alt="" />
+        ) : ft ? (
+          <span className="lib-tile-filetype" style={{ color: ft.color }}>
+            <FileText size={30} />
+            <span className="lib-tile-filetype-label">{ft.label}</span>
+          </span>
+        ) : (
+          <Folder size={30} color="var(--color-text-tertiary)" />
+        )}
+      </div>
+
+      <h3 className="lib-preview-name">{item.name}</h3>
+      {item.area && <p className="lib-preview-area">{item.area}</p>}
+      {subtitle && <p className="lib-preview-desc">{subtitle}</p>}
+
+      {competencias.length > 0 && (
+        <div className="lib-preview-group">
+          <span className="lib-preview-group-label">Competências</span>
+          <div className="lib-preview-chips">
+            {competencias.map(s => <span key={s} className="lib-tile-skill">{s}</span>)}
+          </div>
+        </div>
+      )}
+
+      {tecnologias.length > 0 && (
+        <div className="lib-preview-group">
+          <span className="lib-preview-group-label">Tecnologias</span>
+          <div className="lib-preview-chips">
+            {tecnologias.map(s => <span key={s} className="lib-tile-skill">{s}</span>)}
+          </div>
+        </div>
+      )}
+
+      {competencias.length === 0 && tecnologias.length === 0 && (
+        <p className="lib-preview-empty">Ainda sem competências identificadas.</p>
+      )}
+
+      <ModalActions>
+        <Button variant="secondary" onClick={onClose}>Fechar</Button>
+        <Button variant="primary" onClick={() => onOpenItem(item)}>
+          {isLibrary ? 'Abrir ficheiro' : 'Abrir projeto'}
+        </Button>
+      </ModalActions>
+    </Modal>
+  )
+}
+
 export default function Biblioteca() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const [items, setItems] = useState(null)
   const [removing, setRemoving] = useState(null)
   const [viewing, setViewing] = useState(null)
+  const [previewing, setPreviewing] = useState(null)
   const [confirmingDelete, setConfirmingDelete] = useState(null)
   const [editing, setEditing] = useState(false)
   const [renamingId, setRenamingId] = useState(null)
@@ -439,6 +507,18 @@ export default function Biblioteca() {
     input.click()
   }
 
+  // Ação do botão "Abrir projeto" dentro da pré-visualização: adicionado
+  // abre o ficheiro (não tem página própria), criado/concluído vai para a
+  // página do projeto. Mesmo destino que o clique direto tinha antes.
+  function openFromPreview(item) {
+    setPreviewing(null)
+    if (item.entry_kind === 'library') {
+      if (item.library_file_url) setViewing(item)
+    } else {
+      navigate(`/projeto/${item.slug}`)
+    }
+  }
+
   const added = items?.filter(i => i.entry_kind === 'library') ?? []
   const fullProjects = items?.filter(i => i.entry_kind === 'full') ?? []
   const building = fullProjects.filter(i => getProjectState(i) === 'em_progresso')
@@ -503,7 +583,7 @@ export default function Biblioteca() {
                       onCancelRename={() => setRenamingId(null)}
                       onRename={name => patchItem(item.id, { name })}
                       onChangeCover={changeCover}
-                      onOpen={it => it.library_file_url && setViewing(it)} />
+                      onOpen={it => setPreviewing(it)} />
                   ))}
                 </div>
               </div>
@@ -519,7 +599,7 @@ export default function Biblioteca() {
                   {done.map(item => (
                     <LibDoneTile key={item.id} item={item} removing={removing} onDelete={handleDelete}
                       editing={editing} onSetState={setProfileState} onSetLayout={setLayout}
-                      onOpen={it => navigate(`/projeto/${it.slug}`)} />
+                      onOpen={it => setPreviewing(it)} />
                   ))}
                 </div>
               </div>
@@ -534,7 +614,7 @@ export default function Biblioteca() {
                   {building.map(item => (
                     <LibBuildingRow key={item.id} item={item} removing={removing} onDelete={handleDelete}
                       editing={editing} onSetState={setProfileState} onSetLayout={setLayout}
-                      onOpen={it => navigate(`/projeto/${it.slug}`)} />
+                      onOpen={it => setPreviewing(it)} />
                   ))}
                 </div>
               </div>
@@ -542,6 +622,14 @@ export default function Biblioteca() {
           </>
         )}
       </div>
+
+      {previewing && (
+        <LibPreviewModal
+          item={previewing}
+          onClose={() => setPreviewing(null)}
+          onOpenItem={openFromPreview}
+        />
+      )}
 
       {viewing && (
         <LibFileViewer

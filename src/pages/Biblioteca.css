@@ -391,6 +391,30 @@ body.light .lib-tile-cover img { outline-color: oklch(0 0 0 / 0.1); }
 .lib-confirm-btn:hover { opacity: 0.85; }
 .lib-confirm-btn.danger { background: var(--color-error); color: #fff; }
 
+/* ── Pré-visualização de um item ao clicar: capa + info de portefólio
+   (competências/tecnologias) antes de abrir o projeto/ficheiro a sério. ── */
+.lib-preview-cover {
+  position: relative; display: flex; align-items: center; justify-content: center;
+  width: 100%; aspect-ratio: 16 / 9; border-radius: var(--radius-lg);
+  background: var(--color-bg-alt); overflow: hidden; margin-bottom: 16px;
+}
+.lib-preview-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.lib-preview-name {
+  margin: 0 0 4px; font-size: 18px; font-weight: 700;
+  font-family: var(--font-heading); color: var(--color-text);
+}
+.lib-preview-area { margin: 0 0 10px; font-size: 12.5px; font-weight: 600; color: var(--color-text-secondary); }
+.lib-preview-desc { margin: 0 0 16px; font-size: 13.5px; line-height: 1.55; color: var(--color-text-secondary); }
+.lib-preview-group { margin-bottom: 14px; }
+.lib-preview-group-label {
+  display: block; margin-bottom: 6px;
+  font-size: 10.5px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+.lib-preview-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.lib-preview-chips .lib-tile-skill { font-size: 11.5px; padding: 4px 10px; }
+.lib-preview-empty { margin: 0 0 16px; font-size: 13px; color: var(--color-text-tertiary); }
+
 @media (max-width: 980px) {
   .lib-tile-grid { grid-template-columns: repeat(3, 1fr); }
 }
