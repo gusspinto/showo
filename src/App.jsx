@@ -195,10 +195,24 @@ function PhoneGate({ children, reopenGate, setReopenGate }) {
   const [phone, setPhone] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  // "Agora não" — achado real: 1366 registos no último mês, só 234 chegaram
+  // a ver a página de criar projeto. Este ecrã, sem saída nenhuma, era a
+  // primeira coisa a seguir ao registo, antes de a pessoa ver qualquer valor
+  // do Showo. Saltar aqui é só para esta sessão do browser (sessionStorage);
+  // no próximo login volta a perguntar, não perde o dado para sempre.
+  const [phoneSkipped, setPhoneSkipped] = useState(() => {
+    try { return sessionStorage.getItem('showo_phone_skip') === '1' } catch { return false }
+  })
 
   const phoneInvalid = isPhoneInvalid(profile?.phone)
-  const needsPhone = (!isGateExempt(location.pathname) && user && profile && profile.role !== 'professor' && (!profile.phone || phoneInvalid))
-    || reopenGate === 'phone'
+  const needsPhone = ((!isGateExempt(location.pathname) && user && profile && profile.role !== 'professor' && (!profile.phone || phoneInvalid))
+    || reopenGate === 'phone') && !phoneSkipped
+
+  function handleSkip() {
+    try { sessionStorage.setItem('showo_phone_skip', '1') } catch { /* ignore */ }
+    setPhoneSkipped(true)
+    setReopenGate(reopenGate === 'phone' ? 'occupation' : null)
+  }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -258,6 +272,9 @@ function PhoneGate({ children, reopenGate, setReopenGate }) {
 
           <button type="submit" disabled={saving} className="onboard-cta">
             {saving ? 'A guardar…' : phoneInvalid ? 'Guardar número' : 'Activar acesso gratuito'}
+          </button>
+          <button type="button" onClick={handleSkip} className="onboard-skip">
+            Agora não
           </button>
         </form>
       </div>
