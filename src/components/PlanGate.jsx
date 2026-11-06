@@ -43,16 +43,18 @@ const FEATURE_PREVIEW_KIND = {
   defenseTraining: 'defense',
 }
 
-// Só 2 balões (pedido → resultado), não 3: a resposta intermédia "sim, por
-// favor" não acrescentava nada a provar, só altura ao pop-up.
+// Simplificado para 1 balão só, não 2 (pedido do Gustavo: os 2 balões de
+// ida e volta pareciam só texto de preenchimento, não provavam nada
+// concreto). Um balão curto, com um ícone a identificar quem fala, lê-se
+// em menos de 2 segundos, o que a mascote vai fazer quando estiver pronta.
 function CoachPreview() {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <div style={{ alignSelf: 'flex-start', maxWidth: '85%', background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: '12px 12px 12px 4px', padding: '8px 11px', fontSize: 12, color: 'var(--color-text)', lineHeight: 1.45 }}>
-        Faltam exemplos concretos na secção de resultados. Queres que escreva um rascunho?
-      </div>
-      <div style={{ alignSelf: 'flex-start', maxWidth: '85%', background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: '12px 12px 12px 4px', padding: '8px 11px', fontSize: 12, color: 'var(--color-text)', lineHeight: 1.45 }}>
-        Pronto. Já tens um texto específico ao teu projeto, pronto a colar.
+    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
+      <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, width: 26, height: 26, borderRadius: '50%', background: 'var(--color-primary-subtle)', color: 'var(--color-primary)' }}>
+        <CoachIcon size={13} />
+      </span>
+      <div style={{ background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: '12px 12px 12px 4px', padding: '9px 12px', fontSize: 12.5, color: 'var(--color-text)', lineHeight: 1.45 }}>
+        Faltam exemplos concretos na secção de resultados. Queres um rascunho?
       </div>
     </div>
   )
