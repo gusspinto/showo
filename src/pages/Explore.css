@@ -421,6 +421,10 @@
   grid-template-columns: repeat(auto-fill, minmax(min(288px, 100%), 1fr));
   gap: 16px;
 }
+/* min-width:0: sem isto uma track de grid nunca encolhe abaixo do
+   min-content do cartão (tagline/nome compridos) e o cartão sai do ecrã
+   no mobile, onde a grelha cai para 1 coluna só. */
+.explore-grid > * { min-width: 0; }
 
 /* ── Project card ── */
 .explore-card {
