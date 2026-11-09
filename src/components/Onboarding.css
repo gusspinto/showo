@@ -118,7 +118,7 @@
   align-items: center;
   gap: 8px;
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 13px 22px;
   font-size: 15px;
   font-weight: 700;
@@ -293,7 +293,7 @@
 .onb-start-btn {
   background: var(--color-text);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 7px 16px;
   font-size: 12px;
   font-weight: 700;

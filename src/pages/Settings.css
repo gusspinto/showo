@@ -499,7 +499,7 @@
 /* ── Buttons ── */
 .settings-save-btn {
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 12px 24px;
   color: #fff;
   font-size: 14px;
@@ -522,7 +522,7 @@
 .settings-secondary-btn {
   background: transparent;
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 11px 24px;
   color: var(--color-text);
   font-size: 14px;
@@ -543,7 +543,7 @@
 .settings-danger-btn {
   background: rgba(239,68,68,0.08);
   border: 1px solid rgba(239,68,68,0.2);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 11px 24px;
   color: var(--color-error);
   font-size: 14px;

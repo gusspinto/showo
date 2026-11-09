@@ -129,7 +129,7 @@
 .hw3-drop-sub { font-size: 12.5px; color: var(--color-text-secondary); }
 .hw3-new-btn {
   display: flex; align-items: center; justify-content: center; gap: 8px;
-  padding: 12px; border-radius: 12px;
+  padding: 12px; border-radius: var(--radius-md);
   background: var(--color-bg-alt); color: var(--color-text-tertiary);
   font-size: 14px; font-weight: 700;
 }
@@ -284,7 +284,7 @@
 .hw3-ai-actions { display: flex; gap: 8px; }
 .hw3-btn {
   font-size: 13px; font-weight: 700;
-  padding: 8px 14px; border-radius: 10px;
+  padding: 8px 14px; border-radius: var(--radius-md);
   border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text);
 }
 .hw3-btn--solid { background: var(--color-text); border-color: var(--color-text); color: var(--color-bg); }

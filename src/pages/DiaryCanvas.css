@@ -100,7 +100,7 @@
   width: 34px;
   height: 34px;
   border: none;
-  border-radius: 9px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--color-text-tertiary);
   cursor: pointer;
@@ -124,7 +124,7 @@
   width: 34px;
   height: 34px;
   border: none;
-  border-radius: 9px;
+  border-radius: var(--radius-sm);
   background: #fff;
   color: #0a0a0a;
   cursor: pointer;
@@ -199,7 +199,7 @@
   width: 34px;
   height: 34px;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--color-text-tertiary);
   cursor: pointer;

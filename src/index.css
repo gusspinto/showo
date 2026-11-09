@@ -232,7 +232,7 @@ body.light select {
 .icon-btn-ghost {
   background: transparent; border: 1px solid transparent; color: var(--color-text-tertiary);
   cursor: pointer; padding: 5px; display: inline-flex; align-items: center;
-  border-radius: 7px; flex-shrink: 0;
+  border-radius: var(--radius-sm); flex-shrink: 0;
   transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
 }
 .icon-btn-ghost:hover {

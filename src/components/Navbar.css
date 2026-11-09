@@ -57,7 +57,7 @@
 /* Mobile-only action cluster */
 .mob-nav-actions { display: none; align-items: center; gap: 8px; }
 .mob-nav-auth-btn {
-  padding: 8px 13px; border-radius: 8px; font-size: 13px; font-weight: 700;
+  padding: 8px 13px; border-radius: var(--radius-md); font-size: 13px; font-weight: 700;
   font-family: inherit; cursor: pointer; white-space: nowrap; flex-shrink: 0;
   -webkit-tap-highlight-color: transparent; transition: background 0.13s, border-color 0.13s;
 }
@@ -66,7 +66,7 @@
 .mob-nav-auth-btn.primary { background: var(--color-text); border: none; color: var(--color-bg); box-shadow: 0 3px 12px rgba(26,138,122,0.3); }
 .mob-nav-auth-btn.primary:active { transform: scale(0.96); }
 .mob-nav-icon-btn {
-  width: 42px; height: 42px; border-radius: 12px;
+  width: 42px; height: 42px; border-radius: var(--radius-sm);
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; padding: 0; flex-shrink: 0; font-family: inherit;
   -webkit-tap-highlight-color: transparent;
@@ -458,7 +458,7 @@ body.light .sb-collapse-toggle:hover { border-color: rgba(0,0,0,0.75); }
 .sb-action-btn {
   flex: 0 0 auto; width: 32px;
   display: flex; align-items: center; justify-content: center;
-  height: 32px; border-radius: 8px;
+  height: 32px; border-radius: var(--radius-sm);
   background: transparent; border: none;
   color: var(--color-text-tertiary); cursor: pointer;
   transition: background 0.13s, color 0.13s, transform 0.1s;
@@ -473,7 +473,7 @@ body.light .sb-collapse-toggle:hover { border-color: rgba(0,0,0,0.75); }
 .sb-upgrade-btn {
   display: flex; align-items: center; justify-content: center; gap: 5px;
   flex: 0 0 auto; height: 32px; padding: 0 10px;
-  border-radius: 8px; border: none; cursor: pointer;
+  border-radius: var(--radius-full); border: none; cursor: pointer;
   background: var(--color-primary); color: #fff;
   font-size: 12px; font-weight: 700; font-family: var(--font-body);
   transition: opacity 0.13s, transform 0.1s;
@@ -504,7 +504,7 @@ body.light .sb-collapse-toggle:hover { border-color: rgba(0,0,0,0.75); }
 }
 body.sidebar-collapsed .proj-manage-float { left: 84px; }
 .proj-manage-float .pmf-btn {
-  width: 36px; height: 36px; border-radius: 10px;
+  width: 36px; height: 36px; border-radius: var(--radius-sm);
   background: transparent; border: none;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; color: var(--color-text-tertiary);
@@ -666,7 +666,7 @@ body.sidebar-collapsed .proj-manage-float { left: 84px; }
 .mobile-drawer-pair-btn {
   flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
   background: var(--color-bg); border: 1px solid var(--color-border);
-  border-radius: 10px; padding: 11px 8px;
+  border-radius: var(--radius-md); padding: 11px 8px;
   color: var(--color-text); font-size: 13px; font-weight: 600;
   cursor: pointer; font-family: inherit; transition: background 0.15s, border-color 0.15s, transform 0.1s;
 }

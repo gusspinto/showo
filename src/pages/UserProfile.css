@@ -283,7 +283,7 @@
 .up-action-btn {
   background: transparent;
   border: 1px solid var(--color-border);
-  border-radius: 9px;
+  border-radius: var(--radius-md);
   padding: 8px 14px;
   color: var(--color-text-secondary);
   font-size: 13px;
@@ -330,7 +330,7 @@
 .up-icon-btn {
   background: transparent;
   border: 1px solid var(--color-border);
-  border-radius: 9px;
+  border-radius: var(--radius-sm);
   width: 34px;
   height: 34px;
   display: flex;
@@ -712,7 +712,7 @@
 .up-empty-cta {
   background: var(--color-text);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 11px 24px;
   color: var(--color-bg);
   font-size: 14px;
@@ -760,7 +760,7 @@
   margin-top: 8px;
   background: var(--color-text);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 10px 24px;
   color: var(--color-bg);
   font-size: 14px;
