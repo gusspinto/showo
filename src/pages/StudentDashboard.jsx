@@ -1246,7 +1246,7 @@ export default function StudentDashboard({ user, profile }) {
                 <Button
                   iconRight={<ArrowRight size={15} />}
                   onClick={e => { e.stopPropagation(); navigate('/novo') }}
-                  style={{ background: '#fff', color: 'var(--color-primary)' }}
+                  style={{ background: '#fff', color: 'var(--color-primary-deep)' }}
                 >
                   Começar
                 </Button>

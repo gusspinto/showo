@@ -2478,14 +2478,19 @@
 .sdb-first-project:hover {
   border-color: var(--color-border-hover);
 }
-/* Experimental (ainda não decidido): fundo azul sólido, mesma energia do
-   cartão "Experimenta o Plus" ao lado, centrado em vez de alinhado à
-   esquerda: testar se isto resolve o cartão parecer "vazio a mais". */
+/* Mesmo tratamento do .sdb-panel--brand ("Experimenta o Plus"): azul mais
+   profundo (--color-primary-deep, não o azul base) + o brilho radial no
+   canto, não um azul plano. Pedido do Gustavo: "o mesmo efeito do cartão
+   do Plus, mas ligeiramente diferente": o efeito é igual, o que muda é o
+   conteúdo centrado em vez de alinhado à esquerda. */
 .sdb-first-project--accent {
   align-items: center;
   text-align: center;
-  background: var(--color-primary);
+  background:
+    radial-gradient(130% 150% at 100% 0%, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0) 58%),
+    var(--color-primary-deep);
   border-color: transparent;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.16) inset, var(--shadow-md);
 }
 .sdb-first-project--accent:hover { border-color: transparent; }
 .sdb-first-project-mark {
