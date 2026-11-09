@@ -213,11 +213,16 @@ export default function NewProject() {
   const { user, profile, checkGate, consumeAI, logFunnelEvent } = useAuth()
   const { toast, show: showToast } = useToast()
 
-  /* Passos: choose → describe | loading → review → submitting
+  /* Passos: precreate → choose → describe | loading → review → submitting
      "choose" já traz a caixa de enviar ficheiros consigo — deixou de haver
      um ecrã "import" à parte, por isso ?import=1 (link partilhável antigo)
-     também aterra aqui; é ignorado de propósito, não precisa de fazer nada. */
-  const [step, setStep] = useState('choose')
+     também aterra aqui; é ignorado de propósito, não precisa de fazer nada.
+     "precreate" é sempre o primeiro passo: pergunta se o trabalho já está
+     concluído e se é para ficar público ou privado, antes de ver o resto do
+     formulário, ver saveProject.js para onde isto aterra. */
+  const [step, setStep] = useState('precreate')
+  const [projectConcluded, setProjectConcluded] = useState(false)
+  const [projectVisibility, setProjectVisibility] = useState('private')
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -589,6 +594,8 @@ export default function NewProject() {
     try {
       const project = await saveProject(withCreator, aiResult, user?.id ?? null, {
         parentProjectId: asAttachment ? parentId : null,
+        visibility: projectVisibility,
+        concluded: projectConcluded,
       })
       if (user?.id) localStorage.setItem(`edit_token_${project.slug}`, project.edit_token)
       trackEvent('project_created', { manual: isManual, attachment: asAttachment })
@@ -620,7 +627,9 @@ export default function NewProject() {
         state: {
           newProject: true,
           projectData: project,
-          message: asAttachment ? 'Anexo adicionado.' : 'Projeto criado! Começa a melhorar o teu score.',
+          message: asAttachment
+            ? 'Anexo adicionado.'
+            : projectConcluded ? 'Página adicionada.' : 'Página criada! Começa a melhorar o teu score.',
           clearedFields: clearedLabels,
         },
       })
@@ -656,6 +665,78 @@ export default function NewProject() {
   const filledCount = REVIEW_FIELDS.filter(f => (form[f.key] ?? '').trim().length > 0).length
 
   /* ──────────────────────────────────────────────────────────────────────────
+     PASSO: precreate, antes de tudo o resto. Duas perguntas rápidas que
+     mudam o que acontece a seguir: se já está concluído (nasce já marcado,
+     sem mostrar depois a opção de "marcar como concluído" dentro do
+     projeto) e se é para ficar público ou privado (privado por omissão).
+  ────────────────────────────────────────────────────────────────────────── */
+  if (step === 'precreate') {
+    return (
+      <NpShell>
+        <Navbar showLinks={false} />
+        <div className="np-center">
+          <div className="np-wrap">
+            <p className="np-present-label" style={{ fontSize: 22, fontWeight: 700, color: 'var(--color-text)', marginBottom: 4 }}>
+              Antes de começar
+            </p>
+            <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginTop: 0, marginBottom: 24 }}>
+              Duas perguntas rápidas, podes mudar as duas mais tarde dentro do projeto.
+            </p>
+
+            <div className="np-present" style={{ marginBottom: 24 }}>
+              <p className="np-present-label">Este trabalho já está concluído?</p>
+              <div className="np-present-opts">
+                <button
+                  type="button"
+                  className={`np-present-opt${!projectConcluded ? ' is-on' : ''}`}
+                  onClick={() => setProjectConcluded(false)}
+                >
+                  <strong>Ainda estou a desenvolver</strong>
+                  <span>Podes marcar como concluído mais tarde, dentro do projeto.</span>
+                </button>
+                <button
+                  type="button"
+                  className={`np-present-opt${projectConcluded ? ' is-on' : ''}`}
+                  onClick={() => setProjectConcluded(true)}
+                >
+                  <strong>Já está concluído</strong>
+                  <span>Nasce já marcado como concluído.</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="np-present" style={{ marginBottom: 24 }}>
+              <p className="np-present-label">Queres que fique público ou privado?</p>
+              <div className="np-present-opts">
+                <button
+                  type="button"
+                  className={`np-present-opt${projectVisibility === 'private' ? ' is-on' : ''}`}
+                  onClick={() => setProjectVisibility('private')}
+                >
+                  <strong>Privado</strong>
+                  <span>Só tu vês. Publicas quando quiseres.</span>
+                </button>
+                <button
+                  type="button"
+                  className={`np-present-opt${projectVisibility === 'public' ? ' is-on' : ''}`}
+                  onClick={() => setProjectVisibility('public')}
+                >
+                  <strong>Público</strong>
+                  <span>Visível no teu perfil e no Explorar.</span>
+                </button>
+              </div>
+            </div>
+
+            <button className="np-btn-primary" onClick={() => setStep('choose')}>
+              Continuar <ArrowRight size={15} />
+            </button>
+          </div>
+        </div>
+      </NpShell>
+    )
+  }
+
+  /* ──────────────────────────────────────────────────────────────────────────
      PASSO: choose — a pergunta que faltava
      Antes, a única porta de entrada era "descreve o teu projeto". Quem já
      tinha o relatório feito lia isso como "escreve tudo outra vez" e fechava.
@@ -666,7 +747,7 @@ export default function NewProject() {
       <NpShell>
         {gateMsg && <PlanGateModal message={gateMsg} onClose={() => setGateMsg(null)} />}
         <Toast {...toast} />
-        <Navbar showLinks={false} />
+        <Navbar showLinks={false} mobileLeft={<BackButton onClick={() => setStep('precreate')} />} />
         <div className="np-center np-center--choose">
           <div className="np-wrap np-wrap--choose">
             <NpAnimatedTitle />

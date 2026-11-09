@@ -4693,15 +4693,15 @@ export default function ProjectPage() {
             rever nada; aqui é um gesto discreto de fim de revisão, não uma
             declaração. Continua editável depois de concluído, só deixa de
             aparecer como "em construção" na Biblioteca. */}
-        {isOwner && (
+        {isOwner && getProjectState(project) !== 'concluido' && (
           <button
             onClick={toggleProjectState}
             disabled={stateSaving}
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
               margin: '18px auto 4px', background: 'none',
-              border: `1px solid ${getProjectState(project) === 'concluido' ? 'var(--color-success-subtle)' : colors.border}`,
-              color: getProjectState(project) === 'concluido' ? 'var(--color-success)' : colors.subtle,
+              border: `1px solid ${colors.border}`,
+              color: colors.subtle,
               borderRadius: 'var(--radius-full)', padding: '8px 16px', fontSize: 12.5, fontWeight: 600,
               cursor: stateSaving ? 'default' : 'pointer', fontFamily: 'inherit',
               opacity: stateSaving ? 0.6 : 1, transition: 'all 0.15s',
@@ -4709,8 +4709,6 @@ export default function ProjectPage() {
           >
             {stateSaving ? (
               <><Loader size={13} /> A guardar...</>
-            ) : getProjectState(project) === 'concluido' ? (
-              <><Loader size={13} /> Concluído · toca para reabrir</>
             ) : (
               <><Check size={13} /> Marcar como concluído</>
             )}
