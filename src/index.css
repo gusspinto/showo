@@ -433,6 +433,13 @@ a { transition: color 0.15s, opacity 0.15s; }
 .onboard-cta:disabled { opacity: 0.35; cursor: default; }
 .onboard-error { margin: 0; font-size: 0.85rem; color: #ff8080; text-align: center; }
 
+.onboard-skip {
+  width: 100%; border: none; background: transparent; padding: 6px 0;
+  color: rgba(255,255,255,0.45); font-size: 0.85rem; font-family: inherit;
+  cursor: pointer; text-decoration: underline;
+}
+.onboard-skip:hover { color: rgba(255,255,255,0.7); }
+
 @media (prefers-reduced-motion: reduce) {
   .onboard-screen, .onboard-card, .onboard-card-check { animation: none !important; }
 }

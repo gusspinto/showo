@@ -40,7 +40,7 @@ function sessionPreview(msgs) {
 
 export default function Coach() {
   const navigate = useNavigate()
-  const { user, profile, checkGate, consumeAI } = useAuth()
+  const { user, profile, checkGate, consumeAI, logFunnelEvent } = useAuth()
   const isMobile = useIsMobile()
 
   const [myProjects, setMyProjects] = useState([])
@@ -227,6 +227,7 @@ export default function Coach() {
         ? await chatProjectCoach({ project: activeProject, messages, message: msg, profile })
         : await chatGlobalCoach({ messages, message: msg, profile })
       consumeAI('coach')
+      logFunnelEvent('coach_message_sent', activeProject ? 'project' : 'global')
       setMessages(prev => [...prev, { role: 'assistant', content: reply }])
       setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
       const sid = sessionId || crypto.randomUUID()
@@ -461,16 +462,9 @@ export default function Coach() {
                     title="Conversas"
                     style={{ display: 'none', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, minHeight: 0, background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 9, color: C.muted, cursor: 'pointer', flexShrink: 0 }}
                   ><HistoryIcon size={16} /></button>
-                  {/* Sem conversa ainda, o ícone grande do ecrã vazio (mais
-                      abaixo) já é o "rosto" da página, repeti-lo aqui em
-                      cima ficava com dois ao mesmo tempo. Com conversa a
-                      decorrer, o ícone grande some, e este do cabeçalho
-                      volta a ser o único. */}
-                  {!isEmpty && (
-                    <div style={{ width: 44, height: 44, borderRadius: 13, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Bot size={22} color="var(--color-primary)" />
-                    </div>
-                  )}
+                  <div style={{ width: 38, height: 38, borderRadius: 11, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Bot size={19} color="var(--color-primary)" />
+                  </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 17, fontWeight: 700, color: C.text }}>Coach IA</div>
                     <div style={{ fontSize: 12, color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeProject ? `A falar sobre: ${activeProject.name}` : 'Conselho sobre o teu percurso'}</div>
@@ -536,10 +530,8 @@ export default function Coach() {
                       }}>{m.role === 'assistant' ? renderMd(m.content) : m.content}</div>
                     ))}
                     {loading && (
-                      <div style={{ alignSelf: 'flex-start', background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: '14px 14px 14px 4px', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 4 }}>
-                        {[0, 1, 2].map(i => (
-                          <span key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--color-text-tertiary)', animation: 'bounce 1.2s infinite', animationDelay: `${i * 0.15}s` }} />
-                        ))}
+                      <div style={{ alignSelf: 'flex-start', background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: '14px 14px 14px 4px', padding: '10px 16px', display: 'flex', gap: 5, alignItems: 'center' }}>
+                        {[0, 1, 2].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: C.muted, animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />)}
                       </div>
                     )}
                     <div ref={bottomRef} />

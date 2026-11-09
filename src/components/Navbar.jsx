@@ -29,6 +29,7 @@ import { UserPlusRoundedIcon as UserPlus } from '@solar-icons/react/bold/user-pl
 import { Widget4Icon as LayoutDashboard } from '@solar-icons/react/bold/widget-4'
 import { ClipboardListIcon as ClipboardList } from '@solar-icons/react/bold/clipboard-list'
 import { BotIcon as Bot } from '@solar-icons/react/bold/bot'
+import { GalleryWideIcon as ImageIcon } from '@solar-icons/react/bold/gallery-wide'
 import { PlusIcon as Plus } from './icons/PlusIcon'
 import { CompassIcon as Compass } from '@solar-icons/react/bold/compass'
 import { LibraryIcon } from '@solar-icons/react/bold/library'
@@ -1786,8 +1787,17 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               )}
               {user && (
                 <button className={`sb-item${isActive('/coach') ? ' active' : ''}`} onClick={() => navigate('/coach')}>
-                  <Bot size={22} />
-                  {!collapsed && showLabels && <span>Coach IA</span>}
+                  <Bot size={16} />{!collapsed && showLabels && <span>Coach IA</span>}
+                </button>
+              )}
+              {/* Pedido direto do Gustavo: o Coach apontava os utilizadores
+                  para "o separador Imagem", que só existe dentro da edição
+                  de um projeto, sem acesso direto. Isto dá acesso imediato à
+                  mesma feature (Plus/Pro), sem ser preciso abrir um projeto
+                  primeiro. */}
+              {user && (
+                <button className={`sb-item${isActive('/gerador-ia') ? ' active' : ''}`} onClick={() => navigate('/gerador-ia')}>
+                  <ImageIcon size={16} />{!collapsed && showLabels && <span>Gerador IA</span>}
                 </button>
               )}
               {user && (
@@ -2261,7 +2271,12 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   )}
                   {user && (
                     <button className={`mob-nav-btn${isActive('/coach') ? ' active' : ''}`} onClick={() => { navigate('/coach'); setMenuOpen(false) }}>
-                      <Bot size={22} /> Coach IA
+                      <Bot size={18} /> Coach IA
+                    </button>
+                  )}
+                  {user && (
+                    <button className={`mob-nav-btn${isActive('/gerador-ia') ? ' active' : ''}`} onClick={() => { navigate('/gerador-ia'); setMenuOpen(false) }}>
+                      <ImageIcon size={18} /> Gerador IA
                     </button>
                   )}
                   {user && (

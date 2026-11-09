@@ -36,6 +36,11 @@ export default function JournalComposer({
     setSaving(false)
     if (err) { setError('Não foi possível guardar. Tenta outra vez.'); return }
 
+    // Sinal de retenção: escrita manual no diário, feature usada no
+    // send-diary-return-nudge para decidir quem convidar a voltar. Sem
+    // useAuth aqui (userId vem por prop), insere direto, sem bloquear.
+    supabase.from('funnel_events').insert({ user_id: userId, event: 'diary_entry_created', feature: kind }).then(() => {})
+
     // Sync to diary canvas — map kind to card type
     const KIND_CARD = { progresso: 'note', dificuldade: 'note', decisao: 'idea', resultado: 'note', aprendizagem: 'note', conquista: 'highlight' }
     const cardType = KIND_CARD[kind] || 'note'

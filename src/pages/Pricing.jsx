@@ -64,14 +64,19 @@ const PLANS = [
     id: 'plus',
     name: 'Plus',
     priceMonthly: '€8,99',
+    // Cupão SHOWO_ONBOARDING_2026, 50%/6 meses, aplica-se sozinho no
+    // checkout desde que o create-checkout passou a aplicar o desconto
+    // automaticamente. Sem isto aqui, quem vem direto à pricing (sem
+    // passar pelo email) via o preço cheio e nunca sabe que o desconto
+    // existe até já estar no Stripe.
     priceMonthlyDiscounted: '€4,49',
     priceAnnual: '€89,90',
     annualEquivalent: '€7,49/mês',
+    // Mesmo cupão SHOWO_ONBOARDING_2026 (-50%), aplicado também ao anual.
     priceAnnualDiscounted: '€44,95',
     annualEquivalentDiscounted: '€3,75/mês',
     period: '/mês',
     positioning: 'Não pares a meio do caminho.',
-    weeklyNote: 'pouco mais de €2 por semana',
     cta: 'Começar com o Plus',
     ctaVariant: 'primary',
     popular: true,
@@ -82,6 +87,7 @@ const PLANS = [
         label: 'Mais',
         items: [
           { label: '15 projetos' },
+          { label: 'Gerar imagens com IA', value: 'novo', tip: 'Descreve a capa ou ilustração que queres e a IA gera-a na hora, pronta a usar no projeto ou a descarregar. 5 imagens por mês.' },
           { label: 'Sincronização com o GitHub', icon: 'github', tip: 'O teu diário atualiza-se sozinho a cada push, sem teres de voltar cá para escrever nada.' },
           { label: 'Ficheiros de prova', value: '250MB', tip: 'Anexa PDFs, Word, PowerPoint ou imagens, qualquer ficheiro que prove o trabalho. Escolhes o que aparece na página pública.' },
           { label: 'Assistente semanal', tip: 'Todas as semanas recebes um email com o que avançaste, o que ficou parado e o que vem a seguir, sem teres de ir à procura.' },
@@ -92,7 +98,7 @@ const PLANS = [
         label: 'IA',
         ai: true,
         items: [
-          { label: 'Coach IA', value: '100 msgs' },
+          { label: 'Coach IA', value: '30 msgs' },
           { label: 'Toda a IA', value: '5x mais que o Grátis', subitems: ['Criar projeto', 'Entrevista guiada', 'Análise', 'Relatório', 'Narrativa IA'] },
           { label: 'Treino para entrevistas', value: 'novo', tip: 'A IA simula a banca ou o entrevistador, antecipa as perguntas difíceis e sugere respostas. Inclui também uma carta de apresentação gerada a partir do teu trabalho.' },
         ],
@@ -110,7 +116,6 @@ const PLANS = [
     annualEquivalentDiscounted: '€7,50/mês',
     period: '/mês',
     positioning: 'Chega à conversa com prova, não com promessas.',
-    weeklyNote: 'pouco mais de €4 por semana',
     cta: 'Ir para Pro',
     ctaVariant: 'primary',
     inherits: 'Plus',
@@ -120,6 +125,7 @@ const PLANS = [
         label: 'Mais',
         items: [
           { label: 'Projetos ilimitados' },
+          { label: 'Gerar imagens com IA', value: '15/mês', tip: 'Descreve a capa ou ilustração que queres e a IA gera-a na hora, pronta a usar no projeto ou a descarregar.' },
           { label: 'Exportar PowerPoint', value: 'sem limite' },
           { label: 'Ficheiros de prova', value: '1GB', tip: 'Anexa PDFs, Word, PowerPoint ou imagens, qualquer ficheiro que prove o trabalho. Escolhes o que aparece na página pública.' },
           { label: 'Link à tua medida', tip: 'Tira o código aleatório do link do teu projeto e escolhe o teu próprio texto.' },
@@ -130,7 +136,7 @@ const PLANS = [
         label: 'IA',
         ai: true,
         items: [
-          { label: 'Coach IA', value: '300 msgs' },
+          { label: 'Coach IA', value: '50 msgs' },
           { label: 'Toda a IA', value: 'dobro do Plus', subitems: ['Criar projeto', 'Entrevista guiada', 'Análise', 'Relatório', 'Narrativa IA', 'Treino para entrevistas', 'Carta de apresentação'] },
         ],
       },
@@ -147,8 +153,9 @@ const PLANS = [
    uma funcionalidade a mais, não uma quantidade. */
 const COMPARE_ROWS = [
   { label: 'Ficheiros de prova', free: false, plus: '250MB', pro: '1GB' },
-  { label: 'Projetos', free: '3', plus: '15', pro: 'Ilimitados' },
-  { label: 'Coach IA', free: '10 msgs', plus: '100 msgs', pro: '300 msgs' },
+  { label: 'Projetos', free: '2', plus: '15', pro: 'Ilimitados' },
+  { label: 'Gerar imagens com IA', free: false, plus: '5x/mês', pro: '15x/mês' },
+  { label: 'Coach IA', free: '10 msgs', plus: '30 msgs', pro: '50 msgs' },
   { label: 'Criar projeto com IA', free: '3x', plus: '15x', pro: '30x' },
   { label: 'Entrevista guiada', free: '3x', plus: '15x', pro: '30x' },
   { label: 'Análise de projeto', free: '1x', plus: '10x', pro: '25x' },
@@ -266,6 +273,11 @@ export default function Pricing() {
         { body: annual ? { plan: plan.id } : { plan: plan.id, period: 'monthly' } },
       )
       if (fnErr || !data?.url) { setError('Erro ao iniciar pagamento. Tenta novamente.'); return }
+      // Só agora é que se confirma que o Stripe respondeu com uma sessão
+      // válida, por isso só agora se regista quem chegou mesmo ao checkout
+      // (checkout_started, acima, só sabe que a pessoa clicou, não que o
+      // pedido teve sucesso).
+      logFunnelEvent('checkout_redirected', plan.id)
       window.location.href = data.url
     } catch {
       setError('Erro ao iniciar pagamento. Tenta novamente.')

@@ -38,6 +38,7 @@ import { featureUsed, getPlan } from '../lib/plans'
 import ExportProjectsModal from '../components/ExportProjectsModal'
 import { ShareStoryModal } from '../components/ShareStoryModal'
 import FeaturedSpotlightModal from '../components/dashboard/FeaturedSpotlightModal'
+import ReviewPopupModal from '../components/dashboard/ReviewPopupModal'
 
 // ProjectPulse removed — focus project now shown as auto-pinned card
 import JournalComposer from '../components/dashboard/JournalComposer'
@@ -49,6 +50,7 @@ import WeeklyRecap, { shouldShowRecap, RecapsPanel } from '../components/dashboa
 import WeeklyPostCard from '../components/dashboard/WeeklyPostCard'
 import WeeklyRecapTeaser from '../components/dashboard/WeeklyRecapTeaser'
 import LimitNudgeBanner from '../components/dashboard/LimitNudgeBanner'
+import FeaturedWeekBanner from '../components/dashboard/FeaturedWeekBanner'
 import SegmentedTabs from '../components/SegmentedTabs'
 import WeeklyCheckin, { shouldShowCheckin } from '../components/dashboard/WeeklyCheckin'
 import AddReminderModal from '../components/dashboard/AddReminderModal'
@@ -197,6 +199,14 @@ export default function StudentDashboard({ user, profile }) {
     logFunnelEvent('nudge_shown')
   }, [nudgeSignal, user.id, logFunnelEvent])
 
+  // Uma vez por montagem (não por render): sinal de retenção mais básico
+  // que temos, quem entra no dashboard a sério, não só quem fez login (um
+  // login pode ser separador aberto sem fazer nada).
+  useEffect(() => {
+    logFunnelEvent('dashboard_viewed')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const [nudgeBannerDismissed, setNudgeBannerDismissed] = useState(
     () => !!localStorage.getItem(`showo_nudge_banner_dismissed_${user.id}_${new Date().toISOString().slice(0, 7)}`)
   )
@@ -208,6 +218,14 @@ export default function StudentDashboard({ user, profile }) {
   // aparece uma vez na vida da conta, controlado por profiles.featured_popup_seen_at.
   const [featuredProjectIds, setFeaturedProjectIds] = useState(() => new Set())
   const [featuredPopupProject, setFeaturedPopupProject] = useState(null)
+  // Pop-up de avaliação (checklist de growth, sugestão do Savvy Growth):
+  // dispara uma única vez na vida da conta, quando algum projeto já tem
+  // score >= 71, controlado por profiles.review_popup_seen_at.
+  const [reviewPopupProject, setReviewPopupProject] = useState(null)
+  // Notificação in-app recorrente (diferente do popup acima, que só dispara
+  // uma vez na vida da conta): volta a aparecer em CADA semana nova de
+  // destaque, comparando featured_weeks.week_start com profiles.featured_week_seen.
+  const [featuredWeekNotice, setFeaturedWeekNotice] = useState(null)
   const [composerKind, setComposerKind] = useState(null)
   // A que projeto pertence o "Registar" que está aberto. Sem isto, o
   // composer ficava sempre agarrado a focusFull (o projeto em foco
@@ -220,9 +238,6 @@ export default function StudentDashboard({ user, profile }) {
   // turma nenhuma para mostrar, por isso o dashboard fica como sempre foi.
   const [dashTab, setDashTab] = useState('projetos')
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
-  const [diaryReminderDismissed, setDiaryReminderDismissed] = useState(
-    () => localStorage.getItem(`showo_diary_remind_${new Date().toISOString().slice(0,10)}`) === '1'
-  )
   const [showReport, setShowReport] = useState(false)
   const [showAddReminder, setShowAddReminder] = useState(null)
   const [editingReminder, setEditingReminder] = useState(null)
@@ -318,6 +333,57 @@ export default function StudentDashboard({ user, profile }) {
       }
     })
   }, [projects, profile?.featured_popup_seen_at])
+
+  /* ── Pop-up de avaliação: primeiro projeto com score >= 41, uma única
+     vez na vida da conta. Medido em produção: 176 de 806 projetos
+     qualificam (contra 101 em 51, 3 em 71), pedido do Gustavo para
+     alcançar mais gente. */
+  useEffect(() => {
+    if (!projects.length || profile?.review_popup_seen_at) return
+    const qualifies = projects.find(p => (p.score ?? 0) >= 41)
+    if (qualifies) setReviewPopupProject(qualifies)
+  }, [projects, profile?.review_popup_seen_at])
+
+  async function markReviewPopupSeen() {
+    if (!user?.id || profile?.review_popup_seen_at) return
+    await supabase.from('profiles').update({ review_popup_seen_at: new Date().toISOString() }).eq('id', user.id)
+    refreshProfile?.()
+  }
+
+  useEffect(() => {
+    if (!projects.length) return
+    let cancelled = false
+    async function load() {
+      const { data, error } = await supabase
+        .from('featured_weeks')
+        .select('project_id, week_start')
+        .order('week_start', { ascending: false })
+        .limit(1)
+      if (cancelled || error || !data?.length) return
+      const latestWeek = data[0].week_start
+      const { data: rows } = await supabase
+        .from('featured_weeks')
+        .select('project_id')
+        .eq('week_start', latestWeek)
+      if (cancelled || !rows) return
+      const myIds = new Set(projects.map(p => p.id))
+      const mine = rows.filter(r => myIds.has(r.project_id))
+      if (mine.length && profile?.featured_week_seen !== latestWeek) {
+        const proj = projects.find(p => p.id === mine[0].project_id)
+        setFeaturedWeekNotice({ weekStart: latestWeek, projectName: proj?.name || 'projeto' })
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [projects, profile?.featured_week_seen])
+
+  async function markFeaturedWeekSeen() {
+    if (!user?.id || !featuredWeekNotice) return
+    const weekStart = featuredWeekNotice.weekStart
+    setFeaturedWeekNotice(null)
+    await supabase.from('profiles').update({ featured_week_seen: weekStart }).eq('id', user.id)
+    refreshProfile?.()
+  }
 
   async function markFeaturedPopupSeen() {
     if (!user?.id || profile?.featured_popup_seen_at) return
@@ -811,6 +877,14 @@ export default function StudentDashboard({ user, profile }) {
         />
       )}
 
+      {reviewPopupProject && (
+        <ReviewPopupModal
+          userId={user.id}
+          projectId={reviewPopupProject.id}
+          onClose={async () => { setReviewPopupProject(null); await markReviewPopupSeen() }}
+        />
+      )}
+
       {showRecap && (
         <WeeklyRecap
           userId={user.id}
@@ -1109,6 +1183,13 @@ export default function StudentDashboard({ user, profile }) {
                   logFunnelEvent('nudge_clicked', nudgeSignal.feature)
                   setShowUpgradeModal(nudgeSignal.feature)
                 }}
+              />
+            )}
+
+            {featuredWeekNotice && (
+              <FeaturedWeekBanner
+                projectName={featuredWeekNotice.projectName}
+                onDismiss={markFeaturedWeekSeen}
               />
             )}
 

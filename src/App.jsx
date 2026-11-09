@@ -101,6 +101,7 @@ const Dashboard    = lazyPage(() => import('./pages/Dashboard'))
 const Biblioteca   = lazyPage(() => import('./pages/Biblioteca'))
 const Vagas        = lazyPage(() => import('./pages/Vagas'))
 const Coach         = lazyPage(() => import('./pages/Coach'))
+const GenerateImage = lazyPage(() => import('./pages/GenerateImage'))
 const Pipeline      = lazyPage(() => import('./pages/Pipeline'))
 const Settings     = lazyPage(() => import('./pages/Settings'))
 const UserProfile  = lazyPage(() => import('./pages/UserProfile'))
@@ -194,10 +195,24 @@ function PhoneGate({ children, reopenGate, setReopenGate }) {
   const [phone, setPhone] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  // "Agora não" — achado real: 1366 registos no último mês, só 234 chegaram
+  // a ver a página de criar projeto. Este ecrã, sem saída nenhuma, era a
+  // primeira coisa a seguir ao registo, antes de a pessoa ver qualquer valor
+  // do Showo. Saltar aqui é só para esta sessão do browser (sessionStorage);
+  // no próximo login volta a perguntar, não perde o dado para sempre.
+  const [phoneSkipped, setPhoneSkipped] = useState(() => {
+    try { return sessionStorage.getItem('showo_phone_skip') === '1' } catch { return false }
+  })
 
   const phoneInvalid = isPhoneInvalid(profile?.phone)
-  const needsPhone = (!isGateExempt(location.pathname) && user && profile && profile.role !== 'professor' && (!profile.phone || phoneInvalid))
-    || reopenGate === 'phone'
+  const needsPhone = ((!isGateExempt(location.pathname) && user && profile && profile.role !== 'professor' && (!profile.phone || phoneInvalid))
+    || reopenGate === 'phone') && !phoneSkipped
+
+  function handleSkip() {
+    try { sessionStorage.setItem('showo_phone_skip', '1') } catch { /* ignore */ }
+    setPhoneSkipped(true)
+    setReopenGate(reopenGate === 'phone' ? 'occupation' : null)
+  }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -257,6 +272,9 @@ function PhoneGate({ children, reopenGate, setReopenGate }) {
 
           <button type="submit" disabled={saving} className="onboard-cta">
             {saving ? 'A guardar…' : phoneInvalid ? 'Guardar número' : 'Activar acesso gratuito'}
+          </button>
+          <button type="button" onClick={handleSkip} className="onboard-skip">
+            Agora não
           </button>
         </form>
       </div>
@@ -839,6 +857,7 @@ export default function App() {
               <Route path="/biblioteca"    element={<Biblioteca />}  />
               <Route path="/vagas"         element={<Vagas />}       />
               <Route path="/coach"         element={<Coach />}       />
+              <Route path="/gerador-ia"    element={<GenerateImage />} />
               <Route path="/pipeline"      element={<Pipeline />}    />
               <Route path="/settings"      element={<Settings />}    />
               <Route path="/u/:username"   element={<UserProfile />} />

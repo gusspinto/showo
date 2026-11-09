@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
     }
 
     // Códigos de desconto (promocionais e de embaixadoras) agora valem para
-    // mensal e anual. Antes só entravam no mensal — o Stripe só restringe
+    // mensal e anual. Antes só entravam no mensal, o Stripe só restringe
     // coupons por produto, não por price, e mensal/anual partilham o mesmo
     // produto, por isso não há forma de deixar só os códigos de embaixadora
     // passarem no anual sem deixar os outros também.

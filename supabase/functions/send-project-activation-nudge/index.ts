@@ -15,12 +15,16 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
    Mesmo raciocínio que já levou a send-continuous-cycle a ser separada de
    send-onboarding-sequence.
 
-   Audiência: projetos entry_kind='full', criados há 24-48h, com menos de 3
+   Audiência: projetos entry_kind='full', criados há 24-100h, com menos de 3
    itens em preview_blocks, ainda sem activation_nudge_sent_at (migração
    205). Um email por projeto, nunca repete. Aplica-se a todos os planos,
    ativação não depende de pagar.
 
-   Corre 1x por dia via pg_cron, para apanhar a janela de 24-48h com folga.
+   Corre 3x por semana via pg_cron (segunda, quarta, sexta), reduzido de
+   diário em 2026-10-31 a pedido do Gustavo (reduzir o número de crons que
+   verificam todos os dias). A janela alargou de 24-48h para 24-100h para
+   cobrir com folga o maior intervalo entre corridas (sexta a segunda, 3
+   dias) sem perder ninguém a meio.
 
    Modo de teste: { test_project_id } no corpo, mesmo padrão das outras
    sequências.
@@ -173,7 +177,7 @@ Deno.serve(async (req) => {
       .eq('entry_kind', 'full')
       .is('activation_nudge_sent_at', null)
       .lte('created_at', new Date(Date.now() - 24 * 3600000).toISOString())
-      .gte('created_at', new Date(Date.now() - 48 * 3600000).toISOString())
+      .gte('created_at', new Date(Date.now() - 100 * 3600000).toISOString())
     if (testProjectId) {
       projectsQuery = supabase
         .from('projects')
@@ -197,12 +201,22 @@ Deno.serve(async (req) => {
     const userIds = [...new Set(incompleteRaw.map(p => p.user_id))]
     const { data: profiles } = await supabase
       .from('profiles')
-      .select('id, full_name, activation_nudge_opted_out')
+      .select('id, full_name, activation_nudge_opted_out, onboarding_sequence_step, onboarding_opted_out')
       .in('id', userIds)
     const profileById = new Map((profiles ?? []).map(p => [p.id, p]))
+    // Quem está a meio da sequência de onboarding já recebe 1 email por dia
+    // dessa sequência (send-onboarding-sequence). Empilhar este por cima,
+    // no mesmo dia, foi confirmado contra a BD em 2026-10-31 a acontecer de
+    // facto (queixa real de "parece spam"). Mesma regra que o
+    // send-saturday-nudge e o send-continuous-cycle já aplicam.
+    const inActiveOnboarding = (prof: { onboarding_sequence_step?: number | null; onboarding_opted_out?: boolean } | undefined) =>
+      !!prof && prof.onboarding_sequence_step != null && prof.onboarding_sequence_step < 14 && !prof.onboarding_opted_out
     const incomplete = testProjectId
       ? incompleteRaw
-      : incompleteRaw.filter(p => !profileById.get(p.user_id)?.activation_nudge_opted_out)
+      : incompleteRaw.filter(p => {
+          const prof = profileById.get(p.user_id)
+          return !prof?.activation_nudge_opted_out && !inActiveOnboarding(prof)
+        })
     const nameById = new Map((profiles ?? []).map(p => [p.id, p.full_name]))
 
     const emailById = new Map<string, string>()

@@ -1119,7 +1119,7 @@ export default function ProjectPage() {
   const { slug } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
-  const { user, profile, loading: authLoading, checkGate, consumeAI, refreshProfile } = useAuth()
+  const { user, profile, loading: authLoading, checkGate, consumeAI, refreshProfile, logFunnelEvent } = useAuth()
   const [project, setProject] = useState(() => location.state?.projectData ?? null)
   const [projectJournalEntries, setProjectJournalEntries] = useState([])
   const [showReport, setShowReport] = useState(false)
@@ -1154,6 +1154,16 @@ export default function ProjectPage() {
     })
     return () => { cancelled = true }
   }, [project?.id, profile?.role])
+
+  // Sinal de retenção/engagement: alguém abriu um projeto a sério (próprio
+  // ou de outra pessoa), não só "fez login". feature distingue dono de
+  // visitante, para o funil no Admin conseguir separar "voltei ao meu
+  // projeto" de "fui ver o de outra pessoa" (Explorar).
+  useEffect(() => {
+    if (!project?.id) return
+    logFunnelEvent('project_opened', user?.id === project.user_id ? 'own' : 'other')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project?.id])
   const [ownerProfile, setOwnerProfile] = useState(null)
   const [aiFeedback, setAiFeedback] = useState(null)
   const [analyzingAI, setAnalyzingAI] = useState(false)
@@ -1501,6 +1511,7 @@ export default function ProjectPage() {
     try {
       const reply = await chatProjectCoach({ project: { ...project, journal: projectJournalEntries, teacher_feedback: teacherFeedback }, messages: coachMessages, message: msg, profile })
       consumeAI('coach')
+      logFunnelEvent('coach_message_sent', 'project')
       const now = new Date().toISOString()
       setCoachMessages(prev => [...prev, { role: 'assistant', content: reply }])
       setTimeout(() => coachBottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
@@ -1908,16 +1919,18 @@ export default function ProjectPage() {
   useEffect(() => {
     if (!project) return
     if (authLoading) return
-    if (!user?.id) return
-    // Logged-in users: only real owner skips view count. Token is irrelevant when authenticated.
-    const isOwner = !!(project.user_id && user.id === project.user_id)
+    // Visitantes anónimos (sem conta) também contam agora. Achado desta
+    // sessão: a maioria de quem recebe um link partilhado não tem conta no
+    // Showo, e `if (!user?.id) return` aqui andava a excluir essas visitas
+    // por completo, de sempre. Só o dono real continua a não contar.
+    const isOwner = !!(user?.id && project.user_id && user.id === project.user_id)
     if (isOwner) return
 
     const viewKey = `viewed_${project.slug}`
     if (!sessionStorage.getItem(viewKey)) {
       sessionStorage.setItem(viewKey, '1')
       // keepalive ensures the POST reaches the DB even if the user refreshes immediately
-      fetch(`${supabaseUrl}/rest/v1/rpc/increment_project_views`, {
+      fetch(`${supabaseUrl}/rest/v1/rpc/log_project_view`, {
         method: 'POST',
         keepalive: true,
         headers: {
@@ -1925,7 +1938,7 @@ export default function ProjectPage() {
           apikey: supabaseAnonKey,
           Authorization: `Bearer ${supabaseAnonKey}`,
         },
-        body: JSON.stringify({ project_id: project.id }),
+        body: JSON.stringify({ p_project_id: project.id, p_viewer_id: user?.id ?? null }),
       })
       setProject(prev => prev ? { ...prev, views: (prev.views ?? 0) + 1 } : prev)
     }
@@ -2139,6 +2152,10 @@ export default function ProjectPage() {
     navigator.clipboard.writeText(pageUrl).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
+      // Metade da definição de ativação (CLAUDE.md): publicar 3+ secções
+      // E partilhar o link. Sem este evento não há forma de medir a
+      // segunda metade, só a primeira (score/secções).
+      logFunnelEvent('project_shared', 'copy_link', project?.id)
     })
   }
 
@@ -2984,6 +3001,7 @@ export default function ProjectPage() {
                   navigator.clipboard.writeText(`${window.location.origin}/projeto/${project.slug}`)
                   setLaunchCopied(true)
                   setTimeout(() => setLaunchCopied(false), 2500)
+                  logFunnelEvent('project_shared', 'launch', project?.id)
                 }}
                 style={{
                   background: launchCopied ? 'var(--color-success-subtle)' : 'var(--color-bg-alt)',
@@ -3173,6 +3191,7 @@ export default function ProjectPage() {
                   navigator.clipboard.writeText(`${window.location.origin}/p/${project.slug}`)
                   triggerToast('Link copiado!')
                   setMilestoneCard(null)
+                  logFunnelEvent('project_shared', 'milestone', project?.id)
                 }}
                 style={{
                   flex: 1,
@@ -4160,6 +4179,7 @@ export default function ProjectPage() {
                 navigator.clipboard.writeText(`${window.location.origin}/p/${project.slug}`)
                 triggerToast('Link copiado!')
                 advancePostTourStage('done')
+                logFunnelEvent('project_shared', 'post_tour', project?.id)
               }
             }}
             onDismiss={() => advancePostTourStage(postTourStage === '3' ? 'done' : String(Number(postTourStage) + 1))}

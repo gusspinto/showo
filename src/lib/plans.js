@@ -14,6 +14,7 @@ export const PLANS = {
       analyzeProject: 15,
       coverLetter: 0,
       exportPptx: 20,
+      generateImage: 0,
     },
     career: {
       internshipPage: false,
@@ -31,7 +32,8 @@ export const PLANS = {
     ai: {
       createProject: 30,
       interviewProject: 30,
-      coach: 300,
+      // Mesma correção do Pro (ver 231): estava em 300, margem negativa.
+      coach: 80,
       defense: 25,
       defenseTraining: 25,
       diaryReport: 10,
@@ -39,6 +41,7 @@ export const PLANS = {
       analyzeProject: 25,
       coverLetter: 25,
       exportPptx: Infinity,
+      generateImage: 15,
     },
     career: {
       internshipPage: true,
@@ -64,6 +67,7 @@ export const PLANS = {
       analyzeProject: 1,
       coverLetter: 0,
       exportPptx: 3,
+      generateImage: 0,
     },
     career: {
       internshipPage: false,
@@ -80,13 +84,22 @@ export const PLANS = {
     priceLabel: '€8,99',
     priceLabelDiscounted: '€4,49',
     priceLabelAnnual: '€89,90',
+    // Mesmo cupão SHOWO_ONBOARDING_2026 (-50%), aplicado ao anual também
+    // (create-annual-checkout). €89,90/2 = €44,95. Antes disto, o anual
+    // mostrava o preço riscado errado (mensal×12, sem ligação nenhuma ao
+    // cupão) e o preço cheio como se já fosse o preço com desconto.
     priceLabelAnnualDiscounted: '€44,95',
     period: '/mês',
     maxProjects: 15,
     ai: {
       createProject: 15,
       interviewProject: 15,
-      coach: 100,
+      // Baixado de 100 para 30 (2026-11-03): no pior caso de custo real por
+      // mensagem já visto ($0,068), 100 mensagens sozinhas quase esgotavam
+      // toda a margem do preço do Plus. 30 fecha ~79% de margem no caso
+      // médio e ~55% no pior caso, e é 3x o limite do Grátis (10), proporção
+      // que se vende melhor do que um salto pequeno.
+      coach: 30,
       defense: 10,
       defenseTraining: 5,
       diaryReport: 5,
@@ -94,6 +107,9 @@ export const PLANS = {
       analyzeProject: 10,
       coverLetter: 5,
       exportPptx: 15,
+      // Imagens (capas de projeto): limite calculado com margem real a
+      // ~$0,011/imagem (GPT Image, tier baixo). Ver migração 230.
+      generateImage: 5,
     },
     career: {
       internshipPage: true,
@@ -110,13 +126,21 @@ export const PLANS = {
     priceLabel: '€17,99',
     priceLabelDiscounted: '€8,99',
     priceLabelAnnual: '€179,90',
+    // €179,90/2 = €89,95.
     priceLabelAnnualDiscounted: '€89,95',
     period: '/mês',
     maxProjects: Infinity,
     ai: {
       createProject: 30,
       interviewProject: 30,
-      coach: 300,
+      // Baixado de 300 para 80, depois para 50 (2026-11-03). O cupão
+      // SHOWO_ONBOARDING_2026 (-50%, primeiros 6 meses) baixa o preço real
+      // do Pro para ~€9, e nesse preço 80 dava margem negativa no pior caso
+      // de custo real por mensagem já visto ($0,068). A 50, o pior caso com
+      // desconto fecha em ~0% (nem lucro nem prejuízo), nunca negativo, e
+      // sem desconto fica bem acima disso. Progressão 10 (Grátis) / 30
+      // (Plus) / 50 (Pro) também vende melhor do que 10/30/40.
+      coach: 50,
       defense: 25,
       defenseTraining: 25,
       diaryReport: 10,
@@ -124,6 +148,7 @@ export const PLANS = {
       analyzeProject: 25,
       coverLetter: 25,
       exportPptx: Infinity,
+      generateImage: 15,
     },
     career: {
       internshipPage: true,
@@ -238,6 +263,12 @@ export function planHighlights(fromPlanId, toPlan) {
 // no checkout via ONBOARDING_DISCOUNT_CODE). Uma só fonte de verdade para a
 // Pricing e o pop-up de upgrade não desalinharem a data ou o desconto.
 export const ONBOARDING_DISCOUNT_NOTE = '-50% nos primeiros 6 meses · código válido até 18 dez'
+
+// Mesma nota para o anual, que é pagamento único (não faz sentido falar em
+// "primeiros 6 meses" para uma só cobrança). Gustavo apontou que o anual
+// nunca aplicava este desconto, nem no preço mostrado nem no checkout real
+// (create-annual-checkout só tinha allow_promotion_codes, a pessoa tinha de
+// escrever o código à mão, 0 resgates confirmados no Stripe).
 export const ANNUAL_ONBOARDING_DISCOUNT_NOTE = '-50% no primeiro ano · código válido até 18 dez'
 
 export function remainingUses(planId, feature, usageMap) {
@@ -267,6 +298,7 @@ export const AI_FEATURE_LABELS = {
   defenseTraining: 'Treino de defesa',
   coverLetter: 'Carta de apresentação',
   exportPptx: 'Exportar PowerPoint',
+  generateImage: 'Gerar imagens',
 }
 
 export const PLAN_GATE_MESSAGES = {
@@ -289,7 +321,7 @@ export const PLAN_GATE_MESSAGES = {
   coach: (plan) => ({
     title: 'Limite do Coach IA atingido',
     body: plan === 'free'
-      ? 'Já usaste as 10 mensagens do Coach este mês. Com o Plus tens 100 por mês — continua exatamente de onde paraste.'
+      ? 'Já usaste as 10 mensagens do Coach este mês. Com o Plus tens 30 por mês, continua exatamente de onde paraste.'
       : `Chegaste ao limite de mensagens do Coach este mês no plano ${getPlan(plan).name}. Faz upgrade para teres mais.`,
   }),
   defense: (plan) => ({
@@ -351,5 +383,11 @@ export const PLAN_GATE_MESSAGES = {
   projectFiles: () => ({
     title: 'Ficheiros do projeto',
     body: 'Anexa PDFs, Word, PowerPoint ou imagens como prova.',
+  }),
+  generateImage: (plan) => ({
+    title: 'Gerar imagens com IA',
+    body: plan === 'free' || plan === 'school'
+      ? 'Gerar imagens com IA está disponível a partir do plano Plus (5 por mês).'
+      : `Já usaste as imagens deste mês no plano ${getPlan(plan).name}. Faz upgrade para teres mais.`,
   }),
 }
