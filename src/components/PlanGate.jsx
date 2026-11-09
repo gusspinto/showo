@@ -11,6 +11,7 @@ import { PresentationGraphIcon as ExportIcon } from '@solar-icons/react/bold/pre
 import { AltArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/alt-arrow-right'
 import { CheckCircleIcon as CheckCircle } from '@solar-icons/react/bold/check-circle'
 import { LikeIcon as ThumbUp } from '@solar-icons/react/bold/like'
+import { BotIcon as Bot } from '@solar-icons/react/bold/bot'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { getPlan, nextPaidPlan, planHighlights, fullAnnualPrice, ONBOARDING_DISCOUNT_NOTE } from '../lib/plans'
@@ -43,18 +44,25 @@ const FEATURE_PREVIEW_KIND = {
   defenseTraining: 'defense',
 }
 
-// Simplificado para 1 balão só, não 2 (pedido do Gustavo: os 2 balões de
-// ida e volta pareciam só texto de preenchimento, não provavam nada
-// concreto). Um balão curto, com um ícone a identificar quem fala, lê-se
-// em menos de 2 segundos, o que a mascote vai fazer quando estiver pronta.
+// Nem balões de chat, nem a moldura "Preview real": o Gustavo achou que
+// não fazia sentido fingir uma conversa real sem mostrar o produto a
+// sério. Fica só o ícone do robô (a identidade da IA até a mascote
+// estar pronta) com uma fala simples por baixo, lê-se em menos de 1
+// segundo. Quando a mascote fechar, troca-se só este ícone, o resto
+// (o pop-up à volta) fica igual.
 function CoachPreview() {
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
-      <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, width: 26, height: 26, borderRadius: '50%', background: 'var(--color-primary-subtle)', color: 'var(--color-primary)' }}>
-        <CoachIcon size={13} />
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '4px 0 2px' }}>
+      <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 56, height: 56, borderRadius: '50%', background: 'var(--color-primary-subtle)', color: 'var(--color-primary)' }}>
+        <Bot size={30} />
       </span>
-      <div style={{ background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: '12px 12px 12px 4px', padding: '9px 12px', fontSize: 12.5, color: 'var(--color-text)', lineHeight: 1.45 }}>
-        Faltam exemplos concretos na secção de resultados. Queres um rascunho?
+      <div style={{ position: 'relative', background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '8px 16px', fontSize: 13, fontWeight: 600, color: 'var(--color-text)' }}>
+        <span style={{
+          position: 'absolute', top: -6, left: '50%', transform: 'translateX(-50%) rotate(45deg)',
+          width: 11, height: 11, background: 'var(--color-bg-alt)',
+          borderLeft: '1px solid var(--color-border)', borderTop: '1px solid var(--color-border)',
+        }} />
+        Precisas de ajuda?
       </div>
     </div>
   )
@@ -127,15 +135,16 @@ function LinkedInPostPreview() {
 
 function FeaturePreview({ feature }) {
   const kind = FEATURE_PREVIEW_KIND[feature] || 'coach'
+  // O Coach não tem rótulo "Preview real": não é uma réplica de ecrã, é só
+  // o ícone + fala, não faz sentido chamar-lhe "preview" de nada.
   const label = {
-    coach: 'Preview real do Coach IA',
     recap: 'O post que o Showo escreve por ti',
     vagas: 'Preview real das vagas de estágio',
     defense: 'Preview real da preparação de defesa',
   }[kind]
   return (
     <div className="plan-gate-fade">
-      <p style={{ margin: '0 0 10px', fontSize: 10, fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
+      {label && <p style={{ margin: '0 0 10px', fontSize: 10, fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>}
       {kind === 'coach' && <CoachPreview />}
       {kind === 'vagas' && <VagasPreview />}
       {kind === 'defense' && <DefensePreview />}
