@@ -1002,7 +1002,6 @@ export default function StudentDashboard({ user, profile }) {
             <SegmentedTabs
               value={mobileSection}
               onChange={setMobileSection}
-              size="compact"
               options={[
                 { id: 'projeto', label: 'Projeto' },
                 { id: 'portfolio', label: 'Portfólio' },
