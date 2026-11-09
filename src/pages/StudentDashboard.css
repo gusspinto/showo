@@ -2478,32 +2478,27 @@
 .sdb-first-project:hover {
   border-color: var(--color-border-hover);
 }
+/* Badge discreto, não o gradiente cheio: chama a atenção sem gritar,
+   mesmo tratamento de ícone que o resto da app já usa (highlightIconWrap
+   do PlanGate, .sdb-sync-btn), não um quadrado novo com cor própria. */
 .sdb-first-project-icon {
   display: flex; align-items: center; justify-content: center;
-  width: 52px; height: 52px; flex-shrink: 0;
+  width: 44px; height: 44px; flex-shrink: 0;
   border-radius: var(--radius-md);
-  background-image: var(--brand-gradient);
-  color: #fff;
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
 }
 .sdb-first-project-title {
   margin: 0;
-  font-size: 22px;
-  font-weight: 800;
+  font-size: 20px;
+  font-weight: 700;
   color: var(--color-text);
   line-height: 1.3;
   font-family: var(--font-heading);
 }
-.sdb-first-project-sub {
-  margin: 0;
-  max-width: 420px;
-  font-size: 14px;
-  line-height: 1.6;
-  color: var(--color-text-secondary);
-}
 @media (max-width: 640px) {
   .sdb-first-project { padding: var(--sp-5) var(--sp-4); gap: var(--sp-3); }
-  .sdb-first-project-title { font-size: 19px; }
-  .sdb-first-project-sub { font-size: 13px; }
+  .sdb-first-project-title { font-size: 18px; }
 }
 
 /* ── Weekly Check-in modal ── */

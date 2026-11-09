@@ -7,6 +7,7 @@ import { calculatePotential, calculateScore } from '../lib/score'
 import { joinClassByCode } from '../lib/joinClass'
 import { RocketIcon as Rocket } from '@solar-icons/react/bold/rocket'
 import { PlusIcon as Plus } from '../components/icons/PlusIcon'
+import { FileIcon } from '../components/icons/FileIcon'
 import { UserIcon as User } from '@solar-icons/react/bold/user'
 import { GlobeIcon as Globe } from '@solar-icons/react/bold/globe'
 import { ChatRoundLineIcon as MessageSquare } from '@solar-icons/react/bold/chat-round-line'
@@ -1231,14 +1232,13 @@ export default function StudentDashboard({ user, profile }) {
 
             {isEmptyState && (
               <section className="sdb-first-project" onClick={() => navigate('/novo')}>
-                {/* "+" no gradiente da marca, mesmo visual do botão de criar
-                    na sidebar/navbar: convite claro, destaca-se do fundo da
-                    página e do cartão do Plus ao lado, pedido do Gustavo
-                    para este cartão parecer menos "a faltar algo". */}
-                <span className="sdb-first-project-icon"><Plus size={26} /></span>
-                <span className="sdb-eyebrow">Primeiro projeto</span>
-                <h2 className="sdb-first-project-title">Cria ou adiciona o teu primeiro projeto</h2>
-                <p className="sdb-first-project-sub">Já tens algo feito? Sobe o ficheiro. Só tens uma ideia? Descreve-a e a IA ajuda-te a desenvolvê-la.</p>
+                {/* Segunda versão: o "+" grande em gradiente foi rejeitado
+                    pelo Gustavo ("gritante"). Uma folha desenhada à mão,
+                    badge discreto, menos texto (só o título, sem eyebrow
+                    nem subtítulo): convite sem gritar, à imagem do resto
+                    dos ícones feitos à mão da app. */}
+                <span className="sdb-first-project-icon"><FileIcon size={22} /></span>
+                <h2 className="sdb-first-project-title">Cria ou sobe o teu primeiro projeto</h2>
                 <Button
                   iconRight={<ArrowRight size={15} />}
                   onClick={e => { e.stopPropagation(); navigate('/novo') }}
