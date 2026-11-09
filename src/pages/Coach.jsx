@@ -7,7 +7,7 @@ import { PlanGateModal, AiUsageBadge } from '../components/PlanGate'
 import { chatGlobalCoach } from '../lib/chatGlobalCoach'
 import { chatProjectCoach } from '../lib/chatProjectCoach'
 import { renderMd } from '../lib/renderMd'
-import ShowoMascot from '../components/mascot/ShowoMascot'
+import { BotIcon as Bot } from '@solar-icons/react/bold/bot'
 import { AltArrowDownIcon as ChevronDown } from '@solar-icons/react/bold/alt-arrow-down'
 import { PlaneIcon as Send } from '@solar-icons/react/bold/plane'
 import { ClipboardListIcon as HistoryIcon } from '@solar-icons/react/bold/clipboard-list'
@@ -461,14 +461,14 @@ export default function Coach() {
                     title="Conversas"
                     style={{ display: 'none', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, minHeight: 0, background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 9, color: C.muted, cursor: 'pointer', flexShrink: 0 }}
                   ><HistoryIcon size={16} /></button>
-                  {/* Sem conversa ainda, o mascote grande do ecrã vazio (mais
+                  {/* Sem conversa ainda, o ícone grande do ecrã vazio (mais
                       abaixo) já é o "rosto" da página, repeti-lo aqui em
-                      cima ficava com dois ao mesmo tempo, apontado pelo
-                      Gustavo. Com conversa a decorrer, o mascote grande some,
-                      e este do cabeçalho volta a ser o único. */}
+                      cima ficava com dois ao mesmo tempo. Com conversa a
+                      decorrer, o ícone grande some, e este do cabeçalho
+                      volta a ser o único. */}
                   {!isEmpty && (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <ShowoMascot size={44} />
+                    <div style={{ width: 44, height: 44, borderRadius: 13, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Bot size={22} color="var(--color-primary)" />
                     </div>
                   )}
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -494,8 +494,8 @@ export default function Coach() {
                 // ecrã de "nova conversa" do ChatGPT/Claude), em vez de deixar
                 // um vazio enorme entre a saudação e a caixa lá em baixo.
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20, paddingBottom: '10vh' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <ShowoMascot size={76} waving />
+                  <div style={{ width: 52, height: 52, borderRadius: 15, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Bot size={26} color="var(--color-primary)" />
                   </div>
                   <p style={{ margin: 0, maxWidth: 440, textAlign: 'center', fontSize: 14, color: C.muted, lineHeight: 1.6 }}>{greeting}</p>
                   <div style={{ width: '100%', maxWidth: 480 }}>{inputBar}</div>
@@ -536,8 +536,10 @@ export default function Coach() {
                       }}>{m.role === 'assistant' ? renderMd(m.content) : m.content}</div>
                     ))}
                     {loading && (
-                      <div style={{ alignSelf: 'flex-start', background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: '14px 14px 14px 4px', padding: '10px 16px', display: 'flex', alignItems: 'center' }}>
-                        <ShowoMascot size={30} loading />
+                      <div style={{ alignSelf: 'flex-start', background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: '14px 14px 14px 4px', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        {[0, 1, 2].map(i => (
+                          <span key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--color-text-tertiary)', animation: 'bounce 1.2s infinite', animationDelay: `${i * 0.15}s` }} />
+                        ))}
                       </div>
                     )}
                     <div ref={bottomRef} />
