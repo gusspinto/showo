@@ -323,6 +323,18 @@
 .sdb-hero-tabs { display: none; }
 .sdb-tabs-row { display: flex; justify-content: center; margin: 0 0 var(--sp-5); }
 
+/* Abas Projeto/Portfólio/Agenda, só em mobile (ver media query abaixo). No
+   desktop a grelha de duas colunas já mostra tudo sem scroll a mais, por
+   isso estas abas nem chegam a existir visualmente lá.
+   .sdb-mobile-sec é sempre "transparente" para o layout (display:contents),
+   tanto em desktop como em mobile: cada filho lá dentro continua a contar
+   como um item independente de .sdb-col (flex no desktop, grid no mobile) e
+   a receber o gap normal entre items. Sem isto, agrupar vários itens dentro
+   deste wrapper colava-os uns aos outros no desktop (o gap de .sdb-col só
+   existe entre filhos diretos). */
+.sdb-mobile-sec-tabs { display: none; }
+.sdb-mobile-sec { display: contents; }
+
 .sdb-streak-row {
   display: flex;
   align-items: center;
@@ -1425,6 +1437,18 @@
   .sdb-o-turma          { order: 11; }
   .sdb-o-potential      { order: 12; display: none; } /* substituído pelos tiles */
   .sdb-o-pinned         { order: 12; }
+
+  /* Abas Projeto/Portfólio/Agenda: cada .sdb-mobile-sec é "transparente"
+     para o grid (display:contents), os filhos lá dentro continuam a usar a
+     própria ordem (sdb-o-pulse, sdb-mobile-stats, etc.) como sempre. Só
+     escondemos o conteúdo dos grupos que não correspondem à aba ativa, e
+     só quando a grelha tem data-active-sec (dashTab 'projetos', com
+     projetos); na tab Turma ou em conta vazia, o atributo não existe e
+     mostra-se tudo, sem filtrar nada. */
+  .sdb-mobile-sec-tabs { display: flex; justify-content: center; margin: 0 0 var(--sp-4); }
+  .sdb-grid[data-active-sec="projeto"]   .sdb-mobile-sec:not([data-sec="projeto"])   { display: none; }
+  .sdb-grid[data-active-sec="portfolio"] .sdb-mobile-sec:not([data-sec="portfolio"]) { display: none; }
+  .sdb-grid[data-active-sec="agenda"]    .sdb-mobile-sec:not([data-sec="agenda"])    { display: none; }
 
   .sdb-stat-tile {
     background: var(--color-surface);
