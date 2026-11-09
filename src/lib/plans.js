@@ -80,6 +80,7 @@ export const PLANS = {
     priceLabel: '€8,99',
     priceLabelDiscounted: '€4,49',
     priceLabelAnnual: '€89,90',
+    priceLabelAnnualDiscounted: '€44,95',
     period: '/mês',
     maxProjects: 15,
     ai: {
@@ -109,6 +110,7 @@ export const PLANS = {
     priceLabel: '€17,99',
     priceLabelDiscounted: '€8,99',
     priceLabelAnnual: '€179,90',
+    priceLabelAnnualDiscounted: '€89,95',
     period: '/mês',
     maxProjects: Infinity,
     ai: {
@@ -232,21 +234,11 @@ export function planHighlights(fromPlanId, toPlan) {
   return items.slice(0, 3)
 }
 
-// Preço cheio se o anual fosse pago mês a mês (mensal × 12), para mostrar
-// riscado ao lado do preço anual real. Pedido do Gustavo: a poupança fica
-// visível no próprio preço, em vez de só dita por texto ("2 meses grátis").
-// Mesmo cálculo partilhado pelo pop-up de upgrade (PlanGate) e pela
-// Pricing, para nunca desalinhar entre os dois sítios.
 // Texto da promoção de lançamento (código SHOWO50, aplicado automaticamente
-// no checkout mensal via ONBOARDING_DISCOUNT_CODE). Uma só fonte de verdade
-// para a Pricing e o pop-up de upgrade não desalinharem a data ou o desconto.
+// no checkout via ONBOARDING_DISCOUNT_CODE). Uma só fonte de verdade para a
+// Pricing e o pop-up de upgrade não desalinharem a data ou o desconto.
 export const ONBOARDING_DISCOUNT_NOTE = '-50% nos primeiros 6 meses · código válido até 18 dez'
-
-export function fullAnnualPrice(monthlyLabel) {
-  const n = parseFloat(String(monthlyLabel).replace('€', '').replace(',', '.'))
-  if (!Number.isFinite(n)) return null
-  return `€${(n * 12).toFixed(2).replace('.', ',')}`
-}
+export const ANNUAL_ONBOARDING_DISCOUNT_NOTE = '-50% no primeiro ano · código válido até 18 dez'
 
 export function remainingUses(planId, feature, usageMap) {
   const limit = getPlan(planId).ai[feature]

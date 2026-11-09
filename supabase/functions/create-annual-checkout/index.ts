@@ -1,5 +1,5 @@
 import Stripe from 'npm:stripe@17.7.0'
-import { getAuthUser, getCorsHeaders } from '../_shared/rateLimit.ts'
+import { getAuthUser, getCorsHeaders, checkRateLimit } from '../_shared/rateLimit.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 // Checkout de pagamento único para o plano anual, em vez da subscrição que
@@ -16,6 +16,13 @@ Deno.serve(async (req) => {
   if (!user) {
     return new Response(JSON.stringify({ error: 'Autenticação necessária.' }), {
       status: 401, headers: { ...cors, 'Content-Type': 'application/json' },
+    })
+  }
+
+  const allowed = await checkRateLimit(req, 'create-annual-checkout', 10)
+  if (!allowed) {
+    return new Response(JSON.stringify({ error: 'Demasiados pedidos. Tenta mais tarde.' }), {
+      status: 429, headers: { ...cors, 'Content-Type': 'application/json' },
     })
   }
 
@@ -75,10 +82,34 @@ Deno.serve(async (req) => {
         .eq('id', user.id)
     }
 
+    // Mesmo cupão de onboarding do create-checkout (SHOWO_ONBOARDING_2026,
+    // -50%), aplicado sozinho em vez de depender da pessoa escrever o código
+    // à mão. Confirmado no Stripe: 0 resgates até agora, apesar de estar
+    // nos emails de onboarding, exatamente o problema que isto resolveu no
+    // mensal. O "repeating 6 meses" do cupão não faz sentido num pagamento
+    // único (mode:'payment'), mas o Stripe aplica o percent_off à mesma
+    // nesse caso, não há conceito de "fatura seguinte" para repetir.
+    const discountCode = Deno.env.get('ONBOARDING_DISCOUNT_CODE')
+    let discounts: Array<{ promotion_code: string }> | undefined
+    if (discountCode) {
+      try {
+        const promos = await stripe.promotionCodes.list({ code: discountCode, active: true, limit: 1 })
+        if (promos.data[0]) discounts = [{ promotion_code: promos.data[0].id }]
+      } catch (e) {
+        console.error('[create-annual-checkout] falha ao procurar código promocional:', e)
+      }
+    }
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'payment',
-      allow_promotion_codes: true,
+      // discounts e allow_promotion_codes não podem ir os dois ao mesmo
+      // tempo (o Stripe recusa), mesma regra do create-checkout.
+      ...(discounts ? { discounts } : { allow_promotion_codes: true }),
+      // locale 'pt' = português europeu. Sem isto saía em português do
+      // Brasil por deteção automática errada (confirmado no create-checkout
+      // com uma screenshot real, mesmo problema aqui).
+      locale: 'pt',
       payment_method_types: ['card', 'multibanco', 'mb_way'],
       line_items: [{
         price_data: {

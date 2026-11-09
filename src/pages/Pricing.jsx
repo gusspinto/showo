@@ -9,7 +9,7 @@ import { InfoCircleIcon as InfoCircle } from '@solar-icons/react/linear/info-cir
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { fullAnnualPrice, ONBOARDING_DISCOUNT_NOTE } from '../lib/plans'
+import { ONBOARDING_DISCOUNT_NOTE, ANNUAL_ONBOARDING_DISCOUNT_NOTE } from '../lib/plans'
 import TestimonialsMarquee from '../components/TestimonialsMarquee'
 import './Pricing.css'
 
@@ -67,6 +67,8 @@ const PLANS = [
     priceMonthlyDiscounted: '€4,49',
     priceAnnual: '€89,90',
     annualEquivalent: '€7,49/mês',
+    priceAnnualDiscounted: '€44,95',
+    annualEquivalentDiscounted: '€3,75/mês',
     period: '/mês',
     positioning: 'Não pares a meio do caminho.',
     weeklyNote: 'pouco mais de €2 por semana',
@@ -104,6 +106,8 @@ const PLANS = [
     priceMonthlyDiscounted: '€8,99',
     priceAnnual: '€179,90',
     annualEquivalent: '€14,99/mês',
+    priceAnnualDiscounted: '€89,95',
+    annualEquivalentDiscounted: '€7,50/mês',
     period: '/mês',
     positioning: 'Chega à conversa com prova, não com promessas.',
     weeklyNote: 'pouco mais de €4 por semana',
@@ -321,26 +325,34 @@ export default function Pricing() {
                 </div>
 
                 <div className="pricing-price">
-                  {/* Preço cheio riscado (mensal × 12), para a poupança do
-                      anual aparecer no próprio preço, não só em texto
-                      ("2 meses grátis"), que saiu daqui. No mensal, o preço
-                      riscado é o SHOWO50 (-50%, aplicado sozinho no checkout). */}
-                  {annual && plan.priceAnnual && plan.priceMonthly && (
-                    <span className="pricing-amount-old">{fullAnnualPrice(plan.priceMonthly)}</span>
+                  {/* Preço riscado: SHOWO50 (-50%, aplicado sozinho no
+                      checkout), tanto no mensal como no anual. Antes disto,
+                      o riscado do anual era mensal × 12 (poupança de pagar
+                      anual, sem ligação ao cupão) e o preço cheio aparecia
+                      como se já tivesse desconto, o cupão nunca se aplicava
+                      no anual, nem aqui nem no checkout real
+                      (create-annual-checkout). */}
+                  {annual && plan.priceAnnualDiscounted && (
+                    <span className="pricing-amount-old">{plan.priceAnnual}</span>
                   )}
                   {!annual && plan.priceMonthlyDiscounted && plan.priceMonthly && (
                     <span className="pricing-amount-old">{plan.priceMonthly}</span>
                   )}
                   <span className="pricing-amount">
                     {annual && plan.priceAnnual
-                      ? plan.priceAnnual
+                      ? (plan.priceAnnualDiscounted ?? plan.priceAnnual)
                       : !annual && plan.priceMonthlyDiscounted
                         ? plan.priceMonthlyDiscounted
                         : plan.priceMonthly ?? plan.price}
                   </span>
                   {plan.period && <span className="pricing-period">{annual && plan.priceAnnual ? '/ano' : plan.period}</span>}
                 </div>
-                {annual && plan.annualEquivalent ? (
+                {annual && plan.priceAnnualDiscounted ? (
+                  <>
+                    <p className="pricing-annual-note">equivale a {plan.annualEquivalentDiscounted ?? plan.annualEquivalent}</p>
+                    <p className="pricing-discount-note">{ANNUAL_ONBOARDING_DISCOUNT_NOTE}</p>
+                  </>
+                ) : annual && plan.annualEquivalent ? (
                   <p className="pricing-annual-note">equivale a {plan.annualEquivalent}</p>
                 ) : !annual && plan.priceMonthlyDiscounted ? (
                   <p className="pricing-discount-note">{ONBOARDING_DISCOUNT_NOTE}</p>
