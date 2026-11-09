@@ -219,10 +219,6 @@ export default function StudentDashboard({ user, profile }) {
   // Pílula Projetos/Turma só existe para contas de escola — no B2C não há
   // turma nenhuma para mostrar, por isso o dashboard fica como sempre foi.
   const [dashTab, setDashTab] = useState('projetos')
-  // Abas só de mobile (ver sdb-mobile-sec-tabs no CSS): em desktop toda a
-  // grelha cabe sem scroll a mais, por isso estas abas ficam escondidas lá
-  // e tudo aparece sempre, como sempre foi.
-  const [mobileSection, setMobileSection] = useState('projeto')
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [diaryReminderDismissed, setDiaryReminderDismissed] = useState(
     () => localStorage.getItem(`showo_diary_remind_${new Date().toISOString().slice(0,10)}`) === '1'
@@ -992,27 +988,8 @@ export default function StudentDashboard({ user, profile }) {
           )
         })()}
 
-        {/* ══════════════ ABAS (só mobile) ══════════════
-            Em ecrãs estreitos a grelha inteira era um scroll só, sem fim.
-            Estas abas só aparecem abaixo de 900px (sdb-mobile-sec-tabs no
-            CSS) e só para contas B2C com projetos: numa conta vazia ou na
-            tab Turma da escola, mostra tudo como sempre, sem dividir. */}
-        {dashTab === 'projetos' && !isEmptyState && (
-          <div className="sdb-mobile-sec-tabs">
-            <SegmentedTabs
-              value={mobileSection}
-              onChange={setMobileSection}
-              options={[
-                { id: 'projeto', label: 'Projeto' },
-                { id: 'portfolio', label: 'Portfólio' },
-                { id: 'agenda', label: 'Agenda' },
-              ]}
-            />
-          </div>
-        )}
-
         {/* ══════════════ GRELHA ══════════════ */}
-        <div className={`sdb-grid${isEmptyState ? ' sdb-grid--empty' : ''}`} data-active-sec={(dashTab === 'projetos' && !isEmptyState) ? mobileSection : undefined}>
+        <div className={`sdb-grid${isEmptyState ? ' sdb-grid--empty' : ''}`}>
 
           {/* ── Coluna principal ── */}
           <div className="sdb-col">
@@ -1117,8 +1094,6 @@ export default function StudentDashboard({ user, profile }) {
             )}
 
             {dashTab === 'projetos' && <>
-
-            <div className="sdb-mobile-sec" data-sec="projeto">
 
             {/* WeeklyRecapTeaser já vive na coluna da Agenda (sdb-o-recap,
                 mais abaixo), não aqui — manter as duas em sítios diferentes
@@ -1310,13 +1285,9 @@ export default function StudentDashboard({ user, profile }) {
               </section>
             )}
 
-            </div>
-
             {focusProject && (
-              <div className="sdb-mobile-sec" data-sec="agenda">
-                <div className="sdb-duo sdb-o-rhythm">
-                  <ActivityPanel buckets={activityBuckets} streak={streak} />
-                </div>
+              <div className="sdb-duo sdb-o-rhythm">
+                <ActivityPanel buckets={activityBuckets} streak={streak} />
               </div>
             )}
 
@@ -1329,7 +1300,6 @@ export default function StudentDashboard({ user, profile }) {
                 return (a.featured_order ?? 99) - (b.featured_order ?? 99)
               })
               return (
-              <div className="sdb-mobile-sec" data-sec="portfolio">
               <section className="sdb-panel sdb-panel--flush sdb-o-portfolio">
                 <header className="sdb-panel-head sdb-panel-head--inset">
                   <span className="sdb-eyebrow">
@@ -1364,7 +1334,6 @@ export default function StudentDashboard({ user, profile }) {
                   ))}
                 </ul>
               </section>
-              </div>
               )
             })()}
 
@@ -1382,8 +1351,6 @@ export default function StudentDashboard({ user, profile }) {
                 força. Mesma ordem em mobile, logo antes da Agenda
                 (sdb-o-recap tem o mesmo `order`, 8, e vem antes dela no
                 DOM, por isso aparece primeiro no empate). */}
-            <div className="sdb-mobile-sec" data-sec="agenda">
-
             {!isSchoolAccount && planId === 'free' && !recapTeaserDismissed && (
               <div className="sdb-o-recap">
                 <WeeklyRecapTeaser userId={user.id} onDismiss={() => setRecapTeaserDismissed(true)} onUpgrade={() => setShowUpgradeModal('weeklyRecap')} />
@@ -1407,8 +1374,6 @@ export default function StudentDashboard({ user, profile }) {
             )}
 
             {!isEmptyState && potentialPanel}
-
-            </div>
 
           </div>
         </div>
