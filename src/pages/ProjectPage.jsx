@@ -1014,7 +1014,7 @@ function ProjectTour({ isPap, onClose, onStep }) {
             cinzento quase invisível ao lado de um botão gradiente que
             dominava tudo; agora tem contorno e peso próprios. */}
         <button onClick={() => onClose(false)} style={isMobile ? {
-          background: 'none', border: '1.5px solid var(--color-border)', borderRadius: 8,
+          background: 'none', border: '1.5px solid var(--color-border)', borderRadius: 'var(--radius-md)',
           padding: '8px 14px', cursor: 'pointer',
           fontSize: 14, fontWeight: 700, color: 'var(--color-text-secondary)', fontFamily: 'inherit',
         } : {
@@ -1028,7 +1028,7 @@ function ProjectTour({ isPap, onClose, onStep }) {
           aria-label={isLast ? 'Começar' : 'Próximo'}
           style={{
             backgroundImage: 'var(--brand-gradient)', border: 'none',
-            borderRadius: isLast ? 8 : 12,
+            borderRadius: isLast ? 'var(--radius-md)' : 'var(--radius-sm)',
             width: isLast ? 'auto' : 42, height: isLast ? 'auto' : 42,
             padding: isLast ? '9px 18px' : 0, flexShrink: 0, boxSizing: 'border-box',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
@@ -2352,14 +2352,14 @@ export default function ProjectPage() {
           {profile?.role !== 'professor' && (
             <button
               onClick={() => navigate('/novo')}
-              style={{ background: colors.text, color: colors.bg, border: 'none', borderRadius: 10, padding: '12px 28px', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginTop: 8, fontFamily: 'inherit' }}
+              style={{ background: colors.text, color: colors.bg, border: 'none', borderRadius: 'var(--radius-md)', padding: '12px 28px', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginTop: 8, fontFamily: 'inherit' }}
             >
               <span style={{display:"flex",alignItems:"center",gap:6}}>Criar o meu projeto <ArrowRight size={15} /></span>
             </button>
           )}
           <button
             onClick={() => navigate('/dashboard')}
-            style={{ background: 'transparent', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 8, padding: '10px 22px', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}
+            style={{ background: 'transparent', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 'var(--radius-md)', padding: '10px 22px', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}
           >
             Ir para o Dashboard
           </button>
@@ -2988,7 +2988,7 @@ export default function ProjectPage() {
                 style={{
                   background: launchCopied ? 'var(--color-success-subtle)' : 'var(--color-bg-alt)',
                   border: `1px solid ${launchCopied ? 'var(--color-success-subtle)' : 'var(--color-border)'}`,
-                  borderRadius: 10,
+                  borderRadius: 'var(--radius-md)',
                   padding: '11px 16px',
                   cursor: 'pointer',
                   color: launchCopied ? 'var(--color-success)' : 'var(--color-text)',
@@ -3019,7 +3019,7 @@ export default function ProjectPage() {
                 width: '100%',
                 background: 'var(--color-text)',
                 border: 'none',
-                borderRadius: 10,
+                borderRadius: 'var(--radius-md)',
                 padding: '13px 24px',
                 color: 'var(--color-bg)',
                 fontSize: 15,
@@ -3049,7 +3049,7 @@ export default function ProjectPage() {
                     display: 'block', width: '100%',
                     background: 'transparent',
                     border: '1px solid var(--color-border)',
-                    borderRadius: 10, padding: '11px 24px',
+                    borderRadius: 'var(--radius-md)', padding: '11px 24px',
                     color: 'var(--color-text)', fontSize: 14, fontWeight: 700,
                     cursor: 'pointer',
                     transition: 'background 0.15s',
@@ -3177,7 +3177,7 @@ export default function ProjectPage() {
                 style={{
                   flex: 1,
                   background: 'var(--color-primary)',
-                  border: 'none', borderRadius: 10,
+                  border: 'none', borderRadius: 'var(--radius-md)',
                   padding: '13px 0', color: '#fff',
                   fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
                   boxShadow: '0 2px 8px var(--color-primary-subtle)',
@@ -3190,7 +3190,7 @@ export default function ProjectPage() {
                 style={{
                   flex: 1,
                   background: 'var(--color-surface-hover)',
-                  border: `1px solid ${colors.border}`, borderRadius: 10,
+                  border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-md)',
                   padding: '13px 0', color: colors.muted,
                   fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
                 }}
@@ -3245,7 +3245,7 @@ export default function ProjectPage() {
                 <>
                   <button
                     onClick={() => navigate('/register', { state: { claimSlug: project.slug } })}
-                    style={{ display: 'block', width: '100%', background: 'var(--color-primary)', border: 'none', borderRadius: 12, padding: '14px 24px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 24px var(--color-primary-subtle)', marginBottom: 10 }}
+                    style={{ display: 'block', width: '100%', background: 'var(--color-primary)', border: 'none', borderRadius: 'var(--radius-md)', padding: '14px 24px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 24px var(--color-primary-subtle)', marginBottom: 10 }}
                   >
                     Criar conta gratuita →
                   </button>
@@ -3275,13 +3275,13 @@ export default function ProjectPage() {
                         localStorage.removeItem(`edit_token_${project.slug}`)
                         navigate('/')
                       }}
-                      style={{ flex: 1, background: 'var(--color-error)', border: 'none', borderRadius: 10, padding: '11px 0', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                      style={{ flex: 1, background: 'var(--color-error)', border: 'none', borderRadius: 'var(--radius-md)', padding: '11px 0', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
                     >
                       Sim, eliminar
                     </button>
                     <button
                       onClick={() => setRegisterPopupConfirm(false)}
-                      style={{ flex: 1, background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 10, padding: '11px 0', color: 'var(--color-text)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                      style={{ flex: 1, background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '11px 0', color: 'var(--color-text)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
                     >
                       Cancelar
                     </button>
@@ -3334,7 +3334,7 @@ export default function ProjectPage() {
                     style={{
                       background: 'var(--color-primary-subtle)',
                       border: `1px solid ${colors.blue}30`,
-                      borderRadius: 8, padding: '8px 16px',
+                      borderRadius: 'var(--radius-md)', padding: '8px 16px',
                       color: colors.blue,
                       fontSize: 12, fontWeight: 700,
                       cursor: analyzingAI ? 'default' : 'pointer',
@@ -3473,7 +3473,7 @@ export default function ProjectPage() {
                     </div>
                     <button
                       onClick={handleAnalyzeAI}
-                      style={{ backgroundImage: 'var(--brand-gradient)', color: '#fff', border: 'none', borderRadius: 9, padding: '12px 26px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'filter 0.2s ease', boxShadow: '0 6px 18px -6px rgba(219,74,61,0.4)' }}
+                      style={{ backgroundImage: 'var(--brand-gradient)', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', padding: '12px 26px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'filter 0.2s ease', boxShadow: '0 6px 18px -6px rgba(219,74,61,0.4)' }}
                       onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(1.05)' }}
                       onMouseLeave={e => { e.currentTarget.style.filter = 'none' }}
                     >
@@ -3503,7 +3503,7 @@ export default function ProjectPage() {
             title="Análise com IA"
             disabled={analyzingAI}
             style={{
-              height: 52, borderRadius: 999, padding: '0 18px',
+              height: 52, borderRadius: 'var(--radius-full)', padding: '0 18px',
               background: '#6d28d9',
               border: 'none',
               color: '#fff', cursor: analyzingAI ? 'default' : 'pointer',
@@ -3529,7 +3529,7 @@ export default function ProjectPage() {
             onClick={() => setDefenseMode(true)}
             title="Preparar defesa"
             style={{
-              borderRadius: 999,
+              borderRadius: 'var(--radius-full)',
               background: 'rgba(251,191,36,0.12)',
               border: '1px solid rgba(251,191,36,0.4)',
               color: 'var(--color-warning)', cursor: 'pointer',
@@ -3566,7 +3566,7 @@ export default function ProjectPage() {
                   background: 'rgba(245,158,11,0.08)',
                   border: '1px solid rgba(245,158,11,0.18)',
                   color: '#f59e0b',
-                  borderRadius: 8, padding: '8px 14px',
+                  borderRadius: 'var(--radius-md)', padding: '8px 14px',
                   fontSize: 13, fontWeight: 600,
                   cursor: 'pointer', fontFamily: 'inherit',
                   display: 'flex', alignItems: 'center', gap: 6,
@@ -3583,7 +3583,7 @@ export default function ProjectPage() {
                   background: 'var(--color-primary-subtle)',
                   border: '1px solid var(--color-primary-subtle)',
                   color: 'var(--color-primary)',
-                  borderRadius: 8, padding: '8px 14px',
+                  borderRadius: 'var(--radius-md)', padding: '8px 14px',
                   fontSize: 13, fontWeight: 600,
                   cursor: 'pointer', fontFamily: 'inherit',
                   display: 'flex', alignItems: 'center', gap: 6,
@@ -3602,7 +3602,7 @@ export default function ProjectPage() {
                 background: 'var(--color-primary-subtle)',
                 border: '1px solid var(--color-primary-subtle)',
                 color: 'var(--color-primary)',
-                borderRadius: 8, padding: '8px 14px',
+                borderRadius: 'var(--radius-md)', padding: '8px 14px',
                 fontSize: 13, fontWeight: 600,
                 cursor: 'pointer', fontFamily: 'inherit',
                 display: 'flex', alignItems: 'center', gap: 6,
@@ -3630,7 +3630,7 @@ export default function ProjectPage() {
           <button
             onClick={() => navigate('/register', { state: { claimSlug: project.slug } })}
             style={{
-              background: 'var(--color-primary)', border: 'none', borderRadius: 7,
+              background: 'var(--color-primary)', border: 'none', borderRadius: 'var(--radius-md)',
               padding: '6px 14px', color: '#fff', fontSize: 13, fontWeight: 700,
               cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
             }}
@@ -3711,7 +3711,7 @@ export default function ProjectPage() {
                   aria-label="Alterar imagem de capa"
                   style={{
                     position: 'absolute', top: 12, right: 16, zIndex: 5,
-                    height: 42, borderRadius: 12,
+                    height: 42, borderRadius: 'var(--radius-md)',
                     width: project.cover_url ? 42 : 'auto',
                     padding: project.cover_url ? 0 : '0 16px 0 14px',
                     background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
@@ -3805,7 +3805,7 @@ export default function ProjectPage() {
                       display: 'flex', alignItems: 'center', gap: 6,
                       background: 'transparent',
                       border: `1px solid ${colors.border}`,
-                      borderRadius: 8, padding: '5px 12px',
+                      borderRadius: 'var(--radius-full)', padding: '5px 12px',
                       color: colors.subtle, cursor: 'pointer',
                       fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
                       transition: 'all 0.15s',
@@ -3846,7 +3846,7 @@ export default function ProjectPage() {
                             <div style={{ fontSize: 12, color: colors.muted }}>Pesquisa pelo nome ou username</div>
                           </div>
                         </div>
-                        <button onClick={closeInviteModal} style={{ background: 'none', border: 'none', color: colors.muted, cursor: 'pointer', padding: 4, borderRadius: 6, display: 'flex', alignItems: 'center' }}><X size={17} /></button>
+                        <button onClick={closeInviteModal} style={{ background: 'none', border: 'none', color: colors.muted, cursor: 'pointer', padding: 4, borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center' }}><X size={17} /></button>
                       </div>
                       {/* Body */}
                       <form onSubmit={handleInvite} style={{ padding: '18px 20px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -3925,7 +3925,7 @@ export default function ProjectPage() {
                         )}
 
                         <button type="submit" disabled={(!inviteInput.trim() && !inviteSelectedUser) || inviting} style={{
-                          width: '100%', padding: '12px', background: 'var(--color-text)', border: 'none', borderRadius: 10,
+                          width: '100%', padding: '12px', background: 'var(--color-text)', border: 'none', borderRadius: 'var(--radius-md)',
                           color: 'var(--color-bg)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
                           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
                           boxShadow: '0 2px 8px color-mix(in srgb, var(--color-text) 20%, transparent)',
@@ -3969,7 +3969,7 @@ export default function ProjectPage() {
               className={`proj-views-widget proj-views-widget-desktop${viewsExpanded ? ' expanded' : ''}`}
               onClick={() => setViewsExpanded(v => !v)}
               title={`${project.views ?? 0} visualizações`}
-              style={{ display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer', color: colors.muted, flexShrink: 0, padding: '4px 6px', borderRadius: 6, marginTop: 8 }}
+              style={{ display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer', color: colors.muted, flexShrink: 0, padding: '4px 6px', borderRadius: 'var(--radius-full)', marginTop: 8 }}
             >
               <Eye size={14} color={colors.muted} />
               <span className="proj-views-count" style={{ fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' }}>
@@ -4112,7 +4112,7 @@ export default function ProjectPage() {
                 className={`proj-views-widget${viewsExpanded ? ' expanded' : ''}`}
                 onClick={() => setViewsExpanded(v => !v)}
                 title={`${project.views ?? 0} visualizações`}
-                style={{ display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer', color: colors.muted, flexShrink: 0, padding: '4px 6px', borderRadius: 6 }}
+                style={{ display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer', color: colors.muted, flexShrink: 0, padding: '4px 6px', borderRadius: 'var(--radius-full)' }}
               >
                 <Eye size={14} color={colors.muted} />
                 <span className="proj-views-count" style={{ fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' }}>
@@ -4233,7 +4233,7 @@ export default function ProjectPage() {
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
               width: '100%', background: 'var(--color-primary-subtle)', color: 'var(--color-primary)',
               border: '1px solid var(--color-primary-subtle)',
-              borderRadius: 12, padding: '13px', fontSize: 14, fontWeight: 600,
+              borderRadius: 'var(--radius-md)', padding: '13px', fontSize: 14, fontWeight: 600,
               letterSpacing: '-0.1px', cursor: 'pointer', fontFamily: 'inherit', marginBottom: 4,
             }}
           >
@@ -4247,7 +4247,7 @@ export default function ProjectPage() {
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               width: '100%', background: 'var(--color-warning-subtle)', color: 'var(--color-warning)',
               border: '1px solid var(--color-warning-subtle)',
-              borderRadius: 12, padding: '14px', fontSize: 15, fontWeight: 800,
+              borderRadius: 'var(--radius-md)', padding: '14px', fontSize: 15, fontWeight: 800,
               letterSpacing: '-0.2px', cursor: 'pointer', fontFamily: 'inherit', marginBottom: 4,
             }}
           >
@@ -4262,7 +4262,7 @@ export default function ProjectPage() {
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               width: '100%', background: 'var(--color-primary-subtle)', color: 'var(--color-primary)',
               border: '1px solid var(--color-primary-subtle)',
-              borderRadius: 12, padding: '14px', fontSize: 15, fontWeight: 800,
+              borderRadius: 'var(--radius-md)', padding: '14px', fontSize: 15, fontWeight: 800,
               letterSpacing: '-0.2px', cursor: 'pointer', fontFamily: 'inherit', marginBottom: 4,
             }}
           >
@@ -4342,7 +4342,7 @@ export default function ProjectPage() {
                 style={{
                   display: 'none', alignItems: 'center', gap: 8, width: '100%',
                   background: `${defenseUrgentColor}0d`, border: `1px solid ${defenseUrgentColor}30`,
-                  borderRadius: 10, padding: '10px 12px', cursor: 'pointer', fontFamily: 'inherit',
+                  borderRadius: 'var(--radius-md)', padding: '10px 12px', cursor: 'pointer', fontFamily: 'inherit',
                   textAlign: 'left',
                 }}
               >
@@ -4381,7 +4381,7 @@ export default function ProjectPage() {
               <button
                 onClick={() => setShowDefensePopup(false)}
                 className="proj-defense-popup-close"
-                style={{ position: 'absolute', top: 14, right: 14, background: 'var(--color-surface-hover)', border: `1px solid ${colors.border}`, borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: colors.muted }}
+                style={{ position: 'absolute', top: 14, right: 14, background: 'var(--color-surface-hover)', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-sm)', width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: colors.muted }}
               ><X size={14} /></button>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ width: 34, height: 34, borderRadius: 9, flexShrink: 0, background: `${defenseUrgentColor}15`, border: `1px solid ${defenseUrgentColor}30`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -4409,7 +4409,7 @@ export default function ProjectPage() {
                   onClick={() => handleSaveDefenseDate('')}
                   style={{
                     display: 'block', width: 'fit-content', margin: '0 auto',
-                    background: 'none', border: `1px solid ${colors.border}`, borderRadius: 100,
+                    background: 'none', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-full)',
                     padding: '7px 16px', color: colors.muted, fontSize: 12.5, fontWeight: 600,
                     cursor: 'pointer', fontFamily: 'inherit',
                   }}
@@ -4439,7 +4439,7 @@ export default function ProjectPage() {
                 onClick={() => navigate('/novo')}
                 style={{
                   background: 'var(--color-accent)',
-                  border: 'none', borderRadius: 8, padding: '7px 16px',
+                  border: 'none', borderRadius: 'var(--radius-md)', padding: '7px 16px',
                   color: '#fff', fontSize: 12, fontWeight: 700,
                   cursor: 'pointer', fontFamily: 'inherit',
                   boxShadow: '0 2px 8px var(--color-accent-subtle)',
@@ -4635,7 +4635,7 @@ export default function ProjectPage() {
               margin: '18px auto 4px', background: 'none',
               border: `1px solid ${getProjectState(project) === 'concluido' ? 'var(--color-success-subtle)' : colors.border}`,
               color: getProjectState(project) === 'concluido' ? 'var(--color-success)' : colors.subtle,
-              borderRadius: 99, padding: '8px 16px', fontSize: 12.5, fontWeight: 600,
+              borderRadius: 'var(--radius-full)', padding: '8px 16px', fontSize: 12.5, fontWeight: 600,
               cursor: stateSaving ? 'default' : 'pointer', fontFamily: 'inherit',
               opacity: stateSaving ? 0.6 : 1, transition: 'all 0.15s',
             }}
@@ -4740,7 +4740,7 @@ export default function ProjectPage() {
               <button onClick={() => setShowInterestors(true)} style={{
                 display: 'flex', alignItems: 'center', gap: 6,
                 background: 'var(--color-warning-subtle)', border: '1px solid var(--color-warning-subtle)',
-                borderRadius: 10, padding: '8px 14px',
+                borderRadius: 'var(--radius-md)', padding: '8px 14px',
                 color: 'var(--color-warning)', fontSize: 13, fontWeight: 700,
                 cursor: 'pointer',
               }}
@@ -4803,7 +4803,7 @@ export default function ProjectPage() {
                           )}
                         </div>
                         <a href={`/u/${rec.username || rec.id}`} style={{
-                          padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                          padding: '6px 12px', borderRadius: 'var(--radius-full)', fontSize: 12, fontWeight: 600,
                           background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)',
                           color: 'var(--color-text)', textDecoration: 'none', flexShrink: 0,
                         }}>Ver perfil</a>
@@ -4846,7 +4846,7 @@ export default function ProjectPage() {
             <style>{`@keyframes proj-ia-sheet-in { from { transform: translateY(24px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }`}</style>
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '11px 12px', borderBottom: `1px solid ${colors.border}`, flexShrink: 0 }}>
-              <button onClick={() => setMobileTab('projeto')} aria-label="Voltar ao projeto" style={{ background: 'none', border: 'none', color: colors.muted, cursor: 'pointer', width: 36, height: 36, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, WebkitTapHighlightColor: 'transparent' }}>
+              <button onClick={() => setMobileTab('projeto')} aria-label="Voltar ao projeto" style={{ background: 'none', border: 'none', color: colors.muted, cursor: 'pointer', width: 36, height: 36, borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, WebkitTapHighlightColor: 'transparent' }}>
                 <ChevronLeft size={22} />
               </button>
               <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -4858,14 +4858,14 @@ export default function ProjectPage() {
               </div>
               <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
                 {coachSessions.length >= 1 && (
-                  <button onClick={() => setCoachSessionsOpen(v => !v)} style={{ background: coachSessionsOpen ? 'var(--color-primary-subtle)' : 'none', border: 'none', cursor: 'pointer', color: coachSessionsOpen ? colors.blue : colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6, borderRadius: 6 }} title="Conversas">
+                  <button onClick={() => setCoachSessionsOpen(v => !v)} style={{ background: coachSessionsOpen ? 'var(--color-primary-subtle)' : 'none', border: 'none', cursor: 'pointer', color: coachSessionsOpen ? colors.blue : colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6, borderRadius: 'var(--radius-sm)' }} title="Conversas">
                     <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="1.5" rx=".75" fill="currentColor"/><rect x="2" y="7.25" width="12" height="1.5" rx=".75" fill="currentColor"/><rect x="2" y="11.5" width="12" height="1.5" rx=".75" fill="currentColor"/></svg>
                   </button>
                 )}
-                <button onClick={() => { setCoachMessages([]); setCoachSessionId(null); setCoachSessionsOpen(false); if (project?.id) localStorage.setItem(`coach_session_${project.id}`, 'new') }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6, borderRadius: 6 }} title="Nova conversa">
+                <button onClick={() => { setCoachMessages([]); setCoachSessionId(null); setCoachSessionsOpen(false); if (project?.id) localStorage.setItem(`coach_session_${project.id}`, 'new') }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6, borderRadius: 'var(--radius-sm)' }} title="Nova conversa">
                   <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
                 </button>
-                <button onClick={() => navigate('/coach')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6, borderRadius: 6 }} title="Abrir Coach IA (todas as conversas)">
+                <button onClick={() => navigate('/coach')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6, borderRadius: 'var(--radius-sm)' }} title="Abrir Coach IA (todas as conversas)">
                   <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M6 3H3.5A1.5 1.5 0 0 0 2 4.5v8A1.5 1.5 0 0 0 3.5 14h8a1.5 1.5 0 0 0 1.5-1.5V10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M9.5 2H14v4.5M14 2 7 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </button>
               </div>
@@ -4881,7 +4881,7 @@ export default function ProjectPage() {
                   const cntM = sess.messages.filter(m => m.role === 'user').length
                   return (
                     <button key={sess.id} onClick={() => { setCoachMessages(sess.messages.map(m => ({ role: m.role, content: m.content }))); setCoachSessionId(sess.id); setCoachSessionsOpen(false); if (project?.id) localStorage.setItem(`coach_session_${project.id}`, sess.id) }}
-                      style={{ display: 'block', width: '100%', textAlign: 'left', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 10, padding: '11px 14px', marginBottom: 6, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      style={{ display: 'block', width: '100%', textAlign: 'left', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-md)', padding: '11px 14px', marginBottom: 6, cursor: 'pointer', fontFamily: 'inherit' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
                         <span style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>{dateM}</span>
                         <span style={{ fontSize: 10, color: colors.muted }}>{cntM} {cntM === 1 ? 'msg' : 'msgs'}</span>
@@ -4939,7 +4939,7 @@ export default function ProjectPage() {
                       <button
                         key={q}
                         onClick={() => { setCoachInput(q); setTimeout(() => document.getElementById('coach-input')?.focus(), 50) }}
-                        style={{ display: 'flex', alignItems: 'center', gap: 9, textAlign: 'left', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 12, padding: '12px 15px', fontSize: 14.5, color: colors.text, cursor: 'pointer', fontFamily: 'inherit', WebkitTapHighlightColor: 'transparent' }}
+                        style={{ display: 'flex', alignItems: 'center', gap: 9, textAlign: 'left', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-md)', padding: '12px 15px', fontSize: 14.5, color: colors.text, cursor: 'pointer', fontFamily: 'inherit', WebkitTapHighlightColor: 'transparent' }}
                       ><Sparkles size={14} color={colors.blue} style={{ flexShrink: 0 }} />{q}</button>
                     ))}
                   </div>
@@ -5004,7 +5004,7 @@ export default function ProjectPage() {
                 style={{
                   background: coachInput.trim() && !coachLoading ? 'var(--color-primary)' : 'var(--color-bg-alt)',
                   border: `1px solid ${coachInput.trim() && !coachLoading ? 'var(--color-primary)' : colors.border}`,
-                  borderRadius: 12, padding: '0 18px', minWidth: 50,
+                  borderRadius: 'var(--radius-md)', padding: '0 18px', minWidth: 50,
                   color: coachInput.trim() && !coachLoading ? '#fff' : colors.muted,
                   cursor: coachInput.trim() && !coachLoading ? 'pointer' : 'default',
                   fontFamily: 'inherit', fontSize: 14.5, fontWeight: 700,
@@ -5044,7 +5044,7 @@ export default function ProjectPage() {
                 background: copied ? `${colors.green}18` : `${colors.blue}18`,
                 border: `1px solid ${copied ? colors.green + '35' : colors.blue + '30'}`,
                 color: copied ? colors.green : colors.blue,
-                borderRadius: 8, padding: '7px 14px',
+                borderRadius: 'var(--radius-md)', padding: '7px 14px',
                 fontSize: 12, fontWeight: 700,
                 cursor: 'pointer', whiteSpace: 'nowrap',
                 transition: 'all 0.2s',
@@ -5060,7 +5060,7 @@ export default function ProjectPage() {
               style={{
                 background: 'var(--color-bg-alt)',
                 border: `1px solid ${colors.border}`,
-                borderRadius: 8, padding: '7px 10px',
+                borderRadius: 'var(--radius-md)', padding: '7px 10px',
                 color: colors.muted, cursor: 'pointer',
                 fontFamily: 'inherit', flexShrink: 0,
                 display: 'flex', alignItems: 'center', gap: 5,
@@ -5086,7 +5086,7 @@ export default function ProjectPage() {
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
                 background: 'rgba(37,211,102,0.1)', border: '1px solid rgba(37,211,102,0.25)',
-                borderRadius: 9, padding: '9px 0',
+                borderRadius: 'var(--radius-md)', padding: '9px 0',
                 color: '#25d366', fontSize: 13, fontWeight: 700,
                 textDecoration: 'none', transition: 'background 0.15s',
               }}
@@ -5102,7 +5102,7 @@ export default function ProjectPage() {
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
                 background: 'rgba(10,102,194,0.1)', border: '1px solid rgba(10,102,194,0.25)',
-                borderRadius: 9, padding: '9px 0',
+                borderRadius: 'var(--radius-md)', padding: '9px 0',
                 color: '#0a66c2', fontSize: 13, fontWeight: 700,
                 textDecoration: 'none', transition: 'background 0.15s',
               }}
@@ -5117,7 +5117,7 @@ export default function ProjectPage() {
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
                 background: `rgba(125,147,176,0.1)`, border: `1px solid ${colors.border}`,
-                borderRadius: 9, padding: '9px 0',
+                borderRadius: 'var(--radius-md)', padding: '9px 0',
                 color: colors.muted, fontSize: 13, fontWeight: 700,
                 textDecoration: 'none', transition: 'background 0.15s',
               }}
@@ -5154,7 +5154,7 @@ export default function ProjectPage() {
             >
               <button
                 onClick={() => setShowQR(false)}
-                style={{ position: 'absolute', top: 14, right: 14, background: 'var(--color-surface-hover)', border: `1px solid ${colors.border}`, borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: colors.muted }}
+                style={{ position: 'absolute', top: 14, right: 14, background: 'var(--color-surface-hover)', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-sm)', width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: colors.muted }}
               ><X size={14} /></button>
               <div>
                 <div style={{ fontSize: 15, fontWeight: 700, color: colors.text, textAlign: 'center', marginBottom: 4 }}>{project.name}</div>
@@ -5208,21 +5208,21 @@ export default function ProjectPage() {
               <div className="proj-author-links" style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                 {project.linkedin_url && (
                   <a href={project.linkedin_url} target="_blank" rel="noopener noreferrer"
-                    style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: colors.muted, fontWeight: 600, textDecoration: 'none', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 7, padding: '5px 10px', transition: 'all 0.15s' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: colors.muted, fontWeight: 600, textDecoration: 'none', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-full)', padding: '5px 10px', transition: 'all 0.15s' }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = colors.borderBright; e.currentTarget.style.color = colors.text }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.muted }}
                   >LinkedIn</a>
                 )}
                 {project.github_url && (
                   <a href={project.github_url} target="_blank" rel="noopener noreferrer"
-                    style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: colors.muted, fontWeight: 600, textDecoration: 'none', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 7, padding: '5px 10px', transition: 'all 0.15s' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: colors.muted, fontWeight: 600, textDecoration: 'none', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-full)', padding: '5px 10px', transition: 'all 0.15s' }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = colors.borderBright; e.currentTarget.style.color = colors.text }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.muted }}
                   >GitHub</a>
                 )}
                 {project.portfolio_url && (
                   <a href={project.portfolio_url} target="_blank" rel="noopener noreferrer"
-                    style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: colors.muted, fontWeight: 600, textDecoration: 'none', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 7, padding: '5px 10px', transition: 'all 0.15s' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: colors.muted, fontWeight: 600, textDecoration: 'none', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-full)', padding: '5px 10px', transition: 'all 0.15s' }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = colors.borderBright; e.currentTarget.style.color = colors.text }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.muted }}
                   >Portfólio</a>
@@ -5248,7 +5248,7 @@ export default function ProjectPage() {
           {isProfessor && !(reviewQueue && reviewQueue.length > 0) && location.state?.turmaCode && (
             <button
               onClick={() => navigate(`/turma/${location.state.turmaCode}`)}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 8, padding: '9px', color: 'var(--color-primary)', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 'var(--radius-md)', padding: '9px', color: 'var(--color-primary)', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
             >
               <ChevronLeft size={13} /> Voltar {location.state?.turmaName ? `a "${location.state.turmaName}"` : 'à turma'}
             </button>
@@ -5307,7 +5307,7 @@ export default function ProjectPage() {
                   flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                   background: project.review_status === 'ready_for_defense' ? 'var(--color-success-subtle)' : 'transparent',
                   border: `1px solid ${project.review_status === 'ready_for_defense' ? 'var(--color-success-subtle)' : colors.border}`,
-                  borderRadius: 8, padding: '8px 6px',
+                  borderRadius: 'var(--radius-md)', padding: '8px 6px',
                   color: project.review_status === 'ready_for_defense' ? 'var(--color-success)' : colors.muted,
                   fontSize: 11, fontWeight: 700, cursor: reviewStatusSaving ? 'default' : 'pointer', fontFamily: 'inherit',
                 }}
@@ -5319,7 +5319,7 @@ export default function ProjectPage() {
                   flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                   background: project.review_status === 'needs_revision' ? 'var(--color-warning-subtle)' : 'transparent',
                   border: `1px solid ${project.review_status === 'needs_revision' ? 'var(--color-warning-subtle)' : colors.border}`,
-                  borderRadius: 8, padding: '8px 6px',
+                  borderRadius: 'var(--radius-md)', padding: '8px 6px',
                   color: project.review_status === 'needs_revision' ? 'var(--color-warning)' : colors.muted,
                   fontSize: 11, fontWeight: 700, cursor: reviewStatusSaving ? 'default' : 'pointer', fontFamily: 'inherit',
                 }}
@@ -5343,7 +5343,7 @@ export default function ProjectPage() {
                   })}
                   style={{
                     flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-                    background: 'transparent', border: `1px solid ${colors.border}`, borderRadius: 8,
+                    background: 'transparent', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-md)',
                     padding: '9px', color: colors.muted, fontSize: 12, fontWeight: 700,
                     cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s, color 0.15s',
                   }}
@@ -5358,7 +5358,7 @@ export default function ProjectPage() {
                 onClick={() => setViewAsPublic(v => !v)}
                 style={{
                   flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-                  background: 'transparent', border: `1px solid ${colors.border}`, borderRadius: 8,
+                  background: 'transparent', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-md)',
                   padding: '9px', color: colors.muted, fontSize: 12, fontWeight: 700,
                   cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s, color 0.15s',
                 }}
@@ -5430,7 +5430,7 @@ export default function ProjectPage() {
                       )}
                       <button
                         onClick={() => setJuryEditing(true)}
-                        style={{ marginLeft: 'auto', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5, background: 'transparent', border: '1px solid var(--color-primary-subtle)', borderRadius: 7, padding: '6px 10px', color: 'var(--color-primary)', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                        style={{ marginLeft: 'auto', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5, background: 'transparent', border: '1px solid var(--color-primary-subtle)', borderRadius: 'var(--radius-full)', padding: '6px 10px', color: 'var(--color-primary)', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
                       >
                         <Pencil size={11} /> Reavaliar
                       </button>
@@ -5587,7 +5587,7 @@ export default function ProjectPage() {
                           setJurySaving(false)
                         }}
                         style={{
-                          width: '100%', padding: '10px', borderRadius: 8,
+                          width: '100%', padding: '10px', borderRadius: 'var(--radius-md)',
                           background: jurySaved ? 'var(--color-success-subtle)' : 'var(--color-primary)',
                           border: jurySaved ? '1px solid var(--color-success-subtle)' : 'none',
                           color: jurySaved ? 'var(--color-success)' : '#fff',
@@ -5660,7 +5660,7 @@ export default function ProjectPage() {
                     <button
                       onClick={() => setShowFeedbackForm(f => !f)}
                       title={showFeedbackForm ? 'Fechar' : 'Editar'}
-                      style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, padding: '4px 9px', borderRadius: 6, border: '1px solid var(--color-primary-subtle)', background: showFeedbackForm ? 'var(--color-primary-subtle)' : 'transparent', color: 'var(--color-primary)', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, flexShrink: 0 }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, padding: '4px 9px', borderRadius: 'var(--radius-full)', border: '1px solid var(--color-primary-subtle)', background: showFeedbackForm ? 'var(--color-primary-subtle)' : 'transparent', color: 'var(--color-primary)', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, flexShrink: 0 }}
                     >
                       {showFeedbackForm ? <X size={12} /> : <><Pencil size={11} /> Editar</>}
                     </button>
@@ -5681,7 +5681,7 @@ export default function ProjectPage() {
                       {isProfessor && (
                         <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
                           <button onClick={() => { setFbEditing(geral.id); setFbFieldKey('geral'); setFbComment(geral.comment); setShowFeedbackForm(true) }} className="icon-btn-ghost" title="Editar nota geral"><Pencil size={11} /></button>
-                          <button onClick={() => handleFbDelete(geral.id)} style={{ background: 'none', border: 'none', color: 'var(--color-error)', cursor: 'pointer', padding: 3, display: 'flex', alignItems: 'center', borderRadius: 4 }} title="Apagar"><X size={11} /></button>
+                          <button onClick={() => handleFbDelete(geral.id)} style={{ background: 'none', border: 'none', color: 'var(--color-error)', cursor: 'pointer', padding: 3, display: 'flex', alignItems: 'center', borderRadius: 'var(--radius-sm)' }} title="Apagar"><X size={11} /></button>
                         </div>
                       )}
                       {isOwner && !resolved && (
@@ -5727,7 +5727,7 @@ export default function ProjectPage() {
                               <button
                                 onClick={() => handleFbDelete(f.id)}
                                 title="Apagar"
-                                style={{ background: 'none', border: 'none', color: 'var(--color-error)', cursor: 'pointer', padding: 3, display: 'flex', alignItems: 'center', borderRadius: 4 }}
+                                style={{ background: 'none', border: 'none', color: 'var(--color-error)', cursor: 'pointer', padding: 3, display: 'flex', alignItems: 'center', borderRadius: 'var(--radius-sm)' }}
                               ><X size={11} /></button>
                             </div>
                           )}
@@ -5751,11 +5751,11 @@ export default function ProjectPage() {
                               <div style={{ display: 'flex', gap: 6 }}>
                                 <button
                                   onClick={() => { handleFbResolve(f.id, resolveNote); setResolvingId(null); setResolveNote('') }}
-                                  style={{ background: 'var(--color-success)', border: 'none', borderRadius: 6, padding: '5px 10px', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                                  style={{ background: 'var(--color-success)', border: 'none', borderRadius: 'var(--radius-full)', padding: '5px 10px', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
                                 >Confirmar</button>
                                 <button
                                   onClick={() => { setResolvingId(null); setResolveNote('') }}
-                                  style={{ background: 'none', border: `1px solid ${colors.border}`, borderRadius: 6, padding: '5px 10px', color: colors.muted, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}
+                                  style={{ background: 'none', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-full)', padding: '5px 10px', color: colors.muted, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}
                                 >Cancelar</button>
                               </div>
                             </div>
@@ -5797,10 +5797,10 @@ export default function ProjectPage() {
                     />
                     {fbError && <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: 'var(--color-error)' }}>{fbError}</p>}
                     <div style={{ display: 'flex', gap: 8 }}>
-                      <button onClick={handleFbSave} disabled={fbSaving || !fbComment.trim()} style={{ flex: 1, background: 'var(--color-primary)', border: 'none', borderRadius: 8, padding: '9px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: fbSaving || !fbComment.trim() ? 'default' : 'pointer', opacity: fbSaving || !fbComment.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
+                      <button onClick={handleFbSave} disabled={fbSaving || !fbComment.trim()} style={{ flex: 1, background: 'var(--color-primary)', border: 'none', borderRadius: 'var(--radius-md)', padding: '9px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: fbSaving || !fbComment.trim() ? 'default' : 'pointer', opacity: fbSaving || !fbComment.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
                         {fbSaving ? 'A guardar…' : fbEditing ? 'Atualizar' : 'Guardar'}
                       </button>
-                      {fbEditing && <button onClick={() => { setFbEditing(null); setFbComment('') }} style={{ background: 'transparent', border: `1px solid ${colors.border}`, borderRadius: 8, padding: '9px 12px', color: colors.muted, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>}
+                      {fbEditing && <button onClick={() => { setFbEditing(null); setFbComment('') }} style={{ background: 'transparent', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-md)', padding: '9px 12px', color: colors.muted, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>}
                     </div>
                   </div>
                 )}
@@ -5844,7 +5844,7 @@ export default function ProjectPage() {
                   onClick={() => handleSaveDefenseDate('')}
                   style={{
                     display: 'block', width: 'fit-content', margin: '8px auto 0',
-                    background: 'none', border: `1px solid ${colors.border}`, borderRadius: 100,
+                    background: 'none', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-full)',
                     padding: '6px 14px', color: colors.muted, fontSize: 11.5, fontWeight: 600,
                     cursor: 'pointer', fontFamily: 'inherit',
                   }}
@@ -5896,7 +5896,7 @@ export default function ProjectPage() {
                       onClick={() => navigate(`/projeto/${project.slug}/diario`)}
                       style={{
                         width: '100%', padding: '7px 0', border: '1px solid rgba(245,158,11,0.25)',
-                        borderRadius: 8, background: 'rgba(245,158,11,0.07)', color: '#f59e0b',
+                        borderRadius: 'var(--radius-md)', background: 'rgba(245,158,11,0.07)', color: '#f59e0b',
                         fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
                       }}
                     >
@@ -5925,7 +5925,7 @@ export default function ProjectPage() {
                       onClick={() => { setPreviewEditing(true); setWsExpanded(true) }}
                       style={{
                         width: '100%', padding: '7px 0', border: '1px solid rgba(245,158,11,0.25)',
-                        borderRadius: 8, background: 'rgba(245,158,11,0.07)', color: '#f59e0b',
+                        borderRadius: 'var(--radius-md)', background: 'rgba(245,158,11,0.07)', color: '#f59e0b',
                         fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
                       }}
                     >
@@ -6022,7 +6022,7 @@ export default function ProjectPage() {
                           document.getElementById('missions-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                         })
                       }}
-                      style={{ marginTop: 14, width: '100%', background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', color: '#5a9ff5', borderRadius: 10, padding: '9px 0', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                      style={{ marginTop: 14, width: '100%', background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', color: '#5a9ff5', borderRadius: 'var(--radius-md)', padding: '9px 0', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
                     >
                       <span style={{display:'flex',alignItems:'center',gap:6,justifyContent:'center'}}>Ver missões <ChevronDown size={14} /></span>
                     </button>
@@ -6054,7 +6054,7 @@ export default function ProjectPage() {
             bottom: 'calc(16px + env(safe-area-inset-bottom, 0px))',
             right: 16,
             zIndex: 200,
-            width: 42, height: 42, borderRadius: 12,
+            width: 42, height: 42, borderRadius: 'var(--radius-sm)',
             background: 'var(--color-primary)',
             border: 'none',
             boxShadow: '0 4px 20px rgba(27,120,247,0.35)',
@@ -6077,7 +6077,7 @@ export default function ProjectPage() {
             className="proj-coach-fab"
             style={{
               position: 'fixed', bottom: 20, right: 20, zIndex: 200,
-              width: 42, height: 42, borderRadius: 12,
+              width: 42, height: 42, borderRadius: 'var(--radius-sm)',
               background: 'var(--color-primary)',
               border: '2px solid transparent',
               boxShadow: '0 4px 20px var(--color-primary-subtle)',
@@ -6129,7 +6129,7 @@ export default function ProjectPage() {
               {coachSessions.length >= 1 && (
                 <button
                   onClick={() => setCoachSessionsOpen(v => !v)}
-                  style={{ background: coachSessionsOpen ? 'var(--color-primary-subtle)' : 'none', border: 'none', cursor: 'pointer', color: coachSessionsOpen ? colors.blue : colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 5, borderRadius: 6, transition: 'all 0.15s', flexShrink: 0 }}
+                  style={{ background: coachSessionsOpen ? 'var(--color-primary-subtle)' : 'none', border: 'none', cursor: 'pointer', color: coachSessionsOpen ? colors.blue : colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 5, borderRadius: 'var(--radius-sm)', transition: 'all 0.15s', flexShrink: 0 }}
                   title="Conversas"
                 >
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="1.5" rx=".75" fill="currentColor"/><rect x="2" y="7.25" width="12" height="1.5" rx=".75" fill="currentColor"/><rect x="2" y="11.5" width="12" height="1.5" rx=".75" fill="currentColor"/></svg>
@@ -6137,21 +6137,21 @@ export default function ProjectPage() {
               )}
               <button
                 onClick={() => { setCoachMessages([]); setCoachSessionId(null); setCoachSessionsOpen(false); if (project?.id) localStorage.setItem(`coach_session_${project.id}`, 'new') }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 5, borderRadius: 6, flexShrink: 0 }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 5, borderRadius: 'var(--radius-sm)', flexShrink: 0 }}
                 title="Nova conversa"
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
               </button>
               <button
                 onClick={() => navigate('/coach')}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 5, borderRadius: 6, flexShrink: 0 }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 5, borderRadius: 'var(--radius-sm)', flexShrink: 0 }}
                 title="Abrir Coach IA (todas as conversas)"
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3H3.5A1.5 1.5 0 0 0 2 4.5v8A1.5 1.5 0 0 0 3.5 14h8a1.5 1.5 0 0 0 1.5-1.5V10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M9.5 2H14v4.5M14 2 7 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </button>
               <button
                 onClick={() => { setCoachOpen(false); setCoachSessionsOpen(false) }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 4, borderRadius: 6, flexShrink: 0 }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 4, borderRadius: 'var(--radius-sm)', flexShrink: 0 }}
                 title="Fechar"
               ><X size={16} /></button>
             </div>
@@ -6174,7 +6174,7 @@ export default function ProjectPage() {
                         setCoachSessionsOpen(false)
                         if (project?.id) localStorage.setItem(`coach_session_${project.id}`, sess.id)
                       }}
-                      style={{ display: 'block', width: '100%', textAlign: 'left', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 10, padding: '10px 13px', marginBottom: 6, cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s' }}
+                      style={{ display: 'block', width: '100%', textAlign: 'left', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-md)', padding: '10px 13px', marginBottom: 6, cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s' }}
                       onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-primary)'}
                       onMouseLeave={e => e.currentTarget.style.borderColor = colors.border}
                     >
@@ -6222,7 +6222,7 @@ export default function ProjectPage() {
                       <button
                         key={q}
                         onClick={() => { setCoachInput(q); setTimeout(() => document.getElementById('coach-input-desktop')?.focus(), 50) }}
-                        style={{ textAlign: 'left', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 10, padding: '9px 13px', fontSize: 12, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+                        style={{ textAlign: 'left', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-md)', padding: '9px 13px', fontSize: 12, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
                         onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-primary-subtle)'; e.currentTarget.style.color = colors.text }}
                         onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.muted }}
                       >{q}</button>
@@ -6277,7 +6277,7 @@ export default function ProjectPage() {
                   flexShrink: 0, width: 36, height: 36,
                   background: coachInput.trim() && !coachLoading ? 'var(--color-primary)' : 'transparent',
                   border: `1px solid ${coachInput.trim() && !coachLoading ? 'var(--color-primary)' : colors.border}`,
-                  borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center',
                   color: coachInput.trim() && !coachLoading ? '#fff' : colors.muted,
                   cursor: coachInput.trim() && !coachLoading ? 'pointer' : 'default',
                   transition: 'all 0.15s',

@@ -239,10 +239,10 @@ function FeedbackModal({ project, teacherId, onClose }) {
           />
           {err && <p style={{ margin: '2px 0 0', fontSize: 12, fontWeight: 600, color: 'var(--color-error)' }}>{err}</p>}
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={handleSave} disabled={saving || !comment.trim()} style={{ flex: 1, background: 'var(--color-primary)', border: 'none', borderRadius: 8, padding: '10px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: saving || !comment.trim() ? 0.6 : 1, fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-primary-subtle)' }}>
+            <button onClick={handleSave} disabled={saving || !comment.trim()} style={{ flex: 1, background: 'var(--color-primary)', border: 'none', borderRadius: 'var(--radius-md)', padding: '10px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: saving || !comment.trim() ? 0.6 : 1, fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-primary-subtle)' }}>
               {saving ? 'A guardar…' : editing ? 'Atualizar' : 'Guardar feedback'}
             </button>
-            {editing && <button onClick={() => { setEditing(null); setComment('') }} style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 14px', color: C.muted, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>}
+            {editing && <button onClick={() => { setEditing(null); setComment('') }} style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-md)', padding: '10px 14px', color: C.muted, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>}
           </div>
         </div>
       </div>
@@ -298,7 +298,7 @@ function EditTurmaModal({ turma, onClose, onSave, onDelete }) {
               options={[...new Set([turma.academic_year, ...academicYearOptions()].filter(Boolean))].map(y => ({ value: y, label: y }))}
               inputStyle={{ background: 'var(--color-bg)', border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 14 }} />
           </div>
-          <button onClick={handleSave} disabled={saving || !name.trim()} style={{ background: 'var(--color-primary)', border: 'none', borderRadius: 8, padding: '11px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: saving || !name.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
+          <button onClick={handleSave} disabled={saving || !name.trim()} style={{ background: 'var(--color-primary)', border: 'none', borderRadius: 'var(--radius-md)', padding: '11px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: saving || !name.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
             {saving ? 'A guardar…' : 'Guardar alterações'}
           </button>
 
@@ -317,11 +317,11 @@ function EditTurmaModal({ turma, onClose, onSave, onDelete }) {
                 <input value={deleteText} onChange={e => setDeleteText(e.target.value)} placeholder="APAGAR"
                   style={{ width: '100%', background: 'var(--color-bg)', border: `1px solid var(--color-error-subtle)`, borderRadius: 8, padding: '9px 12px', color: C.text, fontSize: 13, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
                 <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                  <button onClick={() => { setConfirmingDelete(false); setDeleteText('') }} style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '7px 14px', color: C.muted, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  <button onClick={() => { setConfirmingDelete(false); setDeleteText('') }} style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-md)', padding: '7px 14px', color: C.muted, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                     Cancelar
                   </button>
                   <button onClick={handleDelete} disabled={deleting || deleteText.trim().toUpperCase() !== 'APAGAR'}
-                    style={{ background: 'var(--color-error)', border: 'none', borderRadius: 8, padding: '7px 14px', color: '#fff', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: deleting || deleteText.trim().toUpperCase() !== 'APAGAR' ? 0.5 : 1 }}>
+                    style={{ background: 'var(--color-error)', border: 'none', borderRadius: 'var(--radius-md)', padding: '7px 14px', color: '#fff', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: deleting || deleteText.trim().toUpperCase() !== 'APAGAR' ? 0.5 : 1 }}>
                     {deleting ? 'A apagar…' : 'Apagar'}
                   </button>
                 </div>
@@ -372,7 +372,7 @@ function TaskModal({ initial, onClose, onSave }) {
             <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)}
               style={{ width: '100%', background: 'var(--color-bg)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
           </div>
-          <button type="submit" disabled={saving || !title.trim()} style={{ background: 'var(--color-primary)', border: 'none', borderRadius: 8, padding: '11px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: saving || !title.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
+          <button type="submit" disabled={saving || !title.trim()} style={{ background: 'var(--color-primary)', border: 'none', borderRadius: 'var(--radius-md)', padding: '11px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: saving || !title.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
             {saving ? 'A guardar…' : initial ? 'Guardar alterações' : 'Criar tarefa'}
           </button>
         </form>
@@ -1215,7 +1215,7 @@ export default function TurmaPage() {
                     <button
                       onClick={() => addProject(p.id)}
                       disabled={adding === p.id}
-                      style={{ background: 'var(--color-primary)', border: 'none', borderRadius: 8, padding: '7px 16px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: adding === p.id ? 'default' : 'pointer', fontFamily: 'inherit', opacity: adding === p.id ? 0.6 : 1, flexShrink: 0 }}
+                      style={{ background: 'var(--color-primary)', border: 'none', borderRadius: 'var(--radius-md)', padding: '7px 16px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: adding === p.id ? 'default' : 'pointer', fontFamily: 'inherit', opacity: adding === p.id ? 0.6 : 1, flexShrink: 0 }}
                     >
                       {adding === p.id ? '...' : 'Adicionar'}
                     </button>
@@ -1223,7 +1223,7 @@ export default function TurmaPage() {
                 ))}
               </div>
             )}
-            <button onClick={() => setShowAdd(false)} style={{ marginTop: 16, width: '100%', background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '9px', color: C.muted, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
+            <button onClick={() => setShowAdd(false)} style={{ marginTop: 16, width: '100%', background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-md)', padding: '9px', color: C.muted, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
               Cancelar
             </button>
           </div>
@@ -1399,7 +1399,7 @@ export default function TurmaPage() {
                                   <button
                                     type="submit"
                                     disabled={!replyText.trim() || isSaving}
-                                    style={{ padding: '6px 12px', borderRadius: 6, border: 'none', background: 'var(--color-primary)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: replyText.trim() ? 'pointer' : 'not-allowed', opacity: replyText.trim() ? 1 : 0.4, fontFamily: 'inherit' }}
+                                    style={{ padding: '6px 12px', borderRadius: 'var(--radius-full)', border: 'none', background: 'var(--color-primary)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: replyText.trim() ? 'pointer' : 'not-allowed', opacity: replyText.trim() ? 1 : 0.4, fontFamily: 'inherit' }}
                                   >
                                     {isSaving ? '...' : 'Enviar'}
                                   </button>
@@ -1549,14 +1549,14 @@ export default function TurmaPage() {
                   <button
                     onClick={useDefaultCriteria}
                     disabled={critSaving}
-                    style={{ display: 'flex', alignItems: 'center', gap: 5, background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 7, padding: '6px 12px', color: C.muted, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 5, background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 'var(--radius-full)', padding: '6px 12px', color: C.muted, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
                   >
                     Usar padrão
                   </button>
                 )}
                 <button
                   onClick={() => { setCriteriaAdding(true); setNewCritName(''); setNewCritWeight(String(Math.max(0, 100 - criteria.reduce((s, c) => s + Number(c.weight), 0))) || '25') }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 7, padding: '6px 12px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 'var(--radius-full)', padding: '6px 12px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
                 >
                   <Plus size={13} /> Critério
                 </button>
@@ -1592,10 +1592,10 @@ export default function TurmaPage() {
                         />
                         <span style={{ fontSize: 12, color: C.muted }}>%</span>
                       </div>
-                      <button onClick={saveCriterion} disabled={critSaving} style={{ background: C.blue, border: 'none', borderRadius: 7, padding: '6px 12px', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      <button onClick={saveCriterion} disabled={critSaving} style={{ background: C.blue, border: 'none', borderRadius: 'var(--radius-md)', padding: '6px 12px', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
                         {critSaving ? '…' : 'Guardar'}
                       </button>
-                      <button onClick={() => setEditingCrit(null)} style={{ background: 'none', border: `1px solid ${C.border}`, borderRadius: 7, padding: '6px 10px', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      <button onClick={() => setEditingCrit(null)} style={{ background: 'none', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-md)', padding: '6px 10px', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
                         Cancelar
                       </button>
                     </div>
@@ -1633,10 +1633,10 @@ export default function TurmaPage() {
                       />
                       <span style={{ fontSize: 12, color: C.muted }}>%</span>
                     </div>
-                    <button onClick={addCriterion} disabled={critSaving || !newCritName.trim()} style={{ background: C.blue, border: 'none', borderRadius: 7, padding: '6px 12px', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: (!newCritName.trim() || critSaving) ? 0.5 : 1 }}>
+                    <button onClick={addCriterion} disabled={critSaving || !newCritName.trim()} style={{ background: C.blue, border: 'none', borderRadius: 'var(--radius-md)', padding: '6px 12px', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: (!newCritName.trim() || critSaving) ? 0.5 : 1 }}>
                       {critSaving ? '…' : 'Adicionar'}
                     </button>
-                    <button onClick={() => setCriteriaAdding(false)} style={{ background: 'none', border: `1px solid ${C.border}`, borderRadius: 7, padding: '6px 10px', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    <button onClick={() => setCriteriaAdding(false)} style={{ background: 'none', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-md)', padding: '6px 10px', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
                       Cancelar
                     </button>
                   </div>
@@ -1673,7 +1673,7 @@ export default function TurmaPage() {
               {isTeacher && (
                 <button
                   onClick={() => setShowTaskModal(true)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 7, padding: '6px 12px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 'var(--radius-full)', padding: '6px 12px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
                 >
                   <Plus size={13} /> Nova tarefa
                 </button>
@@ -1901,14 +1901,14 @@ export default function TurmaPage() {
                 <button
                   onClick={() => handleBulkStatus('ready_for_defense')}
                   disabled={bulkSaving}
-                  style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'var(--color-success-subtle)', border: '1px solid var(--color-success-subtle)', borderRadius: 7, padding: '6px 11px', color: 'var(--color-success)', fontSize: 12, fontWeight: 700, cursor: bulkSaving ? 'default' : 'pointer', fontFamily: 'inherit' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'var(--color-success-subtle)', border: '1px solid var(--color-success-subtle)', borderRadius: 'var(--radius-full)', padding: '6px 11px', color: 'var(--color-success)', fontSize: 12, fontWeight: 700, cursor: bulkSaving ? 'default' : 'pointer', fontFamily: 'inherit' }}
                 >
                   <CheckCircle size={12} /> Pronto
                 </button>
                 <button
                   onClick={() => handleBulkStatus('needs_revision')}
                   disabled={bulkSaving}
-                  style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 7, padding: '6px 11px', color: 'var(--color-warning)', fontSize: 12, fontWeight: 700, cursor: bulkSaving ? 'default' : 'pointer', fontFamily: 'inherit' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 'var(--radius-full)', padding: '6px 11px', color: 'var(--color-warning)', fontSize: 12, fontWeight: 700, cursor: bulkSaving ? 'default' : 'pointer', fontFamily: 'inherit' }}
                 >
                   <AlertTriangle size={12} /> Revisão
                 </button>
@@ -1948,7 +1948,7 @@ export default function TurmaPage() {
               <>
                 <p style={{ color: C.muted, fontSize: 14, margin: '0 0 24px' }}>Sê o primeiro a adicionar o teu projeto a esta turma.</p>
                 {user && (
-                  <button onClick={() => setShowAdd(true)} style={{ background: 'var(--color-primary)', border: 'none', borderRadius: 8, padding: '10px 22px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-primary-subtle)' }}>
+                  <button onClick={() => setShowAdd(true)} style={{ background: 'var(--color-primary)', border: 'none', borderRadius: 'var(--radius-md)', padding: '10px 22px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-primary-subtle)' }}>
                     + Adicionar o meu projeto
                   </button>
                 )}
@@ -2013,9 +2013,9 @@ export default function TurmaPage() {
                   </div>
                   <div style={{ fontSize: 12, color: C.muted }}>{updated}</div>
                   <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
-                    <button onClick={() => goToProject(p.slug)} style={{ fontSize: 12, padding: '5px 11px', borderRadius: 6, border: `1px solid ${C.border}`, background: 'transparent', color: C.muted, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>Ver</button>
-                    <button onClick={() => setFeedbackProject(p)} title="Feedback" style={{ padding: '5px 8px', borderRadius: 6, border: `1px solid ${C.border}`, background: 'transparent', color: C.muted, cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><MessageSquare size={12} /></button>
-                    <button onClick={() => removeProject(p.id)} title="Remover" style={{ padding: '5px 8px', borderRadius: 6, border: '1px solid var(--color-error-subtle)', background: 'transparent', color: 'var(--color-error)', cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><X size={12} /></button>
+                    <button onClick={() => goToProject(p.slug)} style={{ fontSize: 12, padding: '5px 11px', borderRadius: 'var(--radius-full)', border: `1px solid ${C.border}`, background: 'transparent', color: C.muted, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>Ver</button>
+                    <button onClick={() => setFeedbackProject(p)} title="Feedback" style={{ padding: '5px 8px', borderRadius: 'var(--radius-sm)', border: `1px solid ${C.border}`, background: 'transparent', color: C.muted, cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><MessageSquare size={12} /></button>
+                    <button onClick={() => removeProject(p.id)} title="Remover" style={{ padding: '5px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-error-subtle)', background: 'transparent', color: 'var(--color-error)', cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><X size={12} /></button>
                   </div>
                 </div>
               )
