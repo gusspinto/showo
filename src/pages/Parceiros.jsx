@@ -109,7 +109,7 @@ function CompanyModal({ initial, onClose, onSave }) {
             <label style={labelStyle}>Notas</label>
             <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} placeholder="ex: Costumam receber estagiários no 2º período." style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit' }} />
           </div>
-          <button type="submit" disabled={saving || !name.trim()} style={{ background: 'var(--color-text)', border: 'none', borderRadius: 8, padding: '11px', color: 'var(--color-bg)', fontSize: 14, fontWeight: 600, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1, fontFamily: 'inherit', marginTop: 4, boxShadow: '0 2px 8px var(--color-surface-hover)' }}>
+          <button type="submit" disabled={saving || !name.trim()} style={{ background: 'var(--color-text)', border: 'none', borderRadius: 'var(--radius-md)', padding: '11px', color: 'var(--color-bg)', fontSize: 14, fontWeight: 600, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1, fontFamily: 'inherit', marginTop: 4, boxShadow: '0 2px 8px var(--color-surface-hover)' }}>
             {saving ? 'A guardar…' : initial ? 'Guardar alterações' : 'Criar empresa'}
           </button>
         </form>
@@ -152,7 +152,7 @@ function LeadModal({ students, onClose, onSave }) {
               options={STATUS_ORDER.map(s => ({ value: s, label: STATUS_META[s].label }))}
               inputStyle={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 14 }} />
           </div>
-          <button type="submit" disabled={saving || !studentId} style={{ background: 'var(--color-text)', border: 'none', borderRadius: 8, padding: '11px', color: 'var(--color-bg)', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: saving || !studentId ? 0.6 : 1, fontFamily: 'inherit', marginTop: 4 }}>
+          <button type="submit" disabled={saving || !studentId} style={{ background: 'var(--color-text)', border: 'none', borderRadius: 'var(--radius-md)', padding: '11px', color: 'var(--color-bg)', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: saving || !studentId ? 0.6 : 1, fontFamily: 'inherit', marginTop: 4 }}>
             {saving ? 'A guardar…' : 'Associar'}
           </button>
         </form>
@@ -230,7 +230,7 @@ function CompanyCard({ company, leads, students, onEdit, onDelete, onAddLead, on
             <button
               onClick={async e => { e.stopPropagation(); setInviting(true); await onInvite(company); setInviting(false) }}
               disabled={inviting}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--color-surface-hover)', border: '1px solid var(--color-surface-hover)', borderRadius: 8, padding: '8px 12px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: inviting ? 'default' : 'pointer', fontFamily: 'inherit', marginBottom: 12, opacity: inviting ? 0.6 : 1 }}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--color-surface-hover)', border: '1px solid var(--color-surface-hover)', borderRadius: 'var(--radius-full)', padding: '8px 12px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: inviting ? 'default' : 'pointer', fontFamily: 'inherit', marginBottom: 12, opacity: inviting ? 0.6 : 1 }}
             >
               <Send size={12} /> {inviting ? 'A enviar…' : invited ? 'Reenviar convite' : 'Convidar empresa para o Showo'}
             </button>
@@ -245,7 +245,7 @@ function CompanyCard({ company, leads, students, onEdit, onDelete, onAddLead, on
           </div>
           <button
             onClick={() => setShowLeadModal(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: `1px dashed ${C.border}`, borderRadius: 8, padding: '8px 12px', color: C.muted, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', marginTop: leads.length ? 10 : 0, width: '100%', justifyContent: 'center' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: `1px dashed ${C.border}`, borderRadius: 'var(--radius-md)', padding: '8px 12px', color: C.muted, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', marginTop: leads.length ? 10 : 0, width: '100%', justifyContent: 'center' }}
           >
             <UserPlus size={13} /> Associar aluno
           </button>
@@ -396,7 +396,7 @@ export default function Parceiros() {
           </div>
           <button
             onClick={() => { setEditingCompany(null); setShowCompanyModal(true) }}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, background: C.blue, border: 'none', borderRadius: 8, color: 'var(--color-bg)', fontSize: 13, fontWeight: 700, padding: '10px 16px', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-surface-hover)' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, background: C.blue, border: 'none', borderRadius: 'var(--radius-md)', color: 'var(--color-bg)', fontSize: 13, fontWeight: 700, padding: '10px 16px', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-surface-hover)' }}
           >
             <Plus size={15} /> Nova empresa
           </button>
@@ -417,7 +417,7 @@ export default function Parceiros() {
             <p style={{ margin: '0 0 20px', fontSize: 13, color: C.muted }}>Adiciona empresas que costumam receber estagiários e associa alunos interessados.</p>
             <button
               onClick={() => setShowCompanyModal(true)}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: C.blue, border: 'none', borderRadius: 8, color: 'var(--color-bg)', fontSize: 13, fontWeight: 700, padding: '10px 18px', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-surface-hover)' }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: C.blue, border: 'none', borderRadius: 'var(--radius-md)', color: 'var(--color-bg)', fontSize: 13, fontWeight: 700, padding: '10px 18px', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-surface-hover)' }}
             >
               <Plus size={15} /> Adicionar empresa
             </button>
@@ -462,10 +462,10 @@ export default function Parceiros() {
               <strong style={{ color: C.text }}>{deletingCompany.name}</strong> e todos os alunos associados serão removidos.
             </p>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={() => setDeletingCompany(null)} style={{ flex: 1, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '11px', color: C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+              <button onClick={() => setDeletingCompany(null)} style={{ flex: 1, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-md)', padding: '11px', color: C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                 Cancelar
               </button>
-              <button onClick={handleDeleteCompany} style={{ flex: 1, background: 'var(--color-error)', border: 'none', borderRadius: 8, padding: '11px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+              <button onClick={handleDeleteCompany} style={{ flex: 1, background: 'var(--color-error)', border: 'none', borderRadius: 'var(--radius-md)', padding: '11px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
                 Remover
               </button>
             </div>

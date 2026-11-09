@@ -511,7 +511,7 @@ export function LiveProof({ project, isOwner, onSave }) {
           placeholder="https://..." aria-label="Link da prova"
           style={{ flex: '1 1 auto', minWidth: 0, padding: '10px 12px', fontSize: 13, borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-bg)', color: 'var(--color-text)', fontFamily: 'inherit' }}
         />
-        <button type="submit" disabled={saving || !draft.trim()} style={{ flexShrink: 0, padding: '10px 16px', fontSize: 13, fontWeight: 700, borderRadius: 8, border: 'none', background: 'var(--color-primary)', color: '#fff', cursor: saving ? 'default' : 'pointer', opacity: saving || !draft.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
+        <button type="submit" disabled={saving || !draft.trim()} style={{ flexShrink: 0, padding: '10px 16px', fontSize: 13, fontWeight: 700, borderRadius: 'var(--radius-md)', border: 'none', background: 'var(--color-primary)', color: '#fff', cursor: saving ? 'default' : 'pointer', opacity: saving || !draft.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
           {saving ? 'A guardar…' : 'Guardar'}
         </button>
       </div>
@@ -1047,7 +1047,7 @@ export const Section = memo(function Section({ fieldKey, content, isOwner, canEd
           {editable && challenge && !isEmpty && !collapsed && (
             <button
               onClick={(e) => { e.stopPropagation(); onImprove(challenge) }}
-              style={{ background: `${colors.blue}10`, border: `1px solid ${colors.blue}22`, color: colors.blue, cursor: 'pointer', fontSize: 11, fontWeight: 700, fontFamily: 'inherit', padding: '8px 12px', borderRadius: 6, flexShrink: 0, transition: 'all 0.15s', minHeight: 36 }}
+              style={{ background: `${colors.blue}10`, border: `1px solid ${colors.blue}22`, color: colors.blue, cursor: 'pointer', fontSize: 11, fontWeight: 700, fontFamily: 'inherit', padding: '8px 12px', borderRadius: 'var(--radius-full)', flexShrink: 0, transition: 'all 0.15s', minHeight: 36 }}
               onMouseEnter={e => { e.currentTarget.style.background = `${colors.blue}1e`; e.currentTarget.style.borderColor = `${colors.blue}44` }}
               onMouseLeave={e => { e.currentTarget.style.background = `${colors.blue}10`; e.currentTarget.style.borderColor = `${colors.blue}22` }}
             >
@@ -1067,7 +1067,7 @@ export const Section = memo(function Section({ fieldKey, content, isOwner, canEd
             {challenge && (
               <button
                 onClick={() => onImprove(challenge)}
-                style={{ background: `${colors.blue}10`, border: `1px solid ${colors.blue}22`, color: colors.blue, borderRadius: 6, padding: '3px 9px', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, transition: 'all 0.15s' }}
+                style={{ background: `${colors.blue}10`, border: `1px solid ${colors.blue}22`, color: colors.blue, borderRadius: 'var(--radius-full)', padding: '3px 9px', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, transition: 'all 0.15s' }}
                 onMouseEnter={e => { e.currentTarget.style.background = `${colors.blue}1e`; e.currentTarget.style.borderColor = `${colors.blue}44` }}
                 onMouseLeave={e => { e.currentTarget.style.background = `${colors.blue}10`; e.currentTarget.style.borderColor = `${colors.blue}22` }}
               >
@@ -1209,7 +1209,7 @@ export const MissionRow = memo(function MissionRow({ challenge, project, onImpro
           onClick={() => onImprove(challenge)}
           style={{
             background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)',
-            color: colors.blue, borderRadius: 8, padding: '8px 14px',
+            color: colors.blue, borderRadius: 'var(--radius-full)', padding: '8px 14px',
             fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, minHeight: 36,
           }}
         >
@@ -1576,7 +1576,7 @@ export function ProjectAttachments({ project }) {
                 key={c.id} type="button" onClick={() => navigate(`/projeto/${c.slug}`)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left',
-                  padding: 10, border: '1px solid var(--color-border)', borderRadius: 12,
+                  padding: 10, border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)',
                   background: 'var(--color-surface)', cursor: 'pointer', fontFamily: 'inherit',
                 }}
               >
@@ -2483,7 +2483,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
               style={{
                 background: previewEditing && wsExpanded ? 'var(--color-bg-alt)' : 'var(--color-primary)',
                 border: previewEditing && wsExpanded ? '1px solid var(--color-border)' : 'none',
-                borderRadius: 9, height: 36, padding: '0 14px',
+                borderRadius: 'var(--radius-md)', height: 36, padding: '0 14px',
                 color: previewEditing && wsExpanded ? 'var(--color-text-secondary)' : '#fff',
                 fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexShrink: 0,
@@ -2500,7 +2500,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
             title="Sair da preview"
             style={{
               background: 'transparent', border: 'none',
-              borderRadius: 9,
+              borderRadius: 'var(--radius-sm)',
               width: isDesktop ? 'auto' : 36, height: 36,
               padding: isDesktop ? '0 12px' : 0,
               color: 'var(--color-error)', fontSize: 13, fontWeight: 600,
@@ -2958,7 +2958,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                 disabled={!canUndo}
                 title="Desfazer"
                 style={{
-                  width: 28, height: 24, borderRadius: 6, background: 'transparent', border: 'none',
+                  width: 28, height: 24, borderRadius: 'var(--radius-sm)', background: 'transparent', border: 'none',
                   color: canUndo ? 'var(--color-text-secondary)' : 'var(--color-text-tertiary)',
                   cursor: canUndo ? 'pointer' : 'default', opacity: canUndo ? 1 : 0.4,
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
@@ -2971,7 +2971,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                 disabled={!canRedo}
                 title="Refazer"
                 style={{
-                  width: 28, height: 24, borderRadius: 6, background: 'transparent', border: 'none',
+                  width: 28, height: 24, borderRadius: 'var(--radius-sm)', background: 'transparent', border: 'none',
                   color: canRedo ? 'var(--color-text-secondary)' : 'var(--color-text-tertiary)',
                   cursor: canRedo ? 'pointer' : 'default', opacity: canRedo ? 1 : 0.4,
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
@@ -3022,7 +3022,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                   <button
                     onClick={() => setSelectedItem(null)}
                     title="Fechar edição"
-                    style={{ width: 28, height: 28, borderRadius: 7, background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                    style={{ width: 28, height: 28, borderRadius: 'var(--radius-sm)', background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                   ><X size={14} /></button>
                 </div>
 
@@ -3055,24 +3055,24 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button
                       onClick={() => moveLayoutItem(selItemObj, -1)}
-                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 12, fontWeight: 700, padding: 9, borderRadius: 8, background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)', cursor: 'pointer', fontFamily: 'inherit' }}
+                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 12, fontWeight: 700, padding: 9, borderRadius: 'var(--radius-md)', background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)', cursor: 'pointer', fontFamily: 'inherit' }}
                     ><ChevronUp size={13} /> Subir</button>
                     <button
                       onClick={() => moveLayoutItem(selItemObj, 1)}
-                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 12, fontWeight: 700, padding: 9, borderRadius: 8, background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)', cursor: 'pointer', fontFamily: 'inherit' }}
+                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 12, fontWeight: 700, padding: 9, borderRadius: 'var(--radius-md)', background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)', cursor: 'pointer', fontFamily: 'inherit' }}
                     ><ChevronDown size={13} /> Descer</button>
                   </div>
                 </div>
 
                 <button
                   onClick={() => { setPreviewTab(isBlock ? 'blocos' : 'conteudo'); setSelectedItem(null) }}
-                  style={{ textAlign: 'left', fontSize: 12.5, fontWeight: 700, padding: '10px 12px', borderRadius: 9, background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)', cursor: 'pointer', fontFamily: 'inherit' }}
+                  style={{ textAlign: 'left', fontSize: 12.5, fontWeight: 700, padding: '10px 12px', borderRadius: 'var(--radius-md)', background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)', cursor: 'pointer', fontFamily: 'inherit' }}
                 >{isBlock ? 'Editar conteúdo do bloco →' : 'Editar texto desta secção →'}</button>
 
                 {isBlock && (
                   <button
                     onClick={() => removeBlock(block.id)}
-                    style={{ textAlign: 'left', fontSize: 12.5, fontWeight: 700, padding: '10px 12px', borderRadius: 9, background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', color: 'var(--color-error)', cursor: 'pointer', fontFamily: 'inherit' }}
+                    style={{ textAlign: 'left', fontSize: 12.5, fontWeight: 700, padding: '10px 12px', borderRadius: 'var(--radius-md)', background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', color: 'var(--color-error)', cursor: 'pointer', fontFamily: 'inherit' }}
                   >Remover bloco</button>
                 )}
 
@@ -3134,7 +3134,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                           }}
                           disabled={savingField}
                           style={{
-                            background: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: 6,
+                            background: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: 'var(--radius-full)',
                             padding: '6px 13px', fontSize: 11, fontWeight: 700, cursor: savingField ? 'not-allowed' : 'pointer',
                             fontFamily: 'inherit', opacity: savingField ? 0.7 : 1,
                           }}
@@ -3276,7 +3276,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                       style={{
                         position: 'absolute', right: 8, bottom: 8,
                         display: 'flex', alignItems: 'center', gap: 6,
-                        padding: '6px 11px', borderRadius: 8,
+                        padding: '6px 11px', borderRadius: 'var(--radius-full)',
                         background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
                         border: '1px solid rgba(255,255,255,0.18)', color: '#fff',
                         fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
@@ -3289,7 +3289,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                   <button
                     onClick={() => pickCoverImage()}
                     style={{
-                      width: '100%', height: 90, borderRadius: 10, marginBottom: 12,
+                      width: '100%', height: 90, borderRadius: 'var(--radius-md)', marginBottom: 12,
                       background: 'var(--color-bg)', border: '1.5px dashed var(--color-border)',
                       color: 'var(--color-text-secondary)', cursor: 'pointer', fontFamily: 'inherit',
                       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6,
@@ -3758,7 +3758,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                               ? { ...ps, layoutOrder: ps.layoutOrder.filter(li => !(li.kind === 'block' && li.id === block.id)) }
                               : ps)
                           }}
-                          style={{ background: 'none', border: 'none', color: 'var(--color-text-tertiary)', cursor: 'pointer', padding: '2px 3px', display: 'flex', alignItems: 'center', borderRadius: 4, transition: 'color 0.12s' }}
+                          style={{ background: 'none', border: 'none', color: 'var(--color-text-tertiary)', cursor: 'pointer', padding: '2px 3px', display: 'flex', alignItems: 'center', borderRadius: 'var(--radius-sm)', transition: 'color 0.12s' }}
                           onMouseEnter={e => e.currentTarget.style.color = 'var(--color-error)'}
                           onMouseLeave={e => e.currentTarget.style.color = 'var(--color-text-tertiary)'}
                         ><X size={12} /></button>
@@ -3798,7 +3798,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                       {block.type === 'image' && (<>
                         <div style={{ display: 'flex', gap: 5, marginBottom: 5 }}>
                           <input value={block.imageUrl || ''} onChange={e => upd(block.id, 'imageUrl', e.target.value)} placeholder="URL da imagem..." style={{ ...wsInputNew, flex: 1 }} />
-                          <button onClick={() => uploadImage(block.id, 'imageUrl')} style={{ background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 6, padding: '0 9px', color: colors.blue, cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><Camera size={12} /></button>
+                          <button onClick={() => uploadImage(block.id, 'imageUrl')} style={{ background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 'var(--radius-sm)', padding: '0 9px', color: colors.blue, cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><Camera size={12} /></button>
                         </div>
                         <input value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)} placeholder="Legenda (opcional)" style={wsInputNew} />
                       </>)}
@@ -3806,7 +3806,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                         {['imageUrl','imageUrl2','imageUrl3'].map((field, gi) => (
                           <div key={field} style={{ display: 'flex', gap: 5, marginBottom: gi < 2 ? 5 : 0 }}>
                             <input value={block[field] || ''} onChange={e => upd(block.id, field, e.target.value)} placeholder={`Imagem ${gi+1}`} style={{ ...wsInputNew, flex: 1 }} />
-                            <button onClick={() => uploadImage(block.id, field)} style={{ background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 6, padding: '0 9px', color: colors.blue, cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><Camera size={12} /></button>
+                            <button onClick={() => uploadImage(block.id, field)} style={{ background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 'var(--radius-sm)', padding: '0 9px', color: colors.blue, cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><Camera size={12} /></button>
                           </div>
                         ))}
                       </>)}
@@ -3988,7 +3988,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                             setPreviewStyle(ps => ({ ...ps, hiddenSections: [...newHidden] }))
                           }}
                           title={isHidden ? 'Mostrar' : 'Ocultar'}
-                          style={{ background: 'none', border: 'none', padding: '3px 4px', cursor: 'pointer', display: 'flex', color: isHidden ? 'var(--color-text-tertiary)' : 'var(--color-primary)', flexShrink: 0, borderRadius: 6, transition: 'background 0.12s' }}
+                          style={{ background: 'none', border: 'none', padding: '3px 4px', cursor: 'pointer', display: 'flex', color: isHidden ? 'var(--color-text-tertiary)' : 'var(--color-primary)', flexShrink: 0, borderRadius: 'var(--radius-sm)', transition: 'background 0.12s' }}
                           onMouseEnter={e => e.currentTarget.style.background = 'var(--color-primary-subtle)'}
                           onMouseLeave={e => e.currentTarget.style.background = 'none'}
                         >
@@ -3998,7 +3998,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                           <button
                             onClick={() => setMediaEditKey(k => k === key ? null : key)}
                             title="Imagem/vídeo ao lado"
-                            style={{ background: media ? 'var(--color-primary-subtle)' : 'none', border: 'none', padding: '3px 4px', cursor: 'pointer', display: 'flex', color: media ? 'var(--color-primary)' : 'var(--color-text-tertiary)', flexShrink: 0, borderRadius: 6, transition: 'background 0.12s' }}
+                            style={{ background: media ? 'var(--color-primary-subtle)' : 'none', border: 'none', padding: '3px 4px', cursor: 'pointer', display: 'flex', color: media ? 'var(--color-primary)' : 'var(--color-text-tertiary)', flexShrink: 0, borderRadius: 'var(--radius-sm)', transition: 'background 0.12s' }}
                           >
                             <Image size={14} />
                           </button>
@@ -4009,7 +4009,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                           <div style={{ display: 'flex', gap: 6 }}>
                             <button
                               onClick={() => uploadSectionMedia(key)}
-                              style={{ flex: 1, padding: '6px 8px', fontSize: 11, fontWeight: 600, background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 6, color: 'var(--color-text)', cursor: 'pointer', fontFamily: 'inherit' }}
+                              style={{ flex: 1, padding: '6px 8px', fontSize: 11, fontWeight: 600, background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-full)', color: 'var(--color-text)', cursor: 'pointer', fontFamily: 'inherit' }}
                             >Carregar imagem</button>
                             {media && (
                               <button
@@ -4018,7 +4018,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                                   delete next[key]
                                   return { ...ps, sectionMedia: next }
                                 })}
-                                style={{ padding: '6px 10px', fontSize: 11, fontWeight: 600, background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 6, color: 'var(--color-error)', cursor: 'pointer', fontFamily: 'inherit' }}
+                                style={{ padding: '6px 10px', fontSize: 11, fontWeight: 600, background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 'var(--radius-full)', color: 'var(--color-error)', cursor: 'pointer', fontFamily: 'inherit' }}
                               >Remover</button>
                             )}
                           </div>
@@ -4195,10 +4195,10 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                       O template <strong>{pendingTpl.label}</strong> vai substituir os teus blocos actuais pelos blocos de base do template.
                     </div>
                     <div style={{ display: 'flex', gap: 6 }}>
-                      <button onClick={() => handleApplyTemplate(pendingTpl)} style={{ flex: 1, padding: '6px 0', fontSize: 11, fontWeight: 700, background: '#d97706', color: '#fff', border: 'none', borderRadius: 7, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      <button onClick={() => handleApplyTemplate(pendingTpl)} style={{ flex: 1, padding: '6px 0', fontSize: 11, fontWeight: 700, background: '#d97706', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontFamily: 'inherit' }}>
                         Aplicar mesmo assim
                       </button>
-                      <button onClick={() => setTemplateConfirm(null)} style={{ flex: 1, padding: '6px 0', fontSize: 11, fontWeight: 700, background: 'var(--color-bg-alt)', color: 'var(--color-text)', border: '1px solid var(--color-border)', borderRadius: 7, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      <button onClick={() => setTemplateConfirm(null)} style={{ flex: 1, padding: '6px 0', fontSize: 11, fontWeight: 700, background: 'var(--color-bg-alt)', color: 'var(--color-text)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontFamily: 'inherit' }}>
                         Cancelar
                       </button>
                     </div>
@@ -4783,7 +4783,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                   onClick={() => navigate(`/u/${ownerProfile.username}`)}
                   style={{
                     background: '#fff', border: 'none',
-                    borderRadius: 9, padding: '9px 18px',
+                    borderRadius: 'var(--radius-md)', padding: '9px 18px',
                     color: '#0a0a0a', fontSize: 13, fontWeight: 700,
                     cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
                     transition: 'background 0.15s, transform 0.12s',
@@ -4817,7 +4817,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                     display: 'flex', alignItems: 'center', gap: 8,
                     background: 'var(--color-surface)',
                     border: '1.5px solid var(--color-border)',
-                    borderRadius: 10, padding: '9px 20px',
+                    borderRadius: 'var(--radius-md)', padding: '9px 20px',
                     color: 'var(--color-text-secondary)',
                     fontSize: 14, fontWeight: 700, cursor: interestLoading ? 'default' : 'pointer',
                     fontFamily: 'inherit', transition: 'all 0.2s',
@@ -4856,7 +4856,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                     href={`/u/${ownerProfile.username}`}
                     style={{
                       display: 'flex', alignItems: 'center', gap: 6,
-                      padding: '7px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+                      padding: '7px 14px', borderRadius: 'var(--radius-md)', fontSize: 13, fontWeight: 600,
                       background: 'var(--color-surface)', border: '1px solid var(--color-border)',
                       color: 'var(--color-text)', textDecoration: 'none',
                     }}
@@ -4868,7 +4868,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                   href={`/mensagens${ownerProfile?.id ? `?to=${ownerProfile.id}` : ''}`}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 6,
-                    padding: '7px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+                    padding: '7px 14px', borderRadius: 'var(--radius-md)', fontSize: 13, fontWeight: 600,
                     background: 'var(--color-warning)', border: 'none',
                     color: '#000', textDecoration: 'none',
                   }}
@@ -4879,7 +4879,7 @@ export function PublicView({ project, ownerProfile, isOwner, isProfessor, onExit
                   onClick={onInterest}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 6,
-                    padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                    padding: '7px 14px', borderRadius: 'var(--radius-md)', fontSize: 12, fontWeight: 600,
                     background: 'none', border: '1px solid var(--color-warning-subtle)',
                     color: 'var(--color-warning-subtle)', cursor: 'pointer', fontFamily: 'inherit',
                   }}

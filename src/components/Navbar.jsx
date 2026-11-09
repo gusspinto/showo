@@ -555,11 +555,11 @@ export function InviteInbox({ userId, sidebar = false, collapsed = false, flat =
                       <div style={{ display: 'flex', gap: 6 }}>
                         <button
                           onClick={() => respond(invite, 'accepted')} disabled={isActing}
-                          style={{ flex: 1, padding: '7px 0', background: 'var(--color-text)', border: 'none', borderRadius: 7, color: '#fff', fontSize: 12, fontWeight: 700, cursor: isActing ? 'default' : 'pointer', fontFamily: 'inherit' }}
+                          style={{ flex: 1, padding: '7px 0', background: 'var(--color-text)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: isActing ? 'default' : 'pointer', fontFamily: 'inherit' }}
                         >{acting[invite.id] === 'accepted' ? '...' : <><Check size={12} style={{ verticalAlign: 'middle', marginRight: 3 }} />Aceitar</>}</button>
                         <button
                           onClick={() => respond(invite, 'declined')} disabled={isActing}
-                          style={{ flex: 1, padding: '7px 0', background: 'transparent', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 7, color: 'var(--color-error)', fontSize: 12, fontWeight: 600, cursor: isActing ? 'default' : 'pointer', fontFamily: 'inherit' }}
+                          style={{ flex: 1, padding: '7px 0', background: 'transparent', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 'var(--radius-md)', color: 'var(--color-error)', fontSize: 12, fontWeight: 600, cursor: isActing ? 'default' : 'pointer', fontFamily: 'inherit' }}
                         >{acting[invite.id] === 'declined' ? '...' : 'Recusar'}</button>
                       </div>
                     </div>
@@ -648,7 +648,7 @@ export function InviteInbox({ userId, sidebar = false, collapsed = false, flat =
                     <button
                       onClick={clearAll}
                       title="Limpar todas"
-                      style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', padding: 5, borderRadius: 6, display: 'flex', alignItems: 'center', transition: 'color 0.12s, background 0.12s' }}
+                      style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', padding: 5, borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', transition: 'color 0.12s, background 0.12s' }}
                       onMouseEnter={e => { e.currentTarget.style.color = 'var(--color-error)'; e.currentTarget.style.background = 'color-mix(in srgb, var(--color-error) 12%, transparent)' }}
                       onMouseLeave={e => { e.currentTarget.style.color = C.muted; e.currentTarget.style.background = 'none' }}
                     >
@@ -706,7 +706,7 @@ export function InviteInbox({ userId, sidebar = false, collapsed = false, flat =
                         data-delete
                         onClick={() => deleteNotifs(n.groupIds)}
                         title="Apagar notificação"
-                        style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', padding: '2px 3px', borderRadius: 4, display: 'flex', alignItems: 'center', opacity: 0.6, transition: 'opacity 0.12s, color 0.12s', lineHeight: 1 }}
+                        style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', padding: '2px 3px', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', opacity: 0.6, transition: 'opacity 0.12s, color 0.12s', lineHeight: 1 }}
                         onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = 'var(--color-error)' }}
                         onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = C.muted }}
                       >
@@ -769,7 +769,7 @@ function UserChip({ user, profile, onClick, onProfile, onSettings, onSignOut, on
           display: 'flex', alignItems: 'center', gap: 8,
           background: open ? 'var(--color-surface-hover)' : 'transparent',
           border: `1px solid ${open ? 'var(--color-border-hover)' : C.border}`,
-          borderRadius: 24, padding: '5px 12px 5px 6px',
+          borderRadius: 'var(--radius-full)', padding: '5px 12px 5px 6px',
           cursor: 'pointer', fontFamily: 'inherit',
           transition: 'background 0.15s, border-color 0.15s',
         }}
@@ -1135,7 +1135,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text)', lineHeight: 1.2 }}>{getDisplayName(user)}</div>
                   <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
                 </div>
-                <button onClick={toggleTheme} style={{ width: 34, height: 34, borderRadius: 8, background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <button onClick={toggleTheme} style={{ width: 34, height: 34, borderRadius: 'var(--radius-sm)', background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
                 </button>
               </div>
@@ -1258,12 +1258,12 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               <button
                 className="nav-drawer-auth-btn"
                 onClick={() => { navigate('/login'); setOpen(false) }}
-                style={{ flex: 1, padding: '12px 0', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: 10, color: 'var(--color-text)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                style={{ flex: 1, padding: '12px 0', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', color: 'var(--color-text)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
               >Entrar</button>
               <button
                 className="nav-drawer-auth-btn"
                 onClick={() => { navigate('/register'); setOpen(false) }}
-                style={{ flex: 1, padding: '12px 0', background: 'var(--color-text)', border: 'none', borderRadius: 10, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px color-mix(in srgb, var(--color-text) 30%, transparent)' }}
+                style={{ flex: 1, padding: '12px 0', background: 'var(--color-text)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px color-mix(in srgb, var(--color-text) 30%, transparent)' }}
               >Criar conta</button>
             </div>
           )}
@@ -1486,7 +1486,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   onClick={() => navigate('/admin')}
                   style={{
                     background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.25)',
-                    color: 'var(--color-accent)', borderRadius: 8, padding: '6px 12px',
+                    color: 'var(--color-accent)', borderRadius: 'var(--radius-sm)', padding: '6px 12px',
                     fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
                   }}
                   title="Painel de administração"
@@ -1514,7 +1514,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               aria-label="Criar projeto"
               style={{
                 border: 'none',
-                borderRadius: 8, width: 38, height: 38,
+                borderRadius: 'var(--radius-sm)', width: 38, height: 38,
                 flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                 cursor: 'pointer', padding: 0, flexShrink: 0,
               }}
@@ -1532,7 +1532,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               style={{
                 background: 'transparent',
                 border: `1px solid ${open ? 'var(--color-text)' : C.border}`,
-                borderRadius: 8, width: 38, height: 38,
+                borderRadius: 'var(--radius-sm)', width: 38, height: 38,
                 flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                 gap: 5, cursor: 'pointer', padding: 0, transition: 'border-color 0.2s', flexShrink: 0,
               }}
@@ -1908,7 +1908,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                       onClick={() => setSbProfileMenuOpen(o => !o)}
                       title={getDisplayName(user)}
                       style={{
-                        width: 32, height: 32, borderRadius: 8, background: sbProfileMenuOpen ? 'var(--color-surface-hover)' : 'transparent',
+                        width: 32, height: 32, borderRadius: 'var(--radius-sm)', background: sbProfileMenuOpen ? 'var(--color-surface-hover)' : 'transparent',
                         border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                         transition: 'background 0.13s', marginTop: 2,
                       }}
@@ -1989,7 +1989,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                     onClick={toggleTheme}
                     title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
                     style={{
-                      flexShrink: 0, width: 32, height: 32, borderRadius: 8,
+                      flexShrink: 0, width: 32, height: 32, borderRadius: 'var(--radius-sm)',
                       background: 'transparent', border: 'none',
                       color: 'var(--color-text-secondary)', cursor: 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
