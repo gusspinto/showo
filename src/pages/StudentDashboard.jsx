@@ -202,7 +202,6 @@ export default function StudentDashboard({ user, profile }) {
   )
 
   /* ── UI ── */
-  const [tutorialPotentialSeen, setTutorialPotentialSeen] = useState(() => !!localStorage.getItem(`showo_tut_potential_${user.id}`))
   const [recapTeaserDismissed, setRecapTeaserDismissed] = useState(() => !!localStorage.getItem(`showo_recap_teaser_dismissed_${user.id}`))
   // "Em destaque" (spotlight do Explorar/Home, calculado por get_featured_projects):
   // featuredProjectIds alimenta o selo fixo na linha do projeto; o popup só
@@ -260,9 +259,13 @@ export default function StudentDashboard({ user, profile }) {
       })
   }, [])
 
-  function dismissPotentialTutorial() {
-    localStorage.setItem(`showo_tut_potential_${user.id}`, '1')
-    setTutorialPotentialSeen(true)
+  /* "O teu Potencial": tal como featured_popup_seen_at, o "visto" fica em
+     profiles, não no localStorage (preso ao browser, reaparecia sempre
+     que o utilizador mudava de dispositivo ou limpava dados do site). */
+  async function dismissPotentialTutorial() {
+    if (!user?.id || profile?.potential_popup_seen_at) return
+    await supabase.from('profiles').update({ potential_popup_seen_at: new Date().toISOString() }).eq('id', user.id)
+    refreshProfile?.()
   }
 
   /* ── Escola: nome da organização ── */
@@ -625,7 +628,7 @@ export default function StudentDashboard({ user, profile }) {
   const engagement = useMemo(() => computeEngagementSignal(entries), [entries])
   const { potential } = profile ? calculatePotential({ projects, profile, engagement }) : { potential: 0 }
   const isEmptyState = !loadingProjects && projects.length === 0
-  const showPotentialTutorial = !tutorialPotentialSeen && !loadingProjects && projects.length >= 1
+  const showPotentialTutorial = !profile?.potential_popup_seen_at && !loadingProjects && projects.length >= 1
 
   function handleEventClick(e) {
     if (e.type === 'defense' && e.slug) navigate(`/projeto/${e.slug}`)
