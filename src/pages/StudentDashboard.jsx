@@ -7,7 +7,6 @@ import { calculatePotential, calculateScore } from '../lib/score'
 import { joinClassByCode } from '../lib/joinClass'
 import { RocketIcon as Rocket } from '@solar-icons/react/bold/rocket'
 import { PlusIcon as Plus } from '../components/icons/PlusIcon'
-import { FileIcon } from '../components/icons/FileIcon'
 import { UserIcon as User } from '@solar-icons/react/bold/user'
 import { GlobeIcon as Globe } from '@solar-icons/react/bold/globe'
 import { ChatRoundLineIcon as MessageSquare } from '@solar-icons/react/bold/chat-round-line'
@@ -1231,17 +1230,23 @@ export default function StudentDashboard({ user, profile }) {
             )}
 
             {isEmptyState && (
-              <section className="sdb-first-project" onClick={() => navigate('/novo')}>
-                {/* Segunda versão: o "+" grande em gradiente foi rejeitado
-                    pelo Gustavo ("gritante"). Uma folha desenhada à mão,
-                    badge discreto, menos texto (só o título, sem eyebrow
-                    nem subtítulo): convite sem gritar, à imagem do resto
-                    dos ícones feitos à mão da app. */}
-                <span className="sdb-first-project-icon"><FileIcon size={22} /></span>
+              <section className="sdb-first-project sdb-first-project--accent" onClick={() => navigate('/novo')}>
+                {/* Terceira versão, experimental (o Gustavo ainda não
+                    decidiu): fundo azul sólido, a mesma energia do cartão
+                    "Experimenta o Plus" ao lado, com a moldura tracejada +
+                    "+" centrada e maior em vez do ícone de folha pequeno
+                    num badge, que achou "vazio a mais". */}
+                <span className="sdb-first-project-mark">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+                    <rect x="3.5" y="3.5" width="17" height="17" rx="4" stroke="currentColor" strokeWidth="1.6" strokeDasharray="3.2 3.2" strokeLinecap="round" />
+                    <path d="M12 9v6M9 12h6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                  </svg>
+                </span>
                 <h2 className="sdb-first-project-title">Cria ou carrega o teu primeiro projeto</h2>
                 <Button
                   iconRight={<ArrowRight size={15} />}
                   onClick={e => { e.stopPropagation(); navigate('/novo') }}
+                  style={{ background: '#fff', color: 'var(--color-primary)' }}
                 >
                   Começar
                 </Button>

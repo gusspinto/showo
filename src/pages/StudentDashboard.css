@@ -2478,15 +2478,19 @@
 .sdb-first-project:hover {
   border-color: var(--color-border-hover);
 }
-/* Badge discreto, não o gradiente cheio: chama a atenção sem gritar,
-   mesmo tratamento de ícone que o resto da app já usa (highlightIconWrap
-   do PlanGate, .sdb-sync-btn), não um quadrado novo com cor própria. */
-.sdb-first-project-icon {
+/* Experimental (ainda não decidido): fundo azul sólido, mesma energia do
+   cartão "Experimenta o Plus" ao lado, centrado em vez de alinhado à
+   esquerda: testar se isto resolve o cartão parecer "vazio a mais". */
+.sdb-first-project--accent {
+  align-items: center;
+  text-align: center;
+  background: var(--color-primary);
+  border-color: transparent;
+}
+.sdb-first-project--accent:hover { border-color: transparent; }
+.sdb-first-project-mark {
   display: flex; align-items: center; justify-content: center;
-  width: 44px; height: 44px; flex-shrink: 0;
-  border-radius: var(--radius-md);
-  background: var(--color-primary-subtle);
-  color: var(--color-primary);
+  color: #fff;
 }
 .sdb-first-project-title {
   margin: 0;
@@ -2496,6 +2500,7 @@
   line-height: 1.3;
   font-family: var(--font-heading);
 }
+.sdb-first-project--accent .sdb-first-project-title { color: #fff; }
 @media (max-width: 640px) {
   .sdb-first-project { padding: var(--sp-5) var(--sp-4); gap: var(--sp-3); }
   .sdb-first-project-title { font-size: 18px; }
