@@ -154,10 +154,10 @@ function JoinModal({ onClose, onJoin, navigate }) {
               : <>A turma <strong style={{ color: C.text }}>{joined.turma.name}</strong> foi encontrada, mas não consegui confirmar o teu registo como membro. Tenta abrir a turma — se não apareceres na lista de alunos, avisa.</>}
           </p>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={onClose} style={{ flex: 1, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '11px', color: C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+            <button onClick={onClose} style={{ flex: 1, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-md)', padding: '11px', color: C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
               Fechar
             </button>
-            <button onClick={() => { onClose(); navigate?.(`/turma/${joined.turma.code}`) }} style={{ flex: 1, background: C.blue, border: 'none', borderRadius: 8, padding: '11px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+            <button onClick={() => { onClose(); navigate?.(`/turma/${joined.turma.code}`) }} style={{ flex: 1, background: C.blue, border: 'none', borderRadius: 'var(--radius-md)', padding: '11px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
               Ver turma
             </button>
           </div>

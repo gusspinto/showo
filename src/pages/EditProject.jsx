@@ -1067,10 +1067,10 @@ function AdvancedSection({ project, isOwner, navigate }) {
             </div>
             {slugError && <p style={{ color: '#ef4444', fontSize: 12, margin: '6px 0 0' }}>{slugError}</p>}
             <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-              <button type="button" disabled={savingSlug} onClick={saveSlug} style={{ padding: '8px 16px', background: colors.blue, border: 'none', borderRadius: 8, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+              <button type="button" disabled={savingSlug} onClick={saveSlug} style={{ padding: '8px 16px', background: colors.blue, border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                 {savingSlug ? 'A guardar…' : 'Guardar'}
               </button>
-              <button type="button" onClick={() => setEditingSlug(false)} style={{ padding: '8px 16px', background: 'transparent', border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+              <button type="button" onClick={() => setEditingSlug(false)} style={{ padding: '8px 16px', background: 'transparent', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-md)', color: colors.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                 Cancelar
               </button>
             </div>
@@ -1083,15 +1083,15 @@ function AdvancedSection({ project, isOwner, navigate }) {
           <div style={{ marginBottom: 10 }}>
             <div style={{ background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 8, padding: '10px 12px', fontSize: 13, color: colors.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 8 }}>{publicUrl}</div>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button type="button" onClick={copyLink} style={{ flex: 1, padding: '10px 16px', background: copied ? colors.green : colors.blue, border: 'none', borderRadius: 8, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, whiteSpace: 'nowrap' }}>
+              <button type="button" onClick={copyLink} style={{ flex: 1, padding: '10px 16px', background: copied ? colors.green : colors.blue, border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, whiteSpace: 'nowrap' }}>
                 {copied ? <><Check size={14} /> Copiado</> : <><Copy size={14} /> Copiar link</>}
               </button>
               {cleanLinkGate.allowed && (
-                <button type="button" onClick={startEditSlug} title="Personalizar link" style={{ width: 40, padding: 0, background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}>
+                <button type="button" onClick={startEditSlug} title="Personalizar link" style={{ width: 40, padding: 0, background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-sm)', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}>
                   <Pencil size={14} />
                 </button>
               )}
-              <a href={publicUrl} target="_blank" rel="noopener noreferrer" style={{ width: 40, background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <a href={publicUrl} target="_blank" rel="noopener noreferrer" style={{ width: 40, background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-sm)', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <ExternalLink size={14} />
               </a>
             </div>
@@ -1672,10 +1672,10 @@ function GithubAdvancedCard({ project }) {
                     O que escreveste à mão fica. Podes sincronizar outra vez a qualquer momento.
                   </p>
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <button type="button" onClick={handleRemove} disabled={removing} style={{ background: colors.red, color: '#fff', border: 'none', borderRadius: 8, padding: '9px 16px', fontSize: 13, fontWeight: 700, cursor: removing ? 'default' : 'pointer', fontFamily: 'inherit', opacity: removing ? 0.7 : 1 }}>
+                    <button type="button" onClick={handleRemove} disabled={removing} style={{ background: colors.red, color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', padding: '9px 16px', fontSize: 13, fontWeight: 700, cursor: removing ? 'default' : 'pointer', fontFamily: 'inherit', opacity: removing ? 0.7 : 1 }}>
                       {removing ? 'A remover…' : 'Remover entradas'}
                     </button>
-                    <button type="button" onClick={() => setConfirmRemove(false)} disabled={removing} style={{ background: 'none', color: colors.muted, border: `1px solid ${colors.border}`, borderRadius: 8, padding: '9px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    <button type="button" onClick={() => setConfirmRemove(false)} disabled={removing} style={{ background: 'none', color: colors.muted, border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-md)', padding: '9px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                       Cancelar
                     </button>
                   </div>
@@ -1724,17 +1724,17 @@ function DangerZone({ project, navigate }) {
         Eliminar o projeto é definitivo. Apaga os dados, o score e a página pública para sempre.
       </p>
       {!confirmDelete ? (
-        <button type="button" onClick={() => setConfirmDelete(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.25)', borderRadius: 10, color: colors.red, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+        <button type="button" onClick={() => setConfirmDelete(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.25)', borderRadius: 'var(--radius-md)', color: colors.red, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
           <Trash2 size={15} /> Eliminar projeto
         </button>
       ) : (
         <div style={{ background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.25)', borderRadius: 12, padding: '16px 18px' }}>
           <p style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 700, color: colors.red }}>Tens a certeza? Esta ação não pode ser desfeita.</p>
           <div style={{ display: 'flex', gap: 10 }}>
-            <button type="button" onClick={handleDelete} disabled={deleting} style={{ flex: 1, padding: '10px', background: colors.red, border: 'none', borderRadius: 10, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <button type="button" onClick={handleDelete} disabled={deleting} style={{ flex: 1, padding: '10px', background: colors.red, border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
               {deleting ? 'A eliminar…' : <><Trash2 size={14} /> Confirmar eliminação</>}
             </button>
-            <button type="button" onClick={() => setConfirmDelete(false)} disabled={deleting} style={{ flex: 1, padding: '10px', background: 'none', border: `1px solid ${colors.border}`, borderRadius: 10, color: colors.muted, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+            <button type="button" onClick={() => setConfirmDelete(false)} disabled={deleting} style={{ flex: 1, padding: '10px', background: 'none', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-md)', color: colors.muted, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
               Cancelar
             </button>
           </div>
@@ -1998,10 +1998,10 @@ function NewTableForm({ project, onCreated, onCancel, initial }) {
       {err && <p style={{ margin: '12px 0 0', fontSize: 12.5, color: colors.red }}>{err}</p>}
 
       <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-        <button type="button" onClick={handleCreate} disabled={saving} style={{ flex: 1, background: colors.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '10px 18px', fontSize: 13.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: saving ? 0.7 : 1 }}>
+        <button type="button" onClick={handleCreate} disabled={saving} style={{ flex: 1, background: colors.blue, color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', padding: '10px 18px', fontSize: 13.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: saving ? 0.7 : 1 }}>
           {saving ? 'A criar…' : 'Criar tabela'}
         </button>
-        <button type="button" onClick={onCancel} style={{ background: 'none', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 8, padding: '10px 18px', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+        <button type="button" onClick={onCancel} style={{ background: 'none', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 'var(--radius-md)', padding: '10px 18px', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
           Cancelar
         </button>
       </div>
@@ -2084,10 +2084,10 @@ function EditColumnsForm({ project, table, onSaved, onCancel }) {
       {err && <p style={{ margin: '0 0 10px', fontSize: 12.5, color: colors.red }}>{err}</p>}
 
       <div style={{ display: 'flex', gap: 8 }}>
-        <button type="button" onClick={handleSave} disabled={saving} style={{ background: colors.blue, color: '#fff', border: 'none', borderRadius: 7, padding: '7px 14px', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: saving ? 0.7 : 1 }}>
+        <button type="button" onClick={handleSave} disabled={saving} style={{ background: colors.blue, color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', padding: '7px 14px', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: saving ? 0.7 : 1 }}>
           {saving ? 'A guardar…' : 'Guardar colunas'}
         </button>
-        <button type="button" onClick={onCancel} style={{ background: 'none', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 7, padding: '7px 14px', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+        <button type="button" onClick={onCancel} style={{ background: 'none', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 'var(--radius-md)', padding: '7px 14px', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
           Cancelar
         </button>
       </div>
@@ -2196,8 +2196,8 @@ function DataTableCard({ project, table, expanded, onToggleExpand, onChanged }) 
             ) : (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ fontSize: 12.5, color: colors.text }}>Apaga a tabela e todas as linhas. Tens a certeza?</span>
-                <button type="button" onClick={handleDelete} disabled={busy} style={{ background: colors.red, color: '#fff', border: 'none', borderRadius: 6, padding: '5px 10px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Eliminar</button>
-                <button type="button" onClick={() => setConfirmDelete(false)} style={{ background: 'none', border: `1px solid ${colors.border}`, borderRadius: 6, padding: '5px 10px', fontSize: 12, fontWeight: 600, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>
+                <button type="button" onClick={handleDelete} disabled={busy} style={{ background: colors.red, color: '#fff', border: 'none', borderRadius: 'var(--radius-full)', padding: '5px 10px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Eliminar</button>
+                <button type="button" onClick={() => setConfirmDelete(false)} style={{ background: 'none', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-full)', padding: '5px 10px', fontSize: 12, fontWeight: 600, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>
               </div>
             )}
           </div>
@@ -2390,12 +2390,12 @@ function RowsPanel({ project, table, onChanged }) {
       {err && <p style={{ margin: '0 0 10px', fontSize: 12, color: colors.red }}>{err}</p>}
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-        <button type="button" onClick={() => fileInputRef.current?.click()} disabled={importing} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: `1px solid ${colors.border}`, borderRadius: 7, padding: '7px 12px', fontSize: 12.5, fontWeight: 600, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit' }}>
+        <button type="button" onClick={() => fileInputRef.current?.click()} disabled={importing} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-full)', padding: '7px 12px', fontSize: 12.5, fontWeight: 600, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit' }}>
           <Upload size={13} /> {importing ? 'A importar…' : 'Importar CSV'}
         </button>
         <input ref={fileInputRef} type="file" accept=".csv,text/csv" onChange={handleImportCsv} style={{ display: 'none' }} />
         {rows.length > 0 && (
-          <button type="button" onClick={handleExportCsv} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: `1px solid ${colors.border}`, borderRadius: 7, padding: '7px 12px', fontSize: 12.5, fontWeight: 600, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit' }}>
+          <button type="button" onClick={handleExportCsv} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-full)', padding: '7px 12px', fontSize: 12.5, fontWeight: 600, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit' }}>
             <Download size={13} /> Exportar CSV
           </button>
         )}
@@ -2464,7 +2464,7 @@ function ApiKeyCard({ project, apiKey, firstTable, onKeyChanged }) {
         Todos os pedidos são <code>POST</code> para o mesmo endereço; é o campo <code>action</code> no corpo que diz o que fazer.
       </p>
       {!apiKey && (
-        <button type="button" onClick={handleGenerate} disabled={generating} style={{ background: colors.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: generating ? 0.7 : 1 }}>
+        <button type="button" onClick={handleGenerate} disabled={generating} style={{ background: colors.blue, color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', padding: '9px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: generating ? 0.7 : 1 }}>
           {generating ? 'A gerar…' : 'Gerar chave de API'}
         </button>
       )}
@@ -2525,10 +2525,10 @@ function ApiKeyCard({ project, apiKey, firstTable, onKeyChanged }) {
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontSize: 12, color: colors.text }}>A chave antiga deixa de funcionar. Confirmas?</span>
-              <button type="button" onClick={handleRegen} disabled={regenerating} style={{ background: colors.red, color: '#fff', border: 'none', borderRadius: 6, padding: '5px 10px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+              <button type="button" onClick={handleRegen} disabled={regenerating} style={{ background: colors.red, color: '#fff', border: 'none', borderRadius: 'var(--radius-full)', padding: '5px 10px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
                 {regenerating ? 'A gerar…' : 'Confirmar'}
               </button>
-              <button type="button" onClick={() => setConfirmRegen(false)} style={{ background: 'none', border: `1px solid ${colors.border}`, borderRadius: 6, padding: '5px 10px', fontSize: 12, fontWeight: 600, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit' }}>
+              <button type="button" onClick={() => setConfirmRegen(false)} style={{ background: 'none', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-full)', padding: '5px 10px', fontSize: 12, fontWeight: 600, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit' }}>
                 Cancelar
               </button>
             </div>
