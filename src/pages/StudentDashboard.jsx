@@ -1238,7 +1238,7 @@ export default function StudentDashboard({ user, profile }) {
                     nem subtítulo): convite sem gritar, à imagem do resto
                     dos ícones feitos à mão da app. */}
                 <span className="sdb-first-project-icon"><FileIcon size={22} /></span>
-                <h2 className="sdb-first-project-title">Cria ou sobe o teu primeiro projeto</h2>
+                <h2 className="sdb-first-project-title">Cria ou carrega o teu primeiro projeto</h2>
                 <Button
                   iconRight={<ArrowRight size={15} />}
                   onClick={e => { e.stopPropagation(); navigate('/novo') }}
