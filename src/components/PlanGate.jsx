@@ -47,22 +47,27 @@ const FEATURE_PREVIEW_KIND = {
 // Nem balões de chat, nem a moldura "Preview real": o Gustavo achou que
 // não fazia sentido fingir uma conversa real sem mostrar o produto a
 // sério. Fica só o ícone do robô (a identidade da IA até a mascote
-// estar pronta) com uma fala simples por baixo, lê-se em menos de 1
-// segundo. Quando a mascote fechar, troca-se só este ícone, o resto
-// (o pop-up à volta) fica igual.
-function CoachPreview() {
+// estar pronta) com uma fala curta por baixo. A fala diz o limite real
+// do plano (upgrade.ai.coach), não um número fixo no texto: nunca
+// desalinha se os limites dos planos mudarem, e muda sozinha para Plus
+// ou Pro consoante o upgrade mostrado.
+function CoachPreview({ upgrade }) {
+  const limit = upgrade?.ai?.coach
+  const msg = Number.isFinite(limit)
+    ? `${limit} perguntas por mês no ${upgrade.name}. Vamos?`
+    : 'Precisas de ajuda?'
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '4px 0 2px' }}>
       <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 56, height: 56, borderRadius: '50%', background: 'var(--color-primary-subtle)', color: 'var(--color-primary)' }}>
         <Bot size={30} />
       </span>
-      <div style={{ position: 'relative', background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '8px 16px', fontSize: 13, fontWeight: 600, color: 'var(--color-text)' }}>
+      <div style={{ position: 'relative', background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '8px 16px', fontSize: 13, fontWeight: 600, color: 'var(--color-text)', textAlign: 'center' }}>
         <span style={{
           position: 'absolute', top: -6, left: '50%', transform: 'translateX(-50%) rotate(45deg)',
           width: 11, height: 11, background: 'var(--color-bg-alt)',
           borderLeft: '1px solid var(--color-border)', borderTop: '1px solid var(--color-border)',
         }} />
-        Precisas de ajuda?
+        {msg}
       </div>
     </div>
   )
@@ -133,7 +138,7 @@ function LinkedInPostPreview() {
   )
 }
 
-function FeaturePreview({ feature }) {
+function FeaturePreview({ feature, upgrade }) {
   const kind = FEATURE_PREVIEW_KIND[feature] || 'coach'
   // O Coach não tem rótulo "Preview real": não é uma réplica de ecrã, é só
   // o ícone + fala, não faz sentido chamar-lhe "preview" de nada.
@@ -145,7 +150,7 @@ function FeaturePreview({ feature }) {
   return (
     <div className="plan-gate-fade">
       {label && <p style={{ margin: '0 0 10px', fontSize: 10, fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>}
-      {kind === 'coach' && <CoachPreview />}
+      {kind === 'coach' && <CoachPreview upgrade={upgrade} />}
       {kind === 'vagas' && <VagasPreview />}
       {kind === 'defense' && <DefensePreview />}
       {/* Era RecapPreview (email) + LinkedInPostPreview empilhados, duas
@@ -472,7 +477,7 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
                   esquerda, "o que ganhas" inteiro mesmo em cima de "quanto
                   custa", não partido a meio entre as duas colunas. */}
               <div className="plan-gate-title-block">
-                <FeaturePreview feature={feature} />
+                <FeaturePreview feature={feature} upgrade={upgrade} />
               </div>
 
               <div className="plan-gate-col-left">
