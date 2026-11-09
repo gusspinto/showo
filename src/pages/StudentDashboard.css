@@ -2478,6 +2478,13 @@
 .sdb-first-project:hover {
   border-color: var(--color-border-hover);
 }
+.sdb-first-project-icon {
+  display: flex; align-items: center; justify-content: center;
+  width: 52px; height: 52px; flex-shrink: 0;
+  border-radius: var(--radius-md);
+  background-image: var(--brand-gradient);
+  color: #fff;
+}
 .sdb-first-project-title {
   margin: 0;
   font-size: 22px;

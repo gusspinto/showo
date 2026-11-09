@@ -1231,6 +1231,11 @@ export default function StudentDashboard({ user, profile }) {
 
             {isEmptyState && (
               <section className="sdb-first-project" onClick={() => navigate('/novo')}>
+                {/* "+" no gradiente da marca, mesmo visual do botão de criar
+                    na sidebar/navbar: convite claro, destaca-se do fundo da
+                    página e do cartão do Plus ao lado, pedido do Gustavo
+                    para este cartão parecer menos "a faltar algo". */}
+                <span className="sdb-first-project-icon"><Plus size={26} /></span>
                 <span className="sdb-eyebrow">Primeiro projeto</span>
                 <h2 className="sdb-first-project-title">Cria ou adiciona o teu primeiro projeto</h2>
                 <p className="sdb-first-project-sub">Já tens algo feito? Sobe o ficheiro. Só tens uma ideia? Descreve-a e a IA ajuda-te a desenvolvê-la.</p>
