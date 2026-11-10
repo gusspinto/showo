@@ -216,26 +216,30 @@ export default function NewProject() {
   const { user, profile, checkGate, consumeAI, logFunnelEvent } = useAuth()
   const { toast, show: showToast } = useToast()
 
-  /* Passos: choose → describe | loading → review → submitting
+  /* Passos: choose → describe | details → precreate | loading → review → submitting
      "choose" já traz a caixa de enviar ficheiros consigo — deixou de haver
      um ecrã "import" à parte, por isso ?import=1 (link partilhável antigo)
      também aterra aqui; é ignorado de propósito, não precisa de fazer nada.
-     "precreate" (concluído/privado) já não é o primeiro ecrã: só entra a
-     seguir a "choose" ou "describe", quando o user já escolheu o ficheiro
-     ou já escreveu a descrição e está prestes a mandar a IA processar,
-     pedido do Gustavo: perguntar logo à entrada era cedo demais, ninguém
-     tinha ainda decidido criar nada. goToPrecreate() guarda de onde veio
-     (precreateOrigin, para o botão Voltar) e o que fazer a seguir
-     (pendingAction, chamado por runPendingAction() no "Continuar"). */
+     "choose" e "describe" ficam só com a escolha essencial (ficheiro ou
+     descrição); tipo de projeto, data de defesa, avaliação e notas saem
+     daí e passam para "details", um ecrã à parte, opcional e saltável
+     (pedido do Gustavo: tudo isto junto ao upload ficava confuso demais,
+     "o que não couber passa para outra página de continuação"). "details"
+     e "precreate" (concluído/privado) só entram depois de "choose" ou
+     "describe", quando o user já escolheu o ficheiro ou já escreveu a
+     descrição e está prestes a mandar a IA processar, nunca logo à
+     entrada. goToDetails() guarda de onde veio (precreateOrigin, para o
+     botão Voltar de "details") e o que fazer a seguir (pendingAction,
+     chamado por runPendingAction() no "Continuar" de "precreate"). */
   const [step, setStep] = useState('choose')
   const [projectConcluded, setProjectConcluded] = useState(false)
   const [projectVisibility, setProjectVisibility] = useState('private')
   const [precreateOrigin, setPrecreateOrigin] = useState('choose')
   const [pendingAction, setPendingAction] = useState(null)
-  function goToPrecreate(origin, action) {
+  function goToDetails(origin, action) {
     setPrecreateOrigin(origin)
     setPendingAction(action)
-    setStep('precreate')
+    setStep('details')
   }
   function runPendingAction() {
     const action = pendingAction
@@ -692,6 +696,60 @@ export default function NewProject() {
   const filledCount = REVIEW_FIELDS.filter(f => (form[f.key] ?? '').trim().length > 0).length
 
   /* ──────────────────────────────────────────────────────────────────────────
+     PASSO: details: tipo de projeto, data de defesa/avaliação (só PAP) e
+     notas (só no caminho do ficheiro, onde alimentam o import-project).
+     Tudo isto saiu de "choose"/"describe" para aqui, ecrã à parte,
+     totalmente opcional ("Saltar" e "Continuar" levam ao mesmo sítio):
+     pedido do Gustavo, tudo junto ao upload/descrição ficava confuso
+     demais, "o que não couber passa para outra página de continuação".
+  ────────────────────────────────────────────────────────────────────────── */
+  if (step === 'details') {
+    return (
+      <NpShell>
+        <Navbar showLinks={false} mobileLeft={<BackButton onClick={() => setStep(precreateOrigin)} />} />
+        <div className="np-center">
+          <div className="np-wrap">
+            <p className="np-present-label" style={{ fontSize: 22, fontWeight: 700, color: 'var(--color-text)', marginBottom: 4 }}>
+              Mais detalhes
+            </p>
+            <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginTop: 0, marginBottom: 24 }}>
+              Tudo opcional, dá para preencher mais tarde dentro do projeto.
+            </p>
+
+            <TypeRow value={projectType} onChange={setProjectType} accountType={profile?.account_type}
+              defenseDate={defenseDate} setDefenseDate={setDefenseDate}
+              defenseDateUnknown={defenseDateUnknown} setDefenseDateUnknown={setDefenseDateUnknown}
+              evaluationModes={evaluationModes} setEvaluationModes={setEvaluationModes} />
+
+            {/* As notas só alimentam o import-project (ver handleAnalyzeFiles),
+                não fazem sentido no caminho da descrição: essa já é a nota. */}
+            {precreateOrigin === 'choose' && (
+              <div className="np-notes-block" style={{ marginTop: 20 }}>
+                <label className="np-notes-label" htmlFor="np-notes">Algo a acrescentar antes de a IA ler? (opcional)</label>
+                <textarea
+                  id="np-notes"
+                  className="np-notes"
+                  rows={2}
+                  value={importNotes}
+                  onChange={e => setImportNotes(e.target.value)}
+                  placeholder="Ex: o meu papel foi o design e a investigação de utilizadores."
+                />
+              </div>
+            )}
+
+            <button className="np-btn-primary" style={{ marginTop: 24 }} onClick={() => setStep('precreate')}>
+              Continuar <ArrowRight size={15} />
+            </button>
+            <button className="np-alt-link" style={{ display: 'block', margin: '10px auto 0' }} onClick={() => setStep('precreate')}>
+              Saltar por agora
+            </button>
+          </div>
+        </div>
+      </NpShell>
+    )
+  }
+
+  /* ──────────────────────────────────────────────────────────────────────────
      PASSO: precreate, duas perguntas rápidas mesmo antes de a IA processar
      (ficheiro já escolhido ou descrição já escrita): se já está concluído
      (nasce já marcado, sem mostrar depois a opção de "marcar como
@@ -703,7 +761,7 @@ export default function NewProject() {
   if (step === 'precreate') {
     return (
       <NpShell>
-        <Navbar showLinks={false} mobileLeft={<BackButton onClick={() => setStep(precreateOrigin)} />} />
+        <Navbar showLinks={false} mobileLeft={<BackButton onClick={() => setStep('details')} />} />
         <div className="np-center">
           <div className="np-wrap np-precreate">
             <div className="np-pill-group">
@@ -760,30 +818,19 @@ export default function NewProject() {
             <div className="np-add-card">
               <FilePicker files={files} onAdd={addFiles} onRemove={i => setFiles(f => f.filter((_, k) => k !== i))} />
 
+              {/* Tipo de projeto, data de defesa, avaliação e notas saíram
+                  daqui, ficam todos no ecrã "details", a seguir a este
+                  passo (ver goToDetails). Aqui fica só o essencial: o
+                  ficheiro escolhido e quantos/quanto pesam. */}
               {files.length > 0 && (
-                <div className="np-notes-block">
-                  <div className="np-filemeta">
-                    {files.length} {files.length === 1 ? 'ficheiro' : 'ficheiros'} · {prettySize(totalBytes)}
-                  </div>
-                  <TypeRow value={projectType} onChange={setProjectType} accountType={profile?.account_type}
-                    defenseDate={defenseDate} setDefenseDate={setDefenseDate}
-                    defenseDateUnknown={defenseDateUnknown} setDefenseDateUnknown={setDefenseDateUnknown}
-                    evaluationModes={evaluationModes} setEvaluationModes={setEvaluationModes} />
-                  <label className="np-notes-label" htmlFor="np-notes">Algo a acrescentar antes de a IA ler? (opcional)</label>
-                  <textarea
-                    id="np-notes"
-                    className="np-notes"
-                    rows={2}
-                    value={importNotes}
-                    onChange={e => setImportNotes(e.target.value)}
-                    placeholder="Ex: o meu papel foi o design e a investigação de utilizadores."
-                  />
+                <div className="np-filemeta">
+                  {files.length} {files.length === 1 ? 'ficheiro' : 'ficheiros'} · {prettySize(totalBytes)}
                 </div>
               )}
 
               {error && <p className="np-err"><AlertTriangle size={13} /> {error}</p>}
 
-              <button className="np-btn-primary np-btn-ai" onClick={() => goToPrecreate('choose', 'analyzeFiles')} disabled={!files.length}>
+              <button className="np-btn-primary np-btn-ai" onClick={() => goToDetails('choose', 'analyzeFiles')} disabled={!files.length}>
                 <Sparkles size={15} /> Analisar e criar página
               </button>
               {files.length > 0 && (
@@ -820,16 +867,11 @@ export default function NewProject() {
             <h1 className="np-headline">Conta-nos sobre o teu projeto.</h1>
             <p className="np-sub">Descreve a tua ideia, a IA ajuda-te a desenvolvê-la.</p>
 
-            <DescribeTextarea value={description} onChange={setDescription} onSubmit={() => goToPrecreate('describe', 'generate')} />
-
-            <TypeRow value={projectType} onChange={setProjectType} accountType={profile?.account_type}
-              defenseDate={defenseDate} setDefenseDate={setDefenseDate}
-              defenseDateUnknown={defenseDateUnknown} setDefenseDateUnknown={setDefenseDateUnknown}
-              evaluationModes={evaluationModes} setEvaluationModes={setEvaluationModes} />
+            <DescribeTextarea value={description} onChange={setDescription} onSubmit={() => goToDetails('describe', 'generate')} />
 
             {error && <p className="np-err"><AlertTriangle size={13} /> {error}</p>}
 
-            <button className="np-btn-primary np-btn-ai" onClick={() => goToPrecreate('describe', 'generate')} disabled={!isDescriptionValid(description)}>
+            <button className="np-btn-primary np-btn-ai" onClick={() => goToDetails('describe', 'generate')} disabled={!isDescriptionValid(description)}>
               <Sparkles size={15} /> Criar com IA
             </button>
 
@@ -838,11 +880,11 @@ export default function NewProject() {
                 peso visual idêntico só empurravam a decisão para o user
                 logo à entrada. Ficam como link secundário, discreto. */}
             <div className="np-alt-links">
-              <button className="np-alt-link" onClick={() => goToPrecreate('describe', 'interview')} disabled={!isDescriptionValid(description)}>
+              <button className="np-alt-link" onClick={() => goToDetails('describe', 'interview')} disabled={!isDescriptionValid(description)}>
                 Responder a perguntas guiadas
               </button>
               <span className="np-alt-links-sep">·</span>
-              <button className="np-alt-link" onClick={() => goToPrecreate('describe', 'manual')}>
+              <button className="np-alt-link" onClick={() => goToDetails('describe', 'manual')}>
                 Prefiro preencher à mão
               </button>
             </div>
