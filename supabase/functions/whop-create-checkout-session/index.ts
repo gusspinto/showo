@@ -2,13 +2,17 @@ import { getAuthUser, getCorsHeaders, checkRateLimit } from '../_shared/rateLimi
 
 /* ══════════════════════════════════════════════════════════════════════════
    CRIA UMA SESSÃO DE CHECKOUT NO WHOP, substitui create-checkout /
-   create-annual-checkout (Stripe). Chamada pelo frontend antes de abrir o
-   WhopCheckoutEmbed, para podermos anexar metadata.user_id à sessão (o
-   componente de embed só aceita planId OU sessionId, e só a sessionId
-   carrega metadata, ver docs.whop.com/api-reference/v2/checkout-sessions).
+   create-annual-checkout (Stripe). O frontend redireciona para o
+   purchase_url desta sessão (não usa o embed do Whop, abandonado depois de
+   várias tentativas sem sucesso em produção: a sessão criada por este
+   endpoint mostrava sempre "this checkout is no longer available" dentro
+   do componente de embed, sem conseguirmos confirmar porquê sem acesso à
+   documentação completa do Whop).
 
-   O whop-webhook (payment.succeeded) lê metadata.user_id de volta para
-   saber a quem atualizar profiles.plan.
+   Cria a sessão aqui em vez de usar o purchase_url do Plano diretamente
+   para podermos anexar metadata.user_id, que o whop-webhook
+   (payment.succeeded) lê de volta para saber a quem atualizar
+   profiles.plan.
    ══════════════════════════════════════════════════════════════════════════ */
 
 const PLAN_TO_WHOP_PLAN_ID: Record<string, Record<'monthly' | 'annual', string>> = {
@@ -78,12 +82,10 @@ Deno.serve(async (req) => {
     }
 
     const session = await res.json()
-    // O campo exato com o link partilhável da sessão (para o fluxo "pedir aos
-    // pais") não está confirmado sem um teste real, a documentação dá nomes
-    // diferentes consoante a versão (purchase_url, redirect_url, checkout_url).
-    // Aceita os três, o que existir primeiro.
+    // purchase_url confirmado em teste real (payload da API), os outros dois
+    // nomes ficam como rede de segurança caso o formato mude.
     const url = session.purchase_url ?? session.redirect_url ?? session.checkout_url ?? null
-    return new Response(JSON.stringify({ sessionId: session.id, url }), {
+    return new Response(JSON.stringify({ url }), {
       headers: { ...cors, 'Content-Type': 'application/json' },
     })
   } catch (e) {

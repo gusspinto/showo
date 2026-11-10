@@ -7,7 +7,6 @@ import { AltArrowDownIcon as ChevronDown } from '@solar-icons/react/linear/alt-a
 import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/linear/square-academic-cap'
 import { InfoCircleIcon as InfoCircle } from '@solar-icons/react/linear/info-circle'
 import { Navbar } from '../components/Navbar'
-import { WhopCheckoutModal } from '../components/WhopCheckoutModal'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { ONBOARDING_DISCOUNT_NOTE, ANNUAL_ONBOARDING_DISCOUNT_NOTE } from '../lib/plans'
@@ -231,11 +230,10 @@ const PLAN_ORDER = { free: 0, plus: 1, pro: 2 }
 
 export default function Pricing() {
   const navigate = useNavigate()
-  const { user, planId, profile, isSchoolAccount, logFunnelEvent, refreshProfile } = useAuth()
+  const { user, planId, profile, isSchoolAccount, logFunnelEvent } = useAuth()
   const [loading, setLoading] = useState(null)
   const [annual, setAnnual] = useState(false)
   const [openTip, setOpenTip] = useState(null) // "<planId>:<label>" do tooltip aberto, ou null
-  const [checkoutSessionId, setCheckoutSessionId] = useState(null)
 
   // Fecha o tooltip ao clicar fora dele (em qualquer sítio da página).
   useEffect(() => {
@@ -263,11 +261,6 @@ export default function Pricing() {
     if (!user) { navigate('/register'); return }
     if (plan.id === 'free') { navigate('/dashboard'); return }
     if (plan.id === planId) return
-    // Sem isto, um clique a mais enquanto o embed ainda está a carregar (o
-    // botão já voltou ao normal, mas o iframe do Whop ainda não apareceu)
-    // cria uma segunda sessão de checkout e invalida a primeira, que é
-    // exatamente o que os logs mostraram num teste real.
-    if (checkoutSessionId) return
     logFunnelEvent('checkout_started', plan.id)
     setLoading(plan.id)
     setError('')
@@ -276,27 +269,18 @@ export default function Pricing() {
         'whop-create-checkout-session',
         { body: { plan: plan.id, period: annual ? 'annual' : 'monthly' } },
       )
-      if (fnErr || !data?.sessionId) { setError('Erro ao iniciar pagamento. Tenta novamente.'); return }
+      if (fnErr || !data?.url) { setError('Erro ao iniciar pagamento. Tenta novamente.'); return }
       // Só agora é que se confirma que o Whop respondeu com uma sessão
       // válida, por isso só agora se regista quem chegou mesmo ao checkout
       // (checkout_started, acima, só sabe que a pessoa clicou, não que o
       // pedido teve sucesso).
       logFunnelEvent('checkout_redirected', plan.id)
-      setCheckoutSessionId(data.sessionId)
+      window.location.href = data.url
     } catch {
       setError('Erro ao iniciar pagamento. Tenta novamente.')
     } finally {
       setLoading(null)
     }
-  }
-
-  async function handleCheckoutComplete() {
-    setCheckoutSessionId(null)
-    // O webhook (whop-webhook) atualiza profiles.plan de forma assíncrona
-    // quando o Whop confirma o pagamento. Refrescamos aqui para o caso de
-    // já ter chegado, mas pode levar alguns segundos.
-    await refreshProfile?.()
-    navigate('/dashboard')
   }
 
   return (
@@ -396,9 +380,9 @@ export default function Pricing() {
                   <button
                     className={`pricing-cta pricing-cta--${plan.ctaVariant}`}
                     onClick={() => handleCta(plan)}
-                    disabled={loading === plan.id || !!checkoutSessionId}
+                    disabled={loading === plan.id}
                   >
-                    {loading === plan.id || checkoutSessionId ? 'A abrir o pagamento…' : <>{plan.cta} <ArrowRight size={14} /></>}
+                    {loading === plan.id ? 'A redirecionar…' : <>{plan.cta} <ArrowRight size={14} /></>}
                   </button>
                 )}
                 {/* Reduz o atrito de decidir pagar — facto real (já está na
@@ -543,13 +527,6 @@ export default function Pricing() {
           </div>
         </section>
       </div>
-      {checkoutSessionId && (
-        <WhopCheckoutModal
-          sessionId={checkoutSessionId}
-          onClose={() => setCheckoutSessionId(null)}
-          onComplete={handleCheckoutComplete}
-        />
-      )}
     </div>
   )
 }
