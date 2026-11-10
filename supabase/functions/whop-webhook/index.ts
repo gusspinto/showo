@@ -25,11 +25,16 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
    propósito, para nunca aceitar eventos não verificados.
    ══════════════════════════════════════════════════════════════════════════ */
 
+// A coluna profiles.plan só aceita 'free' | 'build' | 'launch' (check
+// constraint na BD), 'plus'/'pro' são só aliases resolvidos no código da
+// app (PLAN_ALIASES em plans.js). Escrever 'plus'/'pro' aqui falha
+// silenciosamente na BD (confirmado ao dar o Plus manualmente ao Gustavo
+// depois de um pagamento de teste, 2026-11-10).
 const PLAN_ID_TO_PLAN: Record<string, string> = {
-  plan_NKq7gp0RahWnx: 'plus', // Plus mensal, €8,99
-  plan_olyzpCXMgYlXI: 'plus', // Plus anual, €89,99 (ver nota no 229/plans.js: devia ser €89,90)
-  plan_uZg18icmbnVBp: 'pro', // Pro mensal, €17,99
-  plan_fF025x79dcW50: 'pro', // Pro anual, €179,90
+  plan_NKq7gp0RahWnx: 'build', // Plus mensal, €8,99
+  plan_olyzpCXMgYlXI: 'build', // Plus anual, €89,99 (ver nota no 229/plans.js: devia ser €89,90)
+  plan_uZg18icmbnVBp: 'launch', // Pro mensal, €17,99
+  plan_fF025x79dcW50: 'launch', // Pro anual, €179,90
 }
 
 async function verifyWhopSignature(
