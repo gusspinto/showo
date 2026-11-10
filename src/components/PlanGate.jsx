@@ -10,11 +10,9 @@ import { LinkIcon } from '@solar-icons/react/bold/link'
 import { PresentationGraphIcon as ExportIcon } from '@solar-icons/react/bold/presentation-graph'
 import { AltArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/alt-arrow-right'
 import { CheckCircleIcon as CheckCircle } from '@solar-icons/react/bold/check-circle'
-import { LikeIcon as ThumbUp } from '@solar-icons/react/bold/like'
-import { BotIcon as Bot } from '@solar-icons/react/bold/bot'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { getPlan, nextPaidPlan, planHighlights, ONBOARDING_DISCOUNT_NOTE, ANNUAL_ONBOARDING_DISCOUNT_NOTE } from '../lib/plans'
+import { getPlan, nextPaidPlan, planHighlights, ONBOARDING_DISCOUNT_NOTE, ANNUAL_ONBOARDING_DISCOUNT_NOTE, PLANS } from '../lib/plans'
 
 // Mapeia a chave que planHighlights() devolve (string, lib/plans.js não sabe
 // de React) para o ícone a mostrar, mesma convenção de ícones que a
@@ -35,134 +33,6 @@ const HIGHLIGHT_ICONS = {
 // que o utilizador vai mesmo ver, não uma promessa abstrata. Mapeia cada
 // feature de gate para a preview mais relevante; o que não tem mapa
 // específico cai no Coach IA, a feature paga mais universal de todas.
-const FEATURE_PREVIEW_KIND = {
-  coach: 'coach',
-  weeklyRecap: 'recap',
-  internshipPage: 'vagas',
-  vagaApplication: 'vagas',
-  defense: 'defense',
-  defenseTraining: 'defense',
-}
-
-// Nem balões de chat, nem a moldura "Preview real": o Gustavo achou que
-// não fazia sentido fingir uma conversa real sem mostrar o produto a
-// sério. Fica só o ícone do robô (a identidade da IA até a mascote
-// estar pronta) com uma fala curta por baixo. A fala diz o limite real
-// do plano (upgrade.ai.coach), não um número fixo no texto: nunca
-// desalinha se os limites dos planos mudarem, e muda sozinha para Plus
-// ou Pro consoante o upgrade mostrado.
-function CoachPreview({ upgrade }) {
-  const limit = upgrade?.ai?.coach
-  const msg = Number.isFinite(limit)
-    ? `${limit} perguntas por mês no ${upgrade.name}. Vamos?`
-    : 'Precisas de ajuda?'
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '4px 0 2px' }}>
-      <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 56, height: 56, borderRadius: '50%', background: 'var(--color-primary-subtle)', color: 'var(--color-primary)' }}>
-        <Bot size={30} />
-      </span>
-      <div style={{ position: 'relative', background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '8px 16px', fontSize: 13, fontWeight: 600, color: 'var(--color-text)', textAlign: 'center' }}>
-        <span style={{
-          position: 'absolute', top: -6, left: '50%', transform: 'translateX(-50%) rotate(45deg)',
-          width: 11, height: 11, background: 'var(--color-bg-alt)',
-          borderLeft: '1px solid var(--color-border)', borderTop: '1px solid var(--color-border)',
-        }} />
-        {msg}
-      </div>
-    </div>
-  )
-}
-
-function VagasPreview() {
-  return (
-    <div style={{ background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 10, padding: 12 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-        <span style={{ width: 26, height: 26, borderRadius: 7, background: 'var(--color-primary-subtle)', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 11, fontWeight: 800 }}>T</span>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--color-text)' }}>Estágio em Marketing Digital</div>
-          <div style={{ fontSize: 10.5, color: 'var(--color-text-secondary)' }}>TechCorp · Porto</div>
-        </div>
-      </div>
-      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 700, color: 'var(--color-success)', background: 'var(--color-success-subtle)', padding: '3px 8px', borderRadius: 100 }}>
-        ✓ Candidatura enviada
-      </div>
-    </div>
-  )
-}
-
-function DefensePreview() {
-  return (
-    <div style={{ background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 10, padding: 12 }}>
-      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Pergunta provável do júri</div>
-      <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--color-text)', marginBottom: 8 }}>"Porque escolheste esta solução e não outra?"</div>
-      <div style={{ fontSize: 11.5, color: 'var(--color-text-secondary)', lineHeight: 1.5, borderLeft: '2px solid var(--color-primary-muted)', paddingLeft: 8 }}>
-        Resposta sugerida, baseada no teu diário: menciona a alternativa que consideraste e o critério que decidiu.
-      </div>
-    </div>
-  )
-}
-
-// Logótipo do LinkedIn, mesmo usado em WeeklyRecapTeaser.jsx (o cartão da
-// sidebar que abre este pop-up já usa a cor/ícone do LinkedIn, "mostra
-// provas reais"). O pop-up estava a mostrar o email em vez do post de
-// LinkedIn, mensagem diferente da prometida pelo cartão que o abre, pedido
-// do Gustavo para alinhar as duas.
-const LinkedInMark = ({ size = 13 }) => (
-  <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" aria-hidden="true">
-    <path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.55C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.72C24 .77 23.2 0 22.22 0z"/>
-  </svg>
-)
-
-// Fundo branco de propósito: é uma réplica de um post real do LinkedIn, não
-// uma superfície da Showo, por isso não segue a paleta da marca aqui (a
-// moldura "Preview real" à volta já deixa claro que é um exemplo). 3
-// elementos: cabeçalho (avatar+nome+marca), texto do post, barra de reação.
-// Sem nome de projeto inventado no texto (confundia, "de onde vem esse
-// nome?"), fica genérico ("o projeto").
-function LinkedInPostPreview() {
-  return (
-    <div style={{ background: '#fff', borderRadius: 10, padding: 12 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
-        <span style={{ width: 24, height: 24, borderRadius: '50%', background: '#3B82F6', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 10, fontWeight: 800 }}>S</span>
-        <span style={{ fontSize: 10.5, fontWeight: 700, color: '#1a1a1a', flex: 1, minWidth: 0 }}>A tua página</span>
-        <span style={{ color: '#0A66C2', flexShrink: 0 }}><LinkedInMark size={13} /></span>
-      </div>
-      <p style={{ margin: 0, fontSize: 11.5, color: '#1a1a1a', lineHeight: 1.5 }}>
-        Esta semana avancei o projeto: melhorei a explicação do problema que resolve e simplifiquei o fluxo, depois de testar com duas pessoas que acharam confuso.
-      </p>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 8, paddingTop: 7, borderTop: '1px solid #eee' }}>
-        <ThumbUp size={11} color="#0A66C2" />
-        <span style={{ fontSize: 9.5, color: '#767676' }}>Gostei · Comentar · Partilhar</span>
-      </div>
-    </div>
-  )
-}
-
-function FeaturePreview({ feature, upgrade }) {
-  const kind = FEATURE_PREVIEW_KIND[feature] || 'coach'
-  // O Coach não tem rótulo "Preview real": não é uma réplica de ecrã, é só
-  // o ícone + fala, não faz sentido chamar-lhe "preview" de nada.
-  const label = {
-    recap: 'O post que o Showo escreve por ti',
-    vagas: 'Preview real das vagas de estágio',
-    defense: 'Preview real da preparação de defesa',
-  }[kind]
-  return (
-    <div className="plan-gate-fade">
-      {label && <p style={{ margin: '0 0 10px', fontSize: 10, fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>}
-      {kind === 'coach' && <CoachPreview upgrade={upgrade} />}
-      {kind === 'vagas' && <VagasPreview />}
-      {kind === 'defense' && <DefensePreview />}
-      {/* Era RecapPreview (email) + LinkedInPostPreview empilhados, duas
-          previews diferentes no mesmo bloco ("isto é o email ou o
-          LinkedIn?"). O cartão que abre este pop-up (WeeklyRecapTeaser, na
-          sidebar) já promete "provas reais" com a cor/ícone do LinkedIn,
-          por isso fica só o post, que é o que o cartão prometeu. */}
-      {kind === 'recap' && <LinkedInPostPreview />}
-    </div>
-  )
-}
-
 // Marca do plano ao lado do nome — a marca Showo na cor do plano
 // (grátis não tem badge). Imagens em /public: plus.png, pro.png, escola.png.
 const PLAN_BADGES = {
@@ -339,6 +209,14 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
   const [askingParents, setAskingParents] = useState(false)
   const [checkoutError, setCheckoutError] = useState('')
   const [annual, setAnnual] = useState(false)
+  // Quem está no Grátis via sempre só o Plus neste popup, nunca o Pro: não
+  // tinha como descobrir que o Pro existe sem ir a /planos à parte. Só
+  // mostra a escolha quando faz sentido mesmo escolher (Grátis, sem
+  // forcedPlan): quem já está no Plus só tem um upgrade possível (Pro), e
+  // forcedPlan existe precisamente porque só um plano resolve (ex: link
+  // limpo só no Pro), mostrar os dois aí enganava.
+  const [selectedUpgradeId, setSelectedUpgradeId] = useState('plus')
+  const showPlanToggle = !forcedPlan && planId === 'free'
 
   // Mesma regra dos outros pop-ups (Modal.jsx, ShareStoryModal) — sem isto o
   // body continua a fazer scroll por trás no mobile enquanto o modal parece
@@ -356,7 +234,7 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
   // contas de escola/professor (essas nunca são self-serve) — nesses casos não há CTA de
   // pagamento nenhum, só a mensagem e fechar. `forcedPlan` sobrepõe-se quando o chamador já
   // sabe que o "próximo tier" não chega (ex: link limpo só existe no Pro, não no Plus).
-  const upgrade = forcedPlan || nextPaidPlan(planId)
+  const upgrade = forcedPlan || (showPlanToggle ? PLANS[selectedUpgradeId] : nextPaidPlan(planId))
   // O cartão de preço deixou de ter a linha "Recap semanal: incluído" (gain,
   // pedido do Gustavo, repetia a lista de benefícios ao lado). Sem exclude
   // aqui, essa feature volta a aparecer, mas só na lista, não duplicada.
@@ -474,21 +352,31 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
         {upgrade ? (
           <div style={C.body}>
             <div className="plan-gate-columns">
-              {/* Bloco próprio (não dentro da coluna de botões) para poder
-                  ficar em cima de tudo em mobile e, no desktop, mudar de
-                  posição via grid-area para o topo da coluna dos botões —
-                  sem duplicar JSX para cada tamanho de ecrã. */}
-              {/* Só a preview (FeaturePreview) fica na coluna da direita. Título,
-                  lista de benefícios, preço e testemunho ficam todos juntos à
-                  esquerda, "o que ganhas" inteiro mesmo em cima de "quanto
-                  custa", não partido a meio entre as duas colunas. */}
-              <div className="plan-gate-title-block">
-                <FeaturePreview feature={feature} upgrade={upgrade} />
-              </div>
-
               <div className="plan-gate-col-left">
                 <p style={C.titleRight}>{title}</p>
                 <p style={C.subtitleRight}>Escolhe como queres continuar.</p>
+                {/* Plano e periodicidade lado a lado, centrados, sem rótulo
+                    por cima de nenhum dos dois (testado com o Gustavo:
+                    "PLANO"/"PERIODICIDADE" por cima piorava, e empilhado
+                    verticalmente também não ganhava nada a lado a lado). Só
+                    aparece para quem está no Grátis sem forcedPlan: é a
+                    única situação em que faz sentido escolher entre dois
+                    planos, quem já está no Plus só tem o Pro como upgrade,
+                    e forcedPlan existe porque só um plano resolve mesmo. */}
+                {showPlanToggle && (
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 'var(--sp-3)' }}>
+                    <div style={{ ...C.periodToggle, marginBottom: 0 }} role="group" aria-label="Plano">
+                      <button type="button" style={C.periodBtn(selectedUpgradeId === 'plus')} onClick={() => setSelectedUpgradeId('plus')}>Plus</button>
+                      <button type="button" style={C.periodBtn(selectedUpgradeId === 'pro')} onClick={() => setSelectedUpgradeId('pro')}>Pro</button>
+                    </div>
+                    {upgrade.priceLabelAnnual && (
+                      <div style={{ ...C.periodToggle, marginBottom: 0 }} role="group" aria-label="Periodicidade do pagamento">
+                        <button type="button" style={C.periodBtn(!annual)} onClick={() => setAnnual(false)}>Mensal</button>
+                        <button type="button" style={C.periodBtn(annual)} onClick={() => setAnnual(true)}>Anual</button>
+                      </div>
+                    )}
+                  </div>
+                )}
                 {highlights.length > 0 && (
                   <ul style={{ ...C.highlights, listStyle: 'none', padding: 0 }}>
                     {highlights.map((h, i) => {
@@ -513,7 +401,10 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
                     })}
                   </ul>
                 )}
-                {upgrade.priceLabelAnnual && (
+                {/* Quando o toggle de plano aparece acima, a periodicidade já
+                    vem junto dele (lado a lado); aqui só fica para quem não
+                    tem esse toggle (upgrade de plano único). */}
+                {!showPlanToggle && upgrade.priceLabelAnnual && (
                   <div style={{ ...C.periodToggle, margin: '0 auto 12px' }} role="group" aria-label="Periodicidade do pagamento">
                     <button type="button" style={C.periodBtn(!annual)} onClick={() => setAnnual(false)}>Mensal</button>
                     <button type="button" style={C.periodBtn(annual)} onClick={() => setAnnual(true)}>Anual</button>
