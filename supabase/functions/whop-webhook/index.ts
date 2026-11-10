@@ -109,8 +109,15 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     )
 
+    // manage_url é o link do próprio Whop para a pessoa gerir/cancelar a
+    // subscrição sozinha (Settings.jsx usa isto em vez do create-portal do
+    // Stripe). Só vem em membership.activated, não em payment.succeeded.
+    const manageUrl: string | null = event?.data?.manage_url ?? null
+    const update: Record<string, unknown> = { plan }
+    if (manageUrl) update.whop_manage_url = manageUrl
+
     await supabase.from('profiles')
-      .update({ plan })
+      .update(update)
       .eq('id', userId)
 
     return new Response(JSON.stringify({ ok: true }))
