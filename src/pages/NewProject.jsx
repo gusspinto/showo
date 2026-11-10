@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { saveProject } from '../lib/saveProject'
 import { officeFileToPdfBlob, isOfficeFile } from '../lib/officeToPdf'
+import { toWebP } from '../lib/imageOptimize'
 import { markLibraryTagging } from '../lib/libraryTagging'
 import { StarsIcon as Sparkles } from '@solar-icons/react/bold/stars'
 import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
@@ -538,7 +539,11 @@ export default function NewProject() {
       navigate('/biblioteca')
     } catch (err) {
       console.error(err)
-      setError('Não foi possível guardar. Tenta novamente.')
+      // Mensagem genérica escondia a causa real sempre que isto falhava
+      // (ex: tamanho do ficheiro, erro de rede, RLS), tanto para quem usa
+      // a app como para quem depois tenta perceber porque falhou, a partir
+      // só do print. Mostra a mensagem real do Supabase quando existe.
+      setError(err?.message ? `Não foi possível guardar: ${err.message}` : 'Não foi possível guardar. Tenta novamente.')
     } finally {
       setSavingToLibrary(false)
     }
