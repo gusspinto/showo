@@ -151,6 +151,39 @@ const C = {
   },
   upsellPeriod: { fontWeight: 500, fontSize: '0.8rem', color: 'var(--color-text-secondary)' },
   upsellDiscountNote: { margin: 0, fontSize: '0.74rem', fontWeight: 500, color: 'var(--color-text-secondary)' },
+  // Período como link discreto, só quando há dois cartões de plano a
+  // escolher: um botão/pílula a mais aqui competia visualmente com os
+  // cartões, que já são a escolha principal (pedido do Gustavo, "ainda
+  // muita coisa a acontecer").
+  periodLinkRow: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', fontSize: '0.76rem', fontWeight: 600, color: 'var(--color-text-secondary)' },
+  periodLinkBtn: (active) => ({
+    background: 'none', border: 'none', padding: '2px 4px', cursor: 'pointer',
+    fontFamily: 'var(--font-body)', font: 'inherit', fontWeight: 600,
+    color: active ? 'var(--color-text)' : 'var(--color-text-secondary)',
+    textDecoration: active ? 'underline' : 'none', textUnderlineOffset: '3px',
+  }),
+  periodLinkSep: { color: 'var(--color-text-tertiary)' },
+  // Preço já dentro da escolha do plano, não repetido numa caixa à parte
+  // por baixo: era a mesma informação duas vezes (nome+preço no cartão,
+  // nome+preço outra vez na caixa "upsell"), só por não ter outro sítio
+  // onde pôr quando havia dois planos para escolher.
+  planCards: { display: 'flex', gap: '10px' },
+  planCard: (active) => ({
+    flex: 1, textAlign: 'left', cursor: 'pointer', fontFamily: 'var(--font-body)',
+    display: 'flex', flexDirection: 'column', gap: '2px',
+    padding: '14px 12px', borderRadius: 'var(--radius-lg)',
+    border: active ? '1.5px solid var(--color-primary)' : '1.5px solid var(--color-border)',
+    background: active ? 'var(--color-primary-subtle)' : 'var(--color-bg)',
+  }),
+  planCardNameRow: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' },
+  planCardName: { fontWeight: 700, fontSize: '0.88rem', color: 'var(--color-text)' },
+  planCardBadge: {
+    fontSize: '0.6rem', fontWeight: 800, color: 'var(--color-success)',
+    background: 'var(--color-success-subtle)', padding: '2px 6px', borderRadius: 'var(--radius-full)', whiteSpace: 'nowrap',
+  },
+  planCardPrice: { fontWeight: 800, fontSize: '1.05rem', color: 'var(--color-text)' },
+  planCardPriceOld: { fontSize: '0.68rem', fontWeight: 600, color: 'var(--color-text-tertiary)', textDecoration: 'line-through', marginRight: '4px' },
+  planCardPeriod: { fontWeight: 500, fontSize: '0.68rem', color: 'var(--color-text-secondary)' },
   errorText: { margin: 0, fontSize: '0.78rem', color: 'var(--color-error)' },
   // Invertido (var(--color-text)/var(--color-bg)), não azul — o mesmo botão
   // "cheio" que a Home, o Login e o Registo já usam. O azul fica reservado
@@ -354,28 +387,51 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
             <div className="plan-gate-columns">
               <div className="plan-gate-col-left">
                 <p style={C.titleRight}>{title}</p>
-                <p style={C.subtitleRight}>Escolhe como queres continuar.</p>
-                {/* Plano e periodicidade lado a lado, centrados, sem rótulo
-                    por cima de nenhum dos dois (testado com o Gustavo:
-                    "PLANO"/"PERIODICIDADE" por cima piorava, e empilhado
-                    verticalmente também não ganhava nada a lado a lado). Só
-                    aparece para quem está no Grátis sem forcedPlan: é a
-                    única situação em que faz sentido escolher entre dois
-                    planos, quem já está no Plus só tem o Pro como upgrade,
-                    e forcedPlan existe porque só um plano resolve mesmo. */}
+                {/* Sem subtítulo quando há cartões de plano: "Plus"/"Pro" já
+                    diz "escolhe", uma frase a repetir isso só ocupava
+                    espaço (pedido do Gustavo, "ainda muita coisa a
+                    acontecer"). Para upgrade de plano único mantém-se, não
+                    há cartões aqui a substituir essa pista visual. */}
+                {!showPlanToggle && <p style={C.subtitleRight}>Escolhe como queres continuar.</p>}
+                {/* Preço já dentro de cada cartão de plano, período como
+                    link discreto por cima: menos uma caixa (a "upsell" de
+                    baixo não existe neste caso, o preço já não precisa de
+                    repetir-se lá). Só aparece para quem está no Grátis sem
+                    forcedPlan: é a única situação em que faz sentido
+                    escolher entre dois planos, quem já está no Plus só tem
+                    o Pro como upgrade, e forcedPlan existe porque só um
+                    plano resolve mesmo. */}
                 {showPlanToggle && (
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 'var(--sp-3)' }}>
-                    <div style={{ ...C.periodToggle, marginBottom: 0 }} role="group" aria-label="Plano">
-                      <button type="button" style={C.periodBtn(selectedUpgradeId === 'plus')} onClick={() => setSelectedUpgradeId('plus')}>Plus</button>
-                      <button type="button" style={C.periodBtn(selectedUpgradeId === 'pro')} onClick={() => setSelectedUpgradeId('pro')}>Pro</button>
-                    </div>
+                  <>
                     {upgrade.priceLabelAnnual && (
-                      <div style={{ ...C.periodToggle, marginBottom: 0 }} role="group" aria-label="Periodicidade do pagamento">
-                        <button type="button" style={C.periodBtn(!annual)} onClick={() => setAnnual(false)}>Mensal</button>
-                        <button type="button" style={C.periodBtn(annual)} onClick={() => setAnnual(true)}>Anual</button>
+                      <div style={{ ...C.periodLinkRow, marginBottom: 'var(--sp-3)' }}>
+                        <button type="button" style={C.periodLinkBtn(!annual)} onClick={() => setAnnual(false)}>Mensal</button>
+                        <span style={C.periodLinkSep}>·</span>
+                        <button type="button" style={C.periodLinkBtn(annual)} onClick={() => setAnnual(true)}>Anual</button>
                       </div>
                     )}
-                  </div>
+                    <div style={{ ...C.planCards, marginBottom: 'var(--sp-4)' }} role="group" aria-label="Plano">
+                      {['plus', 'pro'].map(id => {
+                        const p = PLANS[id]
+                        const annualNow = annual && p.priceLabelAnnual
+                        const priceOld = annualNow ? (p.priceLabelAnnualDiscounted ? p.priceLabelAnnual : null) : (p.priceLabelDiscounted ? p.priceLabel : null)
+                        const priceNow = annualNow ? (p.priceLabelAnnualDiscounted ?? p.priceLabelAnnual) : (p.priceLabelDiscounted ?? p.priceLabel)
+                        const period = annualNow ? '/ano' : p.period
+                        return (
+                          <button key={id} type="button" style={C.planCard(selectedUpgradeId === id)} onClick={() => setSelectedUpgradeId(id)}>
+                            <span style={C.planCardNameRow}>
+                              <span style={C.planCardName}>{p.name}</span>
+                              {priceOld && <span style={C.planCardBadge}>-50%</span>}
+                            </span>
+                            <span style={C.planCardPrice}>
+                              {priceOld && <span style={C.planCardPriceOld}>{priceOld}</span>}
+                              {priceNow}<span style={C.planCardPeriod}>{period}</span>
+                            </span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </>
                 )}
                 {highlights.length > 0 && (
                   <ul style={{ ...C.highlights, listStyle: 'none', padding: 0 }}>
@@ -404,43 +460,47 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
                 {/* Quando o toggle de plano aparece acima, a periodicidade já
                     vem junto dele (lado a lado); aqui só fica para quem não
                     tem esse toggle (upgrade de plano único). */}
-                {!showPlanToggle && upgrade.priceLabelAnnual && (
-                  <div style={{ ...C.periodToggle, margin: '0 auto 12px' }} role="group" aria-label="Periodicidade do pagamento">
-                    <button type="button" style={C.periodBtn(!annual)} onClick={() => setAnnual(false)}>Mensal</button>
-                    <button type="button" style={C.periodBtn(annual)} onClick={() => setAnnual(true)}>Anual</button>
-                  </div>
+                {!showPlanToggle && (
+                  <>
+                    {upgrade.priceLabelAnnual && (
+                      <div style={{ ...C.periodToggle, margin: '0 auto 12px' }} role="group" aria-label="Periodicidade do pagamento">
+                        <button type="button" style={C.periodBtn(!annual)} onClick={() => setAnnual(false)}>Mensal</button>
+                        <button type="button" style={C.periodBtn(annual)} onClick={() => setAnnual(true)}>Anual</button>
+                      </div>
+                    )}
+                    <div style={C.upsell}>
+                      <div style={C.upsellHead}>
+                        <span style={C.upsellName}>{upgrade.name}</span>
+                        <span style={C.upsellPrice}>
+                          {/* Preço riscado: SHOWO50 (-50%, aplicado sozinho no
+                              checkout), tanto no mensal como no anual. Antes
+                              disto, o riscado do anual era mensal × 12 (poupança
+                              de pagar anual, sem ligação ao cupão) e o preço
+                              cheio aparecia como se já tivesse desconto, o
+                              cupão nunca se aplicava no anual, nem aqui nem no
+                              checkout real (create-annual-checkout). */}
+                          {annual && upgrade.priceLabelAnnualDiscounted && (
+                            <span style={C.upsellPriceOld}>{upgrade.priceLabelAnnual}</span>
+                          )}
+                          {!annual && upgrade.priceLabelDiscounted && (
+                            <span style={C.upsellPriceOld}>{upgrade.priceLabel}</span>
+                          )}
+                          {annual && upgrade.priceLabelAnnual
+                            ? (upgrade.priceLabelAnnualDiscounted ?? upgrade.priceLabelAnnual)
+                            : !annual && upgrade.priceLabelDiscounted
+                              ? upgrade.priceLabelDiscounted
+                              : upgrade.priceLabel}
+                          <span style={C.upsellPeriod}>{annual && upgrade.priceLabelAnnual ? '/ano' : upgrade.period}</span>
+                        </span>
+                      </div>
+                      {annual && upgrade.priceLabelAnnualDiscounted ? (
+                        <p style={C.upsellDiscountNote}>{ANNUAL_ONBOARDING_DISCOUNT_NOTE}</p>
+                      ) : !annual && upgrade.priceLabelDiscounted ? (
+                        <p style={C.upsellDiscountNote}>{ONBOARDING_DISCOUNT_NOTE}</p>
+                      ) : null}
+                    </div>
+                  </>
                 )}
-                <div style={C.upsell}>
-                  <div style={C.upsellHead}>
-                    <span style={C.upsellName}>{upgrade.name}</span>
-                    <span style={C.upsellPrice}>
-                      {/* Preço riscado: SHOWO50 (-50%, aplicado sozinho no
-                          checkout), tanto no mensal como no anual. Antes
-                          disto, o riscado do anual era mensal × 12 (poupança
-                          de pagar anual, sem ligação ao cupão) e o preço
-                          cheio aparecia como se já tivesse desconto, o
-                          cupão nunca se aplicava no anual, nem aqui nem no
-                          checkout real (create-annual-checkout). */}
-                      {annual && upgrade.priceLabelAnnualDiscounted && (
-                        <span style={C.upsellPriceOld}>{upgrade.priceLabelAnnual}</span>
-                      )}
-                      {!annual && upgrade.priceLabelDiscounted && (
-                        <span style={C.upsellPriceOld}>{upgrade.priceLabel}</span>
-                      )}
-                      {annual && upgrade.priceLabelAnnual
-                        ? (upgrade.priceLabelAnnualDiscounted ?? upgrade.priceLabelAnnual)
-                        : !annual && upgrade.priceLabelDiscounted
-                          ? upgrade.priceLabelDiscounted
-                          : upgrade.priceLabel}
-                      <span style={C.upsellPeriod}>{annual && upgrade.priceLabelAnnual ? '/ano' : upgrade.period}</span>
-                    </span>
-                  </div>
-                  {annual && upgrade.priceLabelAnnualDiscounted ? (
-                    <p style={C.upsellDiscountNote}>{ANNUAL_ONBOARDING_DISCOUNT_NOTE}</p>
-                  ) : !annual && upgrade.priceLabelDiscounted ? (
-                    <p style={C.upsellDiscountNote}>{ONBOARDING_DISCOUNT_NOTE}</p>
-                  ) : null}
-                </div>
               </div>
 
               <div className="plan-gate-col-right">
