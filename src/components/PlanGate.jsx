@@ -13,6 +13,7 @@ import { CheckCircleIcon as CheckCircle } from '@solar-icons/react/bold/check-ci
 import { LikeIcon as ThumbUp } from '@solar-icons/react/bold/like'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
+import { WhopCheckoutModal } from './WhopCheckoutModal'
 import { getPlan, nextPaidPlan, planHighlights, ONBOARDING_DISCOUNT_NOTE, ANNUAL_ONBOARDING_DISCOUNT_NOTE } from '../lib/plans'
 
 // Mapeia a chave que planHighlights() devolve (string, lib/plans.js não sabe
@@ -315,11 +316,12 @@ const C = {
 export function PlanGateModal({ message, onClose, forcedPlan }) {
   const navigate = useNavigate()
   const location = useLocation()
-  const { planId, logFunnelEvent } = useAuth()
+  const { planId, logFunnelEvent, refreshProfile } = useAuth()
   const [loading, setLoading] = useState(false)
   const [askingParents, setAskingParents] = useState(false)
   const [checkoutError, setCheckoutError] = useState('')
   const [annual, setAnnual] = useState(false)
+  const [checkoutSessionId, setCheckoutSessionId] = useState(null)
 
   // Mesma regra dos outros pop-ups (Modal.jsx, ShareStoryModal) — sem isto o
   // body continua a fazer scroll por trás no mobile enquanto o modal parece
@@ -365,20 +367,15 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
     // nudge" já tinha revelado.
     logFunnelEvent('checkout_started', feature)
     try {
-      const returnPath = `${location.pathname}${location.search}`
-      // O anual vai por create-annual-checkout (pagamento único, com
-      // Multibanco e MB WAY): Multibanco/MB WAY não funcionam em
-      // mode:'subscription' no Stripe, confirmado por teste direto na API.
-      // O mensal continua por create-checkout (subscrição, só cartão).
       const { data, error } = await supabase.functions.invoke(
-        annual ? 'create-annual-checkout' : 'create-checkout',
-        { body: annual ? { plan: upgrade.id, returnPath } : { plan: upgrade.id, period: 'monthly', returnPath } },
+        'whop-create-checkout-session',
+        { body: { plan: upgrade.id, period: annual ? 'annual' : 'monthly' } },
       )
-      if (error || !data?.url) { setCheckoutError('Erro ao iniciar pagamento. Tenta novamente.'); return }
-      // Confirmação real de que chegou ao Stripe (o pedido teve sucesso),
+      if (error || !data?.sessionId) { setCheckoutError('Erro ao iniciar pagamento. Tenta novamente.'); return }
+      // Confirmação real de que chegou ao Whop (o pedido teve sucesso),
       // distinto de checkout_started acima que só sabe que houve clique.
       logFunnelEvent('checkout_redirected', feature)
-      window.location.href = data.url
+      setCheckoutSessionId(data.sessionId)
     } catch {
       setCheckoutError('Erro ao iniciar pagamento. Tenta novamente.')
     } finally {
@@ -386,15 +383,23 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
     }
   }
 
+  async function handleCheckoutComplete() {
+    setCheckoutSessionId(null)
+    await refreshProfile?.()
+    const returnPath = `${location.pathname}${location.search}`
+    navigate(returnPath)
+  }
+
   // Muita gente deste público (alunos PAP) não tem cartão próprio — em vez
-  // de bloquear a compra, dá um caminho para pedir a quem tem. Usa a mesma
-  // sessão de checkout do Stripe (o link funciona para quem o abrir, não
-  // precisa de sessão do Showo), só muda o canal: WhatsApp com mensagem
-  // pronta, em vez de redirecionar logo o próprio browser.
+  // de bloquear a compra, dá um caminho para pedir a quem tem. Usa o link
+  // partilhável da mesma sessão de checkout do Whop (funciona para quem o
+  // abrir, não precisa de sessão do Showo, e mantém a metadata.user_id
+  // ligada a esta conta), só muda o canal: WhatsApp com mensagem pronta,
+  // em vez de abrir o embed no próprio browser.
   async function handleAskParents() {
     if (!upgrade) return
-    // Também é um início de checkout real (mesma sessão Stripe, só muda o
-    // canal), por isso regista igual ao handleUpgrade.
+    // Também é um início de checkout real (mesma sessão), por isso regista
+    // igual ao handleUpgrade.
     logFunnelEvent('checkout_started', feature)
     // Aberto já, síncrono com o clique — se esperasse pelo fetch antes de
     // abrir, o Safari (e por vezes o Chrome) trata a nova aba como popup
@@ -404,10 +409,9 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
     setAskingParents(true)
     setCheckoutError('')
     try {
-      const returnPath = `${location.pathname}${location.search}`
       const { data, error } = await supabase.functions.invoke(
-        annual ? 'create-annual-checkout' : 'create-checkout',
-        { body: annual ? { plan: upgrade.id, returnPath } : { plan: upgrade.id, period: 'monthly', returnPath } },
+        'whop-create-checkout-session',
+        { body: { plan: upgrade.id, period: annual ? 'annual' : 'monthly' } },
       )
       if (error || !data?.url) {
         win?.close()
@@ -415,10 +419,10 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
         return
       }
       // Segunda tentativa depois do Gustavo apontar que continuava a soar a
-      // burla — "ajudas-me a pagar?" e explicar que é "direto pelo Stripe"
-      // não é como ninguém fala mesmo. O mais curto e direto possível.
-      // Mesma confirmação real do handleUpgrade: o pedido ao Stripe teve
-      // sucesso, só muda o canal (WhatsApp em vez de redirect direto).
+      // burla ("ajudas-me a pagar?" e explicar que é "direto pelo Whop"
+      // não é como ninguém fala mesmo). O mais curto e direto possível.
+      // Mesma confirmação real do handleUpgrade: o pedido ao Whop teve
+      // sucesso, só muda o canal (WhatsApp em vez de abrir o embed).
       logFunnelEvent('checkout_redirected', feature)
       const msg = `Olá! Podes pagar isto por mim? É para o Showo, o portefólio que ando a fazer: ${data.url}`
       const waUrl = `https://wa.me/?text=${encodeURIComponent(msg)}`
@@ -559,6 +563,13 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
           </div>
         )}
       </div>
+      {checkoutSessionId && (
+        <WhopCheckoutModal
+          sessionId={checkoutSessionId}
+          onClose={() => setCheckoutSessionId(null)}
+          onComplete={handleCheckoutComplete}
+        />
+      )}
     </div>,
     document.body
   )

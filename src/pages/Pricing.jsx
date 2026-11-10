@@ -7,6 +7,7 @@ import { AltArrowDownIcon as ChevronDown } from '@solar-icons/react/linear/alt-a
 import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/linear/square-academic-cap'
 import { InfoCircleIcon as InfoCircle } from '@solar-icons/react/linear/info-circle'
 import { Navbar } from '../components/Navbar'
+import { WhopCheckoutModal } from '../components/WhopCheckoutModal'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { ONBOARDING_DISCOUNT_NOTE, ANNUAL_ONBOARDING_DISCOUNT_NOTE } from '../lib/plans'
@@ -230,10 +231,11 @@ const PLAN_ORDER = { free: 0, plus: 1, pro: 2 }
 
 export default function Pricing() {
   const navigate = useNavigate()
-  const { user, planId, profile, isSchoolAccount, logFunnelEvent } = useAuth()
+  const { user, planId, profile, isSchoolAccount, logFunnelEvent, refreshProfile } = useAuth()
   const [loading, setLoading] = useState(null)
   const [annual, setAnnual] = useState(false)
   const [openTip, setOpenTip] = useState(null) // "<planId>:<label>" do tooltip aberto, ou null
+  const [checkoutSessionId, setCheckoutSessionId] = useState(null)
 
   // Fecha o tooltip ao clicar fora dele (em qualquer sítio da página).
   useEffect(() => {
@@ -265,25 +267,31 @@ export default function Pricing() {
     setLoading(plan.id)
     setError('')
     try {
-      // O anual vai por create-annual-checkout (pagamento único, com
-      // Multibanco e MB WAY): esses métodos não funcionam em
-      // mode:'subscription' no Stripe. Mesma troca do PlanGate.jsx.
       const { data, error: fnErr } = await supabase.functions.invoke(
-        annual ? 'create-annual-checkout' : 'create-checkout',
-        { body: annual ? { plan: plan.id } : { plan: plan.id, period: 'monthly' } },
+        'whop-create-checkout-session',
+        { body: { plan: plan.id, period: annual ? 'annual' : 'monthly' } },
       )
-      if (fnErr || !data?.url) { setError('Erro ao iniciar pagamento. Tenta novamente.'); return }
-      // Só agora é que se confirma que o Stripe respondeu com uma sessão
+      if (fnErr || !data?.sessionId) { setError('Erro ao iniciar pagamento. Tenta novamente.'); return }
+      // Só agora é que se confirma que o Whop respondeu com uma sessão
       // válida, por isso só agora se regista quem chegou mesmo ao checkout
       // (checkout_started, acima, só sabe que a pessoa clicou, não que o
       // pedido teve sucesso).
       logFunnelEvent('checkout_redirected', plan.id)
-      window.location.href = data.url
+      setCheckoutSessionId(data.sessionId)
     } catch {
       setError('Erro ao iniciar pagamento. Tenta novamente.')
     } finally {
       setLoading(null)
     }
+  }
+
+  async function handleCheckoutComplete() {
+    setCheckoutSessionId(null)
+    // O webhook (whop-webhook) atualiza profiles.plan de forma assíncrona
+    // quando o Whop confirma o pagamento. Refrescamos aqui para o caso de
+    // já ter chegado, mas pode levar alguns segundos.
+    await refreshProfile?.()
+    navigate('/dashboard')
   }
 
   return (
@@ -530,6 +538,13 @@ export default function Pricing() {
           </div>
         </section>
       </div>
+      {checkoutSessionId && (
+        <WhopCheckoutModal
+          sessionId={checkoutSessionId}
+          onClose={() => setCheckoutSessionId(null)}
+          onComplete={handleCheckoutComplete}
+        />
+      )}
     </div>
   )
 }
