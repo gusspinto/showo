@@ -3000,18 +3000,35 @@ export default function ProjectPage() {
                 A IA não tinha a certeza sobre {location.state.clearedFields.join(', ')} — ficou em branco. Preenche quando quiseres.
               </p>
             ) : (Array.isArray(previewBlocks) ? previewBlocks.length : 0) < 3 ? (
-              <p style={{
-                margin: '0 0 24px',
-                fontSize: 14,
-                color: 'var(--color-warning)',
-                lineHeight: 1.6,
-                background: 'var(--color-warning-subtle)',
-                border: '1px solid var(--color-warning-subtle)',
-                borderRadius: 8,
-                padding: '10px 12px',
-              }}>
-                Falta a parte que conta: com menos de 3 secções, quem vir o link ainda não percebe o que fizeste. Volta a editar antes de partilhar.
-              </p>
+              /* Esta mensagem confundia quem tinha acabado de marcar o
+                 projeto como "ainda em desenvolvimento" no ecrã
+                 pré-criação (apontado pelo Pedro e pelo Gustavo): com menos
+                 de 3 secções é esperado nesse caso, não um erro. Só avisa a
+                 sério quando o projeto já nasceu (ou foi marcado) como
+                 concluído e mesmo assim está fino, aí sim há contradição. */
+              getProjectState(project) === 'concluido' ? (
+                <p style={{
+                  margin: '0 0 24px',
+                  fontSize: 14,
+                  color: 'var(--color-warning)',
+                  lineHeight: 1.6,
+                  background: 'var(--color-warning-subtle)',
+                  border: '1px solid var(--color-warning-subtle)',
+                  borderRadius: 8,
+                  padding: '10px 12px',
+                }}>
+                  Falta a parte que conta: com menos de 3 secções, quem vir o link ainda não percebe o que fizeste. Volta a editar antes de partilhar.
+                </p>
+              ) : (
+                <p style={{
+                  margin: '0 0 24px',
+                  fontSize: 14,
+                  color: 'var(--color-text-secondary)',
+                  lineHeight: 1.6,
+                }}>
+                  Continua quando quiseres. A partir de 3 secções preenchidas, quem vir o link já percebe o essencial.
+                </p>
+              )
             ) : (
               <p style={{
                 margin: '0 0 24px',
