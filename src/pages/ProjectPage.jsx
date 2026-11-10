@@ -847,6 +847,17 @@ function ProjectTour({ isPap, onClose, onStep }) {
   const [rect, setRect] = useState(null)
   const skipRef = useRef(false)
 
+  // O tour é o foco enquanto está aberto: antes dava para mexer na app por
+  // baixo dele (navegar para outra página, clicar em botões, fazer scroll
+  // do fundo), apontado como bug. Bloqueia o scroll do body enquanto o
+  // tour está montado; o bloqueio de cliques no resto do ecrã está no
+  // pointerEvents do overlay, mais abaixo.
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prevOverflow }
+  }, [])
+
   // Junta dois retângulos no menor que envolve os dois — usado para o
   // destaque do passo "preview" cobrir o botão E o menu aberto por baixo
   // dele, não só o botão sozinho com o menu a espreitar por fora da luz.
@@ -916,27 +927,45 @@ function ProjectTour({ isPap, onClose, onStep }) {
     if (el) el.scrollIntoView({ behavior: 'instant', block: 'center' })
 
     let raf1, raf2, remeasureTimer
+    // Bug antigo: o botão de um passo (ex. "edit"/"diary", dentro da
+    // Navbar) podia ainda não estar no DOM 2 frames depois de o passo
+    // mudar (isOwner/dados do projeto ainda a resolver), e o tour saltava
+    // logo para o próximo alvo que encontrasse (ex. "1/9" ia direto a
+    // "4/9", saltando passos inteiros). Em vez de desistir ao fim de 2
+    // frames, tenta outra vez por até ~1.5s antes de aceitar que o alvo
+    // deste passo realmente não existe e avançar para o seguinte.
+    let attempts = 0
+    const MAX_ATTEMPTS = 15
+    function tryMeasure() {
+      if (skipRef.current) return
+      const r = measureStep(stepIdx, steps)
+      if (r) { setRect(r); return }
+      attempts++
+      if (attempts < MAX_ATTEMPTS) {
+        remeasureTimer = setTimeout(tryMeasure, 100)
+        return
+      }
+      const found = advanceToVisible(stepIdx)
+      if (!found) { onClose(false); return }
+      if (found.idx !== stepIdx) { setStepIdx(found.idx); return }
+      setRect(found.rect)
+    }
     raf1 = requestAnimationFrame(() => {
-      raf2 = requestAnimationFrame(() => {
-        if (skipRef.current) return
-        const found = advanceToVisible(stepIdx)
-        if (!found) { onClose(false); return }
-        if (found.idx !== stepIdx) { setStepIdx(found.idx); return }
-        setRect(found.rect)
-      })
+      raf2 = requestAnimationFrame(tryMeasure)
     })
     // O passo "preview" abre o menu real (forceMenuOpen) — isso atravessa
     // Context + outro componente (Navbar), pode não estar montado ainda
     // aos 2 frames daqui. Remede um pouco depois, só para apanhar o menu
     // já aberto e alargar o destaque a ele.
+    let previewTimer
     if (steps[stepIdx].target === 'preview') {
-      remeasureTimer = setTimeout(() => {
+      previewTimer = setTimeout(() => {
         if (skipRef.current) return
         const r = measureStep(stepIdx, steps)
         if (r) setRect(r)
       }, 150)
     }
-    return () => { skipRef.current = true; cancelAnimationFrame(raf1); cancelAnimationFrame(raf2); clearTimeout(remeasureTimer) }
+    return () => { skipRef.current = true; cancelAnimationFrame(raf1); cancelAnimationFrame(raf2); clearTimeout(remeasureTimer); clearTimeout(previewTimer) }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepIdx])
 
@@ -1023,27 +1052,45 @@ function ProjectTour({ isPap, onClose, onStep }) {
         }}>
           Saltar tour
         </button>
-        <button
-          onClick={() => isLast ? onClose(true) : setStepIdx(i => i + 1)}
-          aria-label={isLast ? 'Começar' : 'Próximo'}
-          style={{
-            backgroundImage: 'var(--brand-gradient)', border: 'none',
-            borderRadius: isLast ? 8 : 12,
-            width: isLast ? 'auto' : 42, height: isLast ? 'auto' : 42,
-            padding: isLast ? '9px 18px' : 0, flexShrink: 0, boxSizing: 'border-box',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-            color: '#fff', fontSize: 13, fontWeight: 600,
-            cursor: 'pointer', fontFamily: 'inherit',
-          }}
-        >
-          {isLast ? 'Começar' : <TourNextArrow size={19} strokeWidth={2.5} />}
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {stepIdx > 0 && (
+            <button
+              onClick={() => setStepIdx(i => i - 1)}
+              aria-label="Voltar"
+              style={isMobile ? {
+                background: 'none', border: '1.5px solid var(--color-border)', borderRadius: 'var(--radius-md)',
+                padding: '8px 14px', cursor: 'pointer',
+                fontSize: 14, fontWeight: 700, color: 'var(--color-text-secondary)', fontFamily: 'inherit',
+              } : {
+                background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                fontSize: 12, color: 'var(--color-text-tertiary)', fontFamily: 'inherit',
+              }}
+            >
+              ← Voltar
+            </button>
+          )}
+          <button
+            onClick={() => isLast ? onClose(true) : setStepIdx(i => i + 1)}
+            aria-label={isLast ? 'Começar' : 'Próximo'}
+            style={{
+              backgroundImage: 'var(--brand-gradient)', border: 'none',
+              borderRadius: isLast ? 'var(--radius-md)' : 'var(--radius-sm)',
+              width: isLast ? 'auto' : 42, height: isLast ? 'auto' : 42,
+              padding: isLast ? '9px 18px' : 0, flexShrink: 0, boxSizing: 'border-box',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              color: '#fff', fontSize: 13, fontWeight: 600,
+              cursor: 'pointer', fontFamily: 'inherit',
+            }}
+          >
+            {isLast ? 'Começar' : <TourNextArrow size={19} strokeWidth={2.5} />}
+          </button>
+        </div>
       </div>
     </>
   )
 
   return createPortal(
-    <div style={{ position: 'fixed', inset: 0, zIndex: 9100, pointerEvents: 'none' }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 9100, pointerEvents: 'all' }}>
       {spotlight && (
         <div style={{
           position: 'fixed',
