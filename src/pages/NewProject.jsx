@@ -17,6 +17,8 @@ import WheelDatePicker from '../components/WheelDatePicker'
 import { looksLikeSpam } from '../lib/score'
 import { CalendarIcon as Calendar } from '@solar-icons/react/bold/calendar'
 import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
+import { LockKeyholeIcon as Lock } from '@solar-icons/react/bold/lock-keyhole'
+import { GlobeIcon as Globe } from '@solar-icons/react/bold/globe'
 import { PlusIcon } from '../components/icons/PlusIcon'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
@@ -213,16 +215,36 @@ export default function NewProject() {
   const { user, profile, checkGate, consumeAI, logFunnelEvent } = useAuth()
   const { toast, show: showToast } = useToast()
 
-  /* Passos: precreate → choose → describe | loading → review → submitting
+  /* Passos: choose → describe | loading → review → submitting
      "choose" já traz a caixa de enviar ficheiros consigo — deixou de haver
      um ecrã "import" à parte, por isso ?import=1 (link partilhável antigo)
      também aterra aqui; é ignorado de propósito, não precisa de fazer nada.
-     "precreate" é sempre o primeiro passo: pergunta se o trabalho já está
-     concluído e se é para ficar público ou privado, antes de ver o resto do
-     formulário, ver saveProject.js para onde isto aterra. */
-  const [step, setStep] = useState('precreate')
+     "precreate" (concluído/privado) já não é o primeiro ecrã: só entra a
+     seguir a "choose" ou "describe", quando o user já escolheu o ficheiro
+     ou já escreveu a descrição e está prestes a mandar a IA processar,
+     pedido do Gustavo: perguntar logo à entrada era cedo demais, ninguém
+     tinha ainda decidido criar nada. goToPrecreate() guarda de onde veio
+     (precreateOrigin, para o botão Voltar) e o que fazer a seguir
+     (pendingAction, chamado por runPendingAction() no "Continuar"). */
+  const [step, setStep] = useState('choose')
   const [projectConcluded, setProjectConcluded] = useState(false)
   const [projectVisibility, setProjectVisibility] = useState('private')
+  const [precreateOrigin, setPrecreateOrigin] = useState('choose')
+  const [pendingAction, setPendingAction] = useState(null)
+  function goToPrecreate(origin, action) {
+    setPrecreateOrigin(origin)
+    setPendingAction(action)
+    setStep('precreate')
+  }
+  function runPendingAction() {
+    const action = pendingAction
+    setPendingAction(null)
+    if (action === 'analyzeFiles') handleAnalyzeFiles()
+    else if (action === 'generate') handleGenerate()
+    else if (action === 'interview') handleInterview()
+    else if (action === 'manual') startManual()
+    else setStep(precreateOrigin)
+  }
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -669,69 +691,45 @@ export default function NewProject() {
   const filledCount = REVIEW_FIELDS.filter(f => (form[f.key] ?? '').trim().length > 0).length
 
   /* ──────────────────────────────────────────────────────────────────────────
-     PASSO: precreate, antes de tudo o resto. Duas perguntas rápidas que
-     mudam o que acontece a seguir: se já está concluído (nasce já marcado,
-     sem mostrar depois a opção de "marcar como concluído" dentro do
-     projeto) e se é para ficar público ou privado (privado por omissão).
+     PASSO: precreate, duas perguntas rápidas mesmo antes de a IA processar
+     (ficheiro já escolhido ou descrição já escrita): se já está concluído
+     (nasce já marcado, sem mostrar depois a opção de "marcar como
+     concluído" dentro do projeto) e se é para ficar público ou privado
+     (privado por omissão). Pílulas com ícone, não cartões com frase, só a
+     pergunta e a escolha, sem título/subtítulo a repetir o óbvio (pedido do
+     Gustavo: "o foco aqui é os users escolherem isso").
   ────────────────────────────────────────────────────────────────────────── */
   if (step === 'precreate') {
     return (
       <NpShell>
-        <Navbar showLinks={false} />
+        <Navbar showLinks={false} mobileLeft={<BackButton onClick={() => setStep(precreateOrigin)} />} />
         <div className="np-center">
-          <div className="np-wrap">
-            <p className="np-present-label" style={{ fontSize: 22, fontWeight: 700, color: 'var(--color-text)', marginBottom: 4 }}>
-              Antes de começar
-            </p>
-            <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginTop: 0, marginBottom: 24 }}>
-              Duas perguntas rápidas, podes mudar as duas mais tarde dentro do projeto.
-            </p>
-
-            <div className="np-present" style={{ marginBottom: 24 }}>
-              <p className="np-present-label">Este trabalho já está concluído?</p>
-              <div className="np-present-opts">
-                <button
-                  type="button"
-                  className={`np-present-opt${!projectConcluded ? ' is-on' : ''}`}
-                  onClick={() => setProjectConcluded(false)}
-                >
-                  <strong>Ainda estou a desenvolver</strong>
-                  <span>Podes marcar como concluído mais tarde, dentro do projeto.</span>
+          <div className="np-wrap np-precreate">
+            <div className="np-pill-group">
+              <p className="np-pill-label">Este trabalho ou projeto já está concluído?</p>
+              <div className="np-pill-row" role="group" aria-label="Estado">
+                <button type="button" className={`np-pill${!projectConcluded ? ' is-on' : ''}`} onClick={() => setProjectConcluded(false)}>
+                  <Pencil size={15} /> A desenvolver
                 </button>
-                <button
-                  type="button"
-                  className={`np-present-opt${projectConcluded ? ' is-on' : ''}`}
-                  onClick={() => setProjectConcluded(true)}
-                >
-                  <strong>Já está concluído</strong>
-                  <span>Nasce já marcado como concluído.</span>
+                <button type="button" className={`np-pill${projectConcluded ? ' is-on' : ''}`} onClick={() => setProjectConcluded(true)}>
+                  <Check size={15} /> Concluído
                 </button>
               </div>
             </div>
 
-            <div className="np-present" style={{ marginBottom: 24 }}>
-              <p className="np-present-label">Queres que fique público ou privado?</p>
-              <div className="np-present-opts">
-                <button
-                  type="button"
-                  className={`np-present-opt${projectVisibility === 'private' ? ' is-on' : ''}`}
-                  onClick={() => setProjectVisibility('private')}
-                >
-                  <strong>Privado</strong>
-                  <span>Só tu vês. Publicas quando quiseres.</span>
+            <div className="np-pill-group">
+              <p className="np-pill-label">Queres que fique público ou privado?</p>
+              <div className="np-pill-row" role="group" aria-label="Visibilidade">
+                <button type="button" className={`np-pill${projectVisibility === 'private' ? ' is-on' : ''}`} onClick={() => setProjectVisibility('private')}>
+                  <Lock size={15} /> Privado
                 </button>
-                <button
-                  type="button"
-                  className={`np-present-opt${projectVisibility === 'public' ? ' is-on' : ''}`}
-                  onClick={() => setProjectVisibility('public')}
-                >
-                  <strong>Público</strong>
-                  <span>Visível no teu perfil e no Explorar.</span>
+                <button type="button" className={`np-pill${projectVisibility === 'public' ? ' is-on' : ''}`} onClick={() => setProjectVisibility('public')}>
+                  <Globe size={15} /> Público
                 </button>
               </div>
             </div>
 
-            <button className="np-btn-primary" onClick={() => setStep('choose')}>
+            <button className="np-btn-primary" onClick={runPendingAction}>
               Continuar <ArrowRight size={15} />
             </button>
           </div>
@@ -751,7 +749,7 @@ export default function NewProject() {
       <NpShell>
         {gateMsg && <PlanGateModal message={gateMsg} onClose={() => setGateMsg(null)} />}
         <Toast {...toast} />
-        <Navbar showLinks={false} mobileLeft={<BackButton onClick={() => setStep('precreate')} />} />
+        <Navbar showLinks={false} />
         <div className="np-center np-center--choose">
           <div className="np-wrap np-wrap--choose">
             <NpAnimatedTitle />
@@ -784,7 +782,7 @@ export default function NewProject() {
 
               {error && <p className="np-err"><AlertTriangle size={13} /> {error}</p>}
 
-              <button className="np-btn-primary np-btn-ai" onClick={handleAnalyzeFiles} disabled={!files.length}>
+              <button className="np-btn-primary np-btn-ai" onClick={() => goToPrecreate('choose', 'analyzeFiles')} disabled={!files.length}>
                 <Sparkles size={15} /> Analisar e criar página
               </button>
               {files.length > 0 && (
@@ -821,7 +819,7 @@ export default function NewProject() {
             <h1 className="np-headline">Conta-nos sobre o teu projeto.</h1>
             <p className="np-sub">Descreve a tua ideia, a IA ajuda-te a desenvolvê-la.</p>
 
-            <DescribeTextarea value={description} onChange={setDescription} onSubmit={handleGenerate} />
+            <DescribeTextarea value={description} onChange={setDescription} onSubmit={() => goToPrecreate('describe', 'generate')} />
 
             <TypeRow value={projectType} onChange={setProjectType} accountType={profile?.account_type}
               defenseDate={defenseDate} setDefenseDate={setDefenseDate}
@@ -830,7 +828,7 @@ export default function NewProject() {
 
             {error && <p className="np-err"><AlertTriangle size={13} /> {error}</p>}
 
-            <button className="np-btn-primary np-btn-ai" onClick={handleGenerate} disabled={!isDescriptionValid(description)}>
+            <button className="np-btn-primary np-btn-ai" onClick={() => goToPrecreate('describe', 'generate')} disabled={!isDescriptionValid(description)}>
               <Sparkles size={15} /> Criar com IA
             </button>
 
@@ -839,11 +837,11 @@ export default function NewProject() {
                 peso visual idêntico só empurravam a decisão para o user
                 logo à entrada. Ficam como link secundário, discreto. */}
             <div className="np-alt-links">
-              <button className="np-alt-link" onClick={handleInterview} disabled={!isDescriptionValid(description)}>
+              <button className="np-alt-link" onClick={() => goToPrecreate('describe', 'interview')} disabled={!isDescriptionValid(description)}>
                 Responder a perguntas guiadas
               </button>
               <span className="np-alt-links-sep">·</span>
-              <button className="np-alt-link" onClick={startManual}>
+              <button className="np-alt-link" onClick={() => goToPrecreate('describe', 'manual')}>
                 Prefiro preencher à mão
               </button>
             </div>

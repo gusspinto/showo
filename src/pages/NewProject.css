@@ -223,6 +223,29 @@
   .np-present-opts { flex-direction: column; }
 }
 
+/* ── Precreate (concluído? / privado?): pílulas com ícone, não cartões
+   com frase. Só a pergunta e a escolha, mais espaço entre os dois grupos
+   do que o resto da página (48px) para não parecerem a mesma pergunta
+   dividida em duas, pedido do Gustavo depois de ver a primeira versão com
+   título/subtítulo e texto de ajuda por baixo de cada pílula. ── */
+.np-precreate { padding-top: 8px; }
+.np-pill-group { margin-bottom: 48px; }
+.np-pill-group:last-of-type { margin-bottom: 36px; }
+.np-pill-label { margin: 0 0 12px; font-size: 15px; font-weight: 700; color: var(--color-text); }
+.np-pill-row {
+  display: flex; gap: 6px; background: var(--color-bg-alt);
+  border: 1px solid var(--color-border); border-radius: var(--radius-full); padding: 5px;
+}
+.np-pill {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 11px 10px; border: none; border-radius: var(--radius-full);
+  background: transparent; color: var(--color-text-secondary);
+  font-weight: 700; font-size: 13.5px; cursor: pointer; font-family: inherit;
+  transition: background 0.18s, color 0.18s;
+}
+.np-pill svg { flex-shrink: 0; }
+.np-pill.is-on { background: var(--color-primary); color: #fff; }
+
 /* ── Upload ── */
 .np-drop {
   display: flex; flex-direction: column;
