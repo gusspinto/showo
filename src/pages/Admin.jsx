@@ -934,7 +934,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
           { label: 'Ativação', value: `${activationRate}%`, color: activationRate >= 20 ? C.green : activationRate >= 5 ? C.yellow : C.red, sub: `${activatedUserIds.size} de ${totalUsers} publicaram 3+ secções` },
           { label: 'Utilizadores', value: totalUsers, color: C.blue, sub: `+${newUsersMonth} no último mês` },
           { label: `Ativos ${periodLabel}`, value: activityStats?.active_range?.length ?? activeThisMonth, color: C.green, sub: `${activityStats?.sessions_range ?? 0} sessões` },
-          { label: 'MRR real', value: `€${mrrEstimate.toFixed(2)}`, color: mrrEstimate > 0 ? C.green : C.muted, sub: `${paidUsers} assinante${paidUsers === 1 ? '' : 's'} a pagar via Stripe` },
+          { label: 'MRR real', value: `€${mrrEstimate.toFixed(2)}`, color: mrrEstimate > 0 ? C.green : C.muted, sub: `${paidUsers} assinante${paidUsers === 1 ? '' : 's'} a pagar a sério` },
           { label: 'Retenção mensal', value: `${retentionRate}%`, color: retentionRate > 30 ? C.green : retentionRate > 10 ? C.yellow : C.red, sub: `${priorUsersReturned}/${priorUsersCount} de quem já cá estava` },
           { label: 'Retenção semanal', value: `${retentionRateWeek}%`, color: retentionRateWeek > 30 ? C.green : retentionRateWeek > 10 ? C.yellow : C.red, sub: `${weekCohortReturned}/${weekCohortCount} de quem entrou há 7-14 dias` },
         ].map(k => (
@@ -1130,9 +1130,9 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
       <h3 style={{ margin: '0 0 2px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Negócio {periodLabel}</h3>
       <p style={{ margin: '0 0 14px', fontSize: 11, color: C.subtle }}>Assinantes e MRR são sempre "agora" (quem paga neste preciso momento); as restantes seguem o período escolhido acima.</p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))', gap: 12 }}>
-        <StatCard icon={<Star size={20} />} label="Assinantes reais" value={paidUsers} color={paidUsers > 0 ? C.green : C.muted} sub={`${realPlusCount} Plus · ${realProCount} Pro · pagam via Stripe`} onClick={paidUsers > 0 ? () => setShowSubscribers(o => !o) : undefined} />
+        <StatCard icon={<Star size={20} />} label="Assinantes reais" value={paidUsers} color={paidUsers > 0 ? C.green : C.muted} sub={`${realPlusCount} Plus · ${realProCount} Pro · pagam a sério`} onClick={paidUsers > 0 ? () => setShowSubscribers(o => !o) : undefined} />
         <StatCard icon={<Star size={20} />} label="MRR real" value={`€${mrrEstimate.toFixed(2)}`} color={mrrEstimate > 0 ? C.green : C.muted} sub="Preço de lista, sem promoções" />
-        <StatCard icon={<Star size={20} />} label="Acesso Plus/Pro oferecido" value={grantedUsers} color={C.purple} sub="Professores e ofertas manuais, sem Stripe" />
+        <StatCard icon={<Star size={20} />} label="Acesso Plus/Pro oferecido" value={grantedUsers} color={C.purple} sub="Professores e ofertas manuais, sem pagamento real" />
         <StatCard icon={<Star size={20} />} label="Subscrições novas" value={newSubsInRange} color={newSubsInRange > 0 ? C.green : C.muted} sub={periodLabel} />
         <StatCard icon={<Star size={20} />} label="Cancelamentos" value={churnedInRange} color={churnedInRange > 0 ? C.red : C.muted} sub={periodLabel} />
         <StatCard icon={<Star size={20} />} label="Receita cobrada" value={`€${revenueInRange.toFixed(2)}`} color={revenueInRange > 0 ? C.green : C.muted} sub={`Faturas pagas ${periodLabel}`} />
@@ -1141,7 +1141,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
 
       {showSubscribers && realSubscribers.length > 0 && (
         <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 20px', marginBottom: 24, display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Quem paga — dados reais do Stripe</h3>
+          <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Quem paga, dados reais (Stripe + Whop)</h3>
           {realSubscribers.map(u => (
             <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12.5 }}>
               <Avatar name={u.full_name || u.username || '?'} size={22} color={PLAN_COLORS[resolvePlanId(u)]} />
@@ -1186,11 +1186,11 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
 
       <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px' }}>
         <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Limite atingido → checkout {periodLabel}</h3>
-        <p style={{ margin: '0 0 18px', fontSize: 11, color: C.subtle }}>Do limite atingido em qualquer feature ao clique em pagar (Pricing ou pop-up de upgrade). "Clicaram em pagar" conta o clique, mesmo que o pedido falhe a meio; "Chegaram ao Stripe" só conta quem recebeu mesmo a sessão de pagamento. Dados reais, não estimativa.</p>
+        <p style={{ margin: '0 0 18px', fontSize: 11, color: C.subtle }}>Do limite atingido em qualquer feature ao clique em pagar (Pricing ou pop-up de upgrade). "Clicaram em pagar" conta o clique, mesmo que o pedido falhe a meio; "Chegaram ao checkout" só conta quem recebeu mesmo a sessão de pagamento (Stripe ou Whop). Dados reais, não estimativa.</p>
         <FunnelFlow steps={[
           { label: 'Bateram num limite', value: usersAtLimit, onClick: usersAtLimit > 0 ? () => setShowLimitUsers(o => !o) : undefined, icon: <AlertTriangle size={14} />, color: C.red },
           { label: 'Clicaram em pagar', value: checkoutStarted, onClick: checkoutStarted > 0 ? () => setShowCheckoutUsers(o => !o) : undefined, icon: <Star size={14} />, color: C.yellow },
-          { label: 'Chegaram ao Stripe', value: checkoutRedirected, icon: <Check size={14} />, color: C.green },
+          { label: 'Chegaram ao checkout', value: checkoutRedirected, icon: <Check size={14} />, color: C.green },
         ]} />
         {showLimitUsers && usersAtLimitList.length > 0 && (
           <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -1258,7 +1258,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
                       background: !trackedForRedirect ? C.bgAlt : reached ? C.bgAlt : 'var(--color-warning-subtle)',
                       color: !trackedForRedirect ? C.subtle : reached ? C.muted : 'var(--color-warning)',
                     }}>
-                      {!trackedForRedirect ? 'Sem dado (anterior a 4/11)' : reached ? 'Chegou ao Stripe' : 'Não chegou ao Stripe'}
+                      {!trackedForRedirect ? 'Sem dado (anterior a 4/11)' : reached ? 'Chegou ao checkout' : 'Não chegou ao checkout'}
                     </span>
                     <span style={{
                       fontSize: 10.5, fontWeight: 700, padding: '3px 9px', borderRadius: 99,
