@@ -79,13 +79,21 @@ const PLAN_META = {
   school: { name: 'Escola',  color: '#2B7EF5', desc: 'Plano incluído pela tua instituição.' },
 }
 
-function PlanSection({ planId, navigate }) {
+function PlanSection({ planId, navigate, whopManageUrl }) {
   const meta = PLAN_META[planId] ?? PLAN_META.free
   const [portalLoading, setPortalLoading] = useState(false)
   const params = new URLSearchParams(window.location.search)
   const stripeSuccess = params.get('stripe') === 'success'
 
+  // Quem subscreveu via Whop tem whop_manage_url guardado (o whop-webhook
+  // escreve isto em membership.activated): é o link do próprio Whop para a
+  // pessoa gerir/cancelar sozinha. create-portal (Stripe) só serve quem
+  // ainda tem uma subscrição Stripe de antes da troca para o Whop.
   async function openPortal() {
+    if (whopManageUrl) {
+      window.location.href = whopManageUrl
+      return
+    }
     setPortalLoading(true)
     try {
       const { data, error } = await supabase.functions.invoke('create-portal')
@@ -863,7 +871,7 @@ export default function Settings() {
             )}
 
             {activeTab === 'plano' && role !== 'professor' && (
-              <PlanSection planId={planId} navigate={navigate} />
+              <PlanSection planId={planId} navigate={navigate} whopManageUrl={profile?.whop_manage_url} />
             )}
 
             {activeTab === 'plano' && role !== 'professor' && checkGate('projectFiles').allowed && (
