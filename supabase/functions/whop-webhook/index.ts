@@ -9,20 +9,12 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
    webhook-timestamp, webhook-signature (em vez de svix-id/svix-timestamp/
    svix-signature). A assinatura esperada vem prefixada com "v1,".
 
-   IMPORTANTE, ainda por confirmar com um evento real do Whop (não há acesso
-   à documentação completa nesta sessão, isto foi montado por pesquisa):
-     1. Se o secret (WHOP_WEBHOOK_SECRET, formato "ws_...") entra tal e
-        qualquer na chave HMAC, sem decode base64 nem stripping do prefixo
-        "ws_" (ao contrário do Resend, que faz atob() depois de tirar o
-        "whsec_"). Fontes de terceiros concordam nisto, mas não é a
-        documentação oficial do Whop.
-     2. Se o campo metadata.user_id que mandamos no checkout (ver
-        whop-create-checkout-session) chega mesmo dentro do payload de
-        payment.succeeded. Há um relato (GitHub issue do SDK Python do
-        Whop) a dizer que pode não chegar.
-   Por isso: ao testar o primeiro pagamento real, confirmar no log
-   (console.log abaixo deixa o payload completo nos logs da função) antes
-   de confiar cegamente nisto em produção.
+   Confirmado com um pagamento real (2026-11-10): o secret entra sem
+   decode, tal e qual, e metadata.user_id chega mesmo no payload. O que
+   estava errado: o Whop manda o plano no campo variant_id, não plan_id
+   como eu tinha escrito à primeira (sem acesso à documentação, só
+   pesquisa), e isso fazia o webhook ignorar silenciosamente todos os
+   eventos ("plan_id desconhecido: undefined" nos logs).
 
    Configuração necessária no lado do Whop (fora deste código):
      1. Dashboard do Whop, Desenvolvedor, Webhooks, endpoint já criado a
@@ -94,7 +86,7 @@ Deno.serve(async (req) => {
     }
 
     const userId: string | undefined = event?.data?.metadata?.user_id
-    const planId: string | undefined = event?.data?.plan_id ?? event?.data?.plan?.id
+    const planId: string | undefined = event?.data?.variant_id
 
     if (!userId) {
       console.error('[whop-webhook] sem user_id em metadata, payload:', JSON.stringify(event?.data))
@@ -103,8 +95,8 @@ Deno.serve(async (req) => {
 
     const plan = planId ? PLAN_ID_TO_PLAN[planId] : undefined
     if (!plan) {
-      console.error('[whop-webhook] plan_id desconhecido:', planId)
-      return new Response(JSON.stringify({ ok: true, skipped: 'unknown plan_id' }))
+      console.error('[whop-webhook] variant_id desconhecido:', planId)
+      return new Response(JSON.stringify({ ok: true, skipped: 'unknown variant_id' }))
     }
 
     const supabase = createClient(
