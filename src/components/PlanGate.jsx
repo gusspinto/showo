@@ -13,7 +13,6 @@ import { CheckCircleIcon as CheckCircle } from '@solar-icons/react/bold/check-ci
 import { LikeIcon as ThumbUp } from '@solar-icons/react/bold/like'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { WhopCheckoutModal } from './WhopCheckoutModal'
 import { getPlan, nextPaidPlan, planHighlights, ONBOARDING_DISCOUNT_NOTE, ANNUAL_ONBOARDING_DISCOUNT_NOTE } from '../lib/plans'
 
 // Mapeia a chave que planHighlights() devolve (string, lib/plans.js não sabe
@@ -316,12 +315,11 @@ const C = {
 export function PlanGateModal({ message, onClose, forcedPlan }) {
   const navigate = useNavigate()
   const location = useLocation()
-  const { planId, logFunnelEvent, refreshProfile } = useAuth()
+  const { planId, logFunnelEvent } = useAuth()
   const [loading, setLoading] = useState(false)
   const [askingParents, setAskingParents] = useState(false)
   const [checkoutError, setCheckoutError] = useState('')
   const [annual, setAnnual] = useState(false)
-  const [checkoutSessionId, setCheckoutSessionId] = useState(null)
 
   // Mesma regra dos outros pop-ups (Modal.jsx, ShareStoryModal) — sem isto o
   // body continua a fazer scroll por trás no mobile enquanto o modal parece
@@ -356,10 +354,6 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
 
   async function handleUpgrade() {
     if (!upgrade) return
-    // Sem isto, um clique a mais enquanto o embed ainda está a carregar cria
-    // uma segunda sessão de checkout e invalida a primeira (mesmo bug já
-    // confirmado em teste real no Pricing.jsx).
-    if (checkoutSessionId) return
     setLoading(true)
     setCheckoutError('')
     // Faltava aqui: Pricing.jsx já registava checkout_started no seu próprio
@@ -375,11 +369,11 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
         'whop-create-checkout-session',
         { body: { plan: upgrade.id, period: annual ? 'annual' : 'monthly' } },
       )
-      if (error || !data?.sessionId) { setCheckoutError('Erro ao iniciar pagamento. Tenta novamente.'); return }
+      if (error || !data?.url) { setCheckoutError('Erro ao iniciar pagamento. Tenta novamente.'); return }
       // Confirmação real de que chegou ao Whop (o pedido teve sucesso),
       // distinto de checkout_started acima que só sabe que houve clique.
       logFunnelEvent('checkout_redirected', feature)
-      setCheckoutSessionId(data.sessionId)
+      window.location.href = data.url
     } catch {
       setCheckoutError('Erro ao iniciar pagamento. Tenta novamente.')
     } finally {
@@ -387,19 +381,12 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
     }
   }
 
-  async function handleCheckoutComplete() {
-    setCheckoutSessionId(null)
-    await refreshProfile?.()
-    const returnPath = `${location.pathname}${location.search}`
-    navigate(returnPath)
-  }
-
-  // Muita gente deste público (alunos PAP) não tem cartão próprio — em vez
+  // Muita gente deste público (alunos PAP) não tem cartão próprio, em vez
   // de bloquear a compra, dá um caminho para pedir a quem tem. Usa o link
-  // partilhável da mesma sessão de checkout do Whop (funciona para quem o
-  // abrir, não precisa de sessão do Showo, e mantém a metadata.user_id
-  // ligada a esta conta), só muda o canal: WhatsApp com mensagem pronta,
-  // em vez de abrir o embed no próprio browser.
+  // da mesma sessão de checkout do Whop (funciona para quem o abrir, não
+  // precisa de sessão do Showo, e mantém a metadata.user_id ligada a esta
+  // conta), só muda o canal: WhatsApp com mensagem pronta, em vez de
+  // redirecionar logo o próprio browser.
   async function handleAskParents() {
     if (!upgrade) return
     // Também é um início de checkout real (mesma sessão), por isso regista
@@ -426,7 +413,7 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
       // burla ("ajudas-me a pagar?" e explicar que é "direto pelo Whop"
       // não é como ninguém fala mesmo). O mais curto e direto possível.
       // Mesma confirmação real do handleUpgrade: o pedido ao Whop teve
-      // sucesso, só muda o canal (WhatsApp em vez de abrir o embed).
+      // sucesso, só muda o canal (WhatsApp em vez de redirect direto).
       logFunnelEvent('checkout_redirected', feature)
       const msg = `Olá! Podes pagar isto por mim? É para o Showo, o portefólio que ando a fazer: ${data.url}`
       const waUrl = `https://wa.me/?text=${encodeURIComponent(msg)}`
@@ -544,8 +531,8 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
               <div className="plan-gate-col-right">
                 {checkoutError && <p style={C.errorText}>{checkoutError}</p>}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <button style={C.ctaPrimary} className="plan-gate-cta-primary" disabled={loading || askingParents || !!checkoutSessionId} onClick={handleUpgrade}>
-                    {loading || checkoutSessionId ? 'A abrir…' : `Passar a ${upgrade.name} agora`}
+                  <button style={C.ctaPrimary} className="plan-gate-cta-primary" disabled={loading || askingParents} onClick={handleUpgrade}>
+                    {loading ? 'A abrir…' : `Passar a ${upgrade.name} agora`}
                   </button>
                   <button style={C.ctaLink} disabled={loading || askingParents} onClick={handleAskParents}>
                     {askingParents ? 'A preparar…' : 'Pedir aos pais para pagar'}
@@ -567,13 +554,6 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
           </div>
         )}
       </div>
-      {checkoutSessionId && (
-        <WhopCheckoutModal
-          sessionId={checkoutSessionId}
-          onClose={() => setCheckoutSessionId(null)}
-          onComplete={handleCheckoutComplete}
-        />
-      )}
     </div>,
     document.body
   )
