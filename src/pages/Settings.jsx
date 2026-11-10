@@ -86,22 +86,13 @@ function PlanSection({ planId, navigate, whopManageUrl }) {
   const stripeSuccess = params.get('stripe') === 'success'
 
   // Quem subscreveu via Whop tem whop_manage_url guardado (o whop-webhook
-  // escreve isto em membership.activated): é o link do próprio Whop para a
-  // pessoa gerir/cancelar sozinha. create-portal (Stripe) só serve quem
-  // ainda tem uma subscrição Stripe de antes da troca para o Whop.
+  // escreve isto em membership.activated). Mas confirmado num pagamento
+  // real: o Whop pode devolver manage_url a null (não sabemos ainda em que
+  // condições gera o link). Sem isso, não há nada de Stripe real para
+  // cair, por isso deixámos de chamar create-portal por omissão, mostra
+  // só instruções diretas (ver abaixo no JSX).
   async function openPortal() {
-    if (whopManageUrl) {
-      window.location.href = whopManageUrl
-      return
-    }
-    setPortalLoading(true)
-    try {
-      const { data, error } = await supabase.functions.invoke('create-portal')
-      if (error || !data?.url) return
-      window.location.href = data.url
-    } finally {
-      setPortalLoading(false)
-    }
+    if (whopManageUrl) window.location.href = whopManageUrl
   }
 
   return (
@@ -142,14 +133,24 @@ function PlanSection({ planId, navigate, whopManageUrl }) {
 
         {planId !== 'free' && planId !== 'school' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <button
-              className="settings-secondary-btn"
-              onClick={openPortal}
-              disabled={portalLoading}
-            >
-              {portalLoading ? 'A abrir…' : 'Gerir subscrição'}
-            </button>
-            <p className="settings-hint">Altera o método de pagamento, vê faturas ou cancela.</p>
+            {whopManageUrl ? (
+              <>
+                <button
+                  className="settings-secondary-btn"
+                  onClick={openPortal}
+                  disabled={portalLoading}
+                >
+                  {portalLoading ? 'A abrir…' : 'Gerir subscrição'}
+                </button>
+                <p className="settings-hint">Altera o método de pagamento, vê faturas ou cancela.</p>
+              </>
+            ) : (
+              <p className="settings-hint">
+                Para cancelar ou alterar o pagamento, entra em{' '}
+                <a href="https://whop.com" target="_blank" rel="noreferrer">whop.com</a>{' '}
+                com o email que usaste na compra. Se não encontrares, fala connosco.
+              </p>
+            )}
           </div>
         )}
       </div>
