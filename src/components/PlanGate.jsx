@@ -356,6 +356,10 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
 
   async function handleUpgrade() {
     if (!upgrade) return
+    // Sem isto, um clique a mais enquanto o embed ainda está a carregar cria
+    // uma segunda sessão de checkout e invalida a primeira (mesmo bug já
+    // confirmado em teste real no Pricing.jsx).
+    if (checkoutSessionId) return
     setLoading(true)
     setCheckoutError('')
     // Faltava aqui: Pricing.jsx já registava checkout_started no seu próprio
@@ -540,8 +544,8 @@ export function PlanGateModal({ message, onClose, forcedPlan }) {
               <div className="plan-gate-col-right">
                 {checkoutError && <p style={C.errorText}>{checkoutError}</p>}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <button style={C.ctaPrimary} className="plan-gate-cta-primary" disabled={loading || askingParents} onClick={handleUpgrade}>
-                    {loading ? 'A abrir…' : `Passar a ${upgrade.name} agora`}
+                  <button style={C.ctaPrimary} className="plan-gate-cta-primary" disabled={loading || askingParents || !!checkoutSessionId} onClick={handleUpgrade}>
+                    {loading || checkoutSessionId ? 'A abrir…' : `Passar a ${upgrade.name} agora`}
                   </button>
                   <button style={C.ctaLink} disabled={loading || askingParents} onClick={handleAskParents}>
                     {askingParents ? 'A preparar…' : 'Pedir aos pais para pagar'}

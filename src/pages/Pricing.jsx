@@ -263,6 +263,11 @@ export default function Pricing() {
     if (!user) { navigate('/register'); return }
     if (plan.id === 'free') { navigate('/dashboard'); return }
     if (plan.id === planId) return
+    // Sem isto, um clique a mais enquanto o embed ainda está a carregar (o
+    // botão já voltou ao normal, mas o iframe do Whop ainda não apareceu)
+    // cria uma segunda sessão de checkout e invalida a primeira, que é
+    // exatamente o que os logs mostraram num teste real.
+    if (checkoutSessionId) return
     logFunnelEvent('checkout_started', plan.id)
     setLoading(plan.id)
     setError('')
@@ -391,9 +396,9 @@ export default function Pricing() {
                   <button
                     className={`pricing-cta pricing-cta--${plan.ctaVariant}`}
                     onClick={() => handleCta(plan)}
-                    disabled={loading === plan.id}
+                    disabled={loading === plan.id || !!checkoutSessionId}
                   >
-                    {loading === plan.id ? 'A redirecionar…' : <>{plan.cta} <ArrowRight size={14} /></>}
+                    {loading === plan.id || checkoutSessionId ? 'A abrir o pagamento…' : <>{plan.cta} <ArrowRight size={14} /></>}
                   </button>
                 )}
                 {/* Reduz o atrito de decidir pagar — facto real (já está na
