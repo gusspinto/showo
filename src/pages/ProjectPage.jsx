@@ -998,9 +998,13 @@ function ProjectTour({ isPap, onClose, onStep }) {
   } : null
 
   function tooltipPos() {
-    if (!rect) return { left: -999, top: -999 }
     const TW = 320, TH = 540, P = 16
     const vw = window.innerWidth, vh = window.innerHeight
+    // Sem alvo medido ainda (ou nunca encontrado): centra o cartão no
+    // ecrã em vez de o mandar para fora (-999,-999). O tour inteiro
+    // desaparecia enquanto procurava, parecendo partido; agora mostra-se
+    // sempre, só sem o quadrado de destaque à volta de nada.
+    if (!rect) return { left: Math.max(P, (vw - TW) / 2), top: Math.max(P, (vh - TH) / 2) }
     const cy = rect.top + rect.height / 2
     const centeredTop = Math.max(P, Math.min(cy - TH / 2, vh - TH - P))
     const cx = Math.max(P, Math.min(rect.left + rect.width / 2 - TW / 2, vw - TW - P))
@@ -1124,7 +1128,12 @@ function ProjectTour({ isPap, onClose, onStep }) {
           zIndex: 9101,
         }} />
       )}
-      {rect && (
+      {/* Cartão do passo mostra-se sempre, mesmo sem "rect" ainda (alvo por
+          encontrar): o quadrado de destaque (spotlight, acima) é que fica
+          condicionado a existir um alvo medido, não o cartão inteiro. Sem
+          isto, o tour inteiro desaparecia enquanto procurava um alvo mais
+          lento a aparecer, parecia ter fechado sozinho. */}
+      {
         isMobile ? (
           mobileSheetAtBottom ? (
             /* target in top half → sheet at bottom */
@@ -1175,7 +1184,7 @@ function ProjectTour({ isPap, onClose, onStep }) {
             {tooltipContent}
           </div>
         )
-      )}
+      }
     </div>,
     document.body
   )
