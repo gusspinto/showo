@@ -939,6 +939,12 @@ function ProjectTour({ isPap, onClose, onStep }) {
   useEffect(() => {
     skipRef.current = false
     onStep?.(steps[stepIdx].target)
+    // Limpa o destaque do passo anterior já: sem isto, enquanto a medição
+    // deste passo não encontra o alvo (mesmo que seja só um frame), o
+    // quadrado azul ficava preso na posição do passo de trás, parecendo
+    // que "não mudou nem selecionou nada" em vez de simplesmente ainda
+    // estar à procura.
+    setRect(null)
     const el = resolveEl(steps[stepIdx].target)
     if (el) el.scrollIntoView({ behavior: 'instant', block: 'center' })
 
