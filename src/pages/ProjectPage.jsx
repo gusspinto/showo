@@ -835,7 +835,16 @@ const TOUR_STEPS_MOBILE_OTHER = TOUR_STEPS_MOBILE_PAP.map(s =>
 )
 
 function ProjectTour({ isPap, onClose, onStep }) {
-  const isMobileSteps = window.innerWidth < 640
+  // 860px, não 640: é o breakpoint real onde a página troca os botões
+  // "Editar"/"Diário" da Navbar (.proj-nav-btns) pelos FABs mobile
+  // (.proj-fab-area), ver o <style> mais abaixo. Com 640 aqui, qualquer
+  // ecrã entre 641-860px (tablets, janelas de portátil mais estreitas)
+  // escolhia a lista de passos "desktop" (com "edit"/"diary" como passos
+  // próprios), mas esses botões já estavam escondidos pela CSS nessa
+  // largura, o tour tentava medi-los, nunca conseguia, e saltava os dois
+  // de repente, mesmo bug do mobile mas disfarçado de "bug no desktop"
+  // porque a classificação própria do tour discordava da CSS real.
+  const isMobileSteps = window.innerWidth < 860
   const steps = isMobileSteps
     ? (isPap ? TOUR_STEPS_MOBILE_PAP : TOUR_STEPS_MOBILE_OTHER)
     : (isPap ? TOUR_STEPS_PAP : TOUR_STEPS_OTHER)
@@ -894,7 +903,7 @@ function ProjectTour({ isPap, onClose, onStep }) {
 
   function measureStep(idx, stepsArr) {
     const step = stepsArr[idx]
-    const isMob = window.innerWidth < 640
+    const isMob = window.innerWidth < 860
     // On mobile, defense/ai/invite all fall back to the paintbrush button (data-tour="preview")
     const mobileAliasToPaintbrush = ['defense', 'ai', 'invite']
     const targets = isMob && mobileAliasToPaintbrush.includes(step.target)
@@ -928,7 +937,7 @@ function ProjectTour({ isPap, onClose, onStep }) {
   }
 
   function resolveEl(target) {
-    const isMob = window.innerWidth < 640
+    const isMob = window.innerWidth < 860
     const alias = ['defense', 'ai', 'invite']
     const targets = isMob && alias.includes(target) ? ['preview'] : [target]
     for (const t of targets) {
@@ -1028,7 +1037,7 @@ function ProjectTour({ isPap, onClose, onStep }) {
 
   const tp = tooltipPos()
   const isLast = stepIdx === steps.length - 1
-  const isMobile = window.innerWidth < 640
+  const isMobile = window.innerWidth < 860
   const mobileSheetAtBottom = rect ? (rect.top + rect.height / 2) < window.innerHeight / 2 : true
 
   const tooltipContent = (
