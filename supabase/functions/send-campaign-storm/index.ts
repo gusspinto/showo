@@ -54,20 +54,20 @@ function wrap(opts: { firstName?: string; unsubscribeUrl: string; bodyHtml: stri
 
 function buildStudentHtml(opts: { firstName?: string; unsubscribeUrl: string }) {
   const bodyHtml = `
-        <tr><td style="padding:0 0 20px;color:#f0f0f0;font-size:18px;line-height:1.5;">Daqui a uns meses estás numa sala, ou numa chamada, frente a frente com alguém que decide se te dá o estágio, a bolsa, a vaga.</td></tr>
+        <tr><td style="padding:0 0 20px;color:#f0f0f0;font-size:18px;font-weight:400;line-height:1.5;">Daqui a uns meses estás numa sala, ou numa chamada, frente a frente com alguém que decide se te dá o estágio, a bolsa, a vaga.</td></tr>
         <tr><td style="padding:0 0 20px;color:#f0f0f0;font-size:18px;font-weight:700;line-height:1.5;">Essa pessoa não quer saber da tua média.</td></tr>
-        <tr><td style="padding:0 0 20px;color:#f0f0f0;font-size:18px;line-height:1.5;">Pede para abrires um link e mostrares o que fizeste.</td></tr>
+        <tr><td style="padding:0 0 20px;color:#f0f0f0;font-size:18px;font-weight:400;line-height:1.5;">Pede para abrires um link e mostrares o que fizeste.</td></tr>
         <tr><td style="padding:0 0 28px;color:#f0f0f0;font-size:18px;font-weight:700;line-height:1.5;">Se fosse hoje, o que é que abrias?</td></tr>
-        <tr><td style="padding:0 0 32px;color:#888888;font-size:16px;line-height:1.5;">Hoje não tens aulas por causa da tempestade. Tens, sem querer, um bocado de tempo livre que normalmente não tens.</td></tr>`
+        <tr><td style="padding:0 0 32px;color:#888888;font-size:16px;font-weight:400;line-height:1.5;">Hoje não tens aulas por causa da tempestade. Tens, sem querer, um bocado de tempo livre que normalmente não tens.</td></tr>`
   return wrap({ ...opts, bodyHtml, ctaLabel: 'Abrir o projeto' })
 }
 
 function buildProHtml(opts: { firstName?: string; unsubscribeUrl: string }) {
   const bodyHtml = `
-        <tr><td style="padding:0 0 20px;color:#f0f0f0;font-size:18px;line-height:1.5;">Daqui a umas semanas recebes uma mensagem.</td></tr>
+        <tr><td style="padding:0 0 20px;color:#f0f0f0;font-size:18px;font-weight:400;line-height:1.5;">Daqui a umas semanas recebes uma mensagem.</td></tr>
         <tr><td style="padding:0 0 20px;color:#f0f0f0;font-size:18px;font-weight:700;line-height:1.5;">Um cliente, ou alguém que te quer contratar, pede para ver trabalho teu antes de decidir.</td></tr>
         <tr><td style="padding:0 0 28px;color:#f0f0f0;font-size:18px;font-weight:700;line-height:1.5;">Se fosse hoje, o que é que mandavas?</td></tr>
-        <tr><td style="padding:0 0 32px;color:#888888;font-size:16px;line-height:1.5;">Hoje trabalhas de casa por causa da tempestade. É um dia fora do normal, sem reuniões a puxar-te para todo o lado.</td></tr>`
+        <tr><td style="padding:0 0 32px;color:#888888;font-size:16px;font-weight:400;line-height:1.5;">Hoje trabalhas de casa por causa da tempestade. É um dia fora do normal, sem reuniões a puxar-te para todo o lado.</td></tr>`
   return wrap({ ...opts, bodyHtml, ctaLabel: 'Ver o que tens' })
 }
 
