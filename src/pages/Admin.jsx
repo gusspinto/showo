@@ -523,6 +523,26 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
     ? Math.round((projectsWithJournal / projects.length) * 1000) / 10
     : null
 
+  // Retenção vinha de um cálculo ao vivo em cada render, com coortes
+  // pequenas (ex: 140 pessoas na semanal), e qualquer minuto que passasse
+  // deslocava quem entrava/saía da janela e o número mudava à frente dos
+  // olhos, sem nada ter mudado a sério. Fixo agora como snapshot diário
+  // (admin_compute_retention_snapshot, corrido por cron 1x/dia), o Admin só lê.
+  const [retentionSnapshot, setRetentionSnapshot] = useState(null)
+  useEffect(() => {
+    let cancelled = false
+    supabase.rpc('admin_get_retention_snapshot').then(({ data }) => {
+      if (!cancelled) setRetentionSnapshot(data)
+    })
+    return () => { cancelled = true }
+  }, [])
+  const retentionRate = retentionSnapshot?.month_prior_count > 0
+    ? Math.round((retentionSnapshot.month_prior_returned / retentionSnapshot.month_prior_count) * 100)
+    : 0
+  const retentionRateWeek = retentionSnapshot?.week_cohort_count > 0
+    ? Math.round((retentionSnapshot.week_cohort_returned / retentionSnapshot.week_cohort_count) * 100)
+    : 0
+
   const now = Date.now()
   const totalUsers = users.length
   const totalProjects = projects.length
@@ -541,30 +561,6 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
   const activeThisMonth = activeMonthIds.size
   const neverActive = users.filter(u => !u.last_active_at).length
 
-  // "Voltou" só faz sentido para quem já cá estava antes destes 30 dias —
-  // um registo de hoje que entra às 14h não "voltou", nunca saiu. Contar
-  // isso como retenção infla o número com o próprio crescimento recente.
-  const priorUserIds = new Set(users.filter(u => new Date(u.created_at).getTime() < monthAgo).map(u => u.id))
-  const priorUsersCount = priorUserIds.size
-  const priorUsersReturned = [...activeMonthIds].filter(id => priorUserIds.has(id)).length
-  const retentionRate = priorUsersCount > 0 ? Math.round((priorUsersReturned / priorUsersCount) * 100) : 0
-
-  // A retenção semanal NÃO pode copiar a regra da mensal usando "todos os
-  // que já cá estavam há mais de 7 dias" como base: com o crescimento atual
-  // (1358 novos utilizadores só no último mês), esse grupo é quase toda a
-  // base (1489 de 1607), incluindo uma cauda enorme de contas de meses atrás
-  // já mortas. Isso fazia a semanal sair em 4% contra 14% da mensal, não por
-  // a semana ter corrido pior, mas porque o denominador estava inchado com
-  // gente antiga sem qualquer chance de "voltar esta semana". Correto é um
-  // coorte comparável: de quem se registou há 7-14 dias (já teve uma semana
-  // inteira de oportunidade para voltar), quantos voltaram nos últimos 7 dias.
-  const twoWeeksAgo = now - 14 * 86400000
-  const weekCohortIds = new Set(
-    users.filter(u => { const t = new Date(u.created_at).getTime(); return t < weekAgo && t >= twoWeeksAgo }).map(u => u.id)
-  )
-  const weekCohortCount = weekCohortIds.size
-  const weekCohortReturned = [...activeWeekIds].filter(id => weekCohortIds.has(id)).length
-  const retentionRateWeek = weekCohortCount > 0 ? Math.round((weekCohortReturned / weekCohortCount) * 100) : 0
   const planCounts = { free: 0, school: 0, school_pro: 0, plus: 0, pro: 0 }
   users.forEach(u => { const p = resolvePlanId(u); planCounts[p] = (planCounts[p] || 0) + 1 })
 
@@ -935,8 +931,8 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
           { label: 'Utilizadores', value: totalUsers, color: C.blue, sub: `+${newUsersMonth} no último mês` },
           { label: `Ativos ${periodLabel}`, value: activityStats?.active_range?.length ?? activeThisMonth, color: C.green, sub: `${activityStats?.sessions_range ?? 0} sessões` },
           { label: 'MRR real', value: `€${mrrEstimate.toFixed(2)}`, color: mrrEstimate > 0 ? C.green : C.muted, sub: `${paidUsers} assinante${paidUsers === 1 ? '' : 's'} a pagar a sério` },
-          { label: 'Retenção mensal', value: `${retentionRate}%`, color: retentionRate > 30 ? C.green : retentionRate > 10 ? C.yellow : C.red, sub: `${priorUsersReturned}/${priorUsersCount} de quem já cá estava` },
-          { label: 'Retenção semanal', value: `${retentionRateWeek}%`, color: retentionRateWeek > 30 ? C.green : retentionRateWeek > 10 ? C.yellow : C.red, sub: `${weekCohortReturned}/${weekCohortCount} de quem entrou há 7-14 dias` },
+          { label: 'Retenção mensal', value: `${retentionRate}%`, color: retentionRate > 30 ? C.green : retentionRate > 10 ? C.yellow : C.red, sub: retentionSnapshot ? `${retentionSnapshot.month_prior_returned}/${retentionSnapshot.month_prior_count} · snapshot ${retentionSnapshot.snapshot_date}` : 'a calcular...' },
+          { label: 'Retenção semanal', value: `${retentionRateWeek}%`, color: retentionRateWeek > 30 ? C.green : retentionRateWeek > 10 ? C.yellow : C.red, sub: retentionSnapshot ? `${retentionSnapshot.week_cohort_returned}/${retentionSnapshot.week_cohort_count} · snapshot ${retentionSnapshot.snapshot_date}` : 'a calcular...' },
         ].map(k => (
           <div key={k.label} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 14, padding: '20px 22px' }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>{k.label}</div>
