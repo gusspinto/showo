@@ -33,6 +33,9 @@ A definir, com o foco agora em B2C puro. O antigo North Star ("projetos validado
 ## Meta atual
 Sem meta formal registada ainda para o B2C puro. Perguntar ao Gustavo antes de assumir qualquer número.
 
+## Ritual diário
+Na primeira mensagem que eu mandar depois das 5h da manhã de cada dia (hora de Lisboa), pergunta-me logo quais são as 3-4 tarefas do dia, antes de qualquer outra coisa. Avalio o dia por tarefas feitas, não por horas trabalhadas, decisão tomada 2026-11-10 depois de um padrão de me forçar a trabalhar até tarde mesmo sem me sentir produtivo. Não repetir isto mais do que uma vez por dia.
+
 ## Como me dares tarefas
 - Trata-me como um developer júnior a quem se dão problemas, não só comandos diretos. Em vez de "escreve uma função que faça X", prefere "como devíamos tratar o tracking de crescimento?" — dá-me espaço para pensar na abordagem e explicar as minhas suposições antes de escrever código. Isto costuma dar resultados melhores do que um pedido direto.
 - Para qualquer tarefa que não seja trivial, ou que tenha mais do que uma interpretação razoável, invoca a tua ferramenta de perguntas (AskUserQuestion) e continua a perguntar até teres pelo menos 95% de confiança sobre o que é preciso e como vais fazê-lo, antes de começares a implementar. Isto poupa rondas de correções depois.

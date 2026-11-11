@@ -30,11 +30,11 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 // app (PLAN_ALIASES em plans.js). Escrever 'plus'/'pro' aqui falha
 // silenciosamente na BD (confirmado ao dar o Plus manualmente ao Gustavo
 // depois de um pagamento de teste, 2026-11-10).
-const PLAN_ID_TO_PLAN: Record<string, string> = {
-  plan_NKq7gp0RahWnx: 'build', // Plus mensal, €8,99
-  plan_olyzpCXMgYlXI: 'build', // Plus anual, €89,99 (ver nota no 229/plans.js: devia ser €89,90)
-  plan_uZg18icmbnVBp: 'launch', // Pro mensal, €17,99
-  plan_fF025x79dcW50: 'launch', // Pro anual, €179,90
+const PLAN_ID_TO_PLAN: Record<string, { profilePlan: string; label: string; period: string }> = {
+  plan_NKq7gp0RahWnx: { profilePlan: 'build', label: 'plus', period: 'monthly' },
+  plan_olyzpCXMgYlXI: { profilePlan: 'build', label: 'plus', period: 'annual' }, // €89,99 (devia ser €89,90, ver 229/plans.js)
+  plan_uZg18icmbnVBp: { profilePlan: 'launch', label: 'pro', period: 'monthly' },
+  plan_fF025x79dcW50: { profilePlan: 'launch', label: 'pro', period: 'annual' },
 }
 
 async function verifyWhopSignature(
@@ -98,8 +98,8 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ ok: true, skipped: 'no user_id in metadata' }))
     }
 
-    const plan = planId ? PLAN_ID_TO_PLAN[planId] : undefined
-    if (!plan) {
+    const planInfo = planId ? PLAN_ID_TO_PLAN[planId] : undefined
+    if (!planInfo) {
       console.error('[whop-webhook] variant_id desconhecido:', planId)
       return new Response(JSON.stringify({ ok: true, skipped: 'unknown variant_id' }))
     }
@@ -113,7 +113,30 @@ Deno.serve(async (req) => {
     // subscrição sozinha (Settings.jsx usa isto em vez do create-portal do
     // Stripe). Só vem em membership.activated, não em payment.succeeded.
     const manageUrl: string | null = event?.data?.manage_url ?? null
-    const update: Record<string, unknown> = { plan }
+
+    // billing_events é a única fonte do MRR/assinantes reais no Admin
+    // (admin_get_real_subscriber_ids, admin_get_finance_summary), escrita
+    // até agora só pelo stripe-webhook. Sem escrever aqui também, o Admin
+    // ficava sempre a mostrar só os assinantes do Stripe, mesmo depois da
+    // troca para o Whop, o pedido do Gustavo era juntar os dois, não
+    // duplicar a lógica no painel, resolve-se aqui na origem dos dados.
+    if (event.type === 'membership.activated') {
+      const { data: existing } = await supabase.from('profiles').select('plan').eq('id', userId).single()
+      const wasFree = !existing?.plan || existing.plan === 'free'
+      if (wasFree) {
+        await supabase.from('billing_events').insert({
+          user_id: userId, event: 'subscription_started', plan: planInfo.label, plan_period: planInfo.period,
+        })
+      }
+    } else if (event.type === 'payment.succeeded') {
+      const amountStr: string | undefined = event?.data?.total?.amount
+      const amountCents = amountStr ? Math.round(parseFloat(amountStr) * 100) : null
+      await supabase.from('billing_events').insert({
+        user_id: userId, event: 'payment_succeeded', plan: planInfo.label, plan_period: planInfo.period, amount_cents: amountCents,
+      })
+    }
+
+    const update: Record<string, unknown> = { plan: planInfo.profilePlan }
     if (manageUrl) update.whop_manage_url = manageUrl
 
     await supabase.from('profiles')

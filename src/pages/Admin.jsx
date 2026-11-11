@@ -523,6 +523,26 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
     ? Math.round((projectsWithJournal / projects.length) * 1000) / 10
     : null
 
+  // Retenção vinha de um cálculo ao vivo em cada render, com coortes
+  // pequenas (ex: 140 pessoas na semanal), e qualquer minuto que passasse
+  // deslocava quem entrava/saía da janela e o número mudava à frente dos
+  // olhos, sem nada ter mudado a sério. Fixo agora como snapshot diário
+  // (admin_compute_retention_snapshot, corrido por cron 1x/dia), o Admin só lê.
+  const [retentionSnapshot, setRetentionSnapshot] = useState(null)
+  useEffect(() => {
+    let cancelled = false
+    supabase.rpc('admin_get_retention_snapshot').then(({ data }) => {
+      if (!cancelled) setRetentionSnapshot(data)
+    })
+    return () => { cancelled = true }
+  }, [])
+  const retentionRate = retentionSnapshot?.month_prior_count > 0
+    ? Math.round((retentionSnapshot.month_prior_returned / retentionSnapshot.month_prior_count) * 100)
+    : 0
+  const retentionRateWeek = retentionSnapshot?.week_cohort_count > 0
+    ? Math.round((retentionSnapshot.week_cohort_returned / retentionSnapshot.week_cohort_count) * 100)
+    : 0
+
   const now = Date.now()
   const totalUsers = users.length
   const totalProjects = projects.length
@@ -541,30 +561,6 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
   const activeThisMonth = activeMonthIds.size
   const neverActive = users.filter(u => !u.last_active_at).length
 
-  // "Voltou" só faz sentido para quem já cá estava antes destes 30 dias —
-  // um registo de hoje que entra às 14h não "voltou", nunca saiu. Contar
-  // isso como retenção infla o número com o próprio crescimento recente.
-  const priorUserIds = new Set(users.filter(u => new Date(u.created_at).getTime() < monthAgo).map(u => u.id))
-  const priorUsersCount = priorUserIds.size
-  const priorUsersReturned = [...activeMonthIds].filter(id => priorUserIds.has(id)).length
-  const retentionRate = priorUsersCount > 0 ? Math.round((priorUsersReturned / priorUsersCount) * 100) : 0
-
-  // A retenção semanal NÃO pode copiar a regra da mensal usando "todos os
-  // que já cá estavam há mais de 7 dias" como base: com o crescimento atual
-  // (1358 novos utilizadores só no último mês), esse grupo é quase toda a
-  // base (1489 de 1607), incluindo uma cauda enorme de contas de meses atrás
-  // já mortas. Isso fazia a semanal sair em 4% contra 14% da mensal, não por
-  // a semana ter corrido pior, mas porque o denominador estava inchado com
-  // gente antiga sem qualquer chance de "voltar esta semana". Correto é um
-  // coorte comparável: de quem se registou há 7-14 dias (já teve uma semana
-  // inteira de oportunidade para voltar), quantos voltaram nos últimos 7 dias.
-  const twoWeeksAgo = now - 14 * 86400000
-  const weekCohortIds = new Set(
-    users.filter(u => { const t = new Date(u.created_at).getTime(); return t < weekAgo && t >= twoWeeksAgo }).map(u => u.id)
-  )
-  const weekCohortCount = weekCohortIds.size
-  const weekCohortReturned = [...activeWeekIds].filter(id => weekCohortIds.has(id)).length
-  const retentionRateWeek = weekCohortCount > 0 ? Math.round((weekCohortReturned / weekCohortCount) * 100) : 0
   const planCounts = { free: 0, school: 0, school_pro: 0, plus: 0, pro: 0 }
   users.forEach(u => { const p = resolvePlanId(u); planCounts[p] = (planCounts[p] || 0) + 1 })
 
@@ -934,9 +930,9 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
           { label: 'Ativação', value: `${activationRate}%`, color: activationRate >= 20 ? C.green : activationRate >= 5 ? C.yellow : C.red, sub: `${activatedUserIds.size} de ${totalUsers} publicaram 3+ secções` },
           { label: 'Utilizadores', value: totalUsers, color: C.blue, sub: `+${newUsersMonth} no último mês` },
           { label: `Ativos ${periodLabel}`, value: activityStats?.active_range?.length ?? activeThisMonth, color: C.green, sub: `${activityStats?.sessions_range ?? 0} sessões` },
-          { label: 'MRR real', value: `€${mrrEstimate.toFixed(2)}`, color: mrrEstimate > 0 ? C.green : C.muted, sub: `${paidUsers} assinante${paidUsers === 1 ? '' : 's'} a pagar via Stripe` },
-          { label: 'Retenção mensal', value: `${retentionRate}%`, color: retentionRate > 30 ? C.green : retentionRate > 10 ? C.yellow : C.red, sub: `${priorUsersReturned}/${priorUsersCount} de quem já cá estava` },
-          { label: 'Retenção semanal', value: `${retentionRateWeek}%`, color: retentionRateWeek > 30 ? C.green : retentionRateWeek > 10 ? C.yellow : C.red, sub: `${weekCohortReturned}/${weekCohortCount} de quem entrou há 7-14 dias` },
+          { label: 'MRR real', value: `€${mrrEstimate.toFixed(2)}`, color: mrrEstimate > 0 ? C.green : C.muted, sub: `${paidUsers} assinante${paidUsers === 1 ? '' : 's'} a pagar a sério` },
+          { label: 'Retenção mensal', value: `${retentionRate}%`, color: retentionRate > 30 ? C.green : retentionRate > 10 ? C.yellow : C.red, sub: retentionSnapshot ? `${retentionSnapshot.month_prior_returned}/${retentionSnapshot.month_prior_count} · snapshot ${retentionSnapshot.snapshot_date}` : 'a calcular...' },
+          { label: 'Retenção semanal', value: `${retentionRateWeek}%`, color: retentionRateWeek > 30 ? C.green : retentionRateWeek > 10 ? C.yellow : C.red, sub: retentionSnapshot ? `${retentionSnapshot.week_cohort_returned}/${retentionSnapshot.week_cohort_count} · snapshot ${retentionSnapshot.snapshot_date}` : 'a calcular...' },
         ].map(k => (
           <div key={k.label} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 14, padding: '20px 22px' }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>{k.label}</div>
@@ -1130,9 +1126,9 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
       <h3 style={{ margin: '0 0 2px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Negócio {periodLabel}</h3>
       <p style={{ margin: '0 0 14px', fontSize: 11, color: C.subtle }}>Assinantes e MRR são sempre "agora" (quem paga neste preciso momento); as restantes seguem o período escolhido acima.</p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))', gap: 12 }}>
-        <StatCard icon={<Star size={20} />} label="Assinantes reais" value={paidUsers} color={paidUsers > 0 ? C.green : C.muted} sub={`${realPlusCount} Plus · ${realProCount} Pro · pagam via Stripe`} onClick={paidUsers > 0 ? () => setShowSubscribers(o => !o) : undefined} />
+        <StatCard icon={<Star size={20} />} label="Assinantes reais" value={paidUsers} color={paidUsers > 0 ? C.green : C.muted} sub={`${realPlusCount} Plus · ${realProCount} Pro · pagam a sério`} onClick={paidUsers > 0 ? () => setShowSubscribers(o => !o) : undefined} />
         <StatCard icon={<Star size={20} />} label="MRR real" value={`€${mrrEstimate.toFixed(2)}`} color={mrrEstimate > 0 ? C.green : C.muted} sub="Preço de lista, sem promoções" />
-        <StatCard icon={<Star size={20} />} label="Acesso Plus/Pro oferecido" value={grantedUsers} color={C.purple} sub="Professores e ofertas manuais, sem Stripe" />
+        <StatCard icon={<Star size={20} />} label="Acesso Plus/Pro oferecido" value={grantedUsers} color={C.purple} sub="Professores e ofertas manuais, sem pagamento real" />
         <StatCard icon={<Star size={20} />} label="Subscrições novas" value={newSubsInRange} color={newSubsInRange > 0 ? C.green : C.muted} sub={periodLabel} />
         <StatCard icon={<Star size={20} />} label="Cancelamentos" value={churnedInRange} color={churnedInRange > 0 ? C.red : C.muted} sub={periodLabel} />
         <StatCard icon={<Star size={20} />} label="Receita cobrada" value={`€${revenueInRange.toFixed(2)}`} color={revenueInRange > 0 ? C.green : C.muted} sub={`Faturas pagas ${periodLabel}`} />
@@ -1141,7 +1137,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
 
       {showSubscribers && realSubscribers.length > 0 && (
         <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 20px', marginBottom: 24, display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Quem paga — dados reais do Stripe</h3>
+          <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Quem paga, dados reais (Stripe + Whop)</h3>
           {realSubscribers.map(u => (
             <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12.5 }}>
               <Avatar name={u.full_name || u.username || '?'} size={22} color={PLAN_COLORS[resolvePlanId(u)]} />
@@ -1186,11 +1182,11 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
 
       <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px' }}>
         <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Limite atingido → checkout {periodLabel}</h3>
-        <p style={{ margin: '0 0 18px', fontSize: 11, color: C.subtle }}>Do limite atingido em qualquer feature ao clique em pagar (Pricing ou pop-up de upgrade). "Clicaram em pagar" conta o clique, mesmo que o pedido falhe a meio; "Chegaram ao Stripe" só conta quem recebeu mesmo a sessão de pagamento. Dados reais, não estimativa.</p>
+        <p style={{ margin: '0 0 18px', fontSize: 11, color: C.subtle }}>Do limite atingido em qualquer feature ao clique em pagar (Pricing ou pop-up de upgrade). "Clicaram em pagar" conta o clique, mesmo que o pedido falhe a meio; "Chegaram ao checkout" só conta quem recebeu mesmo a sessão de pagamento (Stripe ou Whop). Dados reais, não estimativa.</p>
         <FunnelFlow steps={[
           { label: 'Bateram num limite', value: usersAtLimit, onClick: usersAtLimit > 0 ? () => setShowLimitUsers(o => !o) : undefined, icon: <AlertTriangle size={14} />, color: C.red },
           { label: 'Clicaram em pagar', value: checkoutStarted, onClick: checkoutStarted > 0 ? () => setShowCheckoutUsers(o => !o) : undefined, icon: <Star size={14} />, color: C.yellow },
-          { label: 'Chegaram ao Stripe', value: checkoutRedirected, icon: <Check size={14} />, color: C.green },
+          { label: 'Chegaram ao checkout', value: checkoutRedirected, icon: <Check size={14} />, color: C.green },
         ]} />
         {showLimitUsers && usersAtLimitList.length > 0 && (
           <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -1258,7 +1254,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
                       background: !trackedForRedirect ? C.bgAlt : reached ? C.bgAlt : 'var(--color-warning-subtle)',
                       color: !trackedForRedirect ? C.subtle : reached ? C.muted : 'var(--color-warning)',
                     }}>
-                      {!trackedForRedirect ? 'Sem dado (anterior a 4/11)' : reached ? 'Chegou ao Stripe' : 'Não chegou ao Stripe'}
+                      {!trackedForRedirect ? 'Sem dado (anterior a 4/11)' : reached ? 'Chegou ao checkout' : 'Não chegou ao checkout'}
                     </span>
                     <span style={{
                       fontSize: 10.5, fontWeight: 700, padding: '3px 9px', borderRadius: 99,
