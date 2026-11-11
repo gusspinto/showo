@@ -154,6 +154,21 @@ Deno.serve(async (req) => {
       })
     }
 
+    // Lock contra execuções sobrepostas: disparar isto duas vezes seguidas
+    // (ex: achar que a anterior morreu quando só o lado que esperava a
+    // resposta desistiu) causava envios duplicados, a mesma pessoa a
+    // receber o email várias vezes. Enquanto uma execução real estiver
+    // "viva" (lock com menos de 8 minutos), uma segunda chamada desiste
+    // em vez de reprocessar as mesmas pessoas em paralelo.
+    const { data: lockAcquired } = await supabase.rpc('try_acquire_function_lock', { p_name: 'send-campaign-storm', p_stale_minutes: 8 })
+    if (!lockAcquired) {
+      return new Response(JSON.stringify({ ok: true, mode: 'real', skipped_reason: 'already_running' }), {
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
+
+    try {
+
     // Envio real, segmentado por occupation. Uma vez por pessoa: quem já
     // tem linha em email_sends para o tipo certo nunca volta a receber.
     const { data: alreadyStudent } = await supabase.from('email_sends').select('user_id').eq('email_type', 'campaign_storm_aluno')
@@ -229,6 +244,9 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ ok: errors.length === 0, mode: 'real', sent, skipped, errors }), {
       headers: { 'Content-Type': 'application/json' },
     })
+    } finally {
+      await supabase.rpc('release_function_lock', { p_name: 'send-campaign-storm' })
+    }
   } catch (e) {
     console.error(e)
     return new Response(JSON.stringify({ error: 'Erro interno.', detail: String(e) }), { status: 500 })
