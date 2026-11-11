@@ -709,13 +709,12 @@ export default function NewProject() {
         <Navbar showLinks={false} mobileLeft={<BackButton onClick={() => setStep(precreateOrigin)} />} />
         <div className="np-center">
           <div className="np-wrap">
-            <p className="np-present-label" style={{ fontSize: 22, fontWeight: 700, color: 'var(--color-text)', marginBottom: 4 }}>
-              Mais detalhes
-            </p>
-            <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginTop: 0, marginBottom: 24 }}>
-              Tudo opcional, dá para preencher mais tarde dentro do projeto.
-            </p>
-
+            {/* Sem título/subtítulo: "MAIS DETALHES" e a frase por baixo só
+                repetiam o óbvio (as próprias secções já se explicam), e
+                juntavam-se às pílulas e à caixa de notas, muita coisa a
+                acontecer ao mesmo tempo logo no topo. Mais espaço entre as
+                secções (40px) para não parecerem um bloco só (pedido do
+                Gustavo). */}
             <TypeRow value={projectType} onChange={setProjectType} accountType={profile?.account_type}
               defenseDate={defenseDate} setDefenseDate={setDefenseDate}
               defenseDateUnknown={defenseDateUnknown} setDefenseDateUnknown={setDefenseDateUnknown}
@@ -724,7 +723,7 @@ export default function NewProject() {
             {/* As notas só alimentam o import-project (ver handleAnalyzeFiles),
                 não fazem sentido no caminho da descrição: essa já é a nota. */}
             {precreateOrigin === 'choose' && (
-              <div className="np-notes-block" style={{ marginTop: 20 }}>
+              <div className="np-notes-block" style={{ marginTop: 40 }}>
                 <label className="np-notes-label" htmlFor="np-notes">Algo a acrescentar antes de a IA ler? (opcional)</label>
                 <textarea
                   id="np-notes"
@@ -737,7 +736,7 @@ export default function NewProject() {
               </div>
             )}
 
-            <button className="np-btn-primary" style={{ marginTop: 24 }} onClick={() => setStep('precreate')}>
+            <button className="np-btn-primary" style={{ marginTop: 40 }} onClick={() => setStep('precreate')}>
               Continuar <ArrowRight size={15} />
             </button>
             <button className="np-alt-link" style={{ display: 'block', margin: '10px auto 0' }} onClick={() => setStep('precreate')}>
