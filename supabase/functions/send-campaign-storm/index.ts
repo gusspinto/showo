@@ -176,8 +176,15 @@ Deno.serve(async (req) => {
     const alreadySentStudent = new Set((alreadyStudent ?? []).map(r => r.user_id))
     const alreadySentPro = new Set((alreadyPro ?? []).map(r => r.user_id))
 
+    // Tentar despachar os ~150 que faltavam numa só chamada estava a
+    // rebentar sempre com WORKER_RESOURCE_LIMIT antes de sequer começar
+    // a enviar (3 falhas seguidas, zero progresso). Um lote pequeno por
+    // chamada cabe sempre no limite de recursos; o lock + as rondas
+    // repetidas (já existentes) tratam de cobrir o resto aos poucos.
+    const MAX_SENT_PER_RUN = 40
     let page = 1
     const perPage = 200
+    outer:
     for (;;) {
       const { data: pageData, error: listErr } = await supabase.auth.admin.listUsers({ page, perPage })
       if (listErr) throw listErr
@@ -232,6 +239,7 @@ Deno.serve(async (req) => {
             })
           }
           sent++
+          if (sent >= MAX_SENT_PER_RUN) break outer
         } catch (e) {
           errors.push(`${u.email ?? u.id}: ${String(e)}`)
         }
