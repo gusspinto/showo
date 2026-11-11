@@ -69,6 +69,7 @@ import { LetterIcon as Mail } from '@solar-icons/react/bold/letter'
 import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
 import { AltArrowRightIcon as ChevronRight } from '@solar-icons/react/bold/alt-arrow-right'
 import { RoundAltArrowRightIcon as TourNextArrow } from '@solar-icons/react/linear/round-alt-arrow-right'
+import { RoundAltArrowLeftIcon as TourPrevArrow } from '@solar-icons/react/linear/round-alt-arrow-left'
 import { AltArrowLeftIcon as ChevronLeft } from '@solar-icons/react/bold/alt-arrow-left'
 import { GlobeIcon as Globe } from '@solar-icons/react/bold/globe'
 import { GalleryWideIcon as Image } from '@solar-icons/react/bold/gallery-wide'
@@ -849,14 +850,39 @@ function ProjectTour({ isPap, onClose, onStep }) {
 
   // O tour é o foco enquanto está aberto: antes dava para mexer na app por
   // baixo dele (navegar para outra página, clicar em botões, fazer scroll
-  // do fundo), apontado como bug. Bloqueia o scroll do body enquanto o
-  // tour está montado; o bloqueio de cliques no resto do ecrã está no
-  // pointerEvents do overlay, mais abaixo.
+  // do fundo), apontado como bug. "overflow:hidden" sozinho no body não
+  // travava o scroll a sério (sobretudo por gesto, em mobile): ainda dava
+  // para arrastar a página, e como o destaque (spotlight) fica fixo no
+  // ecrã enquanto o alvo real se move com o scroll, parecia o tour "saltar"
+  // para um elemento errado. body.tour-lock-scroll usa position:fixed
+  // (mesmo padrão do Mensagens.css), que bloqueia mesmo; guarda o scroll
+  // atual em "top" negativo para não saltar para o topo, e repõe-no ao
+  // fechar. O bloqueio de cliques no resto do ecrã está no pointerEvents
+  // do overlay, mais abaixo.
   useEffect(() => {
-    const prevOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = prevOverflow }
+    const scrollY = window.scrollY
+    document.body.style.top = `-${scrollY}px`
+    document.body.classList.add('tour-lock-scroll')
+    return () => {
+      document.body.classList.remove('tour-lock-scroll')
+      document.body.style.top = ''
+      window.scrollTo(0, scrollY)
+    }
   }, [])
+
+  // Rede de segurança: se ainda assim algum scroll passar (ex: teclado,
+  // scroll dentro de um painel com o seu próprio overflow), volta a medir
+  // o alvo do passo atual em vez de deixar o destaque fixo dessincronizar
+  // da posição real do elemento.
+  useEffect(() => {
+    function onScroll() {
+      const r = measureStep(stepIdx, steps)
+      if (r) setRect(r)
+    }
+    window.addEventListener('scroll', onScroll, true)
+    return () => window.removeEventListener('scroll', onScroll, true)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stepIdx])
 
   // Junta dois retângulos no menor que envolve os dois — usado para o
   // destaque do passo "preview" cobrir o botão E o menu aberto por baixo
@@ -1041,10 +1067,13 @@ function ProjectTour({ isPap, onClose, onStep }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
         {/* No mobile, "Saltar tour" precisa de se notar — antes era texto
             cinzento quase invisível ao lado de um botão gradiente que
-            dominava tudo; agora tem contorno e peso próprios. */}
+            dominava tudo; agora tem contorno e peso próprios. Altura fixa
+            de 42px, igual ao botão "Próximo", para a linha toda ficar
+            alinhada (antes "Saltar tour"/"Voltar" eram mais baixos que o
+            botão gradiente ao lado, linha desnivelada). */}
         <button onClick={() => onClose(false)} style={isMobile ? {
           background: 'none', border: '1.5px solid var(--color-border)', borderRadius: 'var(--radius-md)',
-          padding: '8px 14px', cursor: 'pointer',
+          height: 42, padding: '0 14px', cursor: 'pointer', boxSizing: 'border-box',
           fontSize: 14, fontWeight: 700, color: 'var(--color-text-secondary)', fontFamily: 'inherit',
         } : {
           background: 'none', border: 'none', cursor: 'pointer', padding: 0,
@@ -1053,20 +1082,27 @@ function ProjectTour({ isPap, onClose, onStep }) {
           Saltar tour
         </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {/* No desktop, "← Voltar" era só texto solto ao lado do botão
+              cheio e colorido do "Próximo", pesos visuais completamente
+              diferentes lado a lado. Passa a um botão fantasma do mesmo
+              tamanho (42x42) e cantos do "Próximo", só ícone, mesma
+              família visual, sem competir com a cor do botão principal. */}
           {stepIdx > 0 && (
             <button
               onClick={() => setStepIdx(i => i - 1)}
               aria-label="Voltar"
               style={isMobile ? {
                 background: 'none', border: '1.5px solid var(--color-border)', borderRadius: 'var(--radius-md)',
-                padding: '8px 14px', cursor: 'pointer',
+                height: 42, padding: '0 14px', cursor: 'pointer', boxSizing: 'border-box',
                 fontSize: 14, fontWeight: 700, color: 'var(--color-text-secondary)', fontFamily: 'inherit',
               } : {
-                background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-                fontSize: 12, color: 'var(--color-text-tertiary)', fontFamily: 'inherit',
+                background: 'none', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)',
+                width: 42, height: 42, padding: 0, flexShrink: 0, boxSizing: 'border-box',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'var(--color-text-secondary)', cursor: 'pointer', fontFamily: 'inherit',
               }}
             >
-              ← Voltar
+              {isMobile ? 'Voltar' : <TourPrevArrow size={19} strokeWidth={2.5} />}
             </button>
           )}
           <button

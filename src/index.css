@@ -506,3 +506,19 @@ body.msg-chat-lock {
   width: 100%;
 }
 html:has(body.msg-chat-lock) { overscroll-behavior: none; }
+
+/* Tour guiado do projeto (ProjectTour, ProjectPage.jsx): mesmo bloqueio
+   de scroll do Mensagens.css, "overflow:hidden" sozinho no body não trava
+   scroll a sério em mobile (gesto de arrastar continua a passar), o scroll
+   ainda dava para fazer com o tour aberto. position:fixed bloqueia mesmo;
+   o "top" negativo (definido via JS, ver ProjectTour) preserva a posição
+   de scroll em vez de saltar para o topo ao abrir/fechar o tour. */
+body.tour-lock-scroll {
+  overflow: hidden;
+  overscroll-behavior: none;
+  position: fixed;
+  left: 0;
+  right: 0;
+  width: 100%;
+}
+html:has(body.tour-lock-scroll) { overscroll-behavior: none; }
