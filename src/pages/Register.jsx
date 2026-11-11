@@ -1044,7 +1044,7 @@ export default function Register() {
                     />
                     <span>
                       Li e aceito os <Link to="/termos" style={{ color: C.blue }}>Termos de Utilização</Link> e a <Link to="/privacidade" style={{ color: C.blue }}>Política de Privacidade</Link>.
-                      {' '}Se tens menos de 16 anos, confirma que tens o consentimento do teu encarregado de educação.
+                      {' '}Se tens menos de 13 anos, confirma que tens o consentimento do teu encarregado de educação.
                     </span>
                   </label>
                 )}

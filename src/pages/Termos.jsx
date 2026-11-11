@@ -4,7 +4,7 @@ export default function Termos() {
   return (
     <LegalLayout
       title="Termos de Utilização"
-      updated="28 de julho de 2026"
+      updated="11 de novembro de 2026"
     >
       <h2>1. Aceitação</h2>
       <p>
@@ -22,7 +22,7 @@ export default function Termos() {
       <ul>
         <li>És responsável por manter a tua palavra-passe segura e por tudo o que acontece na tua conta.</li>
         <li>Ao registares-te, dá-nos informação verdadeira.</li>
-        <li>Se tens menos de 16 anos, só podes usar o Showo com o consentimento de quem cuida de ti.</li>
+        <li>Se tens menos de 13 anos, só podes usar o Showo com o consentimento de quem tem a responsabilidade parental sobre ti.</li>
       </ul>
 
       <h2>4. O teu conteúdo</h2>
