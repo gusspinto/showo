@@ -239,6 +239,11 @@ Deno.serve(async (req) => {
             })
           }
           sent++
+          // Heartbeat: mantém o lock "vivo" enquanto esta execução ainda
+          // está mesmo a trabalhar, para "stale" significar de verdade
+          // "sem sinal de vida há N minutos", nunca "começou há N
+          // minutos" (essa confusão foi a causa real dos duplicados).
+          await supabase.rpc('touch_function_lock', { p_name: 'send-campaign-storm' })
           if (sent >= MAX_SENT_PER_RUN) break outer
         } catch (e) {
           errors.push(`${u.email ?? u.id}: ${String(e)}`)
