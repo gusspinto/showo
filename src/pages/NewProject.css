@@ -7,7 +7,13 @@
    ══════════════════════════════════════════════════════════════════════════ */
 
 .np-shell {
+  /* 100dvh por cima do 100vh (fallback para browsers sem suporte): no
+     Safari mobile, 100vh conta a área da barra de endereço mesmo quando
+     ela está visível, o ecrã ficava sempre "mais alto" do que o que
+     realmente dá para ver, dava para arrastar um bocadinho sem nada a
+     mostrar a seguir. Mesmo padrão já usado em Home.css/Feedback.css. */
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--color-bg);
   color: var(--color-text);
   display: flex; flex-direction: column;

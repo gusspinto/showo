@@ -353,6 +353,18 @@ export default function NewProject() {
   }
 
   /* ── Gerar a partir de uma descrição ── */
+  /* As notas do ecrã "details" (`importNotes`) nasceram só para o caminho
+     do ficheiro (import-project já tem um campo próprio), mas o Gustavo
+     pediu para a caixa ficar sempre visível, incluindo em "Descrever o
+     que estou a fazer". prefill-project/interview-project não têm campo
+     de notas próprio (não dá para redeployar edge functions nesta
+     sessão), por isso juntam-se ao texto da descrição antes de enviar,
+     em vez de se perderem silenciosamente. */
+  function withNotes(text) {
+    const notes = importNotes.trim()
+    return notes ? `${text}\n\n${notes}` : text
+  }
+
   async function handleGenerate() {
     if (!isDescriptionValid(description)) return
     if (requireAccount('/novo')) return
@@ -364,7 +376,7 @@ export default function NewProject() {
     setError(null)
     try {
       const { data, error: fnErr } = await supabase.functions.invoke('prefill-project', {
-        body: { text: description, projectType },
+        body: { text: withNotes(description), projectType },
       })
       if (fnErr) {
         // supabase-js devolve data:null num non-2xx — o erro real está no
@@ -402,7 +414,7 @@ export default function NewProject() {
     setError(null)
     try {
       const { data, error: fnErr } = await supabase.functions.invoke('interview-project', {
-        body: { description, projectType },
+        body: { description: withNotes(description), projectType },
       })
       if (fnErr || !data?.questions?.length) throw new Error()
       consumeAI('interviewProject')
@@ -720,21 +732,21 @@ export default function NewProject() {
               defenseDateUnknown={defenseDateUnknown} setDefenseDateUnknown={setDefenseDateUnknown}
               evaluationModes={evaluationModes} setEvaluationModes={setEvaluationModes} />
 
-            {/* As notas só alimentam o import-project (ver handleAnalyzeFiles),
-                não fazem sentido no caminho da descrição: essa já é a nota. */}
-            {precreateOrigin === 'choose' && (
-              <div className="np-notes-block" style={{ marginTop: 40 }}>
-                <label className="np-notes-label" htmlFor="np-notes">Algo a acrescentar antes de a IA ler? (opcional)</label>
-                <textarea
-                  id="np-notes"
-                  className="np-notes"
-                  rows={2}
-                  value={importNotes}
-                  onChange={e => setImportNotes(e.target.value)}
-                  placeholder="Ex: o meu papel foi o design e a investigação de utilizadores."
-                />
-              </div>
-            )}
+            {/* Sempre visível, nos dois caminhos (pedido do Gustavo). No
+                caminho do ficheiro vai para import-project num campo
+                próprio; no caminho da descrição, withNotes() junta-a ao
+                texto antes de enviar (ver handleGenerate/handleInterview). */}
+            <div className="np-notes-block" style={{ marginTop: 40 }}>
+              <label className="np-notes-label" htmlFor="np-notes">Algo a acrescentar antes de a IA ler? (opcional)</label>
+              <textarea
+                id="np-notes"
+                className="np-notes"
+                rows={2}
+                value={importNotes}
+                onChange={e => setImportNotes(e.target.value)}
+                placeholder="Ex: o meu papel foi o design e a investigação de utilizadores."
+              />
+            </div>
 
             <button className="np-btn-primary" style={{ marginTop: 40 }} onClick={() => setStep('precreate')}>
               Continuar <ArrowRight size={15} />
