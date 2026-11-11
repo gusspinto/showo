@@ -166,7 +166,7 @@ function InlineFeedback({ project, teacherId, onChange }) {
                 rows={2}
                 style={{ width: '100%', background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 7, padding: '8px 10px', color: C.text, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none' }}
               />
-              <button onClick={handleSave} disabled={saving || !comment.trim()} style={{ marginTop: 6, background: C.blue, border: 'none', borderRadius: 7, padding: '7px 14px', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', opacity: saving || !comment.trim() ? 0.5 : 1, fontFamily: 'inherit' }}>
+              <button onClick={handleSave} disabled={saving || !comment.trim()} style={{ marginTop: 6, background: C.blue, border: 'none', borderRadius: 'var(--radius-md)', padding: '7px 14px', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', opacity: saving || !comment.trim() ? 0.5 : 1, fontFamily: 'inherit' }}>
                 {saving ? 'A guardar…' : 'Guardar'}
               </button>
             </>

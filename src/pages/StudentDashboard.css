@@ -2478,25 +2478,37 @@
 .sdb-first-project:hover {
   border-color: var(--color-border-hover);
 }
+/* Mesmo tratamento do .sdb-panel--brand ("Experimenta o Plus"): azul mais
+   profundo (--color-primary-deep, não o azul base) + o brilho radial no
+   canto, não um azul plano. Pedido do Gustavo: "o mesmo efeito do cartão
+   do Plus, mas ligeiramente diferente": o efeito é igual, o que muda é o
+   conteúdo centrado em vez de alinhado à esquerda. */
+.sdb-first-project--accent {
+  align-items: center;
+  text-align: center;
+  background:
+    radial-gradient(130% 150% at 100% 0%, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0) 58%),
+    var(--color-primary-deep);
+  border-color: transparent;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.16) inset, var(--shadow-md);
+}
+.sdb-first-project--accent:hover { border-color: transparent; }
+.sdb-first-project-mark {
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+}
 .sdb-first-project-title {
   margin: 0;
-  font-size: 22px;
-  font-weight: 800;
+  font-size: 20px;
+  font-weight: 700;
   color: var(--color-text);
   line-height: 1.3;
   font-family: var(--font-heading);
 }
-.sdb-first-project-sub {
-  margin: 0;
-  max-width: 420px;
-  font-size: 14px;
-  line-height: 1.6;
-  color: var(--color-text-secondary);
-}
+.sdb-first-project--accent .sdb-first-project-title { color: #fff; }
 @media (max-width: 640px) {
   .sdb-first-project { padding: var(--sp-5) var(--sp-4); gap: var(--sp-3); }
-  .sdb-first-project-title { font-size: 19px; }
-  .sdb-first-project-sub { font-size: 13px; }
+  .sdb-first-project-title { font-size: 18px; }
 }
 
 /* ── Weekly Check-in modal ── */
@@ -3086,7 +3098,7 @@
     justify-content: center;
     font-size: 13px;
     padding: 9px 10px;
-    border-radius: 12px;
+    border-radius: var(--radius-md);
   }
 
   /* ── Pinned card: card unificado com cover opcional ── */

@@ -910,10 +910,10 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
           </div>
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
-          <button onClick={handleCopySummary} style={{ padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', border: `1px solid ${C.border}`, background: 'transparent', color: C.muted }}>
+          <button onClick={handleCopySummary} style={{ padding: '5px 12px', borderRadius: 'var(--radius-full)', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', border: `1px solid ${C.border}`, background: 'transparent', color: C.muted }}>
             Copiar resumo
           </button>
-          <button onClick={handleExport} style={{ padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', border: `1px solid ${C.border}`, background: 'transparent', color: C.muted }}>
+          <button onClick={handleExport} style={{ padding: '5px 12px', borderRadius: 'var(--radius-full)', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', border: `1px solid ${C.border}`, background: 'transparent', color: C.muted }}>
             Exportar .md
           </button>
         </div>
@@ -1927,7 +1927,7 @@ function FinanceTab() {
             style={{ flex: '1 1 160px', padding: '8px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: C.bg, color: C.text, fontSize: 13, fontFamily: 'inherit' }} />
           <input value={novoValor} onChange={e => setNovoValor(e.target.value)} placeholder="25.00" inputMode="decimal"
             style={{ width: 100, padding: '8px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: C.bg, color: C.text, fontSize: 13, fontFamily: 'inherit' }} />
-          <button onClick={addCost} style={{ padding: '8px 18px', borderRadius: 8, background: C.blue, color: '#fff', border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+          <button onClick={addCost} style={{ padding: '8px 18px', borderRadius: 'var(--radius-md)', background: C.blue, color: '#fff', border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
             Adicionar
           </button>
         </div>
@@ -2443,7 +2443,7 @@ function OrgsTab({ users }) {
                     <option value="plus">Escola Plus</option>
                     <option value="pro">Escola Pro</option>
                   </select>
-                  <button onClick={saveEdit} disabled={saving} style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '7px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  <button onClick={saveEdit} disabled={saving} style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', padding: '7px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
                     {saving ? 'A guardar…' : 'Guardar'}
                   </button>
                   <button onClick={() => setEditing(null)} style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', fontSize: 12, fontFamily: 'inherit' }}>Cancelar</button>
@@ -3007,7 +3007,7 @@ export default function Admin() {
                       <label style={{ fontSize: 12, color: 'var(--color-text-secondary)', display: 'block', marginBottom: 4 }}>Comissão</label>
                       <input value={newAmbRate} onChange={e => setNewAmbRate(e.target.value)} placeholder="0.20" style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-bg)', color: 'var(--color-text)', fontSize: 14, width: 80 }} />
                     </div>
-                    <button disabled={creatingAmb} onClick={handleCreateAmbassador} style={{ padding: '8px 18px', borderRadius: 8, background: 'var(--color-primary)', color: '#fff', border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: creatingAmb ? 0.6 : 1 }}>
+                    <button disabled={creatingAmb} onClick={handleCreateAmbassador} style={{ padding: '8px 18px', borderRadius: 'var(--radius-md)', background: 'var(--color-primary)', color: '#fff', border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: creatingAmb ? 0.6 : 1 }}>
                       {creatingAmb ? '...' : 'Criar'}
                     </button>
                   </div>

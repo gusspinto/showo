@@ -212,7 +212,6 @@ export default function StudentDashboard({ user, profile }) {
   )
 
   /* ── UI ── */
-  const [tutorialPotentialSeen, setTutorialPotentialSeen] = useState(() => !!localStorage.getItem(`showo_tut_potential_${user.id}`))
   const [recapTeaserDismissed, setRecapTeaserDismissed] = useState(() => !!localStorage.getItem(`showo_recap_teaser_dismissed_${user.id}`))
   // "Em destaque" (spotlight do Explorar/Home, calculado por get_featured_projects):
   // featuredProjectIds alimenta o selo fixo na linha do projeto; o popup só
@@ -275,9 +274,13 @@ export default function StudentDashboard({ user, profile }) {
       })
   }, [])
 
-  function dismissPotentialTutorial() {
-    localStorage.setItem(`showo_tut_potential_${user.id}`, '1')
-    setTutorialPotentialSeen(true)
+  /* "O teu Potencial": tal como featured_popup_seen_at, o "visto" fica em
+     profiles, não no localStorage (preso ao browser, reaparecia sempre
+     que o utilizador mudava de dispositivo ou limpava dados do site). */
+  async function dismissPotentialTutorial() {
+    if (!user?.id || profile?.potential_popup_seen_at) return
+    await supabase.from('profiles').update({ potential_popup_seen_at: new Date().toISOString() }).eq('id', user.id)
+    refreshProfile?.()
   }
 
   /* ── Escola: nome da organização ── */
@@ -691,7 +694,7 @@ export default function StudentDashboard({ user, profile }) {
   const engagement = useMemo(() => computeEngagementSignal(entries), [entries])
   const { potential } = profile ? calculatePotential({ projects, profile, engagement }) : { potential: 0 }
   const isEmptyState = !loadingProjects && projects.length === 0
-  const showPotentialTutorial = !tutorialPotentialSeen && !loadingProjects && projects.length >= 1
+  const showPotentialTutorial = !profile?.potential_popup_seen_at && !loadingProjects && projects.length >= 1
 
   function handleEventClick(e) {
     if (e.type === 'defense' && e.slug) navigate(`/projeto/${e.slug}`)
@@ -1311,13 +1314,23 @@ export default function StudentDashboard({ user, profile }) {
             )}
 
             {isEmptyState && (
-              <section className="sdb-first-project" onClick={() => navigate('/novo')}>
-                <span className="sdb-eyebrow">Primeiro projeto</span>
-                <h2 className="sdb-first-project-title">Cria ou adiciona o teu primeiro projeto</h2>
-                <p className="sdb-first-project-sub">Já tens algo feito? Sobe o ficheiro. Só tens uma ideia? Descreve-a e a IA ajuda-te a desenvolvê-la.</p>
+              <section className="sdb-first-project sdb-first-project--accent" onClick={() => navigate('/novo')}>
+                {/* Terceira versão, experimental (o Gustavo ainda não
+                    decidiu): fundo azul sólido, a mesma energia do cartão
+                    "Experimenta o Plus" ao lado, com a moldura tracejada +
+                    "+" centrada e maior em vez do ícone de folha pequeno
+                    num badge, que achou "vazio a mais". */}
+                <span className="sdb-first-project-mark">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+                    <rect x="3.5" y="3.5" width="17" height="17" rx="4" stroke="currentColor" strokeWidth="1.6" strokeDasharray="3.2 3.2" strokeLinecap="round" />
+                    <path d="M12 9v6M9 12h6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                  </svg>
+                </span>
+                <h2 className="sdb-first-project-title">Cria ou carrega o teu primeiro projeto</h2>
                 <Button
                   iconRight={<ArrowRight size={15} />}
                   onClick={e => { e.stopPropagation(); navigate('/novo') }}
+                  style={{ background: '#fff', color: 'var(--color-primary-deep)' }}
                 >
                   Começar
                 </Button>

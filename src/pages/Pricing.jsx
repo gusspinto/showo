@@ -334,12 +334,13 @@ export default function Pricing() {
                 </div>
 
                 <div className="pricing-price">
-                  {/* Riscado: SHOWO50 (-50%, aplicado sozinho no checkout),
-                      tanto no mensal como no anual. Antes disto, o anual
-                      mostrava riscado o mensal×12 (poupança de pagar anual,
-                      sem ligação ao cupão) e o preço cheio como se já
-                      fosse o preço com desconto, o cupão nunca chegava a
-                      aplicar-se no anual, nem aqui nem no checkout real. */}
+                  {/* Preço riscado: SHOWO50 (-50%, aplicado sozinho no
+                      checkout), tanto no mensal como no anual. Antes disto,
+                      o riscado do anual era mensal × 12 (poupança de pagar
+                      anual, sem ligação ao cupão) e o preço cheio aparecia
+                      como se já tivesse desconto, o cupão nunca se aplicava
+                      no anual, nem aqui nem no checkout real
+                      (create-annual-checkout). */}
                   {annual && plan.priceAnnualDiscounted && (
                     <span className="pricing-amount-old">{plan.priceAnnual}</span>
                   )}

@@ -117,7 +117,7 @@ body.light .msg-avatar-img { outline-color: oklch(0 0 0 / 0.1); }
   flex-shrink: 0;
   width: 34px;
   height: 34px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: var(--color-primary);
   border: none;
   cursor: pointer;
@@ -308,7 +308,7 @@ body.light .msg-avatar-img { outline-color: oklch(0 0 0 / 0.1); }
   gap: 6px;
   background: rgba(27, 120, 247, 0.08);
   border: 1px solid rgba(27, 120, 247, 0.3);
-  border-radius: 7px;
+  border-radius: var(--radius-full);
   padding: 5px 10px;
   color: var(--color-primary);
   font-size: 12px;
@@ -323,7 +323,7 @@ body.light .msg-avatar-img { outline-color: oklch(0 0 0 / 0.1); }
 .msg-hd-profile-btn {
   background: transparent;
   border: 1px solid var(--color-border);
-  border-radius: 7px;
+  border-radius: var(--radius-full);
   padding: 5px 10px;
   color: var(--color-text-secondary);
   font-size: 12px;
@@ -415,7 +415,7 @@ body.light .msg-avatar-img { outline-color: oklch(0 0 0 / 0.1); }
 .msg-action-inline-btn {
   background: var(--color-bg);
   border: 1px solid var(--color-border);
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   padding: 4px 7px;
   cursor: pointer;
   display: flex;
@@ -571,7 +571,7 @@ body.light .msg-avatar-img { outline-color: oklch(0 0 0 / 0.1); }
 
 .msg-send-btn {
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   width: 42px;
   display: flex;
   align-items: center;

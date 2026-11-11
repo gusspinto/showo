@@ -717,6 +717,10 @@ export default function UserProfile() {
       )}
 
       <div className={`page-content${appearance.bannerUrl ? ' has-banner' : ''}`}>
+        {/* Cartão grande à volta de tudo, pedido do Gustavo: a página tinha
+            só fundo plano preto, sem moldura nenhuma, o oposto do Settings
+            (.settings-card), que tem fundo e borda bem definidos. */}
+        <div className="up-profile-card">
 
         {/* ── Cabeçalho: portefólio, alinhado à esquerda, sem cartão ── */}
         <header className="up-head">
@@ -928,6 +932,7 @@ export default function UserProfile() {
             )}
           </div>
         )}
+        </div>
       </div>
 
       {viewingFile && <LibFileViewer item={viewingFile} onClose={() => setViewingFile(null)} />}
