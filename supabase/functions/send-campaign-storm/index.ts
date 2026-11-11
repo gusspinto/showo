@@ -154,6 +154,21 @@ Deno.serve(async (req) => {
       })
     }
 
+    // Lock contra execuções sobrepostas: disparar isto duas vezes seguidas
+    // (ex: achar que a anterior morreu quando só o lado que esperava a
+    // resposta desistiu) causava envios duplicados, a mesma pessoa a
+    // receber o email várias vezes. Enquanto uma execução real estiver
+    // "viva" (lock com menos de 8 minutos), uma segunda chamada desiste
+    // em vez de reprocessar as mesmas pessoas em paralelo.
+    const { data: lockAcquired } = await supabase.rpc('try_acquire_function_lock', { p_name: 'send-campaign-storm', p_stale_minutes: 8 })
+    if (!lockAcquired) {
+      return new Response(JSON.stringify({ ok: true, mode: 'real', skipped_reason: 'already_running' }), {
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
+
+    try {
+
     // Envio real, segmentado por occupation. Uma vez por pessoa: quem já
     // tem linha em email_sends para o tipo certo nunca volta a receber.
     const { data: alreadyStudent } = await supabase.from('email_sends').select('user_id').eq('email_type', 'campaign_storm_aluno')
@@ -161,8 +176,15 @@ Deno.serve(async (req) => {
     const alreadySentStudent = new Set((alreadyStudent ?? []).map(r => r.user_id))
     const alreadySentPro = new Set((alreadyPro ?? []).map(r => r.user_id))
 
+    // Tentar despachar os ~150 que faltavam numa só chamada estava a
+    // rebentar sempre com WORKER_RESOURCE_LIMIT antes de sequer começar
+    // a enviar (3 falhas seguidas, zero progresso). Um lote pequeno por
+    // chamada cabe sempre no limite de recursos; o lock + as rondas
+    // repetidas (já existentes) tratam de cobrir o resto aos poucos.
+    const MAX_SENT_PER_RUN = 40
     let page = 1
     const perPage = 200
+    outer:
     for (;;) {
       const { data: pageData, error: listErr } = await supabase.auth.admin.listUsers({ page, perPage })
       if (listErr) throw listErr
@@ -217,6 +239,12 @@ Deno.serve(async (req) => {
             })
           }
           sent++
+          // Heartbeat: mantém o lock "vivo" enquanto esta execução ainda
+          // está mesmo a trabalhar, para "stale" significar de verdade
+          // "sem sinal de vida há N minutos", nunca "começou há N
+          // minutos" (essa confusão foi a causa real dos duplicados).
+          await supabase.rpc('touch_function_lock', { p_name: 'send-campaign-storm' })
+          if (sent >= MAX_SENT_PER_RUN) break outer
         } catch (e) {
           errors.push(`${u.email ?? u.id}: ${String(e)}`)
         }
@@ -229,6 +257,9 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ ok: errors.length === 0, mode: 'real', sent, skipped, errors }), {
       headers: { 'Content-Type': 'application/json' },
     })
+    } finally {
+      await supabase.rpc('release_function_lock', { p_name: 'send-campaign-storm' })
+    }
   } catch (e) {
     console.error(e)
     return new Response(JSON.stringify({ error: 'Erro interno.', detail: String(e) }), { status: 500 })
