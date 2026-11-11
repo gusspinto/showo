@@ -781,7 +781,16 @@ const TOUR_STEPS_PAP = [
 ]
 const TOUR_STEPS_OTHER = TOUR_STEPS_PAP.filter(s => s.target !== 'defense')
 
-// Mobile tour — simpler flow that matches the mobile UI layout
+// Mobile tour: fluxo mais simples, que corresponde ao layout mobile. Sem passos
+// próprios para "edit"/"diary": no mobile esses botões vivem dentro do
+// menu do projeto (.mob-proj-menu, aberto a partir do FAB "preview"), não
+// como botões soltos na Navbar (essa fica display:none !important no
+// mobile, ver .proj-nav-btns). Antes havia um passo para cada um a
+// apontar para um elemento que nunca existe no mobile, o tour tentava
+// medi-lo, nunca conseguia, e acabava sempre por saltar os dois de
+// repente (1/6 → 4/6), parecia um bug de "passos a saltar". O passo
+// "preview" já explica que o menu dá acesso a Editar/Diário/etc, por isso
+// não falta informação nenhuma, só deixa de apontar para algo impossível.
 const TOUR_STEPS_MOBILE_PAP = [
   {
     target: 'score',
@@ -789,20 +798,6 @@ const TOUR_STEPS_MOBILE_PAP = [
     bullets: [
       'Gerado pela IA com base no que preencheste',
       'Serve para te orientar, não é uma nota',
-    ],
-  },
-  {
-    target: 'edit',
-    title: 'Editar projeto',
-    bullets: [
-      'Atualiza o nome, área, descrição e todas as secções do projeto',
-    ],
-  },
-  {
-    target: 'diary',
-    title: 'Diário do projeto',
-    bullets: [
-      'Regista o teu progresso, bloqueios e decisões ao longo do tempo',
     ],
   },
   {
