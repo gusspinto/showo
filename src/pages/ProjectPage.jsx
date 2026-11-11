@@ -874,20 +874,6 @@ function ProjectTour({ isPap, onClose, onStep }) {
     }
   }, [])
 
-  // Rede de segurança: se ainda assim algum scroll passar (ex: teclado,
-  // scroll dentro de um painel com o seu próprio overflow), volta a medir
-  // o alvo do passo atual em vez de deixar o destaque fixo dessincronizar
-  // da posição real do elemento.
-  useEffect(() => {
-    function onScroll() {
-      const r = measureStep(stepIdx, steps)
-      if (r) setRect(r)
-    }
-    window.addEventListener('scroll', onScroll, true)
-    return () => window.removeEventListener('scroll', onScroll, true)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stepIdx])
-
   // Junta dois retângulos no menor que envolve os dois — usado para o
   // destaque do passo "preview" cobrir o botão E o menu aberto por baixo
   // dele, não só o botão sozinho com o menu a espreitar por fora da luz.
@@ -956,60 +942,47 @@ function ProjectTour({ isPap, onClose, onStep }) {
     const el = resolveEl(steps[stepIdx].target)
     if (el) el.scrollIntoView({ behavior: 'instant', block: 'center' })
 
-    let raf1, raf2, remeasureTimer
-    // Bug antigo: o botão de um passo (ex. "edit"/"diary", dentro da
-    // Navbar) podia ainda não estar no DOM 2 frames depois de o passo
-    // mudar (isOwner/dados do projeto ainda a resolver), e o tour saltava
-    // logo para o próximo alvo que encontrasse (ex. "1/9" ia direto a
-    // "4/9", saltando passos inteiros). Em vez de desistir ao fim de 2
-    // frames, tenta outra vez por até ~1.5s antes de aceitar que o alvo
-    // deste passo realmente não existe e avançar para o seguinte.
-    let attempts = 0
-    const MAX_ATTEMPTS = 15
-    function tryMeasure() {
+    // Duas falhas reais, mesma causa: medir uma vez (ou umas tentativas
+    // com intervalo fixo) e confiar no resultado.
+    // (1) Salto "1/9 direto a 4/9": o alvo de um passo (ex. "edit"/"diary",
+    // dentro da Navbar) podia ainda não estar no DOM (isOwner/dados do
+    // projeto a resolver), em produção, com latência de rede real, isto
+    // demora mais do que as ~1.5s que o número fixo de tentativas (15×100ms)
+    // dava antes de desistir e avançar para o próximo alvo que encontrasse.
+    // (2) Quadrado azul desalinhado: mesmo depois de encontrar o alvo, o
+    // resto da página continua a carregar por baixo (nota do professor,
+    // views, etc.), o layout desloca-se, e a medição única já não
+    // correspondia à posição real.
+    // Em vez de um número de tentativas, mede em CONTÍNUO, a cada frame,
+    // enquanto este passo estiver visível, corrige os dois problemas à
+    // vez, sem outra lógica: encontra tarde, desloca o layout, mede outra
+    // vez, sempre. Só desiste e avança se o alvo deste passo realmente
+    // nunca aparecer dentro de GIVE_UP_AFTER_MS (generoso de propósito,
+    // bem mais do que qualquer latência real de rede).
+    let rafId
+    const startTime = performance.now()
+    const GIVE_UP_AFTER_MS = 8000
+    function loop() {
       if (skipRef.current) return
       const r = measureStep(stepIdx, steps)
-      if (r) { setRect(r); return }
-      attempts++
-      if (attempts < MAX_ATTEMPTS) {
-        remeasureTimer = setTimeout(tryMeasure, 100)
+      if (r) {
+        setRect(prev => (prev && prev.left === r.left && prev.top === r.top && prev.width === r.width && prev.height === r.height) ? prev : r)
+        rafId = requestAnimationFrame(loop)
         return
       }
-      const found = advanceToVisible(stepIdx)
-      if (!found) { onClose(false); return }
-      if (found.idx !== stepIdx) { setStepIdx(found.idx); return }
-      setRect(found.rect)
+      if (performance.now() - startTime > GIVE_UP_AFTER_MS) {
+        const found = advanceToVisible(stepIdx)
+        if (!found) { onClose(false); return }
+        if (found.idx !== stepIdx) { setStepIdx(found.idx); return }
+        setRect(found.rect)
+        return
+      }
+      rafId = requestAnimationFrame(loop)
     }
-    raf1 = requestAnimationFrame(() => {
-      raf2 = requestAnimationFrame(tryMeasure)
-    })
-    // O passo "preview" abre o menu real (forceMenuOpen) — isso atravessa
-    // Context + outro componente (Navbar), pode não estar montado ainda
-    // aos 2 frames daqui. Remede um pouco depois, só para apanhar o menu
-    // já aberto e alargar o destaque a ele.
-    let previewTimer
-    if (steps[stepIdx].target === 'preview') {
-      previewTimer = setTimeout(() => {
-        if (skipRef.current) return
-        const r = measureStep(stepIdx, steps)
-        if (r) setRect(r)
-      }, 150)
-    }
-    return () => { skipRef.current = true; cancelAnimationFrame(raf1); cancelAnimationFrame(raf2); clearTimeout(remeasureTimer); clearTimeout(previewTimer) }
+    rafId = requestAnimationFrame(loop)
+    return () => { skipRef.current = true; cancelAnimationFrame(rafId) }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepIdx])
-
-  useEffect(() => {
-    function onResize() {
-      const el = resolveEl(steps[stepIdx].target)
-      if (el) {
-        const r = el.getBoundingClientRect()
-        if (r.width > 0 || r.height > 0) setRect(r)
-      }
-    }
-    window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
-  }, [stepIdx, steps])
 
   const step = steps[stepIdx]
   const PAD = 10
