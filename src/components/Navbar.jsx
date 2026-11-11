@@ -2101,13 +2101,13 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               <span className="pmf-tooltip">Fechar</span>
             </button>
           ) : (
-            <button className="pmf-btn" aria-label="Editar" onClick={() => navigate(`/editar/${extras.slug}`)}>
+            <button className="pmf-btn" data-tour="edit" aria-label="Editar" onClick={() => navigate(`/editar/${extras.slug}`)}>
               <Pencil size={16} />
               <span className="pmf-tooltip">Editar</span>
             </button>
           )}
           {extras.showDiary && (
-            <button className="pmf-btn" aria-label="Diário" onClick={() => navigate(`/projeto/${extras.slug}/diario`)}>
+            <button className="pmf-btn" data-tour="diary" aria-label="Diário" onClick={() => navigate(`/projeto/${extras.slug}/diario`)}>
               <BookOpen size={16} />
               <span className="pmf-tooltip">Diário</span>
             </button>

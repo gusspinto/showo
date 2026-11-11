@@ -854,39 +854,33 @@ function ProjectTour({ isPap, onClose, onStep }) {
 
   // O tour é o foco enquanto está aberto: antes dava para mexer na app por
   // baixo dele (navegar para outra página, clicar em botões, fazer scroll
-  // do fundo), apontado como bug. "overflow:hidden" sozinho no body não
-  // travava o scroll a sério (sobretudo por gesto, em mobile): ainda dava
-  // para arrastar a página, e como o destaque (spotlight) fica fixo no
-  // ecrã enquanto o alvo real se move com o scroll, parecia o tour "saltar"
-  // para um elemento errado. body.tour-lock-scroll usa position:fixed
-  // (mesmo padrão do Mensagens.css), que bloqueia mesmo; guarda o scroll
-  // atual em "top" negativo para não saltar para o topo, e repõe-no ao
-  // fechar. O bloqueio de cliques no resto do ecrã está no pointerEvents
-  // do overlay, mais abaixo.
+  // do fundo), apontado como bug. Já tentei bloquear com
+  // body.tour-lock-scroll (position:fixed, mesmo padrão do Mensagens.css),
+  // mas isso trava TODO o scroll, incluindo o scrollIntoView do próprio
+  // tour: um body position:fixed não se move com scrollIntoView/scrollTo,
+  // por isso o passo "Missões" (mais abaixo na página) deixava de fazer
+  // scroll automático nenhum. Em vez de travar a posição do body, trava só
+  // o GESTO do user (wheel, touch, teclado) no próprio overlay do tour,
+  // que já cobre o ecrã inteiro: o scroll continua a existir e a
+  // responder normalmente a scrollIntoView/scrollTo, só não responde a
+  // nada que o user tente fazer manualmente enquanto o tour está aberto.
   useEffect(() => {
-    const scrollY = window.scrollY
-    document.body.style.top = `-${scrollY}px`
-    document.body.classList.add('tour-lock-scroll')
+    function blockKeyScroll(e) {
+      if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].includes(e.key)) e.preventDefault()
+    }
+    function blockGestureScroll(e) { e.preventDefault() }
+    window.addEventListener('keydown', blockKeyScroll)
+    // { passive: false } é obrigatório para o preventDefault destes dois
+    // fazer alguma coisa, o browser trata wheel/touchmove como passive
+    // por omissão (não bloqueia scroll) a não ser que se diga o contrário.
+    window.addEventListener('wheel', blockGestureScroll, { passive: false })
+    window.addEventListener('touchmove', blockGestureScroll, { passive: false })
     return () => {
-      document.body.classList.remove('tour-lock-scroll')
-      document.body.style.top = ''
-      window.scrollTo(0, scrollY)
+      window.removeEventListener('keydown', blockKeyScroll)
+      window.removeEventListener('wheel', blockGestureScroll)
+      window.removeEventListener('touchmove', blockGestureScroll)
     }
   }, [])
-
-  // Rede de segurança: se ainda assim algum scroll passar (ex: teclado,
-  // scroll dentro de um painel com o seu próprio overflow), volta a medir
-  // o alvo do passo atual em vez de deixar o destaque fixo dessincronizar
-  // da posição real do elemento.
-  useEffect(() => {
-    function onScroll() {
-      const r = measureStep(stepIdx, steps)
-      if (r) setRect(r)
-    }
-    window.addEventListener('scroll', onScroll, true)
-    return () => window.removeEventListener('scroll', onScroll, true)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stepIdx])
 
   // Junta dois retângulos no menor que envolve os dois — usado para o
   // destaque do passo "preview" cobrir o botão E o menu aberto por baixo
@@ -953,63 +947,66 @@ function ProjectTour({ isPap, onClose, onStep }) {
   useEffect(() => {
     skipRef.current = false
     onStep?.(steps[stepIdx].target)
-    const el = resolveEl(steps[stepIdx].target)
-    if (el) el.scrollIntoView({ behavior: 'instant', block: 'center' })
+    // Limpa o destaque do passo anterior já: sem isto, enquanto a medição
+    // deste passo não encontra o alvo (mesmo que seja só um frame), o
+    // quadrado azul ficava preso na posição do passo de trás, parecendo
+    // que "não mudou nem selecionou nada" em vez de simplesmente ainda
+    // estar à procura.
+    setRect(null)
 
-    let raf1, raf2, remeasureTimer
-    // Bug antigo: o botão de um passo (ex. "edit"/"diary", dentro da
-    // Navbar) podia ainda não estar no DOM 2 frames depois de o passo
-    // mudar (isOwner/dados do projeto ainda a resolver), e o tour saltava
-    // logo para o próximo alvo que encontrasse (ex. "1/9" ia direto a
-    // "4/9", saltando passos inteiros). Em vez de desistir ao fim de 2
-    // frames, tenta outra vez por até ~1.5s antes de aceitar que o alvo
-    // deste passo realmente não existe e avançar para o seguinte.
-    let attempts = 0
-    const MAX_ATTEMPTS = 15
-    function tryMeasure() {
+    // Duas falhas reais, mesma causa: medir uma vez (ou umas tentativas
+    // com intervalo fixo) e confiar no resultado.
+    // (1) Salto "1/9 direto a 4/9": o alvo de um passo (ex. "edit"/"diary",
+    // dentro da Navbar) podia ainda não estar no DOM (isOwner/dados do
+    // projeto a resolver), em produção, com latência de rede real, isto
+    // demora mais do que as ~1.5s que o número fixo de tentativas (15×100ms)
+    // dava antes de desistir e avançar para o próximo alvo que encontrasse.
+    // (2) Quadrado azul desalinhado: mesmo depois de encontrar o alvo, o
+    // resto da página continua a carregar por baixo (nota do professor,
+    // views, etc.), o layout desloca-se, e a medição única já não
+    // correspondia à posição real.
+    // Em vez de um número de tentativas, mede em CONTÍNUO, a cada frame,
+    // enquanto este passo estiver visível, corrige os dois problemas à
+    // vez, sem outra lógica: encontra tarde, desloca o layout, mede outra
+    // vez, sempre. Só desiste e avança se o alvo deste passo realmente
+    // nunca aparecer dentro de GIVE_UP_AFTER_MS (generoso de propósito,
+    // bem mais do que qualquer latência real de rede).
+    let rafId
+    let scrolled = false
+    const startTime = performance.now()
+    const GIVE_UP_AFTER_MS = 8000
+    function loop() {
       if (skipRef.current) return
       const r = measureStep(stepIdx, steps)
-      if (r) { setRect(r); return }
-      attempts++
-      if (attempts < MAX_ATTEMPTS) {
-        remeasureTimer = setTimeout(tryMeasure, 100)
+      if (r) {
+        // Scroll só na primeira vez que este passo encontra o alvo, não a
+        // cada frame (senão lutava contra o scroll manual do user). Fazia
+        // scroll só uma vez, logo ao montar o passo, se o alvo (ex.
+        // "Missões", mais abaixo na página) ainda não estivesse no DOM
+        // nesse instante (dados a carregar), nunca mais scrollava para lá,
+        // mesmo depois de a medição em contínuo o encontrar mais tarde.
+        if (!scrolled) {
+          scrolled = true
+          const el = resolveEl(steps[stepIdx].target)
+          if (el) el.scrollIntoView({ behavior: 'instant', block: 'center' })
+        }
+        setRect(prev => (prev && prev.left === r.left && prev.top === r.top && prev.width === r.width && prev.height === r.height) ? prev : r)
+        rafId = requestAnimationFrame(loop)
         return
       }
-      const found = advanceToVisible(stepIdx)
-      if (!found) { onClose(false); return }
-      if (found.idx !== stepIdx) { setStepIdx(found.idx); return }
-      setRect(found.rect)
+      if (performance.now() - startTime > GIVE_UP_AFTER_MS) {
+        const found = advanceToVisible(stepIdx)
+        if (!found) { onClose(false); return }
+        if (found.idx !== stepIdx) { setStepIdx(found.idx); return }
+        setRect(found.rect)
+        return
+      }
+      rafId = requestAnimationFrame(loop)
     }
-    raf1 = requestAnimationFrame(() => {
-      raf2 = requestAnimationFrame(tryMeasure)
-    })
-    // O passo "preview" abre o menu real (forceMenuOpen) — isso atravessa
-    // Context + outro componente (Navbar), pode não estar montado ainda
-    // aos 2 frames daqui. Remede um pouco depois, só para apanhar o menu
-    // já aberto e alargar o destaque a ele.
-    let previewTimer
-    if (steps[stepIdx].target === 'preview') {
-      previewTimer = setTimeout(() => {
-        if (skipRef.current) return
-        const r = measureStep(stepIdx, steps)
-        if (r) setRect(r)
-      }, 150)
-    }
-    return () => { skipRef.current = true; cancelAnimationFrame(raf1); cancelAnimationFrame(raf2); clearTimeout(remeasureTimer); clearTimeout(previewTimer) }
+    rafId = requestAnimationFrame(loop)
+    return () => { skipRef.current = true; cancelAnimationFrame(rafId) }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepIdx])
-
-  useEffect(() => {
-    function onResize() {
-      const el = resolveEl(steps[stepIdx].target)
-      if (el) {
-        const r = el.getBoundingClientRect()
-        if (r.width > 0 || r.height > 0) setRect(r)
-      }
-    }
-    window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
-  }, [stepIdx, steps])
 
   const step = steps[stepIdx]
   const PAD = 10
@@ -1019,9 +1016,13 @@ function ProjectTour({ isPap, onClose, onStep }) {
   } : null
 
   function tooltipPos() {
-    if (!rect) return { left: -999, top: -999 }
     const TW = 320, TH = 540, P = 16
     const vw = window.innerWidth, vh = window.innerHeight
+    // Sem alvo medido ainda (ou nunca encontrado): centra o cartão no
+    // ecrã em vez de o mandar para fora (-999,-999). O tour inteiro
+    // desaparecia enquanto procurava, parecendo partido; agora mostra-se
+    // sempre, só sem o quadrado de destaque à volta de nada.
+    if (!rect) return { left: Math.max(P, (vw - TW) / 2), top: Math.max(P, (vh - TH) / 2) }
     const cy = rect.top + rect.height / 2
     const centeredTop = Math.max(P, Math.min(cy - TH / 2, vh - TH - P))
     const cx = Math.max(P, Math.min(rect.left + rect.width / 2 - TW / 2, vw - TW - P))
@@ -1145,7 +1146,12 @@ function ProjectTour({ isPap, onClose, onStep }) {
           zIndex: 9101,
         }} />
       )}
-      {rect && (
+      {/* Cartão do passo mostra-se sempre, mesmo sem "rect" ainda (alvo por
+          encontrar): o quadrado de destaque (spotlight, acima) é que fica
+          condicionado a existir um alvo medido, não o cartão inteiro. Sem
+          isto, o tour inteiro desaparecia enquanto procurava um alvo mais
+          lento a aparecer, parecia ter fechado sozinho. */}
+      {
         isMobile ? (
           mobileSheetAtBottom ? (
             /* target in top half → sheet at bottom */
@@ -1196,7 +1202,7 @@ function ProjectTour({ isPap, onClose, onStep }) {
             {tooltipContent}
           </div>
         )
-      )}
+      }
     </div>,
     document.body
   )
