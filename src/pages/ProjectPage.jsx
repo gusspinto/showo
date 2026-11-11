@@ -854,23 +854,31 @@ function ProjectTour({ isPap, onClose, onStep }) {
 
   // O tour é o foco enquanto está aberto: antes dava para mexer na app por
   // baixo dele (navegar para outra página, clicar em botões, fazer scroll
-  // do fundo), apontado como bug. "overflow:hidden" sozinho no body não
-  // travava o scroll a sério (sobretudo por gesto, em mobile): ainda dava
-  // para arrastar a página, e como o destaque (spotlight) fica fixo no
-  // ecrã enquanto o alvo real se move com o scroll, parecia o tour "saltar"
-  // para um elemento errado. body.tour-lock-scroll usa position:fixed
-  // (mesmo padrão do Mensagens.css), que bloqueia mesmo; guarda o scroll
-  // atual em "top" negativo para não saltar para o topo, e repõe-no ao
-  // fechar. O bloqueio de cliques no resto do ecrã está no pointerEvents
-  // do overlay, mais abaixo.
+  // do fundo), apontado como bug. Já tentei bloquear com
+  // body.tour-lock-scroll (position:fixed, mesmo padrão do Mensagens.css),
+  // mas isso trava TODO o scroll, incluindo o scrollIntoView do próprio
+  // tour: um body position:fixed não se move com scrollIntoView/scrollTo,
+  // por isso o passo "Missões" (mais abaixo na página) deixava de fazer
+  // scroll automático nenhum. Em vez de travar a posição do body, trava só
+  // o GESTO do user (wheel, touch, teclado) no próprio overlay do tour,
+  // que já cobre o ecrã inteiro: o scroll continua a existir e a
+  // responder normalmente a scrollIntoView/scrollTo, só não responde a
+  // nada que o user tente fazer manualmente enquanto o tour está aberto.
   useEffect(() => {
-    const scrollY = window.scrollY
-    document.body.style.top = `-${scrollY}px`
-    document.body.classList.add('tour-lock-scroll')
+    function blockKeyScroll(e) {
+      if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].includes(e.key)) e.preventDefault()
+    }
+    function blockGestureScroll(e) { e.preventDefault() }
+    window.addEventListener('keydown', blockKeyScroll)
+    // { passive: false } é obrigatório para o preventDefault destes dois
+    // fazer alguma coisa, o browser trata wheel/touchmove como passive
+    // por omissão (não bloqueia scroll) a não ser que se diga o contrário.
+    window.addEventListener('wheel', blockGestureScroll, { passive: false })
+    window.addEventListener('touchmove', blockGestureScroll, { passive: false })
     return () => {
-      document.body.classList.remove('tour-lock-scroll')
-      document.body.style.top = ''
-      window.scrollTo(0, scrollY)
+      window.removeEventListener('keydown', blockKeyScroll)
+      window.removeEventListener('wheel', blockGestureScroll)
+      window.removeEventListener('touchmove', blockGestureScroll)
     }
   }, [])
 
@@ -945,8 +953,6 @@ function ProjectTour({ isPap, onClose, onStep }) {
     // que "não mudou nem selecionou nada" em vez de simplesmente ainda
     // estar à procura.
     setRect(null)
-    const el = resolveEl(steps[stepIdx].target)
-    if (el) el.scrollIntoView({ behavior: 'instant', block: 'center' })
 
     // Duas falhas reais, mesma causa: medir uma vez (ou umas tentativas
     // com intervalo fixo) e confiar no resultado.
@@ -966,12 +972,24 @@ function ProjectTour({ isPap, onClose, onStep }) {
     // nunca aparecer dentro de GIVE_UP_AFTER_MS (generoso de propósito,
     // bem mais do que qualquer latência real de rede).
     let rafId
+    let scrolled = false
     const startTime = performance.now()
     const GIVE_UP_AFTER_MS = 8000
     function loop() {
       if (skipRef.current) return
       const r = measureStep(stepIdx, steps)
       if (r) {
+        // Scroll só na primeira vez que este passo encontra o alvo, não a
+        // cada frame (senão lutava contra o scroll manual do user). Fazia
+        // scroll só uma vez, logo ao montar o passo, se o alvo (ex.
+        // "Missões", mais abaixo na página) ainda não estivesse no DOM
+        // nesse instante (dados a carregar), nunca mais scrollava para lá,
+        // mesmo depois de a medição em contínuo o encontrar mais tarde.
+        if (!scrolled) {
+          scrolled = true
+          const el = resolveEl(steps[stepIdx].target)
+          if (el) el.scrollIntoView({ behavior: 'instant', block: 'center' })
+        }
         setRect(prev => (prev && prev.left === r.left && prev.top === r.top && prev.width === r.width && prev.height === r.height) ? prev : r)
         rafId = requestAnimationFrame(loop)
         return
