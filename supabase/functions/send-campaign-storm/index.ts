@@ -41,7 +41,7 @@ function wrap(opts: { firstName?: string; unsubscribeUrl: string; bodyHtml: stri
   <tr>
     <td align="center" bgcolor="#080808" style="background:#080808;padding:48px 24px;font-family:-apple-system,Helvetica,Arial,sans-serif;">
       <table role="presentation" width="440" border="0" cellpadding="0" cellspacing="0" style="max-width:440px;width:100%;text-align:left;">
-        <tr><td style="padding:0 0 28px;"><img src="https://showo.pt/icon.png" alt="Showo" width="32" height="32" style="display:block;border:0;" /></td></tr>
+        <tr><td align="center" style="padding:0 0 28px;"><img src="https://showo.pt/favicon.png" alt="Showo" width="32" height="32" style="display:block;border:0;margin:0 auto;" /></td></tr>
         ${firstName ? `<tr><td style="padding:0 0 16px;color:#888888;font-size:16px;line-height:1.4;">${esc(firstName)},</td></tr>` : ''}
         ${bodyHtml}
         <tr><td style="padding:0 0 40px;"><a href="${APP}/dashboard" style="display:inline-block;background:#2B7EF5;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:12px 24px;border-radius:10px;">${esc(ctaLabel)}</a></td></tr>
