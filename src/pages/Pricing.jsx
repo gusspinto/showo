@@ -265,15 +265,12 @@ export default function Pricing() {
     setLoading(plan.id)
     setError('')
     try {
-      // O anual vai por create-annual-checkout (pagamento único, com
-      // Multibanco e MB WAY): esses métodos não funcionam em
-      // mode:'subscription' no Stripe. Mesma troca do PlanGate.jsx.
       const { data, error: fnErr } = await supabase.functions.invoke(
-        annual ? 'create-annual-checkout' : 'create-checkout',
-        { body: annual ? { plan: plan.id } : { plan: plan.id, period: 'monthly' } },
+        'whop-create-checkout-session',
+        { body: { plan: plan.id, period: annual ? 'annual' : 'monthly' } },
       )
       if (fnErr || !data?.url) { setError('Erro ao iniciar pagamento. Tenta novamente.'); return }
-      // Só agora é que se confirma que o Stripe respondeu com uma sessão
+      // Só agora é que se confirma que o Whop respondeu com uma sessão
       // válida, por isso só agora se regista quem chegou mesmo ao checkout
       // (checkout_started, acima, só sabe que a pessoa clicou, não que o
       // pedido teve sucesso).

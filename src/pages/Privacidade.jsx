@@ -4,7 +4,7 @@ export default function Privacidade() {
   return (
     <LegalLayout
       title="Política de Privacidade"
-      updated="17 de setembro de 2026"
+      updated="11 de novembro de 2026"
     >
       <h2>Quem somos</h2>
       <p>
@@ -14,7 +14,7 @@ export default function Privacidade() {
 
       <h2>Que dados guardamos</h2>
       <ul>
-        <li><strong>Dados da conta:</strong> o teu nome, email, a palavra-passe (guardada sempre encriptada), o número de telemóvel e o papel que escolheste, seja aluno, professor ou recrutador.</li>
+        <li><strong>Dados da conta:</strong> o teu nome, email, a palavra-passe (guardada sempre encriptada), o número de telemóvel e a tua ocupação, seja aluno, freelancer, profissional ou à procura de emprego.</li>
         <li><strong>Perfil:</strong> escola, curso, ano, foto, competências e links como o LinkedIn ou o GitHub. Preenches só o que quiseres.</li>
         <li><strong>O que crias:</strong> os teus projetos, os textos de cada secção, as imagens de capa, as mensagens e os comentários.</li>
         <li><strong>Como usas a app:</strong> que páginas visitas e que ações fazes, para percebermos o que ajuda e o que atrapalha.</li>
@@ -70,9 +70,10 @@ export default function Privacidade() {
 
       <h2>Menores de idade</h2>
       <p>
-        O Showo é usado por estudantes e alguns podem ser menores. Em Portugal, tratar dados de quem tem menos de 16 anos precisa
-        do consentimento de quem cuida deles. Se és encarregado de educação e achas que um menor nos deu dados sem esse consentimento,
-        escreve-nos e apagamos tudo.
+        O Showo é usado por estudantes e alguns podem ser menores. Em Portugal (Lei n.º 58/2019, artigo 16.º), tratar dados de
+        quem tem menos de 13 anos precisa do consentimento de quem tem a responsabilidade parental sobre a criança. Se és
+        encarregado de educação e achas que um menor com menos de 13 anos nos deu dados sem esse consentimento, escreve-nos e
+        apagamos tudo.
       </p>
 
       <h2>Os teus direitos</h2>

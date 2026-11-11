@@ -259,17 +259,21 @@ export function planHighlights(fromPlanId, toPlan) {
   return items.slice(0, 3)
 }
 
-// Texto da promoção de lançamento (código SHOWO50, aplicado automaticamente
-// no checkout via ONBOARDING_DISCOUNT_CODE). Uma só fonte de verdade para a
-// Pricing e o pop-up de upgrade não desalinharem a data ou o desconto.
-export const ONBOARDING_DISCOUNT_NOTE = '-50% nos primeiros 6 meses · código válido até 18 dez'
+// Texto da promoção de lançamento (código SHOWO50). No Whop não há forma
+// confirmada de aplicar o código sozinho no checkout (testado via API e via
+// parâmetro de URL, nenhum funcionou), por isso o código tem de aparecer
+// aqui explícito, para a pessoa saber o que escrever no botão "Adicionar
+// código promocional" do checkout. Mesmo problema que o Stripe já tinha
+// (0 resgates, código nunca mostrado, só a promessa de desconto), agora
+// resolvido mostrando o código em vez de assumir que a pessoa adivinha.
+// Uma só fonte de verdade para a Pricing e o pop-up de upgrade não
+// desalinharem a data, o desconto ou o código.
+export const ONBOARDING_DISCOUNT_CODE_LABEL = 'SHOWO50'
+export const ONBOARDING_DISCOUNT_NOTE = `-50% nos primeiros 6 meses com o código ${ONBOARDING_DISCOUNT_CODE_LABEL} · válido até 18 dez`
 
 // Mesma nota para o anual, que é pagamento único (não faz sentido falar em
-// "primeiros 6 meses" para uma só cobrança). Gustavo apontou que o anual
-// nunca aplicava este desconto, nem no preço mostrado nem no checkout real
-// (create-annual-checkout só tinha allow_promotion_codes, a pessoa tinha de
-// escrever o código à mão, 0 resgates confirmados no Stripe).
-export const ANNUAL_ONBOARDING_DISCOUNT_NOTE = '-50% no primeiro ano · código válido até 18 dez'
+// "primeiros 6 meses" para uma só cobrança).
+export const ANNUAL_ONBOARDING_DISCOUNT_NOTE = `-50% no primeiro ano com o código ${ONBOARDING_DISCOUNT_CODE_LABEL} · válido até 18 dez`
 
 export function remainingUses(planId, feature, usageMap) {
   const limit = getPlan(planId).ai[feature]
