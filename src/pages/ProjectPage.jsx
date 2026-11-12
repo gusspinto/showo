@@ -4930,7 +4930,7 @@ export default function ProjectPage() {
                             <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 1 }}>{rec.company}</div>
                           )}
                         </div>
-                        <a href={`/u/${rec.username || rec.id}`} style={{
+                        <a href={`/empresa/${rec.username || rec.id}`} style={{
                           padding: '6px 12px', borderRadius: 'var(--radius-full)', fontSize: 12, fontWeight: 600,
                           background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)',
                           color: 'var(--color-text)', textDecoration: 'none', flexShrink: 0,

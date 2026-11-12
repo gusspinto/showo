@@ -250,7 +250,7 @@ function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, onShare, i
             <Share2 size={13} />
           </button>
           {recruiterProfile?.username && (
-            <button onClick={() => navigate(`/u/${recruiterProfile.username}`)}
+            <button onClick={() => navigate(`/empresa/${recruiterProfile.username}`)}
               style={{ fontSize: 12, color: C.muted, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 7, padding: '5px 10px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4 }}>
               Ver empresa <ChevronRight size={11} />
             </button>

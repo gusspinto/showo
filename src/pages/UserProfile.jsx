@@ -365,6 +365,16 @@ export default function UserProfile() {
         : await supabase.from('profiles').select(PROFILE_COLS).eq('username', username).single()
 
       if (profileErr || !profileData) { setNotFound(true); setLoading(false); return }
+      // Conta de empresa/recrutador: nunca mostra o perfil genérico aqui
+      // (a grelha de projetos não faz sentido numa conta de empresa), vai
+      // sempre para a página dedicada, mesmo por link antigo/partilhado.
+      if (profileData.role === 'empresa' || profileData.role === 'recrutador') {
+        // username || id: a EmpresaPage aceita os dois (mesmo fallback do
+        // isUUID aqui em cima), não depende de o username estar sempre
+        // definido.
+        navigate(`/empresa/${profileData.username || profileData.id}`, { replace: true })
+        return
+      }
       setProfile(profileData)
 
       // Heatmap agregado — soma o diário de todos os projetos não-privados

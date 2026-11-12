@@ -45,7 +45,7 @@ function timeAgo(ts) {
 }
 
 export default function EmpresaPage() {
-  const { id } = useParams()
+  const { username } = useParams()
   const navigate  = useNavigate()
   const { user, profile: myProfile } = useAuth()
 
@@ -55,20 +55,24 @@ export default function EmpresaPage() {
   const [loading, setLoading]   = useState(true)
   const [notFound, setNotFound] = useState(false)
 
-  const isOwnPage = user?.id === id
+  // Por id, não por username do URL: funciona tanto para /empresa/:username
+  // como para o fallback por UUID (ex: links antigos sem username).
+  const isOwnPage = !!user?.id && user.id === company?.id
   const myRole = myProfile?.role
   const isStudent = myRole === 'aluno' || myRole === 'professor' || !myRole
 
-  useEffect(() => { loadPage() }, [id])
+  useEffect(() => { loadPage() }, [username])
 
   async function loadPage() {
     setLoading(true)
 
-    const { data } = await supabase
-      .from('profiles')
-      .select('id, full_name, username, avatar_url, role, bio, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size')
-      .eq('id', id)
-      .single()
+    // Mesmo fallback do UserProfile.jsx: a maioria dos links já usa
+    // username, mas alguns sítios ainda só têm o id à mão (ex: sem
+    // username definido ainda).
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(username)
+    const { data } = isUUID
+      ? await supabase.from('profiles').select('id, full_name, username, avatar_url, role, bio, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size').eq('id', username).single()
+      : await supabase.from('profiles').select('id, full_name, username, avatar_url, role, bio, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size').eq('username', username).single()
 
     if (!data || (data.role !== 'recrutador' && data.role !== 'empresa')) {
       setNotFound(true)
@@ -81,7 +85,7 @@ export default function EmpresaPage() {
     const { data: vagasData } = await supabase
       .from('vagas')
       .select('*')
-      .eq('recruiter_id', id)
+      .eq('recruiter_id', data.id)
       .eq('is_active', true)
       .order('created_at', { ascending: false })
 
@@ -304,27 +308,23 @@ export default function EmpresaPage() {
               </div>
             )}
 
-            {company.username && (
-              <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '20px' }}>
-                <h3 style={{ margin: '0 0 12px', fontSize: 14, fontWeight: 700, color: C.text }}>Recrutador</h3>
-                <button onClick={() => navigate(`/u/${company.username}`)}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.12s' }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'var(--color-bg-alt)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                  {company.avatar_url ? (
-                    <img src={company.avatar_url} alt="" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }} />
-                  ) : (
-                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: accentColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, color: '#fff' }}>
-                      {name[0].toUpperCase()}
-                    </div>
-                  )}
-                  <div style={{ textAlign: 'left' }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{company.full_name || company.username}</div>
-                    <div style={{ fontSize: 11, color: C.muted }}>@{company.username}</div>
-                  </div>
+            {/* "O que é o Showo", para quem chega aqui de um link de vaga
+                partilhado (WhatsApp, LinkedIn, etc.) sem nunca ter ouvido
+                falar da plataforma. Antes disto, havia aqui um cartão
+                "Recrutador" a repetir a própria empresa (link morto, sem
+                sentido, apontava para a mesma conta que já está a ver). */}
+            <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '20px' }}>
+              <h3 style={{ margin: '0 0 10px', fontSize: 14, fontWeight: 700, color: C.text }}>O que é o Showo</h3>
+              <p style={{ margin: '0 0 14px', fontSize: 13, color: C.muted, lineHeight: 1.6 }}>
+                Uma plataforma onde qualquer pessoa, com ou sem experiência, mostra os projetos que já fez, com IA a ajudar a transformá-los num portefólio a sério.
+              </p>
+              {!user && (
+                <button onClick={() => navigate('/register')}
+                  style={{ width: '100%', background: C.blue, border: 'none', borderRadius: 8, padding: '10px 16px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  Criar conta grátis
                 </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
 

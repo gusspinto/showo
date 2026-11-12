@@ -105,6 +105,7 @@ const GenerateImage = lazyPage(() => import('./pages/GenerateImage'))
 const Pipeline      = lazyPage(() => import('./pages/Pipeline'))
 const Settings     = lazyPage(() => import('./pages/Settings'))
 const UserProfile  = lazyPage(() => import('./pages/UserProfile'))
+const EmpresaPage  = lazyPage(() => import('./pages/EmpresaPage'))
 const Admin        = lazyPage(() => import('./pages/Admin'))
 const TurmaPage    = lazyPage(() => import('./pages/TurmaPage'))
 const TurmaAluno   = lazyPage(() => import('./pages/TurmaAluno'))
@@ -861,6 +862,7 @@ export default function App() {
               <Route path="/pipeline"      element={<Pipeline />}    />
               <Route path="/settings"      element={<Settings />}    />
               <Route path="/u/:username"   element={<UserProfile />} />
+              <Route path="/empresa/:username" element={<EmpresaPage />} />
               <Route path="/admin"         element={<Admin />}       />
               <Route path="/turma/:code"   element={<TurmaPage />}   />
               <Route path="/turma/:code/aluno/:userId" element={<TurmaAluno />} />
