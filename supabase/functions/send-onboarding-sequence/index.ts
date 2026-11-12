@@ -171,53 +171,53 @@ type DayBuilderCtx = {
   isProfessional: boolean
 }
 
-function buildDay1({ firstName, unsubscribeUrl, hasProject, projectState, code, dia, daysToDefense }: DayBuilderCtx): Built {
+// Reescrito 2026-11-12: a sequência inteira tinha taxa de clique de
+// ~0,17% desde o dia 1 (sem padrão de queda ao longo dos 14 dias, medido
+// contra outros tipos de email no sistema que andam entre 0,7% e 1,9%).
+// O dia 1 sempre empurrou o código de desconto, mesmo para quem nunca
+// tinha criado um projeto, a vender um upgrade pago antes de a pessoa ter
+// sequer usado a funcionalidade grátis uma vez. Este teste tira o
+// desconto e a faixa de urgência do dia 1 (urgencyBand incluída), fica só
+// um pedido direto e honesto para a ação gratuita certa.
+function buildDay1({ firstName, unsubscribeUrl, hasProject, projectState }: DayBuilderCtx): Built {
   if (projectState === 'incomplete') {
-    const subject = 'Isto falta ao teu projeto antes de o partilhares'
+    const subject = 'O teu projeto ainda não diz muito a quem o vir'
     return {
       subject,
       html: wrapEmail(
         greeting(firstName) +
-        urgencyBand(dia, code, daysToDefense) +
-        headline('Já criaste o projeto. Falta torná-lo apresentável.') +
-        paragraph('Um projeto com só uma ou duas secções ainda não diz muito a quem o vê, professor, recrutador, ou tu próprio dentro de 6 meses.') +
-        paragraph('Volta e acrescenta pelo menos mais uma secção: o problema que resolveste, as decisões que tomaste, ou os resultados. É nessa altura que o portefólio começa a valer a pena partilhar.') +
-        paragraph(`Já agora: o código ${esc(code)} dá 50% no Plus durante os primeiros 6 meses.`, true) +
-        cta(`${APP}/dashboard`, 'Acabar a parte que falta'),
-        `Dia ${dia} de ${TOTAL_DAYS}`,
+        headline('Já criaste o projeto. Falta mostrar o que fizeste.') +
+        paragraph('Quem abrir o link agora só vê uma ou duas partes preenchidas. Falta o resto: o problema que resolveste, as decisões que tomaste, os resultados.') +
+        paragraph('Volta e acrescenta mais uma secção. É o suficiente para começar a valer a pena partilhar.', true) +
+        cta(`${APP}/dashboard`, 'Acabar o que falta'),
+        'Dia 1 de 14',
         unsubscribeUrl,
       ),
     }
   }
   if (!hasProject) {
-    const subject = 'Em 2 minutos deixas de ter zero projetos'
+    const subject = 'O primeiro projeto é só carregar o que já tens'
     return {
       subject,
       html: wrapEmail(
         greeting(firstName) +
-        urgencyBand(dia, code, daysToDefense) +
-        headline('Ainda não criaste o teu primeiro projeto') +
-        paragraph('Não precisa de estar pronto nem perfeito. Sobe um PDF, um PowerPoint, ou descreve em duas frases o que já fizeste, a IA trata do resto.') +
-        paragraph('A partir daí, a IA já lê o diário do projeto antes de responder, sem teres de explicar tudo outra vez sempre que perguntas algo.') +
-        paragraph(`E já que estás a começar: o código ${esc(code)} dá 50% no Plus durante os primeiros 6 meses, sempre que decidires avançar.`, true) +
-        cta(`${APP}/novo`, 'Criar o primeiro projeto agora'),
-        `Dia ${dia} de ${TOTAL_DAYS}`,
+        headline('Ainda não criaste nada. Leva 2 minutos.') +
+        paragraph('Não precisa de estar pronto nem perfeito. Sobe um PDF, um PowerPoint, ou escreve em duas frases o que já fizeste, a IA organiza o resto.', true) +
+        cta(`${APP}/novo`, 'Criar o primeiro projeto'),
+        'Dia 1 de 14',
         unsubscribeUrl,
       ),
     }
   }
-  const subject = 'Toda a vez que abres o ChatGPT, começas do zero outra vez'
+  const subject = 'O teu diário já guarda o que fizeste até agora'
   return {
     subject,
     html: wrapEmail(
       greeting(firstName) +
-      urgencyBand(dia, code, daysToDefense) +
-      headline('Já reparaste que o ChatGPT começa sempre do zero?') +
-      paragraph('Sempre que abres o ChatGPT para falar do teu projeto, tens de explicar tudo outra vez.') +
-      paragraph('No Showo a IA lê o diário do projeto antes de responder. Continuas a mesma conversa, com contexto acumulado desde o primeiro dia.') +
-      paragraph(`Se quiseres testar a fundo, o código ${esc(code)} dá 50% no Plus durante os primeiros 6 meses.`, true) +
-      cta(`${APP}/dashboard`, 'Nunca mais repetir isto'),
-      `Dia ${dia} de ${TOTAL_DAYS}`,
+      headline('Da próxima vez, não começas do zero') +
+      paragraph('O diário do teu projeto guarda o que já escreveste. Quando voltares, a IA já sabe o contexto, não tens de explicar tudo outra vez.', true) +
+      cta(`${APP}/dashboard`, 'Voltar ao projeto'),
+      'Dia 1 de 14',
       unsubscribeUrl,
     ),
   }
