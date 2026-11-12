@@ -91,7 +91,7 @@ function RecruiterCard({ vaga, cands, onEdit, onToggle, onDelete, onShare, expan
   const tipo = TIPO_INFO[vaga.tipo] ?? TIPO_INFO.estagio
   const candList = cands || []
   return (
-    <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, overflow: 'hidden' }}>
+    <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
       <div style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -103,12 +103,12 @@ function RecruiterCard({ vaga, cands, onEdit, onToggle, onDelete, onShare, expan
             {vaga.area && <p style={{ margin: '4px 0 0', fontSize: 13, color: C.muted }}>{vaga.area}</p>}
           </div>
           <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-            <button onClick={() => onShare(vaga)} style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 7, padding: '5px 8px', cursor: 'pointer', color: C.muted, display: 'flex', alignItems: 'center' }} title="Partilhar"><Share2 size={13} /></button>
-            <button onClick={() => onEdit(vaga)} style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 7, padding: '5px 8px', cursor: 'pointer', color: C.muted, display: 'flex', alignItems: 'center' }} title="Editar"><Pencil size={13} /></button>
-            <button onClick={() => onToggle(vaga)} style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 7, padding: '5px 8px', cursor: 'pointer', color: vaga.is_active ? C.amber : C.green, display: 'flex', alignItems: 'center' }} title={vaga.is_active ? 'Pausar' : 'Ativar'}>
+            <button onClick={() => onShare(vaga)} style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-md)', padding: '5px 8px', cursor: 'pointer', color: C.muted, display: 'flex', alignItems: 'center' }} title="Partilhar"><Share2 size={13} /></button>
+            <button onClick={() => onEdit(vaga)} style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-md)', padding: '5px 8px', cursor: 'pointer', color: C.muted, display: 'flex', alignItems: 'center' }} title="Editar"><Pencil size={13} /></button>
+            <button onClick={() => onToggle(vaga)} style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-md)', padding: '5px 8px', cursor: 'pointer', color: vaga.is_active ? C.amber : C.green, display: 'flex', alignItems: 'center' }} title={vaga.is_active ? 'Pausar' : 'Ativar'}>
               {vaga.is_active ? <X size={13} /> : <Check size={13} />}
             </button>
-            <button onClick={() => onDelete(vaga.id)} style={{ background: 'transparent', border: `1px solid var(--color-error-subtle)`, borderRadius: 7, padding: '5px 8px', cursor: 'pointer', color: C.red, display: 'flex', alignItems: 'center' }} title="Apagar"><Trash2 size={13} /></button>
+            <button onClick={() => onDelete(vaga.id)} style={{ background: 'transparent', border: `1px solid var(--color-error-subtle)`, borderRadius: 'var(--radius-md)', padding: '5px 8px', cursor: 'pointer', color: C.red, display: 'flex', alignItems: 'center' }} title="Apagar"><Trash2 size={13} /></button>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', justifyContent: 'space-between' }}>
@@ -118,7 +118,7 @@ function RecruiterCard({ vaga, cands, onEdit, onToggle, onDelete, onShare, expan
             <DeadlineBadge deadline={vaga.deadline} />
           </div>
           <button onClick={onToggleExpand}
-            style={{ display: 'flex', alignItems: 'center', gap: 5, background: candList.length > 0 ? 'var(--color-surface-hover)' : 'transparent', border: `1px solid ${candList.length > 0 ? 'var(--color-surface-hover)' : C.border}`, borderRadius: 7, padding: '5px 10px', cursor: 'pointer', color: candList.length > 0 ? C.blue : C.muted, fontSize: 12, fontWeight: 600, fontFamily: 'inherit' }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 5, background: candList.length > 0 ? 'var(--color-surface-hover)' : 'transparent', border: `1px solid ${candList.length > 0 ? 'var(--color-surface-hover)' : C.border}`, borderRadius: 'var(--radius-md)', padding: '5px 10px', cursor: 'pointer', color: candList.length > 0 ? C.blue : C.muted, fontSize: 12, fontWeight: 600, fontFamily: 'inherit' }}>
             <Users size={12} /> {candList.length} candidatura{candList.length !== 1 ? 's' : ''}
             {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
           </button>
@@ -151,7 +151,7 @@ function RecruiterCard({ vaga, cands, onEdit, onToggle, onDelete, onShare, expan
                         const question = (vaga.screening_questions || []).find(q => q.id === a.id)
                         if (!question) return null
                         return (
-                          <div key={a.id} style={{ fontSize: 12, background: C.bg, border: `1px solid ${C.border}`, borderRadius: 7, padding: '7px 10px' }}>
+                          <div key={a.id} style={{ fontSize: 12, background: C.bg, border: `1px solid ${C.border}`, borderRadius: 'var(--radius-sm)', padding: '7px 10px' }}>
                             <div style={{ color: C.subtle, fontWeight: 600, marginBottom: 2 }}>{question.q}</div>
                             <div style={{ color: C.text }}>{a.answer || '—'}</div>
                           </div>
@@ -161,14 +161,14 @@ function RecruiterCard({ vaga, cands, onEdit, onToggle, onDelete, onShare, expan
                   )}
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                     <button onClick={() => navigate(p?.username ? `/u/${p.username}` : `/u/${p?.id}`)}
-                      style={{ fontSize: 12, fontWeight: 600, color: C.blue, background: 'var(--color-surface-hover)', border: '1px solid var(--color-surface-hover)', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>Ver perfil</button>
+                      style={{ fontSize: 12, fontWeight: 600, color: C.blue, background: 'var(--color-surface-hover)', border: '1px solid var(--color-surface-hover)', borderRadius: 'var(--radius-md)', padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>Ver perfil</button>
                     <button onClick={() => navigate(`/mensagens?to=${p?.id}`)}
-                      style={{ fontSize: 12, fontWeight: 600, color: C.muted, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>Mensagem</button>
+                      style={{ fontSize: 12, fontWeight: 600, color: C.muted, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-md)', padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>Mensagem</button>
                     {c.status === 'pendente' && <>
                       <button onClick={() => onStatusChange(c.id, vaga.id, 'aceite')}
-                        style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-success)', background: 'var(--color-success-subtle)', border: '1px solid var(--color-success-subtle)', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>Aceitar</button>
+                        style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-success)', background: 'var(--color-success-subtle)', border: '1px solid var(--color-success-subtle)', borderRadius: 'var(--radius-md)', padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>Aceitar</button>
                       <button onClick={() => onStatusChange(c.id, vaga.id, 'recusada')}
-                        style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-error)', background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>Recusar</button>
+                        style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-error)', background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 'var(--radius-md)', padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>Recusar</button>
                     </>}
                   </div>
                 </div>
@@ -313,15 +313,15 @@ function ScreeningEditor({ questions, onChange }) {
     <div style={{ marginBottom: 20 }}>
       <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 8 }}>Perguntas de triagem (opcional)</label>
       {questions.map(q => (
-        <div key={q.id} style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 10, padding: 12, background: 'var(--color-bg)', border: `1px solid ${C.border}`, borderRadius: 10 }}>
+        <div key={q.id} style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 10, padding: 12, background: 'var(--color-bg)', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-md)' }}>
           <div style={{ display: 'flex', gap: 8 }}>
             <input value={q.q} onChange={e => updateQuestion(q.id, { q: e.target.value })} placeholder="Ex: Que experiência tens com React?"
-              style={{ flex: 1, background: C.card, border: `1.5px solid ${C.border}`, borderRadius: 8, color: C.text, fontSize: 13, padding: '8px 10px', outline: 'none', fontFamily: 'inherit' }} />
-            <button type="button" onClick={() => removeQuestion(q.id)} style={{ background: 'transparent', border: `1px solid var(--color-error-subtle)`, borderRadius: 7, padding: '5px 8px', cursor: 'pointer', color: C.red, display: 'flex', alignItems: 'center' }}><Trash2 size={13} /></button>
+              style={{ flex: 1, background: C.card, border: `1.5px solid ${C.border}`, borderRadius: 'var(--radius-md)', color: C.text, fontSize: 13, padding: '8px 10px', outline: 'none', fontFamily: 'inherit' }} />
+            <button type="button" onClick={() => removeQuestion(q.id)} style={{ background: 'transparent', border: `1px solid var(--color-error-subtle)`, borderRadius: 'var(--radius-md)', padding: '5px 8px', cursor: 'pointer', color: C.red, display: 'flex', alignItems: 'center' }}><Trash2 size={13} /></button>
           </div>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <select value={q.type} onChange={e => updateQuestion(q.id, { type: e.target.value })}
-              style={{ background: C.card, border: `1.5px solid ${C.border}`, borderRadius: 8, color: C.text, fontSize: 12, padding: '6px 8px', fontFamily: 'inherit' }}>
+              style={{ background: C.card, border: `1.5px solid ${C.border}`, borderRadius: 'var(--radius-md)', color: C.text, fontSize: 12, padding: '6px 8px', fontFamily: 'inherit' }}>
               <option value="text">Resposta livre</option>
               <option value="choice">Escolha múltipla</option>
             </select>
@@ -332,12 +332,12 @@ function ScreeningEditor({ questions, onChange }) {
           {q.type === 'choice' && (
             <input value={(q.options || []).join(', ')} onChange={e => updateQuestion(q.id, { options: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
               placeholder="Opções separadas por vírgula"
-              style={{ background: C.card, border: `1.5px solid ${C.border}`, borderRadius: 8, color: C.text, fontSize: 12, padding: '7px 10px', outline: 'none', fontFamily: 'inherit' }} />
+              style={{ background: C.card, border: `1.5px solid ${C.border}`, borderRadius: 'var(--radius-md)', color: C.text, fontSize: 12, padding: '7px 10px', outline: 'none', fontFamily: 'inherit' }} />
           )}
         </div>
       ))}
       <button type="button" onClick={addQuestion}
-        style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: `1px dashed ${C.border}`, borderRadius: 8, padding: '8px 12px', cursor: 'pointer', color: C.muted, fontSize: 12, fontWeight: 600, fontFamily: 'inherit', width: '100%', justifyContent: 'center' }}>
+        style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: `1px dashed ${C.border}`, borderRadius: 'var(--radius-md)', padding: '8px 12px', cursor: 'pointer', color: C.muted, fontSize: 12, fontWeight: 600, fontFamily: 'inherit', width: '100%', justifyContent: 'center' }}>
         <Plus size={12} /> Adicionar pergunta
       </button>
     </div>
@@ -351,7 +351,7 @@ function VagaModal({ initial, onSave, onClose, saving }) {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }} onClick={onClose} />
-      <div style={{ position: 'relative', background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 28, width: '100%', maxWidth: 520, maxHeight: '90vh', overflowY: 'auto', zIndex: 1 }}>
+      <div style={{ position: 'relative', background: C.card, border: `1px solid ${C.border}`, borderRadius: 'var(--radius-xl)', padding: 28, width: '100%', maxWidth: 520, maxHeight: '90vh', overflowY: 'auto', zIndex: 1 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
           <h2 style={{ margin: 0, fontSize: 18, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px', color: C.text }}>{initial ? 'Editar vaga' : 'Publicar vaga'}</h2>
           <button onClick={onClose} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: C.muted, display: 'flex', padding: 4 }}><X size={18} /></button>

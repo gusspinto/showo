@@ -46,7 +46,7 @@
   flex-shrink: 0;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 4px;
 }
 .explore-tab-pill {
@@ -56,7 +56,7 @@
   left: 4px;
   width: calc(50% - 4px);
   background: var(--color-text);
-  border-radius: 9px;
+  border-radius: var(--radius-sm);
   transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 2px 12px var(--color-border-hover);
   z-index: 0;
@@ -73,7 +73,7 @@
   gap: 6px;
   padding: 9px 0;
   min-width: 108px;
-  border-radius: 9px;
+  border-radius: var(--radius-sm);
   border: none;
   background: transparent;
   font-size: 13px;
@@ -106,7 +106,7 @@
   width: 100%;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   color: var(--color-text);
   font-size: 14px;
   padding: 12px 16px 12px 44px;
@@ -159,7 +159,7 @@
   right: -5px;
   min-width: 16px;
   height: 16px;
-  border-radius: 99px;
+  border-radius: var(--radius-full);
   background: var(--color-text);
   color: var(--color-bg);
   font-size: 10px;
@@ -175,7 +175,7 @@
 .explore-filter-panel {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   padding: 16px;
   margin-bottom: 20px;
   display: grid;
@@ -195,7 +195,7 @@
   gap: 10px;
   background: var(--color-bg-alt);
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 9px 14px;
 }
 .filter-score-wrap.has-value {
@@ -277,7 +277,7 @@
 }
 .filter-chip {
   padding: 6px 14px;
-  border-radius: 20px;
+  border-radius: var(--radius-sm);
   border: 1.5px solid var(--color-border);
   background: var(--color-bg-alt);
   color: var(--color-text-secondary);
@@ -305,7 +305,7 @@
   background: var(--color-bg-alt);
   border: 1px solid var(--color-border);
   color: var(--color-text-secondary);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 9px 36px 9px 14px;
   font-size: 13px;
   font-weight: 500;
@@ -370,7 +370,7 @@
   gap: 16px;
 }
 .explore-featured-card {
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
   cursor: pointer;
   background: var(--color-glass);
@@ -407,7 +407,7 @@
   align-items: center;
   gap: 4px;
   padding: 3px 8px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
   color: #fff;
@@ -432,7 +432,7 @@
   -webkit-backdrop-filter: blur(16px);
   background: var(--color-glass);
   border: 1px solid var(--color-glass-border);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   padding: 22px;
   cursor: pointer;
   display: flex;
@@ -449,7 +449,7 @@
 }
 
 .explore-card-cover {
-  border-radius: 12px 12px 0 0;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   margin: -22px -22px 16px;
   position: relative;
   overflow: hidden;
@@ -487,7 +487,7 @@ body.light .explore-card-cover img {
   font-size: 11px;
   font-weight: 700;
   color: #fff;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 3px 9px;
 }
 .explore-type-badge.on-cover {
