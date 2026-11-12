@@ -247,60 +247,64 @@ export default function EmpresaPage() {
                 {vagas.map(v => {
                   const cand = applied[v.id]
                   const st   = cand ? STATUS_INFO[cand.status] ?? STATUS_INFO.pendente : null
+                  // Mesma hierarquia do cartão público de Vagas.jsx: título
+                  // em destaque e uma única linha de meta com "·" a separar
+                  // factos, em vez de um ícone por linha. Sem logo aqui,
+                  // porque a empresa é sempre a mesma desta página, já
+                  // visível no hero acima.
+                  const metaParts = []
+                  if (v.localizacao && v.localizacao.trim().toLowerCase() !== 'remoto') metaParts.push(v.localizacao)
+                  if (v.is_remote) metaParts.push('Remoto')
                   return (
-                    <div key={v.id} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px', transition: 'border-color 0.15s' }}
+                    <div key={v.id} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 'var(--radius-lg)', padding: '18px 20px', transition: 'border-color 0.15s', display: 'flex', flexDirection: 'column', gap: 10 }}
                       onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-border-hover)'}
                       onMouseLeave={e => e.currentTarget.style.borderColor = C.border}>
-                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-                        <div style={{ flex: 1, minWidth: 180 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-                            <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: C.text }}>{v.titulo}</h3>
-                            {v.tipo && (
-                              <span style={{ fontSize: 11, fontWeight: 600, color: C.muted }}>
-                                {v.tipo}
-                              </span>
-                            )}
-                          </div>
-                          {/* Nomes de coluna reais (titulo/descricao/localizacao,
-                              não title/description/location): o cartão nunca
-                              mostrava título, descrição nem localização, só o
-                              tipo e a data, por estar a ler colunas que não
-                              existem na tabela "vagas". */}
-                          {v.localizacao && v.localizacao.trim().toLowerCase() !== 'remoto' && (
-                            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: C.muted }}>
-                              <MapPin size={11} /> {v.localizacao}
-                            </span>
-                          )}
-                          {v.is_remote && (
-                            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: C.muted }}>
-                              <Globe size={11} /> Remoto
-                            </span>
-                          )}
-                          {v.descricao && (
-                            <p style={{ margin: '8px 0 0', fontSize: 13, color: C.muted, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                              {v.descricao}
-                            </p>
-                          )}
-                          <div style={{ marginTop: 8, fontSize: 11, color: C.subtle }}>{timeAgo(v.created_at)}</div>
-                        </div>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
+                        <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: C.text, lineHeight: 1.3, fontFamily: 'var(--font-heading)' }}>{v.titulo}</h3>
+                        {v.tipo && (
+                          <span style={{ fontSize: 10.5, fontWeight: 700, color: C.blue, background: 'var(--color-primary-subtle)', padding: '3px 9px', borderRadius: 'var(--radius-full)', whiteSpace: 'nowrap', flexShrink: 0 }}>{v.tipo}</span>
+                        )}
+                      </div>
 
-                        <div style={{ flexShrink: 0 }}>
-                          {st ? (
-                            <span style={{ fontSize: 12, fontWeight: 700, color: st.color, background: st.bg, borderRadius: 7, padding: '5px 12px' }}>
-                              {st.label}
+                      {(metaParts.length > 0 || v.created_at) && (
+                        <p style={{ margin: 0, fontSize: 12.5, color: C.muted, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                          {metaParts.map((part, i) => (
+                            <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              {i > 0 && <span style={{ color: C.subtle }}>·</span>}
+                              {part}
                             </span>
-                          ) : user && isStudent ? (
-                            <button onClick={() => navigate('/vagas')}
-                              style={{ background: C.blue, border: 'none', borderRadius: 8, padding: '8px 16px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-primary-subtle)' }}>
-                              Candidatar
-                            </button>
-                          ) : !user ? (
-                            <button onClick={() => navigate('/login')}
-                              style={{ background: C.blue, border: 'none', borderRadius: 8, padding: '8px 16px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-                              Entrar para candidatar
-                            </button>
-                          ) : null}
-                        </div>
+                          ))}
+                          {v.created_at && (
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              {metaParts.length > 0 && <span style={{ color: C.subtle }}>·</span>}
+                              {timeAgo(v.created_at)}
+                            </span>
+                          )}
+                        </p>
+                      )}
+
+                      {v.descricao && (
+                        <p style={{ margin: 0, fontSize: 13, color: C.muted, lineHeight: 1.6, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                          {v.descricao}
+                        </p>
+                      )}
+
+                      <div style={{ marginTop: 4 }}>
+                        {st ? (
+                          <span style={{ fontSize: 13, fontWeight: 700, color: st.color, background: st.bg, borderRadius: 'var(--radius-full)', padding: '10px 14px', display: 'inline-block' }}>
+                            {st.label}
+                          </span>
+                        ) : user && isStudent ? (
+                          <button onClick={() => navigate('/vagas')}
+                            style={{ background: C.blue, border: 'none', borderRadius: 'var(--radius-full)', padding: '10px 18px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 10px var(--color-primary-subtle)' }}>
+                            Candidatar
+                          </button>
+                        ) : !user ? (
+                          <button onClick={() => navigate('/login')}
+                            style={{ background: C.blue, border: 'none', borderRadius: 'var(--radius-full)', padding: '10px 18px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                            Entrar para candidatar
+                          </button>
+                        ) : null}
                       </div>
                     </div>
                   )
