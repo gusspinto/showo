@@ -2,6 +2,14 @@ import { useState, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
 import { Modal, Button } from '../ui'
 import { JOURNAL_KINDS, KIND_BY_ID, REPORT_SECTIONS } from '../../lib/journal'
+// As classes .sdb-* deste componente só estavam definidas em
+// StudentDashboard.css, importado só pela StudentDashboard. Aberto a
+// partir de ProjectPage.jsx (cartão do diário dentro do projeto), que
+// nunca carrega esse ficheiro, o modal ficava sem estilo nenhum: pílulas
+// a quebrar tortas, contador de carateres colado ao texto ao lado. O
+// componente importa o próprio CSS de que depende, para funcionar em
+// qualquer página que o use, sem cada chamador ter de se lembrar disto.
+import '../../pages/StudentDashboard.css'
 
 /* Que secções do relatório é que este tipo de entrada alimenta — mostrado ao
    aluno enquanto escreve, para que registar não pareça burocracia mas sim
