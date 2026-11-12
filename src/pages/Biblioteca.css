@@ -434,4 +434,13 @@ body.light .lib-tile-cover img { outline-color: oklch(0 0 0 / 0.1); }
   .lib-tile-cover-edit { min-height: 0; }
   .lib-edit-fmt .lib-seg { flex: 1; }
   .lib-seg-btn { min-height: 0; padding: 9px 10px; }
+  /* Privado / Público / No perfil lado a lado não cabia sem cortar o
+     texto (grelha a 2 colunas aqui, tile estreito demais para 3 palavras
+     espremidas). Empilhado, cada opção fica com a largura toda do tile. */
+  .lib-tile .lib-seg--state { flex-direction: column; gap: 4px; }
+  .lib-tile .lib-seg--state .lib-seg-btn {
+    padding: 9px 10px; font-size: 12.5px;
+    overflow: visible; text-overflow: clip; white-space: nowrap;
+    text-align: left;
+  }
 }
