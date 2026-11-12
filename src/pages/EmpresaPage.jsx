@@ -254,21 +254,31 @@ export default function EmpresaPage() {
                       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
                         <div style={{ flex: 1, minWidth: 180 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-                            <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: C.text }}>{v.title}</h3>
+                            <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: C.text }}>{v.titulo}</h3>
                             {v.tipo && (
                               <span style={{ fontSize: 11, fontWeight: 600, color: C.muted }}>
                                 {v.tipo}
                               </span>
                             )}
                           </div>
-                          {v.location && (
+                          {/* Nomes de coluna reais (titulo/descricao/localizacao,
+                              não title/description/location): o cartão nunca
+                              mostrava título, descrição nem localização, só o
+                              tipo e a data, por estar a ler colunas que não
+                              existem na tabela "vagas". */}
+                          {v.localizacao && v.localizacao.trim().toLowerCase() !== 'remoto' && (
                             <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: C.muted }}>
-                              <MapPin size={11} /> {v.location}
+                              <MapPin size={11} /> {v.localizacao}
                             </span>
                           )}
-                          {v.description && (
+                          {v.is_remote && (
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: C.muted }}>
+                              <Globe size={11} /> Remoto
+                            </span>
+                          )}
+                          {v.descricao && (
                             <p style={{ margin: '8px 0 0', fontSize: 13, color: C.muted, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                              {v.description}
+                              {v.descricao}
                             </p>
                           )}
                           <div style={{ marginTop: 8, fontSize: 11, color: C.subtle }}>{timeAgo(v.created_at)}</div>
