@@ -305,8 +305,9 @@ function LibBuildingRow({ item, onOpen, onDelete, removing, editing, onSetState,
    dos "Adicionados") ficam todas aqui, iguais para as 3 secções, antes de
    se decidir abrir o projeto a sério. Pedido do Gustavo: ver a info do
    portefólio sem sair da Biblioteca. */
-function LibPreviewModal({ item, onClose, onOpenItem }) {
+function LibPreviewModal({ item, onClose, onOpenItem, onReopen }) {
   const isLibrary = item.entry_kind === 'library'
+  const isDone = !isLibrary && getProjectState(item) === 'concluido'
   const isImage = item.library_file_type?.startsWith('image/')
   const cover = isLibrary
     ? (isImage ? item._signedFileUrl : item._signedThumbUrl)
@@ -355,6 +356,13 @@ function LibPreviewModal({ item, onClose, onOpenItem }) {
 
       {competencias.length === 0 && tecnologias.length === 0 && (
         <p className="lib-preview-empty">Ainda sem competências identificadas.</p>
+      )}
+
+      {isDone && (
+        <Button variant="ghost" icon={<Restart size={14} />} fullWidth
+          onClick={() => { onReopen(item); onClose() }} style={{ marginTop: 4 }}>
+          Voltar a pôr em construção
+        </Button>
       )}
 
       <ModalActions>
@@ -650,6 +658,7 @@ export default function Biblioteca() {
           item={previewing}
           onClose={() => setPreviewing(null)}
           onOpenItem={openFromPreview}
+          onReopen={handleReopen}
         />
       )}
 
