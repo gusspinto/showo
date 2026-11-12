@@ -20,7 +20,7 @@
   display: flex; align-items: center; gap: 7px; flex-shrink: 0;
   padding: 10px 16px;
   background: var(--color-text); color: var(--color-bg);
-  border: none; border-radius: var(--radius-md);
+  border: none; border-radius: var(--radius-full);
   font-size: 13.5px; font-weight: 700; cursor: pointer; font-family: inherit;
   transition: opacity 0.15s, transform 0.1s;
 }
@@ -33,7 +33,7 @@
   padding: 10px 14px;
   background: transparent;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-full);
   font-size: 13px; font-weight: 700; cursor: pointer;
   font-family: inherit; color: var(--color-text);
   transition: background 0.15s, border-color 0.15s, transform 0.1s;
@@ -96,12 +96,12 @@
 .lib-seg {
   display: inline-flex; background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 8px; padding: 2px;
+  border-radius: var(--radius-full); padding: 2px;
 }
 .lib-seg-btn {
   padding: 6px 12px; border: none; background: transparent;
   font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;
-  color: var(--color-text-tertiary); border-radius: 6px; white-space: nowrap;
+  color: var(--color-text-tertiary); border-radius: var(--radius-full); white-space: nowrap;
   transition: background 0.14s, color 0.14s, transform 0.1s;
 }
 .lib-seg-btn.is-on { background: var(--color-text); color: var(--color-bg); }
@@ -167,7 +167,7 @@ body.light .lib-row-icon.has-thumb img { outline-color: oklch(0 0 0 / 0.1); }
 .lib-row-hint { display: flex; align-items: center; color: var(--color-text-tertiary); flex-shrink: 0; }
 .lib-row-delete {
   display: flex; align-items: center; justify-content: center;
-  width: 26px; height: 26px; flex-shrink: 0; border-radius: 7px;
+  width: 26px; height: 26px; flex-shrink: 0; border-radius: var(--radius-full);
   color: var(--color-text-tertiary); cursor: pointer;
   transition: background 0.14s, color 0.14s;
 }
@@ -273,7 +273,7 @@ body.light .lib-tile-cover img { outline-color: oklch(0 0 0 / 0.1); }
 }
 .lib-tile-tool {
   display: flex; align-items: center; justify-content: center;
-  width: 30px; height: 30px; border-radius: 8px;
+  width: 30px; height: 30px; border-radius: var(--radius-full);
   background: rgba(0,0,0,0.62); color: #fff; cursor: pointer;
   backdrop-filter: blur(4px);
   transition: background 0.14s, transform 0.1s;
@@ -285,7 +285,7 @@ body.light .lib-tile-cover img { outline-color: oklch(0 0 0 / 0.1); }
 /* "Mudar capa" — canto inferior da miniatura. */
 .lib-tile-cover-edit {
   position: absolute; right: 8px; bottom: 8px; z-index: 1;
-  padding: 4px 9px; border-radius: 7px;
+  padding: 4px 9px; border-radius: var(--radius-full);
   background: rgba(0,0,0,0.62); color: #fff;
   font-size: 11px; font-weight: 700; cursor: pointer;
   backdrop-filter: blur(4px);
@@ -321,7 +321,7 @@ body.light .lib-tile-cover img { outline-color: oklch(0 0 0 / 0.1); }
 /* Botão pequeno genérico usado no visualizador (abrir noutra aba / fechar). */
 .lib-card-btn {
   display: flex; align-items: center; justify-content: center;
-  width: 30px; height: 30px; border-radius: var(--radius-sm);
+  width: 30px; height: 30px; border-radius: var(--radius-full);
   background: transparent; border: none;
   color: var(--color-text-tertiary); cursor: pointer;
   text-decoration: none;
@@ -394,7 +394,7 @@ body.light .lib-tile-cover img { outline-color: oklch(0 0 0 / 0.1); }
 .lib-confirm-text { margin: 0 0 18px; font-size: 14px; line-height: 1.5; color: var(--color-text); }
 .lib-confirm-actions { display: flex; gap: 8px; }
 .lib-confirm-btn {
-  flex: 1; padding: 10px 0; border-radius: var(--radius-md);
+  flex: 1; padding: 10px 0; border-radius: var(--radius-full);
   background: var(--color-bg-alt); border: none;
   color: var(--color-text); font-size: 13.5px; font-weight: 700;
   cursor: pointer; font-family: inherit;
@@ -449,7 +449,12 @@ body.light .lib-tile-cover img { outline-color: oklch(0 0 0 / 0.1); }
   /* Privado / Público / No perfil lado a lado não cabia sem cortar o
      texto (grelha a 2 colunas aqui, tile estreito demais para 3 palavras
      espremidas). Empilhado, cada opção fica com a largura toda do tile. */
-  .lib-tile .lib-seg--state { flex-direction: column; gap: 4px; }
+  /* .lib-seg (o contentor à volta das 3 opções) também ficou redondo
+     (ver .lib-seg mais acima), mas empilhado em coluna uma pílula
+     perfeitamente redonda num contentor alto fica uma forma esquisita,
+     não uma pílula. O contentor volta a um raio normal de cartão; cada
+     opção lá dentro continua redonda à mesma. */
+  .lib-tile .lib-seg--state { flex-direction: column; gap: 4px; border-radius: var(--radius-lg); }
   .lib-tile .lib-seg--state .lib-seg-btn {
     padding: 9px 10px; font-size: 12.5px;
     overflow: visible; text-overflow: clip; white-space: nowrap;
