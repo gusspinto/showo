@@ -14,6 +14,7 @@ import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
 import { LibraryIcon } from '@solar-icons/react/bold/library'
 import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
 import { RestartIcon as Restart } from '@solar-icons/react/bold/restart'
+import { AltArrowDownIcon as AltArrowDown } from '@solar-icons/react/bold/alt-arrow-down'
 import { fileTypeStyle, withSignedLibraryUrls } from '../lib/libraryFile'
 import { getProjectState } from '../lib/projectState'
 import { getTaggingIds, markLibraryTagging } from '../lib/libraryTagging'
@@ -38,23 +39,48 @@ function fileIconFor(type) {
 /* Uma só escolha de 3 estados (Privado · Público · No perfil) em vez de
    dois switches que mandavam um no outro. "No perfil" implica público;
    só então aparece o formato. */
+const STATE_LABEL = { private: 'Privado', public: 'Público', featured: 'No perfil' }
+
+function LockIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden="true" style={{ marginRight: 4, verticalAlign: '-1px' }}>
+      <rect x="3.5" y="7" width="9" height="6.5" rx="1.4" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" stroke="currentColor" strokeWidth="1.6" />
+    </svg>
+  )
+}
+
+// Fechado por omissão, só mostra o estado atual: com vários projetos em
+// modo "Organizar" ao mesmo tempo, as 3 opções sempre abertas em cada um
+// ficavam muito altas. Um clique abre a escolha, escolher fecha outra vez.
 function ProfileControls({ item, onSetState, onSetLayout }) {
+  const [open, setOpen] = useState(false)
   const state = item.visibility === 'private' ? 'private' : item.profile_featured ? 'featured' : 'public'
+
+  if (!open) {
+    return (
+      <div className="lib-edit-bar" onClick={e => e.stopPropagation()}>
+        <button type="button" className="lib-seg-trigger" onClick={() => setOpen(true)}>
+          {state === 'private' && <LockIcon />}
+          {STATE_LABEL[state]}
+          <AltArrowDown size={11} />
+        </button>
+      </div>
+    )
+  }
+
   return (
     <div className="lib-edit-bar" onClick={e => e.stopPropagation()}>
       <span className="lib-seg lib-seg--state" role="group" aria-label="Onde este item aparece">
         <button type="button" className={`lib-seg-btn${state === 'private' ? ' is-on' : ''}`}
-          onClick={() => onSetState(item, 'private')}>
-          <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden="true" style={{ marginRight: 4, verticalAlign: '-1px' }}>
-            <rect x="3.5" y="7" width="9" height="6.5" rx="1.4" stroke="currentColor" strokeWidth="1.6" />
-            <path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" stroke="currentColor" strokeWidth="1.6" />
-          </svg>
+          onClick={() => { onSetState(item, 'private'); setOpen(false) }}>
+          <LockIcon />
           Privado
         </button>
         <button type="button" className={`lib-seg-btn${state === 'public' ? ' is-on' : ''}`}
-          onClick={() => onSetState(item, 'public')}>Público</button>
+          onClick={() => { onSetState(item, 'public'); setOpen(false) }}>Público</button>
         <button type="button" className={`lib-seg-btn${state === 'featured' ? ' is-on' : ''}`}
-          onClick={() => onSetState(item, 'featured')}>No perfil</button>
+          onClick={() => { onSetState(item, 'featured'); setOpen(false) }}>No perfil</button>
       </span>
 
       {state === 'featured' && (
