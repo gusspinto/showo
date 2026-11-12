@@ -776,26 +776,7 @@ export default function Vagas() {
 
         {/* Header */}
         <div style={{ marginBottom: 28, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <div style={{
-              width: 48, height: 48, borderRadius: 14,
-              background: 'var(--color-surface-hover)', border: '1px solid var(--color-surface-hover)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-            }}>
-              <Briefcase size={24} color="var(--color-text)" />
-            </div>
-            <div>
-              <h1 style={{ color: C.text, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 6px', letterSpacing: '-0.5px' }}>Vagas</h1>
-              <p style={{ color: C.muted, fontSize: 13, margin: 0, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                {isRecruiter ? 'Gere as tuas ofertas e encontra candidatos' : 'Ofertas de estágio e emprego de empresas e recrutadores'}
-                {isAluno && !isSchoolAccount && applicationsLimit != null && applicationsLimit !== Infinity && (
-                  <span style={{ fontSize: 11, fontWeight: 600, color: applicationsRemaining === 0 ? 'var(--color-error)' : C.subtle, background: 'var(--color-surface-hover)', borderRadius: 100, padding: '3px 10px' }}>
-                    {applicationsRemaining}/{applicationsLimit} candidaturas este mês
-                  </span>
-                )}
-              </p>
-            </div>
-          </div>
+          <h1 style={{ color: C.text, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, fontFamily: 'var(--font-heading)', margin: 0, letterSpacing: '-0.5px' }}>Vagas</h1>
           {isRecruiter && (
             <button onClick={() => { setEditVaga(null); setShowModal(true) }}
               style={{ display: 'flex', alignItems: 'center', gap: 8, background: accentColor, border: 'none', borderRadius: 10, padding: '11px 20px', color: 'var(--color-bg)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-surface-hover)', flexShrink: 0 }}>

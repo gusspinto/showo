@@ -143,81 +143,92 @@ export default function EmpresaPage() {
       <Navbar />
       <div className="page-content">
 
-        {/* ── Hero ── */}
-        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: 'clamp(20px,4vw,36px)', marginBottom: 20 }}>
-          <div className="ep-hero" style={{ display: 'flex', alignItems: 'flex-start', gap: 20, flexWrap: 'wrap' }}>
+        {/* ── Hero ──
+            Barra de acento no topo com a cor do tipo de conta (dourado para
+            empresa, verde para recrutador), para dar alguma identidade
+            própria ao perfil sem inventar métricas que não temos. */}
+        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 'var(--radius-lg)', overflow: 'hidden', marginBottom: 20 }}>
+          <div style={{ height: 4, background: accentColor }} />
+          <div style={{ padding: 'clamp(20px,4vw,36px)' }}>
+          <div className="ep-hero" style={{ display: 'flex', alignItems: 'flex-start', gap: 20 }}>
             {/* Logo/Avatar */}
             <div style={{ flexShrink: 0 }}>
               {company.avatar_url ? (
-                <img src={company.avatar_url} alt={name} className="ep-hero-logo" style={{ width: 88, height: 88, borderRadius: 14, objectFit: 'cover', border: `2px solid ${C.border}` }} />
+                <img src={company.avatar_url} alt={name} className="ep-hero-logo" style={{ width: 88, height: 88, borderRadius: 'var(--radius-lg)', objectFit: 'cover', border: `2px solid ${C.border}` }} />
               ) : (
-                <div className="ep-hero-logo" style={{ width: 88, height: 88, borderRadius: 14, background: accentColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, fontWeight: 400, fontFamily: 'var(--font-heading)', color: '#fff', border: `2px solid ${C.border}` }}>
+                <div className="ep-hero-logo" style={{ width: 88, height: 88, borderRadius: 'var(--radius-lg)', background: accentColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, fontWeight: 400, fontFamily: 'var(--font-heading)', color: '#fff', border: `2px solid ${C.border}` }}>
                   {name[0].toUpperCase()}
                 </div>
               )}
             </div>
 
-            {/* Info */}
-            <div style={{ flex: 1, minWidth: 200 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 6 }}>
-                <h1 style={{ margin: 0, fontSize: 'clamp(20px,3vw,28px)', fontWeight: 400, color: C.text, letterSpacing: '-0.6px', fontFamily: 'var(--font-heading)' }}>{name}</h1>
-                <span style={{ fontSize: 11, fontWeight: 700, color: tipo.color }}>
-                  {tipo.label}
-                </span>
+            {/* Info + ações: a ação fica sempre junto ao nome (puxada para
+                a direita com marginLeft: auto), nunca depois de toda a bio,
+                para não ficar "perdida" lá em baixo no mobile. */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 6 }}>
+                    <h1 style={{ margin: 0, fontSize: 'clamp(20px,3vw,28px)', fontWeight: 400, color: C.text, letterSpacing: '-0.6px', fontFamily: 'var(--font-heading)' }}>{name}</h1>
+                    <span style={{ fontSize: 10.5, fontWeight: 700, color: tipo.color, background: tipo.bg, padding: '3px 10px', borderRadius: 'var(--radius-full)', whiteSpace: 'nowrap' }}>
+                      {tipo.label}
+                    </span>
+                  </div>
+                  {company.company_role && (
+                    <p style={{ margin: 0, fontSize: 14, color: C.muted }}>{company.company_role}</p>
+                  )}
+                </div>
+
+                {/* Ações */}
+                <div className="ep-hero-actions" style={{ display: 'flex', gap: 8, flexShrink: 0, marginLeft: 'auto' }}>
+                  {isOwnPage ? (
+                    <button onClick={() => navigate('/settings')}
+                      style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-full)', padding: '10px 18px', color: C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s, color 0.15s' }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-border-hover)'; e.currentTarget.style.color = C.text }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}>
+                      <Settings size={14} /> Editar
+                    </button>
+                  ) : user ? (
+                    <button onClick={() => navigate(`/mensagens?to=${company.id}`)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 7, background: C.blue, border: 'none', borderRadius: 'var(--radius-full)', padding: '10px 18px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 10px var(--color-primary-subtle)' }}>
+                      <MessageSquare size={14} /> Contactar
+                    </button>
+                  ) : null}
+                </div>
               </div>
 
-              {company.company_role && (
-                <p style={{ margin: '0 0 10px', fontSize: 14, color: C.muted }}>{company.company_role}</p>
-              )}
-
-              {/* Meta */}
-              <div className="ep-meta" style={{ display: 'flex', flexWrap: 'wrap', gap: 14 }}>
+              {/* Meta: pills reais (fundo + contorno), como o resto da app,
+                  em vez de só texto com um ícone ao lado. */}
+              <div className="ep-meta" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
                 {company.company_location && (
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, color: C.muted }}>
-                    <MapPin size={13} /> {company.company_location}
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: C.muted, background: 'var(--color-surface-hover)', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-full)', padding: '5px 12px' }}>
+                    <MapPin size={12} /> {company.company_location}
                   </span>
                 )}
                 {company.company_industry && (
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, color: C.muted }}>
-                    <Briefcase size={13} /> {company.company_industry}
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: C.muted, background: 'var(--color-surface-hover)', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-full)', padding: '5px 12px' }}>
+                    <Briefcase size={12} /> {company.company_industry}
                   </span>
                 )}
                 {company.company_size && (
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, color: C.muted }}>
-                    <Users size={13} /> {company.company_size} pessoas
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: C.muted, background: 'var(--color-surface-hover)', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-full)', padding: '5px 12px' }}>
+                    <Users size={12} /> {company.company_size} pessoas
                   </span>
                 )}
                 {company.company_website && (
                   <a href={company.company_website.startsWith('http') ? company.company_website : `https://${company.company_website}`}
                     target="_blank" rel="noopener noreferrer"
-                    style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, color: C.blue, textDecoration: 'none' }}>
-                    <Globe size={13} /> Website <ExternalLink size={11} />
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: C.blue, background: 'var(--color-primary-subtle)', border: '1px solid transparent', borderRadius: 'var(--radius-full)', padding: '5px 12px', textDecoration: 'none' }}>
+                    <Globe size={12} /> Website <ExternalLink size={11} />
                   </a>
                 )}
                 {company.linkedin_url && (
                   <a href={company.linkedin_url} target="_blank" rel="noopener noreferrer"
-                    style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, color: C.blue, textDecoration: 'none' }}>
-                    <Link size={13} /> LinkedIn <ExternalLink size={11} />
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: C.blue, background: 'var(--color-primary-subtle)', border: '1px solid transparent', borderRadius: 'var(--radius-full)', padding: '5px 12px', textDecoration: 'none' }}>
+                    <Link size={12} /> LinkedIn <ExternalLink size={11} />
                   </a>
                 )}
               </div>
-            </div>
-
-            {/* Actions */}
-            <div className="ep-hero-actions" style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
-              {isOwnPage ? (
-                <button onClick={() => navigate('/settings')}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '9px 16px', color: C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s, color 0.15s' }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-border-hover)'; e.currentTarget.style.color = C.text }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}>
-                  <Settings size={14} /> Editar
-                </button>
-              ) : user ? (
-                <button onClick={() => navigate(`/mensagens?to=${company.id}`)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 7, background: C.blue, border: 'none', borderRadius: 8, padding: '9px 18px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-primary-subtle)' }}>
-                  <MessageSquare size={14} /> Contactar
-                </button>
-              ) : null}
             </div>
           </div>
 
@@ -227,6 +238,7 @@ export default function EmpresaPage() {
               {company.company_description || company.bio}
             </p>
           )}
+          </div>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,300px)', gap: 20, alignItems: 'start' }} className="empresa-grid">
