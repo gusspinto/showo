@@ -779,7 +779,7 @@ export default function Vagas() {
           <h1 style={{ color: C.text, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, fontFamily: 'var(--font-heading)', margin: 0, letterSpacing: '-0.5px' }}>Vagas</h1>
           {isRecruiter && (
             <button onClick={() => { setEditVaga(null); setShowModal(true) }}
-              style={{ display: 'flex', alignItems: 'center', gap: 8, background: accentColor, border: 'none', borderRadius: 10, padding: '11px 20px', color: 'var(--color-bg)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-surface-hover)', flexShrink: 0 }}>
+              style={{ display: 'flex', alignItems: 'center', gap: 8, background: accentColor, border: 'none', borderRadius: 'var(--radius-md)', padding: '11px 20px', color: 'var(--color-bg)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-surface-hover)', flexShrink: 0 }}>
               <Plus size={16} /> Nova vaga
             </button>
           )}
@@ -794,7 +794,7 @@ export default function Vagas() {
                 Convites para ti
               </span>
               {myInvites.length > 0 && (
-                <span style={{ background: 'color-mix(in srgb, var(--color-text) 12%, transparent)', borderRadius: 6, padding: '2px 8px', fontSize: 10, fontWeight: 700, color: 'var(--color-text)' }}>
+                <span style={{ background: 'color-mix(in srgb, var(--color-text) 12%, transparent)', borderRadius: 'var(--radius-sm)', padding: '2px 8px', fontSize: 10, fontWeight: 700, color: 'var(--color-text)' }}>
                   {myInvites.length}
                 </span>
               )}
@@ -803,7 +803,7 @@ export default function Vagas() {
             {loadingInvites ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {[1, 2].map(i => (
-                  <div key={i} style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, height: 80, opacity: 0.5 }} />
+                  <div key={i} style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', height: 80, opacity: 0.5 }} />
                 ))}
               </div>
             ) : (
@@ -817,12 +817,12 @@ export default function Vagas() {
                     <div key={invite.id} style={{
                       background: 'var(--color-surface-hover)',
                       border: '1px solid var(--color-surface-hover)',
-                      borderRadius: 12, padding: '14px 18px',
+                      borderRadius: 'var(--radius-lg)', padding: '14px 18px',
                       display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
                     }}>
                       {/* Icon */}
                       <div style={{
-                        width: 40, height: 40, borderRadius: 10, flexShrink: 0,
+                        width: 40, height: 40, borderRadius: 'var(--radius-md)', flexShrink: 0,
                         background: 'var(--color-surface-hover)', border: '1px solid var(--color-surface-hover)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         overflow: 'hidden',
@@ -860,7 +860,7 @@ export default function Vagas() {
                             disabled={isResponding}
                             style={{
                               display: 'flex', alignItems: 'center', gap: 6,
-                              padding: '7px 14px', borderRadius: 8, fontSize: 13, fontWeight: 700,
+                              padding: '7px 14px', borderRadius: 'var(--radius-md)', fontSize: 13, fontWeight: 700,
                               background: 'var(--color-text)', border: 'none',
                               color: 'var(--color-bg)', cursor: 'pointer', fontFamily: 'inherit',
                               boxShadow: '0 2px 8px var(--color-surface-hover)',
@@ -874,7 +874,7 @@ export default function Vagas() {
                           onClick={() => declineInvite(invite)}
                           disabled={isResponding}
                           style={{
-                            padding: '7px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                            padding: '7px 12px', borderRadius: 'var(--radius-md)', fontSize: 12, fontWeight: 600,
                             background: 'none', border: '1px solid var(--color-border)',
                             color: 'var(--color-text-secondary)', cursor: 'pointer', fontFamily: 'inherit',
                           }}
@@ -907,7 +907,7 @@ export default function Vagas() {
         {loading ? (
           <div className="vagas-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
             {[1, 2, 3].map(i => (
-              <div key={i} style={{ background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 14, padding: 20, height: 160, opacity: 0.5 }} />
+              <div key={i} style={{ background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 'var(--radius-lg)', padding: 20, height: 160, opacity: 0.5 }} />
             ))}
           </div>
         ) : isRecruiter && activeTab === 'minhas' ? (
@@ -917,7 +917,7 @@ export default function Vagas() {
               <p style={{ color: C.muted, fontSize: 16, fontWeight: 700, margin: '0 0 6px' }}>Ainda não tens vagas publicadas</p>
               <p style={{ color: C.subtle, fontSize: 13, margin: '0 0 20px' }}>Publica a tua primeira oferta e começa a receber candidatos</p>
               <button onClick={() => setShowModal(true)}
-                style={{ background: accentColor, border: 'none', borderRadius: 10, padding: '11px 24px', color: 'var(--color-bg)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                style={{ background: accentColor, border: 'none', borderRadius: 'var(--radius-md)', padding: '11px 24px', color: 'var(--color-bg)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
                 <Plus size={14} style={{ verticalAlign: 'middle', marginRight: 6 }} />Publicar primeira vaga
               </button>
             </div>
@@ -962,13 +962,13 @@ export default function Vagas() {
               ))}
               {isAluno && (
                 !hasFullVagasAccess && lockedVagasCount > 0 ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 10, background: C.glass, border: `1px dashed ${C.glassBorder}`, borderRadius: 12, padding: '24px 20px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 10, background: C.glass, border: `1px dashed ${C.glassBorder}`, borderRadius: 'var(--radius-lg)', padding: '24px 20px' }}>
                     <Briefcase size={22} color={C.muted} style={{ opacity: 0.6 }} />
                     <p style={{ margin: 0, fontSize: 13, color: C.muted }}>
                       <strong style={{ color: C.text }}>+{lockedVagasCount} vaga{lockedVagasCount !== 1 ? 's' : ''}</strong> {lockedVagasCount !== 1 ? 'disponíveis' : 'disponível'} a partir do Plus
                     </p>
                     <button onClick={() => navigate('/planos')}
-                      style={{ fontSize: 13, fontWeight: 700, padding: '8px 16px', borderRadius: 8, border: 'none', background: C.blue, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>
+                      style={{ fontSize: 13, fontWeight: 700, padding: '8px 16px', borderRadius: 'var(--radius-md)', border: 'none', background: C.blue, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>
                       Ver planos
                     </button>
                   </div>
@@ -978,7 +978,7 @@ export default function Vagas() {
                   // nada para mostrar, então a mensagem certa é "vem aí", não
                   // silêncio nenhum. Fica como cartão dentro do grid, ao lado
                   // das vagas reais, não como linha de texto perdida por baixo.
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 10, background: C.glass, border: `1px dashed ${C.glassBorder}`, borderRadius: 12, padding: '24px 20px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 10, background: C.glass, border: `1px dashed ${C.glassBorder}`, borderRadius: 'var(--radius-lg)', padding: '24px 20px' }}>
                     <Briefcase size={22} color={C.muted} style={{ opacity: 0.6 }} />
                     <p style={{ margin: 0, fontSize: 13, color: C.subtle, fontWeight: 600 }}>Mais vagas por vir</p>
                   </div>
