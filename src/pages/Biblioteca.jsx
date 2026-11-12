@@ -358,19 +358,23 @@ function LibPreviewModal({ item, onClose, onOpenItem, onReopen }) {
         <p className="lib-preview-empty">Ainda sem competências identificadas.</p>
       )}
 
-      {isDone && (
-        <Button variant="ghost" icon={<Restart size={14} />} fullWidth
-          onClick={() => { onReopen(item); onClose() }} style={{ marginTop: 4 }}>
-          Voltar a pôr em construção
-        </Button>
-      )}
-
-      <ModalActions>
-        <Button variant="secondary" onClick={onClose}>Fechar</Button>
-        <Button variant="primary" onClick={() => onOpenItem(item)}>
-          {isLibrary ? 'Abrir ficheiro' : 'Abrir projeto'}
-        </Button>
-      </ModalActions>
+      {/* "Reabrir" fica na mesma linha de ações, do lado oposto a
+          Fechar/Abrir (space-between), em vez de uma linha própria por
+          cima, que ficava estranho sozinho ali no meio do card. */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-2)', marginTop: 'var(--sp-5)', justifyContent: isDone ? 'space-between' : 'flex-end', alignItems: 'center' }}>
+        {isDone && (
+          <Button variant="ghost" size="sm" icon={<Restart size={13} />} title="Volta a pôr o projeto em construção"
+            onClick={() => { onReopen(item); onClose() }}>
+            Reabrir
+          </Button>
+        )}
+        <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
+          <Button variant="secondary" onClick={onClose}>Fechar</Button>
+          <Button variant="primary" onClick={() => onOpenItem(item)}>
+            {isLibrary ? 'Abrir ficheiro' : 'Abrir projeto'}
+          </Button>
+        </div>
+      </div>
     </Modal>
   )
 }
