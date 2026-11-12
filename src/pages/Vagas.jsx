@@ -365,7 +365,7 @@ function VagaModal({ initial, onSave, onClose, saving }) {
           <div key={key} style={{ marginBottom: 16 }}>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 6 }}>{label}</label>
             <input value={form[key]} onChange={e => set(key, e.target.value)} placeholder={placeholder}
-              style={{ width: '100%', background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }} />
+              style={{ width: '100%', background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 'var(--radius-md)', color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }} />
           </div>
         ))}
 
@@ -374,20 +374,20 @@ function VagaModal({ initial, onSave, onClose, saving }) {
             <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 6 }}>Tipo</label>
             <Select value={form.tipo} onChange={v => set('tipo', v)}
               options={Object.entries(TIPO_INFO).map(([k, v]) => ({ value: k, label: v.label }))}
-              inputStyle={{ background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 10, fontSize: 14, padding: '10px 14px' }} />
+              inputStyle={{ background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 'var(--radius-md)', fontSize: 14, padding: '10px 14px' }} />
           </div>
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 6 }}>Candidaturas até</label>
             <input type="date" value={form.deadline} onChange={e => set('deadline', e.target.value)}
-              style={{ width: '100%', background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }} />
+              style={{ width: '100%', background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 'var(--radius-md)', color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }} />
           </div>
         </div>
 
         {/* Remote toggle */}
         <div style={{ marginBottom: 16 }}>
           <button type="button" onClick={() => set('is_remote', !form.is_remote)}
-            style={{ display: 'flex', alignItems: 'center', gap: 10, background: form.is_remote ? 'var(--color-surface-hover)' : 'transparent', border: `1.5px solid ${form.is_remote ? 'var(--color-surface-hover)' : C.border}`, borderRadius: 10, padding: '10px 14px', cursor: 'pointer', fontFamily: 'inherit', width: '100%', textAlign: 'left' }}>
-            <div style={{ width: 36, height: 20, borderRadius: 10, background: form.is_remote ? C.blue : 'var(--color-text-tertiary)', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 10, background: form.is_remote ? 'var(--color-surface-hover)' : 'transparent', border: `1.5px solid ${form.is_remote ? 'var(--color-surface-hover)' : C.border}`, borderRadius: 'var(--radius-md)', padding: '10px 14px', cursor: 'pointer', fontFamily: 'inherit', width: '100%', textAlign: 'left' }}>
+            <div style={{ width: 36, height: 20, borderRadius: 'var(--radius-full)', background: form.is_remote ? C.blue : 'var(--color-text-tertiary)', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
               <div style={{ position: 'absolute', top: 2, left: form.is_remote ? 18 : 2, width: 16, height: 16, borderRadius: '50%', background: '#fff', transition: 'left 0.2s' }} />
             </div>
             <span style={{ fontSize: 14, fontWeight: 600, color: form.is_remote ? C.blue : C.text }}>Permite trabalho remoto</span>
@@ -401,7 +401,7 @@ function VagaModal({ initial, onSave, onClose, saving }) {
           <div key={key} style={{ marginBottom: 16 }}>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 6 }}>{label}</label>
             <textarea value={form[key]} onChange={e => set(key, e.target.value)} placeholder={placeholder} rows={3}
-              style={{ width: '100%', background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical', minHeight: 80 }} />
+              style={{ width: '100%', background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 'var(--radius-md)', color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical', minHeight: 80 }} />
           </div>
         ))}
 
@@ -417,7 +417,7 @@ function VagaModal({ initial, onSave, onClose, saving }) {
         <ScreeningEditor questions={form.screening_questions ?? []} onChange={v => set('screening_questions', v)} />
 
         <button onClick={() => onSave(form)} disabled={saving || !form.titulo.trim()}
-          style={{ width: '100%', background: saving || !form.titulo.trim() ? C.border : C.blue, border: 'none', borderRadius: 10, padding: '13px 0', color: 'var(--color-bg)', fontSize: 15, fontWeight: 700, cursor: saving || !form.titulo.trim() ? 'default' : 'pointer', fontFamily: 'inherit', boxShadow: saving ? 'none' : '0 2px 8px var(--color-surface-hover)' }}>
+          style={{ width: '100%', background: saving || !form.titulo.trim() ? C.border : C.blue, border: 'none', borderRadius: 'var(--radius-md)', padding: '13px 0', color: 'var(--color-bg)', fontSize: 15, fontWeight: 700, cursor: saving || !form.titulo.trim() ? 'default' : 'pointer', fontFamily: 'inherit', boxShadow: saving ? 'none' : '0 2px 8px var(--color-surface-hover)' }}>
           {saving ? 'A guardar...' : initial ? 'Guardar alterações' : 'Publicar vaga'}
         </button>
       </div>
@@ -440,12 +440,12 @@ function CandidatarModal({ vaga, recruiterProfile, onClose, onSubmit, sending })
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }} onClick={onClose} />
-      <div style={{ position: 'relative', background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 28, width: '100%', maxWidth: 460, maxHeight: '90vh', overflowY: 'auto', zIndex: 1 }}>
+      <div style={{ position: 'relative', background: C.card, border: `1px solid ${C.border}`, borderRadius: 'var(--radius-xl)', padding: 28, width: '100%', maxWidth: 460, maxHeight: '90vh', overflowY: 'auto', zIndex: 1 }}>
         <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px', color: C.text }}>Candidatar a esta vaga</h2>
         <p style={{ margin: '0 0 16px', fontSize: 13, color: C.muted }}>{vaga.titulo} · {vaga.employer_name || recruiterProfile?.company || recruiterProfile?.full_name}</p>
 
         {(vaga.descricao || vaga.requisitos) && (
-          <div style={{ background: 'var(--color-bg)', border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 14px', marginBottom: 20, maxHeight: 180, overflowY: 'auto' }}>
+          <div style={{ background: 'var(--color-bg)', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-md)', padding: '12px 14px', marginBottom: 20, maxHeight: 180, overflowY: 'auto' }}>
             {vaga.descricao && <p style={{ margin: 0, fontSize: 13, color: C.text, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{vaga.descricao}</p>}
             {vaga.requisitos && (
               <p style={{ margin: vaga.descricao ? '10px 0 0' : 0, fontSize: 13, color: C.text, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
@@ -462,13 +462,13 @@ function CandidatarModal({ vaga, recruiterProfile, onClose, onSubmit, sending })
             </label>
             {q.type === 'choice' ? (
               <select value={answers[q.id] || ''} onChange={e => setAnswers(a => ({ ...a, [q.id]: e.target.value }))}
-                style={{ width: '100%', background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}>
+                style={{ width: '100%', background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 'var(--radius-md)', color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}>
                 <option value="">Escolhe uma opção</option>
                 {(q.options || []).map(o => <option key={o} value={o}>{o}</option>)}
               </select>
             ) : (
               <textarea value={answers[q.id] || ''} onChange={e => setAnswers(a => ({ ...a, [q.id]: e.target.value }))} rows={2}
-                style={{ width: '100%', background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' }} />
+                style={{ width: '100%', background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 'var(--radius-md)', color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' }} />
             )}
           </div>
         ))}
@@ -476,7 +476,7 @@ function CandidatarModal({ vaga, recruiterProfile, onClose, onSubmit, sending })
         <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 7 }}>Mensagem de apresentação</label>
         <textarea value={msg} onChange={e => setMsg(e.target.value)} rows={5}
           placeholder="Apresenta-te brevemente e explica porque és uma boa escolha para esta vaga..."
-          style={{ width: '100%', background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '11px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical', minHeight: 110 }} />
+          style={{ width: '100%', background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 'var(--radius-md)', color: C.text, fontSize: 14, padding: '11px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical', minHeight: 110 }} />
         <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
           <button onClick={onClose} style={{ flex: 1, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-md)', padding: '11px 0', color: C.text, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>
           <button onClick={() => onSubmit(msg, questions.map(q => ({ id: q.id, answer: answers[q.id] || '' })))} disabled={sending || missingRequired}

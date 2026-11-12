@@ -134,7 +134,7 @@ function MembersPanel({ ownerName, members, colors, isOwner }) {
             {displayOwner[0]?.toUpperCase()}
           </div>
           <span style={{ fontSize: 14, fontWeight: 600, color: colors.text, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayOwner}</span>
-          <span style={{ fontSize: 11, flexShrink: 0, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 5, padding: '2px 8px', color: colors.blue, fontWeight: 700 }}>Dono</span>
+          <span style={{ fontSize: 11, flexShrink: 0, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 'var(--radius-sm)', padding: '2px 8px', color: colors.blue, fontWeight: 700 }}>Dono</span>
         </div>
         {/* Collaborators */}
         {visibleMembers.map(m => {
@@ -151,18 +151,18 @@ function MembersPanel({ ownerName, members, colors, isOwner }) {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                     <span style={{ fontSize: 14, fontWeight: 600, color: colors.text }}>{name}</span>
-                    <span style={{ fontSize: 11, background: cfg.bg, border: `1px solid ${cfg.border}`, borderRadius: 5, padding: '2px 8px', color: cfg.color, fontWeight: 700 }}>{cfg.label}</span>
+                    <span style={{ fontSize: 11, background: cfg.bg, border: `1px solid ${cfg.border}`, borderRadius: 'var(--radius-sm)', padding: '2px 8px', color: cfg.color, fontWeight: 700 }}>{cfg.label}</span>
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 5 }}>
                     {sections.map(s => (
-                      <span key={s} style={{ fontSize: 11, color: colors.muted, background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 4, padding: '1px 6px' }}>{s}</span>
+                      <span key={s} style={{ fontSize: 11, color: colors.muted, background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-sm)', padding: '1px 6px' }}>{s}</span>
                     ))}
                   </div>
                 </div>
               ) : (
                 <>
                   <span style={{ fontSize: 14, fontWeight: 600, color: colors.text, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>
-                  <span style={{ fontSize: 11, flexShrink: 0, background: cfg.bg, border: `1px solid ${cfg.border}`, borderRadius: 5, padding: '2px 8px', color: cfg.color, fontWeight: 700 }}>{cfg.label}</span>
+                  <span style={{ fontSize: 11, flexShrink: 0, background: cfg.bg, border: `1px solid ${cfg.border}`, borderRadius: 'var(--radius-sm)', padding: '2px 8px', color: cfg.color, fontWeight: 700 }}>{cfg.label}</span>
                 </>
               )}
             </div>
@@ -178,7 +178,7 @@ function MembersPanel({ ownerName, members, colors, isOwner }) {
 function MacWindow({ title, children }) {
   return (
     <div style={{
-      borderRadius:10, overflow:'hidden',
+      borderRadius: 'var(--radius-md)', overflow:'hidden',
       boxShadow:'0 10px 32px rgba(0,0,0,0.6), 0 2px 6px rgba(0,0,0,0.4)',
       border:'1px solid rgba(255,255,255,0.07)',
     }}>
@@ -212,8 +212,8 @@ function TourVisualScore() {
         </svg>
         <div style={{flex:1}}>
           <div style={{fontSize:8,fontWeight:800,color:'#2a9d6a',textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:5}}>Nível Profissional</div>
-          <div style={{height:3,width:'100%',borderRadius:2,background:'rgba(255,255,255,0.05)',overflow:'hidden',marginBottom:7}}>
-            <div style={{height:'100%',width:'88%',background:'#2a9d6a',borderRadius:2}} />
+          <div style={{height:3,width:'100%',borderRadius: 'var(--radius-sm)',background:'rgba(255,255,255,0.05)',overflow:'hidden',marginBottom:7}}>
+            <div style={{height:'100%',width:'88%',background:'#2a9d6a',borderRadius: 'var(--radius-sm)'}} />
           </div>
           <div style={{fontSize:9,color:'rgba(255,255,255,0.3)'}}>Avaliado pela IA · Só tu vês</div>
         </div>
@@ -256,22 +256,22 @@ function TourVisualDefense() {
           <span style={{fontSize:9,color:'rgba(255,255,255,0.5)',flexShrink:0}}>
             <span style={{color:'rgba(255,255,255,0.75)',fontWeight:700}}>1</span>/6 treinadas
           </span>
-          <div style={{flex:1, height:3, borderRadius:2, background:'rgba(255,255,255,0.07)', overflow:'hidden'}}>
-            <div style={{height:'100%', width:'16%', borderRadius:2, background:'linear-gradient(90deg,#2B7EF5,#2a9d6a)'}} />
+          <div style={{flex:1, height:3, borderRadius: 'var(--radius-sm)', background:'rgba(255,255,255,0.07)', overflow:'hidden'}}>
+            <div style={{height:'100%', width:'16%', borderRadius: 'var(--radius-sm)', background:'linear-gradient(90deg,#2B7EF5,#2a9d6a)'}} />
           </div>
         </div>
         {/* Flashcards */}
         <div style={{padding:'0 10px 10px', display:'flex', flexDirection:'column', gap:5}}>
           {cards.map(c => (
             <div key={c.n} style={{
-              borderRadius:7, overflow:'hidden',
+              borderRadius: 'var(--radius-md)', overflow:'hidden',
               background: c.practiced ? 'rgba(42,157,106,0.08)' : 'rgba(255,255,255,0.03)',
               border: `1px solid ${c.practiced ? 'rgba(42,157,106,0.25)' : 'rgba(255,255,255,0.07)'}`,
             }}>
               <div style={{padding:'7px 10px', display:'flex', gap:8, alignItems:'flex-start'}}>
                 {/* Badge */}
                 <div style={{
-                  width:20, height:20, borderRadius:6, flexShrink:0,
+                  width:20, height:20, borderRadius: 'var(--radius-md)', flexShrink:0,
                   background: c.practiced ? 'rgba(42,157,106,0.15)' : 'rgba(196,154,32,0.1)',
                   border: `1px solid ${c.practiced ? 'rgba(42,157,106,0.3)' : 'rgba(196,154,32,0.25)'}`,
                   display:'flex', alignItems:'center', justifyContent:'center',
@@ -294,9 +294,9 @@ function TourVisualDefense() {
               {!c.practiced && (
                 <div style={{padding:'0 10px 7px 38px', display:'flex', gap:5}}>
                   {!c.revealed && (
-                    <div style={{border:'1px solid rgba(255,255,255,0.1)',borderRadius:5,padding:'3px 8px',fontSize:8,color:'rgba(255,255,255,0.4)'}}>Ver resposta sugerida</div>
+                    <div style={{border:'1px solid rgba(255,255,255,0.1)',borderRadius: 'var(--radius-sm)',padding:'3px 8px',fontSize:8,color:'rgba(255,255,255,0.4)'}}>Ver resposta sugerida</div>
                   )}
-                  <div style={{background:'rgba(42,157,106,0.12)',border:'1px solid rgba(42,157,106,0.25)',borderRadius:5,padding:'3px 8px',fontSize:8,fontWeight:600,color:'#2a9d6a'}}>Marcar como treinada</div>
+                  <div style={{background:'rgba(42,157,106,0.12)',border:'1px solid rgba(42,157,106,0.25)',borderRadius: 'var(--radius-sm)',padding:'3px 8px',fontSize:8,fontWeight:600,color:'#2a9d6a'}}>Marcar como treinada</div>
                 </div>
               )}
               {c.practiced && (
@@ -345,9 +345,9 @@ function TourVisualAI() {
     <MacWindow title="Análise IA — MonteSado">
       <div style={{padding:'10px 14px'}}>
         <div style={{display:'flex', alignItems:'center', gap:6, marginBottom:10}}>
-          <span style={{fontSize:9,fontWeight:800,background:'var(--color-primary)',color:'#fff',padding:'3px 7px',borderRadius:3}}>✦ IA</span>
-          <div style={{flex:1,height:3,borderRadius:2,background:'rgba(255,255,255,0.05)',overflow:'hidden'}}>
-            <div style={{height:'100%',width:'64%',background:'var(--color-primary)',borderRadius:2}} />
+          <span style={{fontSize:9,fontWeight:800,background:'var(--color-primary)',color:'#fff',padding:'3px 7px',borderRadius: 'var(--radius-sm)'}}>✦ IA</span>
+          <div style={{flex:1,height:3,borderRadius: 'var(--radius-sm)',background:'rgba(255,255,255,0.05)',overflow:'hidden'}}>
+            <div style={{height:'100%',width:'64%',background:'var(--color-primary)',borderRadius: 'var(--radius-sm)'}} />
           </div>
           <span style={{fontSize:9,fontWeight:700,color:'var(--color-primary)'}}>64%</span>
         </div>
@@ -387,7 +387,7 @@ function TourVisualPreview() {
           }}>
             {sideIcons.map((ic,i) => (
               <div key={i} style={{
-                width:18,height:18,borderRadius:4,flexShrink:0,
+                width:18,height:18,borderRadius: 'var(--radius-sm)',flexShrink:0,
                 background:ic.active?'rgba(43,126,245,0.18)':'transparent',
                 display:'flex',alignItems:'center',justifyContent:'center',
               }}>
@@ -433,7 +433,7 @@ function TourVisualPreview() {
                 <div style={{fontSize:6.5,color:'rgba(255,255,255,0.28)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:3}}>Cor de destaque</div>
                 <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:2}}>
                   {['#E8A020','#9333ea','#ec4899','#16a34a','#2B7EF5','#E04848','#06b6d4','#f59e0b'].map((c,i) => (
-                    <div key={i} style={{height:9,borderRadius:2,background:c,outline:i===4?'1.5px solid #fff':'none',outlineOffset:1}} />
+                    <div key={i} style={{height:9,borderRadius: 'var(--radius-sm)',background:c,outline:i===4?'1.5px solid #fff':'none',outlineOffset:1}} />
                   ))}
                 </div>
               </div>
@@ -445,7 +445,7 @@ function TourVisualPreview() {
                     <div key={l} style={{
                       background:['#0e0e0e','#0d1424','#0a1220','#1e2530','#f5f0e8','#2a2a2a'][i],
                       border:i===3?'1px solid rgba(43,126,245,0.6)':'1px solid rgba(255,255,255,0.08)',
-                      borderRadius:2, padding:'2px 1px', display:'flex', alignItems:'center', justifyContent:'center',
+                      borderRadius: 'var(--radius-sm)', padding:'2px 1px', display:'flex', alignItems:'center', justifyContent:'center',
                     }}>
                       <div style={{fontSize:5.5,color:i>=4?'rgba(0,0,0,0.4)':'rgba(255,255,255,0.4)',textAlign:'center'}}>{l}</div>
                     </div>
@@ -460,7 +460,7 @@ function TourVisualPreview() {
                     <div key={f} style={{
                       background:i===0?'rgba(43,126,245,0.12)':'rgba(255,255,255,0.04)',
                       border:i===0?'1px solid rgba(43,126,245,0.35)':'1px solid rgba(255,255,255,0.07)',
-                      borderRadius:2, padding:'2px 4px', fontSize:6.5, color:i===0?'#2B7EF5':'rgba(255,255,255,0.35)', textAlign:'center',
+                      borderRadius: 'var(--radius-sm)', padding:'2px 4px', fontSize:6.5, color:i===0?'#2B7EF5':'rgba(255,255,255,0.35)', textAlign:'center',
                     }}>{f}</div>
                   ))}
                 </div>
@@ -474,7 +474,7 @@ function TourVisualPreview() {
         <div style={{padding:'9px 12px', display:'flex', flexDirection:'column', gap:5}}>
           <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
             <div>
-              <div style={{height:8, width:75, borderRadius:2, background:'rgba(255,255,255,0.6)', marginBottom:4}} />
+              <div style={{height:8, width:75, borderRadius: 'var(--radius-sm)', background:'rgba(255,255,255,0.6)', marginBottom:4}} />
               <div style={{height:4, width:42, borderRadius:1, background:'rgba(255,255,255,0.18)'}} />
             </div>
             <svg width={32} height={32}>
@@ -550,7 +550,7 @@ function TourVisualMissions() {
     <MacWindow title="Missões">
       <div style={{padding:'10px 12px', display:'flex', flexDirection:'column', gap:8}}>
         {/* XP progress card */}
-        <div style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:8,padding:'8px 10px'}}>
+        <div style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.07)',borderRadius: 'var(--radius-md)',padding:'8px 10px'}}>
           <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}>
             <div>
               <div style={{fontSize:8,color:'rgba(255,255,255,0.4)',fontWeight:600,marginBottom:2}}>XP Total</div>
@@ -565,15 +565,15 @@ function TourVisualMissions() {
               </div>
             </div>
           </div>
-          <div style={{height:3,background:'rgba(255,255,255,0.07)',borderRadius:99,overflow:'hidden'}}>
-            <div style={{height:'100%',width:`${pct}%`,background:'var(--color-primary)',borderRadius:99}} />
+          <div style={{height:3,background:'rgba(255,255,255,0.07)',borderRadius: 'var(--radius-full)',overflow:'hidden'}}>
+            <div style={{height:'100%',width:`${pct}%`,background:'var(--color-primary)',borderRadius: 'var(--radius-full)'}} />
           </div>
         </div>
         {/* Pending */}
         <div style={{fontSize:8,fontWeight:700,color:'rgba(255,255,255,0.3)',textTransform:'uppercase',letterSpacing:'0.08em'}}>Por completar · {pending.length}</div>
         {pending.map((m,i) => (
-          <div key={i} style={{display:'flex',alignItems:'center',gap:8,padding:'7px 8px',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:7}}>
-            <div style={{width:26,height:26,borderRadius:6,flexShrink:0,background:`${m.color}18`,border:`1px solid ${m.color}30`,display:'flex',alignItems:'center',justifyContent:'center',color:m.color}}>{m.icon}</div>
+          <div key={i} style={{display:'flex',alignItems:'center',gap:8,padding:'7px 8px',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.06)',borderRadius: 'var(--radius-md)'}}>
+            <div style={{width:26,height:26,borderRadius: 'var(--radius-md)',flexShrink:0,background:`${m.color}18`,border:`1px solid ${m.color}30`,display:'flex',alignItems:'center',justifyContent:'center',color:m.color}}>{m.icon}</div>
             <div style={{flex:1,minWidth:0}}>
               <div style={{fontSize:10,fontWeight:700,color:'rgba(255,255,255,0.8)',marginBottom:1}}>{m.label}</div>
               <div style={{fontSize:8,color:'rgba(255,255,255,0.35)',lineHeight:1.3,marginBottom:m.prog?4:0}}>{m.desc}</div>
@@ -583,8 +583,8 @@ function TourVisualMissions() {
                     <span style={{fontSize:7,color:'rgba(255,255,255,0.3)',fontWeight:600}}>{m.prog.cur}/{m.prog.max}</span>
                     <span style={{fontSize:7,color:m.color,fontWeight:700}}>{Math.round(m.prog.cur/m.prog.max*100)}%</span>
                   </div>
-                  <div style={{height:2,background:`${m.color}20`,borderRadius:99,overflow:'hidden'}}>
-                    <div style={{height:'100%',width:`${Math.round(m.prog.cur/m.prog.max*100)}%`,background:m.color,borderRadius:99}} />
+                  <div style={{height:2,background:`${m.color}20`,borderRadius: 'var(--radius-full)',overflow:'hidden'}}>
+                    <div style={{height:'100%',width:`${Math.round(m.prog.cur/m.prog.max*100)}%`,background:m.color,borderRadius: 'var(--radius-full)'}} />
                   </div>
                 </div>
               )}
@@ -595,8 +595,8 @@ function TourVisualMissions() {
         {/* Done */}
         <div style={{fontSize:8,fontWeight:700,color:'rgba(255,255,255,0.3)',textTransform:'uppercase',letterSpacing:'0.08em'}}>Concluídas · {done.length}</div>
         {done.map((m,i) => (
-          <div key={i} style={{display:'flex',alignItems:'center',gap:8,padding:'6px 8px',background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.04)',borderRadius:7,opacity:0.5}}>
-            <div style={{width:26,height:26,borderRadius:6,flexShrink:0,background:'rgba(255,255,255,0.05)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <div key={i} style={{display:'flex',alignItems:'center',gap:8,padding:'6px 8px',background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.04)',borderRadius: 'var(--radius-md)',opacity:0.5}}>
+            <div style={{width:26,height:26,borderRadius: 'var(--radius-md)',flexShrink:0,background:'rgba(255,255,255,0.05)',display:'flex',alignItems:'center',justifyContent:'center'}}>
               <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
             </div>
             <div style={{flex:1,minWidth:0}}>
@@ -630,7 +630,7 @@ function TourVisualInvite() {
               <div style={{fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.8)'}}>{m.name}</div>
               <div style={{fontSize:9, color:'rgba(255,255,255,0.3)'}}>{m.role}</div>
             </div>
-            {i === 0 && <div style={{fontSize:9,fontWeight:700,color:'#2a9d6a',background:'rgba(42,157,106,0.12)',padding:'2px 7px',borderRadius:3}}>Tu</div>}
+            {i === 0 && <div style={{fontSize:9,fontWeight:700,color:'#2a9d6a',background:'rgba(42,157,106,0.12)',padding:'2px 7px',borderRadius: 'var(--radius-sm)'}}>Tu</div>}
           </div>
         ))}
         <div style={{borderTop:'1px solid rgba(255,255,255,0.06)', paddingTop:8, display:'flex', alignItems:'center', gap:8}}>
@@ -659,13 +659,13 @@ function TourVisualEdit() {
         {fields.map(f => (
           <div key={f.label}>
             <div style={{fontSize:8,fontWeight:700,color:'rgba(255,255,255,0.35)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:4}}>{f.label}</div>
-            <div style={{background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.09)',borderRadius:6,padding:'6px 9px',fontSize:10,color:'rgba(255,255,255,0.65)',width:f.w}}>
+            <div style={{background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.09)',borderRadius: 'var(--radius-md)',padding:'6px 9px',fontSize:10,color:'rgba(255,255,255,0.65)',width:f.w}}>
               {f.value}
             </div>
           </div>
         ))}
         <div style={{marginTop:2,display:'flex',justifyContent:'flex-end'}}>
-          <div style={{background:'var(--color-primary)',borderRadius:6,padding:'5px 12px',fontSize:10,fontWeight:700,color:'#fff'}}>Guardar</div>
+          <div style={{background:'var(--color-primary)',borderRadius: 'var(--radius-md)',padding:'5px 12px',fontSize:10,fontWeight:700,color:'#fff'}}>Guardar</div>
         </div>
       </div>
     </MacWindow>
@@ -683,15 +683,15 @@ function TourVisualDiary() {
     <MacWindow title="Diário do projeto">
       <div style={{padding:'10px 12px', display:'flex', flexDirection:'column', gap:6}}>
         {entries.map((e, i) => (
-          <div key={i} style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:7,padding:'7px 9px'}}>
+          <div key={i} style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.06)',borderRadius: 'var(--radius-md)',padding:'7px 9px'}}>
             <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:4}}>
               <span style={{fontSize:8,color:'rgba(255,255,255,0.3)',fontWeight:600}}>{e.date}</span>
-              <span style={{fontSize:7,fontWeight:700,color:tagColor[e.tag],background:`${tagColor[e.tag]}18`,padding:'2px 6px',borderRadius:3}}>{e.tag}</span>
+              <span style={{fontSize:7,fontWeight:700,color:tagColor[e.tag],background:`${tagColor[e.tag]}18`,padding:'2px 6px',borderRadius: 'var(--radius-sm)'}}>{e.tag}</span>
             </div>
             <div style={{fontSize:9,color:'rgba(255,255,255,0.6)',lineHeight:1.45}}>{e.text}</div>
           </div>
         ))}
-        <div style={{display:'flex',alignItems:'center',gap:6,padding:'6px 8px',border:'1px dashed rgba(255,255,255,0.1)',borderRadius:7,cursor:'pointer'}}>
+        <div style={{display:'flex',alignItems:'center',gap:6,padding:'6px 8px',border:'1px dashed rgba(255,255,255,0.1)',borderRadius: 'var(--radius-md)',cursor:'pointer'}}>
           <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth={2.5} strokeLinecap="round"><line x1={12} y1={5} x2={12} y2={19}/><line x1={5} y1={12} x2={19} y2={12}/></svg>
           <span style={{fontSize:9,color:'rgba(255,255,255,0.3)'}}>Nova entrada…</span>
         </div>
@@ -1050,7 +1050,7 @@ function ProjectTour({ isPap, onClose, onStep }) {
         {step.title}
       </p>
       {step.visual && !isMobile && (
-        <div style={{ borderRadius: 10, overflow: 'hidden' }}>
+        <div style={{ borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
           {step.visual}
         </div>
       )}
@@ -1062,7 +1062,7 @@ function ProjectTour({ isPap, onClose, onStep }) {
       <div style={{ display: 'flex', gap: 5, marginTop: 2 }}>
         {steps.map((_, i) => (
           <span key={i} style={{
-            width: i === stepIdx ? 18 : 6, height: 6, borderRadius: 3,
+            width: i === stepIdx ? 18 : 6, height: 6, borderRadius: 'var(--radius-sm)',
             background: i === stepIdx ? 'var(--color-primary)' : 'var(--color-border)',
             transition: 'width 0.2s, background 0.2s',
             flexShrink: 0,
@@ -1137,7 +1137,7 @@ function ProjectTour({ isPap, onClose, onStep }) {
           position: 'fixed',
           left: spotlight.left, top: spotlight.top,
           width: spotlight.width, height: spotlight.height,
-          borderRadius: 10,
+          borderRadius: 'var(--radius-md)',
           boxShadow: '0 0 0 9999px color-mix(in srgb, var(--color-bg) 87%, transparent)',
           outline: '2.5px solid var(--color-primary)',
           outlineOffset: 1,
@@ -1165,7 +1165,7 @@ function ProjectTour({ isPap, onClose, onStep }) {
               display: 'flex', flexDirection: 'column', gap: 10,
               zIndex: 9102, pointerEvents: 'all',
             }}>
-              <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--color-border)', margin: '0 auto' }} />
+              <div style={{ width: 36, height: 4, borderRadius: 'var(--radius-sm)', background: 'var(--color-border)', margin: '0 auto' }} />
               {tooltipContent}
             </div>
           ) : (
@@ -1181,7 +1181,7 @@ function ProjectTour({ isPap, onClose, onStep }) {
               zIndex: 9102, pointerEvents: 'all',
             }}>
               {tooltipContent}
-              <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--color-border)', margin: '0 auto' }} />
+              <div style={{ width: 36, height: 4, borderRadius: 'var(--radius-sm)', background: 'var(--color-border)', margin: '0 auto' }} />
             </div>
           )
         ) : (
@@ -1192,7 +1192,7 @@ function ProjectTour({ isPap, onClose, onStep }) {
             width: 320,
             background: 'var(--color-surface)',
             border: '1px solid var(--color-border)',
-            borderRadius: 14,
+            borderRadius: 'var(--radius-lg)',
             padding: '20px 20px 16px',
             boxShadow: '0 8px 48px rgba(0,0,0,0.5)',
             display: 'flex', flexDirection: 'column', gap: 10,
@@ -2433,7 +2433,7 @@ export default function ProjectPage() {
         `}</style>
         <div className="sk-wrap">
           {/* Cover */}
-          <div className="sk" style={{ width: '100%', height: 200, borderRadius: 12, marginTop: 24 }} />
+          <div className="sk" style={{ width: '100%', height: 200, borderRadius: 'var(--radius-lg)', marginTop: 24 }} />
           {/* Title */}
           <div className="sk" style={{ height: 30, width: '60%', marginTop: 28 }} />
           {/* Tagline */}
@@ -2445,8 +2445,8 @@ export default function ProjectPage() {
             <div className="sk" style={{ height: 48, flex: 1, animationDelay: '0.25s' }} />
           </div>
           {/* Card block */}
-          <div className="sk" style={{ height: 140, width: '100%', marginTop: 20, borderRadius: 12, animationDelay: '0.3s' }} />
-          <div className="sk" style={{ height: 100, width: '100%', marginTop: 14, borderRadius: 12, animationDelay: '0.35s' }} />
+          <div className="sk" style={{ height: 140, width: '100%', marginTop: 20, borderRadius: 'var(--radius-lg)', animationDelay: '0.3s' }} />
+          <div className="sk" style={{ height: 100, width: '100%', marginTop: 14, borderRadius: 'var(--radius-lg)', animationDelay: '0.35s' }} />
         </div>
       </div>
     )
@@ -3000,7 +3000,7 @@ export default function ProjectPage() {
               width: '100%', maxWidth: 420,
               background: 'var(--color-bg)',
               border: '1px solid var(--color-border)',
-              borderRadius: 14,
+              borderRadius: 'var(--radius-lg)',
               padding: '36px 32px 28px',
             }}
           >
@@ -3040,7 +3040,7 @@ export default function ProjectPage() {
                 lineHeight: 1.6,
                 background: 'var(--color-warning-subtle)',
                 border: '1px solid var(--color-warning-subtle)',
-                borderRadius: 8,
+                borderRadius: 'var(--radius-md)',
                 padding: '10px 12px',
               }}>
                 A IA não tinha a certeza sobre {location.state.clearedFields.join(', ')} — ficou em branco. Preenche quando quiseres.
@@ -3060,7 +3060,7 @@ export default function ProjectPage() {
                   lineHeight: 1.6,
                   background: 'var(--color-warning-subtle)',
                   border: '1px solid var(--color-warning-subtle)',
-                  borderRadius: 8,
+                  borderRadius: 'var(--radius-md)',
                   padding: '10px 12px',
                 }}>
                   Falta a parte que conta: com menos de 3 secções, quem vir o link ainda não percebe o que fizeste. Volta a editar antes de partilhar.
@@ -3095,7 +3095,7 @@ export default function ProjectPage() {
                   flex: 1,
                   background: 'var(--color-bg-alt)',
                   border: '1px solid var(--color-border)',
-                  borderRadius: 10,
+                  borderRadius: 'var(--radius-md)',
                   padding: '11px 14px',
                   fontSize: 13,
                   color: 'var(--color-text-secondary)',
@@ -3244,7 +3244,7 @@ export default function ProjectPage() {
               width: '100%', maxWidth: 400,
               background: 'var(--color-surface)',
               border: '1px solid var(--color-primary-subtle)',
-              borderRadius: 14,
+              borderRadius: 'var(--radius-lg)',
               padding: '36px 32px',
               textAlign: 'center',
               position: 'relative',
@@ -3281,7 +3281,7 @@ export default function ProjectPage() {
               display: 'inline-flex', alignItems: 'center', gap: 8,
               background: milestoneCard.score >= 90 ? 'var(--color-success-subtle)' : milestoneCard.score >= 70 ? 'var(--color-primary-subtle)' : 'rgba(251,191,36,0.12)',
               border: `1px solid ${milestoneCard.score >= 90 ? 'var(--color-success-subtle)' : milestoneCard.score >= 70 ? 'var(--color-primary-subtle)' : 'rgba(251,191,36,0.3)'}`,
-              borderRadius: 8, padding: '6px 20px', marginBottom: 28,
+              borderRadius: 'var(--radius-md)', padding: '6px 20px', marginBottom: 28,
               color: milestoneCard.score >= 90 ? 'var(--color-success)' : milestoneCard.score >= 70 ? colors.blue : 'var(--color-warning)',
               fontSize: 13, fontWeight: 800, position: 'relative',
             }}>
@@ -3337,10 +3337,10 @@ export default function ProjectPage() {
         <>
           <div style={{ position: 'fixed', inset: 0, zIndex: 700, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }} />
           <div style={{ position: 'fixed', zIndex: 701, left: '50%', top: '50%', transform: 'translate(-50%, -50%)', width: '100%', maxWidth: 540, padding: '0 16px', boxSizing: 'border-box' }}>
-            <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 24, padding: '36px 36px 28px', boxShadow: '0 32px 100px rgba(0,0,0,0.6)' }}>
+            <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-xl)', padding: '36px 36px 28px', boxShadow: '0 32px 100px rgba(0,0,0,0.6)' }}>
               {/* Header */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
-                <div style={{ width: 52, height: 52, borderRadius: 14, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div style={{ width: 52, height: 52, borderRadius: 'var(--radius-lg)', background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <Rocket size={24} color="var(--color-primary)" />
                 </div>
                 <div>
@@ -3355,8 +3355,8 @@ export default function ProjectPage() {
                   { icon: <Globe size={16} color="var(--color-accent)" />, label: 'Partilhar com um link', sub: 'Envia o link a recrutadores, professores e amigos.' },
                   { icon: <Star size={16} color="var(--color-warning)" />, label: 'Guardar permanentemente', sub: 'O projeto fica na tua conta, seguro e sempre acessível.' },
                 ].map(({ icon, label, sub }) => (
-                  <div key={label} style={{ display: 'flex', alignItems: 'flex-start', gap: 14, background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '12px 14px' }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--color-surface)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>{icon}</div>
+                  <div key={label} style={{ display: 'flex', alignItems: 'flex-start', gap: 14, background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', padding: '12px 14px' }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 'var(--radius-md)', background: 'var(--color-surface)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>{icon}</div>
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text)', marginBottom: 2 }}>{label}</div>
                       <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>{sub}</div>
@@ -3365,7 +3365,7 @@ export default function ProjectPage() {
                 ))}
               </div>
               {/* Warning */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--color-warning-subtle)', border: '1px solid var(--color-warning-subtle)', borderRadius: 10, padding: '10px 14px', marginBottom: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--color-warning-subtle)', border: '1px solid var(--color-warning-subtle)', borderRadius: 'var(--radius-md)', padding: '10px 14px', marginBottom: 20 }}>
                 <AlertTriangle size={14} color="var(--color-warning)" style={{ flexShrink: 0 }} />
                 <span style={{ fontSize: 12, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>Sem conta, se perderes este link não há como recuperar o projeto.</span>
               </div>
@@ -3393,7 +3393,7 @@ export default function ProjectPage() {
                   </button>
                 </>
               ) : (
-                <div style={{ background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 14, padding: '18px 16px' }}>
+                <div style={{ background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 'var(--radius-lg)', padding: '18px 16px' }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-error)', marginBottom: 4 }}>Tens a certeza?</div>
                   <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 16, lineHeight: 1.5 }}>O projeto será <strong style={{ color: 'var(--color-text)' }}>eliminado permanentemente</strong>. Esta ação não pode ser desfeita.</div>
                   <div style={{ display: 'flex', gap: 10 }}>
@@ -3439,7 +3439,7 @@ export default function ProjectPage() {
             style={{
               background: 'var(--color-surface)',
               border: `1px solid ${colors.borderBright}`,
-              borderRadius: 14,
+              borderRadius: 'var(--radius-lg)',
               padding: '28px',
               maxWidth: 660,
               width: '100%',
@@ -3503,7 +3503,7 @@ export default function ProjectPage() {
               />
             )}
             {analyzeError && (
-              <div style={{ background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 10, padding: '12px 16px', color: 'var(--color-error)', fontSize: 13, marginBottom: 16 }}>
+              <div style={{ background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 'var(--radius-md)', padding: '12px 16px', color: 'var(--color-error)', fontSize: 13, marginBottom: 16 }}>
                 {analyzeError}
               </div>
             )}
@@ -3515,7 +3515,7 @@ export default function ProjectPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Resumo</div>
                     {aiFeedback.score != null && (
-                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: aiFeedback.score >= 7 ? 'var(--color-success-subtle, #e6f9e6)' : aiFeedback.score >= 4 ? 'var(--color-warning-subtle, #fff8e1)' : 'var(--color-error-subtle, #ffeaea)', border: `1px solid ${aiFeedback.score >= 7 ? colors.green : aiFeedback.score >= 4 ? colors.yellow : colors.orange}`, borderRadius: 8, padding: '3px 10px', fontSize: 13, fontWeight: 800, color: aiFeedback.score >= 7 ? colors.green : aiFeedback.score >= 4 ? colors.yellow : colors.orange }}>
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: aiFeedback.score >= 7 ? 'var(--color-success-subtle, #e6f9e6)' : aiFeedback.score >= 4 ? 'var(--color-warning-subtle, #fff8e1)' : 'var(--color-error-subtle, #ffeaea)', border: `1px solid ${aiFeedback.score >= 7 ? colors.green : aiFeedback.score >= 4 ? colors.yellow : colors.orange}`, borderRadius: 'var(--radius-md)', padding: '3px 10px', fontSize: 13, fontWeight: 800, color: aiFeedback.score >= 7 ? colors.green : aiFeedback.score >= 4 ? colors.yellow : colors.orange }}>
                         {aiFeedback.score}/10
                       </div>
                     )}
@@ -3524,7 +3524,7 @@ export default function ProjectPage() {
                     {aiFeedback.overall}
                   </p>
                   {aiFeedback.score_hint && (
-                    <div style={{ marginTop: 10, display: 'inline-flex', alignItems: 'flex-start', gap: 6, fontSize: 12, color: colors.blue, fontWeight: 600, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 8, padding: '7px 10px' }}>
+                    <div style={{ marginTop: 10, display: 'inline-flex', alignItems: 'flex-start', gap: 6, fontSize: 12, color: colors.blue, fontWeight: 600, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 'var(--radius-md)', padding: '7px 10px' }}>
                       <Lightbulb size={13} style={{ flexShrink: 0, marginTop: 1 }} />
                       <span>{aiFeedback.score_hint}</span>
                     </div>
@@ -3541,7 +3541,7 @@ export default function ProjectPage() {
                         const SecIcon = ICONS[key] || CheckCircle
                         const ratingColor = sec.rating === 'forte' ? colors.green : sec.rating === 'médio' ? colors.yellow : colors.orange
                         return (
-                          <div key={key} style={{ background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 10, padding: '12px 14px' }}>
+                          <div key={key} style={{ background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-md)', padding: '12px 14px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 7 }}>
                               <span style={{ width: 7, height: 7, borderRadius: '50%', background: ratingColor, flexShrink: 0 }} />
                               <SecIcon size={13} color={colors.muted} style={{ flexShrink: 0 }} />
@@ -3595,7 +3595,7 @@ export default function ProjectPage() {
                         { Icon: TrendingUp, label: 'Pontos fortes' },
                         { Icon: Lightbulb, label: 'O que melhorar' },
                       ].map(({ Icon, label }) => (
-                        <span key={label} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 999, padding: '6px 12px', fontSize: 12, fontWeight: 600, color: colors.muted }}>
+                        <span key={label} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-sm)', padding: '6px 12px', fontSize: 12, fontWeight: 600, color: colors.muted }}>
                           <Icon size={12} color={colors.blue} /> {label}
                         </span>
                       ))}
@@ -3934,7 +3934,7 @@ export default function ProjectPage() {
                       display: 'flex', alignItems: 'center', gap: 6,
                       background: 'transparent',
                       border: `1px solid ${colors.border}`,
-                      borderRadius: 'var(--radius-full)', padding: '5px 12px',
+                      borderRadius: 'var(--radius-md)', padding: '5px 12px',
                       color: colors.subtle, cursor: 'pointer',
                       fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
                       transition: 'all 0.15s',
@@ -3958,7 +3958,7 @@ export default function ProjectPage() {
                     <style>{`@keyframes ppInvFade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}`}</style>
                     <div style={{
                       background: 'var(--color-surface)', border: `1px solid ${colors.border}`,
-                      borderRadius: 16, width: '100%', maxWidth: 420,
+                      borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: 420,
                       boxShadow: '0 24px 64px rgba(0,0,0,0.4)',
                       animation: 'ppInvFade 0.2s ease',
                     }}>
@@ -3967,7 +3967,7 @@ export default function ProjectPage() {
                           accent do projeto, não para cada ícone decorativo. */}
                       <div style={{ padding: '18px 20px 14px', borderBottom: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <div style={{ width: 32, height: 32, borderRadius: 'var(--radius-md)', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <UserPlus size={15} color={colors.text} />
                           </div>
                           <div>
@@ -3988,7 +3988,7 @@ export default function ProjectPage() {
                             placeholder="Pesquisar utilizador..."
                             style={{
                               width: '100%', background: 'var(--color-input-bg)', border: `1.5px solid ${colors.border}`,
-                              borderRadius: 10, padding: '12px 14px', color: colors.text,
+                              borderRadius: 'var(--radius-md)', padding: '12px 14px', color: colors.text,
                               fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box',
                               transition: 'border-color 0.2s, box-shadow 0.2s',
                             }}
@@ -3997,7 +3997,7 @@ export default function ProjectPage() {
                             <div style={{
                               position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
                               background: 'var(--color-surface)', border: `1.5px solid ${colors.border}`,
-                              borderRadius: 10, zIndex: 50, overflowY: 'auto', maxHeight: 280,
+                              borderRadius: 'var(--radius-md)', zIndex: 50, overflowY: 'auto', maxHeight: 280,
                               boxShadow: '0 8px 32px rgba(0,0,0,0.35)',
                             }}>
                               {inviteSearchResults.map(u => (
@@ -4032,7 +4032,7 @@ export default function ProjectPage() {
                         </div>
 
                         {inviteSelectedUser && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 10 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-md)' }}>
                             <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--color-surface)', border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: colors.text, flexShrink: 0, overflow: 'hidden' }}>
                               {inviteSelectedUser.avatar_url
                                 ? <img src={inviteSelectedUser.avatar_url} alt="" style={{ width: 32, height: 32, objectFit: 'cover' }} />
@@ -4098,7 +4098,7 @@ export default function ProjectPage() {
               className={`proj-views-widget proj-views-widget-desktop${viewsExpanded ? ' expanded' : ''}`}
               onClick={() => setViewsExpanded(v => !v)}
               title={`${project.views ?? 0} visualizações`}
-              style={{ display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer', color: colors.muted, flexShrink: 0, padding: '4px 6px', borderRadius: 'var(--radius-full)', marginTop: 8 }}
+              style={{ display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer', color: colors.muted, flexShrink: 0, padding: '4px 6px', borderRadius: 'var(--radius-md)', marginTop: 8 }}
             >
               <Eye size={14} color={colors.muted} />
               <span className="proj-views-count" style={{ fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' }}>
@@ -4140,7 +4140,7 @@ export default function ProjectPage() {
                     width: 28, height: 28,
                     background: 'var(--color-primary-subtle)', color: 'var(--color-primary)',
                     border: '1px solid var(--color-primary-subtle)',
-                    borderRadius: 999,
+                    borderRadius: 'var(--radius-sm)',
                     cursor: 'default',
                   }}
                 >
@@ -4162,7 +4162,7 @@ export default function ProjectPage() {
                       background: `rgba(${cfg.tone},0.1)`,
                       color: cfg.color,
                       border: `1px solid rgba(${cfg.tone},0.25)`,
-                      borderRadius: 999, padding: '4px 12px',
+                      borderRadius: 'var(--radius-sm)', padding: '4px 12px',
                       fontSize: 11, fontWeight: 700, lineHeight: 1.5,
                       cursor: 'default',
                     }}
@@ -4215,7 +4215,7 @@ export default function ProjectPage() {
                 </span>
               )}
               {getProjectState(project) === 'concluido' && (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'var(--color-success-subtle)', color: 'var(--color-success)', border: '1px solid var(--color-success-subtle)', borderRadius: 999, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'var(--color-success-subtle)', color: 'var(--color-success)', border: '1px solid var(--color-success-subtle)', borderRadius: 'var(--radius-sm)', padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>
                   <Check size={11} /> Concluído
                 </span>
               )}
@@ -4230,7 +4230,7 @@ export default function ProjectPage() {
                   ? { tone: '27,120,247', color: 'var(--color-primary)', label: 'Correções enviadas' }
                   : { tone: '245,158,11', color: 'var(--color-warning)', label: 'Precisa de revisão' }
                 return (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: `rgba(${cfg.tone},0.12)`, color: cfg.color, border: `1px solid rgba(${cfg.tone},0.28)`, borderRadius: 999, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: `rgba(${cfg.tone},0.12)`, color: cfg.color, border: `1px solid rgba(${cfg.tone},0.28)`, borderRadius: 'var(--radius-sm)', padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>
                     {cfg.label}
                   </span>
                 )
@@ -4241,7 +4241,7 @@ export default function ProjectPage() {
                 className={`proj-views-widget${viewsExpanded ? ' expanded' : ''}`}
                 onClick={() => setViewsExpanded(v => !v)}
                 title={`${project.views ?? 0} visualizações`}
-                style={{ display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer', color: colors.muted, flexShrink: 0, padding: '4px 6px', borderRadius: 'var(--radius-full)' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer', color: colors.muted, flexShrink: 0, padding: '4px 6px', borderRadius: 'var(--radius-md)' }}
               >
                 <Eye size={14} color={colors.muted} />
                 <span className="proj-views-count" style={{ fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' }}>
@@ -4261,7 +4261,7 @@ export default function ProjectPage() {
             <ScoreRing score={displayScore} size={84} />
             <div style={{
               background: level.color + '12', color: level.color,
-              borderRadius: 999, padding: '3px 10px',
+              borderRadius: 'var(--radius-sm)', padding: '3px 10px',
               fontSize: 9, fontWeight: 700, border: `1px solid ${level.color}30`,
               textAlign: 'center', maxWidth: 120, lineHeight: 1.5, letterSpacing: 0.4,
               textTransform: 'uppercase',
@@ -4409,7 +4409,7 @@ export default function ProjectPage() {
           const urgentColor = daysLeft != null && daysLeft <= 7 ? 'var(--color-error)' : daysLeft != null && daysLeft <= 30 ? 'var(--color-warning)' : 'var(--color-primary)'
 
           const miniCardBase = {
-            borderRadius: 12, padding: '12px 14px',
+            borderRadius: 'var(--radius-lg)', padding: '12px 14px',
             display: 'flex', flexDirection: 'column', gap: 6,
             cursor: 'pointer', fontFamily: 'inherit',
             textAlign: 'left', transition: 'all 0.15s',
@@ -4436,7 +4436,7 @@ export default function ProjectPage() {
                   onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-warning-subtle)'; e.currentTarget.style.borderColor = 'var(--color-warning-subtle)' }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 8, background: 'var(--color-warning-subtle)', border: '1px solid var(--color-warning-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 'var(--radius-md)', background: 'var(--color-warning-subtle)', border: '1px solid var(--color-warning-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <AlertTriangle size={13} color="var(--color-warning)" />
                     </div>
                     <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-warning)' }}>Revisão pedida</div>
@@ -4449,7 +4449,7 @@ export default function ProjectPage() {
               {project.review_status === 'resubmitted' && (
                 <div style={{ ...miniCardBase, cursor: 'default', background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 8, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 'var(--radius-md)', background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <Check size={13} color="var(--color-primary)" />
                     </div>
                     <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-primary)' }}>Correções enviadas</div>
@@ -4502,7 +4502,7 @@ export default function ProjectPage() {
               onClick={e => e.stopPropagation()}
               style={{
                 background: colors.card, border: `1px solid ${colors.borderBright}`,
-                borderRadius: 14, padding: '24px 22px',
+                borderRadius: 'var(--radius-lg)', padding: '24px 22px',
                 display: 'flex', flexDirection: 'column', gap: 16,
                 maxWidth: 320, width: '100%', boxSizing: 'border-box', position: 'relative',
                 overflow: 'hidden',
@@ -4514,7 +4514,7 @@ export default function ProjectPage() {
                 style={{ position: 'absolute', top: 14, right: 14, background: 'var(--color-surface-hover)', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-sm)', width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: colors.muted }}
               ><X size={14} /></button>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 34, height: 34, borderRadius: 9, flexShrink: 0, background: `${defenseUrgentColor}15`, border: `1px solid ${defenseUrgentColor}30`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 34, height: 34, borderRadius: 'var(--radius-md)', flexShrink: 0, background: `${defenseUrgentColor}15`, border: `1px solid ${defenseUrgentColor}30`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Calendar size={16} color={defenseUrgentColor} />
                 </div>
                 <div style={{ fontSize: 15, fontWeight: 700, color: defenseDaysLeft != null && defenseDaysLeft <= 7 ? 'var(--color-error)' : colors.text }}>
@@ -4539,7 +4539,7 @@ export default function ProjectPage() {
                   onClick={() => handleSaveDefenseDate('')}
                   style={{
                     display: 'block', width: 'fit-content', margin: '0 auto',
-                    background: 'none', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-full)',
+                    background: 'none', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-md)',
                     padding: '7px 16px', color: colors.muted, fontSize: 12.5, fontWeight: 600,
                     cursor: 'pointer', fontFamily: 'inherit',
                   }}
@@ -4557,7 +4557,7 @@ export default function ProjectPage() {
           <div style={{
             background: colors.card,
             border: `1px solid ${colors.border}`,
-            borderRadius: 12, padding: '16px 20px',
+            borderRadius: 'var(--radius-lg)', padding: '16px 20px',
             display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
           }}>
             <Bot size={20} color={colors.blue} style={{ flexShrink: 0 }} />
@@ -4620,8 +4620,8 @@ export default function ProjectPage() {
                     <ChevronDown size={16} color={colors.muted} style={{ transition: 'transform 0.22s', transform: scoreOpen ? 'rotate(180deg)' : 'none' }} />
                   </div>
                 </div>
-                <div style={{ height: 6, background: progTrack(pct), borderRadius: 99, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', borderRadius: 99, width: `${pct}%`, background: progBar(pct), transition: 'width 0.5s' }} />
+                <div style={{ height: 6, background: progTrack(pct), borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
+                  <div style={{ height: '100%', borderRadius: 'var(--radius-full)', width: `${pct}%`, background: progBar(pct), transition: 'width 0.5s' }} />
                 </div>
               </button>
               {scoreOpen && <div>
@@ -4640,12 +4640,12 @@ export default function ProjectPage() {
                         WebkitTapHighlightColor: 'transparent',
                       }}
                     >
-                      <span style={{ width: 22, height: 22, borderRadius: 7, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: done ? 'var(--color-primary-subtle)' : f.quality === 'short' ? 'var(--color-warning-subtle)' : 'var(--color-bg-alt)', border: done ? 'none' : `1px solid ${colors.border}` }}>
+                      <span style={{ width: 22, height: 22, borderRadius: 'var(--radius-md)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: done ? 'var(--color-primary-subtle)' : f.quality === 'short' ? 'var(--color-warning-subtle)' : 'var(--color-bg-alt)', border: done ? 'none' : `1px solid ${colors.border}` }}>
                         {done ? <Check size={12} color="var(--color-primary)" strokeWidth={3} /> : <span style={{ width: 5, height: 5, borderRadius: '50%', background: f.quality === 'short' ? 'var(--color-warning)' : colors.subtle }} />}
                       </span>
                       <span style={{ flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: done ? 500 : 600, color: done ? colors.muted : colors.text }}>{f.label}</span>
                       {!done && (
-                        <span style={{ fontSize: 10.5, fontWeight: 800, color: tagColor, background: `${tagColor}1f`, borderRadius: 999, padding: '2px 9px' }}>
+                        <span style={{ fontSize: 10.5, fontWeight: 800, color: tagColor, background: `${tagColor}1f`, borderRadius: 'var(--radius-sm)', padding: '2px 9px' }}>
                           {f.quality === 'short' ? 'Curto' : 'Em falta'}
                         </span>
                       )}
@@ -4765,7 +4765,7 @@ export default function ProjectPage() {
               margin: '18px auto 4px', background: 'none',
               border: `1px solid ${colors.border}`,
               color: colors.subtle,
-              borderRadius: 'var(--radius-full)', padding: '8px 16px', fontSize: 12.5, fontWeight: 600,
+              borderRadius: 'var(--radius-md)', padding: '8px 16px', fontSize: 12.5, fontWeight: 600,
               cursor: stateSaving ? 'default' : 'pointer', fontFamily: 'inherit',
               opacity: stateSaving ? 0.6 : 1, transition: 'all 0.15s',
             }}
@@ -4813,8 +4813,8 @@ export default function ProjectPage() {
                 <ChevronDown size={16} color={colors.muted} style={{ transition: 'transform 0.22s', transform: missionsOpenMobile ? 'rotate(180deg)' : 'none' }} />
               </div>
             </div>
-            <div style={{ height: 6, background: progTrack(missionsPct), borderRadius: 99, overflow: 'hidden' }}>
-              <div style={{ height: '100%', borderRadius: 99, width: `${missionsPct}%`, background: progBar(missionsPct), transition: 'width 0.6s ease-out' }} />
+            <div style={{ height: 6, background: progTrack(missionsPct), borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
+              <div style={{ height: '100%', borderRadius: 'var(--radius-full)', width: `${missionsPct}%`, background: progBar(missionsPct), transition: 'width 0.6s ease-out' }} />
             </div>
           </button>
 
@@ -4890,7 +4890,7 @@ export default function ProjectPage() {
             }}>
               <div onClick={e => e.stopPropagation()} style={{
                 background: 'var(--color-surface)', border: '1px solid var(--color-border)',
-                borderRadius: 14, padding: '28px 28px 24px', maxWidth: 440, width: '90%',
+                borderRadius: 'var(--radius-lg)', padding: '28px 28px 24px', maxWidth: 440, width: '90%',
                 maxHeight: '70vh', overflowY: 'auto',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
@@ -4909,7 +4909,7 @@ export default function ProjectPage() {
                     {interestors.map(rec => (
                       <div key={rec.id} style={{
                         display: 'flex', alignItems: 'center', gap: 12,
-                        padding: '12px 14px', borderRadius: 12,
+                        padding: '12px 14px', borderRadius: 'var(--radius-lg)',
                         background: 'var(--color-bg)', border: '1px solid var(--color-border)',
                       }}>
                         <div style={{
@@ -4931,7 +4931,7 @@ export default function ProjectPage() {
                           )}
                         </div>
                         <a href={`/empresa/${rec.username || rec.id}`} style={{
-                          padding: '6px 12px', borderRadius: 'var(--radius-full)', fontSize: 12, fontWeight: 600,
+                          padding: '6px 12px', borderRadius: 'var(--radius-md)', fontSize: 12, fontWeight: 600,
                           background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)',
                           color: 'var(--color-text)', textDecoration: 'none', flexShrink: 0,
                         }}>Ver perfil</a>
@@ -4947,7 +4947,7 @@ export default function ProjectPage() {
           {/* Comments */}
           <div style={{
             background: 'var(--color-surface)', border: '1px solid var(--color-border)',
-            borderRadius: 12, padding: '22px 24px',
+            borderRadius: 'var(--radius-lg)', padding: '22px 24px',
           }}>
             <ProjectComments projectId={project.id} projectAuthorId={project.user_id} />
           </div>
@@ -4977,7 +4977,7 @@ export default function ProjectPage() {
               <button onClick={() => setMobileTab('projeto')} aria-label="Voltar ao projeto" style={{ background: 'none', border: 'none', color: colors.muted, cursor: 'pointer', width: 36, height: 36, borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, WebkitTapHighlightColor: 'transparent' }}>
                 <ChevronLeft size={22} />
               </button>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-md)', background: 'var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Sparkles size={18} color="var(--color-primary)" />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -5120,7 +5120,7 @@ export default function ProjectPage() {
                 disabled={coachLoading}
                 style={{
                   flex: 1, background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`,
-                  borderRadius: 12, padding: '13px 15px', fontSize: 16,
+                  borderRadius: 'var(--radius-lg)', padding: '13px 15px', fontSize: 16,
                   color: colors.text, fontFamily: 'inherit', outline: 'none',
                   opacity: coachLoading ? 0.6 : 1,
                 }}
@@ -5163,7 +5163,7 @@ export default function ProjectPage() {
           </span>
           {/* URL row */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-            <div style={{ flex: 1, minWidth: 0, background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 7, padding: '7px 12px', fontSize: 12, color: colors.subtle, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div style={{ flex: 1, minWidth: 0, background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-md)', padding: '7px 12px', fontSize: 12, color: colors.subtle, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {pageUrl}
             </div>
             <button
@@ -5273,7 +5273,7 @@ export default function ProjectPage() {
               onClick={e => e.stopPropagation()}
               style={{
                 background: colors.card, border: `1px solid ${colors.borderBright}`,
-                borderRadius: 14, padding: '28px 32px',
+                borderRadius: 'var(--radius-lg)', padding: '28px 32px',
                 display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20,
                 boxShadow: 'none',
                 maxWidth: 320, width: '100%',
@@ -5288,10 +5288,10 @@ export default function ProjectPage() {
                 <div style={{ fontSize: 15, fontWeight: 700, color: colors.text, textAlign: 'center', marginBottom: 4 }}>{project.name}</div>
                 <div style={{ fontSize: 12, color: colors.muted, textAlign: 'center' }}>Aponta a câmara para abrir</div>
               </div>
-              <div style={{ background: '#fff', borderRadius: 12, padding: 16, boxShadow: 'none' }}>
+              <div style={{ background: '#fff', borderRadius: 'var(--radius-lg)', padding: 16, boxShadow: 'none' }}>
                 <QRCodeSVG value={pageUrl} size={180} />
               </div>
-              <div style={{ background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 8, padding: '8px 14px', fontSize: 11, color: colors.subtle, textAlign: 'center', wordBreak: 'break-all', maxWidth: '100%' }}>
+              <div style={{ background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-md)', padding: '8px 14px', fontSize: 11, color: colors.subtle, textAlign: 'center', wordBreak: 'break-all', maxWidth: '100%' }}>
                 {pageUrl}
               </div>
             </div>
@@ -5336,21 +5336,21 @@ export default function ProjectPage() {
               <div className="proj-author-links" style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                 {project.linkedin_url && (
                   <a href={project.linkedin_url} target="_blank" rel="noopener noreferrer"
-                    style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: colors.muted, fontWeight: 600, textDecoration: 'none', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-full)', padding: '5px 10px', transition: 'all 0.15s' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: colors.muted, fontWeight: 600, textDecoration: 'none', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-md)', padding: '5px 10px', transition: 'all 0.15s' }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = colors.borderBright; e.currentTarget.style.color = colors.text }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.muted }}
                   >LinkedIn</a>
                 )}
                 {project.github_url && (
                   <a href={project.github_url} target="_blank" rel="noopener noreferrer"
-                    style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: colors.muted, fontWeight: 600, textDecoration: 'none', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-full)', padding: '5px 10px', transition: 'all 0.15s' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: colors.muted, fontWeight: 600, textDecoration: 'none', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-md)', padding: '5px 10px', transition: 'all 0.15s' }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = colors.borderBright; e.currentTarget.style.color = colors.text }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.muted }}
                   >GitHub</a>
                 )}
                 {project.portfolio_url && (
                   <a href={project.portfolio_url} target="_blank" rel="noopener noreferrer"
-                    style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: colors.muted, fontWeight: 600, textDecoration: 'none', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-full)', padding: '5px 10px', transition: 'all 0.15s' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: colors.muted, fontWeight: 600, textDecoration: 'none', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-md)', padding: '5px 10px', transition: 'all 0.15s' }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = colors.borderBright; e.currentTarget.style.color = colors.text }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.muted }}
                   >Portfólio</a>
@@ -5384,7 +5384,7 @@ export default function ProjectPage() {
 
           {/* Professor: batch review queue, started from the turma's "Avaliar todos" */}
           {isProfessor && reviewQueue && reviewQueue.length > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 8, padding: '6px 8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 'var(--radius-md)', padding: '6px 8px' }}>
               <button
                 onClick={() => goToReviewIndex(reviewIndex - 1)}
                 disabled={reviewIndex === 0}
@@ -5416,7 +5416,7 @@ export default function ProjectPage() {
             <div style={{
               display: 'flex', alignItems: 'center', gap: 8,
               background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)',
-              borderRadius: 8, padding: '9px 12px',
+              borderRadius: 'var(--radius-md)', padding: '9px 12px',
             }}>
               <CheckCircle size={13} color="var(--color-primary)" style={{ flexShrink: 0 }} />
               <span style={{ fontSize: 11, color: colors.text, fontWeight: 600, lineHeight: 1.4 }}>
@@ -5536,7 +5536,7 @@ export default function ProjectPage() {
             const canSave       = useClassCriteria ? (allCritRated && critWeightsValid) : allRated
 
             return (
-              <div style={{ ...colors.glassStyle, background: colors.glass, border: `1px solid ${colors.glassBorder}`, borderRadius: 12, overflow: 'hidden', marginBottom: 4 }}>
+              <div style={{ ...colors.glassStyle, background: colors.glass, border: `1px solid ${colors.glassBorder}`, borderRadius: 'var(--radius-lg)', overflow: 'hidden', marginBottom: 4 }}>
                 {/* Header */}
                 <div style={{ padding: '13px 16px 10px', borderBottom: (juryEditing || hasSavedScore) ? '1px solid var(--color-primary-subtle)' : 'none', display: 'flex', alignItems: 'center', gap: 9 }}>
                   <ClipboardList size={14} color="var(--color-primary)" />
@@ -5558,7 +5558,7 @@ export default function ProjectPage() {
                       )}
                       <button
                         onClick={() => setJuryEditing(true)}
-                        style={{ marginLeft: 'auto', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5, background: 'transparent', border: '1px solid var(--color-primary-subtle)', borderRadius: 'var(--radius-full)', padding: '6px 10px', color: 'var(--color-primary)', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                        style={{ marginLeft: 'auto', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5, background: 'transparent', border: '1px solid var(--color-primary-subtle)', borderRadius: 'var(--radius-md)', padding: '6px 10px', color: 'var(--color-primary)', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
                       >
                         <Pencil size={11} /> Reavaliar
                       </button>
@@ -5597,7 +5597,7 @@ export default function ProjectPage() {
                           <div key={c.id}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
                               <span style={{ fontSize: 12, fontWeight: 700, color: colors.text }}>{c.name}</span>
-                              <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-primary)', background: 'var(--color-primary-subtle)', borderRadius: 4, padding: '1px 5px' }}>{c.weight}%</span>
+                              <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-primary)', background: 'var(--color-primary-subtle)', borderRadius: 'var(--radius-sm)', padding: '1px 5px' }}>{c.weight}%</span>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                               <input
@@ -5608,10 +5608,10 @@ export default function ProjectPage() {
                                   setCriterionScores(s => ({ ...s, [c.id]: n }))
                                 }}
                                 placeholder="—"
-                                style={{ width: 52, background: 'var(--color-bg)', border: `1px solid ${colors.border}`, borderRadius: 7, padding: '5px 8px', color: colors.text, fontSize: 13, fontWeight: 700, fontFamily: 'inherit', outline: 'none', textAlign: 'center' }}
+                                style={{ width: 52, background: 'var(--color-bg)', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-md)', padding: '5px 8px', color: colors.text, fontSize: 13, fontWeight: 700, fontFamily: 'inherit', outline: 'none', textAlign: 'center' }}
                               />
-                              <div style={{ flex: 1, height: 6, borderRadius: 3, background: 'var(--color-bg)', overflow: 'hidden' }}>
-                                <div style={{ height: '100%', width: `${((val ?? 0) / 20) * 100}%`, background: val >= 16 ? 'var(--color-success)' : val >= 10 ? 'var(--color-primary)' : 'var(--color-warning)', borderRadius: 3, transition: 'width 0.15s' }} />
+                              <div style={{ flex: 1, height: 6, borderRadius: 'var(--radius-sm)', background: 'var(--color-bg)', overflow: 'hidden' }}>
+                                <div style={{ height: '100%', width: `${((val ?? 0) / 20) * 100}%`, background: val >= 16 ? 'var(--color-success)' : val >= 10 ? 'var(--color-primary)' : 'var(--color-warning)', borderRadius: 'var(--radius-sm)', transition: 'width 0.15s' }} />
                               </div>
                               <span style={{ fontSize: 11, color: colors.muted, minWidth: 22, textAlign: 'right' }}>/20</span>
                             </div>
@@ -5632,7 +5632,7 @@ export default function ProjectPage() {
                                   key={n}
                                   onClick={() => setJuryRatings(r => ({ ...r, [c.id]: n }))}
                                   style={{
-                                    flex: 1, height: 22, borderRadius: 4, border: 'none', cursor: 'pointer', padding: 0,
+                                    flex: 1, height: 22, borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer', padding: 0,
                                     background: active ? (val >= 4 ? 'var(--color-success)' : val >= 2 ? 'var(--color-primary)' : 'var(--color-warning)') : 'var(--color-bg)',
                                     transition: 'background 0.1s',
                                   }}
@@ -5671,7 +5671,7 @@ export default function ProjectPage() {
                         onChange={e => setJuryNote(e.target.value)}
                         placeholder="Nota geral para o aluno (opcional)…"
                         rows={2}
-                        style={{ width: '100%', background: 'var(--color-bg)', border: `1px solid ${colors.border}`, borderRadius: 8, padding: '8px 10px', color: colors.text, fontSize: 12, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none', lineHeight: 1.5 }}
+                        style={{ width: '100%', background: 'var(--color-bg)', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-md)', padding: '8px 10px', color: colors.text, fontSize: 12, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none', lineHeight: 1.5 }}
                       />
                     </div>
 
@@ -5741,7 +5741,7 @@ export default function ProjectPage() {
             const gradeColor = project.teacher_score >= 16 ? 'var(--color-success)' : project.teacher_score >= 10 ? 'var(--color-primary)' : 'var(--color-warning)'
             const scoreColor2 = score >= 86 ? 'var(--color-success)' : score >= 51 ? 'var(--color-primary)' : 'var(--color-warning)'
             return (
-              <div style={{ ...colors.glassStyle, background: colors.glass, border: `1px solid ${colors.glassBorder}`, borderRadius: 12, overflow: 'hidden' }}>
+              <div style={{ ...colors.glassStyle, background: colors.glass, border: `1px solid ${colors.glassBorder}`, borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
                 <div style={{ display: 'flex' }}>
                   <div style={{ flex: 1, padding: '14px 16px', borderRight: `1px solid ${colors.glassBorder}` }}>
                     <div style={{ fontSize: 10, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Score Showo</div>
@@ -5777,7 +5777,7 @@ export default function ProjectPage() {
             const visibleFeedback = teacherFeedback.filter(f => f.field_key !== 'jury_eval')
             const myFeedback = isProfessor ? visibleFeedback.filter(f => f.teacher_id === user?.id) : visibleFeedback
             return (
-              <div style={{ ...colors.glassStyle, background: colors.glass, border: `1px solid ${colors.glassBorder}`, borderRadius: 12, overflow: 'hidden' }}>
+              <div style={{ ...colors.glassStyle, background: colors.glass, border: `1px solid ${colors.glassBorder}`, borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
                 {/* Header */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '12px 14px', borderBottom: myFeedback.length > 0 || showFeedbackForm ? '1px solid var(--color-primary-subtle)' : 'none' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7, minWidth: 0 }}>
@@ -5788,7 +5788,7 @@ export default function ProjectPage() {
                     <button
                       onClick={() => setShowFeedbackForm(f => !f)}
                       title={showFeedbackForm ? 'Fechar' : 'Editar'}
-                      style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, padding: '4px 9px', borderRadius: 'var(--radius-full)', border: '1px solid var(--color-primary-subtle)', background: showFeedbackForm ? 'var(--color-primary-subtle)' : 'transparent', color: 'var(--color-primary)', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, flexShrink: 0 }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, padding: '4px 9px', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-primary-subtle)', background: showFeedbackForm ? 'var(--color-primary-subtle)' : 'transparent', color: 'var(--color-primary)', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, flexShrink: 0 }}
                     >
                       {showFeedbackForm ? <X size={12} /> : <><Pencil size={11} /> Editar</>}
                     </button>
@@ -5836,7 +5836,7 @@ export default function ProjectPage() {
                         style={{ padding: '10px 16px', borderBottom: idx < sectionFeedback.length - 1 ? '1px solid var(--color-primary-subtle)' : 'none', opacity: resolved && !isProfessor ? 0.75 : 1 }}
                       >
                         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                          <span style={{ fontSize: 9, fontWeight: 800, color: 'var(--color-primary)', background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 4, padding: '2px 6px', letterSpacing: 0.5, textTransform: 'uppercase', flexShrink: 0, marginTop: 2, whiteSpace: 'nowrap' }}>
+                          <span style={{ fontSize: 9, fontWeight: 800, color: 'var(--color-primary)', background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 'var(--radius-sm)', padding: '2px 6px', letterSpacing: 0.5, textTransform: 'uppercase', flexShrink: 0, marginTop: 2, whiteSpace: 'nowrap' }}>
                             {FB_SECTION_LABELS[f.field_key] || humanizeFieldKey(f.field_key)}
                           </span>
                           <span style={{ flex: 1, fontSize: 13, color: colors.text, lineHeight: 1.5, textDecoration: resolved ? 'line-through' : 'none', textDecorationColor: 'rgba(148,163,184,0.5)' }}><FeedbackCommentText comment={f.comment} textColor={colors.text} /></span>
@@ -5874,16 +5874,16 @@ export default function ProjectPage() {
                               <input
                                 value={resolveNote} onChange={e => setResolveNote(e.target.value)}
                                 placeholder="O que mudaste? (opcional)"
-                                style={{ background: 'var(--color-bg)', border: `1px solid ${colors.border}`, borderRadius: 6, padding: '6px 9px', color: colors.text, fontSize: 12, fontFamily: 'inherit', outline: 'none' }}
+                                style={{ background: 'var(--color-bg)', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-md)', padding: '6px 9px', color: colors.text, fontSize: 12, fontFamily: 'inherit', outline: 'none' }}
                               />
                               <div style={{ display: 'flex', gap: 6 }}>
                                 <button
                                   onClick={() => { handleFbResolve(f.id, resolveNote); setResolvingId(null); setResolveNote('') }}
-                                  style={{ background: 'var(--color-success)', border: 'none', borderRadius: 'var(--radius-full)', padding: '5px 10px', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                                  style={{ background: 'var(--color-success)', border: 'none', borderRadius: 'var(--radius-md)', padding: '5px 10px', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
                                 >Confirmar</button>
                                 <button
                                   onClick={() => { setResolvingId(null); setResolveNote('') }}
-                                  style={{ background: 'none', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-full)', padding: '5px 10px', color: colors.muted, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}
+                                  style={{ background: 'none', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-md)', padding: '5px 10px', color: colors.muted, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}
                                 >Cancelar</button>
                               </div>
                             </div>
@@ -5914,14 +5914,14 @@ export default function ProjectPage() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 16px', borderTop: myFeedback.length > 0 ? '1px solid var(--color-primary-subtle)' : 'none' }}>
                     <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
                       {Object.entries(FB_SECTION_LABELS).map(([k, l]) => (
-                        <button key={k} onClick={() => setFbFieldKey(k)} style={{ fontSize: 11, padding: '3px 8px', borderRadius: 5, border: `1px solid ${fbFieldKey === k ? 'var(--color-primary)' : colors.border}`, background: fbFieldKey === k ? 'var(--color-primary-subtle)' : 'transparent', color: fbFieldKey === k ? 'var(--color-primary)' : colors.muted, cursor: 'pointer', fontFamily: 'inherit', fontWeight: fbFieldKey === k ? 700 : 400 }}>{l}</button>
+                        <button key={k} onClick={() => setFbFieldKey(k)} style={{ fontSize: 11, padding: '3px 8px', borderRadius: 'var(--radius-sm)', border: `1px solid ${fbFieldKey === k ? 'var(--color-primary)' : colors.border}`, background: fbFieldKey === k ? 'var(--color-primary-subtle)' : 'transparent', color: fbFieldKey === k ? 'var(--color-primary)' : colors.muted, cursor: 'pointer', fontFamily: 'inherit', fontWeight: fbFieldKey === k ? 700 : 400 }}>{l}</button>
                       ))}
                     </div>
                     <textarea
                       value={fbComment} onChange={e => setFbComment(e.target.value)}
                       placeholder={fbFieldKey === 'geral' ? 'Nota geral sobre o projeto: avaliação, observações, pontos a melhorar…' : `Feedback sobre ${FB_SECTION_LABELS[fbFieldKey]}…`}
                       rows={fbFieldKey === 'geral' ? 4 : 3}
-                      style={{ width: '100%', background: 'var(--color-bg)', border: `1px solid ${colors.border}`, borderRadius: 8, padding: '9px 11px', color: colors.text, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none' }}
+                      style={{ width: '100%', background: 'var(--color-bg)', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-md)', padding: '9px 11px', color: colors.text, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none' }}
                     />
                     {fbError && <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: 'var(--color-error)' }}>{fbError}</p>}
                     <div style={{ display: 'flex', gap: 8 }}>
@@ -5948,7 +5948,7 @@ export default function ProjectPage() {
               border: `1px solid ${defenseUrgentColor}30`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                <div style={{ width: 32, height: 32, borderRadius: 9, flexShrink: 0, background: `${defenseUrgentColor}18`, border: `1px solid ${defenseUrgentColor}35`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 32, height: 32, borderRadius: 'var(--radius-md)', flexShrink: 0, background: `${defenseUrgentColor}18`, border: `1px solid ${defenseUrgentColor}35`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Calendar size={15} color={defenseUrgentColor} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -5972,7 +5972,7 @@ export default function ProjectPage() {
                   onClick={() => handleSaveDefenseDate('')}
                   style={{
                     display: 'block', width: 'fit-content', margin: '8px auto 0',
-                    background: 'none', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-full)',
+                    background: 'none', border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-md)',
                     padding: '6px 14px', color: colors.muted, fontSize: 11.5, fontWeight: 600,
                     cursor: 'pointer', fontFamily: 'inherit',
                   }}
@@ -6009,7 +6009,7 @@ export default function ProjectPage() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{
-                        width: 30, height: 30, borderRadius: 8, flexShrink: 0,
+                        width: 30, height: 30, borderRadius: 'var(--radius-md)', flexShrink: 0,
                         background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}>
@@ -6038,7 +6038,7 @@ export default function ProjectPage() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{
-                        width: 30, height: 30, borderRadius: 8, flexShrink: 0,
+                        width: 30, height: 30, borderRadius: 'var(--radius-md)', flexShrink: 0,
                         background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}>
@@ -6090,8 +6090,8 @@ export default function ProjectPage() {
                           </div>
                         ))}
                       </div>
-                      <div style={{ marginTop: 14, height: 4, background: progTrack(pct), borderRadius: 99, overflow: 'hidden' }}>
-                        <div style={{ height: '100%', borderRadius: 99, width: `${pct}%`, background: progBar(pct), transition: 'width 0.5s' }} />
+                      <div style={{ marginTop: 14, height: 4, background: progTrack(pct), borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', borderRadius: 'var(--radius-full)', width: `${pct}%`, background: progBar(pct), transition: 'width 0.5s' }} />
                       </div>
                     </div>
                   </>
@@ -6235,7 +6235,7 @@ export default function ProjectPage() {
               zIndex: 200,
               background: 'var(--color-surface)',
               border: '1px solid var(--color-border)',
-              borderRadius: 16,
+              borderRadius: 'var(--radius-xl)',
               overflow: 'hidden',
               display: 'flex', flexDirection: 'column',
               boxShadow: '0 8px 40px rgba(0,0,0,0.28)',
@@ -6244,7 +6244,7 @@ export default function ProjectPage() {
           >
             {/* Header */}
             <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, background: 'var(--color-bg-alt)', borderRadius: '16px 16px 0 0' }}>
-              <div style={{ width: 30, height: 30, borderRadius: 9, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div style={{ width: 30, height: 30, borderRadius: 'var(--radius-md)', background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Bot size={15} color="var(--color-primary)" />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -6341,7 +6341,7 @@ export default function ProjectPage() {
                   : ' Posso ajudar-te a melhorar cada secção, pensar na estrutura, ou preparar a apresentação.'
                 return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  <div style={{ background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 12, padding: '14px 16px', fontSize: 13, color: colors.text, lineHeight: 1.6 }}>
+                  <div style={{ background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 'var(--radius-lg)', padding: '14px 16px', fontSize: 13, color: colors.text, lineHeight: 1.6 }}>
                     <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Coach IA</span>
                     Olá! Sou o teu coach para o <strong>{project.name}</strong>.{greetingD}
                   </div>
@@ -6392,7 +6392,7 @@ export default function ProjectPage() {
                 autoFocus
                 style={{
                   flex: 1, minWidth: 0, background: 'var(--color-bg)', border: `1px solid ${colors.border}`,
-                  borderRadius: 10, padding: '9px 12px', fontSize: 13,
+                  borderRadius: 'var(--radius-md)', padding: '9px 12px', fontSize: 13,
                   color: colors.text, fontFamily: 'inherit', outline: 'none',
                   opacity: coachLoading ? 0.6 : 1,
                 }}

@@ -790,7 +790,7 @@
 .up-qr-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border-hover);
-  border-radius: 14px;
+  border-radius: var(--radius-xl);
   width: 100%;
   max-width: 340px;
   position: relative;
@@ -802,7 +802,7 @@
   right: 14px;
   background: var(--color-surface-hover);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   width: 30px;
   height: 30px;
   display: flex;
@@ -841,14 +841,14 @@
 
 .up-qr-svg-wrap {
   background: #fff;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 16px;
 }
 
 .up-qr-url {
   background: var(--color-bg);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 8px 14px;
   font-size: 11px;
   color: var(--color-text-tertiary);
@@ -872,7 +872,7 @@
   gap: 7px;
   background: transparent;
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 10px 0;
   color: var(--color-text-secondary);
   font-size: 13px;
@@ -891,7 +891,7 @@
   flex: 1;
   background: var(--color-text);
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 10px 0;
   color: var(--color-bg);
   font-size: 13px;

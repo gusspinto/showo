@@ -505,7 +505,7 @@ body.light .explore-card-cover img {
   gap: 4px;
   background: rgba(0,0,0,0.55);
   backdrop-filter: blur(4px);
-  border-radius: 20px;
+  border-radius: var(--radius-sm);
   padding: 3px 8px;
   font-size: 11px;
   font-weight: 600;
@@ -520,7 +520,7 @@ body.light .explore-card-cover img {
   left: 10px;
   background: rgba(0,0,0,0.55);
   backdrop-filter: blur(4px);
-  border-radius: 20px;
+  border-radius: var(--radius-sm);
   padding: 3px 9px;
   font-size: 11px;
   font-weight: 700;
@@ -555,7 +555,7 @@ body.light .explore-card-cover img {
   color: var(--color-primary);
   background: color-mix(in srgb, var(--color-primary) 12%, transparent);
   border: 1px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   padding: 2px 6px 2px 5px;
   white-space: nowrap;
 }
@@ -612,7 +612,7 @@ body.light .explore-card-cover img {
   color: var(--color-text-secondary);
   background: var(--color-bg-alt);
   border: 1px solid var(--color-border);
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   padding: 2px 7px;
 }
 /* Chip de tecnologia demonstrada — clicável, filtra o Explorar. */
@@ -634,7 +634,7 @@ button.explore-tag--tech.active {
   background: transparent;
   border: 1px solid var(--color-border);
   color: var(--color-text-secondary);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 11px 28px;
   font-size: 14px;
   font-weight: 600;
@@ -661,7 +661,7 @@ button.explore-tag--tech.active {
   background: transparent;
   border: 1px solid var(--color-border);
   color: var(--color-text-secondary);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 10px 22px;
   font-size: 14px;
   cursor: pointer;
@@ -678,7 +678,7 @@ button.explore-tag--tech.active {
   -webkit-backdrop-filter: blur(16px);
   background: var(--color-glass);
   border: 1px solid var(--color-glass-border);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   padding: 16px 18px;
   display: flex;
   align-items: center;
@@ -702,7 +702,7 @@ button.explore-tag--tech.active {
 .explore-avatar {
   width: 46px;
   height: 46px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   object-fit: cover;
   flex-shrink: 0;
   overflow: hidden;
@@ -715,7 +715,7 @@ body.light .explore-avatar {
 .explore-avatar-fallback {
   width: 46px;
   height: 46px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -765,7 +765,7 @@ body.light .explore-avatar {
   color: var(--color-text-secondary);
   background: transparent;
   border: 1px solid var(--color-border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 2px 8px;
   white-space: nowrap;
   overflow: hidden;
