@@ -262,6 +262,10 @@ export default function NewProject() {
   /* Fase 2 — como aparece: página própria ou anexo de outro projeto */
   const [presentation, setPresentation] = useState('page')
   const [parentId, setParentId] = useState('')
+  // Privado por omissão (pedido do Pedro na reunião 09-11: "posso estar a
+  // construir uma coisa em privado"). O dono escolhe aqui, antes de criar,
+  // em vez de o projeto nascer sempre público sem ele ter decidido isso.
+  const [projectVisibility, setProjectVisibility] = useState('private')
   const [myProjects, setMyProjects] = useState([])
 
   useEffect(() => {
@@ -594,6 +598,7 @@ export default function NewProject() {
     try {
       const project = await saveProject(withCreator, aiResult, user?.id ?? null, {
         parentProjectId: asAttachment ? parentId : null,
+        visibility: presentation === 'page' ? projectVisibility : 'public',
       })
       if (user?.id) localStorage.setItem(`edit_token_${project.slug}`, project.edit_token)
       trackEvent('project_created', { manual: isManual, attachment: asAttachment })
@@ -928,6 +933,30 @@ export default function NewProject() {
                   {myProjects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
               )}
+            </div>
+          )}
+
+          {presentation === 'page' && (
+            <div className="np-present">
+              <p className="np-present-label">Visibilidade</p>
+              <div className="np-present-opts">
+                <button
+                  type="button"
+                  className={`np-present-opt${projectVisibility === 'private' ? ' is-on' : ''}`}
+                  onClick={() => setProjectVisibility('private')}
+                >
+                  <strong>Privado</strong>
+                  <span>Só tu o vês, até decidires partilhar.</span>
+                </button>
+                <button
+                  type="button"
+                  className={`np-present-opt${projectVisibility === 'public' ? ' is-on' : ''}`}
+                  onClick={() => setProjectVisibility('public')}
+                >
+                  <strong>Público</strong>
+                  <span>Visível no teu perfil e no Explorar.</span>
+                </button>
+              </div>
             </div>
           )}
         </div>

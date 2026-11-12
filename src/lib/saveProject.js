@@ -82,12 +82,12 @@ export async function saveProject(formData, aiResult, userId, opts = {}) {
     project_type: formData.project_type || null,
     tags: formData.tags || [],
     score,
-    // Explícito, não implícito via NULL: público por defeito é a decisão
-    // (o produto existe para mostrar trabalho, não para o esconder), mas
-    // NULL a significar "público" espalhado por todo o código era frágil,
-    // dependia de ninguém nunca definir a coluna. O dono continua a poder
-    // mudar para privado ou só-com-link em Editar Projeto quando quiser.
-    visibility: 'public',
+    // Privado por omissão (decisão revista 2026-11-12, reunião com o Pedro:
+    // "posso estar a construir uma coisa em privado"). O ecrã de criação em
+    // NewProject.jsx deixa o dono escolher explicitamente antes de criar;
+    // chamadores que não passam opts.visibility (ex: import/duplicar)
+    // mantêm o valor explícito aqui, nunca NULL implícito.
+    visibility: opts.visibility || 'private',
     // profile_featured controlava só a Biblioteca (103), mas o perfil
     // (UserProfile.jsx) passou a exigi-lo também para projetos "full" —
     // sem isto a false por omissão, um projeto público ficava invisível
