@@ -13,6 +13,7 @@ import { TrashBinTrashIcon as Trash } from '@solar-icons/react/bold/trash-bin-tr
 import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
 import { LibraryIcon } from '@solar-icons/react/bold/library'
 import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
+import { RestartIcon as Restart } from '@solar-icons/react/bold/restart'
 import { fileTypeStyle, withSignedLibraryUrls } from '../lib/libraryFile'
 import { getProjectState } from '../lib/projectState'
 import { getTaggingIds, markLibraryTagging } from '../lib/libraryTagging'
@@ -198,7 +199,7 @@ function LibAddedTile({ item, onOpen, onDelete, removing, analyzing, editing, on
    espera ficheiro/miniatura de biblioteca, não cover_url). É isto que
    resolve o "um projeto criado nunca se gradua" — antes ficava sempre na
    lista compacta, por definição, independentemente do que o dono fizesse. */
-function LibDoneTile({ item, onOpen, onDelete, removing, editing, onSetState, onSetLayout }) {
+function LibDoneTile({ item, onOpen, onDelete, removing, editing, onSetState, onSetLayout, onReopen }) {
   return (
     <div className={`lib-tile${editing ? ' is-editing' : ''}${editing && item.profile_featured ? ' is-on' : ''}`}>
       <button type="button" className="lib-tile-main" onClick={() => onOpen(item)}>
@@ -225,6 +226,17 @@ function LibDoneTile({ item, onOpen, onDelete, removing, editing, onSetState, on
 
       {editing && <ProfileControls item={item} onSetState={onSetState} onSetLayout={onSetLayout} />}
       <div className="lib-tile-tools">
+        <span
+          role="button"
+          tabIndex={0}
+          className="lib-tile-tool"
+          onClick={e => { e.stopPropagation(); onReopen(item) }}
+          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); onReopen(item) } }}
+          aria-label="Voltar a pôr em construção"
+          title="Voltar a pôr em construção"
+        >
+          <Restart size={13} />
+        </span>
         <span
           role="button"
           tabIndex={0}
@@ -458,6 +470,16 @@ export default function Biblioteca() {
     await supabase.from('projects').update(patch).eq('id', id).eq('user_id', user.id)
   }
 
+  // Reabrir um projeto concluído: mesmo mecanismo do botão "Marcar como
+  // concluído" na página do projeto (toggleProjectState em ProjectPage.jsx),
+  // só que aqui, na Biblioteca, porque lá o botão desaparece de propósito
+  // depois de concluído (pedido do Gustavo: dar uma saída sem ter de voltar
+  // a abrir o projeto só para desfazer).
+  function handleReopen(item) {
+    patchItem(item.id, { project_finished_on: null })
+    setToast('Projeto movido para "A criar".')
+  }
+
   /* Estado único: 'private' | 'public' | 'featured'. */
   function setProfileState(item, state) {
     const cur = item.visibility === 'private' ? 'private' : item.profile_featured ? 'featured' : 'public'
@@ -599,7 +621,7 @@ export default function Biblioteca() {
                   {done.map(item => (
                     <LibDoneTile key={item.id} item={item} removing={removing} onDelete={handleDelete}
                       editing={editing} onSetState={setProfileState} onSetLayout={setLayout}
-                      onOpen={it => setPreviewing(it)} />
+                      onOpen={it => setPreviewing(it)} onReopen={handleReopen} />
                   ))}
                 </div>
               </div>
