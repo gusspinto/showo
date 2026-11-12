@@ -4,6 +4,14 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
    SEQUÊNCIA DE ONBOARDING, ciclo de 14 dias (dia 0 já é o send-welcome-email
    existente, imediato no signup, não repetido aqui).
 
+   verify_jwt = false (confirmado 2026-11-12): o cron chama isto só com
+   x-cron-secret, sem Authorization header. Esteve a true por engano algures
+   entre 03-11 e 04-11, e isso bloqueou a chamada na própria plataforma
+   (401 antes de chegar ao código), parando a sequência inteira para 1597
+   pessoas elegíveis durante 9 dias sem ninguém reparar (pg_cron reportava
+   "succeeded" na mesma, isso só confirma que o POST foi feito, não que a
+   function correu). NUNCA mudar verify_jwt para true nesta function.
+
    Reescrita depois da reunião com o Maia (mentor, Savvy Growth) de
    2026-10-19: 800 leads novos, conversão baixa. Antes disto a sequência
    tinha só 4/5 passos, sem desconto nem urgência, só educação de feature.
@@ -71,7 +79,7 @@ async function signUserId(userId: string, secret: string): Promise<string> {
   return Array.from(new Uint8Array(sigBuf)).map(b => b.toString(16).padStart(2, '0')).join('')
 }
 
-// Alias do resolvePlanId em src/lib/plans.js — mantém a mesma regra aqui,
+// Alias do resolvePlanId em src/lib/plans.js, mantém a mesma regra aqui,
 // já que esta função corre no servidor e não pode importar código do
 // frontend diretamente. organizationPlan vem de uma query à parte à tabela
 // organizations (profiles NÃO tem essa coluna, confirmado ao vivo: a
@@ -580,6 +588,37 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     )
 
+    // 2026-11-12: descoberto ao vivo um crash 546 (WORKER_RESOURCE_LIMIT) a
+    // meio do loop, com 1538 pessoas devidas num só dia (backlog de 9 dias
+    // por causa de um verify_jwt mal configurado). Mesmo padrão do
+    // send-campaign-storm (ver docs/licoes-aprendidas.md): sem lock, uma
+    // segunda chamada (manual ou um re-fire do cron) podia correr por cima
+    // de uma execução ainda viva e duplicar envios. Lock + heartbeat
+    // (function_locks, migração 252/253) e um limite por corrida resolvem
+    // os dois problemas: nunca duas execuções em paralelo, e cada corrida
+    // fica curta e previsível, processando o resto no dia seguinte sem
+    // repetir ninguém (o passo de quem já foi processado já avançou).
+    if (!testUserId) {
+      const { data: lockAcquired } = await supabase.rpc('try_acquire_function_lock', {
+        p_name: 'send-onboarding-sequence',
+        p_stale_minutes: 8,
+      })
+      if (!lockAcquired) {
+        return new Response(JSON.stringify({ ok: true, skipped_reason: 'already_running' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+    }
+
+    try {
+      return await run()
+    } finally {
+      if (!testUserId) await supabase.rpc('release_function_lock', { p_name: 'send-onboarding-sequence' })
+    }
+
+    async function run(): Promise<Response> {
+    const MAX_SENT_PER_RUN = 150
+
     const emailById = new Map<string, string>()
     {
       let page = 1
@@ -605,6 +644,7 @@ Deno.serve(async (req) => {
     const errors: string[] = []
 
     for (const p of (profiles ?? [])) {
+      if (!testUserId && sent >= MAX_SENT_PER_RUN) break
       try {
         if (!testUserId && p.onboarding_opted_out) continue
         if (!testUserId && (p.onboarding_sequence_step == null || p.onboarding_sequence_step >= TOTAL_DAYS)) continue
@@ -709,6 +749,7 @@ Deno.serve(async (req) => {
           await supabase.from('profiles')
             .update({ onboarding_sequence_step: step + 1, onboarding_sequence_sent_at: now.toISOString() })
             .eq('id', p.id)
+          await supabase.rpc('touch_function_lock', { p_name: 'send-onboarding-sequence' })
         }
       } catch (e) {
         console.error('[send-onboarding-sequence] failed for', p.id, e)
@@ -719,6 +760,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ ok: errors.length === 0, candidates: (profiles ?? []).length, sent, closed, errors }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
+    } // fim de run()
   } catch (e) {
     console.error(e)
     return new Response(JSON.stringify({ error: 'Erro interno.' }), { status: 500, headers: corsHeaders })
