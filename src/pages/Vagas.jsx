@@ -14,7 +14,6 @@ import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
 import { ClockCircleIcon as Clock } from '@solar-icons/react/bold/clock-circle'
 import { Buildings2Icon as Building2 } from '@solar-icons/react/bold/buildings-2'
-import { AltArrowRightIcon as ChevronRight } from '@solar-icons/react/bold/alt-arrow-right'
 import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
 import { TrashBinMinimalisticIcon as Trash2 } from '@solar-icons/react/bold/trash-bin-minimalistic'
 import { SquareArrowRightUpIcon as ExternalLink } from '@solar-icons/react/bold/square-arrow-right-up'
@@ -192,39 +191,71 @@ function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, onShare, i
   const st = myStatus ? STATUS_INFO[myStatus] : null
   const score = matchScore(userSkills, vaga.skills)
 
+  // Linha de meta ao estilo LinkedIn ("Marketing · Remoto · 5d restantes"),
+  // um ponto a separar factos pequenos, em vez de um ícone por campo a
+  // espalhar-se por várias linhas.
+  const metaParts = []
+  if (vaga.area) metaParts.push(vaga.area)
+  if (vaga.localizacao && vaga.localizacao.trim().toLowerCase() !== 'remoto') metaParts.push(vaga.localizacao)
+  if (vaga.is_remote) metaParts.push('Remoto')
+
   return (
-    <div id={`vaga-${vaga.id}`} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${highlighted ? C.blue : C.glassBorder}`, borderRadius: 12, padding: '20px 22px', transition: 'border-color 0.15s', display: 'flex', flexDirection: 'column', gap: 12 }}
+    <div id={`vaga-${vaga.id}`} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${highlighted ? C.blue : C.glassBorder}`, borderRadius: 'var(--radius-lg)', padding: '18px 20px', transition: 'border-color 0.15s', display: 'flex', flexDirection: 'column', gap: 10 }}
       onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-glass-border-bright)'}
       onMouseLeave={e => e.currentTarget.style.borderColor = highlighted ? C.blue : C.glassBorder}>
-      {/* Company header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div style={{ width: 36, height: 36, borderRadius: 8, background: `${tipo.color}22`, border: `1px solid ${tipo.color}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <Building2 size={16} color={tipo.color} />
-        </div>
+      {/* Cabeçalho da empresa: logo/foto real da empresa quando existe
+          (igual ao hero da EmpresaPage), não só o ícone genérico de tipo. */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+        {recruiterProfile?.avatar_url ? (
+          <img src={recruiterProfile.avatar_url} alt="" style={{ width: 32, height: 32, borderRadius: 'var(--radius-sm)', objectFit: 'cover', flexShrink: 0 }} />
+        ) : (
+          <div style={{ width: 32, height: 32, borderRadius: 'var(--radius-sm)', background: `${tipo.color}22`, border: `1px solid ${tipo.color}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Building2 size={15} color={tipo.color} />
+          </div>
+        )}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {vaga.employer_name || recruiterProfile?.company || recruiterProfile?.full_name || 'Empresa'}
           </div>
           {vaga.source === 'eures' ? (
-            <div style={{ fontSize: 11, color: C.muted }}>via EURES</div>
-          ) : recruiterProfile?.company_role && <div style={{ fontSize: 11, color: C.muted }}>{recruiterProfile.company_role}</div>}
+            <div style={{ fontSize: 11, color: C.subtle }}>via EURES</div>
+          ) : recruiterProfile?.company_role && <div style={{ fontSize: 11, color: C.subtle }}>{recruiterProfile.company_role}</div>}
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-          <span style={{ fontSize: 11, fontWeight: 700, color: tipo.color }}>{tipo.label}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
           {score !== null && <MatchBadge score={score} />}
+          <span style={{ fontSize: 10.5, fontWeight: 700, color: tipo.color, background: `${tipo.color}1a`, padding: '3px 9px', borderRadius: 'var(--radius-full)', whiteSpace: 'nowrap' }}>{tipo.label}</span>
+          <button onClick={() => onShare(vaga)} title="Partilhar vaga"
+            style={{ width: 26, height: 26, color: C.subtle, background: 'transparent', border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Share2 size={14} />
+          </button>
         </div>
       </div>
 
       <div>
-        <h3 style={{ margin: '0 0 4px', fontSize: 16, fontWeight: 600, color: C.text, lineHeight: 1.25 }}>{vaga.titulo}</h3>
-        {vaga.area && <p style={{ margin: 0, fontSize: 13, color: C.blue, fontWeight: 600 }}>{vaga.area}</p>}
+        <h3 style={{ margin: '2px 0 4px', fontSize: 17, fontWeight: 700, color: C.text, lineHeight: 1.3, fontFamily: 'var(--font-heading)' }}>{vaga.titulo}</h3>
+        {(metaParts.length > 0 || vaga.deadline) && (
+          <p style={{ margin: 0, fontSize: 12.5, color: C.muted, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            {metaParts.map((part, i) => (
+              <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                {i > 0 && <span style={{ color: C.subtle }}>·</span>}
+                {part}
+              </span>
+            ))}
+            {vaga.deadline && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                {metaParts.length > 0 && <span style={{ color: C.subtle }}>·</span>}
+                <DeadlineBadge deadline={vaga.deadline} />
+              </span>
+            )}
+          </p>
+        )}
       </div>
 
       {vaga.descricao && (
         <div>
           <p style={{
             margin: 0, fontSize: 13, color: C.muted, lineHeight: 1.6, whiteSpace: 'pre-wrap',
-            ...(expanded ? {} : { display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }),
+            ...(expanded ? {} : { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }),
           }}>{vaga.descricao}</p>
           {vaga.requisitos && expanded && (
             <p style={{ margin: '10px 0 0', fontSize: 13, color: C.muted, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
@@ -238,36 +269,29 @@ function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, onShare, i
         </div>
       )}
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          {vaga.localizacao && vaga.localizacao.trim().toLowerCase() !== 'remoto' && <span style={{ fontSize: 12, color: C.muted, display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={11} />{vaga.localizacao}</span>}
-          {vaga.is_remote && <span style={{ fontSize: 12, color: C.muted, display: 'flex', alignItems: 'center', gap: 4 }}><Globe size={11} />Remoto</span>}
-          <DeadlineBadge deadline={vaga.deadline} />
-        </div>
-        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-          <button onClick={() => onShare(vaga)} title="Partilhar vaga"
-            style={{ color: C.muted, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 7, padding: '5px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-            <Share2 size={13} />
+      {/* Ações: as duas sempre com texto, nenhuma vira só ícone (pedido
+          explícito do Gustavo: "Ver empresa" tem de estar visível, não um
+          ícone). "Candidatar" domina por ser maior (flex 1.6 vs 1), não
+          por a outra desaparecer. */}
+      <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+        {recruiterProfile?.username && (
+          <button onClick={() => navigate(`/empresa/${recruiterProfile.username}`)}
+            style={{ flex: isAluno ? 1 : 'none', width: isAluno ? 'auto' : '100%', fontSize: 13, fontWeight: 700, color: C.text, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-full)', padding: '10px 14px', cursor: 'pointer', fontFamily: 'inherit' }}>
+            Ver empresa
           </button>
-          {recruiterProfile?.username && (
-            <button onClick={() => navigate(`/empresa/${recruiterProfile.username}`)}
-              style={{ fontSize: 12, color: C.muted, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 7, padding: '5px 10px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4 }}>
-              Ver empresa <ChevronRight size={11} />
+        )}
+        {isAluno && (
+          st ? (
+            <span style={{ flex: 1.6, fontSize: 13, fontWeight: 700, color: st.color, background: `${st.color}1a`, borderRadius: 'var(--radius-full)', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+              <Check size={13} /> {st.label}
+            </span>
+          ) : (
+            <button onClick={() => onCandidatar(vaga)}
+              style={{ flex: 1.6, fontSize: 13, fontWeight: 700, color: '#fff', background: 'var(--color-primary)', border: 'none', borderRadius: 'var(--radius-full)', padding: '10px 14px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, boxShadow: '0 2px 10px var(--color-primary-subtle)' }}>
+              <Send size={13} /> Candidatar
             </button>
-          )}
-          {isAluno && (
-            st ? (
-              <span style={{ fontSize: 12, fontWeight: 700, color: st.color, display: 'flex', alignItems: 'center', gap: 4 }}>
-                <Check size={11} /> {st.label}
-              </span>
-            ) : (
-              <button onClick={() => onCandidatar(vaga)}
-                style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-bg)', background: C.blue, border: 'none', borderRadius: 8, padding: '5px 12px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4, boxShadow: '0 2px 8px var(--color-surface-hover)' }}>
-                <Send size={11} /> Candidatar
-              </button>
-            )
-          )}
-        </div>
+          )
+        )}
       </div>
     </div>
   )
