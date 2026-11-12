@@ -58,7 +58,7 @@ const C = {
 // authenticated only has column-level SELECT grant on these (no email — that
 // comes from admin_get_users() instead) since migration 033; select('*')
 // fails outright and silently returns no rows.
-const PROFILE_COLUMNS = 'id, username, total_xp, created_at, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, project_draft, signup_country, signup_city, signup_referrer, signup_utm_source, last_active_at, last_action, plan, account_type, organization_id, stripe_customer_id, occupation, phone, heard_from, intended_use, pap_timing'
+const PROFILE_COLUMNS = 'id, username, total_xp, created_at, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, company_verified, skills, school, project_draft, signup_country, signup_city, signup_referrer, signup_utm_source, last_active_at, last_action, plan, account_type, organization_id, stripe_customer_id, occupation, phone, heard_from, intended_use, pap_timing'
 
 const FETCH_PAGE_SIZE = 1000
 
@@ -1588,7 +1588,7 @@ const USERS_TAB_SORTS = [
   { id: 'name', label: 'Nome (A-Z)' },
 ]
 
-function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, onResetPassword }) {
+function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, onResetPassword, onToggleVerified }) {
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [planFilter, setPlanFilter] = useState('all')
@@ -1629,6 +1629,7 @@ function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, 
             confirm.type === 'makeAdmin' ? 'Tornar administrador?' :
             confirm.type === 'changeRole' ? 'Trocar cargo?' :
             confirm.type === 'resetPassword' ? 'Enviar reset de password?' :
+            confirm.type === 'toggleVerified' ? (confirm.user.company_verified ? 'Remover selo de verificada?' : 'Verificar empresa?') :
             'Revogar administrador?'
           }
           body={
@@ -1640,6 +1641,10 @@ function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, 
             ? `O cargo de "${confirm.user.full_name || confirm.user.username}" passa de ${ROLE_LABELS[confirm.user.role] || confirm.user.role} para ${ROLE_LABELS[confirm.newRole]}.`
             : confirm.type === 'resetPassword'
             ? `Vai ser enviado um email de reset de password para ${confirm.user.email}.`
+            : confirm.type === 'toggleVerified'
+            ? (confirm.user.company_verified
+              ? `"${confirm.user.full_name || confirm.user.username}" deixa de mostrar o selo de verificada no perfil público.`
+              : `Confirma que já verificaste "${confirm.user.full_name || confirm.user.username}" a sério antes de lhe dar o selo. Aparece no perfil público da empresa.`)
             : `Revogar os privilégios de admin de "${confirm.user.full_name || confirm.user.username}"?`
           }
           danger={confirm.type === 'delete'}
@@ -1648,6 +1653,7 @@ function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, 
             if (confirm.type === 'delete') onDeleteUser(confirm.user.id)
             else if (confirm.type === 'changeRole') onChangeRole(confirm.user.id, confirm.newRole)
             else if (confirm.type === 'resetPassword') onResetPassword(confirm.user.email)
+            else if (confirm.type === 'toggleVerified') onToggleVerified(confirm.user.id, !confirm.user.company_verified)
             else onToggleAdmin(confirm.user.id, confirm.type === 'makeAdmin')
             setConfirm(null)
           }}
@@ -1732,6 +1738,7 @@ function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, 
                   <span style={{ fontSize: 13.5, fontWeight: 700, color: C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
                   {u.is_admin && <Shield size={12} color={C.purple} />}
                   {plan !== 'free' && <Badge color={PLAN_COLORS[plan] || C.blue}>{PLAN_LABELS[plan] || plan}</Badge>}
+                  {u.company_verified && <Badge color={C.blue}>Verificada</Badge>}
                   {u.banned_at && <Badge color={C.red}>Banido</Badge>}
                 </div>
                 <div style={{ fontSize: 11.5, color: C.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.email || (u.username ? `@${u.username}` : '—')}</div>
@@ -1747,6 +1754,9 @@ function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, 
 
               <RowMenu items={[
                 { label: 'Reset password', onClick: () => setConfirm({ type: 'resetPassword', user: u }) },
+                ...(u.role === 'empresa' || u.role === 'recrutador'
+                  ? [{ label: u.company_verified ? 'Remover verificação' : 'Verificar empresa', onClick: () => setConfirm({ type: 'toggleVerified', user: u }) }]
+                  : []),
                 u.is_admin
                   ? { label: 'Revogar Admin', onClick: () => setConfirm({ type: 'revokeAdmin', user: u }) }
                   : { label: 'Tornar Admin', onClick: () => setConfirm({ type: 'makeAdmin', user: u }) },
@@ -2856,6 +2866,16 @@ export default function Admin() {
     setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u))
   }
 
+  // Selo de empresa verificada: nunca um UPDATE direto à coluna (não há
+  // GRANT UPDATE para ninguém, nem authenticated, de propósito, ver 257),
+  // só esta RPC, que confirma is_admin() do lado do servidor.
+  async function handleToggleVerified(userId, verified) {
+    const { error } = await supabase.rpc('admin_set_company_verified', { target_user_id: userId, verified })
+    if (error) { showToast('Erro ao atualizar verificação: ' + error.message); return }
+    showToast(verified ? 'Empresa verificada' : 'Verificação removida')
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, company_verified: verified } : u))
+  }
+
   async function handleResetPassword(email) {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/login`,
@@ -2969,6 +2989,7 @@ export default function Admin() {
                 onDeleteUser={handleDeleteUser}
                 onChangeRole={handleChangeRole}
                 onResetPassword={handleResetPassword}
+                onToggleVerified={handleToggleVerified}
               />
             )}
             {tab === 'projects' && (

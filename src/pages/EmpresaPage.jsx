@@ -13,6 +13,7 @@ import { Buildings2Icon as Building2 } from '@solar-icons/react/bold/buildings-2
 import { LinkIcon as Link } from '@solar-icons/react/bold/link'
 import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
 import { SettingsIcon as Settings } from '@solar-icons/react/bold/settings'
+import { VerifiedCheckIcon as VerifiedCheck } from '@solar-icons/react/bold/verified-check'
 import SegmentedTabs from '../components/SegmentedTabs'
 
 const C = {
@@ -56,6 +57,11 @@ export default function EmpresaPage() {
   const [loading, setLoading]   = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [activeTab, setActiveTab] = useState('vagas')
+  // Stats reais, nunca inventados: vagas publicadas é lifetime (todas, não
+  // só as abertas), candidaturas recebidas só se calcula para o dono da
+  // página (não há garantia de que um visitante público possa ler
+  // candidaturas de outra pessoa, e não é suposto poder).
+  const [stats, setStats] = useState({ totalVagas: 0, totalCandidaturas: null })
 
   // Por id, não por username do URL: funciona tanto para /empresa/:username
   // como para o fallback por UUID (ex: links antigos sem username).
@@ -72,9 +78,10 @@ export default function EmpresaPage() {
     // username, mas alguns sítios ainda só têm o id à mão (ex: sem
     // username definido ainda).
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(username)
+    const PROFILE_FIELDS = 'id, full_name, username, avatar_url, role, bio, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, company_verified, created_at'
     const { data } = isUUID
-      ? await supabase.from('profiles').select('id, full_name, username, avatar_url, role, bio, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size').eq('id', username).single()
-      : await supabase.from('profiles').select('id, full_name, username, avatar_url, role, bio, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size').eq('username', username).single()
+      ? await supabase.from('profiles').select(PROFILE_FIELDS).eq('id', username).single()
+      : await supabase.from('profiles').select(PROFILE_FIELDS).eq('username', username).single()
 
     if (!data || (data.role !== 'recrutador' && data.role !== 'empresa')) {
       setNotFound(true)
@@ -105,6 +112,30 @@ export default function EmpresaPage() {
       cands?.forEach(c => { map[c.vaga_id] = c })
       setApplied(map)
     }
+
+    // Vagas publicadas (lifetime, não só as abertas) é um número honesto
+    // de mostrar a toda a gente. Candidaturas recebidas é informação do
+    // negócio da própria empresa, só calculada para quem está a ver a
+    // própria página.
+    const { count: totalVagas } = await supabase
+      .from('vagas')
+      .select('id', { count: 'exact', head: true })
+      .eq('recruiter_id', data.id)
+
+    let totalCandidaturas = null
+    if (user?.id === data.id) {
+      const { data: allVagaIds } = await supabase.from('vagas').select('id').eq('recruiter_id', data.id)
+      if (allVagaIds?.length) {
+        const { count } = await supabase
+          .from('candidaturas')
+          .select('id', { count: 'exact', head: true })
+          .in('vaga_id', allVagaIds.map(v => v.id))
+        totalCandidaturas = count ?? 0
+      } else {
+        totalCandidaturas = 0
+      }
+    }
+    setStats({ totalVagas: totalVagas ?? 0, totalCandidaturas })
 
     setLoading(false)
   }
@@ -145,90 +176,118 @@ export default function EmpresaPage() {
       <div className="page-content">
 
         {/* ── Hero ──
-            Neutro, como o resto da app: nada de barra/badge/avatar a
-            dourado ou verde consoante o tipo de conta, isso destoava do
-            resto do Showo (fundo preto, azul primário, cor só no essencial). */}
-        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 'var(--radius-lg)', padding: 'clamp(20px,4vw,36px)', marginBottom: 20 }}>
-          <div className="ep-hero" style={{ display: 'flex', alignItems: 'flex-start', gap: 20 }}>
-            {/* Logo/Avatar */}
-            <div style={{ flexShrink: 0 }}>
-              {company.avatar_url ? (
-                <img src={company.avatar_url} alt={name} className="ep-hero-logo" style={{ width: 88, height: 88, borderRadius: 'var(--radius-lg)', objectFit: 'cover', border: `2px solid ${C.border}` }} />
-              ) : (
-                <div className="ep-hero-logo" style={{ width: 88, height: 88, borderRadius: 'var(--radius-lg)', background: 'var(--color-surface-hover)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, fontWeight: 400, fontFamily: 'var(--font-heading)', color: C.text, border: `2px solid ${C.border}` }}>
-                  {name[0].toUpperCase()}
-                </div>
-              )}
-            </div>
-
-            {/* Info + ações: a ação fica sempre junto ao nome (puxada para
-                a direita com marginLeft: auto), nunca depois de toda a bio,
-                para não ficar "perdida" lá em baixo no mobile. */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 6 }}>
-                    <h1 style={{ margin: 0, fontSize: 'clamp(20px,3vw,28px)', fontWeight: 400, color: C.text, letterSpacing: '-0.6px', fontFamily: 'var(--font-heading)' }}>{name}</h1>
-                    <span style={{ fontSize: 10.5, fontWeight: 700, color: C.muted, background: 'var(--color-surface-hover)', padding: '3px 10px', borderRadius: 'var(--radius-full)', whiteSpace: 'nowrap' }}>
-                      {tipo.label}
-                    </span>
-                  </div>
-                  {company.company_role && (
-                    <p style={{ margin: 0, fontSize: 14, color: C.muted }}>{company.company_role}</p>
-                  )}
-                </div>
-
-                {/* Ações */}
-                <div className="ep-hero-actions" style={{ display: 'flex', gap: 8, flexShrink: 0, marginLeft: 'auto' }}>
-                  {isOwnPage ? (
-                    <button onClick={() => navigate('/settings')}
-                      style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-full)', padding: '10px 18px', color: C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s, color 0.15s' }}
-                      onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-border-hover)'; e.currentTarget.style.color = C.text }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}>
-                      <Settings size={14} /> Editar
-                    </button>
-                  ) : user ? (
-                    <button onClick={() => navigate(`/mensagens?to=${company.id}`)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 7, background: C.blue, border: 'none', borderRadius: 'var(--radius-full)', padding: '10px 18px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 10px var(--color-primary-subtle)' }}>
-                      <MessageSquare size={14} /> Contactar
-                    </button>
-                  ) : null}
-                </div>
+            Centrado, como um cartão de perfil, em vez de avatar à esquerda
+            e tudo o resto espalhado à direita (isso é que fazia o botão
+            "Contactar" ficar mal colocado no mobile, a competir com o nome
+            pelo mesmo espaço). Ações ficam sempre numa linha própria depois
+            da bio, nunca espremidas ao lado do nome. Neutro: nada de cor
+            especial por tipo de conta, só o selo de verificado (quando um
+            admin confirmou a empresa a sério) e o azul nas ações reais. */}
+        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 'var(--radius-lg)', padding: 'clamp(24px,5vw,40px)', marginBottom: 20, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+          {/* Logo/Avatar centrado, com o selo sobreposto no canto. */}
+          <div style={{ position: 'relative', marginBottom: 16 }}>
+            {company.avatar_url ? (
+              <img src={company.avatar_url} alt={name} className="ep-hero-logo" style={{ width: 96, height: 96, borderRadius: 'var(--radius-lg)', objectFit: 'cover', border: `2px solid ${C.border}` }} />
+            ) : (
+              <div className="ep-hero-logo" style={{ width: 96, height: 96, borderRadius: 'var(--radius-lg)', background: 'var(--color-surface-hover)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 38, fontWeight: 400, fontFamily: 'var(--font-heading)', color: C.text, border: `2px solid ${C.border}` }}>
+                {name[0].toUpperCase()}
               </div>
-
-              {/* Meta: pills reais (fundo + contorno), como o resto da app,
-                  em vez de só texto com um ícone ao lado. */}
-              <div className="ep-meta" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
-                {company.company_location && (
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: C.muted, background: 'var(--color-surface-hover)', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-full)', padding: '5px 12px' }}>
-                    <MapPin size={12} /> {company.company_location}
-                  </span>
-                )}
-                {company.company_industry && (
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: C.muted, background: 'var(--color-surface-hover)', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-full)', padding: '5px 12px' }}>
-                    <Briefcase size={12} /> {company.company_industry}
-                  </span>
-                )}
-                {company.company_size && (
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: C.muted, background: 'var(--color-surface-hover)', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-full)', padding: '5px 12px' }}>
-                    <Users size={12} /> {company.company_size} pessoas
-                  </span>
-                )}
-                {company.company_website && (
-                  <a href={company.company_website.startsWith('http') ? company.company_website : `https://${company.company_website}`}
-                    target="_blank" rel="noopener noreferrer"
-                    style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: C.blue, background: 'var(--color-primary-subtle)', border: '1px solid transparent', borderRadius: 'var(--radius-full)', padding: '5px 12px', textDecoration: 'none' }}>
-                    <Globe size={12} /> Website <ExternalLink size={11} />
-                  </a>
-                )}
-                {company.linkedin_url && (
-                  <a href={company.linkedin_url} target="_blank" rel="noopener noreferrer"
-                    style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: C.blue, background: 'var(--color-primary-subtle)', border: '1px solid transparent', borderRadius: 'var(--radius-full)', padding: '5px 12px', textDecoration: 'none' }}>
-                    <Link size={12} /> LinkedIn <ExternalLink size={11} />
-                  </a>
-                )}
+            )}
+            {company.company_verified && (
+              <div title="Empresa verificada" style={{ position: 'absolute', bottom: -4, right: -4, background: C.bg, borderRadius: 'var(--radius-full)', padding: 2, display: 'flex' }}>
+                <VerifiedCheck size={22} color={C.blue} />
               </div>
-            </div>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <h1 style={{ margin: 0, fontSize: 'clamp(20px,3vw,28px)', fontWeight: 400, color: C.text, letterSpacing: '-0.6px', fontFamily: 'var(--font-heading)' }}>{name}</h1>
+            <span style={{ fontSize: 10.5, fontWeight: 700, color: C.muted, background: 'var(--color-surface-hover)', padding: '3px 10px', borderRadius: 'var(--radius-full)', whiteSpace: 'nowrap' }}>
+              {tipo.label}
+            </span>
+          </div>
+          {company.company_role && (
+            <p style={{ margin: '4px 0 0', fontSize: 14, color: C.muted }}>{company.company_role}</p>
+          )}
+
+          {/* Meta: pills reais (fundo + contorno), como o resto da app,
+              em vez de só texto com um ícone ao lado. */}
+          <div className="ep-meta" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 14, justifyContent: 'center' }}>
+            {company.company_location && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: C.muted, background: 'var(--color-surface-hover)', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-full)', padding: '5px 12px' }}>
+                <MapPin size={12} /> {company.company_location}
+              </span>
+            )}
+            {company.company_industry && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: C.muted, background: 'var(--color-surface-hover)', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-full)', padding: '5px 12px' }}>
+                <Briefcase size={12} /> {company.company_industry}
+              </span>
+            )}
+            {company.company_size && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: C.muted, background: 'var(--color-surface-hover)', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-full)', padding: '5px 12px' }}>
+                <Users size={12} /> {company.company_size} pessoas
+              </span>
+            )}
+            {company.company_website && (
+              <a href={company.company_website.startsWith('http') ? company.company_website : `https://${company.company_website}`}
+                target="_blank" rel="noopener noreferrer"
+                style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: C.blue, background: 'var(--color-primary-subtle)', border: '1px solid transparent', borderRadius: 'var(--radius-full)', padding: '5px 12px', textDecoration: 'none' }}>
+                <Globe size={12} /> Website <ExternalLink size={11} />
+              </a>
+            )}
+            {company.linkedin_url && (
+              <a href={company.linkedin_url} target="_blank" rel="noopener noreferrer"
+                style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: C.blue, background: 'var(--color-primary-subtle)', border: '1px solid transparent', borderRadius: 'var(--radius-full)', padding: '5px 12px', textDecoration: 'none' }}>
+                <Link size={12} /> LinkedIn <ExternalLink size={11} />
+              </a>
+            )}
+          </div>
+
+          {(company.company_description || company.bio) && (
+            <p style={{ margin: '18px 0 0', fontSize: 15, color: C.text, lineHeight: 1.7, maxWidth: 560, borderTop: `1px solid ${C.border}`, paddingTop: 18 }}>
+              {company.company_description || company.bio}
+            </p>
+          )}
+
+          {/* Ações: linha própria, sempre centrada, nunca a competir com o
+              nome pelo mesmo espaço (era isso que ficava mal no mobile). */}
+          <div className="ep-hero-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', marginTop: 20 }}>
+            {isOwnPage ? (
+              <button onClick={() => navigate('/settings')}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-full)', padding: '10px 18px', color: C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s, color 0.15s' }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-border-hover)'; e.currentTarget.style.color = C.text }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}>
+                <Settings size={14} /> Editar
+              </button>
+            ) : user ? (
+              <button onClick={() => navigate(`/mensagens?to=${company.id}`)}
+                style={{ display: 'flex', alignItems: 'center', gap: 7, background: C.blue, border: 'none', borderRadius: 'var(--radius-full)', padding: '10px 18px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 10px var(--color-primary-subtle)' }}>
+                <MessageSquare size={14} /> Contactar
+              </button>
+            ) : null}
+          </div>
+
+          {/* Stats: números reais, nunca inventados. Vagas publicadas é
+              clicável e salta para a tab, o "interativo" que faz sentido
+              aqui sem fabricar um conceito de seguidores que não existe. */}
+          <div style={{ display: 'flex', gap: 28, flexWrap: 'wrap', justifyContent: 'center', width: '100%', marginTop: 24, paddingTop: 20, borderTop: `1px solid ${C.border}` }}>
+            <button onClick={() => setActiveTab('vagas')}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>
+              <span style={{ fontSize: 20, fontWeight: 700, color: C.text }}>{stats.totalVagas}</span>
+              <span style={{ fontSize: 11.5, color: C.muted }}>Vagas publicadas</span>
+            </button>
+            {stats.totalCandidaturas !== null && (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                <span style={{ fontSize: 20, fontWeight: 700, color: C.text }}>{stats.totalCandidaturas}</span>
+                <span style={{ fontSize: 11.5, color: C.muted }}>Candidaturas recebidas</span>
+              </div>
+            )}
+            {company.created_at && (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                <span style={{ fontSize: 20, fontWeight: 700, color: C.text }}>{new Date(company.created_at).toLocaleDateString('pt-PT', { month: 'short', year: 'numeric' })}</span>
+                <span style={{ fontSize: 11.5, color: C.muted }}>Membro desde</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -368,13 +427,8 @@ export default function EmpresaPage() {
       </div>
 
       <style>{`
-        @media (max-width: 600px) {
-          .ep-hero { flex-direction: column !important; align-items: flex-start !important; gap: 16px !important; }
-          .ep-hero-actions { flex-wrap: wrap !important; gap: 8px !important; }
-          .ep-meta { flex-wrap: wrap !important; gap: 8px !important; }
-        }
         @media (max-width: 480px) {
-          .ep-hero-logo { width: 60px !important; height: 60px !important; }
+          .ep-hero-logo { width: 72px !important; height: 72px !important; }
         }
       `}</style>
     </div>
