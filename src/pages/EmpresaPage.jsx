@@ -137,7 +137,6 @@ export default function EmpresaPage() {
   )
 
   const tipo = TIPO_INFO[company.role] ?? TIPO_INFO.recrutador
-  const accentColor = company.role === 'empresa' ? 'var(--color-warning)' : 'var(--color-accent)'
   const name = company.company || company.full_name || 'Empresa'
 
   return (
@@ -146,19 +145,17 @@ export default function EmpresaPage() {
       <div className="page-content">
 
         {/* ── Hero ──
-            Barra de acento no topo com a cor do tipo de conta (dourado para
-            empresa, verde para recrutador), para dar alguma identidade
-            própria ao perfil sem inventar métricas que não temos. */}
-        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 'var(--radius-lg)', overflow: 'hidden', marginBottom: 20 }}>
-          <div style={{ height: 4, background: accentColor }} />
-          <div style={{ padding: 'clamp(20px,4vw,36px)' }}>
+            Neutro, como o resto da app: nada de barra/badge/avatar a
+            dourado ou verde consoante o tipo de conta, isso destoava do
+            resto do Showo (fundo preto, azul primário, cor só no essencial). */}
+        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 'var(--radius-lg)', padding: 'clamp(20px,4vw,36px)', marginBottom: 20 }}>
           <div className="ep-hero" style={{ display: 'flex', alignItems: 'flex-start', gap: 20 }}>
             {/* Logo/Avatar */}
             <div style={{ flexShrink: 0 }}>
               {company.avatar_url ? (
                 <img src={company.avatar_url} alt={name} className="ep-hero-logo" style={{ width: 88, height: 88, borderRadius: 'var(--radius-lg)', objectFit: 'cover', border: `2px solid ${C.border}` }} />
               ) : (
-                <div className="ep-hero-logo" style={{ width: 88, height: 88, borderRadius: 'var(--radius-lg)', background: accentColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, fontWeight: 400, fontFamily: 'var(--font-heading)', color: '#fff', border: `2px solid ${C.border}` }}>
+                <div className="ep-hero-logo" style={{ width: 88, height: 88, borderRadius: 'var(--radius-lg)', background: 'var(--color-surface-hover)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, fontWeight: 400, fontFamily: 'var(--font-heading)', color: C.text, border: `2px solid ${C.border}` }}>
                   {name[0].toUpperCase()}
                 </div>
               )}
@@ -172,7 +169,7 @@ export default function EmpresaPage() {
                 <div style={{ minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 6 }}>
                     <h1 style={{ margin: 0, fontSize: 'clamp(20px,3vw,28px)', fontWeight: 400, color: C.text, letterSpacing: '-0.6px', fontFamily: 'var(--font-heading)' }}>{name}</h1>
-                    <span style={{ fontSize: 10.5, fontWeight: 700, color: tipo.color, background: tipo.bg, padding: '3px 10px', borderRadius: 'var(--radius-full)', whiteSpace: 'nowrap' }}>
+                    <span style={{ fontSize: 10.5, fontWeight: 700, color: C.muted, background: 'var(--color-surface-hover)', padding: '3px 10px', borderRadius: 'var(--radius-full)', whiteSpace: 'nowrap' }}>
                       {tipo.label}
                     </span>
                   </div>
@@ -233,27 +230,21 @@ export default function EmpresaPage() {
               </div>
             </div>
           </div>
-
-          {/* Description / bio */}
-          {(company.company_description || company.bio) && (
-            <p style={{ margin: '20px 0 0', fontSize: 15, color: C.text, lineHeight: 1.7, maxWidth: 680, borderTop: `1px solid ${C.border}`, paddingTop: 18 }}>
-              {company.company_description || company.bio}
-            </p>
-          )}
-          </div>
         </div>
 
         {/* ── Secções por pílulas, como o resto da app (SegmentedTabs já
             usado em Vagas/Explorar/EditProject), em vez do cartão da
-            sidebar a aparecer sempre por baixo sem seleção nenhuma. */}
+            sidebar a aparecer sempre por baixo sem seleção nenhuma. "Sobre"
+            aparece sempre, para toda e qualquer empresa, não só quando já
+            preencheu "o que procuram": não é um extra condicional. */}
         <div style={{ marginBottom: 20 }}>
           <SegmentedTabs
             value={activeTab}
             onChange={setActiveTab}
             size="compact"
             options={[
-              { id: 'vagas', label: `Vagas (${vagas.length})`, pillColor: accentColor, activeColor: '#fff' },
-              ...(company.looking_for ? [{ id: 'sobre', label: 'O que procuram', pillColor: accentColor, activeColor: '#fff' }] : []),
+              { id: 'vagas', label: `Vagas (${vagas.length})` },
+              { id: 'sobre', label: 'Sobre' },
             ]}
           />
         </div>
@@ -340,8 +331,18 @@ export default function EmpresaPage() {
             </div>
           )
         ) : (
-          <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '20px 20px 22px' }}>
-            <p style={{ margin: 0, fontSize: 14, color: C.text, lineHeight: 1.7 }}>{company.looking_for}</p>
+          <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '20px 20px 22px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+            {(company.company_description || company.bio) ? (
+              <p style={{ margin: 0, fontSize: 14, color: C.text, lineHeight: 1.7 }}>{company.company_description || company.bio}</p>
+            ) : (
+              <p style={{ margin: 0, fontSize: 14, color: C.subtle, lineHeight: 1.7 }}>Ainda sem descrição.</p>
+            )}
+            {company.looking_for && (
+              <div>
+                <h3 style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 700, color: C.text }}>O que procuram</h3>
+                <p style={{ margin: 0, fontSize: 14, color: C.muted, lineHeight: 1.7 }}>{company.looking_for}</p>
+              </div>
+            )}
           </div>
         )}
 
