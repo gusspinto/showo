@@ -329,7 +329,7 @@
   padding: 7px 16px;
   background: var(--color-primary);
   border: none;
-  border-radius: 7px;
+  border-radius: var(--radius-md);
   color: #fff;
   font-size: 13px;
   font-weight: 600;

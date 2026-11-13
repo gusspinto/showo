@@ -132,7 +132,7 @@ function NotesPanel({ aiData, loadingAI, aiError, onRetry }) {
       <p style={{ color: C.muted, fontSize: 13, margin: '0 0 20px', lineHeight: 1.6 }}>
         A IA não conseguiu processar o projeto de momento. Certifica-te de que os campos principais estão preenchidos e tenta novamente.
       </p>
-      <button onClick={onRetry} style={{ background: C.blue, color: 'var(--color-bg)', border: 'none', borderRadius: 8, padding: '10px 22px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+      <button onClick={onRetry} style={{ background: C.blue, color: 'var(--color-bg)', border: 'none', borderRadius: 'var(--radius-md)', padding: '10px 22px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
         Tentar novamente
       </button>
     </div>
@@ -144,7 +144,7 @@ function NotesPanel({ aiData, loadingAI, aiError, onRetry }) {
       <p style={{ color: C.muted, fontSize: 13, margin: '0 0 20px', lineHeight: 1.6 }}>
         A IA vai gerar notas personalizadas para cada secção da tua apresentação com base no conteúdo do projeto.
       </p>
-      <button onClick={onRetry} style={{ background: C.blue, color: 'var(--color-bg)', border: 'none', borderRadius: 8, padding: '10px 22px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+      <button onClick={onRetry} style={{ background: C.blue, color: 'var(--color-bg)', border: 'none', borderRadius: 'var(--radius-md)', padding: '10px 22px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
         Gerar notas
       </button>
     </div>
@@ -175,7 +175,7 @@ function NotesPanel({ aiData, loadingAI, aiError, onRetry }) {
         {filled.length === 0 && (
           <div style={{ textAlign: 'center', padding: '40px 0', color: C.muted }}>
             <p style={{ fontSize: 14, margin: '0 0 16px' }}>Não foi possível gerar notas para este projeto.</p>
-            <button onClick={onRetry} style={{ background: C.blue, color: 'var(--color-bg)', border: 'none', borderRadius: 8, padding: '9px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+            <button onClick={onRetry} style={{ background: C.blue, color: 'var(--color-bg)', border: 'none', borderRadius: 'var(--radius-md)', padding: '9px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
               Tentar novamente
             </button>
           </div>
@@ -199,7 +199,7 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
       <p style={{ color: C.muted, fontSize: 13, margin: '0 0 20px', lineHeight: 1.6 }}>
         A IA não conseguiu processar o projeto de momento. Certifica-te de que os campos principais estão preenchidos e tenta novamente.
       </p>
-      <button onClick={onRetry} style={{ background: C.blue, color: 'var(--color-bg)', border: 'none', borderRadius: 8, padding: '10px 22px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+      <button onClick={onRetry} style={{ background: C.blue, color: 'var(--color-bg)', border: 'none', borderRadius: 'var(--radius-md)', padding: '10px 22px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
         Tentar novamente
       </button>
     </div>
@@ -211,7 +211,7 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
       <p style={{ color: C.muted, fontSize: 13, margin: '0 0 20px', lineHeight: 1.6 }}>
         A IA vai simular as perguntas que um júri faria sobre o teu projeto, com respostas sugeridas.
       </p>
-      <button onClick={onRetry} style={{ background: C.blue, color: 'var(--color-bg)', border: 'none', borderRadius: 8, padding: '10px 22px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+      <button onClick={onRetry} style={{ background: C.blue, color: 'var(--color-bg)', border: 'none', borderRadius: 'var(--radius-md)', padding: '10px 22px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
         Gerar perguntas
       </button>
     </div>
@@ -223,7 +223,7 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
   if (questions.length === 0) return (
     <div style={{ textAlign: 'center', padding: '40px 0', color: C.muted }}>
       <p style={{ fontSize: 14, margin: '0 0 16px' }}>Não foi possível gerar perguntas para este projeto.</p>
-      <button onClick={onRetry} style={{ background: C.blue, color: 'var(--color-bg)', border: 'none', borderRadius: 8, padding: '9px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+      <button onClick={onRetry} style={{ background: C.blue, color: 'var(--color-bg)', border: 'none', borderRadius: 'var(--radius-md)', padding: '9px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
         Tentar novamente
       </button>
     </div>
@@ -302,7 +302,7 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
                     style={{
                       background: 'transparent',
                       border: `1px solid ${C.border}`,
-                      borderRadius: 7, padding: '6px 14px',
+                      borderRadius: 'var(--radius-full)', padding: '6px 14px',
                       color: C.muted, fontSize: 12, fontWeight: 600,
                       cursor: 'pointer', fontFamily: 'inherit',
                       transition: 'border-color 0.15s',
@@ -316,7 +316,7 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
                     onClick={() => setPracticed(p => ({ ...p, [i]: true }))}
                     style={{
                       background: 'var(--color-success-subtle)', border: '1px solid var(--color-success-subtle)',
-                      borderRadius: 7, padding: '6px 14px',
+                      borderRadius: 'var(--radius-full)', padding: '6px 14px',
                       color: C.green, fontSize: 12, fontWeight: 600,
                       cursor: 'pointer', fontFamily: 'inherit',
                     }}
@@ -469,7 +469,7 @@ function GuideEditor({ project, onSave }) {
               style={{ width: 40, background: 'var(--color-bg)', border: `1px solid ${C.border}`, borderRadius: 6, color: C.text, fontSize: 12, padding: '4px 2px', textAlign: 'center', fontFamily: 'inherit' }}
             />
             <span style={{ fontSize: 11, color: C.subtle }}>min</span>
-            <button onClick={() => toggleHidden(i)} title={row.hidden ? 'Mostrar secção' : 'Esconder secção'} style={{ background: 'none', border: 'none', color: row.hidden ? C.subtle : C.blue, cursor: 'pointer', display: 'flex', padding: 4, borderRadius: 6 }}>
+            <button onClick={() => toggleHidden(i)} title={row.hidden ? 'Mostrar secção' : 'Esconder secção'} style={{ background: 'none', border: 'none', color: row.hidden ? C.subtle : C.blue, cursor: 'pointer', display: 'flex', padding: 4, borderRadius: 'var(--radius-sm)' }}>
               {row.hidden ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>
           </div>
@@ -479,7 +479,7 @@ function GuideEditor({ project, onSave }) {
         onClick={handleSave}
         disabled={saving}
         className="dm-cta-btn"
-        style={{ marginTop: 14, width: '100%', padding: '10px 0', background: saved ? 'var(--color-success-subtle)' : 'var(--color-text)', border: saved ? '1px solid var(--color-success-subtle)' : 'none', borderRadius: 10, color: saved ? C.green : 'var(--color-bg)', fontSize: 13, fontWeight: 700, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit' }}
+        style={{ marginTop: 14, width: '100%', padding: '10px 0', background: saved ? 'var(--color-success-subtle)' : 'var(--color-text)', border: saved ? '1px solid var(--color-success-subtle)' : 'none', borderRadius: 'var(--radius-md)', color: saved ? C.green : 'var(--color-bg)', fontSize: 13, fontWeight: 700, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit' }}
       >
         {saving ? 'A guardar...' : saved ? 'Guardado' : 'Guardar personalização'}
       </button>
@@ -670,7 +670,7 @@ function GrupoPanel({ project }) {
         <button
           onClick={doSearch}
           disabled={!search.trim() || searching}
-          style={{ background: 'var(--color-surface-hover)', border: '1px solid var(--color-surface-hover)', borderRadius: 10, padding: '10px 16px', color: C.blue, fontSize: 13, fontWeight: 600, cursor: search.trim() ? 'pointer' : 'default', fontFamily: 'inherit' }}
+          style={{ background: 'var(--color-surface-hover)', border: '1px solid var(--color-surface-hover)', borderRadius: 'var(--radius-md)', padding: '10px 16px', color: C.blue, fontSize: 13, fontWeight: 600, cursor: search.trim() ? 'pointer' : 'default', fontFamily: 'inherit' }}
         >
           {searching ? '...' : 'Procurar'}
         </button>
@@ -686,7 +686,7 @@ function GrupoPanel({ project }) {
           </div>
           <button
             onClick={addCollaborator}
-            style={{ background: 'var(--color-text)', border: 'none', borderRadius: 8, padding: '8px 16px', color: 'var(--color-bg)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+            style={{ background: 'var(--color-text)', border: 'none', borderRadius: 'var(--radius-md)', padding: '8px 16px', color: 'var(--color-bg)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
           >
             Adicionar
           </button>
@@ -769,7 +769,7 @@ function GrupoPanel({ project }) {
                 padding: '12px 0', width: '100%',
                 background: saved ? 'var(--color-success-subtle)' : 'var(--color-text)',
                 border: saved ? '1px solid var(--color-success-subtle)' : 'none',
-                borderRadius: 12,
+                borderRadius: 'var(--radius-md)',
                 color: saved ? C.green : 'var(--color-bg)',
                 fontSize: 14, fontWeight: 700, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit',
               }}
@@ -1130,7 +1130,7 @@ function DefenseTraining({ project, checkGate, consumeAI }) {
 
         <button
           onClick={() => { setPhase('idle'); setFeedback(null); setTranscript(''); setElapsed(0) }}
-          style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 0', color: C.text, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+          style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 'var(--radius-md)', padding: '12px 0', color: C.text, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
         >Treinar outra vez</button>
       </div>
     )
@@ -1151,7 +1151,7 @@ function DefenseTraining({ project, checkGate, consumeAI }) {
           <button
             onClick={startRecording}
             style={{
-              background: 'var(--color-success)', border: 'none', borderRadius: 10, padding: '12px 28px',
+              background: 'var(--color-success)', border: 'none', borderRadius: 'var(--radius-md)', padding: '12px 28px',
               color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
               display: 'inline-flex', alignItems: 'center', gap: 8,
             }}
@@ -1179,7 +1179,7 @@ function DefenseTraining({ project, checkGate, consumeAI }) {
               style={{
                 background: elapsed < MIN_TRAINING_SECONDS ? C.card : 'var(--color-error)',
                 border: elapsed < MIN_TRAINING_SECONDS ? `1px solid ${C.border}` : 'none',
-                borderRadius: 10, padding: '12px 28px',
+                borderRadius: 'var(--radius-md)', padding: '12px 28px',
                 color: elapsed < MIN_TRAINING_SECONDS ? C.muted : '#fff',
                 fontSize: 14, fontWeight: 700,
                 cursor: elapsed < MIN_TRAINING_SECONDS ? 'default' : 'pointer',
@@ -1196,7 +1196,7 @@ function DefenseTraining({ project, checkGate, consumeAI }) {
               onClick={cancelRecording}
               style={{
                 background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)',
-                color: 'var(--color-error)', borderRadius: 8,
+                color: 'var(--color-error)', borderRadius: 'var(--radius-full)',
                 fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
                 padding: '7px 16px',
               }}
@@ -1220,7 +1220,7 @@ function DefenseTraining({ project, checkGate, consumeAI }) {
           <p style={{ fontSize: 14, color: C.red, margin: '0 0 12px' }}>{error}</p>
           <button
             onClick={() => { setPhase('idle'); setError('') }}
-            style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: '10px 20px', color: C.text, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+            style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 'var(--radius-md)', padding: '10px 20px', color: C.text, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
           >Tentar outra vez</button>
         </>
       )}
@@ -1432,7 +1432,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
                     style={{
                       width: '100%', padding: '14px 0',
                       background: '#fff',
-                      border: 'none', borderRadius: 12,
+                      border: 'none', borderRadius: 'var(--radius-md)',
                       color: '#000000', fontSize: 15, fontWeight: 700,
                       cursor: exporting || loadingAI ? 'wait' : 'pointer', fontFamily: 'inherit',
                       boxShadow: '0 8px 28px rgba(0,0,0,0.25)',

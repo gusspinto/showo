@@ -103,7 +103,7 @@
 .ptl-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 6px; }
 .ptl-btn {
   display: inline-flex; align-items: center; gap: 6px;
-  padding: 7px 12px; border-radius: 8px; min-height: 0;
+  padding: 7px 12px; border-radius: var(--radius-full); min-height: 0;
   border: 1px solid var(--color-border); background: var(--color-surface);
   color: var(--color-text-secondary); font-size: 12px; font-weight: 600;
   cursor: pointer; font-family: inherit;

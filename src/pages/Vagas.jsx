@@ -454,9 +454,9 @@ function CandidatarModal({ vaga, recruiterProfile, onClose, onSubmit, sending })
           placeholder="Apresenta-te brevemente e explica porque és uma boa escolha para esta vaga..."
           style={{ width: '100%', background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '11px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical', minHeight: 110 }} />
         <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-          <button onClick={onClose} style={{ flex: 1, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 10, padding: '11px 0', color: C.text, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>
+          <button onClick={onClose} style={{ flex: 1, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-md)', padding: '11px 0', color: C.text, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>
           <button onClick={() => onSubmit(msg, questions.map(q => ({ id: q.id, answer: answers[q.id] || '' })))} disabled={sending || missingRequired}
-            style={{ flex: 1, background: sending || missingRequired ? C.border : C.blue, border: 'none', borderRadius: 10, padding: '11px 0', color: 'var(--color-bg)', fontSize: 14, fontWeight: 700, cursor: sending || missingRequired ? 'default' : 'pointer', fontFamily: 'inherit' }}>
+            style={{ flex: 1, background: sending || missingRequired ? C.border : C.blue, border: 'none', borderRadius: 'var(--radius-md)', padding: '11px 0', color: 'var(--color-bg)', fontSize: 14, fontWeight: 700, cursor: sending || missingRequired ? 'default' : 'pointer', fontFamily: 'inherit' }}>
             {sending ? 'A enviar...' : <><Send size={13} style={{ verticalAlign: 'middle', marginRight: 5 }} />Candidatar</>}
           </button>
         </div>

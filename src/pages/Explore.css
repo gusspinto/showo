@@ -19,7 +19,7 @@
   background: var(--color-text);
   color: var(--color-bg);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 9px 18px;
   font-size: 14px;
   font-weight: 600;
@@ -130,7 +130,7 @@
   gap: 6px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 0 14px;
   height: 44px;
   color: var(--color-text-secondary);
@@ -231,7 +231,7 @@
   gap: 6px;
   background: var(--color-bg-alt);
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 9px 14px;
   color: var(--color-text-secondary);
   font-size: 12px;
@@ -254,7 +254,7 @@
   background: transparent;
   border: 1px solid var(--color-border);
   color: var(--color-text-secondary);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 9px 14px;
   font-size: 12px;
   font-weight: 600;
@@ -421,6 +421,10 @@
   grid-template-columns: repeat(auto-fill, minmax(min(288px, 100%), 1fr));
   gap: 16px;
 }
+/* min-width:0: sem isto uma track de grid nunca encolhe abaixo do
+   min-content do cartão (tagline/nome compridos) e o cartão sai do ecrã
+   no mobile, onde a grelha cai para 1 coluna só. */
+.explore-grid > * { min-width: 0; }
 
 /* ── Project card ── */
 .explore-card {
@@ -847,7 +851,7 @@ body.light .explore-avatar {
   background: var(--color-text);
   color: var(--color-bg);
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 13px 0;
   font-size: 15px;
   font-weight: 700;
@@ -860,7 +864,7 @@ body.light .explore-avatar {
 .explore-people-cta-btn-ghost {
   background: none;
   border: 1.5px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 12px 0;
   font-size: 14px;
   font-weight: 600;

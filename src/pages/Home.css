@@ -375,7 +375,7 @@ body.light .home-card-cover img {
   background: var(--color-text);
   color: var(--color-bg);
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 13px 26px;
   font-size: 14px;
   font-weight: 700;
@@ -890,7 +890,7 @@ body.light .home-pom-cover-img {
   background: #fff;
   color: #09101f;
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 10px 20px;
   font-size: 14px;
   font-weight: 700;

@@ -18,6 +18,8 @@ import WheelDatePicker from '../components/WheelDatePicker'
 import { looksLikeSpam } from '../lib/score'
 import { CalendarIcon as Calendar } from '@solar-icons/react/bold/calendar'
 import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
+import { LockKeyholeIcon as Lock } from '@solar-icons/react/bold/lock-keyhole'
+import { GlobeIcon as Globe } from '@solar-icons/react/bold/globe'
 import { PlusIcon } from '../components/icons/PlusIcon'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
@@ -214,11 +216,40 @@ export default function NewProject() {
   const { user, profile, checkGate, consumeAI, logFunnelEvent } = useAuth()
   const { toast, show: showToast } = useToast()
 
-  /* Passos: choose → describe | loading → review → submitting
+  /* Passos: choose → describe | details → precreate | loading → review → submitting
      "choose" já traz a caixa de enviar ficheiros consigo — deixou de haver
      um ecrã "import" à parte, por isso ?import=1 (link partilhável antigo)
-     também aterra aqui; é ignorado de propósito, não precisa de fazer nada. */
+     também aterra aqui; é ignorado de propósito, não precisa de fazer nada.
+     "choose" e "describe" ficam só com a escolha essencial (ficheiro ou
+     descrição); tipo de projeto, data de defesa, avaliação e notas saem
+     daí e passam para "details", um ecrã à parte, opcional e saltável
+     (pedido do Gustavo: tudo isto junto ao upload ficava confuso demais,
+     "o que não couber passa para outra página de continuação"). "details"
+     e "precreate" (concluído/privado) só entram depois de "choose" ou
+     "describe", quando o user já escolheu o ficheiro ou já escreveu a
+     descrição e está prestes a mandar a IA processar, nunca logo à
+     entrada. goToDetails() guarda de onde veio (precreateOrigin, para o
+     botão Voltar de "details") e o que fazer a seguir (pendingAction,
+     chamado por runPendingAction() no "Continuar" de "precreate"). */
   const [step, setStep] = useState('choose')
+  const [projectConcluded, setProjectConcluded] = useState(false)
+  const [projectVisibility, setProjectVisibility] = useState('private')
+  const [precreateOrigin, setPrecreateOrigin] = useState('choose')
+  const [pendingAction, setPendingAction] = useState(null)
+  function goToDetails(origin, action) {
+    setPrecreateOrigin(origin)
+    setPendingAction(action)
+    setStep('details')
+  }
+  function runPendingAction() {
+    const action = pendingAction
+    setPendingAction(null)
+    if (action === 'analyzeFiles') handleAnalyzeFiles()
+    else if (action === 'generate') handleGenerate()
+    else if (action === 'interview') handleInterview()
+    else if (action === 'manual') startManual()
+    else setStep(precreateOrigin)
+  }
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -336,6 +367,18 @@ export default function NewProject() {
   }
 
   /* ── Gerar a partir de uma descrição ── */
+  /* As notas do ecrã "details" (`importNotes`) nasceram só para o caminho
+     do ficheiro (import-project já tem um campo próprio), mas o Gustavo
+     pediu para a caixa ficar sempre visível, incluindo em "Descrever o
+     que estou a fazer". prefill-project/interview-project não têm campo
+     de notas próprio (não dá para redeployar edge functions nesta
+     sessão), por isso juntam-se ao texto da descrição antes de enviar,
+     em vez de se perderem silenciosamente. */
+  function withNotes(text) {
+    const notes = importNotes.trim()
+    return notes ? `${text}\n\n${notes}` : text
+  }
+
   async function handleGenerate() {
     if (!isDescriptionValid(description)) return
     trackEvent('novo_ai_generate_clicked')
@@ -349,7 +392,7 @@ export default function NewProject() {
     setError(null)
     try {
       const { data, error: fnErr } = await supabase.functions.invoke('prefill-project', {
-        body: { text: description, projectType },
+        body: { text: withNotes(description), projectType },
       })
       if (fnErr) {
         // supabase-js devolve data:null num non-2xx — o erro real está no
@@ -387,7 +430,7 @@ export default function NewProject() {
     setError(null)
     try {
       const { data, error: fnErr } = await supabase.functions.invoke('interview-project', {
-        body: { description, projectType },
+        body: { description: withNotes(description), projectType },
       })
       if (fnErr || !data?.questions?.length) throw new Error()
       consumeAI('interviewProject')
@@ -610,6 +653,8 @@ export default function NewProject() {
     try {
       const project = await saveProject(withCreator, aiResult, user?.id ?? null, {
         parentProjectId: asAttachment ? parentId : null,
+        visibility: projectVisibility,
+        concluded: projectConcluded,
       })
       if (user?.id) localStorage.setItem(`edit_token_${project.slug}`, project.edit_token)
       trackEvent('project_created', { manual: isManual, attachment: asAttachment })
@@ -641,7 +686,9 @@ export default function NewProject() {
         state: {
           newProject: true,
           projectData: project,
-          message: asAttachment ? 'Anexo adicionado.' : 'Projeto criado! Começa a melhorar o teu score.',
+          message: asAttachment
+            ? 'Anexo adicionado.'
+            : projectConcluded ? 'Página adicionada.' : 'Página criada! Começa a melhorar o teu score.',
           clearedFields: clearedLabels,
         },
       })
@@ -677,6 +724,107 @@ export default function NewProject() {
   const filledCount = REVIEW_FIELDS.filter(f => (form[f.key] ?? '').trim().length > 0).length
 
   /* ──────────────────────────────────────────────────────────────────────────
+     PASSO: details: tipo de projeto, data de defesa/avaliação (só PAP) e
+     notas (só no caminho do ficheiro, onde alimentam o import-project).
+     Tudo isto saiu de "choose"/"describe" para aqui, ecrã à parte,
+     totalmente opcional ("Saltar" e "Continuar" levam ao mesmo sítio):
+     pedido do Gustavo, tudo junto ao upload/descrição ficava confuso
+     demais, "o que não couber passa para outra página de continuação".
+  ────────────────────────────────────────────────────────────────────────── */
+  if (step === 'details') {
+    return (
+      <NpShell>
+        <Navbar showLinks={false} mobileLeft={<BackButton onClick={() => setStep(precreateOrigin)} />} />
+        <div className="np-center">
+          <div className="np-wrap">
+            {/* Sem título/subtítulo: "MAIS DETALHES" e a frase por baixo só
+                repetiam o óbvio (as próprias secções já se explicam), e
+                juntavam-se às pílulas e à caixa de notas, muita coisa a
+                acontecer ao mesmo tempo logo no topo. Mais espaço entre as
+                secções (40px) para não parecerem um bloco só (pedido do
+                Gustavo). */}
+            <TypeRow value={projectType} onChange={setProjectType} accountType={profile?.account_type}
+              defenseDate={defenseDate} setDefenseDate={setDefenseDate}
+              defenseDateUnknown={defenseDateUnknown} setDefenseDateUnknown={setDefenseDateUnknown}
+              evaluationModes={evaluationModes} setEvaluationModes={setEvaluationModes} />
+
+            {/* Sempre visível, nos dois caminhos (pedido do Gustavo). No
+                caminho do ficheiro vai para import-project num campo
+                próprio; no caminho da descrição, withNotes() junta-a ao
+                texto antes de enviar (ver handleGenerate/handleInterview). */}
+            <div className="np-notes-block" style={{ marginTop: 40 }}>
+              <label className="np-notes-label" htmlFor="np-notes">Algo a acrescentar antes de a IA ler? (opcional)</label>
+              <textarea
+                id="np-notes"
+                className="np-notes"
+                rows={2}
+                value={importNotes}
+                onChange={e => setImportNotes(e.target.value)}
+                placeholder="Ex: o meu papel foi o design e a investigação de utilizadores."
+              />
+            </div>
+
+            <button className="np-btn-primary" style={{ marginTop: 40 }} onClick={() => setStep('precreate')}>
+              Continuar <ArrowRight size={15} />
+            </button>
+            <button className="np-alt-link" style={{ display: 'block', margin: '10px auto 0' }} onClick={() => setStep('precreate')}>
+              Saltar por agora
+            </button>
+          </div>
+        </div>
+      </NpShell>
+    )
+  }
+
+  /* ──────────────────────────────────────────────────────────────────────────
+     PASSO: precreate, duas perguntas rápidas mesmo antes de a IA processar
+     (ficheiro já escolhido ou descrição já escrita): se já está concluído
+     (nasce já marcado, sem mostrar depois a opção de "marcar como
+     concluído" dentro do projeto) e se é para ficar público ou privado
+     (privado por omissão). Pílulas com ícone, não cartões com frase, só a
+     pergunta e a escolha, sem título/subtítulo a repetir o óbvio (pedido do
+     Gustavo: "o foco aqui é os users escolherem isso").
+  ────────────────────────────────────────────────────────────────────────── */
+  if (step === 'precreate') {
+    return (
+      <NpShell>
+        <Navbar showLinks={false} mobileLeft={<BackButton onClick={() => setStep('details')} />} />
+        <div className="np-center">
+          <div className="np-wrap np-precreate">
+            <div className="np-pill-group">
+              <p className="np-pill-label">Este trabalho ou projeto já está concluído?</p>
+              <div className="np-pill-row" role="group" aria-label="Estado">
+                <button type="button" className={`np-pill${!projectConcluded ? ' is-on' : ''}`} onClick={() => setProjectConcluded(false)}>
+                  <Pencil size={15} /> A desenvolver
+                </button>
+                <button type="button" className={`np-pill${projectConcluded ? ' is-on' : ''}`} onClick={() => setProjectConcluded(true)}>
+                  <Check size={15} /> Concluído
+                </button>
+              </div>
+            </div>
+
+            <div className="np-pill-group">
+              <p className="np-pill-label">Queres que fique público ou privado?</p>
+              <div className="np-pill-row" role="group" aria-label="Visibilidade">
+                <button type="button" className={`np-pill${projectVisibility === 'private' ? ' is-on' : ''}`} onClick={() => setProjectVisibility('private')}>
+                  <Lock size={15} /> Privado
+                </button>
+                <button type="button" className={`np-pill${projectVisibility === 'public' ? ' is-on' : ''}`} onClick={() => setProjectVisibility('public')}>
+                  <Globe size={15} /> Público
+                </button>
+              </div>
+            </div>
+
+            <button className="np-btn-primary" onClick={runPendingAction}>
+              Continuar <ArrowRight size={15} />
+            </button>
+          </div>
+        </div>
+      </NpShell>
+    )
+  }
+
+  /* ──────────────────────────────────────────────────────────────────────────
      PASSO: choose — a pergunta que faltava
      Antes, a única porta de entrada era "descreve o teu projeto". Quem já
      tinha o relatório feito lia isso como "escreve tudo outra vez" e fechava.
@@ -697,30 +845,19 @@ export default function NewProject() {
             <div className="np-add-card">
               <FilePicker files={files} onAdd={addFiles} onRemove={i => setFiles(f => f.filter((_, k) => k !== i))} />
 
+              {/* Tipo de projeto, data de defesa, avaliação e notas saíram
+                  daqui, ficam todos no ecrã "details", a seguir a este
+                  passo (ver goToDetails). Aqui fica só o essencial: o
+                  ficheiro escolhido e quantos/quanto pesam. */}
               {files.length > 0 && (
-                <div className="np-notes-block">
-                  <div className="np-filemeta">
-                    {files.length} {files.length === 1 ? 'ficheiro' : 'ficheiros'} · {prettySize(totalBytes)}
-                  </div>
-                  <TypeRow value={projectType} onChange={setProjectType} accountType={profile?.account_type}
-                    defenseDate={defenseDate} setDefenseDate={setDefenseDate}
-                    defenseDateUnknown={defenseDateUnknown} setDefenseDateUnknown={setDefenseDateUnknown}
-                    evaluationModes={evaluationModes} setEvaluationModes={setEvaluationModes} />
-                  <label className="np-notes-label" htmlFor="np-notes">Algo a acrescentar antes de a IA ler? (opcional)</label>
-                  <textarea
-                    id="np-notes"
-                    className="np-notes"
-                    rows={2}
-                    value={importNotes}
-                    onChange={e => setImportNotes(e.target.value)}
-                    placeholder="Ex: o meu papel foi o design e a investigação de utilizadores."
-                  />
+                <div className="np-filemeta">
+                  {files.length} {files.length === 1 ? 'ficheiro' : 'ficheiros'} · {prettySize(totalBytes)}
                 </div>
               )}
 
               {error && <p className="np-err"><AlertTriangle size={13} /> {error}</p>}
 
-              <button className="np-btn-primary np-btn-ai" onClick={handleAnalyzeFiles} disabled={!files.length}>
+              <button className="np-btn-primary np-btn-ai" onClick={() => goToDetails('choose', 'analyzeFiles')} disabled={!files.length}>
                 <Sparkles size={15} /> Analisar e criar página
               </button>
               {files.length > 0 && (
@@ -757,16 +894,11 @@ export default function NewProject() {
             <h1 className="np-headline">Conta-nos sobre o teu projeto.</h1>
             <p className="np-sub">Descreve a tua ideia, a IA ajuda-te a desenvolvê-la.</p>
 
-            <DescribeTextarea value={description} onChange={handleDescriptionChange} onSubmit={handleGenerate} />
-
-            <TypeRow value={projectType} onChange={setProjectType} accountType={profile?.account_type}
-              defenseDate={defenseDate} setDefenseDate={setDefenseDate}
-              defenseDateUnknown={defenseDateUnknown} setDefenseDateUnknown={setDefenseDateUnknown}
-              evaluationModes={evaluationModes} setEvaluationModes={setEvaluationModes} />
+            <DescribeTextarea value={description} onChange={handleDescriptionChange} onSubmit={() => goToDetails('describe', 'generate')} />
 
             {error && <p className="np-err"><AlertTriangle size={13} /> {error}</p>}
 
-            <button className="np-btn-primary np-btn-ai" onClick={handleGenerate} disabled={!isDescriptionValid(description)}>
+            <button className="np-btn-primary np-btn-ai" onClick={() => goToDetails('describe', 'generate')} disabled={!isDescriptionValid(description)}>
               <Sparkles size={15} /> Criar com IA
             </button>
 
@@ -775,11 +907,11 @@ export default function NewProject() {
                 peso visual idêntico só empurravam a decisão para o user
                 logo à entrada. Ficam como link secundário, discreto. */}
             <div className="np-alt-links">
-              <button className="np-alt-link" onClick={handleInterview} disabled={!isDescriptionValid(description)}>
+              <button className="np-alt-link" onClick={() => goToDetails('describe', 'interview')} disabled={!isDescriptionValid(description)}>
                 Responder a perguntas guiadas
               </button>
               <span className="np-alt-links-sep">·</span>
-              <button className="np-alt-link" onClick={startManual}>
+              <button className="np-alt-link" onClick={() => goToDetails('describe', 'manual')}>
                 Prefiro preencher à mão
               </button>
             </div>
