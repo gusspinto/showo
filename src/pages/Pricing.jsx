@@ -419,7 +419,7 @@ export default function Pricing() {
                               : <Check size={14} className="pricing-check" />}
                             <span className="pricing-item-body">
                               <span className="pricing-item-main">
-                                <span className="pricing-item-label-wrap">
+                                <span className={`pricing-item-label-wrap${item.tip && !item.subitems ? ' has-tip' : ''}`}>
                                   <span className="pricing-item-label">{item.label}</span>
                                   {item.tip && !item.subitems && (
                                     <span className="pricing-tip-wrap">

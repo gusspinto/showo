@@ -279,8 +279,15 @@
 .pricing-check { color: var(--color-text-tertiary); flex-shrink: 0; margin-top: 2px; }
 .pricing-check-github { color: var(--color-text); margin-top: 1px; }
 .pricing-item-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
-.pricing-item-main { display: flex; align-items: flex-start; gap: 9px; }
-.pricing-item-label-wrap { flex: 1; min-width: 0; display: inline-flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+/* flex-wrap aqui, não no label-wrap: quando a coluna é estreita e o valor
+   (badge) é longo, é o VALOR que cai para a linha de baixo, nunca o ícone de
+   info sozinho. Só os itens com tooltip (.has-tip) ficam nowrap, para o
+   texto+ícone serem sempre um bloco atómico que nunca se separa; os itens
+   sem ícone continuam a poder quebrar o próprio rótulo em várias linhas,
+   como antes. */
+.pricing-item-main { display: flex; align-items: flex-start; gap: 9px; flex-wrap: wrap; }
+.pricing-item-label-wrap { flex: 1 1 auto; min-width: 0; }
+.pricing-item-label-wrap.has-tip { white-space: nowrap; }
 .pricing-item-label { min-width: 0; }
 /* Nomes das ferramentas escondidas atrás do item-resumo ("Toda a IA",
    "Todas as outras ferramentas") — mostradas, não escondidas num
@@ -292,7 +299,7 @@
   line-height: 1.5;
   color: var(--color-text-secondary);
 }
-.pricing-tip-wrap { position: relative; display: inline-flex; flex-shrink: 0; }
+.pricing-tip-wrap { position: relative; display: inline-flex; vertical-align: middle; margin-left: 5px; }
 .pricing-tip-btn {
   /* O botão herdava o min-height:44px global de toque mínimo (regra em
      index.css, correta para botões normais), o que esticava só as linhas
