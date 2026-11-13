@@ -905,7 +905,7 @@ export default function Vagas() {
         )}
 
         {loading ? (
-          <div className="vagas-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
+          <div className="vagas-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 360px))', gap: 16 }}>
             {[1, 2, 3].map(i => (
               <div key={i} style={{ background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 'var(--radius-lg)', padding: 20, height: 160, opacity: 0.5 }} />
             ))}
@@ -946,7 +946,7 @@ export default function Vagas() {
           </div>
         ) : (
           <>
-            <div className="vagas-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
+            <div className="vagas-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 360px))', gap: 16 }}>
               {visibleVagas.map(v => (
                 <PublicCard key={v.id} vaga={v} recruiterProfile={profiles[v.recruiter_id]}
                   myStatus={myCandidaturas[v.id]?.status}
