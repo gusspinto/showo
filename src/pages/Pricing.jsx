@@ -326,7 +326,7 @@ export default function Pricing() {
             return (
               <div key={plan.id} className={`pricing-card${plan.popular ? ' is-popular' : ''}${plan.career ? ' is-career' : ''}`}>
                 {plan.popular && <span className="pricing-flag"><span className="pricing-flag-text">Mais escolhido</span></span>}
-                {plan.career && <span className="pricing-flag pricing-flag--career">Carreira</span>}
+                {plan.career && <span className="pricing-flag pricing-flag--career">Mais valor</span>}
 
                 <div className="pricing-card-head">
                   <h2 className="pricing-name">{plan.name}</h2>
