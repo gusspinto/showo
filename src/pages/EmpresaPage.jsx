@@ -78,12 +78,7 @@ export default function EmpresaPage() {
     // username, mas alguns sítios ainda só têm o id à mão (ex: sem
     // username definido ainda).
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(username)
-    // company_verified fica de fora propositadamente: a coluna ainda não
-    // existe em produção (migrações 256-258 por aplicar), e pedir uma
-    // coluna que não existe faz o select inteiro falhar, partindo a
-    // página para TODAS as empresas, não só a funcionalidade do selo.
-    // Voltar a juntar aqui assim que a migração for aplicada.
-    const PROFILE_FIELDS = 'id, full_name, username, avatar_url, role, bio, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, created_at'
+    const PROFILE_FIELDS = 'id, full_name, username, avatar_url, role, bio, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, company_verified, created_at'
     const { data } = isUUID
       ? await supabase.from('profiles').select(PROFILE_FIELDS).eq('id', username).single()
       : await supabase.from('profiles').select(PROFILE_FIELDS).eq('username', username).single()

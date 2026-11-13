@@ -58,11 +58,7 @@ const C = {
 // authenticated only has column-level SELECT grant on these (no email — that
 // comes from admin_get_users() instead) since migration 033; select('*')
 // fails outright and silently returns no rows.
-// company_verified fica de fora propositadamente até a migração 256-258
-// ser aplicada em produção: pedir uma coluna que não existe faz este
-// select inteiro falhar, partindo a tab Utilizadores toda. Voltar a
-// juntar aqui assim que a migração for aplicada.
-const PROFILE_COLUMNS = 'id, username, total_xp, created_at, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, project_draft, signup_country, signup_city, signup_referrer, signup_utm_source, last_active_at, last_action, plan, account_type, organization_id, stripe_customer_id, occupation, phone, heard_from, intended_use, pap_timing'
+const PROFILE_COLUMNS = 'id, username, total_xp, created_at, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, company_verified, skills, school, project_draft, signup_country, signup_city, signup_referrer, signup_utm_source, last_active_at, last_action, plan, account_type, organization_id, stripe_customer_id, occupation, phone, heard_from, intended_use, pap_timing'
 
 const FETCH_PAGE_SIZE = 1000
 
