@@ -4,6 +4,14 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
    SEQUÊNCIA DE ONBOARDING, ciclo de 14 dias (dia 0 já é o send-welcome-email
    existente, imediato no signup, não repetido aqui).
 
+   verify_jwt = false (confirmado 2026-11-12): o cron chama isto só com
+   x-cron-secret, sem Authorization header. Esteve a true por engano algures
+   entre 03-11 e 04-11, e isso bloqueou a chamada na própria plataforma
+   (401 antes de chegar ao código), parando a sequência inteira para 1597
+   pessoas elegíveis durante 9 dias sem ninguém reparar (pg_cron reportava
+   "succeeded" na mesma, isso só confirma que o POST foi feito, não que a
+   function correu). NUNCA mudar verify_jwt para true nesta function.
+
    Reescrita depois da reunião com o Maia (mentor, Savvy Growth) de
    2026-10-19: 800 leads novos, conversão baixa. Antes disto a sequência
    tinha só 4/5 passos, sem desconto nem urgência, só educação de feature.
@@ -71,7 +79,7 @@ async function signUserId(userId: string, secret: string): Promise<string> {
   return Array.from(new Uint8Array(sigBuf)).map(b => b.toString(16).padStart(2, '0')).join('')
 }
 
-// Alias do resolvePlanId em src/lib/plans.js — mantém a mesma regra aqui,
+// Alias do resolvePlanId em src/lib/plans.js, mantém a mesma regra aqui,
 // já que esta função corre no servidor e não pode importar código do
 // frontend diretamente. organizationPlan vem de uma query à parte à tabela
 // organizations (profiles NÃO tem essa coluna, confirmado ao vivo: a
@@ -171,53 +179,53 @@ type DayBuilderCtx = {
   isProfessional: boolean
 }
 
-function buildDay1({ firstName, unsubscribeUrl, hasProject, projectState, code, dia, daysToDefense }: DayBuilderCtx): Built {
+// Reescrito 2026-11-12: a sequência inteira tinha taxa de clique de
+// ~0,17% desde o dia 1 (sem padrão de queda ao longo dos 14 dias, medido
+// contra outros tipos de email no sistema que andam entre 0,7% e 1,9%).
+// O dia 1 sempre empurrou o código de desconto, mesmo para quem nunca
+// tinha criado um projeto, a vender um upgrade pago antes de a pessoa ter
+// sequer usado a funcionalidade grátis uma vez. Este teste tira o
+// desconto e a faixa de urgência do dia 1 (urgencyBand incluída), fica só
+// um pedido direto e honesto para a ação gratuita certa.
+function buildDay1({ firstName, unsubscribeUrl, hasProject, projectState }: DayBuilderCtx): Built {
   if (projectState === 'incomplete') {
-    const subject = 'Isto falta ao teu projeto antes de o partilhares'
+    const subject = 'O teu projeto ainda não diz muito a quem o vir'
     return {
       subject,
       html: wrapEmail(
         greeting(firstName) +
-        urgencyBand(dia, code, daysToDefense) +
-        headline('Já criaste o projeto. Falta torná-lo apresentável.') +
-        paragraph('Um projeto com só uma ou duas secções ainda não diz muito a quem o vê, professor, recrutador, ou tu próprio dentro de 6 meses.') +
-        paragraph('Volta e acrescenta pelo menos mais uma secção: o problema que resolveste, as decisões que tomaste, ou os resultados. É nessa altura que o portefólio começa a valer a pena partilhar.') +
-        paragraph(`Já agora: o código ${esc(code)} dá 50% no Plus durante os primeiros 6 meses.`, true) +
-        cta(`${APP}/dashboard`, 'Acabar a parte que falta'),
-        `Dia ${dia} de ${TOTAL_DAYS}`,
+        headline('Já criaste o projeto. Falta mostrar o que fizeste.') +
+        paragraph('Quem abrir o link agora só vê uma ou duas partes preenchidas. Falta o resto: o problema que resolveste, as decisões que tomaste, os resultados.') +
+        paragraph('Volta e acrescenta mais uma secção. É o suficiente para começar a valer a pena partilhar.', true) +
+        cta(`${APP}/dashboard`, 'Acabar o que falta'),
+        'Dia 1 de 14',
         unsubscribeUrl,
       ),
     }
   }
   if (!hasProject) {
-    const subject = 'Em 2 minutos deixas de ter zero projetos'
+    const subject = 'O primeiro projeto é só carregar o que já tens'
     return {
       subject,
       html: wrapEmail(
         greeting(firstName) +
-        urgencyBand(dia, code, daysToDefense) +
-        headline('Ainda não criaste o teu primeiro projeto') +
-        paragraph('Não precisa de estar pronto nem perfeito. Sobe um PDF, um PowerPoint, ou descreve em duas frases o que já fizeste, a IA trata do resto.') +
-        paragraph('A partir daí, a IA já lê o diário do projeto antes de responder, sem teres de explicar tudo outra vez sempre que perguntas algo.') +
-        paragraph(`E já que estás a começar: o código ${esc(code)} dá 50% no Plus durante os primeiros 6 meses, sempre que decidires avançar.`, true) +
-        cta(`${APP}/novo`, 'Criar o primeiro projeto agora'),
-        `Dia ${dia} de ${TOTAL_DAYS}`,
+        headline('Ainda não criaste nada. Leva 2 minutos.') +
+        paragraph('Não precisa de estar pronto nem perfeito. Sobe um PDF, um PowerPoint, ou escreve em duas frases o que já fizeste, a IA organiza o resto.', true) +
+        cta(`${APP}/novo`, 'Criar o primeiro projeto'),
+        'Dia 1 de 14',
         unsubscribeUrl,
       ),
     }
   }
-  const subject = 'Toda a vez que abres o ChatGPT, começas do zero outra vez'
+  const subject = 'O teu diário já guarda o que fizeste até agora'
   return {
     subject,
     html: wrapEmail(
       greeting(firstName) +
-      urgencyBand(dia, code, daysToDefense) +
-      headline('Já reparaste que o ChatGPT começa sempre do zero?') +
-      paragraph('Sempre que abres o ChatGPT para falar do teu projeto, tens de explicar tudo outra vez.') +
-      paragraph('No Showo a IA lê o diário do projeto antes de responder. Continuas a mesma conversa, com contexto acumulado desde o primeiro dia.') +
-      paragraph(`Se quiseres testar a fundo, o código ${esc(code)} dá 50% no Plus durante os primeiros 6 meses.`, true) +
-      cta(`${APP}/dashboard`, 'Nunca mais repetir isto'),
-      `Dia ${dia} de ${TOTAL_DAYS}`,
+      headline('Da próxima vez, não começas do zero') +
+      paragraph('O diário do teu projeto guarda o que já escreveste. Quando voltares, a IA já sabe o contexto, não tens de explicar tudo outra vez.', true) +
+      cta(`${APP}/dashboard`, 'Voltar ao projeto'),
+      'Dia 1 de 14',
       unsubscribeUrl,
     ),
   }
@@ -580,6 +588,37 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     )
 
+    // 2026-11-12: descoberto ao vivo um crash 546 (WORKER_RESOURCE_LIMIT) a
+    // meio do loop, com 1538 pessoas devidas num só dia (backlog de 9 dias
+    // por causa de um verify_jwt mal configurado). Mesmo padrão do
+    // send-campaign-storm (ver docs/licoes-aprendidas.md): sem lock, uma
+    // segunda chamada (manual ou um re-fire do cron) podia correr por cima
+    // de uma execução ainda viva e duplicar envios. Lock + heartbeat
+    // (function_locks, migração 252/253) e um limite por corrida resolvem
+    // os dois problemas: nunca duas execuções em paralelo, e cada corrida
+    // fica curta e previsível, processando o resto no dia seguinte sem
+    // repetir ninguém (o passo de quem já foi processado já avançou).
+    if (!testUserId) {
+      const { data: lockAcquired } = await supabase.rpc('try_acquire_function_lock', {
+        p_name: 'send-onboarding-sequence',
+        p_stale_minutes: 8,
+      })
+      if (!lockAcquired) {
+        return new Response(JSON.stringify({ ok: true, skipped_reason: 'already_running' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+    }
+
+    try {
+      return await run()
+    } finally {
+      if (!testUserId) await supabase.rpc('release_function_lock', { p_name: 'send-onboarding-sequence' })
+    }
+
+    async function run(): Promise<Response> {
+    const MAX_SENT_PER_RUN = 150
+
     const emailById = new Map<string, string>()
     {
       let page = 1
@@ -605,6 +644,7 @@ Deno.serve(async (req) => {
     const errors: string[] = []
 
     for (const p of (profiles ?? [])) {
+      if (!testUserId && sent >= MAX_SENT_PER_RUN) break
       try {
         if (!testUserId && p.onboarding_opted_out) continue
         if (!testUserId && (p.onboarding_sequence_step == null || p.onboarding_sequence_step >= TOTAL_DAYS)) continue
@@ -709,6 +749,7 @@ Deno.serve(async (req) => {
           await supabase.from('profiles')
             .update({ onboarding_sequence_step: step + 1, onboarding_sequence_sent_at: now.toISOString() })
             .eq('id', p.id)
+          await supabase.rpc('touch_function_lock', { p_name: 'send-onboarding-sequence' })
         }
       } catch (e) {
         console.error('[send-onboarding-sequence] failed for', p.id, e)
@@ -719,6 +760,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ ok: errors.length === 0, candidates: (profiles ?? []).length, sent, closed, errors }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
+    } // fim de run()
   } catch (e) {
     console.error(e)
     return new Response(JSON.stringify({ error: 'Erro interno.' }), { status: 500, headers: corsHeaders })

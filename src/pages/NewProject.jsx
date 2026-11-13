@@ -264,6 +264,20 @@ export default function NewProject() {
   const authNext = path => `/register?next=${encodeURIComponent(path)}`
   const requireAccount = path => { if (!user) { navigate(authNext(path)); return true } return false }
   const [description, setDescription] = useState('')
+  // Investigação de 2026-11-13: 46% de quem abre esta página nunca cria
+  // nada, e não havia forma de saber se desistem antes de escrever, depois
+  // de escrever mas sem clicar em gerar, ou depois de gerar mas sem
+  // guardar. O último passo já dava para calcular a partir de
+  // novo_ai_generate_result vs project_created, faltavam só estes dois.
+  const hasTrackedTypingRef = useRef(false)
+  function handleDescriptionChange(value) {
+    if (!hasTrackedTypingRef.current && value.trim().length > 0) {
+      hasTrackedTypingRef.current = true
+      trackEvent('novo_description_started')
+      if (user?.id) logFunnelEvent('novo_description_started')
+    }
+    setDescription(value)
+  }
   const [projectType, setProjectType] = useState('personal')
   // Só para project_type 'pap' — perguntadas inline, dentro do mesmo passo
   // onde o tipo é escolhido, em vez de um passo novo no assistente.
@@ -367,6 +381,8 @@ export default function NewProject() {
 
   async function handleGenerate() {
     if (!isDescriptionValid(description)) return
+    trackEvent('novo_ai_generate_clicked')
+    if (user?.id) logFunnelEvent('novo_ai_generate_clicked')
     if (requireAccount('/novo')) return
     if (!(await guardProjectCount())) return
     const aiGate = checkGate('createProject')
@@ -878,7 +894,7 @@ export default function NewProject() {
             <h1 className="np-headline">Conta-nos sobre o teu projeto.</h1>
             <p className="np-sub">Descreve a tua ideia, a IA ajuda-te a desenvolvê-la.</p>
 
-            <DescribeTextarea value={description} onChange={setDescription} onSubmit={() => goToDetails('describe', 'generate')} />
+            <DescribeTextarea value={description} onChange={handleDescriptionChange} onSubmit={() => goToDetails('describe', 'generate')} />
 
             {error && <p className="np-err"><AlertTriangle size={13} /> {error}</p>}
 
