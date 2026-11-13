@@ -270,6 +270,7 @@ export default function NewProject() {
   // guardar. O último passo já dava para calcular a partir de
   // novo_ai_generate_result vs project_created, faltavam só estes dois.
   const hasTrackedTypingRef = useRef(false)
+  const isGeneratingRef = useRef(false)
   function handleDescriptionChange(value) {
     if (!hasTrackedTypingRef.current && value.trim().length > 0) {
       hasTrackedTypingRef.current = true
@@ -380,13 +381,24 @@ export default function NewProject() {
   }
 
   async function handleGenerate() {
+    // 2026-11-13: encontrado no Admin (Guilherme Macário, 7+ cópias do
+    // mesmo "Torneio de bilhar"). Entre o clique e o setStep('loading')
+    // havia dois awaits (guardProjectCount, verificação de plano), janela
+    // suficiente para um duplo clique disparar duas chamadas completas à
+    // IA, cada uma a criar o seu próprio projeto. O ref é verificado e
+    // marcado na primeira linha, antes de qualquer await, exatamente para
+    // fechar essa janela independentemente de quantas esperas existam a
+    // seguir (diferente de só desativar o botão, que depende do React já
+    // ter re-renderizado a tempo do segundo clique).
+    if (isGeneratingRef.current) return
     if (!isDescriptionValid(description)) return
+    isGeneratingRef.current = true
     trackEvent('novo_ai_generate_clicked')
     if (user?.id) logFunnelEvent('novo_ai_generate_clicked')
-    if (requireAccount('/novo')) return
-    if (!(await guardProjectCount())) return
+    if (requireAccount('/novo')) { isGeneratingRef.current = false; return }
+    if (!(await guardProjectCount())) { isGeneratingRef.current = false; return }
     const aiGate = checkGate('createProject')
-    if (!aiGate.allowed) { setGateMsg(aiGate.message); return }
+    if (!aiGate.allowed) { setGateMsg(aiGate.message); isGeneratingRef.current = false; return }
 
     setStep('loading')
     setError(null)
@@ -416,6 +428,8 @@ export default function NewProject() {
           : err.message
       )
       setStep('describe')
+    } finally {
+      isGeneratingRef.current = false
     }
   }
 
