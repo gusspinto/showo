@@ -547,21 +547,31 @@ export function InviteInbox({ userId, sidebar = false, collapsed = false, flat =
                   const invitedBy = invite.inviterName || 'um colega'
                   const isActing = !!acting[invite.id]
                   return (
+                    // Mesmo tratamento visual das notificações de baixo
+                    // (ícone colorido, fundo tingido com color-mix): antes
+                    // tinha cor e tamanho próprios, destoava do resto. O
+                    // botão "Aceitar" tinha ainda um bug de contraste a
+                    // sério: fundo var(--color-text) (quase branco no
+                    // escuro) com texto branco por cima, ilegível.
                     <div key={invite.id} style={{
-                      background: 'color-mix(in srgb, var(--color-text) 5%, transparent)', border: '1px solid color-mix(in srgb, var(--color-text) 15%, transparent)',
-                      borderRadius: 10, padding: '12px 14px', marginBottom: 6,
+                      background: 'color-mix(in srgb, var(--color-accent) 8%, transparent)',
+                      borderRadius: 10, padding: '10px 12px', marginBottom: 2,
+                      display: 'flex', alignItems: 'flex-start', gap: 10,
                     }}>
-                      <p style={{ margin: '0 0 2px', fontSize: 14, fontWeight: 700, color: C.text }}>{invite.projectName}</p>
-                      <p style={{ margin: '0 0 12px', fontSize: 12, color: C.muted }}>Convidado por {invitedBy}</p>
-                      <div style={{ display: 'flex', gap: 6 }}>
-                        <button
-                          onClick={() => respond(invite, 'accepted')} disabled={isActing}
-                          style={{ flex: 1, padding: '7px 0', background: 'var(--color-text)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: isActing ? 'default' : 'pointer', fontFamily: 'inherit' }}
-                        >{acting[invite.id] === 'accepted' ? '...' : <><Check size={12} style={{ verticalAlign: 'middle', marginRight: 3 }} />Aceitar</>}</button>
-                        <button
-                          onClick={() => respond(invite, 'declined')} disabled={isActing}
-                          style={{ flex: 1, padding: '7px 0', background: 'transparent', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 'var(--radius-md)', color: 'var(--color-error)', fontSize: 12, fontWeight: 600, cursor: isActing ? 'default' : 'pointer', fontFamily: 'inherit' }}
-                        >{acting[invite.id] === 'declined' ? '...' : 'Recusar'}</button>
+                      <span style={{ display: 'flex', flexShrink: 0, marginTop: 1, color: 'var(--color-accent)' }}><UserPlus size={15} strokeWidth={2} /></span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ margin: '0 0 2px', fontSize: 13, fontWeight: 600, color: C.text, lineHeight: 1.45 }}>Convite para "{invite.projectName}"</p>
+                        <p style={{ margin: '0 0 10px', fontSize: 12, color: C.muted }}>Convidado por {invitedBy}</p>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button
+                            onClick={() => respond(invite, 'accepted')} disabled={isActing}
+                            style={{ flex: 1, padding: '7px 0', background: 'var(--color-primary)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: isActing ? 'default' : 'pointer', fontFamily: 'inherit' }}
+                          >{acting[invite.id] === 'accepted' ? '...' : <><Check size={12} style={{ verticalAlign: 'middle', marginRight: 3 }} />Aceitar</>}</button>
+                          <button
+                            onClick={() => respond(invite, 'declined')} disabled={isActing}
+                            style={{ flex: 1, padding: '7px 0', background: 'transparent', border: '1px solid color-mix(in srgb, var(--color-error) 30%, transparent)', borderRadius: 'var(--radius-md)', color: 'var(--color-error)', fontSize: 12, fontWeight: 600, cursor: isActing ? 'default' : 'pointer', fontFamily: 'inherit' }}
+                          >{acting[invite.id] === 'declined' ? '...' : 'Recusar'}</button>
+                        </div>
                       </div>
                     </div>
                   )
