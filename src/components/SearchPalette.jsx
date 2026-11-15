@@ -10,6 +10,7 @@ import { PlusIcon as Plus } from './icons/PlusIcon'
 import { CompassIcon as Compass } from '@solar-icons/react/bold/compass'
 import { LibraryIcon } from '@solar-icons/react/bold/library'
 import { ChatRoundLineIcon as MessageSquare } from '@solar-icons/react/bold/chat-round-line'
+import { Buildings2Icon as Building2 } from '@solar-icons/react/bold/buildings-2'
 import './SearchPalette.css'
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -28,14 +29,21 @@ const SHORTCUTS = [
 const CATEGORIES = [
   { key: 'projects', label: 'Projetos', icon: Layers },
   { key: 'people', label: 'Pessoas', icon: User },
+  { key: 'companies', label: 'Empresas', icon: Building2 },
 ]
+
+// Contas de empresa/recrutador (EmpresaPage.jsx usa a mesma lista para
+// decidir se um perfil tem página de empresa) ficam à parte das pessoas,
+// nunca misturadas na mesma secção.
+const COMPANY_ROLES = ['empresa', 'recrutador']
 
 export function SearchPalette({ onClose }) {
   const navigate = useNavigate()
   const [q, setQ] = useState('')
-  const [active, setActive] = useState(() => new Set(['projects', 'people']))
+  const [active, setActive] = useState(() => new Set(['projects', 'people', 'companies']))
   const [projects, setProjects] = useState([])
   const [people, setPeople] = useState([])
+  const [companies, setCompanies] = useState([])
   const [loading, setLoading] = useState(false)
   const inputRef = useRef(null)
 
@@ -55,11 +63,11 @@ export function SearchPalette({ onClose }) {
   const hasQuery = query.length >= 2
 
   useEffect(() => {
-    if (!hasQuery) { setProjects([]); setPeople([]); setLoading(false); return }
+    if (!hasQuery) { setProjects([]); setPeople([]); setCompanies([]); setLoading(false); return }
     setLoading(true)
     let cancelled = false
     const t = setTimeout(async () => {
-      const [projRes, peopleRes] = await Promise.all([
+      const [projRes, peopleRes, companiesRes] = await Promise.all([
         active.has('projects')
           ? supabase.from('projects')
               .select('id, name, slug, area, cover_url, creator_name')
@@ -74,6 +82,7 @@ export function SearchPalette({ onClose }) {
           ? supabase.from('profiles')
               .select('id, username, full_name, avatar_url, role')
               .is('banned_at', null)
+              .not('role', 'in', `(${COMPANY_ROLES.join(',')})`)
               // Sem exigir username: muita gente nunca escolheu um, e antes
               // isso bastava para ficarem invisíveis na pesquisa mesmo
               // aparecendo pelo nome. UserProfile.jsx já sabe abrir por id
@@ -81,10 +90,19 @@ export function SearchPalette({ onClose }) {
               .or(`full_name.ilike.%${query}%,username.ilike.%${query}%`)
               .limit(6)
           : Promise.resolve({ data: [] }),
+        active.has('companies')
+          ? supabase.from('profiles')
+              .select('id, username, full_name, avatar_url, role, company, company_verified')
+              .is('banned_at', null)
+              .in('role', COMPANY_ROLES)
+              .or(`company.ilike.%${query}%,full_name.ilike.%${query}%,username.ilike.%${query}%`)
+              .limit(6)
+          : Promise.resolve({ data: [] }),
       ])
       if (cancelled) return
       setProjects(projRes.data || [])
       setPeople(peopleRes.data || [])
+      setCompanies(companiesRes.data || [])
       setLoading(false)
     }, 250)
     return () => { cancelled = true; clearTimeout(t) }
@@ -102,7 +120,7 @@ export function SearchPalette({ onClose }) {
     })
   }
 
-  const hasResults = projects.length > 0 || people.length > 0
+  const hasResults = projects.length > 0 || people.length > 0 || companies.length > 0
 
   function go(path) {
     navigate(path)
@@ -118,7 +136,7 @@ export function SearchPalette({ onClose }) {
             ref={inputRef}
             value={q}
             onChange={e => setQ(e.target.value)}
-            placeholder="Pesquisar projetos, pessoas…"
+            placeholder="Pesquisar projetos, pessoas, empresas…"
           />
           <button className="search-palette-close" onClick={onClose} aria-label="Fechar">
             <X size={16} />
@@ -202,6 +220,24 @@ export function SearchPalette({ onClose }) {
                   </button>
                   <ChevronRight size={15} className="search-palette-row-chevron" />
                 </div>
+              ))}
+            </div>
+          )}
+
+          {hasQuery && !loading && active.has('companies') && companies.length > 0 && (
+            <div className="search-palette-section">
+              <span className="search-palette-label">Empresas</span>
+              {companies.map(c => (
+                <button key={c.id} className="search-palette-row" onClick={() => go(`/empresa/${c.username || c.id}`)}>
+                  {c.avatar_url
+                    ? <img src={c.avatar_url} alt="" className="search-palette-avatar" />
+                    : <div className="search-palette-avatar search-palette-avatar-fb">{(c.company || c.full_name || c.username || '?')[0].toUpperCase()}</div>}
+                  <span className="search-palette-row-text">
+                    <span className="search-palette-row-title">{c.company || c.full_name || 'Empresa'}</span>
+                    {c.username && <span className="search-palette-row-sub">@{c.username}</span>}
+                  </span>
+                  <ChevronRight size={15} className="search-palette-row-chevron" />
+                </button>
               ))}
             </div>
           )}
