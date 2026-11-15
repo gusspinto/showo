@@ -7,10 +7,13 @@ import { PlanGateModal } from '../components/PlanGate'
 import { planThatUnlocks, nextPaidPlan } from '../lib/plans'
 import { GalleryWideIcon as ImageIcon } from '@solar-icons/react/bold/gallery-wide'
 import { StarsIcon as Sparkles } from '@solar-icons/react/bold/stars'
+import { DownloadIcon as Download } from '@solar-icons/react/bold/download'
 
 const C = {
   bg: 'var(--color-bg)', card: 'var(--color-surface)', border: 'var(--color-border)',
   blue: 'var(--color-primary)', muted: 'var(--color-text-secondary)', text: 'var(--color-text)',
+  glass: 'var(--color-glass)', glassBorder: 'var(--color-glass-border)',
+  glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
 }
 
 // Pedido direto do Gustavo depois de confusão real: o Coach apontava para
@@ -156,37 +159,39 @@ export default function GenerateImage() {
 
   const upgrade = planThatUnlocks('generateImage', planId) || nextPaidPlan(planId)
 
+  const pillPrimary = {
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+    padding: '11px 22px', fontSize: 13.5, fontWeight: 700, fontFamily: 'inherit',
+    border: 'none', borderRadius: 'var(--radius-full)', cursor: 'pointer',
+    background: C.blue, color: '#fff', boxShadow: '0 2px 10px var(--color-primary-subtle)',
+  }
+  const pillGhost = {
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+    padding: '9px 16px', fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
+    border: `1px solid ${C.border}`, borderRadius: 'var(--radius-full)', cursor: 'pointer',
+    background: 'transparent', color: C.text,
+  }
+
   return (
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'inherit' }}>
       <Navbar />
       <div className="page-content">
         <div style={{ maxWidth: 640, width: '100%', margin: '0 auto', padding: 'clamp(16px,3vw,24px)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 22 }}>
-            <div style={{ width: 38, height: 38, borderRadius: 11, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <ImageIcon size={19} color={C.blue} />
-            </div>
-            <div>
-              <h1 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: C.text }}>Gerar imagem com IA</h1>
-              <p style={{ margin: 0, fontSize: 12, color: C.muted }}>Capas, ilustrações e imagens para os teus projetos</p>
-            </div>
-          </div>
 
           {!gate.allowed ? (
-            <>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'var(--color-primary-subtle)', border: `1px solid ${C.blue}`, borderRadius: 12, padding: '14px 16px' }}>
-                <div style={{ width: 30, height: 30, borderRadius: 8, background: C.blue, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Sparkles size={15} color="#fff" />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: C.text }}>{gate.message?.title || 'Gerar imagens com IA'}</p>
-                  {gate.message?.body && <p style={{ margin: '1px 0 0', fontSize: 12, color: C.muted, lineHeight: 1.35 }}>{gate.message.body}</p>}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setGenGateMsg(gate.message)}
-                  style={{ padding: '8px 14px', fontSize: 12.5, fontWeight: 700, fontFamily: 'inherit', border: 'none', borderRadius: 8, cursor: 'pointer', background: C.blue, color: '#fff', flexShrink: 0 }}
-                >{upgrade ? upgrade.name : 'Ver planos'}</button>
+            // Um cartão só, em vez de cabeçalho + caixa de upsell a repetir o
+            // mesmo ícone e quase o mesmo texto uma a seguir à outra.
+            <div style={{ textAlign: 'center', ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 'var(--radius-xl)', padding: 'clamp(36px,7vw,52px) 28px' }}>
+              <div style={{ width: 64, height: 64, borderRadius: 'var(--radius-lg)', background: 'var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+                <ImageIcon size={28} color={C.blue} />
               </div>
+              <h1 style={{ margin: '0 0 8px', fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.4px', color: C.text }}>Gerar imagem com IA</h1>
+              <p style={{ margin: '0 auto 24px', maxWidth: 360, fontSize: 14, color: C.muted, lineHeight: 1.6 }}>
+                {gate.message?.body || 'Capas, ilustrações e imagens para os teus projetos.'}
+              </p>
+              <button type="button" onClick={() => setGenGateMsg(gate.message)} style={pillPrimary}>
+                <Sparkles size={14} /> {upgrade ? `Desbloquear com o ${upgrade.name}` : 'Ver planos'}
+              </button>
               {genGateMsg && (
                 <PlanGateModal
                   message={genGateMsg}
@@ -194,60 +199,64 @@ export default function GenerateImage() {
                   onClose={() => setGenGateMsg(null)}
                 />
               )}
-            </>
+            </div>
           ) : (
             <>
-              <p style={{ margin: '0 0 10px', fontSize: 12.5, color: C.muted }}>
-                Tens {gate.remaining} de {gate.limit} imagens este mês.
-              </p>
-              <textarea
-                value={genPrompt}
-                onChange={e => setGenPrompt(e.target.value)}
-                placeholder="Ex: capa minimalista para um projeto de PAP sobre gestão de tarefas, tons de azul"
-                rows={3}
-                disabled={generating}
-                style={{
-                  width: '100%', boxSizing: 'border-box', resize: 'vertical', marginBottom: 10,
-                  background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 10,
-                  padding: '12px 14px', fontSize: 13, color: C.text, fontFamily: 'inherit', outline: 'none',
-                }}
-              />
-              {genError && <p style={{ margin: '0 0 10px', fontSize: 12, color: 'var(--color-error)' }}>{genError}</p>}
-              <button
-                type="button"
-                onClick={handleGenerate}
-                disabled={generating || !genPrompt.trim()}
-                style={{
-                  padding: '10px 20px', fontSize: 13, fontWeight: 700, fontFamily: 'inherit',
-                  border: 'none', borderRadius: 8, cursor: generating ? 'default' : 'pointer',
-                  background: C.blue, color: '#fff', opacity: generating || !genPrompt.trim() ? 0.6 : 1,
-                }}
-              >{generating ? 'A gerar...' : 'Gerar imagem'}</button>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-md)', background: 'var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <ImageIcon size={21} color={C.blue} />
+                  </div>
+                  <div>
+                    <h1 style={{ margin: 0, fontSize: 19, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px', color: C.text }}>Gerar imagem com IA</h1>
+                    <p style={{ margin: 0, fontSize: 12.5, color: C.muted }}>Capas, ilustrações e imagens para os teus projetos</p>
+                  </div>
+                </div>
+                <span style={{ fontSize: 11.5, fontWeight: 700, color: C.blue, background: 'var(--color-primary-subtle)', padding: '5px 12px', borderRadius: 'var(--radius-full)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                  {gate.remaining} de {gate.limit} este mês
+                </span>
+              </div>
+
+              <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 'var(--radius-lg)', padding: 20 }}>
+                <textarea
+                  value={genPrompt}
+                  onChange={e => setGenPrompt(e.target.value)}
+                  placeholder="Ex: capa minimalista para um projeto de PAP sobre gestão de tarefas, tons de azul"
+                  rows={3}
+                  disabled={generating}
+                  style={{
+                    width: '100%', boxSizing: 'border-box', resize: 'vertical', marginBottom: 12,
+                    background: 'var(--color-bg)', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-md)',
+                    padding: '12px 14px', fontSize: 13.5, color: C.text, fontFamily: 'inherit', outline: 'none',
+                  }}
+                />
+                {genError && <p style={{ margin: '0 0 12px', fontSize: 12.5, color: 'var(--color-error)' }}>{genError}</p>}
+                <button
+                  type="button"
+                  onClick={handleGenerate}
+                  disabled={generating || !genPrompt.trim()}
+                  style={{ ...pillPrimary, opacity: generating || !genPrompt.trim() ? 0.6 : 1, cursor: generating || !genPrompt.trim() ? 'default' : 'pointer' }}
+                >
+                  <Sparkles size={14} /> {generating ? 'A gerar...' : 'Gerar imagem'}
+                </button>
+              </div>
 
               {preview && (
-                <div style={{ marginTop: 20 }}>
-                  <img src={preview.url} alt="Imagem gerada" style={{ width: '100%', borderRadius: 10, border: `1px solid ${C.border}`, display: 'block' }} />
-                  <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
-                    <button
-                      type="button"
-                      onClick={handleDownload}
-                      style={{ padding: '8px 14px', fontSize: 12.5, fontWeight: 600, fontFamily: 'inherit', border: `1px solid ${C.border}`, borderRadius: 8, cursor: 'pointer', background: 'transparent', color: C.text }}
-                    >Descarregar</button>
-                    <button
-                      type="button"
-                      onClick={handleCopy}
-                      style={{ padding: '8px 14px', fontSize: 12.5, fontWeight: 600, fontFamily: 'inherit', border: `1px solid ${C.border}`, borderRadius: 8, cursor: 'pointer', background: 'transparent', color: C.text }}
-                    >{copied ? 'Copiada!' : 'Copiar imagem'}</button>
+                <div style={{ marginTop: 20, ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 'var(--radius-lg)', padding: 20 }}>
+                  <img src={preview.url} alt="Imagem gerada" style={{ width: '100%', borderRadius: 'var(--radius-md)', border: `1px solid ${C.border}`, display: 'block' }} />
+                  <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
+                    <button type="button" onClick={handleDownload} style={pillGhost}>Descarregar</button>
+                    <button type="button" onClick={handleCopy} style={pillGhost}>{copied ? 'Copiada!' : 'Copiar imagem'}</button>
                   </div>
 
                   {myProjects.length > 0 && (
-                    <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
-                      <p style={{ margin: '0 0 8px', fontSize: 12.5, color: C.muted }}>Usar como capa de um projeto</p>
+                    <div style={{ marginTop: 18, paddingTop: 18, borderTop: `1px solid ${C.border}` }}>
+                      <p style={{ margin: '0 0 10px', fontSize: 12.5, color: C.muted }}>Usar como capa de um projeto</p>
                       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                         <select
                           value={coverProjectId}
                           onChange={e => { setCoverProjectId(e.target.value); setCoverDone(false) }}
-                          style={{ flex: 1, minWidth: 180, background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '8px 10px', fontSize: 12.5, color: C.text, fontFamily: 'inherit' }}
+                          style={{ flex: 1, minWidth: 180, background: 'var(--color-bg)', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-md)', padding: '9px 12px', fontSize: 13, color: C.text, fontFamily: 'inherit' }}
                         >
                           <option value="">Escolhe um projeto...</option>
                           {myProjects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -256,12 +265,12 @@ export default function GenerateImage() {
                           type="button"
                           onClick={handleUseAsCover}
                           disabled={!coverProjectId || usingAsCover}
-                          style={{ padding: '8px 14px', fontSize: 12.5, fontWeight: 700, fontFamily: 'inherit', border: 'none', borderRadius: 8, cursor: !coverProjectId || usingAsCover ? 'default' : 'pointer', background: C.blue, color: '#fff', opacity: !coverProjectId || usingAsCover ? 0.6 : 1 }}
+                          style={{ ...pillPrimary, padding: '9px 18px', opacity: !coverProjectId || usingAsCover ? 0.6 : 1, cursor: !coverProjectId || usingAsCover ? 'default' : 'pointer' }}
                         >{usingAsCover ? 'A usar...' : 'Usar como capa'}</button>
                       </div>
                       {coverDone && (
-                        <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--color-success)' }}>
-                          Capa atualizada. <button type="button" onClick={() => navigate(`/editar/${myProjects.find(p => p.id === coverProjectId)?.slug}`)} style={{ background: 'none', border: 'none', padding: 0, color: C.blue, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, textDecoration: 'underline' }}>Ver projeto</button>
+                        <p style={{ margin: '10px 0 0', fontSize: 12.5, color: 'var(--color-success)' }}>
+                          Capa atualizada. <button type="button" onClick={() => navigate(`/editar/${myProjects.find(p => p.id === coverProjectId)?.slug}`)} style={{ background: 'none', border: 'none', padding: 0, color: C.blue, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12.5, textDecoration: 'underline' }}>Ver projeto</button>
                         </p>
                       )}
                     </div>
@@ -272,23 +281,32 @@ export default function GenerateImage() {
           )}
 
           {!loadingHistory && history.length > 0 && (
-            <div style={{ marginTop: 32, paddingTop: 22, borderTop: `1px solid ${C.border}` }}>
-              <h2 style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 700, color: C.text }}>Imagens anteriores</h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10 }}>
+            <div style={{ marginTop: 32, paddingTop: 24, borderTop: `1px solid ${C.border}` }}>
+              <h2 style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 700, color: C.text }}>Imagens anteriores</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 12 }}>
                 {history.map(item => (
-                  <div key={item.id} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <div key={item.id} style={{ position: 'relative', borderRadius: 'var(--radius-md)', overflow: 'hidden', border: `1px solid ${C.border}` }}>
                     <img
                       src={item.image_url}
                       alt={item.prompt || 'Imagem gerada'}
                       title={item.prompt || ''}
-                      style={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'cover', borderRadius: 8, border: `1px solid ${C.border}`, display: 'block' }}
+                      loading="lazy"
+                      style={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'cover', display: 'block' }}
                     />
                     <button
                       type="button"
                       onClick={() => handleDownloadFromHistory(item)}
                       disabled={downloadingId === item.id}
-                      style={{ padding: '5px 8px', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', border: `1px solid ${C.border}`, borderRadius: 6, cursor: downloadingId === item.id ? 'default' : 'pointer', background: 'transparent', color: C.muted, opacity: downloadingId === item.id ? 0.6 : 1 }}
-                    >{downloadingId === item.id ? 'A descarregar...' : 'Descarregar'}</button>
+                      title="Descarregar"
+                      aria-label="Descarregar"
+                      style={{
+                        position: 'absolute', bottom: 8, right: 8, width: 30, height: 30,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        borderRadius: 'var(--radius-full)', border: 'none', cursor: downloadingId === item.id ? 'default' : 'pointer',
+                        background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)', color: '#fff',
+                        opacity: downloadingId === item.id ? 0.6 : 1,
+                      }}
+                    ><Download size={14} /></button>
                   </div>
                 ))}
               </div>
