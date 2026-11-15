@@ -403,12 +403,14 @@ export default function EmpresaPage() {
                           {st.label}
                         </span>
                       ) : user && isStudent ? (
-                        // &open=1: Vagas.jsx abre logo o popup da vaga com
-                        // tudo à vista, em vez de só fazer scroll até ao
-                        // cartão e obrigar a um segundo clique em "Candidatar".
+                        // "Ver mais", igual ao cartão de Vagas.jsx: abre
+                        // logo o popup com a vaga toda à vista (&open=1),
+                        // sem nenhuma barreira antes disso. "Candidatar"
+                        // deixou de fazer sentido aqui sozinho, a vaga
+                        // nunca se vê completa neste resumo.
                         <button onClick={e => { e.stopPropagation(); navigate(`/vagas?v=${v.id}&open=1`) }}
                           style={{ background: C.blue, border: 'none', borderRadius: 'var(--radius-full)', padding: '10px 18px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 10px var(--color-primary-subtle)' }}>
-                          Candidatar
+                          Ver mais
                         </button>
                       ) : !user ? (
                         <button onClick={e => { e.stopPropagation(); navigate('/login') }}
