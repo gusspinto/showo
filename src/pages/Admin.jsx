@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
@@ -1529,17 +1529,41 @@ const USER_PLAN_FILTERS = [
 // atrás de um menu, continua a um clique de distância mas exige intenção.
 function RowMenu({ items }) {
   const [open, setOpen] = useState(false)
-  const ref = useCallback(node => {
+  const [pos, setPos] = useState(null)
+  const btnRef = useCallback(node => {
     if (!node) return
     function onDocClick(e) { if (!node.contains(e.target)) setOpen(false) }
     document.addEventListener('mousedown', onDocClick)
     return () => document.removeEventListener('mousedown', onDocClick)
   }, [])
+  const measureRef = useRef(null)
+
+  // A tabela de utilizadores tem overflowX:'auto'/overflowY:'hidden' para
+  // scroll horizontal em ecrãs estreitos (ver UsersTab), e isso corta
+  // qualquer position:absolute dentro dela, incluindo este menu: ficava
+  // tecnicamente a renderizar, só que invisível, cortado pelo contentor.
+  // Mesma correção já usada no ColorPicker.jsx: portal para document.body,
+  // position:fixed com coordenadas medidas do próprio botão.
+  function toggleOpen() {
+    if (!open && measureRef.current) {
+      const r = measureRef.current.getBoundingClientRect()
+      const MENU_WIDTH = 168
+      const MARGIN = 8
+      setPos({
+        top: r.bottom + 4,
+        left: Math.min(r.right - MENU_WIDTH, window.innerWidth - MENU_WIDTH - MARGIN),
+      })
+    }
+    setOpen(o => !o)
+  }
 
   return (
-    <div ref={ref} style={{ position: 'relative' }}>
+    <div
+      ref={node => { btnRef(node); measureRef.current = node }}
+      style={{ position: 'relative' }}
+    >
       <button
-        onClick={() => setOpen(o => !o)}
+        onClick={toggleOpen}
         aria-label="Mais ações"
         style={{
           width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -1548,9 +1572,9 @@ function RowMenu({ items }) {
           fontFamily: 'inherit',
         }}
       >⋯</button>
-      {open && (
+      {open && pos && createPortal(
         <div style={{
-          position: 'absolute', right: 0, top: 'calc(100% + 4px)', zIndex: 10,
+          position: 'fixed', top: pos.top, left: pos.left, zIndex: 400,
           background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 10,
           padding: 4, minWidth: 168, boxShadow: '0 8px 24px rgba(0,0,0,0.28)',
         }}>
@@ -1568,7 +1592,8 @@ function RowMenu({ items }) {
               onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
             >{it.label}</button>
           ))}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
