@@ -169,7 +169,7 @@ export default function ExportProjectsModal({ onClose }) {
                         {isSelected ? <CheckSquare size={16} /> : <Square size={16} />}
                       </span>
                       {p.cover_url && (
-                        <img src={p.cover_url} alt="" style={{ width: 36, height: 36, borderRadius: 6, objectFit: 'cover', flexShrink: 0 }} />
+                        <img loading="lazy" src={p.cover_url} alt="" style={{ width: 36, height: 36, borderRadius: 6, objectFit: 'cover', flexShrink: 0 }} />
                       )}
                       <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)', lineHeight: 1.3, flex: 1 }}>
                         {p.name || p.slug}

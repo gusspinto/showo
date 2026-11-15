@@ -36,7 +36,7 @@ function Avatar({ profile, size = 36 }) {
   const colors = ['var(--color-primary)','var(--color-accent)','#0d9488','var(--color-warning)','#ec4899','#10b981']
   const bg = colors[(initial.charCodeAt(0) || 0) % colors.length]
   if (profile?.avatar_url) return (
-    <img src={profile.avatar_url} alt={name} className="msg-avatar-img" style={{ width: size, height: size }} />
+    <img loading="lazy" src={profile.avatar_url} alt={name} className="msg-avatar-img" style={{ width: size, height: size }} />
   )
   return (
     <div className="msg-avatar-fallback" style={{ width: size, height: size, background: bg, fontSize: size * 0.38 }}>

@@ -573,7 +573,7 @@ export default function Explore() {
                       style={{ background: project.cover_url ? undefined : getAreaColor(project.area) }}
                     >
                       {project.cover_url ? (
-                        <img src={project.cover_url} alt="" />
+                        <img loading="lazy" src={project.cover_url} alt="" />
                       ) : (
                         <span className="explore-card-cover-letter">
                           {project.name ? project.name[0].toUpperCase() : '?'}
@@ -654,7 +654,7 @@ export default function Explore() {
                     >
                       {project.cover_url ? (
                         <>
-                          <img src={project.cover_url} alt="" />
+                          <img loading="lazy" src={project.cover_url} alt="" />
                           <div className="explore-card-cover-gradient" />
                           {project.project_type && TYPE_COLORS[project.project_type] && (
                             <span className="explore-type-badge on-cover" style={{ background: TYPE_COLORS[project.project_type] + 'cc' }}>
@@ -904,7 +904,7 @@ export default function Explore() {
                         onClick={() => navigate(profileUrl)}
                         style={{ cursor: 'pointer' }}>
                         {p.avatar_url ? (
-                          <img src={p.avatar_url} alt={displayName} className="explore-avatar" referrerPolicy="no-referrer" />
+                          <img loading="lazy" src={p.avatar_url} alt={displayName} className="explore-avatar" referrerPolicy="no-referrer" />
                         ) : (
                           <div className="explore-avatar-fallback" style={{ background: avatarBg }}>{initial}</div>
                         )}

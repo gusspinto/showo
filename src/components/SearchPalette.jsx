@@ -186,7 +186,7 @@ export function SearchPalette({ onClose }) {
               {projects.map(p => (
                 <button key={p.id} className="search-palette-row" onClick={() => go(`/projeto/${p.slug}`)}>
                   {p.cover_url
-                    ? <img src={p.cover_url} alt="" className="search-palette-thumb" />
+                    ? <img loading="lazy" src={p.cover_url} alt="" className="search-palette-thumb" />
                     : <div className="search-palette-thumb search-palette-thumb-fb"><Layers size={14} /></div>}
                   <span className="search-palette-row-text">
                     <span className="search-palette-row-title">{p.name}</span>
@@ -204,7 +204,7 @@ export function SearchPalette({ onClose }) {
               {people.map(p => (
                 <div key={p.id} className="search-palette-row search-palette-row--person" onClick={() => go(`/u/${p.username || p.id}`)}>
                   {p.avatar_url
-                    ? <img src={p.avatar_url} alt="" className="search-palette-avatar" />
+                    ? <img loading="lazy" src={p.avatar_url} alt="" className="search-palette-avatar" />
                     : <div className="search-palette-avatar search-palette-avatar-fb">{(p.full_name || p.username || '?')[0].toUpperCase()}</div>}
                   <span className="search-palette-row-text">
                     <span className="search-palette-row-title">{p.full_name || p.username || 'Sem nome'}</span>
@@ -230,7 +230,7 @@ export function SearchPalette({ onClose }) {
               {companies.map(c => (
                 <button key={c.id} className="search-palette-row" onClick={() => go(`/empresa/${c.username || c.id}`)}>
                   {c.avatar_url
-                    ? <img src={c.avatar_url} alt="" className="search-palette-avatar" />
+                    ? <img loading="lazy" src={c.avatar_url} alt="" className="search-palette-avatar" />
                     : <div className="search-palette-avatar search-palette-avatar-fb">{(c.company || c.full_name || c.username || '?')[0].toUpperCase()}</div>}
                   <span className="search-palette-row-text">
                     <span className="search-palette-row-title">{c.company || c.full_name || 'Empresa'}</span>

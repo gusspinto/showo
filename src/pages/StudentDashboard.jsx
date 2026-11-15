@@ -1030,7 +1030,7 @@ export default function StudentDashboard({ user, profile }) {
               {/* Cover strip */}
               {p.cover_url && (
                 <div className="sdb-pom-cover">
-                  <img src={p.cover_url} alt="" />
+                  <img loading="lazy" src={p.cover_url} alt="" />
                   <div className="sdb-pom-cover-overlay" />
                 </div>
               )}
@@ -1044,7 +1044,7 @@ export default function StudentDashboard({ user, profile }) {
                     {p.ai_tagline && <div className="sdb-pom-tagline">{p.ai_tagline}</div>}
                     <div className="sdb-pom-author">
                       {profile?.avatar_url
-                        ? <img src={profile.avatar_url} alt="" className="sdb-pom-avatar" />
+                        ? <img loading="lazy" src={profile.avatar_url} alt="" className="sdb-pom-avatar" />
                         : <div className="sdb-pom-avatar sdb-pom-avatar-fb">{displayName[0]?.toUpperCase()}</div>
                       }
                       <span>{isOwn ? 'O teu projeto!' : displayName}</span>

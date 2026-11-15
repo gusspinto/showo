@@ -52,7 +52,7 @@ function Avatar({ avatarUrl, name, size = 40 }) {
   const colors = ['var(--color-primary)', 'var(--color-accent)', '#0d9488', 'var(--color-warning)', '#ec4899', '#10b981']
   const bg = colors[(initial.charCodeAt(0) || 0) % colors.length]
   if (avatarUrl) {
-    return <img src={avatarUrl} alt="" style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+    return <img loading="lazy" src={avatarUrl} alt="" style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
   }
   return (
     <div style={{ width: size, height: size, borderRadius: '50%', background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: size * 0.42, fontWeight: 800, color: '#fff', flexShrink: 0 }}>

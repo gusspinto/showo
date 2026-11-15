@@ -114,7 +114,7 @@ function ProfileItem({ project, onOpen, timeline, publicApiCount }) {
   return (
     <div className="up-project-card" onClick={onOpen}>
       {cover ? (
-        <div className="up-card-cover-img"><img src={cover} alt="" /></div>
+        <div className="up-card-cover-img"><img loading="lazy" src={cover} alt="" /></div>
       ) : isLibrary ? (
         <div className="up-card-cover-file">{filetypeCard}</div>
       ) : (

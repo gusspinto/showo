@@ -70,7 +70,7 @@ function ProjectCard({ project, navigate }) {
       }}
     >
       {project.cover_url ? (
-        <img src={project.cover_url} alt="" style={{ width: '100%', height: 120, objectFit: 'cover', display: 'block' }} />
+        <img loading="lazy" src={project.cover_url} alt="" style={{ width: '100%', height: 120, objectFit: 'cover', display: 'block' }} />
       ) : (
         <div style={{ width: '100%', height: 80, background: 'linear-gradient(135deg,var(--color-primary-subtle),rgba(79,70,229,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Folder size={28} color="var(--color-primary)" />
@@ -386,7 +386,7 @@ function Avatar({ avatarUrl, name, size = 40 }) {
   const colors = ['var(--color-primary)','var(--color-accent)','#0d9488','var(--color-warning)','#ec4899','#10b981']
   const bg = colors[(initial.charCodeAt(0) || 0) % colors.length]
   if (avatarUrl) return (
-    <img src={avatarUrl} alt={name} style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+    <img loading="lazy" src={avatarUrl} alt={name} style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
   )
   return (
     <div style={{ width: size, height: size, borderRadius: '50%', background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: size * 0.4, fontWeight: 700, color: '#fff', flexShrink: 0 }}>

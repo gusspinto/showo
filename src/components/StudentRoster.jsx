@@ -27,7 +27,7 @@ function Ring({ value, color }) {
 }
 
 function Avatar({ url, name }) {
-  if (url) return <img className="sr-avatar" src={url} alt="" />
+  if (url) return <img loading="lazy" className="sr-avatar" src={url} alt="" />
   return <span className="sr-avatar sr-avatar--ph">{(name || '?')[0].toUpperCase()}</span>
 }
 

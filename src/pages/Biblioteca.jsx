@@ -347,7 +347,7 @@ function LibPreviewModal({ item, onClose, onOpenItem, onReopen }) {
     <Modal onClose={onClose} width={440}>
       <div className="lib-preview-cover" style={!cover ? { background: ft ? `color-mix(in srgb, ${ft.color} 16%, var(--color-bg-alt))` : 'var(--color-bg-alt)' } : undefined}>
         {cover ? (
-          <img src={cover} alt="" />
+          <img loading="lazy" src={cover} alt="" />
         ) : ft ? (
           <span className="lib-tile-filetype" style={{ color: ft.color }}>
             <FileText size={30} />

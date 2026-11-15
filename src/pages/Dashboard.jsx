@@ -643,7 +643,7 @@ function FeaturedProjectCard({ project, navigate, myInterests }) {
         {/* Cover — fixed width sidebar */}
         <div style={{ width: 160, flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
           {project.cover_url
-            ? <img src={project.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            ? <img loading="lazy" src={project.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
             : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, var(--color-primary-subtle) 0%, rgba(26,138,122,0.15) 100%)' }}>
                 <Folder size={32} color="var(--color-primary)" style={{ opacity: 0.35 }} />
               </div>

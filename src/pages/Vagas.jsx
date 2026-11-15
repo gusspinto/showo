@@ -211,7 +211,7 @@ function PublicCard({ vaga, recruiterProfile, myStatus, onVerMais, onShare, isAl
           (igual ao hero da EmpresaPage), não só o ícone genérico de tipo. */}
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
         {recruiterProfile?.avatar_url ? (
-          <img src={recruiterProfile.avatar_url} alt="" style={{ width: 32, height: 32, borderRadius: 'var(--radius-sm)', objectFit: 'cover', flexShrink: 0 }} />
+          <img loading="lazy" src={recruiterProfile.avatar_url} alt="" style={{ width: 32, height: 32, borderRadius: 'var(--radius-sm)', objectFit: 'cover', flexShrink: 0 }} />
         ) : (
           <div style={{ width: 32, height: 32, borderRadius: 'var(--radius-sm)', background: `color-mix(in srgb, ${tipo.color} 13%, transparent)`, border: `1px solid color-mix(in srgb, ${tipo.color} 27%, transparent)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <Building2 size={15} color={tipo.color} />
@@ -960,7 +960,7 @@ export default function Vagas() {
                         overflow: 'hidden',
                       }}>
                         {invite.recruiter?.avatar_url
-                          ? <img src={invite.recruiter.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ? <img loading="lazy" src={invite.recruiter.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           : <Building2 size={18} color="var(--color-text)" />
                         }
                       </div>

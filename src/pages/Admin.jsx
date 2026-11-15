@@ -1370,7 +1370,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
               >
                 <div style={{ width: 36, height: 36, borderRadius: 8, background: C.bgAlt, border: `1px solid ${C.border}`, overflow: 'hidden', flexShrink: 0 }}>
                   {p.cover_url
-                    ? <img src={p.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ? <img loading="lazy" src={p.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Folder size={16} color={C.muted} /></div>
                   }
                 </div>
@@ -2032,7 +2032,7 @@ function ProjectsTab({ projects, users, onDeleteProject }) {
               {/* Thumbnail */}
               <div style={{ width: 48, height: 36, borderRadius: 6, background: C.bgAlt, border: `1px solid ${C.border}`, overflow: 'hidden', flexShrink: 0 }}>
                 {p.cover_url
-                  ? <img src={p.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ? <img loading="lazy" src={p.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Folder size={18} color={C.muted} /></div>
                 }
               </div>
@@ -2240,7 +2240,7 @@ function SignupsTab({ signups, users }) {
                 overflow: 'hidden', flexShrink: 0,
               }}>
                 {s.avatar_url
-                  ? <img src={s.avatar_url} alt="" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ? <img loading="lazy" src={s.avatar_url} alt="" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   : <span style={{ fontSize: 14, fontWeight: 700, color: C.blue }}>{name[0].toUpperCase()}</span>
                 }
               </div>

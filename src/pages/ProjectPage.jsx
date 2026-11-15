@@ -4017,7 +4017,7 @@ export default function ProjectPage() {
                                     fontSize: 13, fontWeight: 700, color: colors.text, overflow: 'hidden',
                                   }}>
                                     {u.avatar_url
-                                      ? <img src={u.avatar_url} alt="" style={{ width: 34, height: 34, objectFit: 'cover' }} />
+                                      ? <img loading="lazy" src={u.avatar_url} alt="" style={{ width: 34, height: 34, objectFit: 'cover' }} />
                                       : (u.full_name || u.username || '?')[0].toUpperCase()
                                     }
                                   </div>
@@ -4918,7 +4918,7 @@ export default function ProjectPage() {
                           overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
                         }}>
                           {rec.avatar_url
-                            ? <img src={rec.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ? <img loading="lazy" src={rec.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                             : <User size={18} color="var(--color-text-secondary)" />
                           }
                         </div>

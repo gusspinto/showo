@@ -242,7 +242,7 @@ export default function Home() {
                 {/* Background cover or gradient */}
                 <div className="home-pom-bg">
                   {p.cover_url
-                    ? <img src={p.cover_url} alt="" className="home-pom-cover-img" />
+                    ? <img loading="lazy" src={p.cover_url} alt="" className="home-pom-cover-img" />
                     : <div className="home-pom-cover-gradient" style={{ background: AREA_COLORS[p.area] || 'var(--color-primary)' }} />
                   }
                   <div className="home-pom-overlay" />
@@ -272,7 +272,7 @@ export default function Home() {
                   {/* Author row */}
                   <div className="home-pom-author">
                     {avatar
-                      ? <img src={avatar} alt="" className="home-pom-avatar" />
+                      ? <img loading="lazy" src={avatar} alt="" className="home-pom-avatar" />
                       : <div className="home-pom-avatar home-pom-avatar-fallback">{displayName[0]?.toUpperCase()}</div>
                     }
                     <div>
@@ -322,7 +322,7 @@ export default function Home() {
                 >
                   {p.cover_url ? (
                     <>
-                      <img src={p.cover_url} alt="" />
+                      <img loading="lazy" src={p.cover_url} alt="" />
                       <div className="home-card-cover-gradient" />
                     </>
                   ) : (

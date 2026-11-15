@@ -91,51 +91,53 @@ export default function EmpresaPage() {
 
     setCompany(data)
 
-    const { data: vagasData } = await supabase
-      .from('vagas')
-      .select('*')
-      .eq('recruiter_id', data.id)
-      .eq('is_active', true)
-      .order('created_at', { ascending: false })
+    // As três queries aqui não dependem umas das outras (só de data.id,
+    // já em mãos), mas corriam em série, uma à espera da anterior
+    // terminar. Em paralelo poupa 2 das 3 viagens de ida-e-volta à BD só
+    // nesta fase, o que se sente a sério ao abrir a página.
+    const viewingOwnPage = user?.id === data.id
+    const [vagasRes, totalVagasRes, allVagaIdsRes] = await Promise.all([
+      supabase.from('vagas').select('*').eq('recruiter_id', data.id).eq('is_active', true).order('created_at', { ascending: false }),
+      // Vagas publicadas (lifetime, não só as abertas) é um número honesto
+      // de mostrar a toda a gente.
+      supabase.from('vagas').select('id', { count: 'exact', head: true }).eq('recruiter_id', data.id),
+      // Só precisa de correr para quem vê a própria página (candidaturas
+      // recebidas é informação do negócio da empresa, não pública).
+      viewingOwnPage ? supabase.from('vagas').select('id').eq('recruiter_id', data.id) : Promise.resolve({ data: null }),
+    ])
 
+    const vagasData = vagasRes.data
     setVagas(vagasData ?? [])
 
-    // Check if logged-in student has applied to any of these vagas
+    // Estas duas também não dependem uma da outra, só dos resultados
+    // acima, por isso correm juntas numa segunda onda em vez de em série.
+    const second = []
     if (user && isStudent && vagasData?.length) {
-      const { data: cands } = await supabase
-        .from('candidaturas')
-        .select('vaga_id, status')
-        .eq('student_id', user.id)
-        .in('vaga_id', vagasData.map(v => v.id))
-
-      const map = {}
-      cands?.forEach(c => { map[c.vaga_id] = c })
-      setApplied(map)
+      second.push(
+        supabase.from('candidaturas').select('vaga_id, status').eq('student_id', user.id).in('vaga_id', vagasData.map(v => v.id))
+          .then(({ data: cands }) => {
+            const map = {}
+            cands?.forEach(c => { map[c.vaga_id] = c })
+            setApplied(map)
+          })
+      )
     }
 
-    // Vagas publicadas (lifetime, não só as abertas) é um número honesto
-    // de mostrar a toda a gente. Candidaturas recebidas é informação do
-    // negócio da própria empresa, só calculada para quem está a ver a
-    // própria página.
-    const { count: totalVagas } = await supabase
-      .from('vagas')
-      .select('id', { count: 'exact', head: true })
-      .eq('recruiter_id', data.id)
-
     let totalCandidaturas = null
-    if (user?.id === data.id) {
-      const { data: allVagaIds } = await supabase.from('vagas').select('id').eq('recruiter_id', data.id)
+    const allVagaIds = allVagaIdsRes.data
+    if (viewingOwnPage) {
       if (allVagaIds?.length) {
-        const { count } = await supabase
-          .from('candidaturas')
-          .select('id', { count: 'exact', head: true })
-          .in('vaga_id', allVagaIds.map(v => v.id))
-        totalCandidaturas = count ?? 0
+        second.push(
+          supabase.from('candidaturas').select('id', { count: 'exact', head: true }).in('vaga_id', allVagaIds.map(v => v.id))
+            .then(({ count }) => { totalCandidaturas = count ?? 0 })
+        )
       } else {
         totalCandidaturas = 0
       }
     }
-    setStats({ totalVagas: totalVagas ?? 0, totalCandidaturas })
+    await Promise.all(second)
+
+    setStats({ totalVagas: totalVagasRes.count ?? 0, totalCandidaturas })
 
     setLoading(false)
   }

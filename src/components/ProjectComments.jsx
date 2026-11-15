@@ -368,7 +368,7 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
       {user ? (
         <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
           {profile?.avatar_url ? (
-            <img src={profile.avatar_url} alt="" style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+            <img loading="lazy" src={profile.avatar_url} alt="" style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
           ) : (
             <div style={{
               width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
