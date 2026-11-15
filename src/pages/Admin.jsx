@@ -1530,13 +1530,23 @@ const USER_PLAN_FILTERS = [
 function RowMenu({ items }) {
   const [open, setOpen] = useState(false)
   const [pos, setPos] = useState(null)
-  const btnRef = useCallback(node => {
-    if (!node) return
-    function onDocClick(e) { if (!node.contains(e.target)) setOpen(false) }
+  const measureRef = useRef(null)
+  const menuRef = useRef(null)
+
+  // O menu vai por portal para document.body (ver baixo), por isso já não
+  // é filho de `node` no DOM: um clique num item do menu fazia
+  // `node.contains(e.target)` dar false, o "clique fora" fechava o menu
+  // já no mousedown, antes de o click do botão sequer disparar, e o botão
+  // parecia sempre não fazer nada. Tem de verificar as duas referências.
+  useEffect(() => {
+    function onDocClick(e) {
+      if (measureRef.current?.contains(e.target)) return
+      if (menuRef.current?.contains(e.target)) return
+      setOpen(false)
+    }
     document.addEventListener('mousedown', onDocClick)
     return () => document.removeEventListener('mousedown', onDocClick)
   }, [])
-  const measureRef = useRef(null)
 
   // A tabela de utilizadores tem overflowX:'auto'/overflowY:'hidden' para
   // scroll horizontal em ecrãs estreitos (ver UsersTab), e isso corta
@@ -1558,10 +1568,7 @@ function RowMenu({ items }) {
   }
 
   return (
-    <div
-      ref={node => { btnRef(node); measureRef.current = node }}
-      style={{ position: 'relative' }}
-    >
+    <div ref={measureRef} style={{ position: 'relative' }}>
       <button
         onClick={toggleOpen}
         aria-label="Mais ações"
@@ -1573,7 +1580,7 @@ function RowMenu({ items }) {
         }}
       >⋯</button>
       {open && pos && createPortal(
-        <div style={{
+        <div ref={menuRef} style={{
           position: 'fixed', top: pos.top, left: pos.left, zIndex: 400,
           background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 10,
           padding: 4, minWidth: 168, boxShadow: '0 8px 24px rgba(0,0,0,0.28)',
