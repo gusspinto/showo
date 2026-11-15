@@ -142,16 +142,35 @@ export default function EmpresaPage() {
     setLoading(false)
   }
 
+  // Esqueleto com a forma real da página (avatar, nome, pills, descrição,
+  // depois os cartões de vaga), em vez de um mini-spinner centrado e vazio
+  // que não dizia nada sobre o que vinha a seguir. Mesmo sistema de
+  // classes partilhadas (.skel/.skel-line/.skel-circle/.skel-card) já
+  // usado em Explore.jsx e UserProfile.jsx, para ficar consistente.
   if (loading) return (
     <div style={{ minHeight: '100vh', background: C.bg }}>
       <Navbar />
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 'calc(100dvh - 62px)' }}>
-        <style>{`@keyframes ep-sh{0%{background-position:-300px 0}100%{background-position:300px 0}}`}</style>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-          {[140, 90, 120].map((w, i) => (
-            <div key={i} style={{ height: i === 0 ? 14 : 9, width: w, borderRadius: 6, background: 'linear-gradient(90deg,var(--color-bg-alt) 25%,var(--color-surface-hover) 50%,var(--color-bg-alt) 75%)', backgroundSize: '300px 100%', animation: `ep-sh 1.5s ease-in-out infinite ${i*0.12}s` }} />
-          ))}
+      <div className="page-content">
+        <div className="skel" style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 'var(--radius-lg)', padding: 'clamp(24px,5vw,40px)', marginBottom: 20, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+          <div className="skel-circle" style={{ width: 96, height: 96 }} />
+          <div className="skel-line w-40 h-xl" />
+          <div className="skel-line w-60" />
+          <div className="flex gap-2" style={{ marginTop: 6 }}>
+            <div className="skel-line h-lg" style={{ width: 90 }} />
+            <div className="skel-line h-lg" style={{ width: 110 }} />
+            <div className="skel-line h-lg" style={{ width: 80 }} />
+          </div>
+          <div className="skel-line w-full" style={{ marginTop: 10, maxWidth: 480 }} />
+          <div className="skel-line w-80" style={{ maxWidth: 380 }} />
         </div>
+        <div className="skel-line w-40 h-lg" style={{ marginBottom: 16 }} />
+        {Array.from({ length: 2 }).map((_, i) => (
+          <div key={i} className="skel skel-card" style={{ padding: '18px 20px', marginBottom: 16, animationDelay: `${i * 0.1}s` }}>
+            <div className="skel-line w-60 h-lg" />
+            <div className="skel-line w-40" style={{ marginTop: 8 }} />
+            <div className="skel-line w-full" style={{ marginTop: 10 }} />
+          </div>
+        ))}
       </div>
     </div>
   )
