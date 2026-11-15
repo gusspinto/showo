@@ -504,10 +504,12 @@ export default function Settings() {
   const isRecruiter = role === 'recrutador' || role === 'empresa'
   const accentColor = role === 'empresa' ? 'var(--color-warning)' : 'var(--color-accent)'
 
+  // "Empresa" e "Recrutamento" saíram daqui: são o conteúdo da própria
+  // página pública da empresa (EmpresaPage.jsx), não preferências de
+  // conta, e passaram a editar-se lá, ao vivo (CompanyCustomizer), como o
+  // "Editar perfil" dos alunos já fazia.
   const baseTabs = isRecruiter ? [
     { id: 'perfil', label: 'Perfil', icon: <Camera size={16} /> },
-    { id: 'empresa', label: 'Empresa', icon: <Building2 size={16} /> },
-    { id: 'recrutamento', label: 'Recrutamento', icon: <Search size={16} /> },
     { id: 'notificacoes', label: 'Notificações', icon: <Bell size={16} /> },
     { id: 'privacidade', label: 'Privacidade', icon: <Shield size={16} /> },
     { id: 'aparencia', label: 'Aparência', icon: theme === 'dark' ? <Moon size={16} /> : <Sun size={16} /> },
@@ -557,7 +559,7 @@ export default function Settings() {
 
   const saveButtonLabel = saving ? 'A guardar…' : justSaved ? 'Guardado ✓' : 'Guardar'
 
-  const tabsWithSave = ['perfil', 'empresa', 'recrutamento', 'notificacoes', 'privacidade']
+  const tabsWithSave = ['perfil', 'notificacoes', 'privacidade']
   const showMobileSave = tabsWithSave.includes(activeTab)
 
   // "aluno" no role da base de dados cobre dois casos: conta Individual
@@ -762,49 +764,9 @@ export default function Settings() {
               </>
             )}
 
-            {activeTab === 'empresa' && isRecruiter && (
-              <SectionCard title="Dados da empresa">
-                <div className="settings-info-banner" style={{ background: `${accentColor}0d`, border: `1px solid ${accentColor}33` }}>
-                  <Building2 size={14} color={accentColor} />
-                  <span className="text-sm font-semibold" style={{ color: accentColor }}>Estes dados ficam visíveis no teu perfil público</span>
-                </div>
-                <Input label="Nome da empresa" value={company} onChange={setCompany} placeholder="Ex: Google, NOS, Altice..." />
-                <Input label="O teu cargo" value={companyRole} onChange={setCompanyRole} placeholder="Ex: Talent Acquisition, HR Manager, CEO..." />
-                <Textarea label="Sobre a empresa" value={companyDescription} onChange={setCompanyDescription} placeholder="Descreve a empresa, a cultura, os projetos, o ambiente de trabalho..." hint="Aparece na página pública da empresa." />
-                <div className="settings-2col">
-                  <Input label="Localização" value={companyLocation} onChange={setCompanyLocation} placeholder="Ex: Lisboa, Porto, Remote..." />
-                  <Input label="Setor / Indústria" value={companyIndustry} onChange={setCompanyIndustry} placeholder="Ex: Tecnologia, Saúde..." />
-                </div>
-                <div className="settings-field">
-                  <label className="settings-label">Dimensão da empresa</label>
-                  <div className="settings-size-chips">
-                    {['1–10', '11–50', '51–200', '201–500', '500+'].map(s => (
-                      <button key={s} type="button" onClick={() => setCompanySize(s)}
-                        className={`settings-size-chip${companySize === s ? ' active' : ''}`}
-                        style={companySize === s ? { borderColor: accentColor, background: `${accentColor}15`, color: accentColor } : undefined}>
-                        {s}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <Input label="Website" value={companyWebsite} onChange={setCompanyWebsite} placeholder="https://empresa.com" />
-                <Input label="LinkedIn" value={linkedinUrl} onChange={setLinkedinUrl} placeholder="https://linkedin.com/in/..." hint="O LinkedIn da empresa ou o teu perfil pessoal." />
-                {saveBlock}
-              </SectionCard>
-            )}
-
-            {activeTab === 'recrutamento' && isRecruiter && (
-              <SectionCard title="O que procuras">
-                <div className="settings-info-banner" style={{ background: `${accentColor}0d`, border: `1px solid ${accentColor}33` }}>
-                  <Search size={14} color={accentColor} />
-                  <span className="text-sm font-semibold" style={{ color: accentColor, lineHeight: 1.4 }}>
-                    Esta informação ajuda os alunos a perceber se o teu perfil é relevante para eles
-                  </span>
-                </div>
-                <Textarea label="Perfil que procuras" value={lookingFor} onChange={setLookingFor} placeholder="Ex: Procuro estagiários de Engenharia Informática com projetos na área de mobile ou web..." hint="Aparece no teu perfil público. Quanto mais detalhe deres, mais facilmente os alunos percebem se se encaixam." />
-                {saveBlock}
-              </SectionCard>
-            )}
+            {/* "Dados da empresa" e "O que procuras" saíram daqui: ver
+                EmpresaPage.jsx (botão "Editar" abre o CompanyCustomizer,
+                direto na própria página pública que mostra estes dados). */}
 
             {activeTab === 'notificacoes' && (
               <SectionCard title="Notificações por email">

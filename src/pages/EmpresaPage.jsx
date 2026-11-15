@@ -15,6 +15,7 @@ import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
 import { SettingsIcon as Settings } from '@solar-icons/react/bold/settings'
 import { VerifiedCheckIcon as VerifiedCheck } from '@solar-icons/react/bold/verified-check'
 import SegmentedTabs from '../components/SegmentedTabs'
+import CompanyCustomizer from '../components/CompanyCustomizer'
 
 const C = {
   bg:     'var(--color-bg)',
@@ -68,6 +69,77 @@ export default function EmpresaPage() {
   const isOwnPage = !!user?.id && user.id === company?.id
   const myRole = myProfile?.role
   const isStudent = myRole === 'aluno' || myRole === 'professor' || !myRole
+
+  // Edição ao vivo do perfil de empresa, mesmo conceito do "Editar perfil"
+  // dos alunos (ProfileCustomizer): painel na própria página, nunca na
+  // Settings, que não fazia sentido ter estes dados (são o conteúdo da
+  // própria página pública, não preferências de conta).
+  const [editingCompany, setEditingCompany] = useState(false)
+  const [savingCompany, setSavingCompany] = useState(false)
+  const [companyEditError, setCompanyEditError] = useState('')
+  const [draftCompany, setDraftCompany] = useState('')
+  const [draftCompanyRole, setDraftCompanyRole] = useState('')
+  const [draftCompanyDescription, setDraftCompanyDescription] = useState('')
+  const [draftCompanyLocation, setDraftCompanyLocation] = useState('')
+  const [draftCompanyIndustry, setDraftCompanyIndustry] = useState('')
+  const [draftCompanySize, setDraftCompanySize] = useState('')
+  const [draftCompanyWebsite, setDraftCompanyWebsite] = useState('')
+  const [draftLinkedinUrl, setDraftLinkedinUrl] = useState('')
+  const [draftLookingFor, setDraftLookingFor] = useState('')
+
+  function openCompanyEditor() {
+    setDraftCompany(company?.company || '')
+    setDraftCompanyRole(company?.company_role || '')
+    setDraftCompanyDescription(company?.company_description || '')
+    setDraftCompanyLocation(company?.company_location || '')
+    setDraftCompanyIndustry(company?.company_industry || '')
+    setDraftCompanySize(company?.company_size || '')
+    setDraftCompanyWebsite(company?.company_website || '')
+    setDraftLinkedinUrl(company?.linkedin_url || '')
+    setDraftLookingFor(company?.looking_for || '')
+    setCompanyEditError('')
+    setEditingCompany(true)
+  }
+
+  async function saveCompanyEdit() {
+    setSavingCompany(true)
+    setCompanyEditError('')
+    const patch = {
+      company: draftCompany.trim() || null,
+      company_role: draftCompanyRole.trim() || null,
+      company_description: draftCompanyDescription.trim() || null,
+      company_location: draftCompanyLocation.trim() || null,
+      company_industry: draftCompanyIndustry.trim() || null,
+      company_size: draftCompanySize.trim() || null,
+      company_website: draftCompanyWebsite.trim() || null,
+      linkedin_url: draftLinkedinUrl.trim() || null,
+      looking_for: draftLookingFor.trim() || null,
+    }
+    const { error } = await supabase.from('profiles').update(patch).eq('id', user.id)
+    setSavingCompany(false)
+    if (error) {
+      setCompanyEditError('Não foi possível guardar. Tenta de novo.')
+      return
+    }
+    setCompany(c => ({ ...c, ...patch }))
+    setEditingCompany(false)
+  }
+
+  // Preview ao vivo: enquanto o painel está aberto, a página lê os valores
+  // em edição (ainda não guardados), não os já guardados em `company`.
+  // Mesma técnica do ProfileCustomizer/UserProfile.jsx.
+  const displayCompany = editingCompany ? {
+    ...company,
+    company: draftCompany,
+    company_role: draftCompanyRole,
+    company_description: draftCompanyDescription,
+    company_location: draftCompanyLocation,
+    company_industry: draftCompanyIndustry,
+    company_size: draftCompanySize,
+    company_website: draftCompanyWebsite,
+    linkedin_url: draftLinkedinUrl,
+    looking_for: draftLookingFor,
+  } : company
 
   useEffect(() => { loadPage() }, [username])
 
@@ -189,7 +261,7 @@ export default function EmpresaPage() {
   )
 
   const tipo = TIPO_INFO[company.role] ?? TIPO_INFO.recrutador
-  const name = company.company || company.full_name || 'Empresa'
+  const name = displayCompany.company || displayCompany.full_name || 'Empresa'
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'inherit' }}>
@@ -231,41 +303,41 @@ export default function EmpresaPage() {
                   {tipo.label}
                 </span>
               </div>
-              {company.company_role && (
-                <p style={{ margin: '4px 0 0', fontSize: 14, color: C.muted }}>{company.company_role}</p>
+              {displayCompany.company_role && (
+                <p style={{ margin: '4px 0 0', fontSize: 14, color: C.muted }}>{displayCompany.company_role}</p>
               )}
 
               {/* Meta: pills reais (fundo + contorno), como o resto da app,
                   em vez de só texto com um ícone ao lado. */}
               <div className="ep-meta" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 14 }}>
-                {company.company_location && (
+                {displayCompany.company_location && (
                   <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: C.muted, background: 'var(--color-surface-hover)', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-full)', padding: '5px 12px' }}>
-                    <MapPin size={12} /> {company.company_location}
+                    <MapPin size={12} /> {displayCompany.company_location}
                   </span>
                 )}
-                {company.company_industry && (
+                {displayCompany.company_industry && (
                   <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: C.muted, background: 'var(--color-surface-hover)', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-full)', padding: '5px 12px' }}>
-                    <Briefcase size={12} /> {company.company_industry}
+                    <Briefcase size={12} /> {displayCompany.company_industry}
                   </span>
                 )}
-                {company.company_size && (
+                {displayCompany.company_size && (
                   <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: C.muted, background: 'var(--color-surface-hover)', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-full)', padding: '5px 12px' }}>
-                    <Users size={12} /> {company.company_size} pessoas
+                    <Users size={12} /> {displayCompany.company_size} pessoas
                   </span>
                 )}
                 {/* No mobile ficam aqui, nas pills, como sempre estiveram;
                     no desktop este par repete-se (ep-weblinks-actions) por
                     baixo do botão Contactar, e esta cópia esconde-se via
                     CSS (ep-weblinks-inline). */}
-                {company.company_website && (
-                  <a className="ep-weblinks-inline" href={company.company_website.startsWith('http') ? company.company_website : `https://${company.company_website}`}
+                {displayCompany.company_website && (
+                  <a className="ep-weblinks-inline" href={displayCompany.company_website.startsWith('http') ? displayCompany.company_website : `https://${displayCompany.company_website}`}
                     target="_blank" rel="noopener noreferrer"
                     style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: C.blue, background: 'var(--color-primary-subtle)', border: '1px solid transparent', borderRadius: 'var(--radius-full)', padding: '5px 12px', textDecoration: 'none' }}>
                     <Globe size={12} /> Website <ExternalLink size={11} />
                   </a>
                 )}
-                {company.linkedin_url && (
-                  <a className="ep-weblinks-inline" href={company.linkedin_url} target="_blank" rel="noopener noreferrer"
+                {displayCompany.linkedin_url && (
+                  <a className="ep-weblinks-inline" href={displayCompany.linkedin_url} target="_blank" rel="noopener noreferrer"
                     style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: C.blue, background: 'var(--color-primary-subtle)', border: '1px solid transparent', borderRadius: 'var(--radius-full)', padding: '5px 12px', textDecoration: 'none' }}>
                     <Link size={12} /> LinkedIn <ExternalLink size={11} />
                   </a>
@@ -279,7 +351,7 @@ export default function EmpresaPage() {
                 Website/LinkedIn empilhados por baixo do botão. */}
             <div className="ep-hero-actions">
               {isOwnPage ? (
-                <button onClick={() => navigate('/settings')}
+                <button onClick={openCompanyEditor}
                   style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-full)', padding: '10px 18px', color: C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s, color 0.15s' }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-border-hover)'; e.currentTarget.style.color = C.text }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}>
@@ -292,17 +364,17 @@ export default function EmpresaPage() {
                 </button>
               ) : null}
 
-              {(company.company_website || company.linkedin_url) && (
+              {(displayCompany.company_website || displayCompany.linkedin_url) && (
                 <div className="ep-weblinks-actions">
-                  {company.company_website && (
-                    <a href={company.company_website.startsWith('http') ? company.company_website : `https://${company.company_website}`}
+                  {displayCompany.company_website && (
+                    <a href={displayCompany.company_website.startsWith('http') ? displayCompany.company_website : `https://${displayCompany.company_website}`}
                       target="_blank" rel="noopener noreferrer"
                       style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: C.blue, background: 'var(--color-primary-subtle)', border: '1px solid transparent', borderRadius: 'var(--radius-full)', padding: '5px 12px', textDecoration: 'none' }}>
                       <Globe size={12} /> Website <ExternalLink size={11} />
                     </a>
                   )}
-                  {company.linkedin_url && (
-                    <a href={company.linkedin_url} target="_blank" rel="noopener noreferrer"
+                  {displayCompany.linkedin_url && (
+                    <a href={displayCompany.linkedin_url} target="_blank" rel="noopener noreferrer"
                       style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: C.blue, background: 'var(--color-primary-subtle)', border: '1px solid transparent', borderRadius: 'var(--radius-full)', padding: '5px 12px', textDecoration: 'none' }}>
                       <Link size={12} /> LinkedIn <ExternalLink size={11} />
                     </a>
@@ -312,9 +384,9 @@ export default function EmpresaPage() {
             </div>
           </div>
 
-          {(company.company_description || company.bio) && (
+          {(displayCompany.company_description || company.bio) && (
             <p className="ep-hero-description" style={{ margin: '18px 0 0', fontSize: 15, color: C.text, lineHeight: 1.7, maxWidth: 560, borderTop: `1px solid ${C.border}`, paddingTop: 18 }}>
-              {company.company_description || company.bio}
+              {displayCompany.company_description || company.bio}
             </p>
           )}
 
@@ -447,15 +519,15 @@ export default function EmpresaPage() {
           )
         ) : (
           <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '20px 20px 22px', display: 'flex', flexDirection: 'column', gap: 20 }}>
-            {(company.company_description || company.bio) ? (
-              <p style={{ margin: 0, fontSize: 14, color: C.text, lineHeight: 1.7 }}>{company.company_description || company.bio}</p>
+            {(displayCompany.company_description || company.bio) ? (
+              <p style={{ margin: 0, fontSize: 14, color: C.text, lineHeight: 1.7 }}>{displayCompany.company_description || company.bio}</p>
             ) : (
               <p style={{ margin: 0, fontSize: 14, color: C.subtle, lineHeight: 1.7 }}>Ainda sem descrição.</p>
             )}
-            {company.looking_for && (
+            {displayCompany.looking_for && (
               <div>
                 <h3 style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 700, color: C.text }}>O que procuram</h3>
-                <p style={{ margin: 0, fontSize: 14, color: C.muted, lineHeight: 1.7 }}>{company.looking_for}</p>
+                <p style={{ margin: 0, fontSize: 14, color: C.muted, lineHeight: 1.7 }}>{displayCompany.looking_for}</p>
               </div>
             )}
           </div>
@@ -514,6 +586,24 @@ export default function EmpresaPage() {
           .ep-hero-logo { width: 72px !important; height: 72px !important; }
         }
       `}</style>
+
+      {editingCompany && (
+        <CompanyCustomizer
+          company={draftCompany} onCompanyChange={setDraftCompany}
+          companyRole={draftCompanyRole} onCompanyRoleChange={setDraftCompanyRole}
+          companyDescription={draftCompanyDescription} onCompanyDescriptionChange={setDraftCompanyDescription}
+          companyLocation={draftCompanyLocation} onCompanyLocationChange={setDraftCompanyLocation}
+          companyIndustry={draftCompanyIndustry} onCompanyIndustryChange={setDraftCompanyIndustry}
+          companySize={draftCompanySize} onCompanySizeChange={setDraftCompanySize}
+          companyWebsite={draftCompanyWebsite} onCompanyWebsiteChange={setDraftCompanyWebsite}
+          linkedinUrl={draftLinkedinUrl} onLinkedinUrlChange={setDraftLinkedinUrl}
+          lookingFor={draftLookingFor} onLookingForChange={setDraftLookingFor}
+          error={companyEditError}
+          saving={savingCompany}
+          onSave={saveCompanyEdit}
+          onClose={() => setEditingCompany(false)}
+        />
+      )}
     </div>
   )
 }
