@@ -443,7 +443,7 @@ const STATUS_INFO = {
   recusada:  { label: 'Recusada',  color: 'var(--color-error)', bg: 'var(--color-error-subtle)'   },
 }
 
-function CandidatarModal({ vaga, recruiterProfile, onClose, onSubmit, sending }) {
+function CandidatarModal({ vaga, recruiterProfile, onClose, onSubmit, sending, userSkills }) {
   const [msg, setMsg] = useState('')
   const questions = vaga.screening_questions || []
   const [answers, setAnswers] = useState(() => Object.fromEntries(questions.map(q => [q.id, ''])))
@@ -454,54 +454,120 @@ function CandidatarModal({ vaga, recruiterProfile, onClose, onSubmit, sending })
     return () => { document.body.style.overflow = '' }
   }, [])
   const missingRequired = questions.some(q => q.required && !answers[q.id]?.trim())
+
+  const tipo = TIPO_INFO[vaga.tipo] ?? TIPO_INFO.estagio
+  const score = matchScore(userSkills, vaga.skills)
+  const empresaNome = vaga.employer_name || recruiterProfile?.company || recruiterProfile?.full_name || 'Empresa'
+  const metaParts = []
+  if (vaga.area) metaParts.push(vaga.area)
+  if (vaga.localizacao && vaga.localizacao.trim().toLowerCase() !== 'remoto') metaParts.push(vaga.localizacao)
+  if (vaga.is_remote) metaParts.push('Remoto')
+
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }} onClick={onClose} />
-      <div style={{ position: 'relative', background: C.card, border: `1px solid ${C.border}`, borderRadius: 'var(--radius-xl)', padding: 28, width: '100%', maxWidth: 460, maxHeight: '90vh', overflowY: 'auto', zIndex: 1 }}>
-        <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px', color: C.text }}>Candidatar a esta vaga</h2>
-        <p style={{ margin: '0 0 16px', fontSize: 13, color: C.muted }}>{vaga.titulo} · {vaga.employer_name || recruiterProfile?.company || recruiterProfile?.full_name}</p>
+      <div className="candidatar-modal" style={{ position: 'relative', background: C.card, border: `1px solid ${C.border}`, borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: 820, maxHeight: '90vh', overflowY: 'auto', zIndex: 1 }}>
+        <button onClick={onClose} aria-label="Fechar"
+          style={{ position: 'absolute', top: 16, right: 16, background: 'var(--color-surface-hover)', border: 'none', borderRadius: 'var(--radius-full)', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.muted, zIndex: 2 }}>
+          <X size={16} />
+        </button>
 
-        {(vaga.descricao || vaga.requisitos) && (
-          <div style={{ background: 'var(--color-bg)', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-md)', padding: '12px 14px', marginBottom: 20, maxHeight: 180, overflowY: 'auto' }}>
-            {vaga.descricao && <p style={{ margin: 0, fontSize: 13, color: C.text, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{vaga.descricao}</p>}
+        <div className="candidatar-modal-cols">
+          {/* Coluna esquerda: quem é a empresa e do que se trata a vaga,
+              tudo visível de uma vez, sem scroll próprio dentro da coluna
+              (o scroll é só do popup inteiro, se o ecrã for baixo). */}
+          <div className="candidatar-modal-left">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              {recruiterProfile?.avatar_url ? (
+                <img src={recruiterProfile.avatar_url} alt="" style={{ width: 52, height: 52, borderRadius: 'var(--radius-md)', objectFit: 'cover', flexShrink: 0 }} />
+              ) : (
+                <div style={{ width: 52, height: 52, borderRadius: 'var(--radius-md)', background: `${tipo.color}22`, border: `1px solid ${tipo.color}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Building2 size={22} color={tipo.color} />
+                </div>
+              )}
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{empresaNome}</div>
+                {recruiterProfile?.company_role && <div style={{ fontSize: 12.5, color: C.subtle }}>{recruiterProfile.company_role}</div>}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 18 }}>
+              {score !== null && <MatchBadge score={score} />}
+              <span style={{ fontSize: 10.5, fontWeight: 700, color: tipo.color, background: `${tipo.color}1a`, padding: '3px 9px', borderRadius: 'var(--radius-full)', whiteSpace: 'nowrap' }}>{tipo.label}</span>
+              {vaga.deadline && <DeadlineBadge deadline={vaga.deadline} />}
+            </div>
+
+            <h2 style={{ margin: '14px 0 4px', fontSize: 21, fontWeight: 700, color: C.text, lineHeight: 1.3, fontFamily: 'var(--font-heading)' }}>{vaga.titulo}</h2>
+            {metaParts.length > 0 && (
+              <p style={{ margin: 0, fontSize: 12.5, color: C.muted, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                {metaParts.map((part, i) => (
+                  <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {i > 0 && <span style={{ color: C.subtle }}>·</span>}
+                    {part}
+                  </span>
+                ))}
+              </p>
+            )}
+
+            {vaga.descricao && (
+              <p style={{ margin: '18px 0 0', fontSize: 13.5, color: C.text, lineHeight: 1.65, whiteSpace: 'pre-wrap' }}>{vaga.descricao}</p>
+            )}
             {vaga.requisitos && (
-              <p style={{ margin: vaga.descricao ? '10px 0 0' : 0, fontSize: 13, color: C.text, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+              <p style={{ margin: '14px 0 0', fontSize: 13.5, color: C.text, lineHeight: 1.65, whiteSpace: 'pre-wrap' }}>
                 <strong>Requisitos: </strong>{vaga.requisitos}
               </p>
             )}
           </div>
-        )}
 
-        {questions.map(q => (
-          <div key={q.id} style={{ marginBottom: 16 }}>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 7 }}>
-              {q.q}{q.required && <span style={{ color: C.red }}> *</span>}
-            </label>
-            {q.type === 'choice' ? (
-              <select value={answers[q.id] || ''} onChange={e => setAnswers(a => ({ ...a, [q.id]: e.target.value }))}
-                style={{ width: '100%', background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 'var(--radius-md)', color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}>
-                <option value="">Escolhe uma opção</option>
-                {(q.options || []).map(o => <option key={o} value={o}>{o}</option>)}
-              </select>
-            ) : (
-              <textarea value={answers[q.id] || ''} onChange={e => setAnswers(a => ({ ...a, [q.id]: e.target.value }))} rows={2}
-                style={{ width: '100%', background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 'var(--radius-md)', color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' }} />
-            )}
+          {/* Coluna direita: as perguntas de quem está a candidatar-se. */}
+          <div className="candidatar-modal-right">
+            <h3 style={{ margin: '0 0 18px', fontSize: 15, fontWeight: 700, color: C.text }}>A tua candidatura</h3>
+
+            {questions.map(q => (
+              <div key={q.id} style={{ marginBottom: 16 }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 7 }}>
+                  {q.q}{q.required && <span style={{ color: C.red }}> *</span>}
+                </label>
+                {q.type === 'choice' ? (
+                  <select value={answers[q.id] || ''} onChange={e => setAnswers(a => ({ ...a, [q.id]: e.target.value }))}
+                    style={{ width: '100%', background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 'var(--radius-md)', color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}>
+                    <option value="">Escolhe uma opção</option>
+                    {(q.options || []).map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                ) : (
+                  <textarea value={answers[q.id] || ''} onChange={e => setAnswers(a => ({ ...a, [q.id]: e.target.value }))} rows={2}
+                    style={{ width: '100%', background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 'var(--radius-md)', color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' }} />
+                )}
+              </div>
+            ))}
+
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 7 }}>Mensagem de apresentação</label>
+            <textarea value={msg} onChange={e => setMsg(e.target.value)} rows={5}
+              placeholder="Apresenta-te brevemente e explica porque és uma boa escolha para esta vaga..."
+              style={{ width: '100%', background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 'var(--radius-md)', color: C.text, fontSize: 14, padding: '11px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical', minHeight: 110 }} />
+            <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+              <button onClick={onClose} style={{ flex: 1, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-md)', padding: '11px 0', color: C.text, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>
+              <button onClick={() => onSubmit(msg, questions.map(q => ({ id: q.id, answer: answers[q.id] || '' })))} disabled={sending || missingRequired}
+                style={{ flex: 1, background: sending || missingRequired ? C.border : C.blue, border: 'none', borderRadius: 'var(--radius-md)', padding: '11px 0', color: 'var(--color-bg)', fontSize: 14, fontWeight: 700, cursor: sending || missingRequired ? 'default' : 'pointer', fontFamily: 'inherit' }}>
+                {sending ? 'A enviar...' : <><Send size={13} style={{ verticalAlign: 'middle', marginRight: 5 }} />Candidatar</>}
+              </button>
+            </div>
           </div>
-        ))}
-
-        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 7 }}>Mensagem de apresentação</label>
-        <textarea value={msg} onChange={e => setMsg(e.target.value)} rows={5}
-          placeholder="Apresenta-te brevemente e explica porque és uma boa escolha para esta vaga..."
-          style={{ width: '100%', background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 'var(--radius-md)', color: C.text, fontSize: 14, padding: '11px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical', minHeight: 110 }} />
-        <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-          <button onClick={onClose} style={{ flex: 1, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-md)', padding: '11px 0', color: C.text, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>
-          <button onClick={() => onSubmit(msg, questions.map(q => ({ id: q.id, answer: answers[q.id] || '' })))} disabled={sending || missingRequired}
-            style={{ flex: 1, background: sending || missingRequired ? C.border : C.blue, border: 'none', borderRadius: 'var(--radius-md)', padding: '11px 0', color: 'var(--color-bg)', fontSize: 14, fontWeight: 700, cursor: sending || missingRequired ? 'default' : 'pointer', fontFamily: 'inherit' }}>
-            {sending ? 'A enviar...' : <><Send size={13} style={{ verticalAlign: 'middle', marginRight: 5 }} />Candidatar</>}
-          </button>
         </div>
       </div>
+
+      <style>{`
+        .candidatar-modal-cols { display: flex; }
+        .candidatar-modal-left {
+          flex: 1; min-width: 0; padding: 28px; background: var(--color-bg);
+          border-right: 1px solid ${C.border}; border-radius: var(--radius-xl) 0 0 var(--radius-xl);
+        }
+        .candidatar-modal-right { flex: 1; min-width: 0; padding: 28px; }
+        @media (max-width: 680px) {
+          .candidatar-modal-cols { flex-direction: column; }
+          .candidatar-modal-left { border-right: none; border-bottom: 1px solid ${C.border}; border-radius: var(--radius-xl) var(--radius-xl) 0 0; }
+        }
+      `}</style>
     </div>
   )
 }
@@ -1030,6 +1096,7 @@ export default function Vagas() {
           onClose={() => setCandidatarVaga(null)}
           onSubmit={submitCandidatura}
           sending={sendingCandidatura}
+          userSkills={profile?.skills}
         />
       )}
       {gateMsg && <PlanGateModal message={gateMsg} onClose={() => setGateMsg(null)} />}
