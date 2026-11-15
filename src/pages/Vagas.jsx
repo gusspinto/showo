@@ -181,7 +181,7 @@ function RecruiterCard({ vaga, cands, onEdit, onToggle, onDelete, onShare, expan
   )
 }
 
-function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, onVerMais, onShare, isAluno, userSkills, highlighted }) {
+function PublicCard({ vaga, recruiterProfile, myStatus, onVerMais, onShare, isAluno, userSkills, highlighted }) {
   const navigate = useNavigate()
   const tipo = TIPO_INFO[vaga.tipo] ?? TIPO_INFO.estagio
   const days = daysDiff(vaga.deadline)
@@ -213,7 +213,7 @@ function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, onVerMais,
         {recruiterProfile?.avatar_url ? (
           <img src={recruiterProfile.avatar_url} alt="" style={{ width: 32, height: 32, borderRadius: 'var(--radius-sm)', objectFit: 'cover', flexShrink: 0 }} />
         ) : (
-          <div style={{ width: 32, height: 32, borderRadius: 'var(--radius-sm)', background: `${tipo.color}22`, border: `1px solid ${tipo.color}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ width: 32, height: 32, borderRadius: 'var(--radius-sm)', background: `color-mix(in srgb, ${tipo.color} 13%, transparent)`, border: `1px solid color-mix(in srgb, ${tipo.color} 27%, transparent)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <Building2 size={15} color={tipo.color} />
           </div>
         )}
@@ -227,7 +227,11 @@ function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, onVerMais,
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
           {score !== null && <MatchBadge score={score} />}
-          <span style={{ fontSize: 10.5, fontWeight: 700, color: tipo.color, background: `${tipo.color}1a`, padding: '3px 9px', borderRadius: 'var(--radius-full)', whiteSpace: 'nowrap' }}>{tipo.label}</span>
+          {/* tipo.color é sempre var(--x): var(--x)1a é CSS inválido (não dá
+              para colar sufixo hex a um var()), o browser descarta o fundo
+              inteiro em silêncio. color-mix() é a forma correta de atenuar
+              uma cor vinda de variável CSS. */}
+          <span style={{ fontSize: 10.5, fontWeight: 700, color: tipo.color, background: `color-mix(in srgb, ${tipo.color} 10%, transparent)`, padding: '3px 9px', borderRadius: 'var(--radius-full)', whiteSpace: 'nowrap' }}>{tipo.label}</span>
           <button onClick={() => onShare(vaga)} title="Partilhar vaga"
             style={{ width: 26, height: 26, color: C.subtle, background: 'transparent', border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <Share2 size={14} />
@@ -255,7 +259,7 @@ function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, onVerMais,
         )}
       </div>
 
-      {vaga.descricao && (
+      {vaga.descricao && !onVerMais && (
         <div>
           <p style={{
             margin: 0, fontSize: 13, color: C.muted, lineHeight: 1.6, whiteSpace: 'pre-wrap',
@@ -266,17 +270,29 @@ function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, onVerMais,
               <strong style={{ color: C.text }}>Requisitos: </strong>{vaga.requisitos}
             </p>
           )}
-          <button type="button" onClick={() => onVerMais ? onVerMais(vaga) : setExpanded(e => !e)}
+          {/* Só para quem não tem onVerMais (não-aluno): este cartão não tem
+              botão "Ver mais" próprio na linha de ações, por isso mantém o
+              toggle aqui. Para aluno, o botão "Ver mais" abaixo já faz
+              tudo, não faz sentido duplicar a mesma ação duas vezes. */}
+          <button type="button" onClick={() => setExpanded(e => !e)}
             style={{ marginTop: 6, background: 'transparent', border: 'none', padding: 0, color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-            {onVerMais ? 'Ver mais' : (expanded ? 'Ver menos' : 'Ver mais')}
+            {expanded ? 'Ver menos' : 'Ver mais'}
           </button>
         </div>
       )}
+      {vaga.descricao && onVerMais && (
+        <p style={{
+          margin: 0, fontSize: 13, color: C.muted, lineHeight: 1.6, whiteSpace: 'pre-wrap',
+          display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+        }}>{vaga.descricao}</p>
+      )}
 
-      {/* Ações: as duas sempre com texto, nenhuma vira só ícone (pedido
-          explícito do Gustavo: "Ver empresa" tem de estar visível, não um
-          ícone). "Candidatar" domina por ser maior (flex 1.6 vs 1), não
-          por a outra desaparecer. */}
+      {/* Ações: "Ver empresa" sempre com texto, nunca só ícone (pedido
+          explícito do Gustavo). Para aluno, um botão só, "Ver mais", que
+          abre o popup com tudo (descrição completa e candidatura) sem
+          nenhuma barreira antes disso: tinha um "Candidatar" à parte que
+          já bloqueava o plano antes sequer de ver a vaga, uma segunda
+          barreira a mais, o próprio popup já trata disso ao submeter. */}
       <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
         {recruiterProfile?.username && (
           <button onClick={() => navigate(`/empresa/${recruiterProfile.username}`)}
@@ -285,14 +301,18 @@ function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, onVerMais,
           </button>
         )}
         {isAluno && (
+          // STATUS_INFO já tem "bg" pronto para isto (mistura certa para os
+          // estados em var(--x), só "pendente" é hex simples); usar esse
+          // campo em vez de recalcular `${st.color}1a`, que é CSS inválido
+          // para os três estados em var() e ficava sem fundo nenhum.
           st ? (
-            <span style={{ flex: 1.6, fontSize: 13, fontWeight: 700, color: st.color, background: `${st.color}1a`, borderRadius: 'var(--radius-full)', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <span style={{ flex: 1.6, fontSize: 13, fontWeight: 700, color: st.color, background: st.bg, borderRadius: 'var(--radius-full)', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
               <Check size={13} /> {st.label}
             </span>
           ) : (
-            <button onClick={() => onCandidatar(vaga)}
+            <button onClick={() => onVerMais(vaga)}
               style={{ flex: 1.6, fontSize: 13, fontWeight: 700, color: '#fff', background: 'var(--color-primary)', border: 'none', borderRadius: 'var(--radius-full)', padding: '10px 14px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, boxShadow: '0 2px 10px var(--color-primary-subtle)' }}>
-              <Send size={13} /> Candidatar
+              Ver mais
             </button>
           )
         )}
@@ -443,7 +463,7 @@ const STATUS_INFO = {
   recusada:  { label: 'Recusada',  color: 'var(--color-error)', bg: 'var(--color-error-subtle)'   },
 }
 
-function CandidatarModal({ vaga, recruiterProfile, onClose, onSubmit, sending, userSkills }) {
+function CandidatarModal({ vaga, recruiterProfile, onClose, onSubmit, sending, userSkills, blocked, onUpgrade }) {
   const [msg, setMsg] = useState('')
   const questions = vaga.screening_questions || []
   const [answers, setAnswers] = useState(() => Object.fromEntries(questions.map(q => [q.id, ''])))
@@ -481,7 +501,7 @@ function CandidatarModal({ vaga, recruiterProfile, onClose, onSubmit, sending, u
               {recruiterProfile?.avatar_url ? (
                 <img src={recruiterProfile.avatar_url} alt="" style={{ width: 52, height: 52, borderRadius: 'var(--radius-md)', objectFit: 'cover', flexShrink: 0 }} />
               ) : (
-                <div style={{ width: 52, height: 52, borderRadius: 'var(--radius-md)', background: `${tipo.color}22`, border: `1px solid ${tipo.color}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div style={{ width: 52, height: 52, borderRadius: 'var(--radius-md)', background: `color-mix(in srgb, ${tipo.color} 13%, transparent)`, border: `1px solid color-mix(in srgb, ${tipo.color} 27%, transparent)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <Building2 size={22} color={tipo.color} />
                 </div>
               )}
@@ -493,7 +513,13 @@ function CandidatarModal({ vaga, recruiterProfile, onClose, onSubmit, sending, u
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 18 }}>
               {score !== null && <MatchBadge score={score} />}
-              <span style={{ fontSize: 10.5, fontWeight: 700, color: tipo.color, background: `${tipo.color}1a`, padding: '3px 9px', borderRadius: 'var(--radius-full)', whiteSpace: 'nowrap' }}>{tipo.label}</span>
+              {/* Com border, não só fundo, para ler como uma secção/etiqueta
+                  mesmo sozinho nesta linha (sem match% nem prazo, o caso
+                  mais comum), não como texto perdido. tipo.color é sempre
+                  var(--x): var(--x)26 é CSS inválido (sufixo hex colado a
+                  um var() não funciona), o browser descartava fundo e
+                  contorno em silêncio. color-mix() é a forma correta. */}
+              <span style={{ fontSize: 10.5, fontWeight: 700, color: tipo.color, background: `color-mix(in srgb, ${tipo.color} 15%, transparent)`, border: `1px solid color-mix(in srgb, ${tipo.color} 40%, transparent)`, padding: '4px 10px', borderRadius: 'var(--radius-full)', whiteSpace: 'nowrap' }}>{tipo.label}</span>
               {vaga.deadline && <DeadlineBadge deadline={vaga.deadline} />}
             </div>
 
@@ -529,11 +555,10 @@ function CandidatarModal({ vaga, recruiterProfile, onClose, onSubmit, sending, u
                   {q.q}{q.required && <span style={{ color: C.red }}> *</span>}
                 </label>
                 {q.type === 'choice' ? (
-                  <select value={answers[q.id] || ''} onChange={e => setAnswers(a => ({ ...a, [q.id]: e.target.value }))}
-                    style={{ width: '100%', background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 'var(--radius-md)', color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}>
-                    <option value="">Escolhe uma opção</option>
-                    {(q.options || []).map(o => <option key={o} value={o}>{o}</option>)}
-                  </select>
+                  <Select value={answers[q.id] || ''} onChange={v => setAnswers(a => ({ ...a, [q.id]: v }))}
+                    options={(q.options || []).map(o => ({ value: o, label: o }))}
+                    placeholder="Escolhe uma opção"
+                    inputStyle={{ background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 'var(--radius-md)', fontSize: 14, padding: '10px 14px' }} />
                 ) : (
                   <textarea value={answers[q.id] || ''} onChange={e => setAnswers(a => ({ ...a, [q.id]: e.target.value }))} rows={2}
                     style={{ width: '100%', background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 'var(--radius-md)', color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' }} />
@@ -547,10 +572,19 @@ function CandidatarModal({ vaga, recruiterProfile, onClose, onSubmit, sending, u
               style={{ width: '100%', background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 'var(--radius-md)', color: C.text, fontSize: 14, padding: '11px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical', minHeight: 110 }} />
             <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
               <button onClick={onClose} style={{ flex: 1, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-md)', padding: '11px 0', color: C.text, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>
-              <button onClick={() => onSubmit(msg, questions.map(q => ({ id: q.id, answer: answers[q.id] || '' })))} disabled={sending || missingRequired}
-                style={{ flex: 1, background: sending || missingRequired ? C.border : C.blue, border: 'none', borderRadius: 'var(--radius-md)', padding: '11px 0', color: 'var(--color-bg)', fontSize: 14, fontWeight: 700, cursor: sending || missingRequired ? 'default' : 'pointer', fontFamily: 'inherit' }}>
-                {sending ? 'A enviar...' : <><Send size={13} style={{ verticalAlign: 'middle', marginRight: 5 }} />Candidatar</>}
-              </button>
+              {blocked ? (
+                // Já sem candidaturas este mês: avisa aqui, antes de a
+                // pessoa preencher tudo e só descobrir ao tentar submeter.
+                <button onClick={onUpgrade}
+                  style={{ flex: 1, background: C.blue, border: 'none', borderRadius: 'var(--radius-md)', padding: '11px 0', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  Ver planos
+                </button>
+              ) : (
+                <button onClick={() => onSubmit(msg, questions.map(q => ({ id: q.id, answer: answers[q.id] || '' })))} disabled={sending || missingRequired}
+                  style={{ flex: 1, background: sending || missingRequired ? C.border : C.blue, border: 'none', borderRadius: 'var(--radius-md)', padding: '11px 0', color: 'var(--color-bg)', fontSize: 14, fontWeight: 700, cursor: sending || missingRequired ? 'default' : 'pointer', fontFamily: 'inherit' }}>
+                  {sending ? 'A enviar...' : <><Send size={13} style={{ verticalAlign: 'middle', marginRight: 5 }} />Candidatar</>}
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -1045,15 +1079,12 @@ export default function Vagas() {
                 <PublicCard key={v.id} vaga={v} recruiterProfile={profiles[v.recruiter_id]}
                   myStatus={myCandidaturas[v.id]?.status}
                   isAluno={isAluno}
-                  onCandidatar={(v) => {
-                    if (!isSchoolAccount && !canApplyMore) { setGateMsg(checkGate('vagaApplication').message); return }
-                    setCandidatarVaga(v)
-                  }}
-                  // "Ver mais" abre sempre o mesmo popup, mesmo sem
-                  // candidaturas sobrando este mês: ler a vaga não devia
-                  // estar limitado, só candidatar-se de facto. O limite
-                  // continua a aplicar-se ao submeter (submitCandidatura
-                  // volta a verificar o gate nessa altura).
+                  // Abre sempre o mesmo popup, mesmo sem candidaturas
+                  // sobrando este mês: ler a vaga não devia estar limitado,
+                  // só candidatar-se de facto. O limite continua a
+                  // aplicar-se ao submeter (submitCandidatura volta a
+                  // verificar o gate nessa altura, e o próprio botão lá
+                  // dentro já avisa "Ver planos" em vez de tentar submeter).
                   onVerMais={isAluno ? (v) => setCandidatarVaga(v) : undefined}
                   onShare={shareVaga}
                   highlighted={highlightedVagaId === v.id}
@@ -1097,6 +1128,11 @@ export default function Vagas() {
           onSubmit={submitCandidatura}
           sending={sendingCandidatura}
           userSkills={profile?.skills}
+          // Entrado via "Ver mais" sem limite de candidaturas sobrando: o
+          // botão principal avisa já aqui em vez de deixar preencher tudo
+          // e só bloquear no fim, ao submeter.
+          blocked={!isSchoolAccount && !canApplyMore}
+          onUpgrade={() => setGateMsg(checkGate('vagaApplication').message)}
         />
       )}
       {gateMsg && <PlanGateModal message={gateMsg} onClose={() => setGateMsg(null)} />}
