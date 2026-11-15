@@ -348,6 +348,13 @@ function VagaModal({ initial, onSave, onClose, saving }) {
   const [form, setForm] = useState(initial ?? EMPTY_FORM)
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
+  // Bloqueia o scroll da página por trás enquanto o popup está aberto,
+  // senão dá para arrastar o fundo com a roda do rato por cima do modal.
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [])
+
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }} onClick={onClose} />
@@ -436,6 +443,12 @@ function CandidatarModal({ vaga, recruiterProfile, onClose, onSubmit, sending })
   const [msg, setMsg] = useState('')
   const questions = vaga.screening_questions || []
   const [answers, setAnswers] = useState(() => Object.fromEntries(questions.map(q => [q.id, ''])))
+
+  // Bloqueia o scroll da página por trás enquanto o popup está aberto.
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [])
   const missingRequired = questions.some(q => q.required && !answers[q.id]?.trim())
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
