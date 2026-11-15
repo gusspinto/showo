@@ -575,8 +575,12 @@ function CandidatarModal({ vaga, recruiterProfile, onClose, onSubmit, sending, u
               {blocked ? (
                 // Já sem candidaturas este mês: avisa aqui, antes de a
                 // pessoa preencher tudo e só descobrir ao tentar submeter.
+                // C.blue não é azul: está definido (erro antigo deste
+                // ficheiro, igual ao botão "Ver planos" mais abaixo) como
+                // var(--color-text), quase branco. var(--color-primary) é
+                // o azul da marca a sério.
                 <button onClick={onUpgrade}
-                  style={{ flex: 1, background: C.blue, border: 'none', borderRadius: 'var(--radius-md)', padding: '11px 0', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  style={{ flex: 1, background: 'var(--color-primary)', border: 'none', borderRadius: 'var(--radius-md)', padding: '11px 0', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
                   Ver planos
                 </button>
               ) : (
