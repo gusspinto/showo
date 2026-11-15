@@ -181,10 +181,14 @@ function RecruiterCard({ vaga, cands, onEdit, onToggle, onDelete, onShare, expan
   )
 }
 
-function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, onShare, isAluno, userSkills, highlighted }) {
+function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, onVerMais, onShare, isAluno, userSkills, highlighted }) {
   const navigate = useNavigate()
   const tipo = TIPO_INFO[vaga.tipo] ?? TIPO_INFO.estagio
   const days = daysDiff(vaga.deadline)
+  // Só para quem não tem onVerMais (não-aluno): fallback ao expandir no
+  // próprio cartão, como sempre. Para aluno, "Ver mais" abre o popup, nunca
+  // expande o cartão, que é o que esticava os vizinhos na mesma linha da
+  // grid (cartão real e "Mais vagas por vir") até ficarem enormes e vazios.
   const [expanded, setExpanded] = useState(false)
   if (vaga.deadline && days < 0) return null
 
@@ -262,9 +266,9 @@ function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, onShare, i
               <strong style={{ color: C.text }}>Requisitos: </strong>{vaga.requisitos}
             </p>
           )}
-          <button type="button" onClick={() => setExpanded(e => !e)}
+          <button type="button" onClick={() => onVerMais ? onVerMais(vaga) : setExpanded(e => !e)}
             style={{ marginTop: 6, background: 'transparent', border: 'none', padding: 0, color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-            {expanded ? 'Ver menos' : 'Ver mais'}
+            {onVerMais ? 'Ver mais' : (expanded ? 'Ver menos' : 'Ver mais')}
           </button>
         </div>
       )}
@@ -506,6 +510,10 @@ export default function Vagas() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const sharedVagaId = searchParams.get('v')
+  // Vindo do botão "Candidatar" do perfil da empresa (EmpresaPage.jsx), em
+  // vez de só fazer scroll até ao cartão, abre logo o popup com a vaga
+  // toda à vista, sem obrigar a um segundo clique depois de chegar aqui.
+  const openVagaId = searchParams.get('open') === '1' ? sharedVagaId : null
   const { toast, show: showToast } = useToast()
   const { user, profile, isSchoolAccount, checkGate, refreshVagaApplications } = useAuth()
   const isRecruiter = profile?.role === 'recrutador' || profile?.role === 'empresa'
@@ -774,6 +782,13 @@ export default function Vagas() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sharedVagaId, loading])
 
+  useEffect(() => {
+    if (!openVagaId || loading) return
+    const v = vagas.find(v => v.id === openVagaId)
+    if (v) setCandidatarVaga(v)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openVagaId, loading, vagas])
+
   const accentColor = profile?.role === 'empresa' ? 'var(--color-warning)' : C.blue
   const visibleVagas = hasFullVagasAccess ? vagas : vagas.filter(v => v.free_for_all)
   const lockedVagasCount = vagas.length - visibleVagas.length
@@ -968,6 +983,12 @@ export default function Vagas() {
                     if (!isSchoolAccount && !canApplyMore) { setGateMsg(checkGate('vagaApplication').message); return }
                     setCandidatarVaga(v)
                   }}
+                  // "Ver mais" abre sempre o mesmo popup, mesmo sem
+                  // candidaturas sobrando este mês: ler a vaga não devia
+                  // estar limitado, só candidatar-se de facto. O limite
+                  // continua a aplicar-se ao submeter (submitCandidatura
+                  // volta a verificar o gate nessa altura).
+                  onVerMais={isAluno ? (v) => setCandidatarVaga(v) : undefined}
                   onShare={shareVaga}
                   highlighted={highlightedVagaId === v.id}
                   userSkills={profile?.skills}
