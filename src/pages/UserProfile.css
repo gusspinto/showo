@@ -964,9 +964,17 @@
   .up-head-main { display: contents; }
   .up-head-top { display: contents; }
 
+  /* Era ".up-avatar"/".up-avatar-placeholder" a receber grid-area:avatar
+     diretamente, porque antes eram filhos diretos da grid de .up-head
+     (graças aos "display:contents" acima). Agora que ficam dentro de
+     .up-avatar-btn (para o overlay do ícone de câmara), é o botão que
+     tem de carregar o grid-area, senão a grid de .up-head não sabe onde
+     o pôr e todo o cabeçalho descola. */
+  .up-avatar-btn {
+    grid-area: avatar;
+  }
   .up-avatar,
   .up-avatar-placeholder {
-    grid-area: avatar;
     width: 88px;
     height: 88px;
     font-size: 32px;
