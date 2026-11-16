@@ -448,7 +448,7 @@ function VagaModal({ initial, onSave, onClose, saving }) {
         <ScreeningEditor questions={form.screening_questions ?? []} onChange={v => set('screening_questions', v)} />
 
         <button onClick={() => onSave(form)} disabled={saving || !form.titulo.trim()}
-          style={{ width: '100%', background: saving || !form.titulo.trim() ? C.border : C.blue, border: 'none', borderRadius: 'var(--radius-md)', padding: '13px 0', color: 'var(--color-bg)', fontSize: 15, fontWeight: 700, cursor: saving || !form.titulo.trim() ? 'default' : 'pointer', fontFamily: 'inherit', boxShadow: saving ? 'none' : '0 2px 8px var(--color-surface-hover)' }}>
+          style={{ width: '100%', background: saving || !form.titulo.trim() ? C.border : C.blue, border: 'none', borderRadius: 'var(--radius-full)', padding: '13px 0', color: 'var(--color-bg)', fontSize: 15, fontWeight: 700, cursor: saving || !form.titulo.trim() ? 'default' : 'pointer', fontFamily: 'inherit', boxShadow: saving ? 'none' : '0 2px 8px var(--color-surface-hover)' }}>
           {saving ? 'A guardar...' : initial ? 'Guardar alterações' : 'Publicar vaga'}
         </button>
       </div>
@@ -577,7 +577,7 @@ function CandidatarModal({ vaga, recruiterProfile, onClose, onSubmit, sending, u
               placeholder="Apresenta-te brevemente e explica porque és uma boa escolha para esta vaga..."
               style={{ width: '100%', background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 'var(--radius-md)', color: C.text, fontSize: 14, padding: '11px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical', minHeight: 110 }} />
             <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-              <button onClick={onClose} style={{ flex: 1, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-md)', padding: '11px 0', color: C.text, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>
+              <button onClick={onClose} style={{ flex: 1, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-full)', padding: '11px 0', color: C.text, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>
               {blocked ? (
                 // Já sem candidaturas este mês: avisa aqui, antes de a
                 // pessoa preencher tudo e só descobrir ao tentar submeter.
@@ -586,12 +586,12 @@ function CandidatarModal({ vaga, recruiterProfile, onClose, onSubmit, sending, u
                 // var(--color-text), quase branco. var(--color-primary) é
                 // o azul da marca a sério.
                 <button onClick={onUpgrade}
-                  style={{ flex: 1, background: 'var(--color-primary)', border: 'none', borderRadius: 'var(--radius-md)', padding: '11px 0', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  style={{ flex: 1, background: 'var(--color-primary)', border: 'none', borderRadius: 'var(--radius-full)', padding: '11px 0', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
                   Ver planos
                 </button>
               ) : (
                 <button onClick={() => onSubmit(msg, questions.map(q => ({ id: q.id, answer: answers[q.id] || '' })))} disabled={sending || missingRequired}
-                  style={{ flex: 1, background: sending || missingRequired ? C.border : C.blue, border: 'none', borderRadius: 'var(--radius-md)', padding: '11px 0', color: 'var(--color-bg)', fontSize: 14, fontWeight: 700, cursor: sending || missingRequired ? 'default' : 'pointer', fontFamily: 'inherit' }}>
+                  style={{ flex: 1, background: sending || missingRequired ? C.border : C.blue, border: 'none', borderRadius: 'var(--radius-full)', padding: '11px 0', color: 'var(--color-bg)', fontSize: 14, fontWeight: 700, cursor: sending || missingRequired ? 'default' : 'pointer', fontFamily: 'inherit' }}>
                   {sending ? 'A enviar...' : <><Send size={13} style={{ verticalAlign: 'middle', marginRight: 5 }} />Candidatar</>}
                 </button>
               )}
@@ -917,7 +917,7 @@ export default function Vagas() {
           <h1 style={{ color: C.text, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, fontFamily: 'var(--font-heading)', margin: 0, letterSpacing: '-0.5px' }}>Vagas</h1>
           {isRecruiter && (
             <button onClick={() => { setEditVaga(null); setShowModal(true) }}
-              style={{ display: 'flex', alignItems: 'center', gap: 8, background: accentColor, border: 'none', borderRadius: 'var(--radius-md)', padding: '11px 20px', color: 'var(--color-bg)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-surface-hover)', flexShrink: 0 }}>
+              style={{ display: 'flex', alignItems: 'center', gap: 8, background: accentColor, border: 'none', borderRadius: 'var(--radius-full)', padding: '11px 20px', color: 'var(--color-bg)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-surface-hover)', flexShrink: 0 }}>
               <Plus size={16} /> Nova vaga
             </button>
           )}
@@ -998,7 +998,7 @@ export default function Vagas() {
                             disabled={isResponding}
                             style={{
                               display: 'flex', alignItems: 'center', gap: 6,
-                              padding: '7px 14px', borderRadius: 'var(--radius-md)', fontSize: 13, fontWeight: 700,
+                              padding: '7px 14px', borderRadius: 'var(--radius-full)', fontSize: 13, fontWeight: 700,
                               background: 'var(--color-text)', border: 'none',
                               color: 'var(--color-bg)', cursor: 'pointer', fontFamily: 'inherit',
                               boxShadow: '0 2px 8px var(--color-surface-hover)',
@@ -1012,7 +1012,7 @@ export default function Vagas() {
                           onClick={() => declineInvite(invite)}
                           disabled={isResponding}
                           style={{
-                            padding: '7px 12px', borderRadius: 'var(--radius-md)', fontSize: 12, fontWeight: 600,
+                            padding: '7px 12px', borderRadius: 'var(--radius-full)', fontSize: 12, fontWeight: 600,
                             background: 'none', border: '1px solid var(--color-border)',
                             color: 'var(--color-text-secondary)', cursor: 'pointer', fontFamily: 'inherit',
                           }}
@@ -1055,7 +1055,7 @@ export default function Vagas() {
               <p style={{ color: C.muted, fontSize: 16, fontWeight: 700, margin: '0 0 6px' }}>Ainda não tens vagas publicadas</p>
               <p style={{ color: C.subtle, fontSize: 13, margin: '0 0 20px' }}>Publica a tua primeira oferta e começa a receber candidatos</p>
               <button onClick={() => setShowModal(true)}
-                style={{ background: accentColor, border: 'none', borderRadius: 'var(--radius-md)', padding: '11px 24px', color: 'var(--color-bg)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                style={{ background: accentColor, border: 'none', borderRadius: 'var(--radius-full)', padding: '11px 24px', color: 'var(--color-bg)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
                 <Plus size={14} style={{ verticalAlign: 'middle', marginRight: 6 }} />Publicar primeira vaga
               </button>
             </div>
@@ -1109,7 +1109,7 @@ export default function Vagas() {
                       <strong style={{ color: C.text }}>+{lockedVagasCount} vaga{lockedVagasCount !== 1 ? 's' : ''}</strong> {lockedVagasCount !== 1 ? 'disponíveis' : 'disponível'} a partir do Plus
                     </p>
                     <button onClick={() => navigate('/planos')}
-                      style={{ fontSize: 13, fontWeight: 700, padding: '8px 16px', borderRadius: 'var(--radius-md)', border: 'none', background: C.blue, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>
+                      style={{ fontSize: 13, fontWeight: 700, padding: '8px 16px', borderRadius: 'var(--radius-full)', border: 'none', background: C.blue, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>
                       Ver planos
                     </button>
                   </div>
