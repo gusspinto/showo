@@ -86,7 +86,7 @@
 /* Ícone de câmara que aparece ao passar o rato na própria foto, para
    sinalizar que dá para clicar e mudar a foto (só visível para o dono). */
 .up-avatar-hover {
-  position: absolute; inset: 0; border-radius: 50%;
+  position: absolute; top: 0; right: 0; bottom: 0; left: 0; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   background: rgba(0, 0, 0, 0.45);
   opacity: 0; transition: opacity 0.15s ease;

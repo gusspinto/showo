@@ -581,7 +581,7 @@ export default function EmpresaPage() {
         /* Ícone de câmara ao passar o rato no logo, só para o dono: sinal
            de que o clique muda a foto, não só a amplia. */
         .ep-logo-hover {
-          position: absolute; inset: 0; border-radius: var(--radius-lg);
+          position: absolute; top: 0; right: 0; bottom: 0; left: 0; border-radius: var(--radius-lg);
           display: flex; align-items: center; justify-content: center;
           background: rgba(0, 0, 0, 0.45);
           opacity: 0; transition: opacity 0.15s ease;
