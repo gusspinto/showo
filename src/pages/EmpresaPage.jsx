@@ -419,7 +419,7 @@ export default function EmpresaPage() {
             sidebar a aparecer sempre por baixo sem seleção nenhuma. "Sobre"
             aparece sempre, para toda e qualquer empresa, não só quando já
             preencheu "o que procuram": não é um extra condicional. */}
-        <div style={{ marginBottom: 20 }}>
+        <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'center' }}>
           <SegmentedTabs
             value={activeTab}
             onChange={setActiveTab}

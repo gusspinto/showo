@@ -487,8 +487,14 @@ function CandidatarModal({ vaga, recruiterProfile, onClose, onSubmit, sending, u
     <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }} onClick={onClose} />
       <div className="candidatar-modal" style={{ position: 'relative', background: C.card, border: `1px solid ${C.border}`, borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: 820, maxHeight: '90vh', overflowY: 'auto', zIndex: 1 }}>
+        {/* Mesmo estilo do "X" dos outros popups (CompanyCustomizer/
+            ProfileCustomizer): transparente por omissão, só destaca ao
+            passar o rato. Antes tinha um fundo cinzento sempre visível,
+            um círculo sólido que destoava de todo o resto da app. */}
         <button onClick={onClose} aria-label="Fechar"
-          style={{ position: 'absolute', top: 16, right: 16, background: 'var(--color-surface-hover)', border: 'none', borderRadius: 'var(--radius-full)', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.muted, zIndex: 2 }}>
+          style={{ position: 'absolute', top: 16, right: 16, background: 'transparent', border: 'none', borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.muted, zIndex: 2, transition: 'background 0.14s, color 0.14s' }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-surface-hover)'; e.currentTarget.style.color = C.text }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = C.muted }}>
           <X size={16} />
         </button>
 
