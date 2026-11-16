@@ -8,7 +8,6 @@ import { GlobeIcon as Globe } from '@solar-icons/react/bold/globe'
 import { UsersGroupRoundedIcon as Users } from '@solar-icons/react/bold/users-group-rounded'
 import { CaseIcon as Briefcase } from '@solar-icons/react/bold/case'
 import { ChatRoundLineIcon as MessageSquare } from '@solar-icons/react/bold/chat-round-line'
-import { SquareArrowRightUpIcon as ExternalLink } from '@solar-icons/react/bold/square-arrow-right-up'
 import { Buildings2Icon as Building2 } from '@solar-icons/react/bold/buildings-2'
 import { LinkIcon as Link } from '@solar-icons/react/bold/link'
 import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
@@ -325,30 +324,16 @@ export default function EmpresaPage() {
                     <Users size={12} /> {displayCompany.company_size} pessoas
                   </span>
                 )}
-                {/* No mobile ficam aqui, nas pills, como sempre estiveram;
-                    no desktop este par repete-se (ep-weblinks-actions) por
-                    baixo do botão Contactar, e esta cópia esconde-se via
-                    CSS (ep-weblinks-inline). */}
-                {displayCompany.company_website && (
-                  <a className="ep-weblinks-inline" href={displayCompany.company_website.startsWith('http') ? displayCompany.company_website : `https://${displayCompany.company_website}`}
-                    target="_blank" rel="noopener noreferrer"
-                    style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: C.blue, background: 'var(--color-primary-subtle)', border: '1px solid transparent', borderRadius: 'var(--radius-full)', padding: '5px 12px', textDecoration: 'none' }}>
-                    <Globe size={12} /> Website <ExternalLink size={11} />
-                  </a>
-                )}
-                {displayCompany.linkedin_url && (
-                  <a className="ep-weblinks-inline" href={displayCompany.linkedin_url} target="_blank" rel="noopener noreferrer"
-                    style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: C.blue, background: 'var(--color-primary-subtle)', border: '1px solid transparent', borderRadius: 'var(--radius-full)', padding: '5px 12px', textDecoration: 'none' }}>
-                    <Link size={12} /> LinkedIn <ExternalLink size={11} />
-                  </a>
-                )}
               </div>
             </div>
 
             {/* Ações: no mobile ficam numa linha própria centrada depois da
                 bio (era isso que resolvia o botão mal colocado); no desktop
-                sobem para esta linha, à direita da identidade, com o
-                Website/LinkedIn empilhados por baixo do botão. */}
+                sobem para esta linha, à direita da identidade. Website/
+                LinkedIn deixaram de ser pills com texto do mesmo tamanho do
+                botão principal, isso competia com "Contactar"/"Editar" por
+                atenção. Ficam como dois ícones pequenos e discretos ao
+                lado, mesmo quadrado dos outros botões da app. */}
             <div className="ep-hero-actions">
               {isOwnPage ? (
                 <button onClick={openCompanyEditor}
@@ -364,22 +349,22 @@ export default function EmpresaPage() {
                 </button>
               ) : null}
 
-              {(displayCompany.company_website || displayCompany.linkedin_url) && (
-                <div className="ep-weblinks-actions">
-                  {displayCompany.company_website && (
-                    <a href={displayCompany.company_website.startsWith('http') ? displayCompany.company_website : `https://${displayCompany.company_website}`}
-                      target="_blank" rel="noopener noreferrer"
-                      style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: C.blue, background: 'var(--color-primary-subtle)', border: '1px solid transparent', borderRadius: 'var(--radius-full)', padding: '5px 12px', textDecoration: 'none' }}>
-                      <Globe size={12} /> Website <ExternalLink size={11} />
-                    </a>
-                  )}
-                  {displayCompany.linkedin_url && (
-                    <a href={displayCompany.linkedin_url} target="_blank" rel="noopener noreferrer"
-                      style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: C.blue, background: 'var(--color-primary-subtle)', border: '1px solid transparent', borderRadius: 'var(--radius-full)', padding: '5px 12px', textDecoration: 'none' }}>
-                      <Link size={12} /> LinkedIn <ExternalLink size={11} />
-                    </a>
-                  )}
-                </div>
+              {displayCompany.company_website && (
+                <a href={displayCompany.company_website.startsWith('http') ? displayCompany.company_website : `https://${displayCompany.company_website}`}
+                  target="_blank" rel="noopener noreferrer" title="Website"
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 38, height: 38, flexShrink: 0, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-md)', color: C.muted, transition: 'border-color 0.15s, color 0.15s' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-border-hover)'; e.currentTarget.style.color = C.text }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}>
+                  <Globe size={15} />
+                </a>
+              )}
+              {displayCompany.linkedin_url && (
+                <a href={displayCompany.linkedin_url} target="_blank" rel="noopener noreferrer" title="LinkedIn"
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 38, height: 38, flexShrink: 0, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-md)', color: C.muted, transition: 'border-color 0.15s, color 0.15s' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-border-hover)'; e.currentTarget.style.color = C.text }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}>
+                  <Link size={15} />
+                </a>
               )}
             </div>
           </div>
@@ -564,22 +549,19 @@ export default function EmpresaPage() {
         .ep-hero-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 20px; }
         .ep-hero-description { text-align: center; margin-left: auto; margin-right: auto; }
         .ep-hero-stats { justify-content: center; }
-        .ep-weblinks-actions { display: none; }
 
         /* Desktop: alinhado à esquerda como os perfis normais (up-head em
-           UserProfile.jsx), botão de ação à direita na mesma linha, com o
-           Website/LinkedIn empilhados por baixo dele. As estatísticas
-           ficam centradas em qualquer largura (pedido explícito). */
+           UserProfile.jsx), botões de ação à direita na mesma linha. As
+           estatísticas ficam centradas em qualquer largura (pedido
+           explícito). */
         @media (min-width: 681px) {
           .ep-hero-top { flex-direction: row; align-items: flex-start; text-align: left; gap: 20px; }
           .ep-hero-avatar-wrap { margin-bottom: 0; flex-shrink: 0; }
           .ep-hero-identity { flex: 1; min-width: 0; }
           .ep-hero-name-row { justify-content: flex-start; }
           .ep-meta { justify-content: flex-start; }
-          .ep-hero-actions { flex-direction: column; align-items: flex-end; margin-top: 0; flex-shrink: 0; }
+          .ep-hero-actions { flex-direction: row; align-items: center; margin-top: 0; flex-shrink: 0; }
           .ep-hero-description { text-align: left; margin-left: 0; margin-right: 0; }
-          .ep-weblinks-inline { display: none !important; }
-          .ep-weblinks-actions { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
         }
 
         @media (max-width: 480px) {
