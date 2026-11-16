@@ -401,7 +401,16 @@ export default function Coach() {
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'inherit' }}>
       <Navbar />
       <div className="page-content" style={{ padding: 0 }}>
-        <div style={{ display: 'flex', height: 'calc(100dvh - 70px)' }}>
+        {/* No mobile, ".page-content" tem um padding forçado por !important
+            (20px + 48px+safe-area, ver index.css) que o style={{padding:0}}
+            deste componente não consegue anular. Sem descontar esses 68px
+            aqui, esta caixa fica sempre ~68px mais alta do que o viewport
+            tem para dar, e é a página toda que ganha scroll em vez de ficar
+            só dentro da lista de mensagens (o mesmo problema que o
+            .msg-outer-wrap em Mensagens.css resolve com o seu próprio
+            calc(100dvh - 62px) !important no mobile). overflow:hidden
+            trava o que sobrar, como segunda rede de segurança. */}
+        <div style={{ display: 'flex', height: isMobile ? 'calc(100dvh - 70px - 68px)' : 'calc(100dvh - 70px)', overflow: 'hidden' }}>
 
           {/* Painel de histórico (docked no desktop, overlay no mobile) */}
           <div
@@ -417,7 +426,7 @@ export default function Coach() {
           </div>
           {historyOpen && <div className="coach-history-backdrop" onClick={() => setHistoryOpen(false)} />}
 
-          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ flex: 1, minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
             <div style={{ maxWidth: 760, width: '100%', margin: '0 auto', padding: '0 clamp(16px,3vw,24px)', display: 'flex', flexDirection: 'column', flex: 1, boxSizing: 'border-box', minHeight: 0 }}>
 
               {/* Header: duas versões, não uma só espremida.
@@ -514,8 +523,13 @@ export default function Coach() {
                 </div>
               ) : (
                 <>
-                  {/* Messages */}
-                  <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 16 }}>
+                  {/* Messages. Sem minHeight:0 aqui, um item flex com
+                      flex:1 recusa-se a encolher abaixo da altura do seu
+                      conteúdo (min-height:auto por omissão), por isso a
+                      coluna toda crescia com a conversa e era a página
+                      inteira a dar scroll, não esta lista (ver msg-messages
+                      em Mensagens.css para o mesmo padrão). */}
+                  <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 16 }}>
                     {messages.map((m, i) => (
                       <div key={i} style={{
                         alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',

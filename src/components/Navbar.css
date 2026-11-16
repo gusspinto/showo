@@ -447,7 +447,10 @@ body.light .sb-collapse-toggle:hover { border-color: rgba(0,0,0,0.75); }
   width: 40px !important; height: 40px !important;
   flex: 0 0 40px !important;
   aspect-ratio: 1 / 1;
-  border-radius: 9px !important;
+  /* Era 9px fixo, diferente do var(--radius-sm)=6px dos outros botões da
+     mesma barra (Pesquisar, Notificações, Conta): o "+" ficava com um
+     canto visivelmente mais arredondado que os vizinhos. */
+  border-radius: var(--radius-sm) !important;
 }
 .sb-divider { height: 1px; background: var(--color-border); margin: 6px 0; opacity: 0.6; }
 .sb-bottom { padding: 0 10px 14px; }
