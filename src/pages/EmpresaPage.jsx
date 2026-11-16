@@ -15,6 +15,7 @@ import { SettingsIcon as Settings } from '@solar-icons/react/bold/settings'
 import { VerifiedCheckIcon as VerifiedCheck } from '@solar-icons/react/bold/verified-check'
 import SegmentedTabs from '../components/SegmentedTabs'
 import CompanyCustomizer from '../components/CompanyCustomizer'
+import { AvatarLightbox } from '../components/AvatarLightbox'
 
 const C = {
   bg:     'var(--color-bg)',
@@ -49,7 +50,8 @@ function timeAgo(ts) {
 export default function EmpresaPage() {
   const { username } = useParams()
   const navigate  = useNavigate()
-  const { user, profile: myProfile } = useAuth()
+  const { user, profile: myProfile, refreshProfile } = useAuth()
+  const [avatarLightboxOpen, setAvatarLightboxOpen] = useState(false)
 
   const [company, setCompany]   = useState(null)
   const [vagas, setVagas]       = useState([])
@@ -289,17 +291,34 @@ export default function EmpresaPage() {
           <div className="ep-hero-top">
             {/* Logo/Avatar, com o selo sobreposto no canto. */}
             <div className="ep-hero-avatar-wrap" style={{ position: 'relative' }}>
-              {company.avatar_url ? (
-                <img src={company.avatar_url} alt={name} className="ep-hero-logo" style={{ width: 96, height: 96, borderRadius: 'var(--radius-lg)', objectFit: 'cover', border: `2px solid ${C.border}` }} />
-              ) : (
-                <div className="ep-hero-logo" style={{ width: 96, height: 96, borderRadius: 'var(--radius-lg)', background: 'var(--color-surface-hover)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 38, fontWeight: 400, fontFamily: 'var(--font-heading)', color: C.text, border: `2px solid ${C.border}` }}>
-                  {name[0].toUpperCase()}
-                </div>
-              )}
+              <button type="button" onClick={() => setAvatarLightboxOpen(true)} aria-label={`Ver logo de ${name}`}
+                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'block' }}>
+                {company.avatar_url ? (
+                  <img src={company.avatar_url} alt={name} className="ep-hero-logo" style={{ width: 96, height: 96, borderRadius: 'var(--radius-lg)', objectFit: 'cover', border: `2px solid ${C.border}` }} />
+                ) : (
+                  <div className="ep-hero-logo" style={{ width: 96, height: 96, borderRadius: 'var(--radius-lg)', background: 'var(--color-surface-hover)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 38, fontWeight: 400, fontFamily: 'var(--font-heading)', color: C.text, border: `2px solid ${C.border}` }}>
+                    {name[0].toUpperCase()}
+                  </div>
+                )}
+              </button>
               {company.company_verified && (
                 <div title="Empresa verificada" style={{ position: 'absolute', bottom: -4, right: -4, background: C.bg, borderRadius: 'var(--radius-full)', padding: 2, display: 'flex' }}>
                   <VerifiedCheck size={22} color={C.blue} />
                 </div>
+              )}
+              {avatarLightboxOpen && (
+                <AvatarLightbox
+                  userId={company.id}
+                  imageUrl={company.avatar_url}
+                  name={name}
+                  bg="var(--color-surface-hover)"
+                  fallbackColor={C.text}
+                  shape="square"
+                  isOwner={isOwnPage}
+                  onUploaded={(url) => { setCompany(c => ({ ...c, avatar_url: url })); if (isOwnPage) refreshProfile(); setAvatarLightboxOpen(false) }}
+                  onRemoved={() => { setCompany(c => ({ ...c, avatar_url: null })); if (isOwnPage) refreshProfile(); setAvatarLightboxOpen(false) }}
+                  onClose={() => setAvatarLightboxOpen(false)}
+                />
               )}
             </div>
 

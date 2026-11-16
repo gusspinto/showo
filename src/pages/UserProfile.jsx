@@ -26,6 +26,7 @@ import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/
 import { PlaneIcon as Send } from '@solar-icons/react/bold/plane'
 import ConvidarVagaModal from '../components/ConvidarVagaModal'
 import ProfileCustomizer from '../components/ProfileCustomizer'
+import { AvatarLightbox } from '../components/AvatarLightbox'
 import LibFileViewer from '../components/LibFileViewer'
 import { PlanBadge } from '../components/PlanGate'
 import { DocumentTextIcon as FileText } from '@solar-icons/react/bold/document-text'
@@ -324,7 +325,8 @@ function ProfileSkeleton() {
 export default function UserProfile() {
   const { username } = useParams()
   const navigate = useNavigate()
-  const { user, profile: myProfile } = useAuth()
+  const { user, profile: myProfile, refreshProfile } = useAuth()
+  const [avatarLightboxOpen, setAvatarLightboxOpen] = useState(false)
   const isRecruiter = myProfile?.role === 'recrutador' || myProfile?.role === 'empresa'
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [profile, setProfile] = useState(null)
@@ -743,10 +745,28 @@ export default function UserProfile() {
 
         {/* ── Cabeçalho: portefólio, alinhado à esquerda, sem cartão ── */}
         <header className="up-head">
-          {profile.avatar_url
-            ? <img src={profile.avatar_url} alt={displayName} className="up-avatar" />
-            : <div className="up-avatar-placeholder">{displayName[0].toUpperCase()}</div>
-          }
+          <button type="button" onClick={() => setAvatarLightboxOpen(true)} aria-label={`Ver foto de ${displayName}`}
+            style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', flexShrink: 0 }}>
+            {profile.avatar_url
+              ? <img src={profile.avatar_url} alt={displayName} className="up-avatar" />
+              : <div className="up-avatar-placeholder">{displayName[0].toUpperCase()}</div>
+            }
+          </button>
+
+          {avatarLightboxOpen && (
+            <AvatarLightbox
+              userId={profile.id}
+              imageUrl={profile.avatar_url}
+              name={displayName}
+              bg="var(--color-bg-alt)"
+              fallbackColor="var(--color-text-tertiary)"
+              shape="circle"
+              isOwner={isOwnProfile}
+              onUploaded={(url) => { setProfile(p => ({ ...p, avatar_url: url })); refreshProfile(); setAvatarLightboxOpen(false) }}
+              onRemoved={() => { setProfile(p => ({ ...p, avatar_url: null })); refreshProfile(); setAvatarLightboxOpen(false) }}
+              onClose={() => setAvatarLightboxOpen(false)}
+            />
+          )}
 
           <div className="up-head-main">
             <div className="up-head-top">
