@@ -12,6 +12,7 @@ import { Buildings2Icon as Building2 } from '@solar-icons/react/bold/buildings-2
 import { LinkIcon as Link } from '@solar-icons/react/bold/link'
 import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
 import { SettingsIcon as Settings } from '@solar-icons/react/bold/settings'
+import { CameraIcon as Camera } from '@solar-icons/react/bold/camera'
 import { VerifiedCheckIcon as VerifiedCheck } from '@solar-icons/react/bold/verified-check'
 import SegmentedTabs from '../components/SegmentedTabs'
 import CompanyCustomizer from '../components/CompanyCustomizer'
@@ -291,14 +292,24 @@ export default function EmpresaPage() {
           <div className="ep-hero-top">
             {/* Logo/Avatar, com o selo sobreposto no canto. */}
             <div className="ep-hero-avatar-wrap" style={{ position: 'relative' }}>
-              <button type="button" onClick={() => setAvatarLightboxOpen(true)} aria-label={`Ver logo de ${name}`}
-                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'block' }}>
+              <button type="button" onClick={() => setAvatarLightboxOpen(true)}
+                aria-label={isOwnPage ? 'Mudar logo da empresa' : `Ver logo de ${name}`}
+                className={isOwnPage ? 'ep-logo-btn' : undefined}
+                style={{ position: 'relative', background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'block' }}>
                 {company.avatar_url ? (
                   <img src={company.avatar_url} alt={name} className="ep-hero-logo" style={{ width: 96, height: 96, borderRadius: 'var(--radius-lg)', objectFit: 'cover', border: `2px solid ${C.border}` }} />
                 ) : (
                   <div className="ep-hero-logo" style={{ width: 96, height: 96, borderRadius: 'var(--radius-lg)', background: 'var(--color-surface-hover)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 38, fontWeight: 400, fontFamily: 'var(--font-heading)', color: C.text, border: `2px solid ${C.border}` }}>
                     {name[0].toUpperCase()}
                   </div>
+                )}
+                {/* Mesma dica do UserProfile.jsx: só o dono vê o ícone de
+                    câmara ao passar o rato, sinal de que o clique muda a
+                    foto, não só a amplia. */}
+                {isOwnPage && (
+                  <span className="ep-logo-hover" aria-hidden="true">
+                    <Camera size={20} color="#fff" />
+                  </span>
                 )}
               </button>
               {company.company_verified && (
@@ -567,6 +578,18 @@ export default function EmpresaPage() {
       </div>
 
       <style>{`
+        /* Ícone de câmara ao passar o rato no logo, só para o dono: sinal
+           de que o clique muda a foto, não só a amplia. */
+        .ep-logo-hover {
+          position: absolute; inset: 0; border-radius: var(--radius-lg);
+          display: flex; align-items: center; justify-content: center;
+          background: rgba(0, 0, 0, 0.45);
+          opacity: 0; transition: opacity 0.15s ease;
+          pointer-events: none;
+        }
+        .ep-logo-btn:hover .ep-logo-hover,
+        .ep-logo-btn:focus-visible .ep-logo-hover { opacity: 1; }
+
         /* Mobile (por omissão): tudo centrado, numa coluna só. */
         .ep-hero-top { display: flex; flex-direction: column; align-items: center; text-align: center; }
         .ep-hero-avatar-wrap { margin-bottom: 16px; }

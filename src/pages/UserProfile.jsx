@@ -13,6 +13,7 @@ import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { DownloadIcon as Download } from '@solar-icons/react/bold/download'
 import { EyeIcon as Eye } from '@solar-icons/react/bold/eye'
 import { QrCodeIcon as QrCode } from '@solar-icons/react/bold/qr-code'
+import { CameraIcon as Camera } from '@solar-icons/react/bold/camera'
 import { SquareArrowRightUpIcon as ExternalLink } from '@solar-icons/react/bold/square-arrow-right-up'
 import { PaletteIcon as Palette } from '@solar-icons/react/bold/palette'
 import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
@@ -745,12 +746,22 @@ export default function UserProfile() {
 
         {/* ── Cabeçalho: portefólio, alinhado à esquerda, sem cartão ── */}
         <header className="up-head">
-          <button type="button" onClick={() => setAvatarLightboxOpen(true)} aria-label={`Ver foto de ${displayName}`}
-            style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', flexShrink: 0 }}>
+          <button type="button" onClick={() => setAvatarLightboxOpen(true)}
+            aria-label={isOwnProfile ? 'Mudar foto de perfil' : `Ver foto de ${displayName}`}
+            className={isOwnProfile ? 'up-avatar-btn' : undefined}
+            style={{ position: 'relative', background: 'none', border: 'none', padding: 0, cursor: 'pointer', flexShrink: 0 }}>
             {profile.avatar_url
               ? <img src={profile.avatar_url} alt={displayName} className="up-avatar" />
               : <div className="up-avatar-placeholder">{displayName[0].toUpperCase()}</div>
             }
+            {/* Dica visual de que dá para clicar e mudar a foto, só para o
+                dono: sem isto, o clique na própria foto não tinha nenhum
+                sinal de que fazia algo. */}
+            {isOwnProfile && (
+              <span className="up-avatar-hover" aria-hidden="true">
+                <Camera size={20} color="#fff" />
+              </span>
+            )}
           </button>
 
           {avatarLightboxOpen && (
