@@ -43,6 +43,18 @@ export default function Coach() {
   const { user, profile, checkGate, consumeAI, logFunnelEvent } = useAuth()
   const isMobile = useIsMobile()
 
+  // Trava o scroll da página em si no mobile, o mesmo mecanismo que
+  // Mensagens.jsx usa (document.body.style.overflow = 'hidden') quando
+  // está a mostrar uma conversa. Um calc(100dvh - Npx) sozinho depende de
+  // valores como o safe-area-inset-bottom real do telemóvel, que variam
+  // de aparelho para aparelho, por isso não chega por si só: isto garante
+  // a sério que só a lista de mensagens dá scroll, nunca a página.
+  useEffect(() => {
+    if (!isMobile) return
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [isMobile])
+
   const [myProjects, setMyProjects] = useState([])
   const [pickerOpen, setPickerOpen] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
