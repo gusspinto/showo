@@ -295,7 +295,7 @@ export default function EmpresaPage() {
               <button type="button" onClick={() => setAvatarLightboxOpen(true)}
                 aria-label={isOwnPage ? 'Mudar logo da empresa' : `Ver logo de ${name}`}
                 className={isOwnPage ? 'ep-logo-btn' : undefined}
-                style={{ position: 'relative', background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'block' }}>
+                style={{ position: 'relative', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
                 {company.avatar_url ? (
                   <img src={company.avatar_url} alt={name} className="ep-hero-logo" style={{ width: 96, height: 96, borderRadius: 'var(--radius-lg)', objectFit: 'cover', border: `2px solid ${C.border}` }} />
                 ) : (
@@ -579,9 +579,17 @@ export default function EmpresaPage() {
 
       <style>{`
         /* Ícone de câmara ao passar o rato no logo, só para o dono: sinal
-           de que o clique muda a foto, não só a amplia. */
+           de que o clique muda a foto, não só a amplia. Grid com os dois
+           filhos na mesma célula, em vez de position:absolute + inset
+           (ver UserProfile.css para a mesma troca e o porquê). */
+        .ep-logo-btn { display: grid; }
+        .ep-logo-btn > .ep-hero-logo,
+        .ep-logo-btn > .ep-logo-hover {
+          grid-area: 1 / 1;
+        }
         .ep-logo-hover {
-          position: absolute; top: 0; right: 0; bottom: 0; left: 0; border-radius: var(--radius-lg);
+          width: 100%; height: 100%;
+          border-radius: var(--radius-lg);
           display: flex; align-items: center; justify-content: center;
           background: rgba(0, 0, 0, 0.45);
           opacity: 0; transition: opacity 0.15s ease;

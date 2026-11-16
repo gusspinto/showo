@@ -84,9 +84,21 @@
 .up-avatar { object-fit: cover; }
 
 /* Ícone de câmara que aparece ao passar o rato na própria foto, para
-   sinalizar que dá para clicar e mudar a foto (só visível para o dono). */
+   sinalizar que dá para clicar e mudar a foto (só visível para o dono).
+   Grid com os dois filhos na mesma célula, em vez de position:absolute +
+   inset/top-right-bottom-left: isto garante o tamanho do avatar sem
+   depender do containing block do botão, que noutros motores de
+   navegador (fora do Chromium usado para testar aqui) não estava a dar
+   o mesmo resultado, o overlay saía mais pequeno do que o avatar. */
+.up-avatar-btn { display: grid; }
+.up-avatar-btn > .up-avatar,
+.up-avatar-btn > .up-avatar-placeholder,
+.up-avatar-btn > .up-avatar-hover {
+  grid-area: 1 / 1;
+}
 .up-avatar-hover {
-  position: absolute; top: 0; right: 0; bottom: 0; left: 0; border-radius: 50%;
+  width: 100%; height: 100%;
+  border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   background: rgba(0, 0, 0, 0.45);
   opacity: 0; transition: opacity 0.15s ease;
