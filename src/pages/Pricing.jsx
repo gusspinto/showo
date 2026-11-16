@@ -392,6 +392,15 @@ export default function Pricing() {
                 {plan.id !== 'free' && !isCurrent && !isDowngrade && (
                   <p className="pricing-cta-note">Cancela quando quiseres, sem letras miúdas.</p>
                 )}
+                {/* Pedido do Gustavo (16/11): quem recebe um código por
+                    chamada/email não pode parecer que está a ser enganado
+                    quem não recebe. Aviso genérico, nunca o código em si
+                    (SHOWO50 é só para quem é contactado diretamente). O
+                    checkout da Whop não aplica nada sozinho, por isso tem
+                    de ser mesmo escrito à mão lá. */}
+                {plan.id !== 'free' && !isCurrent && !isDowngrade && (
+                  <p className="pricing-cta-note">Tens um código de desconto? Escreve-o no checkout, antes de pagar.</p>
+                )}
 
                 {/* "Tudo do X, mais…" em vez de repetir a mesma lista três
                     vezes: o que interessa é a diferença, não o inventário. */}
