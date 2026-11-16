@@ -187,6 +187,7 @@ export default function Register() {
   const [confirmationPending, setConfirmationPending] = useState(false)
   const [resendState, setResendState] = useState('idle')
   const [detectedOrg, setDetectedOrg] = useState(null) // { id, name, plan } | null
+  const [emailTypoSuggestion, setEmailTypoSuggestion] = useState(null) // domínio correto sugerido, ou null
 
   // ── Partner-company invite (?empresa_convite=<token>) — a professor added
   // this company in Parceiros.jsx and emailed this link. It unlocks the
@@ -218,9 +219,21 @@ export default function Register() {
 
   const [classCode, setClassCode] = useState('')
 
+  // Typos comuns de domínio, apanhados antes do envio, não depois do bounce.
+  // Caso real: "victorhsilva2104@gmail.ocm" nunca chegou a confirmar a conta,
+  // o email ficou para sempre em bounce silencioso sem o utilizador perceber
+  // porquê.
+  const COMMON_EMAIL_TYPOS = {
+    'gmail.ocm': 'gmail.com', 'gmial.com': 'gmail.com', 'gmai.com': 'gmail.com', 'gmail.con': 'gmail.com',
+    'hotmial.com': 'hotmail.com', 'hotmai.com': 'hotmail.com', 'hotmail.con': 'hotmail.com',
+    'outlok.com': 'outlook.com', 'outloo.com': 'outlook.com', 'outlook.con': 'outlook.com',
+    'yahooo.com': 'yahoo.com', 'yaho.com': 'yahoo.com', 'yahoo.con': 'yahoo.com',
+  }
+
   async function checkEmailDomain(emailValue) {
     const domain = emailValue.split('@')[1]?.trim().toLowerCase()
-    if (!domain || !domain.includes('.')) { setDetectedOrg(null); return }
+    if (!domain || !domain.includes('.')) { setDetectedOrg(null); setEmailTypoSuggestion(null); return }
+    setEmailTypoSuggestion(COMMON_EMAIL_TYPOS[domain] ?? null)
     const { data } = await supabase.rpc('get_organization_by_domain', { p_domain: domain })
     const row = Array.isArray(data) ? data[0] : data
     setDetectedOrg(row ?? null)
@@ -928,6 +941,23 @@ export default function Register() {
                     }}>
                       <DiplomaIcon size={14} />
                       <span>Conta escolar — <strong>{detectedOrg.name}</strong></span>
+                    </div>
+                  )}
+                  {emailTypoSuggestion && (
+                    <div style={{ marginTop: 8, fontSize: 13, color: C.muted }}>
+                      Querias dizer{' '}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const fixed = `${email.split('@')[0]}@${emailTypoSuggestion}`
+                          setEmail(fixed)
+                          setEmailTypoSuggestion(null)
+                        }}
+                        style={{ background: 'none', border: 'none', padding: 0, color: C.blue, fontWeight: 600, cursor: 'pointer', fontSize: 13, textDecoration: 'underline' }}
+                      >
+                        {email.split('@')[0]}@{emailTypoSuggestion}
+                      </button>
+                      ?
                     </div>
                   )}
                 </Field>
