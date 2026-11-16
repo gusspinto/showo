@@ -9,7 +9,7 @@ import { InfoCircleIcon as InfoCircle } from '@solar-icons/react/linear/info-cir
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { ONBOARDING_DISCOUNT_NOTE, ANNUAL_ONBOARDING_DISCOUNT_NOTE } from '../lib/plans'
+import { ONBOARDING_DISCOUNT_NOTE, ANNUAL_ONBOARDING_DISCOUNT_NOTE, ONBOARDING_DISCOUNT_CODE_LABEL } from '../lib/plans'
 import TestimonialsMarquee from '../components/TestimonialsMarquee'
 import './Pricing.css'
 
@@ -251,6 +251,7 @@ export default function Pricing() {
     return null
   }
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
 
   if (user && profile?.role === 'professor') {
     navigate('/dashboard', { replace: true })
@@ -264,6 +265,7 @@ export default function Pricing() {
     logFunnelEvent('checkout_started', plan.id)
     setLoading(plan.id)
     setError('')
+    setNotice('')
     try {
       const { data, error: fnErr } = await supabase.functions.invoke(
         'whop-create-checkout-session',
@@ -275,6 +277,19 @@ export default function Pricing() {
       // (checkout_started, acima, só sabe que a pessoa clicou, não que o
       // pedido teve sucesso).
       logFunnelEvent('checkout_redirected', plan.id)
+      // O preço com desconto que esta página mostra (confirmado na Whop,
+      // 16/11: o plano está configurado com o preço cheio, €8,99, não os
+      // €4,49) só sai se a pessoa escrever o código no checkout da Whop.
+      // Não há forma de o aplicar sozinho a partir daqui, por isso copia-se
+      // o código antes de redirecionar, para ela só ter de colar.
+      const discounted = annual ? plan.priceAnnualDiscounted : plan.priceMonthlyDiscounted
+      if (discounted) {
+        try {
+          await navigator.clipboard.writeText(ONBOARDING_DISCOUNT_CODE_LABEL)
+          setNotice(`Código ${ONBOARDING_DISCOUNT_CODE_LABEL} copiado. Cola-o no checkout para pagares ${discounted}.`)
+          await new Promise(resolve => setTimeout(resolve, 1200))
+        } catch { /* clipboard pode falhar (sem permissão/http). Segue sem bloquear o pagamento */ }
+      }
       window.location.href = data.url
     } catch {
       setError('Erro ao iniciar pagamento. Tenta novamente.')
@@ -288,6 +303,7 @@ export default function Pricing() {
       <Navbar />
       <div className="pricing-container">
         {error && <div className="pricing-toast">{error}</div>}
+        {notice && <div className="pricing-toast pricing-toast--info">{notice}</div>}
 
         <header className="pricing-header">
           <h1>Mostra o trabalho. Não contes sobre ele.</h1>
@@ -392,6 +408,11 @@ export default function Pricing() {
                 {plan.id !== 'free' && !isCurrent && !isDowngrade && (
                   <p className="pricing-cta-note">Cancela quando quiseres, sem letras miúdas.</p>
                 )}
+                {/* O ONBOARDING_DISCOUNT_NOTE acima, junto ao preço, já diz
+                    "com o código SHOWO50" à vista de toda a gente. É o que
+                    o Gustavo quis (16/11): o código não é segredo, é a
+                    chamada em si que é exclusiva ("liguei só a um grupo
+                    pequeno"), não o código. Nada a acrescentar aqui. */}
 
                 {/* "Tudo do X, mais…" em vez de repetir a mesma lista três
                     vezes: o que interessa é a diferença, não o inventário. */}
