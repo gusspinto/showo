@@ -6,38 +6,22 @@ import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
 
 /* ═══════════════════════════════════════════════════════════════════════════
    PÁGINA DE CREDIBILIDADE — separada de propósito do /admin de análise.
-   O /admin é feito para nós (Gustavo/Bruno) decidirmos coisas, cheio de
-   filtros e tabelas técnicas. Esta é feita para ser mostrada a outras
-   pessoas: um screenshot direto, com o visual do próprio produto (fundo
-   #1C2333, azul #3B82F6), não uma tabela de admin genérica.
+   O /admin é feito para nós (Gustavo/Bruno) decidirmos coisas. Esta é feita
+   para ser mostrada a outras pessoas: um screenshot direto.
 
-   Números sempre reais e verificáveis, nunca "esta semana" por calendário
-   (dá 0 numa segunda de manhã e seria falso postar assim) — sempre janelas
-   móveis dos últimos N dias.
+   2026-11-16, 2ª versão: a 1ª (grelha de cartões todos iguais, etiqueta em
+   maiúsculas + número gigante) parecia o template genérico de "dashboard
+   de IA", o Gustavo apontou isso diretamente. Refeito como página
+   editorial: um número hero sozinho, uma faixa de factos finos sem
+   caixas, e um projeto real em destaque com citação, em vez de mais
+   cartões iguais.
+
+   Números sempre em janela móvel de 7 dias, nunca "esta semana" por
+   calendário (dá 0 numa segunda de manhã, seria falso postar assim).
    ══════════════════════════════════════════════════════════════════════════ */
 
 const BG = '#1C2333'
 const BLUE = '#3B82F6'
-const CARD_BG = 'rgba(255,255,255,0.04)'
-const CARD_BORDER = 'rgba(255,255,255,0.08)'
-
-function StatCard({ label, value, sub, big }) {
-  return (
-    <div style={{
-      background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 18,
-      padding: big ? '32px 28px' : '26px 24px',
-      gridColumn: big ? 'span 2' : 'span 1',
-    }}>
-      <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
-        {label}
-      </div>
-      <div style={{ fontSize: big ? 64 : 48, fontWeight: 800, color: '#fff', lineHeight: 1, letterSpacing: '-1px' }}>
-        {value}
-      </div>
-      {sub && <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.65)', marginTop: 10, lineHeight: 1.5 }}>{sub}</div>}
-    </div>
-  )
-}
 
 export default function AdminCredibilidade() {
   const navigate = useNavigate()
@@ -62,12 +46,22 @@ export default function AdminCredibilidade() {
         totalProjectsRes,
         newProjectsRes,
         retentionRes,
+        activityRes,
+        topProjectRes,
       ] = await Promise.all([
         supabase.from('profiles').select('id', { count: 'exact', head: true }),
         supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', sevenDaysAgo),
         supabase.from('projects').select('id', { count: 'exact', head: true }),
         supabase.from('projects').select('id', { count: 'exact', head: true }).gte('created_at', sevenDaysAgo),
         supabase.rpc('admin_get_retention_snapshot'),
+        supabase.rpc('admin_get_activity_stats', { p_days: 7 }),
+        supabase.from('projects')
+          .select('name, slug, score, creator_name')
+          .eq('visibility', 'public')
+          .not('score', 'is', null)
+          .order('score', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
       ])
 
       if (cancelled) return
@@ -82,9 +76,11 @@ export default function AdminCredibilidade() {
         newUsers7d: newUsersRes.count ?? 0,
         totalProjects: totalProjectsRes.count ?? 0,
         newProjects7d: newProjectsRes.count ?? 0,
+        activeUsers7d: activityRes.data?.active_range?.length ?? null,
         returning: snap?.month_prior_returned ?? null,
         returningOf: snap?.month_prior_count ?? null,
         retentionRate,
+        topProject: topProjectRes.data ?? null,
       })
       setLoading(false)
     }
@@ -95,63 +91,100 @@ export default function AdminCredibilidade() {
   if (authLoading || !isAdmin) return null
 
   return (
-    <div style={{ minHeight: '100vh', background: BG, padding: '40px 24px 80px', fontFamily: 'inherit' }}>
-      <div style={{ maxWidth: 880, margin: '0 auto' }}>
+    <div style={{ minHeight: '100vh', background: BG, padding: '48px 24px 100px' }}>
+      <div style={{ maxWidth: 760, margin: '0 auto' }}>
         <button
           onClick={() => navigate('/admin')}
           style={{
             display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none',
-            color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: 600, cursor: 'pointer',
-            padding: 0, marginBottom: 28, fontFamily: 'inherit',
+            color: 'rgba(255,255,255,0.45)', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+            padding: 0, marginBottom: 48, fontFamily: 'inherit',
           }}
         >
           <ArrowLeft size={14} /> Voltar ao Admin
         </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
-          <img src="/icon.png" alt="Showo" width={36} height={36} />
-          <span style={{ fontSize: 15, fontWeight: 700, color: 'rgba(255,255,255,0.5)', letterSpacing: 1, textTransform: 'uppercase' }}>Showo</span>
-        </div>
-        <h1 style={{ fontSize: 30, fontWeight: 800, color: '#fff', margin: '0 0 8px', letterSpacing: '-0.5px' }}>
-          Números reais, prontos a mostrar
-        </h1>
-        <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.55)', margin: '0 0 36px', lineHeight: 1.6 }}>
-          Esta página é só para screenshot. Pode ser mostrada a utilizadores, a parceiros, a quem quiseres. Para a análise interna a sério, usa o Admin normal.
-        </p>
-
         {loading && <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14 }}>A carregar...</div>}
 
         {!loading && stats && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
-            <StatCard
-              big
-              label="Utilizadores"
-              value={stats.totalUsers.toLocaleString('pt-PT')}
-              sub={`+${stats.newUsers7d} nos últimos 7 dias`}
-            />
-            <StatCard
-              label="Projetos criados"
-              value={stats.totalProjects.toLocaleString('pt-PT')}
-              sub={`+${stats.newProjects7d} nos últimos 7 dias`}
-            />
-            <StatCard
-              label="Taxa de retenção"
-              value={stats.retentionRate != null ? `${stats.retentionRate}%` : '—'}
-              sub="Voltaram ao mês seguinte"
-            />
-            <StatCard
-              label="Pessoas que voltam"
-              value={stats.returning != null ? stats.returning.toLocaleString('pt-PT') : '—'}
-              sub={stats.returningOf != null ? `de ${stats.returningOf.toLocaleString('pt-PT')} analisados` : ''}
-            />
-          </div>
+          <>
+            {/* Hero: um número sozinho, sem caixa, sem etiqueta em
+                maiúsculas. É o que se lê primeiro num screenshot. */}
+            <div style={{ marginBottom: 56 }}>
+              <div style={{
+                fontSize: 'clamp(72px, 14vw, 128px)', fontWeight: 800, color: '#fff',
+                lineHeight: 0.95, letterSpacing: '-3px', fontFamily: 'var(--font-heading)',
+              }}>
+                {stats.totalUsers.toLocaleString('pt-PT')}
+              </div>
+              <div style={{ fontSize: 19, color: 'rgba(255,255,255,0.6)', marginTop: 10 }}>
+                pessoas já construíram o seu portefólio no Showo
+                {stats.newUsers7d > 0 && <span style={{ color: BLUE, fontWeight: 600 }}> · +{stats.newUsers7d} esta semana</span>}
+              </div>
+            </div>
+
+            {/* Faixa de factos: linhas finas, não caixas repetidas. Cada um
+                tem um peso visual diferente, de propósito. */}
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.12)' }}>
+              <FactRow
+                value={stats.totalProjects.toLocaleString('pt-PT')}
+                label="projetos publicados"
+                detail={stats.newProjects7d > 0 ? `${stats.newProjects7d} novos nos últimos 7 dias` : null}
+              />
+              {stats.activeUsers7d != null && (
+                <FactRow
+                  value={stats.activeUsers7d.toLocaleString('pt-PT')}
+                  label="pessoas ativas nos últimos 7 dias"
+                />
+              )}
+              {stats.retentionRate != null && (
+                <FactRow
+                  value={`${stats.retentionRate}%`}
+                  label="voltam ao mês seguinte"
+                  detail={stats.returningOf != null ? `${stats.returning} de ${stats.returningOf} analisados` : null}
+                />
+              )}
+            </div>
+
+            {/* Projeto real em destaque, como uma citação, não um cartão de
+                estatística. É o que mais convence quem nunca ouviu falar do
+                Showo: ver uma pessoa real a sério, não um número abstrato. */}
+            {stats.topProject && (
+              <div style={{ marginTop: 56, paddingLeft: 20, borderLeft: `3px solid ${BLUE}` }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 10 }}>
+                  Projeto com melhor score no Showo
+                </div>
+                <div style={{ fontSize: 24, fontWeight: 700, color: '#fff', lineHeight: 1.3, marginBottom: 6 }}>
+                  {stats.topProject.name}
+                </div>
+                <div style={{ fontSize: 15, color: 'rgba(255,255,255,0.55)' }}>
+                  {stats.topProject.creator_name ? `${stats.topProject.creator_name} · ` : ''}score {stats.topProject.score}
+                </div>
+              </div>
+            )}
+          </>
         )}
 
-        <div style={{ marginTop: 40, padding: '16px 20px', background: 'rgba(59,130,246,0.1)', border: `1px solid rgba(59,130,246,0.25)`, borderRadius: 12 }}>
-          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.6 }}>
-            Tira o screenshot só desta página, não da barra do navegador nem do botão "Voltar ao Admin" acima.
-          </div>
+        <div style={{ marginTop: 64, fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>
+          Tira o screenshot só do conteúdo acima, não da barra do navegador.
         </div>
+      </div>
+    </div>
+  )
+}
+
+function FactRow({ value, label, detail }) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'baseline', gap: 18, flexWrap: 'wrap',
+      padding: '22px 0', borderBottom: '1px solid rgba(255,255,255,0.12)',
+    }}>
+      <div style={{ fontSize: 36, fontWeight: 800, color: '#fff', fontFamily: 'var(--font-heading)', minWidth: 100 }}>
+        {value}
+      </div>
+      <div style={{ flex: 1, minWidth: 180 }}>
+        <div style={{ fontSize: 16, color: 'rgba(255,255,255,0.75)' }}>{label}</div>
+        {detail && <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>{detail}</div>}
       </div>
     </div>
   )
