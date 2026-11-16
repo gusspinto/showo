@@ -468,7 +468,6 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
     { id: 'produto', label: 'Produto' },
     { id: 'negocio', label: 'Negócio' },
     { id: 'pessoas', label: 'Pessoas' },
-    { id: 'redes', label: 'Redes sociais' },
   ]
 
   // Contagens de utilizadores ativos vêm agregadas do servidor (nunca linhas
@@ -1509,84 +1508,6 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
         </div>
       </div>
       </>}
-
-      {subTab === 'redes' && <SocialProofTab users={users} projects={projects} />}
-    </div>
-  )
-}
-
-// ─── SOCIAL PROOF TAB (dados prontos a postar nas redes) ────
-function SocialProofTab({ users, projects }) {
-  const navigate = useNavigate()
-  const [copiedId, setCopiedId] = useState(null)
-
-  const publicProjects = projects.filter(p => p.visibility === 'public')
-  const sevenDaysAgo = new Date(Date.now() - 7 * 86400000)
-  const projectsLast7d = projects.filter(p => new Date(p.created_at) >= sevenDaysAgo).length
-  const topProjects = [...publicProjects]
-    .filter(p => p.score != null)
-    .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
-    .slice(0, 6)
-
-  const copy = (id, text) => {
-    navigator.clipboard.writeText(text)
-    setCopiedId(id)
-    setTimeout(() => setCopiedId(prev => (prev === id ? null : prev)), 1500)
-  }
-
-  const CopyButton = ({ id, text }) => (
-    <button
-      onClick={() => copy(id, text)}
-      style={{ padding: '4px 10px', borderRadius: 'var(--radius-full)', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', border: `1px solid ${C.border}`, background: 'transparent', color: copiedId === id ? C.green : C.muted, flexShrink: 0 }}
-    >
-      {copiedId === id ? 'Copiado' : 'Copiar'}
-    </button>
-  )
-
-  return (
-    <div>
-      {/* Só números verdadeiros, nunca "esta semana" por calendário. Numa
-          segunda de manhã isso dá sempre 0 e seria mentira postar assim.
-          "Últimos 7 dias" é sempre real, não importa o dia em que abres isto. */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 28 }}>
-        {[
-          { label: 'Utilizadores (total)', value: users.length, texto: `Já somos ${users.length} pessoas a construir o nosso portefólio no Showo.` },
-          { label: 'Projetos publicados (total)', value: publicProjects.length, texto: `${publicProjects.length} projetos já publicados no Showo.` },
-          { label: 'Projetos nos últimos 7 dias', value: projectsLast7d, texto: `Nos últimos 7 dias, ${projectsLast7d} pessoas criaram um projeto novo no Showo.` },
-        ].map(k => (
-          <div key={k.label} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 14, padding: '20px 22px' }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>{k.label}</div>
-            <div style={{ fontSize: 34, fontWeight: 400, color: C.blue, letterSpacing: '-0.5px', lineHeight: 1, fontFamily: 'var(--font-heading)', marginBottom: 10 }}>{k.value}</div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-              <div style={{ fontSize: 12, color: C.subtle, lineHeight: 1.4 }}>{k.texto}</div>
-              <CopyButton id={k.label} text={k.texto} />
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '20px 22px' }}>
-        <h3 style={{ margin: '0 0 4px', fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Projetos com melhor score (públicos)</h3>
-        <p style={{ margin: '0 0 16px', fontSize: 11, color: C.subtle }}>Pede sempre permissão ao dono antes de mostrares o projeto dele numa Story ou post.</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {topProjects.map(p => {
-            const texto = `Isto não existia há 2 meses. "${p.name}" é um portefólio feito em horas, não semanas, no Showo.`
-            return (
-              <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div
-                  onClick={() => p.slug && navigate(`/projeto/${p.slug}`)}
-                  style={{ flex: 1, minWidth: 0, cursor: p.slug ? 'pointer' : 'default' }}
-                >
-                  <div style={{ fontSize: 13, fontWeight: 600, color: C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
-                  <div style={{ fontSize: 11, color: C.subtle }}>{p.creator_name || '—'} · score {p.score}</div>
-                </div>
-                <CopyButton id={p.id} text={texto} />
-              </div>
-            )
-          })}
-          {topProjects.length === 0 && <div style={{ fontSize: 12, color: C.subtle }}>Sem projetos públicos com score ainda.</div>}
-        </div>
-      </div>
     </div>
   )
 }
@@ -3009,6 +2930,12 @@ export default function Admin() {
               <h1 style={{ margin: 0, fontSize: 24, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.5px' }}>Painel de Administração</h1>
               <p style={{ margin: 0, fontSize: 13, color: C.muted }}>Gestão completa de utilizadores e projetos</p>
             </div>
+            <button
+              onClick={() => navigate('/admin/credibilidade')}
+              style={{ marginLeft: 'auto', padding: '8px 16px', borderRadius: 'var(--radius-full)', fontSize: 12, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', border: `1px solid ${C.border}`, background: 'transparent', color: C.blue }}
+            >
+              Página de credibilidade →
+            </button>
           </div>
         </div>
 
