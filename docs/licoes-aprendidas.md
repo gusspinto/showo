@@ -4,6 +4,11 @@ Registo automático de erros corrigidos, para o Claude Code não os repetir. Cad
 
 Este ficheiro é lido automaticamente em todas as sessões (via `@docs/licoes-aprendidas.md` no `CLAUDE.md`) — não apagar entradas antigas sem falar com o Gustavo primeiro.
 
+## [2026-11-16] Filtro de onboarding matou a campanha de destaque semanal durante 3 semanas, sem nenhum erro aparecer
+- O que correu mal: a 31/10, acrescentou-se um filtro a `send-featured-notification` para não notificar quem está a meio da sequência de onboarding (já recebe 1 email por dia dessa sequência). Isso parecia uma proteção razoável, mas criou uma correlação não prevista: quem constrói um projeto bom o suficiente para ficar em destaque é quase sempre alguém registado há pouco tempo, ainda dentro dos 14 dias de onboarding. Resultado: os 4 vencedores das 2 semanas seguintes (02/11 e 09/11) foram TODOS saltados pelo filtro, zero emails enviados, sem nenhum erro no código, `featured_weeks` continuava a ser escrito normalmente (a escolha dos vencedores funcionava), só o envio em si morria silenciosamente em "skipped".
+- A correção: removido o filtro de onboarding especificamente para `send-featured-notification` (mantidos os outros filtros: opt-out e cooldown de 6 dias). Decisão explícita do Gustavo: ser destacado é especial o suficiente para quebrar a regra do "1 email por dia". Confirmado ao vivo depois do deploy: 2 candidatos, 2 enviados, 0 erros.
+- Regra geral para não repetir: quando se adiciona uma regra "não envies a quem está a fazer X" a uma campanha nova, perguntar sempre se o público-alvo dessa campanha tem sobreposição estrutural com X, não só "faz sentido em teoria". Aqui "melhores projetos novos" e "ainda em onboarding" sobrepõem-se quase sempre, por definição. Um filtro que bloqueia 100% dos casos nunca aparece como erro, só como silêncio, por isso contar candidatos vs. enviados em cada corrida (não só "succeeded") é a única forma de apanhar isto cedo.
+
 <!-- Novas entradas vão sendo adicionadas aqui pelo Claude Code, mais recentes no fundo. -->
 
 ## [2026-09-18] Commit direto em `main` por engano, duas vezes na mesma sessão
