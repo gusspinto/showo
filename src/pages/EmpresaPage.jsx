@@ -100,6 +100,14 @@ export default function EmpresaPage() {
     setEditingCompany(true)
   }
 
+  // Mesmo ajuste do UserProfile.jsx: a .nb-topbar é fixed até right:20px
+  // sempre, mesmo com este painel aberto por cima, e ficava a tapar-lhe o
+  // topo. Ver Navbar.css para o lado que desconta.
+  useEffect(() => {
+    document.body.classList.toggle('customizer-open', editingCompany)
+    return () => document.body.classList.remove('customizer-open')
+  }, [editingCompany])
+
   async function saveCompanyEdit() {
     setSavingCompany(true)
     setCompanyEditError('')

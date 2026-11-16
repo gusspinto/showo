@@ -493,6 +493,15 @@ export default function UserProfile() {
       .then(({ data }) => setRecruiterVagas(data || []))
   }, [user, isRecruiter])
 
+  // A .nb-topbar (Plus/feedback/conta) é fixed e ia até right:20px sempre,
+  // mesmo com este painel aberto por cima, por isso ficava a tapar-lhe o
+  // topo. Com este painel aberto, a .nb-topbar pára antes da borda
+  // esquerda do painel (ver Navbar.css).
+  useEffect(() => {
+    document.body.classList.toggle('customizer-open', customizing)
+    return () => document.body.classList.remove('customizer-open')
+  }, [customizing])
+
   // Portfolio view tracking — mirrors the project view counter on ProjectPage.
   // Bump profiles.views once per browser session per profile, and (after a short
   // dwell, so a quick bounce doesn't count) fire the "someone viewed your

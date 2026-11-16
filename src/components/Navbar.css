@@ -571,6 +571,11 @@ body.sidebar-collapsed .proj-manage-float { left: 84px; }
     transition: left 0.22s cubic-bezier(0.4,0,0.2,1);
   }
   body.sidebar-collapsed .nb-topbar { left: 80px; }
+  /* O painel de editar perfil/empresa (.pc-panel, ProfileCustomizer.css) é
+     fixed à direita com 340px de largura, por cima de tudo. Sem isto, a
+     nb-topbar ia sempre até right:20px e ficava a tapar o topo do painel
+     quando ele abria. */
+  body.customizer-open .nb-topbar { right: 360px; transition: right 0.18s var(--ease-out, ease), left 0.22s cubic-bezier(0.4,0,0.2,1); }
 }
 
 /* .proj-manage-float é position:fixed, fora do fluxo — nada reservava
