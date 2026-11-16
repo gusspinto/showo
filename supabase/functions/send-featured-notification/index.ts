@@ -16,6 +16,15 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
    verify_jwt=false, como as funções irmãs (send-weekly-checkin,
    send-onboarding-sequence) — a autorização é o x-cron-secret próprio,
    não o gateway JWT do Supabase.
+
+   2026-11-16: removido o filtro "está a meio do onboarding" (acrescentado
+   em 2026-10-31). Confirmado por dados reais que os 4 vencedores das
+   últimas 2 semanas (02/11 e 09/11) tinham todos onboarding_sequence_step
+   < 14, por isso o filtro bloqueou a campanha inteira sem exceção: quem
+   constrói rápido o suficiente para ficar em destaque é quase sempre
+   alguém registado há pouco. Decisão do Gustavo: abrir exceção aqui, ser
+   destacado é especial o suficiente para quebrar a regra do "1 email por
+   dia" do onboarding.
    ══════════════════════════════════════════════════════════════════════════ */
 
 const FROM = 'Showo <hello@showo.pt>'
@@ -140,13 +149,13 @@ Deno.serve(async (req) => {
 
         const { data: profile } = await supabase
           .from('profiles')
-          .select('full_name, featured_notification_opted_out, onboarding_sequence_step, onboarding_opted_out')
+          .select('full_name, featured_notification_opted_out')
           .eq('id', row.user_id)
           .single()
         if (!testProjectId && profile?.featured_notification_opted_out) { skipped++; continue }
-        // Quem está a meio do onboarding já recebe 1 email por dia dessa
-        // sequência. Mesma regra aplicada às outras campanhas em 2026-10-31.
-        if (!testProjectId && profile?.onboarding_sequence_step != null && profile.onboarding_sequence_step < 14 && !profile.onboarding_opted_out) { skipped++; continue }
+        // Exceção decidida em 2026-11-16: ser destacado é especial o
+        // suficiente para quebrar a regra de "1 email por dia" do
+        // onboarding (ver comentário no topo do ficheiro).
 
         const { data: userData, error: userErr } = await supabase.auth.admin.getUserById(row.user_id)
         if (userErr || !userData?.user?.email) continue
@@ -228,13 +237,12 @@ Deno.serve(async (req) => {
 
           const { data: profile } = await supabase
             .from('profiles')
-            .select('full_name, featured_notification_opted_out, onboarding_sequence_step, onboarding_opted_out')
+            .select('full_name, featured_notification_opted_out')
             .eq('id', proj.user_id)
             .single()
           if (profile?.featured_notification_opted_out) continue
-          // Quem está a meio do onboarding já recebe 1 email por dia dessa
-          // sequência. Mesma regra aplicada às outras campanhas em 2026-10-31.
-          if (profile?.onboarding_sequence_step != null && profile.onboarding_sequence_step < 14 && !profile.onboarding_opted_out) continue
+          // Exceção decidida em 2026-11-16: mesma razão do bloco principal
+          // acima, ver comentário no topo do ficheiro.
 
           const { data: userData } = await supabase.auth.admin.getUserById(proj.user_id)
           if (!userData?.user?.email) continue

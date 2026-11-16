@@ -2930,6 +2930,12 @@ export default function Admin() {
               <h1 style={{ margin: 0, fontSize: 24, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.5px' }}>Painel de Administração</h1>
               <p style={{ margin: 0, fontSize: 13, color: C.muted }}>Gestão completa de utilizadores e projetos</p>
             </div>
+            <button
+              onClick={() => navigate('/admin/credibilidade')}
+              style={{ marginLeft: 'auto', padding: '8px 16px', borderRadius: 'var(--radius-full)', fontSize: 12, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', border: `1px solid ${C.border}`, background: 'transparent', color: C.blue }}
+            >
+              Página de credibilidade →
+            </button>
           </div>
         </div>
 

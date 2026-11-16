@@ -247,6 +247,24 @@ export function AuthProvider({ children }) {
       }
       fetchAiUsage()
       fetchVagaApplications(uid)
+      // signup_country/signup_city existiam na BD e já eram lidos em todo o
+      // lado (Admin.jsx), mas nunca escritos em lado nenhum. O comentário em
+      // Register.jsx já previa fazer isto aqui, "no primeiro login real",
+      // mas ninguém tinha implementado a chamada. ipwho.is: geolocalização
+      // por IP gratuita, sem chave, HTTPS. Falha silenciosa é aceitável, não
+      // é crítico para nada, por isso timeout curto e sem retry.
+      if (!data.signup_country) {
+        fetch('https://ipwho.is/', { signal: AbortSignal.timeout(4000) })
+          .then(r => r.json())
+          .then(geo => {
+            if (!geo?.success || !geo.country) return
+            supabase.from('profiles')
+              .update({ signup_country: geo.country, signup_city: geo.city ?? null })
+              .eq('id', uid)
+              .then(() => {})
+          })
+          .catch(() => {})
+      }
     }
   }, [fetchAiUsage, fetchVagaApplications])
 
