@@ -352,14 +352,14 @@ export default function EmpresaPage() {
             <div className="ep-hero-actions">
               {isOwnPage ? (
                 <button onClick={openCompanyEditor}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-full)', padding: '10px 18px', color: C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s, color 0.15s' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-md)', padding: '10px 18px', color: C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s, color 0.15s' }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-border-hover)'; e.currentTarget.style.color = C.text }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}>
                   <Settings size={14} /> Editar
                 </button>
               ) : user ? (
                 <button onClick={() => navigate(`/mensagens?to=${company.id}`)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 7, background: C.blue, border: 'none', borderRadius: 'var(--radius-full)', padding: '10px 18px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 10px var(--color-primary-subtle)' }}>
+                  style={{ display: 'flex', alignItems: 'center', gap: 7, background: C.blue, border: 'none', borderRadius: 'var(--radius-md)', padding: '10px 18px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 10px var(--color-primary-subtle)' }}>
                   <MessageSquare size={14} /> Contactar
                 </button>
               ) : null}
@@ -492,7 +492,7 @@ export default function EmpresaPage() {
 
                     <div style={{ marginTop: 4 }}>
                       {st ? (
-                        <span style={{ fontSize: 13, fontWeight: 700, color: st.color, background: st.bg, borderRadius: 'var(--radius-full)', padding: '10px 14px', display: 'inline-block' }}>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: st.color, background: st.bg, borderRadius: 'var(--radius-md)', padding: '10px 14px', display: 'inline-block' }}>
                           {st.label}
                         </span>
                       ) : user && isStudent ? (
@@ -502,12 +502,12 @@ export default function EmpresaPage() {
                         // deixou de fazer sentido aqui sozinho, a vaga
                         // nunca se vê completa neste resumo.
                         <button onClick={e => { e.stopPropagation(); navigate(`/vagas?v=${v.id}&open=1`) }}
-                          style={{ background: C.blue, border: 'none', borderRadius: 'var(--radius-full)', padding: '10px 18px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 10px var(--color-primary-subtle)' }}>
+                          style={{ background: C.blue, border: 'none', borderRadius: 'var(--radius-md)', padding: '10px 18px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 10px var(--color-primary-subtle)' }}>
                           Ver mais
                         </button>
                       ) : !user ? (
                         <button onClick={e => { e.stopPropagation(); navigate('/login') }}
-                          style={{ background: C.blue, border: 'none', borderRadius: 'var(--radius-full)', padding: '10px 18px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                          style={{ background: C.blue, border: 'none', borderRadius: 'var(--radius-md)', padding: '10px 18px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
                           Entrar para candidatar
                         </button>
                       ) : null}
@@ -546,7 +546,7 @@ export default function EmpresaPage() {
               </p>
             </div>
             <button onClick={() => navigate('/register')}
-              style={{ flexShrink: 0, background: C.blue, border: 'none', borderRadius: 'var(--radius-full)', padding: '10px 20px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+              style={{ flexShrink: 0, background: C.blue, border: 'none', borderRadius: 'var(--radius-md)', padding: '10px 20px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
               Criar conta grátis
             </button>
           </div>

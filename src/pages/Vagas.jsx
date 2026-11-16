@@ -296,7 +296,7 @@ function PublicCard({ vaga, recruiterProfile, myStatus, onVerMais, onShare, isAl
       <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
         {recruiterProfile?.username && (
           <button onClick={() => navigate(`/empresa/${recruiterProfile.username}`)}
-            style={{ flex: isAluno ? 1 : 'none', width: isAluno ? 'auto' : '100%', fontSize: 13, fontWeight: 700, color: C.text, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-full)', padding: '10px 14px', cursor: 'pointer', fontFamily: 'inherit' }}>
+            style={{ flex: isAluno ? 1 : 'none', width: isAluno ? 'auto' : '100%', fontSize: 13, fontWeight: 700, color: C.text, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 'var(--radius-md)', padding: '10px 14px', cursor: 'pointer', fontFamily: 'inherit' }}>
             Ver empresa
           </button>
         )}
@@ -306,12 +306,12 @@ function PublicCard({ vaga, recruiterProfile, myStatus, onVerMais, onShare, isAl
           // campo em vez de recalcular `${st.color}1a`, que é CSS inválido
           // para os três estados em var() e ficava sem fundo nenhum.
           st ? (
-            <span style={{ flex: 1.6, fontSize: 13, fontWeight: 700, color: st.color, background: st.bg, borderRadius: 'var(--radius-full)', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <span style={{ flex: 1.6, fontSize: 13, fontWeight: 700, color: st.color, background: st.bg, borderRadius: 'var(--radius-md)', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
               <Check size={13} /> {st.label}
             </span>
           ) : (
             <button onClick={() => onVerMais(vaga)}
-              style={{ flex: 1.6, fontSize: 13, fontWeight: 700, color: '#fff', background: 'var(--color-primary)', border: 'none', borderRadius: 'var(--radius-full)', padding: '10px 14px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, boxShadow: '0 2px 10px var(--color-primary-subtle)' }}>
+              style={{ flex: 1.6, fontSize: 13, fontWeight: 700, color: '#fff', background: 'var(--color-primary)', border: 'none', borderRadius: 'var(--radius-md)', padding: '10px 14px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, boxShadow: '0 2px 10px var(--color-primary-subtle)' }}>
               Ver mais
             </button>
           )
