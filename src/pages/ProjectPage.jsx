@@ -2377,9 +2377,13 @@ export default function ProjectPage() {
     if (found.id === user?.id) { setInviteMsg({ type: 'error', text: 'Não podes convidar-te a ti próprio.' }); return }
     setInviting(true); setInviteMsg(null)
     try {
+      // invited_by em falta era a causa real do convite mostrar sempre
+      // "Convidado por um colega" nas notificações (Navbar.jsx): a RPC
+      // get_pending_invites junta profiles pelo invited_by, e sem isto o
+      // campo fica sempre null, não é um problema de permissões.
       const { error } = await supabase
         .from('project_collaborators')
-        .upsert({ project_id: project.id, user_id: found.id, status: 'pending', sections: [] }, { onConflict: 'project_id,user_id' })
+        .upsert({ project_id: project.id, user_id: found.id, invited_by: user?.id, status: 'pending', sections: [] }, { onConflict: 'project_id,user_id' })
       if (error) throw error
       setInviteMsg({ type: 'success', text: `Convite enviado para ${found.full_name || found.username}!` })
       setInviteInput(''); setInviteSelectedUser(null)
