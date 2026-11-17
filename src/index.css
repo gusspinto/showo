@@ -156,8 +156,12 @@ body.light nav {
    estava a sobrepor-se sempre, pintando-o de branco liso. :not(.auth-input)
    exclui o mesmo campo nos ecrãs de login/registo — esses usam um campo
    com só underline (sem caixa), e este !important tinha mais especificidade
-   do que a regra do .auth-input, pintando uma caixa branca por cima. */
-body.light input:not(.home-start-input):not(.auth-input),
+   do que a regra do .auth-input, pintando uma caixa branca por cima.
+   :not(.sk-tag-input) exclui o campo de texto do SkillsPicker, esse campo
+   vive dentro de uma caixa própria (o "chip row" com as competências já
+   escolhidas) que já tem o seu próprio fundo, e este !important pintava
+   uma caixa branca sólida só à volta do input, por cima dessa caixa. */
+body.light input:not(.home-start-input):not(.auth-input):not(.sk-tag-input),
 body.light textarea,
 body.light select {
   background: var(--color-input-bg) !important;

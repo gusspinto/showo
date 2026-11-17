@@ -117,6 +117,7 @@ export default function SkillsPicker({ value = [], onChange, max = 10, label = '
         {selected.length < max && (
           <input
             ref={inputRef}
+            className="sk-tag-input"
             value={input}
             onChange={e => { setInput(e.target.value); setShowSuggestions(true) }}
             onKeyDown={handleKey}
@@ -125,7 +126,8 @@ export default function SkillsPicker({ value = [], onChange, max = 10, label = '
             placeholder={selected.length === 0 ? 'Adiciona competências…' : ''}
             autoComplete="off"
             style={{
-              flex: 1, minWidth: 120, background: 'none', border: 'none', outline: 'none',
+              flex: 1, minWidth: 120, background: 'transparent', border: 'none', outline: 'none',
+              WebkitAppearance: 'none', appearance: 'none',
               fontSize: 13, color: 'var(--color-text)', fontFamily: 'inherit',
             }}
           />
