@@ -362,7 +362,11 @@ export default function Settings() {
   function handleAvatarChange(e) {
     const file = e.target.files?.[0]
     if (!file || !user) return
-    if (file.size > 10 * 1024 * 1024) { setSaveMsg({ type: 'err', text: 'A imagem não pode ter mais de 10 MB.' }); return }
+    // O bucket "avatars" (018_avatar_upload.sql) tem file_size_limit de
+    // 2 MB a sério no Supabase. O limite aqui estava em 10 MB (e a dica
+    // abaixo dizia "máx. 5 MB"), deixando ficheiros maiores passar no
+    // cliente e só falhar mais tarde no upload, sem explicar porquê.
+    if (file.size > 2 * 1024 * 1024) { setSaveMsg({ type: 'err', text: 'A imagem não pode ter mais de 2 MB.' }); return }
     setAvatarCropFile(file)
     if (e.target) e.target.value = ''
   }
@@ -373,7 +377,10 @@ export default function Settings() {
     setAvatarUploading(true); setSaveMsg(null)
     const path = `${user.id}/avatar.webp`
     const { error: upErr } = await supabase.storage.from('avatars').upload(path, blob, { upsert: true, contentType: 'image/webp' })
-    if (upErr) { setSaveMsg({ type: 'err', text: 'Erro ao carregar imagem.' }); setAvatarUploading(false); return }
+    if (upErr) {
+      setSaveMsg({ type: 'err', text: upErr.message?.toLowerCase().includes('size') ? 'A imagem recortada ainda é demasiado grande. Tenta recortar uma área mais pequena.' : 'Erro ao carregar imagem.' })
+      setAvatarUploading(false); return
+    }
     const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
     const bustedUrl = `${publicUrl}?t=${Date.now()}`
     await supabase.from('profiles').update({ avatar_url: bustedUrl }).eq('id', user.id)
@@ -544,7 +551,7 @@ export default function Settings() {
           {avatarUploading ? 'A carregar…' : 'Alterar foto'}
         </button>
         {avatarUrl && <button type="button" onClick={handleRemoveAvatar} disabled={avatarUploading} className="settings-avatar-remove">Remover foto</button>}
-        <p className="settings-hint mt-2">JPG, PNG ou WebP · máx. 5 MB</p>
+        <p className="settings-hint mt-2">JPG, PNG ou WebP · máx. 2 MB</p>
       </div>
     </div>
   )

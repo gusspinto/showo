@@ -576,16 +576,25 @@ export default function Coach() {
       </div>
 
       {/* O painel de histórico no mobile (coach-history-panel, z-index
-          300) e este portal do chat (z-index 150) ficavam em stacking
-          contexts diferentes quando o painel renderizava dentro de
-          .page-content (filho de #root) e o chat noutro portal (filho
-          direto de document.body): medido com elementsFromPoint, o
-          painel pintava sempre por baixo do chat, apesar do z-index
-          maior. Os dois têm de ser filhos diretos do mesmo portal para o
-          z-index entre eles fazer sentido. */}
+          300) e este portal do chat ficavam em stacking contexts
+          diferentes quando o painel renderizava dentro de .page-content
+          (filho de #root) e o chat noutro portal (filho direto de
+          document.body): medido com elementsFromPoint, o painel pintava
+          sempre por baixo do chat, apesar do z-index maior. Os dois têm
+          de ser filhos diretos do mesmo portal para o z-index entre eles
+          fazer sentido.
+
+          z-index do chat tem de ficar ABAIXO de 100 (var(--z) do
+          .top-nav, ver Navbar.css): a navbar é position:sticky com
+          z-index:100, o que cria o próprio stacking context, e os
+          dropdowns de conta/notificações (z-index 99/199 lá dentro) só
+          são comparados DENTRO desse contexto, não contra este portal.
+          Com o chat a 150 (acima dos 100 da navbar), esses dropdowns
+          ficavam escondidos atrás do chat sempre que abriam, apesar do
+          z-index deles ser bem maior que 150 "por dentro". */}
       {isMobile && createPortal(
         <>
-          <div style={{ position: 'fixed', top: 62, left: 0, right: 0, bottom: 0, zIndex: 150, display: 'flex', flexDirection: 'column', background: C.bg, fontFamily: 'inherit' }}>
+          <div style={{ position: 'fixed', top: 62, left: 0, right: 0, bottom: 0, zIndex: 50, display: 'flex', flexDirection: 'column', background: C.bg, fontFamily: 'inherit' }}>
             {chatHeader}
             {chatContent}
           </div>

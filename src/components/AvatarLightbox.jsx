@@ -60,7 +60,13 @@ export function AvatarLightbox({ userId, imageUrl, name, bg, fallbackColor = '#f
   function handleFileChange(e) {
     const file = e.target.files?.[0]
     if (!file) return
-    if (file.size > 10 * 1024 * 1024) { setError('A imagem não pode ter mais de 10 MB.'); return }
+    // O bucket "avatars" (migração 018_avatar_upload.sql) tem
+    // file_size_limit de 2 MB a sério no Supabase. Um limite maior aqui
+    // (ex: 10 MB, como estava) deixa passar o ficheiro no cliente e só
+    // falha mais tarde no upload, com um erro genérico sem explicar
+    // porquê. Mais vale travar aqui, com a mensagem certa, antes de
+    // sequer abrir o recorte.
+    if (file.size > 2 * 1024 * 1024) { setError('A imagem não pode ter mais de 2 MB.'); return }
     setCropFile(file)
     if (e.target) e.target.value = ''
   }
@@ -70,7 +76,10 @@ export function AvatarLightbox({ userId, imageUrl, name, bg, fallbackColor = '#f
     setBusy(true); setError('')
     const path = `${userId}/avatar.webp`
     const { error: upErr } = await supabase.storage.from('avatars').upload(path, blob, { upsert: true, contentType: 'image/webp' })
-    if (upErr) { setError('Erro ao carregar imagem.'); setBusy(false); return }
+    if (upErr) {
+      setError(upErr.message?.toLowerCase().includes('size') ? 'A imagem recortada ainda é demasiado grande. Tenta recortar uma área mais pequena.' : 'Erro ao carregar imagem.')
+      setBusy(false); return
+    }
     const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
     const bustedUrl = `${publicUrl}?t=${Date.now()}`
     await supabase.from('profiles').update({ avatar_url: bustedUrl }).eq('id', userId)
