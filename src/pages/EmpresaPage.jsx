@@ -303,12 +303,13 @@ export default function EmpresaPage() {
                     {name[0].toUpperCase()}
                   </div>
                 )}
-                {/* Mesma dica do UserProfile.jsx: só o dono vê o ícone de
-                    câmara ao passar o rato, sinal de que o clique muda a
-                    foto, não só a amplia. */}
+                {/* Mesmo selo fixo do UserProfile.jsx (não depende de
+                    hover, que em toque nem sempre dispara). Canto
+                    esquerdo para não colidir com o selo de verificado,
+                    que fica no canto direito. */}
                 {isOwnPage && (
-                  <span className="ep-logo-hover" aria-hidden="true">
-                    <Camera size={20} color="#fff" />
+                  <span className="ep-logo-camera-badge" aria-hidden="true">
+                    <Camera size={14} />
                   </span>
                 )}
               </button>
@@ -578,25 +579,18 @@ export default function EmpresaPage() {
       </div>
 
       <style>{`
-        /* Ícone de câmara ao passar o rato no logo, só para o dono: sinal
-           de que o clique muda a foto, não só a amplia. Grid com os dois
-           filhos na mesma célula, em vez de position:absolute + inset
-           (ver UserProfile.css para a mesma troca e o porquê). */
-        .ep-logo-btn { display: grid; }
-        .ep-logo-btn > .ep-hero-logo,
-        .ep-logo-btn > .ep-logo-hover {
-          grid-area: 1 / 1;
-        }
-        .ep-logo-hover {
-          width: 100%; height: 100%;
-          border-radius: var(--radius-lg);
+        /* Selo fixo de câmara no canto do logo, sempre visível para o
+           dono: não depende de :hover, que em ecrãs de toque nem sempre
+           dispara. */
+        .ep-logo-camera-badge {
+          position: absolute; bottom: -2px; left: -2px;
+          width: 26px; height: 26px; border-radius: 50%;
           display: flex; align-items: center; justify-content: center;
-          background: rgba(0, 0, 0, 0.45);
-          opacity: 0; transition: opacity 0.15s ease;
+          background: var(--color-text);
+          color: var(--color-bg);
+          border: 2px solid var(--color-bg);
           pointer-events: none;
         }
-        .ep-logo-btn:hover .ep-logo-hover,
-        .ep-logo-btn:focus-visible .ep-logo-hover { opacity: 1; }
 
         /* Mobile (por omissão): tudo centrado, numa coluna só. */
         .ep-hero-top { display: flex; flex-direction: column; align-items: center; text-align: center; }

@@ -754,12 +754,13 @@ export default function UserProfile() {
               ? <img src={profile.avatar_url} alt={displayName} className="up-avatar" />
               : <div className="up-avatar-placeholder">{displayName[0].toUpperCase()}</div>
             }
-            {/* Dica visual de que dá para clicar e mudar a foto, só para o
-                dono: sem isto, o clique na própria foto não tinha nenhum
-                sinal de que fazia algo. */}
+            {/* Selo fixo (nunca dependente de hover, que em ecrãs de toque
+                nem sempre dispara) de que dá para clicar e mudar a foto, só
+                para o dono. Mesmo padrão visual do selo de verificado da
+                EmpresaPage: círculo pequeno encostado ao canto. */}
             {isOwnProfile && (
-              <span className="up-avatar-hover" aria-hidden="true">
-                <Camera size={20} color="#fff" />
+              <span className="up-avatar-camera-badge" aria-hidden="true">
+                <Camera size={14} />
               </span>
             )}
           </button>

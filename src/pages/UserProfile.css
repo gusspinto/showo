@@ -83,29 +83,20 @@
 }
 .up-avatar { object-fit: cover; }
 
-/* Ícone de câmara que aparece ao passar o rato na própria foto, para
-   sinalizar que dá para clicar e mudar a foto (só visível para o dono).
-   Grid com os dois filhos na mesma célula, em vez de position:absolute +
-   inset/top-right-bottom-left: isto garante o tamanho do avatar sem
-   depender do containing block do botão, que noutros motores de
-   navegador (fora do Chromium usado para testar aqui) não estava a dar
-   o mesmo resultado, o overlay saía mais pequeno do que o avatar. */
-.up-avatar-btn { display: grid; }
-.up-avatar-btn > .up-avatar,
-.up-avatar-btn > .up-avatar-placeholder,
-.up-avatar-btn > .up-avatar-hover {
-  grid-area: 1 / 1;
-}
-.up-avatar-hover {
-  width: 100%; height: 100%;
-  border-radius: 50%;
+/* Selo fixo de câmara no canto do avatar, sempre visível para o dono (não
+   depende de :hover, que em ecrãs de toque nem sempre dispara como no
+   desktop). Mesmo padrão do selo de verificado da EmpresaPage: círculo
+   pequeno encostado ao canto, com a cor de fundo da página a "recortar"
+   a borda do avatar por baixo. */
+.up-avatar-camera-badge {
+  position: absolute; bottom: -2px; right: -2px;
+  width: 28px; height: 28px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(0, 0, 0, 0.45);
-  opacity: 0; transition: opacity 0.15s ease;
+  background: var(--color-text);
+  color: var(--color-bg);
+  border: 2px solid var(--color-bg);
   pointer-events: none;
 }
-.up-avatar-btn:hover .up-avatar-hover,
-.up-avatar-btn:focus-visible .up-avatar-hover { opacity: 1; }
 
 .up-avatar-placeholder {
   background: var(--color-bg-alt);
