@@ -153,6 +153,10 @@
   --up-wash-pct:       30%;
   --up-shadow-pct:     42%;
   --up-shadow-pct-sm:  32%;
+  /* Vidro do cartão do perfil (UserProfile.css, .up-profile-card/.up-empty).
+     No escuro, --color-glass (branco bem transparente) já destaca-se do
+     fundo preto sozinho. Sem override aqui, por isso. */
+  --up-card-glass:     var(--color-glass);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -226,6 +230,12 @@ body.light {
   --up-wash-pct:       22%;
   --up-shadow-pct:     30%;
   --up-shadow-pct-sm:  22%;
+  /* Ver nota em :root. No claro, --color-glass é branco quase opaco sobre
+     uma página quase branca, o cartão mal se separa dela. Vidro escuro
+     translúcido em vez disso: o cartão fica visivelmente mais escuro do
+     que a página (contraste a sério, não só a borda), e o desfoque por
+     baixo continua a deixar passar a atmosfera da cor, só mais funda. */
+  --up-card-glass:     rgba(15, 18, 26, 0.10);
 }
 
 /* ── Professor: reaproveita as cores de sucesso como acento em vez do azul do
