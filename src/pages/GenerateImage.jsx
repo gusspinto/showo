@@ -17,13 +17,41 @@ const C = {
 }
 
 // Pré-visualização de quem ainda não desbloqueou: não temos exemplos reais
-// prontos a mostrar aqui, por isso são só gradientes a sugerir estilos de
-// capa diferentes, não capturas verdadeiras da ferramenta.
+// prontos a mostrar aqui, por isso cada "capa" é composta (várias manchas
+// radiais sobrepostas + nome do projeto a simular o resultado final com
+// texto por cima), não um retângulo de cor sólida, para dar uma ideia mais
+// próxima do que a ferramenta gera de verdade, não só um tapete de cor.
 const MOCK_BANNERS = [
-  { label: 'Capa minimalista, tons de azul', gradient: 'linear-gradient(135deg, #1e3a8a, #3b82f6, #93c5fd)' },
-  { label: 'Capa criativa, gradiente vibrante', gradient: 'linear-gradient(135deg, #db2777, #ea580c, #facc15)' },
-  { label: 'Capa editorial, preto e branco', gradient: 'linear-gradient(135deg, #0f172a, #334155, #cbd5e1)' },
-  { label: 'Capa tech, verde e grafite', gradient: 'linear-gradient(135deg, #064e3b, #0d9488, #5eead4)' },
+  {
+    title: 'FitTrack', category: 'App de fitness',
+    background: `radial-gradient(circle at 15% 18%, rgba(255,255,255,0.22), transparent 35%),
+      radial-gradient(circle at 85% 12%, #60a5fa, transparent 45%),
+      radial-gradient(circle at 78% 88%, #a78bfa, transparent 50%),
+      radial-gradient(circle at 8% 90%, #1d4ed8, transparent 45%),
+      linear-gradient(135deg, #0b1120, #1e293b)`,
+  },
+  {
+    title: 'Lumen Studio', category: 'Portefólio de design',
+    background: `radial-gradient(circle at 20% 15%, #fde68a, transparent 40%),
+      radial-gradient(circle at 82% 22%, #fb7185, transparent 45%),
+      radial-gradient(circle at 72% 88%, #f97316, transparent 50%),
+      radial-gradient(circle at 12% 85%, #be185d, transparent 45%),
+      linear-gradient(135deg, #1a0a12, #3b0a1c)`,
+  },
+  {
+    title: 'Noir Editions', category: 'Editorial minimalista',
+    background: `radial-gradient(circle at 25% 18%, rgba(255,255,255,0.16), transparent 35%),
+      radial-gradient(circle at 82% 70%, #94a3b8, transparent 50%),
+      radial-gradient(circle at 14% 82%, #475569, transparent 45%),
+      linear-gradient(135deg, #0a0a0a, #27272a)`,
+  },
+  {
+    title: 'Raiz Verde', category: 'Startup sustentável',
+    background: `radial-gradient(circle at 20% 18%, #bbf7d0, transparent 40%),
+      radial-gradient(circle at 82% 28%, #2dd4bf, transparent 45%),
+      radial-gradient(circle at 70% 88%, #15803d, transparent 50%),
+      linear-gradient(135deg, #03140d, #042f1f)`,
+  },
 ]
 
 // Pedido direto do Gustavo depois de confusão real: o Coach apontava para
@@ -219,11 +247,17 @@ export default function GenerateImage() {
                 <p style={{ margin: '0 0 12px', fontSize: 12.5, fontWeight: 700, color: C.muted, textAlign: 'center' }}>
                   Alguns exemplos do que dá para gerar
                 </p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 12 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
                   {MOCK_BANNERS.map(m => (
-                    <div key={m.label} style={{ borderRadius: 'var(--radius-md)', overflow: 'hidden', border: `1px solid ${C.border}` }}>
-                      <div style={{ aspectRatio: '16 / 10', background: m.gradient }} />
-                      <p style={{ margin: 0, padding: '8px 10px', fontSize: 11, color: C.muted, lineHeight: 1.4 }}>{m.label}</p>
+                    <div key={m.title} style={{ position: 'relative', aspectRatio: '16 / 10', borderRadius: 'var(--radius-md)', overflow: 'hidden', border: `1px solid ${C.border}`, background: m.background }}>
+                      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.65), transparent 55%)' }} />
+                      <span style={{ position: 'absolute', top: 10, right: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 24, height: 24, borderRadius: 'var(--radius-full)', background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(4px)' }}>
+                        <Sparkles size={12} color="#fff" />
+                      </span>
+                      <div style={{ position: 'absolute', left: 14, right: 14, bottom: 10 }}>
+                        <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#fff', fontFamily: 'var(--font-heading)', letterSpacing: '-0.2px' }}>{m.title}</p>
+                        <p style={{ margin: 0, fontSize: 11, color: 'rgba(255,255,255,0.75)' }}>{m.category}</p>
+                      </div>
                     </div>
                   ))}
                 </div>
