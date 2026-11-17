@@ -27,6 +27,7 @@ export default function ProfileCustomizer({
   const [bannerErr, setBannerErr] = useState(null)
   const [pickerOpen, setPickerOpen] = useState(false)
   const customSwatchBtnRef = useRef(null)
+  const [tab, setTab] = useState('conteudo')
 
   function set(patch) { onChange({ ...a, ...patch }) }
 
@@ -62,146 +63,165 @@ export default function ProfileCustomizer({
           <button className="pc-x" onClick={onClose} aria-label="Fechar"><X size={16} /></button>
         </header>
 
+        <div className="pc-tabs" role="tablist">
+          <button type="button" role="tab" aria-selected={tab === 'conteudo'}
+            className={`pc-tab${tab === 'conteudo' ? ' is-on' : ''}`} onClick={() => setTab('conteudo')}>
+            Conteúdo
+          </button>
+          <button type="button" role="tab" aria-selected={tab === 'aparencia'}
+            className={`pc-tab${tab === 'aparencia' ? ' is-on' : ''}`} onClick={() => setTab('aparencia')}>
+            Aparência
+          </button>
+        </div>
+
         <div className="pc-body">
-          {/* Nome */}
-          <section className="pc-group">
-            <p className="pc-label">Nome</p>
-            <input
-              className="pc-headline-input"
-              type="text"
-              maxLength={80}
-              placeholder="O teu nome"
-              value={fullName || ''}
-              onChange={e => onFullNameChange(e.target.value)}
-            />
-          </section>
+          {tab === 'conteudo' && (
+            <>
+              {/* Nome */}
+              <section className="pc-group">
+                <p className="pc-label">Nome</p>
+                <input
+                  className="pc-headline-input"
+                  type="text"
+                  maxLength={80}
+                  placeholder="O teu nome"
+                  value={fullName || ''}
+                  onChange={e => onFullNameChange(e.target.value)}
+                />
+              </section>
 
-          {/* Headline */}
-          <section className="pc-group">
-            <p className="pc-label">Frase de topo</p>
-            <textarea
-              className="pc-headline-input"
-              rows={2}
-              maxLength={HEADLINE_MAX}
-              placeholder="Ex.: Designer de interação a fazer coisas que ninguém pediu"
-              value={headline || ''}
-              onChange={e => onHeadlineChange(e.target.value)}
-            />
-          </section>
+              {/* Headline */}
+              <section className="pc-group">
+                <p className="pc-label">Frase de topo</p>
+                <textarea
+                  className="pc-headline-input"
+                  rows={2}
+                  maxLength={HEADLINE_MAX}
+                  placeholder="Ex.: Designer de interação a fazer coisas que ninguém pediu"
+                  value={headline || ''}
+                  onChange={e => onHeadlineChange(e.target.value)}
+                />
+              </section>
 
-          {/* Bio */}
-          <section className="pc-group">
-            <p className="pc-label">Bio</p>
-            <textarea
-              className="pc-headline-input"
-              rows={3}
-              maxLength={BIO_MAX}
-              placeholder="Conta um pouco sobre ti e os teus projetos…"
-              value={bio || ''}
-              onChange={e => onBioChange(e.target.value)}
-            />
-          </section>
+              {/* Bio */}
+              <section className="pc-group">
+                <p className="pc-label">Bio</p>
+                <textarea
+                  className="pc-headline-input"
+                  rows={3}
+                  maxLength={BIO_MAX}
+                  placeholder="Conta um pouco sobre ti e os teus projetos…"
+                  value={bio || ''}
+                  onChange={e => onBioChange(e.target.value)}
+                />
+              </section>
 
-          {/* Competências */}
-          {canEditSkills && (
-            <section className="pc-group">
-              <SkillsPicker value={skills || []} onChange={onSkillsChange} max={12} label="Competências" showHint={false} />
-            </section>
+              {/* Competências */}
+              {canEditSkills && (
+                <section className="pc-group">
+                  <SkillsPicker value={skills || []} onChange={onSkillsChange} max={12} label="Competências" showHint={false} />
+                </section>
+              )}
+            </>
           )}
 
-          <p className="pc-subhead">Aparência</p>
-
-          {/* Banner */}
-          <section className="pc-group">
-            <p className="pc-label">Imagem de topo</p>
-            {a.bannerUrl ? (
-              <>
-                <div className="pc-banner-preview">
-                  <img src={a.bannerUrl} alt="" style={{ objectPosition: `50% ${a.bannerPosition ?? 50}%` }} />
-                  <button className="pc-banner-remove" onClick={() => set({ bannerUrl: null, bannerPosition: null })} aria-label="Remover imagem">
-                    <Trash size={13} />
+          {tab === 'aparencia' && (
+            <>
+              {/* Banner */}
+              <section className="pc-group">
+                <p className="pc-label">Imagem de topo</p>
+                {a.bannerUrl ? (
+                  <>
+                    <div className="pc-banner-preview">
+                      <img src={a.bannerUrl} alt="" style={{ objectPosition: `50% ${a.bannerPosition ?? 50}%` }} />
+                      <button className="pc-banner-remove" onClick={() => set({ bannerUrl: null, bannerPosition: null })} aria-label="Remover imagem">
+                        <Trash size={13} />
+                      </button>
+                    </div>
+                    <div className="pc-banner-position">
+                      <span className="pc-banner-position-label">Posição da imagem</span>
+                      <input
+                        type="range" min="0" max="100"
+                        value={a.bannerPosition ?? 50}
+                        onChange={e => set({ bannerPosition: Number(e.target.value) })}
+                      />
+                    </div>
+                    <button className="pc-banner-change" onClick={() => fileRef.current?.click()} disabled={bannerBusy}>
+                      <ImageIcon size={14} />
+                      {bannerBusy ? 'A carregar…' : 'Trocar imagem'}
+                    </button>
+                  </>
+                ) : (
+                  <button className="pc-banner-add" onClick={() => fileRef.current?.click()} disabled={bannerBusy}>
+                    <ImageIcon size={16} />
+                    {bannerBusy ? 'A carregar…' : 'Carregar imagem'}
                   </button>
-                </div>
-                <div className="pc-banner-position">
-                  <span className="pc-banner-position-label">Posição da imagem</span>
-                  <input
-                    type="range" min="0" max="100"
-                    value={a.bannerPosition ?? 50}
-                    onChange={e => set({ bannerPosition: Number(e.target.value) })}
-                  />
-                </div>
-                <button className="pc-banner-change" onClick={() => fileRef.current?.click()} disabled={bannerBusy}>
-                  <ImageIcon size={14} />
-                  {bannerBusy ? 'A carregar…' : 'Trocar imagem'}
-                </button>
-              </>
-            ) : (
-              <button className="pc-banner-add" onClick={() => fileRef.current?.click()} disabled={bannerBusy}>
-                <ImageIcon size={16} />
-                {bannerBusy ? 'A carregar…' : 'Carregar imagem'}
-              </button>
-            )}
-            {bannerErr && <p className="pc-err">{bannerErr}</p>}
-            <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={pickBanner} />
-          </section>
-
-          {/* Accent */}
-          <section className="pc-group">
-            <p className="pc-label">Cor</p>
-            <div className="pc-swatches">
-              {ACCENT_SWATCHES.map(c => (
-                <button
-                  key={c}
-                  className={`pc-swatch${(a.accent || DEFAULT_ACCENT) === c ? ' is-on' : ''}`}
-                  style={{ background: c }}
-                  onClick={() => set({ accent: c })}
-                  aria-label={c}
-                />
-              ))}
-              <div className="pc-swatch-custom-wrap">
-                <button
-                  ref={customSwatchBtnRef}
-                  type="button"
-                  className="pc-swatch pc-swatch--custom"
-                  title="Cor personalizada"
-                  onClick={() => setPickerOpen(o => !o)}
-                  aria-label="Escolher cor personalizada"
-                />
-                {pickerOpen && (
-                  <ColorPicker
-                    anchorRef={customSwatchBtnRef}
-                    value={a.accent || DEFAULT_ACCENT}
-                    onChange={c => set({ accent: c })}
-                    onClose={() => setPickerOpen(false)}
-                  />
                 )}
-              </div>
-            </div>
-          </section>
+                {bannerErr && <p className="pc-err">{bannerErr}</p>}
+                <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={pickBanner} />
+              </section>
 
-          {/* Tipografia */}
-          <section className="pc-group">
-            <p className="pc-label">Tipografia</p>
-            <div className="pc-options">
-              {Object.entries(FONTS).map(([key, f]) => (
-                <button
-                  key={key}
-                  className={`pc-option${(a.font || 'moderno') === key ? ' is-on' : ''}`}
-                  style={{ fontFamily: f.heading }}
-                  onClick={() => set({ font: key })}
-                >
-                  {f.label}
-                </button>
-              ))}
-            </div>
-          </section>
+              {/* Accent */}
+              <section className="pc-group">
+                <p className="pc-label">Cor</p>
+                <div className="pc-swatches">
+                  {ACCENT_SWATCHES.map(c => (
+                    <button
+                      key={c}
+                      className={`pc-swatch${(a.accent || DEFAULT_ACCENT) === c ? ' is-on' : ''}`}
+                      style={{ background: c }}
+                      onClick={() => set({ accent: c })}
+                      aria-label={c}
+                    />
+                  ))}
+                  <div className="pc-swatch-custom-wrap">
+                    <button
+                      ref={customSwatchBtnRef}
+                      type="button"
+                      className="pc-swatch pc-swatch--custom"
+                      title="Cor personalizada"
+                      onClick={() => setPickerOpen(o => !o)}
+                      aria-label="Escolher cor personalizada"
+                    />
+                    {pickerOpen && (
+                      <ColorPicker
+                        anchorRef={customSwatchBtnRef}
+                        value={a.accent || DEFAULT_ACCENT}
+                        onChange={c => set({ accent: c })}
+                        onClose={() => setPickerOpen(false)}
+                      />
+                    )}
+                  </div>
+                </div>
+              </section>
+
+              {/* Tipografia */}
+              <section className="pc-group">
+                <p className="pc-label">Tipografia</p>
+                <div className="pc-options">
+                  {Object.entries(FONTS).map(([key, f]) => (
+                    <button
+                      key={key}
+                      className={`pc-option${(a.font || 'moderno') === key ? ' is-on' : ''}`}
+                      style={{ fontFamily: f.heading }}
+                      onClick={() => set({ font: key })}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+              </section>
+            </>
+          )}
         </div>
 
         {error && <p className="pc-err pc-err--foot">{error}</p>}
         <footer className="pc-foot">
-          <button className="pc-reset" onClick={() => { onChange({ bannerUrl: a.bannerUrl || null }); }} disabled={saving}>
-            Repor cor e fonte
-          </button>
+          {tab === 'aparencia' && (
+            <button className="pc-reset" onClick={() => { onChange({ bannerUrl: a.bannerUrl || null }); }} disabled={saving}>
+              Repor cor e fonte
+            </button>
+          )}
           <button className="pc-save" onClick={onSave} disabled={saving || bannerBusy}>
             {saving ? 'A guardar…' : 'Guardar'}
           </button>
