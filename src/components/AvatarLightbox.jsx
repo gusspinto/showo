@@ -1,6 +1,5 @@
 import { useRef, useState, useEffect, useId } from 'react'
 import { createPortal } from 'react-dom'
-import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { CameraIcon as Camera } from '@solar-icons/react/bold/camera'
 import { TrashBin2Icon as Trash } from '@solar-icons/react/bold/trash-bin-2'
 import { supabase } from '../lib/supabase'
@@ -24,18 +23,39 @@ import { CropModal } from './CropModal'
 //   onClose()        fecha o lightbox
 export function AvatarLightbox({ userId, imageUrl, name, bg, fallbackColor = '#fff', shape = 'circle', isOwner, onUploaded, onRemoved, onClose }) {
   const fileRef = useRef(null)
-  const closeBtnRef = useRef(null)
   const titleId = useId()
   const [cropFile, setCropFile] = useState(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    closeBtnRef.current?.focus()
     const onKeyDown = (e) => { if (e.key === 'Escape') onClose() }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [onClose])
+
+  // Trava o scroll da página por trás do popup (sem isto, dava para dar
+  // scroll na página toda enquanto o popup estava aberto por cima, no
+  // mobile). Mesmo padrão já usado em CropModal.jsx: tirar o body do
+  // fluxo com position:fixed, não só overflow:hidden, que sozinho não
+  // chega no Safari/iOS.
+  useEffect(() => {
+    const prevent = (e) => { if (e.cancelable) e.preventDefault() }
+    document.addEventListener('touchmove', prevent, { passive: false })
+    const scrollY = window.scrollY
+    document.body.style.position = 'fixed'
+    document.body.style.top = `-${scrollY}px`
+    document.body.style.width = '100%'
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('touchmove', prevent)
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.width = ''
+      document.body.style.overflow = ''
+      window.scrollTo(0, scrollY)
+    }
+  }, [])
 
   function handleFileChange(e) {
     const file = e.target.files?.[0]
@@ -78,13 +98,10 @@ export function AvatarLightbox({ userId, imageUrl, name, bg, fallbackColor = '#f
       <span id={titleId} style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0,0,0,0)' }}>
         {name ? `Foto de ${name}` : 'Foto de perfil'}
       </span>
-      <button ref={closeBtnRef} type="button" onClick={onClose} aria-label="Fechar"
-        style={{ position: 'absolute', top: 16, right: 16, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                 width: 38, height: 38, borderRadius: 'var(--radius-md)', border: '1px solid rgba(255,255,255,0.18)',
-                 background: 'rgba(255,255,255,0.08)', color: '#fff', cursor: 'pointer' }}>
-        <X size={17} />
-      </button>
 
+      {/* Sem "X" aqui em cima: ficava a sobrepor-se à navbar por trás, não
+          fazia sentido ali. Fechar é clicar fora da foto/botões (o
+          próprio fundo escurecido) ou Esc. */}
       <div style={{ width: 'min(280px, 70vw)', height: 'min(280px, 70vw)', borderRadius: radius, overflow: 'hidden',
                     flexShrink: 0, boxShadow: '0 24px 70px rgba(0,0,0,0.55)' }}
         onClick={e => e.stopPropagation()}>
