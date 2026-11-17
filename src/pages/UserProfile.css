@@ -22,9 +22,22 @@
   margin-top: 14px;
 }
 
+/* ── Fundo da página com atmosfera na cor de marca do perfil (--up-accent,
+   ver profileAppearance.js). color-mix() parte sempre de --color-bg, que já
+   é escuro no tema escuro e claro no tema claro, por isso o resultado
+   acompanha o tema sozinho, sem JS nenhum. O cartão de vidro por cima
+   (.up-profile-card) não muda de cor, só a página à volta dele. */
+.bg-page.up-root {
+  background: radial-gradient(ellipse 1100px 520px at 50% 0%,
+    color-mix(in srgb, var(--up-accent, var(--color-primary)) 30%, var(--color-bg) 70%) 0%,
+    var(--color-bg) 72%);
+}
+
 /* ── Cartão grande à volta de todo o conteúdo do perfil (cabeçalho,
    projetos, competências), mesmo tratamento visual do .settings-card:
-   fundo e borda "vidro", não fundo plano da página sem moldura nenhuma. ── */
+   fundo e borda "vidro", não fundo plano da página sem moldura nenhuma.
+   A sombra usa a mesma --up-accent, para o cartão parecer iluminado pela
+   atmosfera da página, não só mais um retângulo em cima dela. ── */
 .up-profile-card {
   background: var(--color-glass);
   backdrop-filter: blur(16px);
@@ -32,6 +45,7 @@
   border: 1px solid var(--color-glass-border);
   border-radius: var(--radius-xl, 20px);
   padding: 32px 32px 40px;
+  box-shadow: 0 32px 80px -24px color-mix(in srgb, var(--up-accent, var(--color-primary)) 42%, transparent);
 }
 @media (max-width: 860px) {
   .up-profile-card { padding: 22px 18px 28px; border-radius: var(--radius-xl); }
@@ -481,6 +495,7 @@
   text-align: left;
   color: inherit;
   transition: border-color 0.15s;
+  box-shadow: 0 16px 36px -18px color-mix(in srgb, var(--up-accent, var(--color-primary)) 32%, transparent);
 }
 .up-pf-row:hover { border-color: var(--color-border-hover); }
 
@@ -519,6 +534,7 @@
   cursor: pointer;
   overflow: hidden;
   transition: border-color 0.15s;
+  box-shadow: 0 16px 36px -18px color-mix(in srgb, var(--up-accent, var(--color-primary)) 32%, transparent);
 }
 
 .up-project-card:hover {
