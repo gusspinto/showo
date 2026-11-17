@@ -55,6 +55,32 @@ export default function Coach() {
     return () => document.body.classList.remove('coach-chat-lock')
   }, [])
 
+  // Quando o teclado abre no mobile, o Safari por vezes decide "trazer o
+  // campo focado para a vista" fazendo um pan do visual viewport, que
+  // desloca TUDO que é position:fixed (incluindo esta barra, "Geral" +
+  // limite) para fora do ecrã, mesmo esse fixed nunca se devia mexer com
+  // scroll nenhum. visualViewport.offsetTop é exatamente esse deslocamento;
+  // ao aplicar translateY(offsetTop) ao nosso próprio container fixed,
+  // compensamos o pan e ele fica sempre na mesma posição visível no ecrã,
+  // nunca empurrado para cima ou para fora. A altura segue visualViewport.
+  // height pela mesma razão: sem isto, o container assume sempre a altura
+  // cheia do ecrã (100dvh), ignorando quanto o teclado já esconde.
+  const [vv, setVv] = useState(() => ({
+    height: typeof window !== 'undefined' ? window.innerHeight : 0,
+    offsetTop: 0,
+  }))
+  useEffect(() => {
+    if (!isMobile || typeof window === 'undefined' || !window.visualViewport) return
+    const viewport = window.visualViewport
+    const update = () => setVv({ height: viewport.height, offsetTop: viewport.offsetTop })
+    update()
+    viewport.addEventListener('resize', update)
+    viewport.addEventListener('scroll', update)
+    return () => {
+      viewport.removeEventListener('resize', update)
+      viewport.removeEventListener('scroll', update)
+    }
+  }, [isMobile])
 
   const [myProjects, setMyProjects] = useState([])
   const [pickerOpen, setPickerOpen] = useState(false)
@@ -595,7 +621,7 @@ export default function Coach() {
           z-index deles ser bem maior que 150 "por dentro". */}
       {isMobile && createPortal(
         <>
-          <div style={{ position: 'fixed', top: 62, left: 0, right: 0, bottom: 0, zIndex: 50, display: 'flex', flexDirection: 'column', background: C.bg, fontFamily: 'inherit' }}>
+          <div style={{ position: 'fixed', top: 62, left: 0, right: 0, height: Math.max(0, vv.height - 62), transform: `translateY(${vv.offsetTop}px)`, zIndex: 50, display: 'flex', flexDirection: 'column', background: C.bg, fontFamily: 'inherit' }}>
             {chatHeader}
             {chatContent}
           </div>
