@@ -1098,18 +1098,23 @@
   margin-top: 34px;
 }
 
-/* ── Banner ── */
+/* ── Banner ── Fundo transparente de propósito: o fade da imagem (abaixo)
+   revela a atmosfera da página (.bg-page.up-root) por baixo, não um
+   retângulo opaco, para a imagem acabar a esbater-se na página em vez de
+   cortar a direito contra o cartão de vidro logo a seguir. */
 .up-banner {
   width: 100%;
   height: clamp(130px, 24vw, 240px);
   overflow: hidden;
-  background: var(--color-bg-alt);
+  background: transparent;
 }
 .up-banner img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
+  -webkit-mask-image: linear-gradient(to bottom, #000 68%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 68%, transparent 100%);
 }
 
 /* ── Ficheiros da Biblioteca no perfil: cartão colorido por tipo quando
