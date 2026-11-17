@@ -13,6 +13,7 @@ import { PlaneIcon as Send } from '@solar-icons/react/bold/plane'
 import { ClipboardListIcon as HistoryIcon } from '@solar-icons/react/bold/clipboard-list'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { useIsMobile } from '../lib/useIsMobile'
+import { createPortal } from 'react-dom'
 
 const C = {
   bg: 'var(--color-bg)', card: 'var(--color-surface)', border: 'var(--color-border)',
@@ -43,30 +44,16 @@ export default function Coach() {
   const { user, profile, checkGate, consumeAI, logFunnelEvent } = useAuth()
   const isMobile = useIsMobile()
 
-  // Trava o scroll da página a sério no mobile. `overflow:hidden` sozinho
-  // no body não chega no Safari/iOS (continua a dar rubber-band scroll à
-  // página mesmo assim, confirmado num iPhone real), é preciso tirar o
-  // body do fluxo normal com position:fixed, o mesmo padrão já usado em
-  // CropModal.jsx para travar o scroll atrás de um modal. Sem o
-  // touchmove preventDefault do CropModal, porque aqui a lista de
-  // mensagens tem de continuar a dar scroll por dentro dela própria.
+  // Mesmo princípio do .msg-chat-lock em Mensagens.jsx: página de chat,
+  // sem scroll da página inteira, só da lista de mensagens. Sem isto, um
+  // wheel/touch sobre uma zona do chat sem conteúdo para dar scroll (ex:
+  // poucas mensagens) escapa e arrasta a página toda, mesmo com o chat a
+  // ocupar o ecrã via position:fixed. Confirmado a medir: sem esta
+  // classe, um scroll na área do chat ainda mexia document.scrollingElement.
   useEffect(() => {
-    if (!isMobile) return
-    const scrollY = window.scrollY
-    document.body.style.position = 'fixed'
-    document.body.style.top = `-${scrollY}px`
-    document.body.style.left = '0'
-    document.body.style.right = '0'
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.position = ''
-      document.body.style.top = ''
-      document.body.style.left = ''
-      document.body.style.right = ''
-      document.body.style.overflow = ''
-      window.scrollTo(0, scrollY)
-    }
-  }, [isMobile])
+    document.body.classList.add('coach-chat-lock')
+    return () => document.body.classList.remove('coach-chat-lock')
+  }, [])
 
   const [myProjects, setMyProjects] = useState([])
   const [pickerOpen, setPickerOpen] = useState(false)
@@ -422,179 +409,190 @@ export default function Coach() {
     </div>
   )
 
+  // Cabeçalho + mensagens/vazio + input: partilhado entre a versão desktop
+  // (dentro do cartão na página) e a versão mobile (cartão fora, a
+  // preencher o ecrã a sério, ver mais abaixo).
+  const chatHeader = isMobile ? (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 16px', borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
+      <button
+        className="coach-history-toggle"
+        onClick={() => setHistoryOpen(true)}
+        title="Conversas"
+        style={{ display: 'none', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, minHeight: 0, background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 9, color: C.muted, cursor: 'pointer', flexShrink: 0 }}
+      ><HistoryIcon size={16} /></button>
+      {picker || (
+        <div style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {activeProject ? activeProject.name : 'Geral'}
+        </div>
+      )}
+      <AiUsageBadge feature="coach" compact style={{ flexShrink: 0 }} />
+      {!isEmpty && (
+        <button
+          onClick={newConversation}
+          title="Nova conversa"
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, minHeight: 0, background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 9, color: C.muted, cursor: 'pointer', flexShrink: 0 }}
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
+        </button>
+      )}
+    </div>
+  ) : (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '18px 24px', borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
+      <button
+        className="coach-history-toggle"
+        onClick={() => setHistoryOpen(true)}
+        title="Conversas"
+        style={{ display: 'none', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, minHeight: 0, background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 9, color: C.muted, cursor: 'pointer', flexShrink: 0 }}
+      ><HistoryIcon size={16} /></button>
+      <div style={{ width: 38, height: 38, borderRadius: 11, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <Bot size={19} color="var(--color-primary)" />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 17, fontWeight: 700, color: C.text }}>Coach IA</div>
+        <div style={{ fontSize: 12, color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeProject ? `A falar sobre: ${activeProject.name}` : 'Conselho sobre o teu percurso'}</div>
+      </div>
+      <AiUsageBadge feature="coach" />
+      {!isEmpty && (
+        <button
+          onClick={newConversation}
+          title="Nova conversa"
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, minHeight: 0, background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 9, color: C.muted, cursor: 'pointer' }}
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
+        </button>
+      )}
+      {picker}
+    </div>
+  )
+
+  const chatContent = isEmpty ? (
+    // Sem mensagens ainda: tudo centrado a meio do ecrã (como o
+    // ecrã de "nova conversa" do ChatGPT/Claude), em vez de deixar
+    // um vazio enorme entre a saudação e a caixa lá em baixo.
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20, padding: '24px 24px calc(10vh + 24px)' }}>
+      <div style={{ width: 52, height: 52, borderRadius: 15, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Bot size={26} color="var(--color-primary)" />
+      </div>
+      <p style={{ margin: 0, maxWidth: 440, textAlign: 'center', fontSize: 14, color: C.muted, lineHeight: 1.6 }}>{greeting}</p>
+      <div style={{ width: '100%', maxWidth: 480 }}>{inputBar}</div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', maxWidth: 480 }}>
+        {suggestions.map(q => (
+          <button
+            key={q}
+            onClick={() => setInput(q)}
+            style={{ background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 100, padding: '7px 14px', fontSize: 12, color: C.muted, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-primary-subtle)'; e.currentTarget.style.color = C.text }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}
+          >{q}</button>
+        ))}
+      </div>
+      {hasHistory && (
+        <button
+          className="coach-history-toggle-empty"
+          onClick={() => setHistoryOpen(true)}
+          style={{ display: 'none', alignItems: 'center', gap: 6, background: 'none', border: 'none', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}
+        ><HistoryIcon size={13} /> Ver conversas anteriores</button>
+      )}
+    </div>
+  ) : (
+    <>
+      {/* Messages. Sem minHeight:0 aqui, um item flex com
+          flex:1 recusa-se a encolher abaixo da altura do seu
+          conteúdo (min-height:auto por omissão), por isso a
+          coluna toda crescia com a conversa e era a página
+          inteira a dar scroll, não esta lista (ver msg-messages
+          em Mensagens.css para o mesmo padrão). */}
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, padding: '20px 24px' }}>
+        {messages.map((m, i) => (
+          <div key={i} style={{
+            alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
+            maxWidth: '87%',
+            background: m.role === 'user' ? 'var(--color-primary)' : 'var(--color-bg-alt)',
+            border: m.role === 'user' ? 'none' : `1px solid ${C.border}`,
+            borderRadius: m.role === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
+            padding: '10px 14px', fontSize: 13,
+            color: m.role === 'user' ? '#fff' : C.text,
+            lineHeight: 1.6,
+            whiteSpace: m.role === 'user' ? 'pre-wrap' : undefined,
+          }}>{m.role === 'assistant' ? renderMd(m.content) : m.content}</div>
+        ))}
+        {loading && (
+          <div style={{ alignSelf: 'flex-start', background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: '14px 14px 14px 4px', padding: '10px 16px', display: 'flex', gap: 5, alignItems: 'center' }}>
+            {[0, 1, 2].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: C.muted, animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />)}
+          </div>
+        )}
+        <div ref={bottomRef} />
+      </div>
+
+      {/* Input. No mobile, o padding de baixo desconta a safe-area a
+          sério (env()), mesmo padrão de .msg-mobile-thread .msg-input-area
+          em Mensagens.css, para o botão de enviar nunca ficar debaixo do
+          home indicator do iPhone. */}
+      <div style={{ padding: isMobile ? '14px 16px calc(14px + env(safe-area-inset-bottom, 0px))' : '14px 24px', borderTop: `1px solid ${C.border}`, flexShrink: 0 }}>{inputBar}</div>
+    </>
+  )
+
+  const historyPanelEl = (
+    <>
+      <div
+        className={`coach-history-panel${historyOpen ? ' coach-history-open' : ''}`}
+        style={{
+          width: 272, flexShrink: 0,
+          background: 'linear-gradient(165deg, var(--color-bg-alt), var(--color-bg))',
+          borderRadius: '0 22px 22px 0',
+          boxShadow: '10px 0 28px -18px rgba(0,0,0,0.45)',
+        }}
+      >
+        {historyPanel}
+      </div>
+      {historyOpen && <div className="coach-history-backdrop" onClick={() => setHistoryOpen(false)} />}
+    </>
+  )
+
   return (
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'inherit' }}>
       <Navbar />
       <div className="page-content" style={{ padding: 0 }}>
-        {/* No mobile, ".page-content" tem um padding forçado por !important
-            (20px + 48px + safe-area-inset-bottom, ver index.css) que o
-            style={{padding:0}} deste componente não consegue anular. Sem
-            descontar isto aqui, esta caixa fica sempre mais alta do que o
-            viewport tem para dar. env(safe-area-inset-bottom) tem de ser
-            usado tal e qual (não um número fixo): num iPhone real com
-            home indicator vale ~34px, numa simulação sem notch vale 0,
-            um número fixo escolhido a testar na simulação fica sempre
-            errado no aparelho real. overflow:hidden trava o que sobrar,
-            como segunda rede de segurança a par do position:fixed no
-            body acima. */}
-        <div style={{ display: 'flex', height: isMobile ? 'calc(100dvh - 70px - 20px - 48px - env(safe-area-inset-bottom, 0px))' : 'calc(100dvh - 70px)', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', height: 'calc(100dvh - 70px)', overflow: 'hidden' }}>
+          {/* No mobile o painel de histórico também sai daqui, para o
+              portal do chat (ver mais abaixo): precisam de ser filhos do
+              mesmo portal para o z-index entre os dois fazer sentido. */}
+          {!isMobile && historyPanelEl}
 
-          {/* Painel de histórico (docked no desktop, overlay no mobile) */}
-          <div
-            className={`coach-history-panel${historyOpen ? ' coach-history-open' : ''}`}
-            style={{
-              width: 272, flexShrink: 0,
-              background: 'linear-gradient(165deg, var(--color-bg-alt), var(--color-bg))',
-              borderRadius: '0 22px 22px 0',
-              boxShadow: '10px 0 28px -18px rgba(0,0,0,0.45)',
-            }}
-          >
-            {historyPanel}
-          </div>
-          {historyOpen && <div className="coach-history-backdrop" onClick={() => setHistoryOpen(false)} />}
-
-          <div style={{ flex: 1, minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', padding: isMobile ? 0 : 'clamp(16px,3vw,24px) clamp(16px,3vw,24px) 0' }}>
-            {/* Cartão único (cabeçalho + mensagens + input), como o
-                .msg-thread de Mensagens.jsx: antes disto a conversa não
-                tinha nenhum contorno a dizer onde começa e acaba, só
-                flutuava sobre o fundo da página. No mobile, Mensagens.jsx
-                não usa esse cartão flutuante, usa .msg-mobile-thread: sem
-                margens, sem borda, a preencher o ecrã todo abaixo da
-                navbar (igual a uma app de chat a sério, não um cartão
-                dentro da página). Replicado aqui: no mobile, sem padding
-                à volta, sem borda, sem raio, fundo igual ao da página. */}
-            <div style={{ maxWidth: isMobile ? 'none' : 760, width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', flex: 1, boxSizing: 'border-box', minHeight: 0, background: isMobile ? C.bg : C.card, border: isMobile ? 'none' : `1px solid ${C.border}`, borderRadius: isMobile ? 0 : 16, overflow: 'hidden' }}>
-
-              {/* Header: duas versões, não uma só espremida.
-                  Desktop: ícone + "Coach IA"/legenda à esquerda, badge +
-                  nova conversa + seletor à direita — como sempre foi.
-                  Mobile: nada de "Coach IA" repetido (já se sabe onde se
-                  está) nem ícone a ocupar espaço — pedido do Gustavo depois
-                  de ver o título a sobrepor-se ao badge num ecrã estreito.
-                  Fica o seletor de projeto a esticar (é o controlo que
-                  interessa, já identifica o contexto sozinho — "Geral" ou
-                  o nome do projeto) e o badge/nova conversa compactos ao
-                  lado, tudo numa linha só. */}
-              {isMobile ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 16px', borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
-                  <button
-                    className="coach-history-toggle"
-                    onClick={() => setHistoryOpen(true)}
-                    title="Conversas"
-                    style={{ display: 'none', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, minHeight: 0, background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 9, color: C.muted, cursor: 'pointer', flexShrink: 0 }}
-                  ><HistoryIcon size={16} /></button>
-                  {picker || (
-                    <div style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {activeProject ? activeProject.name : 'Geral'}
-                    </div>
-                  )}
-                  <AiUsageBadge feature="coach" compact style={{ flexShrink: 0 }} />
-                  {!isEmpty && (
-                    <button
-                      onClick={newConversation}
-                      title="Nova conversa"
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, minHeight: 0, background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 9, color: C.muted, cursor: 'pointer', flexShrink: 0 }}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '18px 24px', borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
-                  <button
-                    className="coach-history-toggle"
-                    onClick={() => setHistoryOpen(true)}
-                    title="Conversas"
-                    style={{ display: 'none', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, minHeight: 0, background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 9, color: C.muted, cursor: 'pointer', flexShrink: 0 }}
-                  ><HistoryIcon size={16} /></button>
-                  <div style={{ width: 38, height: 38, borderRadius: 11, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Bot size={19} color="var(--color-primary)" />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 17, fontWeight: 700, color: C.text }}>Coach IA</div>
-                    <div style={{ fontSize: 12, color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeProject ? `A falar sobre: ${activeProject.name}` : 'Conselho sobre o teu percurso'}</div>
-                  </div>
-                  <AiUsageBadge feature="coach" />
-                  {!isEmpty && (
-                    <button
-                      onClick={newConversation}
-                      title="Nova conversa"
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, minHeight: 0, background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 9, color: C.muted, cursor: 'pointer' }}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
-                    </button>
-                  )}
-                  {picker}
-                </div>
-              )}
-
-              {isEmpty ? (
-                // Sem mensagens ainda: tudo centrado a meio do ecrã (como o
-                // ecrã de "nova conversa" do ChatGPT/Claude), em vez de deixar
-                // um vazio enorme entre a saudação e a caixa lá em baixo.
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20, padding: '24px 24px calc(10vh + 24px)' }}>
-                  <div style={{ width: 52, height: 52, borderRadius: 15, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Bot size={26} color="var(--color-primary)" />
-                  </div>
-                  <p style={{ margin: 0, maxWidth: 440, textAlign: 'center', fontSize: 14, color: C.muted, lineHeight: 1.6 }}>{greeting}</p>
-                  <div style={{ width: '100%', maxWidth: 480 }}>{inputBar}</div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', maxWidth: 480 }}>
-                    {suggestions.map(q => (
-                      <button
-                        key={q}
-                        onClick={() => setInput(q)}
-                        style={{ background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 100, padding: '7px 14px', fontSize: 12, color: C.muted, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
-                        onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-primary-subtle)'; e.currentTarget.style.color = C.text }}
-                        onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}
-                      >{q}</button>
-                    ))}
-                  </div>
-                  {hasHistory && (
-                    <button
-                      className="coach-history-toggle-empty"
-                      onClick={() => setHistoryOpen(true)}
-                      style={{ display: 'none', alignItems: 'center', gap: 6, background: 'none', border: 'none', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}
-                    ><HistoryIcon size={13} /> Ver conversas anteriores</button>
-                  )}
-                </div>
-              ) : (
-                <>
-                  {/* Messages. Sem minHeight:0 aqui, um item flex com
-                      flex:1 recusa-se a encolher abaixo da altura do seu
-                      conteúdo (min-height:auto por omissão), por isso a
-                      coluna toda crescia com a conversa e era a página
-                      inteira a dar scroll, não esta lista (ver msg-messages
-                      em Mensagens.css para o mesmo padrão). */}
-                  <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, padding: '20px 24px' }}>
-                    {messages.map((m, i) => (
-                      <div key={i} style={{
-                        alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
-                        maxWidth: '87%',
-                        background: m.role === 'user' ? 'var(--color-primary)' : 'var(--color-bg-alt)',
-                        border: m.role === 'user' ? 'none' : `1px solid ${C.border}`,
-                        borderRadius: m.role === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
-                        padding: '10px 14px', fontSize: 13,
-                        color: m.role === 'user' ? '#fff' : C.text,
-                        lineHeight: 1.6,
-                        whiteSpace: m.role === 'user' ? 'pre-wrap' : undefined,
-                      }}>{m.role === 'assistant' ? renderMd(m.content) : m.content}</div>
-                    ))}
-                    {loading && (
-                      <div style={{ alignSelf: 'flex-start', background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: '14px 14px 14px 4px', padding: '10px 16px', display: 'flex', gap: 5, alignItems: 'center' }}>
-                        {[0, 1, 2].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: C.muted, animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />)}
-                      </div>
-                    )}
-                    <div ref={bottomRef} />
-                  </div>
-
-                  {/* Input */}
-                  <div style={{ padding: '14px 24px', borderTop: `1px solid ${C.border}`, flexShrink: 0 }}>{inputBar}</div>
-                </>
-              )}
+          {/* No mobile, o chat sai daqui (ver o portal lá em baixo): nada
+              de cartão flutuante dentro da página, com margens e a
+              competir com o padding forçado de .page-content. É um
+              segundo elemento fixed, igual a .msg-mobile-thread em
+              Mensagens.jsx, a preencher o ecrã a sério por cima de tudo. */}
+          {!isMobile && (
+            <div style={{ flex: 1, minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', padding: 'clamp(16px,3vw,24px) clamp(16px,3vw,24px) 0' }}>
+              <div style={{ maxWidth: 760, width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', flex: 1, boxSizing: 'border-box', minHeight: 0, background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, overflow: 'hidden' }}>
+                {chatHeader}
+                {chatContent}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
+
+      {/* O painel de histórico no mobile (coach-history-panel, z-index
+          300) e este portal do chat (z-index 150) ficavam em stacking
+          contexts diferentes quando o painel renderizava dentro de
+          .page-content (filho de #root) e o chat noutro portal (filho
+          direto de document.body): medido com elementsFromPoint, o
+          painel pintava sempre por baixo do chat, apesar do z-index
+          maior. Os dois têm de ser filhos diretos do mesmo portal para o
+          z-index entre eles fazer sentido. */}
+      {isMobile && createPortal(
+        <>
+          <div style={{ position: 'fixed', top: 62, left: 0, right: 0, bottom: 0, zIndex: 150, display: 'flex', flexDirection: 'column', background: C.bg, fontFamily: 'inherit' }}>
+            {chatHeader}
+            {chatContent}
+          </div>
+          {historyPanelEl}
+        </>,
+        document.body
+      )}
 
       {gateMsg && <PlanGateModal message={gateMsg} onClose={() => setGateMsg(null)} />}
 

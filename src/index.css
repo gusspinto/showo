@@ -507,3 +507,14 @@ body.msg-chat-lock {
 }
 html:has(body.msg-chat-lock) { overscroll-behavior: none; }
 
+/* Coach IA: mesmo princípio do msg-chat-lock, página de chat também, sem
+   scroll da página, só da lista de mensagens (ver Coach.jsx). */
+body.coach-chat-lock {
+  overflow: hidden;
+  overscroll-behavior: none;
+  position: fixed;
+  inset: 0;
+  width: 100%;
+}
+html:has(body.coach-chat-lock) { overscroll-behavior: none; }
+
