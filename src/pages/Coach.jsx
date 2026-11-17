@@ -43,16 +43,29 @@ export default function Coach() {
   const { user, profile, checkGate, consumeAI, logFunnelEvent } = useAuth()
   const isMobile = useIsMobile()
 
-  // Trava o scroll da página em si no mobile, o mesmo mecanismo que
-  // Mensagens.jsx usa (document.body.style.overflow = 'hidden') quando
-  // está a mostrar uma conversa. Um calc(100dvh - Npx) sozinho depende de
-  // valores como o safe-area-inset-bottom real do telemóvel, que variam
-  // de aparelho para aparelho, por isso não chega por si só: isto garante
-  // a sério que só a lista de mensagens dá scroll, nunca a página.
+  // Trava o scroll da página a sério no mobile. `overflow:hidden` sozinho
+  // no body não chega no Safari/iOS (continua a dar rubber-band scroll à
+  // página mesmo assim, confirmado num iPhone real), é preciso tirar o
+  // body do fluxo normal com position:fixed, o mesmo padrão já usado em
+  // CropModal.jsx para travar o scroll atrás de um modal. Sem o
+  // touchmove preventDefault do CropModal, porque aqui a lista de
+  // mensagens tem de continuar a dar scroll por dentro dela própria.
   useEffect(() => {
     if (!isMobile) return
+    const scrollY = window.scrollY
+    document.body.style.position = 'fixed'
+    document.body.style.top = `-${scrollY}px`
+    document.body.style.left = '0'
+    document.body.style.right = '0'
     document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = '' }
+    return () => {
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.left = ''
+      document.body.style.right = ''
+      document.body.style.overflow = ''
+      window.scrollTo(0, scrollY)
+    }
   }, [isMobile])
 
   const [myProjects, setMyProjects] = useState([])
@@ -414,15 +427,17 @@ export default function Coach() {
       <Navbar />
       <div className="page-content" style={{ padding: 0 }}>
         {/* No mobile, ".page-content" tem um padding forçado por !important
-            (20px + 48px+safe-area, ver index.css) que o style={{padding:0}}
-            deste componente não consegue anular. Sem descontar esses 68px
-            aqui, esta caixa fica sempre ~68px mais alta do que o viewport
-            tem para dar, e é a página toda que ganha scroll em vez de ficar
-            só dentro da lista de mensagens (o mesmo problema que o
-            .msg-outer-wrap em Mensagens.css resolve com o seu próprio
-            calc(100dvh - 62px) !important no mobile). overflow:hidden
-            trava o que sobrar, como segunda rede de segurança. */}
-        <div style={{ display: 'flex', height: isMobile ? 'calc(100dvh - 70px - 68px)' : 'calc(100dvh - 70px)', overflow: 'hidden' }}>
+            (20px + 48px + safe-area-inset-bottom, ver index.css) que o
+            style={{padding:0}} deste componente não consegue anular. Sem
+            descontar isto aqui, esta caixa fica sempre mais alta do que o
+            viewport tem para dar. env(safe-area-inset-bottom) tem de ser
+            usado tal e qual (não um número fixo): num iPhone real com
+            home indicator vale ~34px, numa simulação sem notch vale 0,
+            um número fixo escolhido a testar na simulação fica sempre
+            errado no aparelho real. overflow:hidden trava o que sobrar,
+            como segunda rede de segurança a par do position:fixed no
+            body acima. */}
+        <div style={{ display: 'flex', height: isMobile ? 'calc(100dvh - 70px - 20px - 48px - env(safe-area-inset-bottom, 0px))' : 'calc(100dvh - 70px)', overflow: 'hidden' }}>
 
           {/* Painel de histórico (docked no desktop, overlay no mobile) */}
           <div
