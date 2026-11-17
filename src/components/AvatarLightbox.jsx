@@ -99,7 +99,8 @@ export function AvatarLightbox({ userId, imageUrl, name, bg, fallbackColor = '#f
   return createPortal(
     <div
       role="dialog" aria-modal="true" aria-labelledby={titleId}
-      style={{ position: 'fixed', inset: 0, zIndex: 9900, background: 'rgba(0,0,0,0.82)',
+      style={{ position: 'fixed', inset: 0, zIndex: 9900, background: 'rgba(0,0,0,0.6)',
+               backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                gap: 20, padding: 24 }}
       onClick={onClose}

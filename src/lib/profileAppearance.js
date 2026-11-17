@@ -26,11 +26,18 @@ export const FONTS = {
   neutro:     { label: 'Neutro',     heading: "system-ui, -apple-system, 'Segoe UI', sans-serif",  body: "system-ui, -apple-system, 'Segoe UI', sans-serif" },
 }
 
+// Só usado como ponto de partida da roda de cor personalizada, nunca como
+// cor por omissão de um perfil (ver appearanceVars): sem cor escolhida, o
+// perfil fica neutro, sem atmosfera nenhuma, para a cor continuar a ser um
+// sinal de "isto foi personalizado", não o estado em que todos nascem.
 export const DEFAULT_ACCENT = '#2563eb'
 
-/* style inline para o wrapper .up-root — só accent e tipografia. */
+/* style inline para o wrapper .up-root, só accent e tipografia. Sem
+   --up-accent quando não há cor escolhida (ver UserProfile.css: os
+   fallbacks de wash/sombra resolvem para "sem tinta nenhuma" nesse caso). */
 export function appearanceVars(a = {}) {
-  const vars = { '--up-accent': a.accent || DEFAULT_ACCENT }
+  const vars = {}
+  if (a.accent) vars['--up-accent'] = a.accent
   const font = FONTS[a.font]
   if (font) {
     vars['--up-font-heading'] = font.heading

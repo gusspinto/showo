@@ -219,11 +219,13 @@ body.light {
   --shadow-lg:  0 4px 16px rgba(0,0,0,0.08);
   --shadow-xl:  0 8px 32px rgba(0,0,0,0.10);
 
-  /* Ver nota em :root, mesma cor, bem menos intensidade, senão o pastel
-     sobre fundo claro fica lavado em vez de atmosfera. */
-  --up-wash-pct:       10%;
-  --up-shadow-pct:     16%;
-  --up-shadow-pct-sm:  12%;
+  /* Ver nota em :root. O mix passa a ser em oklch (UserProfile.css), que
+     guarda mais croma ao clarear do que srgb, por isso aqui já não precisa
+     de ser tão baixo quanto antes para não ficar lavado, só precisa de
+     ficar visivelmente mais contido do que no escuro. */
+  --up-wash-pct:       22%;
+  --up-shadow-pct:     30%;
+  --up-shadow-pct-sm:  22%;
 }
 
 /* ── Professor: reaproveita as cores de sucesso como acento em vez do azul do

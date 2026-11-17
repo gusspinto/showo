@@ -27,11 +27,18 @@
    é escuro no tema escuro e claro no tema claro, por isso o resultado
    acompanha o tema sozinho, sem JS nenhum. O cartão de vidro por cima
    (.up-profile-card) não muda de cor, só a página à volta dele. A
-   intensidade (--up-wash-pct) vem dos tokens, bem mais baixa no tema claro,
-   senão a mesma % fica num pastel lavado em vez de atmosfera. */
+   intensidade (--up-wash-pct) vem dos tokens, mais contida no tema claro.
+   O mix é em oklch, não srgb: misturar em srgb com um fundo quase branco
+   lava a cor (perde croma depressa ao clarear), oklch mantém o croma mais
+   tempo, por isso a cor continua reconhecível em vez de virar pastel sem
+   nome. Sem cor escolhida, --up-accent não existe (ver profileAppearance.js)
+   e o fallback aqui é o próprio --color-bg, por isso o mix dá --color-bg
+   outra vez, sem tinta nenhuma, de propósito: a cor é um sinal de
+   personalização, não um azul automático que todos os perfis teriam à
+   nascença. */
 .bg-page.up-root {
   background: radial-gradient(ellipse 1100px 520px at 50% 0%,
-    color-mix(in srgb, var(--up-accent, var(--color-primary)) var(--up-wash-pct, 30%), var(--color-bg)) 0%,
+    color-mix(in oklch, var(--up-accent, var(--color-bg)) var(--up-wash-pct, 30%), var(--color-bg)) 0%,
     var(--color-bg) 72%);
 }
 
@@ -47,7 +54,7 @@
   border: 1px solid var(--color-glass-border);
   border-radius: var(--radius-xl, 20px);
   padding: 32px 32px 40px;
-  box-shadow: 0 32px 80px -24px color-mix(in srgb, var(--up-accent, var(--color-primary)) var(--up-shadow-pct, 42%), transparent);
+  box-shadow: 0 32px 80px -24px color-mix(in oklch, var(--up-accent, transparent) var(--up-shadow-pct, 42%), transparent);
 }
 @media (max-width: 860px) {
   .up-profile-card { padding: 22px 18px 28px; border-radius: var(--radius-xl); }
@@ -497,7 +504,7 @@
   text-align: left;
   color: inherit;
   transition: border-color 0.15s;
-  box-shadow: 0 16px 36px -18px color-mix(in srgb, var(--up-accent, var(--color-primary)) var(--up-shadow-pct-sm, 32%), transparent);
+  box-shadow: 0 16px 36px -18px color-mix(in oklch, var(--up-accent, transparent) var(--up-shadow-pct-sm, 32%), transparent);
 }
 .up-pf-row:hover { border-color: var(--color-border-hover); }
 
@@ -536,7 +543,7 @@
   cursor: pointer;
   overflow: hidden;
   transition: border-color 0.15s;
-  box-shadow: 0 16px 36px -18px color-mix(in srgb, var(--up-accent, var(--color-primary)) var(--up-shadow-pct-sm, 32%), transparent);
+  box-shadow: 0 16px 36px -18px color-mix(in oklch, var(--up-accent, transparent) var(--up-shadow-pct-sm, 32%), transparent);
 }
 
 .up-project-card:hover {
@@ -707,7 +714,7 @@
   border-radius: var(--radius-lg);
   padding: 48px 32px;
   text-align: center;
-  box-shadow: 0 16px 36px -18px color-mix(in srgb, var(--up-accent, var(--color-primary)) var(--up-shadow-pct-sm, 32%), transparent);
+  box-shadow: 0 16px 36px -18px color-mix(in oklch, var(--up-accent, transparent) var(--up-shadow-pct-sm, 32%), transparent);
 }
 
 .up-empty-icon {
@@ -1070,12 +1077,12 @@
    link do LinkedIn e realce no hover dos cards. Botões preenchidos ficam
    neutros (var(--color-text) / var(--color-bg)). */
 .up-root .up-chip--link {
-  color: var(--up-accent);
-  border-color: color-mix(in srgb, var(--up-accent) 45%, var(--color-border));
+  color: var(--up-accent, var(--color-primary));
+  border-color: color-mix(in srgb, var(--up-accent, var(--color-primary)) 45%, var(--color-border));
 }
 .up-root .up-project-card:hover,
 .up-root .up-pf-row:hover {
-  border-color: var(--up-accent);
+  border-color: var(--up-accent, var(--color-border-hover));
 }
 
 /* ── Frase de topo: entre o nome e a meta. Mais forte que a bio por baixo

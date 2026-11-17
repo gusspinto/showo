@@ -7,7 +7,13 @@ import { TrashBinTrashIcon as Trash } from '@solar-icons/react/bold/trash-bin-tr
 import { ACCENT_SWATCHES, FONTS, DEFAULT_ACCENT } from '../lib/profileAppearance'
 import ColorPicker from './ColorPicker'
 import SkillsPicker from './SkillsPicker'
+import SegmentedTabs from './SegmentedTabs'
 import './ProfileCustomizer.css'
+
+const PC_TABS = [
+  { id: 'conteudo', label: 'Conteúdo' },
+  { id: 'aparencia', label: 'Aparência' },
+]
 
 const HEADLINE_MAX = 90
 const BIO_MAX = 400
@@ -63,16 +69,7 @@ export default function ProfileCustomizer({
           <button className="pc-x" onClick={onClose} aria-label="Fechar"><X size={16} /></button>
         </header>
 
-        <div className="pc-tabs" role="tablist">
-          <button type="button" role="tab" aria-selected={tab === 'conteudo'}
-            className={`pc-tab${tab === 'conteudo' ? ' is-on' : ''}`} onClick={() => setTab('conteudo')}>
-            Conteúdo
-          </button>
-          <button type="button" role="tab" aria-selected={tab === 'aparencia'}
-            className={`pc-tab${tab === 'aparencia' ? ' is-on' : ''}`} onClick={() => setTab('aparencia')}>
-            Aparência
-          </button>
-        </div>
+        <SegmentedTabs value={tab} onChange={setTab} options={PC_TABS} size="compact" className="pc-tabs" />
 
         <div className="pc-body">
           {tab === 'conteudo' && (
@@ -168,7 +165,7 @@ export default function ProfileCustomizer({
                   {ACCENT_SWATCHES.map(c => (
                     <button
                       key={c}
-                      className={`pc-swatch${(a.accent || DEFAULT_ACCENT) === c ? ' is-on' : ''}`}
+                      className={`pc-swatch${a.accent === c ? ' is-on' : ''}`}
                       style={{ background: c }}
                       onClick={() => set({ accent: c })}
                       aria-label={c}

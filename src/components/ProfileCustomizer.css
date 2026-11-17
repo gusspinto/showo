@@ -32,22 +32,15 @@
 
 /* Separa o conteúdo do perfil (nome, frase, bio, competências) da
    aparência (banner, cor, tipografia), em vez de um divisor a meio de
-   uma lista só, mais fácil de voltar a um campo sem percorrer tudo. */
+   uma lista só, mais fácil de voltar a um campo sem percorrer tudo.
+   SegmentedTabs.css já trata do visual (o mesmo controlo do Explorar, da
+   dashboard de professor, etc.), aqui só o espaçamento dentro do painel. */
 .pc-tabs {
-  display: flex; gap: 4px; flex-shrink: 0;
+  flex-shrink: 0;
   margin: 14px 16px 0;
-  padding: 4px;
-  background: var(--color-bg-alt);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-full);
+  width: calc(100% - 32px);
 }
-.pc-tab {
-  flex: 1; padding: 9px 10px; border: none; border-radius: var(--radius-full);
-  background: transparent; color: var(--color-text-secondary);
-  font-weight: 700; font-size: 13px; cursor: pointer; font-family: inherit;
-  transition: background 0.18s, color 0.18s;
-}
-.pc-tab.is-on { background: var(--color-primary); color: #fff; }
+.pc-tabs .seg-btn { flex: 1; }
 
 .pc-body { flex: 1; overflow-y: auto; padding: 18px 16px 24px; }
 .pc-group { margin-bottom: 20px; }
