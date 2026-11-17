@@ -145,6 +145,14 @@
   --shadow-md:  0 2px 8px rgba(0,0,0,0.45);
   --shadow-lg:  0 4px 16px rgba(0,0,0,0.50);
   --shadow-xl:  0 8px 32px rgba(0,0,0,0.55);
+
+  /* ── Intensidade da atmosfera de marca do perfil (UserProfile.css,
+     --up-accent). Um glow saturado lê-se bem sobre fundo escuro, mas a
+     mesma % sobre fundo claro fica a um pastel lavado, por isso cada tema
+     tem a sua própria intensidade em vez de uma % fixa para os dois. */
+  --up-wash-pct:       30%;
+  --up-shadow-pct:     42%;
+  --up-shadow-pct-sm:  32%;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -210,6 +218,12 @@ body.light {
   --shadow-md:  0 2px 8px rgba(0,0,0,0.06);
   --shadow-lg:  0 4px 16px rgba(0,0,0,0.08);
   --shadow-xl:  0 8px 32px rgba(0,0,0,0.10);
+
+  /* Ver nota em :root, mesma cor, bem menos intensidade, senão o pastel
+     sobre fundo claro fica lavado em vez de atmosfera. */
+  --up-wash-pct:       10%;
+  --up-shadow-pct:     16%;
+  --up-shadow-pct-sm:  12%;
 }
 
 /* ── Professor: reaproveita as cores de sucesso como acento em vez do azul do

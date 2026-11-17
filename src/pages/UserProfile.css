@@ -26,10 +26,12 @@
    ver profileAppearance.js). color-mix() parte sempre de --color-bg, que já
    é escuro no tema escuro e claro no tema claro, por isso o resultado
    acompanha o tema sozinho, sem JS nenhum. O cartão de vidro por cima
-   (.up-profile-card) não muda de cor, só a página à volta dele. */
+   (.up-profile-card) não muda de cor, só a página à volta dele. A
+   intensidade (--up-wash-pct) vem dos tokens, bem mais baixa no tema claro,
+   senão a mesma % fica num pastel lavado em vez de atmosfera. */
 .bg-page.up-root {
   background: radial-gradient(ellipse 1100px 520px at 50% 0%,
-    color-mix(in srgb, var(--up-accent, var(--color-primary)) 30%, var(--color-bg) 70%) 0%,
+    color-mix(in srgb, var(--up-accent, var(--color-primary)) var(--up-wash-pct, 30%), var(--color-bg)) 0%,
     var(--color-bg) 72%);
 }
 
@@ -45,7 +47,7 @@
   border: 1px solid var(--color-glass-border);
   border-radius: var(--radius-xl, 20px);
   padding: 32px 32px 40px;
-  box-shadow: 0 32px 80px -24px color-mix(in srgb, var(--up-accent, var(--color-primary)) 42%, transparent);
+  box-shadow: 0 32px 80px -24px color-mix(in srgb, var(--up-accent, var(--color-primary)) var(--up-shadow-pct, 42%), transparent);
 }
 @media (max-width: 860px) {
   .up-profile-card { padding: 22px 18px 28px; border-radius: var(--radius-xl); }
@@ -495,7 +497,7 @@
   text-align: left;
   color: inherit;
   transition: border-color 0.15s;
-  box-shadow: 0 16px 36px -18px color-mix(in srgb, var(--up-accent, var(--color-primary)) 32%, transparent);
+  box-shadow: 0 16px 36px -18px color-mix(in srgb, var(--up-accent, var(--color-primary)) var(--up-shadow-pct-sm, 32%), transparent);
 }
 .up-pf-row:hover { border-color: var(--color-border-hover); }
 
@@ -534,7 +536,7 @@
   cursor: pointer;
   overflow: hidden;
   transition: border-color 0.15s;
-  box-shadow: 0 16px 36px -18px color-mix(in srgb, var(--up-accent, var(--color-primary)) 32%, transparent);
+  box-shadow: 0 16px 36px -18px color-mix(in srgb, var(--up-accent, var(--color-primary)) var(--up-shadow-pct-sm, 32%), transparent);
 }
 
 .up-project-card:hover {
@@ -698,11 +700,14 @@
 
 /* ── Empty state ── */
 .up-empty {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--color-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--color-glass-border);
   border-radius: var(--radius-lg);
   padding: 48px 32px;
   text-align: center;
+  box-shadow: 0 16px 36px -18px color-mix(in srgb, var(--up-accent, var(--color-primary)) var(--up-shadow-pct-sm, 32%), transparent);
 }
 
 .up-empty-icon {
