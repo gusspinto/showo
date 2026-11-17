@@ -55,33 +55,6 @@ export default function Coach() {
     return () => document.body.classList.remove('coach-chat-lock')
   }, [])
 
-  // Altura real e visível do ecrã no mobile, seguida ao vivo via
-  // visualViewport. Sem isto, o portal fixed (top:62, bottom:0) assumia
-  // que a altura visível era sempre 100dvh, mas quando o teclado abre a
-  // área visível encolhe por baixo sem o layout viewport encolher da
-  // mesma forma em todos os motores, mesmo com interactive-widget=
-  // resizes-content no <meta viewport>. O browser então tentava
-  // "trazer o input para a vista" a dar scroll à própria página, que é
-  // exatamente o "volta para o user" que o Gustavo via, com o input a
-  // saltar mais alto do que precisava. Ao calcular a altura do
-  // container a partir do visualViewport a sério, em vez de confiar no
-  // bottom:0/100dvh, o rodapé do chat fica sempre colado ao topo real
-  // do teclado, sem espaço a mais nem scroll a escapar.
-  const [vvHeight, setVvHeight] = useState(() => (
-    typeof window !== 'undefined' ? window.innerHeight : 0
-  ))
-  useEffect(() => {
-    if (!isMobile || typeof window === 'undefined' || !window.visualViewport) return
-    const vv = window.visualViewport
-    const update = () => setVvHeight(vv.height)
-    update()
-    vv.addEventListener('resize', update)
-    vv.addEventListener('scroll', update)
-    return () => {
-      vv.removeEventListener('resize', update)
-      vv.removeEventListener('scroll', update)
-    }
-  }, [isMobile])
 
   const [myProjects, setMyProjects] = useState([])
   const [pickerOpen, setPickerOpen] = useState(false)
@@ -622,7 +595,7 @@ export default function Coach() {
           z-index deles ser bem maior que 150 "por dentro". */}
       {isMobile && createPortal(
         <>
-          <div style={{ position: 'fixed', top: 62, left: 0, right: 0, height: Math.max(0, vvHeight - 62), zIndex: 50, display: 'flex', flexDirection: 'column', background: C.bg, fontFamily: 'inherit' }}>
+          <div style={{ position: 'fixed', top: 62, left: 0, right: 0, bottom: 0, zIndex: 50, display: 'flex', flexDirection: 'column', background: C.bg, fontFamily: 'inherit' }}>
             {chatHeader}
             {chatContent}
           </div>
