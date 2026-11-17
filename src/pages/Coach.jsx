@@ -438,15 +438,17 @@ export default function Coach() {
           </div>
           {historyOpen && <div className="coach-history-backdrop" onClick={() => setHistoryOpen(false)} />}
 
-          <div style={{ flex: 1, minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', padding: 'clamp(16px,3vw,24px) clamp(16px,3vw,24px) 0' }}>
+          <div style={{ flex: 1, minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', padding: isMobile ? 0 : 'clamp(16px,3vw,24px) clamp(16px,3vw,24px) 0' }}>
             {/* Cartão único (cabeçalho + mensagens + input), como o
                 .msg-thread de Mensagens.jsx: antes disto a conversa não
                 tinha nenhum contorno a dizer onde começa e acaba, só
-                flutuava sobre o fundo da página, o que dava a sensação de
-                "largado" e de vazio enorme sem hierarquia nenhuma quando a
-                conversa era curta. Com o cartão, esse espaço fica
-                claramente dentro do chat, não misturado com a página. */}
-            <div style={{ maxWidth: 760, width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', flex: 1, boxSizing: 'border-box', minHeight: 0, background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, overflow: 'hidden' }}>
+                flutuava sobre o fundo da página. No mobile, Mensagens.jsx
+                não usa esse cartão flutuante, usa .msg-mobile-thread: sem
+                margens, sem borda, a preencher o ecrã todo abaixo da
+                navbar (igual a uma app de chat a sério, não um cartão
+                dentro da página). Replicado aqui: no mobile, sem padding
+                à volta, sem borda, sem raio, fundo igual ao da página. */}
+            <div style={{ maxWidth: isMobile ? 'none' : 760, width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', flex: 1, boxSizing: 'border-box', minHeight: 0, background: isMobile ? C.bg : C.card, border: isMobile ? 'none' : `1px solid ${C.border}`, borderRadius: isMobile ? 0 : 16, overflow: 'hidden' }}>
 
               {/* Header: duas versões, não uma só espremida.
                   Desktop: ícone + "Coach IA"/legenda à esquerda, badge +
