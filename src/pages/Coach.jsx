@@ -438,8 +438,15 @@ export default function Coach() {
           </div>
           {historyOpen && <div className="coach-history-backdrop" onClick={() => setHistoryOpen(false)} />}
 
-          <div style={{ flex: 1, minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-            <div style={{ maxWidth: 760, width: '100%', margin: '0 auto', padding: '0 clamp(16px,3vw,24px)', display: 'flex', flexDirection: 'column', flex: 1, boxSizing: 'border-box', minHeight: 0 }}>
+          <div style={{ flex: 1, minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', padding: 'clamp(16px,3vw,24px) clamp(16px,3vw,24px) 0' }}>
+            {/* Cartão único (cabeçalho + mensagens + input), como o
+                .msg-thread de Mensagens.jsx: antes disto a conversa não
+                tinha nenhum contorno a dizer onde começa e acaba, só
+                flutuava sobre o fundo da página, o que dava a sensação de
+                "largado" e de vazio enorme sem hierarquia nenhuma quando a
+                conversa era curta. Com o cartão, esse espaço fica
+                claramente dentro do chat, não misturado com a página. */}
+            <div style={{ maxWidth: 760, width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', flex: 1, boxSizing: 'border-box', minHeight: 0, background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, overflow: 'hidden' }}>
 
               {/* Header: duas versões, não uma só espremida.
                   Desktop: ícone + "Coach IA"/legenda à esquerda, badge +
@@ -452,7 +459,7 @@ export default function Coach() {
                   o nome do projeto) e o badge/nova conversa compactos ao
                   lado, tudo numa linha só. */}
               {isMobile ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '16px 0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 16px', borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
                   <button
                     className="coach-history-toggle"
                     onClick={() => setHistoryOpen(true)}
@@ -476,7 +483,7 @@ export default function Coach() {
                   )}
                 </div>
               ) : (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 'clamp(16px,3vw,24px) 0 16px', flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '18px 24px', borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
                   <button
                     className="coach-history-toggle"
                     onClick={() => setHistoryOpen(true)}
@@ -508,7 +515,7 @@ export default function Coach() {
                 // Sem mensagens ainda: tudo centrado a meio do ecrã (como o
                 // ecrã de "nova conversa" do ChatGPT/Claude), em vez de deixar
                 // um vazio enorme entre a saudação e a caixa lá em baixo.
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20, paddingBottom: '10vh' }}>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20, padding: '24px 24px calc(10vh + 24px)' }}>
                   <div style={{ width: 52, height: 52, borderRadius: 15, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Bot size={26} color="var(--color-primary)" />
                   </div>
@@ -541,7 +548,7 @@ export default function Coach() {
                       coluna toda crescia com a conversa e era a página
                       inteira a dar scroll, não esta lista (ver msg-messages
                       em Mensagens.css para o mesmo padrão). */}
-                  <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 16 }}>
+                  <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, padding: '20px 24px' }}>
                     {messages.map((m, i) => (
                       <div key={i} style={{
                         alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
@@ -564,7 +571,7 @@ export default function Coach() {
                   </div>
 
                   {/* Input */}
-                  <div style={{ padding: '10px 0 16px', borderTop: `1px solid ${C.border}`, flexShrink: 0 }}>{inputBar}</div>
+                  <div style={{ padding: '14px 24px', borderTop: `1px solid ${C.border}`, flexShrink: 0 }}>{inputBar}</div>
                 </>
               )}
             </div>
