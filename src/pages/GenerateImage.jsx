@@ -16,6 +16,16 @@ const C = {
   glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
 }
 
+// Pré-visualização de quem ainda não desbloqueou: não temos exemplos reais
+// prontos a mostrar aqui, por isso são só gradientes a sugerir estilos de
+// capa diferentes, não capturas verdadeiras da ferramenta.
+const MOCK_BANNERS = [
+  { label: 'Capa minimalista, tons de azul', gradient: 'linear-gradient(135deg, #1e3a8a, #3b82f6, #93c5fd)' },
+  { label: 'Capa criativa, gradiente vibrante', gradient: 'linear-gradient(135deg, #db2777, #ea580c, #facc15)' },
+  { label: 'Capa editorial, preto e branco', gradient: 'linear-gradient(135deg, #0f172a, #334155, #cbd5e1)' },
+  { label: 'Capa tech, verde e grafite', gradient: 'linear-gradient(135deg, #064e3b, #0d9488, #5eead4)' },
+]
+
 // Pedido direto do Gustavo depois de confusão real: o Coach apontava para
 // "o separador Imagem", mas isso vivia só dentro da edição de um projeto
 // específico, sem acesso direto na barra lateral. Esta página dá acesso
@@ -162,13 +172,13 @@ export default function GenerateImage() {
   const pillPrimary = {
     display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7,
     padding: '11px 22px', fontSize: 13.5, fontWeight: 700, fontFamily: 'inherit',
-    border: 'none', borderRadius: 'var(--radius-full)', cursor: 'pointer',
+    border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer',
     background: C.blue, color: '#fff', boxShadow: '0 2px 10px var(--color-primary-subtle)',
   }
   const pillGhost = {
     display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
     padding: '9px 16px', fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
-    border: `1px solid ${C.border}`, borderRadius: 'var(--radius-full)', cursor: 'pointer',
+    border: `1px solid ${C.border}`, borderRadius: 'var(--radius-md)', cursor: 'pointer',
     background: 'transparent', color: C.text,
   }
 
@@ -179,27 +189,46 @@ export default function GenerateImage() {
         <div style={{ maxWidth: 640, width: '100%', margin: '0 auto', padding: 'clamp(16px,3vw,24px)' }}>
 
           {!gate.allowed ? (
-            // Um cartão só, em vez de cabeçalho + caixa de upsell a repetir o
-            // mesmo ícone e quase o mesmo texto uma a seguir à outra.
-            <div style={{ textAlign: 'center', ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 'var(--radius-xl)', padding: 'clamp(36px,7vw,52px) 28px' }}>
-              <div style={{ width: 64, height: 64, borderRadius: 'var(--radius-lg)', background: 'var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-                <ImageIcon size={28} color={C.blue} />
+            <>
+              {/* Um cartão só, em vez de cabeçalho + caixa de upsell a repetir o
+                  mesmo ícone e quase o mesmo texto uma a seguir à outra. */}
+              <div style={{ textAlign: 'center', ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 'var(--radius-xl)', padding: 'clamp(36px,7vw,52px) 28px' }}>
+                <div style={{ width: 64, height: 64, borderRadius: 'var(--radius-lg)', background: 'var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+                  <ImageIcon size={28} color={C.blue} />
+                </div>
+                <h1 style={{ margin: '0 0 8px', fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.4px', color: C.text }}>Gerar imagem com IA</h1>
+                <p style={{ margin: '0 auto 24px', maxWidth: 360, fontSize: 14, color: C.muted, lineHeight: 1.6 }}>
+                  {gate.message?.body || 'Capas, ilustrações e imagens para os teus projetos.'}
+                </p>
+                <button type="button" onClick={() => setGenGateMsg(gate.message)} style={pillPrimary}>
+                  <Sparkles size={14} /> {upgrade ? `Desbloquear com o ${upgrade.name}` : 'Ver planos'}
+                </button>
+                {genGateMsg && (
+                  <PlanGateModal
+                    message={genGateMsg}
+                    forcedPlan={planThatUnlocks('generateImage', planId)}
+                    onClose={() => setGenGateMsg(null)}
+                  />
+                )}
               </div>
-              <h1 style={{ margin: '0 0 8px', fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.4px', color: C.text }}>Gerar imagem com IA</h1>
-              <p style={{ margin: '0 auto 24px', maxWidth: 360, fontSize: 14, color: C.muted, lineHeight: 1.6 }}>
-                {gate.message?.body || 'Capas, ilustrações e imagens para os teus projetos.'}
-              </p>
-              <button type="button" onClick={() => setGenGateMsg(gate.message)} style={pillPrimary}>
-                <Sparkles size={14} /> {upgrade ? `Desbloquear com o ${upgrade.name}` : 'Ver planos'}
-              </button>
-              {genGateMsg && (
-                <PlanGateModal
-                  message={genGateMsg}
-                  forcedPlan={planThatUnlocks('generateImage', planId)}
-                  onClose={() => setGenGateMsg(null)}
-                />
-              )}
-            </div>
+
+              {/* Ninguém desbloqueou ainda viu o resultado real, por isso um
+                  preview do tipo de capas que a ferramenta gera, para dar uma
+                  ideia concreta do que está a pagar antes de decidir. */}
+              <div style={{ marginTop: 28 }}>
+                <p style={{ margin: '0 0 12px', fontSize: 12.5, fontWeight: 700, color: C.muted, textAlign: 'center' }}>
+                  Alguns exemplos do que dá para gerar
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 12 }}>
+                  {MOCK_BANNERS.map(m => (
+                    <div key={m.label} style={{ borderRadius: 'var(--radius-md)', overflow: 'hidden', border: `1px solid ${C.border}` }}>
+                      <div style={{ aspectRatio: '16 / 10', background: m.gradient }} />
+                      <p style={{ margin: 0, padding: '8px 10px', fontSize: 11, color: C.muted, lineHeight: 1.4 }}>{m.label}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
           ) : (
             <>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>

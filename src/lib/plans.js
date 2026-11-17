@@ -391,7 +391,7 @@ export const PLAN_GATE_MESSAGES = {
   generateImage: (plan) => ({
     title: 'Gerar imagens com IA',
     body: plan === 'free' || plan === 'school'
-      ? 'Gerar imagens com IA está disponível a partir do plano Plus (5 por mês).'
+      ? 'Gerar imagens com IA está disponível a partir do plano Plus.'
       : `Já usaste as imagens deste mês no plano ${getPlan(plan).name}. Faz upgrade para teres mais.`,
   }),
 }
