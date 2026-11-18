@@ -17,6 +17,7 @@ import { CameraIcon as Camera } from '@solar-icons/react/bold/camera'
 import { SquareArrowRightUpIcon as ExternalLink } from '@solar-icons/react/bold/square-arrow-right-up'
 import { PaletteIcon as Palette } from '@solar-icons/react/bold/palette'
 import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
+import { ArrowUpIcon as ArrowUp } from '@solar-icons/react/bold/arrow-up'
 import { StarIcon as Star } from '@solar-icons/react/bold/star'
 import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
 import { PlusIcon as Plus } from '../components/icons/PlusIcon'
@@ -363,6 +364,7 @@ export default function UserProfile() {
   const [showInvite, setShowInvite] = useState(false)
   const [viewingFile, setViewingFile] = useState(null)
   const [customizing, setCustomizing] = useState(false)
+  const [skillsReviewOpen, setSkillsReviewOpen] = useState(false)
   const [draftAppearance, setDraftAppearance] = useState({})
   const [draftHeadline, setDraftHeadline] = useState('')
   const [draftFullName, setDraftFullName] = useState('')
@@ -634,6 +636,15 @@ export default function UserProfile() {
     await supabase.from('profiles').update({ skills: next }).eq('id', user.id)
   }
 
+  // Remoção rápida direto no perfil (hover + X no chip), sem ter de abrir o
+  // painel lateral só para tirar uma competência.
+  async function removeSkillFromProfile(skill) {
+    if (!isOwnProfile) return
+    const next = manualSkills.filter(s => norm(s) !== norm(skill))
+    setProfile(p => ({ ...p, skills: next }))
+    await supabase.from('profiles').update({ skills: next }).eq('id', user.id)
+  }
+
   // Confirma uma sugestão da IA: escreve-a em projects.skills/tech_stack de
   // cada projeto onde apareceu, e tira-a da lista de pendentes.
   async function confirmSuggestion(kind, rawLabel, projectIds) {
@@ -874,16 +885,20 @@ export default function UserProfile() {
         </header>
 
         {/* ── Competências: junto da identidade (nome, frase, bio), não
-             isolada lá em baixo depois dos projetos sem ligação a nada. ── */}
-        {(manualSkills.length > 0 || suggestedSkills.length > 0 || projectTech.length > 0 || pendingSkills.length > 0 || pendingTech.length > 0) && (
+             isolada lá em baixo depois dos projetos sem ligação a nada.
+             Para o dono, mostra-se sempre (mesmo vazia), com atalho para
+             editar ali mesmo; visitantes só veem se houver algo a mostrar. ── */}
+        {(isOwnProfile || manualSkills.length > 0 || suggestedSkills.length > 0 || projectTech.length > 0) && (
           <div className="up-skills-section">
 
             {/* Review: sugestões da IA (só o dono) */}
             {isOwnProfile && (pendingSkills.length > 0 || pendingTech.length > 0) && (
-              <details className="up-skills-review">
+              <details className="up-skills-review" open={skillsReviewOpen} onToggle={e => setSkillsReviewOpen(e.target.open)}>
                 <summary className="up-skills-review-summary">
                   <span className="up-skills-review-title">A IA encontrou {pendingSkills.length + pendingTech.length} sugestões</span>
-                  <span className="up-skills-review-hint">Ver</span>
+                  {skillsReviewOpen
+                    ? <ArrowUp size={14} className="up-skills-review-hint" />
+                    : <span className="up-skills-review-hint">Ver</span>}
                 </summary>
                 <p className="up-skills-review-sub">Confirma o que faz sentido. Só aparece no perfil depois de confirmares.</p>
                 <div className="up-chips-row">
@@ -898,31 +913,46 @@ export default function UserProfile() {
               </details>
             )}
 
-            {(manualSkills.length > 0 || suggestedSkills.length > 0) && (
-              <>
-                <p className="up-section-label">Competências</p>
-                <div className="up-chips-row">
-                  {manualSkills.map(skill => {
-                    const n = proofCount(skill)
-                    return (
-                      <span key={skill} className={`up-chip${n > 0 ? ' up-chip--proven' : ''}`}
-                        title={n > 0 ? `Demonstrada em ${n} projeto${n !== 1 ? 's' : ''}` : undefined}>
-                        {n > 0 && <Check size={11} />} {skill}
-                      </span>
-                    )
-                  })}
-                  {suggestedSkills.map(skill => (
-                    isOwnProfile ? (
-                      <button key={skill} className="up-chip up-chip--add" onClick={() => addSkillToProfile(skill)}
-                        title="Demonstrada nos teus projetos — adicionar à lista">
-                        <Check size={11} /> {skill} <Plus size={11} />
-                      </button>
-                    ) : (
-                      <span key={skill} className="up-chip up-chip--proven"><Check size={11} /> {skill}</span>
-                    )
-                  ))}
-                </div>
-              </>
+            <div className="up-work-head">
+              <p className="up-section-label">Competências</p>
+              {isOwnProfile && (
+                <button className="up-work-add" onClick={openCustomizer}
+                  title="Adicionar ou editar competências" aria-label="Adicionar ou editar competências">
+                  <Plus size={13} />
+                </button>
+              )}
+            </div>
+
+            {(manualSkills.length > 0 || suggestedSkills.length > 0) ? (
+              <div className="up-chips-row">
+                {manualSkills.map(skill => {
+                  const n = proofCount(skill)
+                  return (
+                    <span key={skill} className={`up-chip${n > 0 ? ' up-chip--proven' : ''}${isOwnProfile ? ' up-chip--manual' : ''}`}
+                      title={n > 0 ? `Demonstrada em ${n} projeto${n !== 1 ? 's' : ''}` : undefined}>
+                      {n > 0 && <Check size={11} />} {skill}
+                      {isOwnProfile && (
+                        <button type="button" className="up-chip-remove" onClick={() => removeSkillFromProfile(skill)}
+                          title="Remover" aria-label={`Remover ${skill}`}>
+                          <X size={11} />
+                        </button>
+                      )}
+                    </span>
+                  )
+                })}
+                {suggestedSkills.map(skill => (
+                  isOwnProfile ? (
+                    <button key={skill} className="up-chip up-chip--add" onClick={() => addSkillToProfile(skill)}
+                      title="Demonstrada nos teus projetos — adicionar à lista">
+                      <Check size={11} /> {skill} <Plus size={11} />
+                    </button>
+                  ) : (
+                    <span key={skill} className="up-chip up-chip--proven"><Check size={11} /> {skill}</span>
+                  )
+                ))}
+              </div>
+            ) : isOwnProfile && (
+              <p className="up-skills-empty">Ainda sem competências. Adiciona as tuas ou deixa a IA sugerir a partir dos teus projetos.</p>
             )}
 
             {projectTech.length > 0 && (

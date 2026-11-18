@@ -328,6 +328,25 @@
 .up-chip-act:hover { background: var(--color-error-subtle); color: var(--color-error); }
 .up-chip-act--ok:hover { background: var(--color-success-subtle); color: var(--color-success); }
 
+/* Remoção rápida de competências, direto no perfil: o X fica encolhido e
+   invisível até passar o rato no chip, depois "expande" ao lado do texto,
+   em vez de estar sempre visível a poluir a lista toda. */
+.up-chip--manual { transition: padding-right 0.15s; }
+.up-chip-remove {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 0; min-height: 0; padding: 0; margin: 0; border: none;
+  border-radius: var(--radius-sm); cursor: pointer; overflow: hidden;
+  background: transparent; color: var(--color-text-tertiary); flex-shrink: 0;
+  opacity: 0; transition: width 0.15s, opacity 0.15s, color 0.15s, background 0.15s;
+}
+.up-chip--manual:hover .up-chip-remove,
+.up-chip-remove:focus-visible {
+  width: 16px; opacity: 1;
+}
+.up-chip-remove:hover { color: var(--color-error); background: var(--color-error-subtle); }
+
+.up-skills-empty { margin: 0; font-size: 13px; color: var(--color-text-tertiary); }
+
 /* ── Action buttons ── */
 .up-action-btn {
   background: transparent;
