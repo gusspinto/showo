@@ -248,6 +248,37 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     )
 
+    // 2026-11-18: até agora esta função processava a lista toda, sem lock,
+    // sem limite por corrida, sem order by. Enquanto a audiência era
+    // pequena isso nunca doeu, mas ao fechar o backlog do onboarding
+    // (migração que fecha onboarding_sequence_step para quem estava preso)
+    // esta função passa a ter de repente ~1363 pessoas elegíveis de uma vez
+    // só, o mesmo padrão que já rebentou o send-onboarding-sequence com
+    // WORKER_RESOURCE_LIMIT (546) a meio do loop. Mesmo padrão de proteção
+    // já validado lá: lock + heartbeat contra corridas sobrepostas
+    // (duplicar envios), e limite por corrida para cada execução ficar
+    // curta e previsível, processando o resto na semana seguinte.
+    if (!testUserId) {
+      const { data: lockAcquired } = await supabase.rpc('try_acquire_function_lock', {
+        p_name: 'send-continuous-cycle',
+        p_stale_minutes: 8,
+      })
+      if (!lockAcquired) {
+        return new Response(JSON.stringify({ ok: true, skipped_reason: 'already_running' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+    }
+
+    try {
+      return await run()
+    } finally {
+      if (!testUserId) await supabase.rpc('release_function_lock', { p_name: 'send-continuous-cycle' })
+    }
+
+    async function run(): Promise<Response> {
+    const MAX_SENT_PER_RUN = 500
+
     const emailById = new Map<string, string>()
     {
       let page = 1
@@ -261,10 +292,14 @@ Deno.serve(async (req) => {
     }
 
     const PROFILE_COLS = 'id, full_name, plan, onboarding_sequence_step, continuous_cycle_step, continuous_cycle_sent_at, continuous_cycle_opted_out, occupation'
+    // Ordenado por continuous_cycle_sent_at (nulls first): quem nunca
+    // recebeu nenhum, ou está à espera há mais tempo, é sempre prioritário
+    // dentro do limite por corrida, mesmo princípio do fix no onboarding.
     let profilesQuery = supabase.from('profiles').select(PROFILE_COLS)
       .gte('onboarding_sequence_step', 14)
       .eq('plan', 'free')
       .eq('continuous_cycle_opted_out', false)
+      .order('continuous_cycle_sent_at', { ascending: true, nullsFirst: true })
     if (testUserId) profilesQuery = supabase.from('profiles').select(PROFILE_COLS).eq('id', testUserId)
 
     const { data: profiles, error: profErr } = await profilesQuery
@@ -276,6 +311,7 @@ Deno.serve(async (req) => {
     const errors: string[] = []
 
     for (const p of (profiles ?? [])) {
+      if (!testUserId && sent >= MAX_SENT_PER_RUN) break
       try {
         if (!testUserId) {
           const notCoolingDown = !p.continuous_cycle_sent_at || new Date(p.continuous_cycle_sent_at) < cooldownSince
@@ -309,6 +345,32 @@ Deno.serve(async (req) => {
         const built = builder({ firstName, unsubscribeUrl, code: discountCode, daysToDefense, isProfessional: isProfessionalOccupation(p.occupation) })
         const emailType = `continuous_cycle_week${weekIdx + 1}`
 
+        // Mesma rede de segurança do onboarding: se o update do step abaixo
+        // falhar depois de um envio anterior (timeout, queda de rede a
+        // meio do loop), o profile fica parado nesse step e a próxima
+        // corrida (passado o cooldown de 6 dias) tentava mandar a MESMA
+        // semana outra vez. Confirmar aqui é a única garantia real, já
+        // que envio e update do step não são atómicos. É também a
+        // proteção direta contra a preocupação do Gustavo (18/11) ao
+        // reativar de repente ~1363 pessoas do backlog do onboarding:
+        // nenhuma recebe o mesmo email duas vezes, mesmo que algo falhe
+        // a meio.
+        if (!testUserId) {
+          const { data: alreadySent } = await supabase
+            .from('email_sends')
+            .select('id')
+            .eq('user_id', p.id)
+            .eq('email_type', emailType)
+            .gte('created_at', cooldownSince.toISOString())
+            .limit(1)
+          if (alreadySent?.length) {
+            await supabase.from('profiles')
+              .update({ continuous_cycle_step: stepCounter + 1, continuous_cycle_sent_at: now.toISOString() })
+              .eq('id', p.id)
+            continue
+          }
+        }
+
         const res = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
@@ -340,6 +402,7 @@ Deno.serve(async (req) => {
           await supabase.from('profiles')
             .update({ continuous_cycle_step: stepCounter + 1, continuous_cycle_sent_at: now.toISOString() })
             .eq('id', p.id)
+          await supabase.rpc('touch_function_lock', { p_name: 'send-continuous-cycle' })
         }
       } catch (e) {
         console.error('[send-continuous-cycle] failed for', p.id, e)
@@ -350,6 +413,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ ok: errors.length === 0, candidates: (profiles ?? []).length, sent, errors }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
+    } // fim de run()
   } catch (e) {
     console.error(e)
     return new Response(JSON.stringify({ error: 'Erro interno.' }), { status: 500, headers: corsHeaders })
