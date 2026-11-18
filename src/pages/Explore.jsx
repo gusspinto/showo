@@ -139,7 +139,7 @@ function PeopleSkeleton() {
 export default function Explore() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { profile, user, logFunnelEvent } = useAuth()
+  const { profile, user, logFunnelEvent, isAdmin } = useAuth()
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [featuredList, setFeaturedList] = useState([])
@@ -392,7 +392,7 @@ export default function Explore() {
     const key = `explore_notif_${project.slug}`
     const isOwn = !!(profile?.id && project.user_id && profile.id === project.user_id)
 
-    if (profile?.id && !isOwn && !sessionStorage.getItem(key)) {
+    if (profile?.id && !isOwn && !isAdmin && !sessionStorage.getItem(key)) {
       sessionStorage.setItem(key, '1')
       getVisitorCity().then(city => {
         supabase.functions.invoke('notify-view', { body: { project_slug: project.slug, type, city, visitor_role: role } })

@@ -324,7 +324,7 @@ function ProfileSkeleton() {
 export default function UserProfile() {
   const { username } = useParams()
   const navigate = useNavigate()
-  const { user, profile: myProfile } = useAuth()
+  const { user, profile: myProfile, isAdmin } = useAuth()
   const isRecruiter = myProfile?.role === 'recrutador' || myProfile?.role === 'empresa'
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [profile, setProfile] = useState(null)
@@ -490,7 +490,9 @@ export default function UserProfile() {
   // looking at their own page.
   useEffect(() => {
     const pid = profile?.id
-    if (!pid || user?.id === pid) return
+    // Admin a ver o perfil de outra pessoa nunca deve contar como visita
+    // nem gerar a notificação "alguém viu o teu perfil" ao dono.
+    if (!pid || user?.id === pid || isAdmin) return
 
     const viewKey = `viewed_profile_${pid}`
     if (sessionStorage.getItem(viewKey)) return
@@ -514,7 +516,7 @@ export default function UserProfile() {
       })
     }, 15000)
     return () => clearTimeout(t)
-  }, [profile?.id, user, myProfile?.role])
+  }, [profile?.id, user, myProfile?.role, isAdmin])
 
   async function toggleSave() {
     if (!user || !profile || savingCandidate) return
