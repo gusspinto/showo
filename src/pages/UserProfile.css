@@ -311,7 +311,6 @@
 .up-skills-review-hint { font-size: 12px; font-weight: 600; color: var(--color-primary); }
 .up-skills-review[open] .up-skills-review-hint { color: var(--color-text-tertiary); }
 .up-skills-review[open] .up-skills-review-summary { margin-bottom: 3px; }
-.up-skills-review-sub { margin: 3px 0 12px; font-size: 12px; color: var(--color-text-tertiary); }
 
 .up-chip--pending {
   gap: 6px;
@@ -330,18 +329,21 @@
 
 /* Remoção rápida de competências, direto no perfil: o X fica encolhido e
    invisível até passar o rato no chip, depois "expande" ao lado do texto,
-   em vez de estar sempre visível a poluir a lista toda. */
+   em vez de estar sempre visível a poluir a lista toda. Mesmo estilo de
+   botão do X usado no cartão de sugestões da IA (.up-chip-act), só com a
+   largura a animar de 0 em vez de estar sempre à mostra. */
 .up-chip--manual { transition: padding-right 0.15s; }
 .up-chip-remove {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 0; min-height: 0; padding: 0; margin: 0; border: none;
+  width: 0; height: 18px; min-height: 0; padding: 0; margin: 0 -2px; border: none;
   border-radius: var(--radius-sm); cursor: pointer; overflow: hidden;
-  background: transparent; color: var(--color-text-tertiary); flex-shrink: 0;
+  background: transparent; color: var(--color-text-secondary); flex-shrink: 0;
   opacity: 0; transition: width 0.15s, opacity 0.15s, color 0.15s, background 0.15s;
 }
 .up-chip--manual:hover .up-chip-remove,
 .up-chip-remove:focus-visible {
-  width: 16px; opacity: 1;
+  width: 18px; opacity: 1;
+  background: var(--color-surface-hover);
 }
 .up-chip-remove:hover { color: var(--color-error); background: var(--color-error-subtle); }
 

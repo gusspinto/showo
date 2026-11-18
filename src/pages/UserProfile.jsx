@@ -17,7 +17,6 @@ import { CameraIcon as Camera } from '@solar-icons/react/bold/camera'
 import { SquareArrowRightUpIcon as ExternalLink } from '@solar-icons/react/bold/square-arrow-right-up'
 import { PaletteIcon as Palette } from '@solar-icons/react/bold/palette'
 import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
-import { ArrowUpIcon as ArrowUp } from '@solar-icons/react/bold/arrow-up'
 import { StarIcon as Star } from '@solar-icons/react/bold/star'
 import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
 import { PlusIcon as Plus } from '../components/icons/PlusIcon'
@@ -896,11 +895,8 @@ export default function UserProfile() {
               <details className="up-skills-review" open={skillsReviewOpen} onToggle={e => setSkillsReviewOpen(e.target.open)}>
                 <summary className="up-skills-review-summary">
                   <span className="up-skills-review-title">A IA encontrou {pendingSkills.length + pendingTech.length} sugestões</span>
-                  {skillsReviewOpen
-                    ? <ArrowUp size={14} className="up-skills-review-hint" />
-                    : <span className="up-skills-review-hint">Ver</span>}
+                  <span className="up-skills-review-hint">{skillsReviewOpen ? 'Fechar' : 'Ver'}</span>
                 </summary>
-                <p className="up-skills-review-sub">Confirma o que faz sentido. Só aparece no perfil depois de confirmares.</p>
                 <div className="up-chips-row">
                   {[...pendingSkills.map(s => ({ ...s, kind: 'skill' })), ...pendingTech.map(t => ({ ...t, kind: 'tech' }))].map(item => (
                     <span key={item.kind + item.label} className="up-chip up-chip--pending">
