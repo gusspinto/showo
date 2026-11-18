@@ -2881,11 +2881,15 @@ export default function Admin() {
 
   if (authLoading || (!isAdmin && !authLoading)) return null
 
+  // Ficheiros soltos da Biblioteca (entry_kind 'library', ex: IMG_8021.jpg)
+  // são linhas na mesma tabela projects, mas não são projetos para este
+  // separador, que é feito para gerir/eliminar portefólios reais.
+  const fullProjects = projects.filter(p => p.entry_kind === 'full')
 
   const tabs = [
     { id: 'overview', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><BarChart2 size={14} /> Visão geral</span> },
     { id: 'users',    label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><User size={14} /> Utilizadores ({users.length})</span> },
-    { id: 'projects', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Folder size={14} /> Projetos ({projects.length})</span> },
+    { id: 'projects', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Folder size={14} /> Projetos ({fullProjects.length})</span> },
     { id: 'signups',  label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Star size={14} /> Signups ({signups.length})</span> },
     { id: 'invites',  label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><KeyRound size={14} /> Convites Professor</span> },
     /* Duas coisas diferentes que calhavam com o mesmo nome ("Escolas") em
@@ -2979,7 +2983,7 @@ export default function Admin() {
             )}
             {tab === 'projects' && (
               <ProjectsTab
-                projects={projects}
+                projects={fullProjects}
                 users={users}
                 onDeleteProject={handleDeleteProject}
               />
