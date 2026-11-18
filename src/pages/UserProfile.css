@@ -274,7 +274,7 @@
 .up-meta-link:hover { color: var(--color-text); text-decoration: underline; }
 
 /* ── Secção Competências ── */
-.up-skills-section { margin-top: 40px; }
+.up-skills-section { margin-top: 52px; }
 .up-skills-sub {
   margin: 14px 0 10px;
   font-size: 12px;
@@ -504,7 +504,6 @@
   text-align: left;
   color: inherit;
   transition: border-color 0.15s;
-  box-shadow: 0 16px 36px -18px color-mix(in oklch, var(--up-accent, transparent) var(--up-shadow-pct-sm, 32%), transparent);
 }
 .up-pf-row:hover { border-color: var(--color-border-hover); }
 
@@ -535,7 +534,11 @@
   .up-profile-items { grid-template-columns: 1fr; }
 }
 
-/* ── Project card ── */
+/* ── Project card ── Sem sombra com blur por cartão (ver lição de
+   performance): com uma grelha de muitos projetos, uma box-shadow com
+   blur-radius grande por elemento é cara de pintar, multiplicada pelo
+   número de cartões. A atmosfera da cor fica só no cartão principal (um
+   elemento só), aqui é só borda, como era antes da cor de marca. */
 .up-project-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -543,7 +546,6 @@
   cursor: pointer;
   overflow: hidden;
   transition: border-color 0.15s;
-  box-shadow: 0 16px 36px -18px color-mix(in oklch, var(--up-accent, transparent) var(--up-shadow-pct-sm, 32%), transparent);
 }
 
 .up-project-card:hover {
@@ -1022,7 +1024,7 @@
 
   .up-bio { grid-area: bio; }
 
-  .up-skills-section { margin-top: 32px; }
+  .up-skills-section { margin-top: 40px; }
 
   .up-projects-grid,
   .up-skeleton-projects,
@@ -1100,9 +1102,10 @@
   margin-top: 8px;
 }
 
-/* ── Trabalho: dá-se-lhe o peso visual — mais espaço acima. ── */
+/* ── Trabalho: dá-se-lhe o peso visual, mais espaço acima para separar
+   claramente da identidade (pedido do Gustavo: secções muito coladas). ── */
 .up-work {
-  margin-top: 34px;
+  margin-top: 48px;
 }
 
 /* ── Banner ── Fundo transparente de propósito: o fade da imagem (abaixo)
