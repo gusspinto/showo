@@ -144,6 +144,92 @@ function AuthGate({ children }) {
   return children
 }
 
+// Enforça o segundo fator (TOTP) para quem já o tem ativo (ver Settings.jsx,
+// secção "Autenticação em duas etapas"). Sem isto, enroll() sozinho não
+// protege nada: o Supabase não pede o código sozinho em nenhum login
+// seguinte, é a própria app que tem de verificar o AAL e bloquear até ao
+// desafio ser cumprido. Baseado no padrão oficial (getAuthenticatorAssuranceLevel,
+// currentLevel vs nextLevel), ver docs/guides/auth/auth-mfa.
+function MfaChallengeGate({ children }) {
+  const { user } = useAuth()
+  const [status, setStatus] = useState('checking') // checking | ok | needs-challenge
+  const [factorId, setFactorId] = useState(null)
+  const [challengeId, setChallengeId] = useState(null)
+  const [code, setCode] = useState('')
+  const [error, setError] = useState('')
+  const [verifying, setVerifying] = useState(false)
+
+  useEffect(() => {
+    if (!user) { setStatus('ok'); return }
+    let cancelled = false
+    supabase.auth.mfa.getAuthenticatorAssuranceLevel().then(({ data, error: aalErr }) => {
+      if (cancelled) return
+      if (aalErr || !data) { setStatus('ok'); return }
+      setStatus(data.nextLevel === 'aal2' && data.currentLevel !== data.nextLevel ? 'needs-challenge' : 'ok')
+    })
+    return () => { cancelled = true }
+  }, [user?.id])
+
+  useEffect(() => {
+    if (status !== 'needs-challenge' || challengeId) return
+    let cancelled = false
+    ;(async () => {
+      const { data: factorsData } = await supabase.auth.mfa.listFactors()
+      const totp = factorsData?.totp?.find(f => f.status === 'verified')
+      if (!totp) { if (!cancelled) setStatus('ok'); return } // sem fator verificado, nada a desafiar
+      const { data, error: chErr } = await supabase.auth.mfa.challenge({ factorId: totp.id })
+      if (cancelled) return
+      if (chErr) { setError('Não foi possível pedir o código. Recarrega a página.'); return }
+      setFactorId(totp.id)
+      setChallengeId(data.id)
+    })()
+    return () => { cancelled = true }
+  }, [status, challengeId])
+
+  async function handleVerify(e) {
+    e.preventDefault()
+    setError('')
+    setVerifying(true)
+    const { error: vErr } = await supabase.auth.mfa.verify({ factorId, challengeId, code: code.trim() })
+    setVerifying(false)
+    if (vErr) { setError('Código errado ou expirado. Tenta outra vez.'); setCode(''); return }
+    setStatus('ok')
+  }
+
+  if (status === 'checking') return null
+  if (status === 'ok') return children
+
+  return (
+    <div className="onboard-screen">
+      <div className="onboard-body">
+        <img src="/darkmode_icon_logo.png" alt="Showo" className="onboard-logo" />
+        <div className="onboard-head">
+          <h1 className="onboard-title">Código de verificação</h1>
+          <p className="onboard-subtitle">Esta conta tem autenticação em duas etapas ativa. Introduz o código da tua app de autenticação para continuar.</p>
+        </div>
+        <form onSubmit={handleVerify} style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '100%' }}>
+          <div className="onboard-input-wrap">
+            <input
+              autoFocus inputMode="numeric" maxLength={6} value={code}
+              onChange={e => setCode(e.target.value.replace(/\D/g, ''))}
+              placeholder="000000"
+              className="onboard-input"
+              style={{ fontSize: 24, letterSpacing: 8, textAlign: 'center' }}
+            />
+          </div>
+          {error && <p className="onboard-error">{error}</p>}
+          <button type="submit" disabled={verifying || code.length !== 6} className="onboard-cta">
+            {verifying ? 'A verificar...' : 'Confirmar'}
+          </button>
+          <button type="button" onClick={async () => { await supabase.auth.signOut(); window.location.href = '/login' }} className="onboard-skip">
+            Terminar sessão
+          </button>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 /* ── Onde as comportas (telemóvel, ocupação) NÃO aparecem ──
    Não é a mesma lista das rotas públicas. Uma rota ser pública diz quem a
    pode ver sem sessão; isto diz onde é aceitável interromper quem JÁ tem
@@ -837,6 +923,7 @@ export default function App() {
             <ErrorBoundary>
             <RecoveryGate pwRecovery={pwRecovery}>
             <AuthGate>
+            <MfaChallengeGate>
             <PhoneGate reopenGate={reopenGate} setReopenGate={setReopenGate}>
             <OccupationGate reopenGate={reopenGate} setReopenGate={setReopenGate}>
             <HeardFromGate reopenGate={reopenGate} setReopenGate={setReopenGate}>
@@ -886,6 +973,7 @@ export default function App() {
             </HeardFromGate>
             </OccupationGate>
             </PhoneGate>
+            </MfaChallengeGate>
             </AuthGate>
             </RecoveryGate>
             </ErrorBoundary>
