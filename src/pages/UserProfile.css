@@ -1,5 +1,15 @@
 /* ══ UserProfile ══════════════════════════════════════════════════════════════ */
 
+/* Mesmo espaço entre TODAS as secções de topo do perfil (identidade,
+   registos/heatmap, projetos, competências), em vez de cada uma ter o seu
+   próprio número afinado à parte. Só margin-top em cada secção (nunca
+   margin-bottom na anterior), para não haver dois valores a somar/colidir
+   na mesma fronteira. */
+.up-root {
+  --up-section-gap: 56px;
+  --up-section-gap-mobile: 44px;
+}
+
 /* ── Skeleton ── */
 .up-skeleton-header {
   background: var(--color-surface);
@@ -273,8 +283,8 @@
 }
 .up-meta-link:hover { color: var(--color-text); text-decoration: underline; }
 
-/* ── Secção Competências ── */
-.up-skills-section { margin-top: 52px; }
+/* ── Secção Competências: mesmo espaço de --up-section-gap. ── */
+.up-skills-section { margin-top: var(--up-section-gap, 56px); }
 .up-skills-sub {
   margin: 14px 0 10px;
   font-size: 12px;
@@ -645,7 +655,7 @@
 .up-pf-row-api { display: flex; margin-top: 2px; }
 
 /* ── Heatmap de atividade agregado (todos os projetos) ── */
-.up-heatmap { margin: 12px 0 28px; }
+.up-heatmap { margin: var(--up-section-gap, 56px) 0 0; }
 /* Título e os 3 botões (3 meses / 6 meses / 1 ano) na mesma linha, também
    em mobile — antes os botões desciam para uma linha própria. */
 .up-heatmap-head {
@@ -671,14 +681,20 @@
 }
 .up-heatmap-scrollwrap { position: relative; }
 .up-heatmap-scroll { overflow-x: auto; display: flex; justify-content: center; }
-/* Pista de que a grelha desliza — sem isto, num ecrã estreito parece só
- * cortada a meio em vez de "arrasta para o lado". Fica fora do próprio
- * elemento com scroll (senão o desvanecido arrastava-se com o conteúdo
- * em vez de ficar fixo na borda visível), sobreposto ao seu canto
- * direito; pointer-events: none não bloqueia o scroll nem o hover. */
-.up-heatmap-scrollwrap::after {
+/* Pista de que a grelha desliza, só quando há mesmo scroll disponível
+   (classe .can-scroll, calculada em JS por comparar scrollWidth com
+   clientWidth), sem isto a faixa aparecia sempre, mesmo em ecrãs largos
+   onde a grelha cabe toda, uma barra escura sem função nenhuma ali. A cor
+   segue o vidro do próprio cartão (--up-card-glass), não --color-bg: o
+   cartão deixou de ser opaco (tem blur e deixa passar a atmosfera da
+   página), por isso desvanecer para uma cor sólida criava um corte visível
+   em vez de se misturar. Fica fora do próprio elemento com scroll (senão o
+   desvanecido arrastava-se com o conteúdo em vez de ficar fixo na borda
+   visível), sobreposto ao seu canto direito; pointer-events: none não
+   bloqueia o scroll nem o hover. */
+.up-heatmap-scrollwrap.can-scroll::after {
   content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 28px;
-  background: linear-gradient(to right, transparent, var(--color-bg));
+  background: linear-gradient(to right, transparent, var(--up-card-glass, var(--color-glass)));
   pointer-events: none;
 }
 .up-heatmap-body { display: flex; gap: 6px; width: fit-content; }
@@ -1024,7 +1040,9 @@
 
   .up-bio { grid-area: bio; }
 
-  .up-skills-section { margin-top: 40px; }
+  .up-heatmap,
+  .up-work,
+  .up-skills-section { margin-top: var(--up-section-gap-mobile, 44px); }
 
   .up-projects-grid,
   .up-skeleton-projects,
@@ -1102,10 +1120,10 @@
   margin-top: 8px;
 }
 
-/* ── Trabalho: dá-se-lhe o peso visual, mais espaço acima para separar
-   claramente da identidade (pedido do Gustavo: secções muito coladas). ── */
+/* ── Trabalho: mesmo espaço de --up-section-gap que todas as outras
+   secções de topo (ver nota no início do ficheiro). ── */
 .up-work {
-  margin-top: 48px;
+  margin-top: var(--up-section-gap, 56px);
 }
 
 /* ── Banner ── Fundo transparente de propósito: o fade da imagem (abaixo)

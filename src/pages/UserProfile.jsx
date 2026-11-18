@@ -171,10 +171,26 @@ const HEATMAP_RANGES = [
  * inteiro é muita célula vazia para quem só começou agora. */
 function ActivityHeatmap({ allColumns }) {
   const [rangeWeeks, setRangeWeeks] = useState(26)
+  const [canScroll, setCanScroll] = useState(false)
+  const scrollRef = useRef(null)
   const columns = allColumns.slice(-rangeWeeks)
   const allDays = columns.flat().filter(Boolean)
   const total = allDays.reduce((s, d) => s + d.count, 0)
   const everHadActivity = allColumns.some(col => col.some(d => d && d.count > 0))
+
+  // O desvanecido na borda direita só faz sentido quando a grelha excede a
+  // largura visível a sério, sem isto aparecia sempre, mesmo em ecrãs
+  // largos onde a grelha cabe toda, uma faixa escura sem função nenhuma.
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const check = () => setCanScroll(el.scrollWidth > el.clientWidth + 1)
+    check()
+    const ro = new ResizeObserver(check)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [rangeWeeks, allColumns])
+
   if (!everHadActivity) return null
   const maxDay = Math.max(1, ...allDays.map(d => d.count))
   const rangeLabel = HEATMAP_RANGES.find(r => r.weeks === rangeWeeks)?.label
@@ -206,8 +222,8 @@ function ActivityHeatmap({ allColumns }) {
           ))}
         </div>
       </div>
-      <div className="up-heatmap-scrollwrap">
-      <div className="up-heatmap-scroll">
+      <div className={`up-heatmap-scrollwrap${canScroll ? ' can-scroll' : ''}`}>
+      <div className="up-heatmap-scroll" ref={scrollRef}>
         <div className="up-heatmap-body">
           <div className="up-heatmap-daylabels">
             {HEATMAP_DAY_ROWS.map((label, i) => <span key={i}>{label}</span>)}
@@ -857,6 +873,71 @@ export default function UserProfile() {
           </div>
         </header>
 
+        {/* ── Competências: junto da identidade (nome, frase, bio), não
+             isolada lá em baixo depois dos projetos sem ligação a nada. ── */}
+        {(manualSkills.length > 0 || suggestedSkills.length > 0 || projectTech.length > 0 || pendingSkills.length > 0 || pendingTech.length > 0) && (
+          <div className="up-skills-section">
+
+            {/* Review: sugestões da IA (só o dono) */}
+            {isOwnProfile && (pendingSkills.length > 0 || pendingTech.length > 0) && (
+              <details className="up-skills-review">
+                <summary className="up-skills-review-summary">
+                  <span className="up-skills-review-title">A IA encontrou {pendingSkills.length + pendingTech.length} sugestões</span>
+                  <span className="up-skills-review-hint">Ver</span>
+                </summary>
+                <p className="up-skills-review-sub">Confirma o que faz sentido. Só aparece no perfil depois de confirmares.</p>
+                <div className="up-chips-row">
+                  {[...pendingSkills.map(s => ({ ...s, kind: 'skill' })), ...pendingTech.map(t => ({ ...t, kind: 'tech' }))].map(item => (
+                    <span key={item.kind + item.label} className="up-chip up-chip--pending">
+                      {item.label}
+                      <button onClick={() => confirmSuggestion(item.kind, item.label, item.projectIds)} title="Confirmar" className="up-chip-act up-chip-act--ok"><Check size={12} /></button>
+                      <button onClick={() => dismissSuggestion(item.kind, item.label, item.projectIds)} title="Dispensar" className="up-chip-act"><X size={12} /></button>
+                    </span>
+                  ))}
+                </div>
+              </details>
+            )}
+
+            {(manualSkills.length > 0 || suggestedSkills.length > 0) && (
+              <>
+                <p className="up-section-label">Competências</p>
+                <div className="up-chips-row">
+                  {manualSkills.map(skill => {
+                    const n = proofCount(skill)
+                    return (
+                      <span key={skill} className={`up-chip${n > 0 ? ' up-chip--proven' : ''}`}
+                        title={n > 0 ? `Demonstrada em ${n} projeto${n !== 1 ? 's' : ''}` : undefined}>
+                        {n > 0 && <Check size={11} />} {skill}
+                      </span>
+                    )
+                  })}
+                  {suggestedSkills.map(skill => (
+                    isOwnProfile ? (
+                      <button key={skill} className="up-chip up-chip--add" onClick={() => addSkillToProfile(skill)}
+                        title="Demonstrada nos teus projetos — adicionar à lista">
+                        <Check size={11} /> {skill} <Plus size={11} />
+                      </button>
+                    ) : (
+                      <span key={skill} className="up-chip up-chip--proven"><Check size={11} /> {skill}</span>
+                    )
+                  ))}
+                </div>
+              </>
+            )}
+
+            {projectTech.length > 0 && (
+              <>
+                <p className="up-section-label" style={{ marginTop: 28 }}>Tecnologias</p>
+                <div className="up-chips-row">
+                  {projectTech.map(t => (
+                    <span key={t} className="up-chip up-chip--tech" onClick={() => navigate(`/explorar?tech=${encodeURIComponent(t)}`)} role="link" tabIndex={0}>{t}</span>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
         {activityDaily && activityDaily.length > 0 && (
           <ActivityHeatmap allColumns={dailyGrid(activityDaily, 52)} />
         )}
@@ -920,69 +1001,6 @@ export default function UserProfile() {
           )}
         </div>
 
-        {/* ── Competências ── */}
-        {(manualSkills.length > 0 || suggestedSkills.length > 0 || projectTech.length > 0 || pendingSkills.length > 0 || pendingTech.length > 0) && (
-          <div className="up-skills-section">
-
-            {/* Review: sugestões da IA (só o dono) */}
-            {isOwnProfile && (pendingSkills.length > 0 || pendingTech.length > 0) && (
-              <details className="up-skills-review">
-                <summary className="up-skills-review-summary">
-                  <span className="up-skills-review-title">A IA encontrou {pendingSkills.length + pendingTech.length} sugestões</span>
-                  <span className="up-skills-review-hint">Ver</span>
-                </summary>
-                <p className="up-skills-review-sub">Confirma o que faz sentido. Só aparece no perfil depois de confirmares.</p>
-                <div className="up-chips-row">
-                  {[...pendingSkills.map(s => ({ ...s, kind: 'skill' })), ...pendingTech.map(t => ({ ...t, kind: 'tech' }))].map(item => (
-                    <span key={item.kind + item.label} className="up-chip up-chip--pending">
-                      {item.label}
-                      <button onClick={() => confirmSuggestion(item.kind, item.label, item.projectIds)} title="Confirmar" className="up-chip-act up-chip-act--ok"><Check size={12} /></button>
-                      <button onClick={() => dismissSuggestion(item.kind, item.label, item.projectIds)} title="Dispensar" className="up-chip-act"><X size={12} /></button>
-                    </span>
-                  ))}
-                </div>
-              </details>
-            )}
-
-            {(manualSkills.length > 0 || suggestedSkills.length > 0) && (
-              <>
-                <p className="up-section-label">Competências</p>
-                <div className="up-chips-row">
-                  {manualSkills.map(skill => {
-                    const n = proofCount(skill)
-                    return (
-                      <span key={skill} className={`up-chip${n > 0 ? ' up-chip--proven' : ''}`}
-                        title={n > 0 ? `Demonstrada em ${n} projeto${n !== 1 ? 's' : ''}` : undefined}>
-                        {n > 0 && <Check size={11} />} {skill}
-                      </span>
-                    )
-                  })}
-                  {suggestedSkills.map(skill => (
-                    isOwnProfile ? (
-                      <button key={skill} className="up-chip up-chip--add" onClick={() => addSkillToProfile(skill)}
-                        title="Demonstrada nos teus projetos — adicionar à lista">
-                        <Check size={11} /> {skill} <Plus size={11} />
-                      </button>
-                    ) : (
-                      <span key={skill} className="up-chip up-chip--proven"><Check size={11} /> {skill}</span>
-                    )
-                  ))}
-                </div>
-              </>
-            )}
-
-            {projectTech.length > 0 && (
-              <>
-                <p className="up-section-label" style={{ marginTop: 28 }}>Tecnologias</p>
-                <div className="up-chips-row">
-                  {projectTech.map(t => (
-                    <span key={t} className="up-chip up-chip--tech" onClick={() => navigate(`/explorar?tech=${encodeURIComponent(t)}`)} role="link" tabIndex={0}>{t}</span>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-        )}
         </div>
       </div>
 
