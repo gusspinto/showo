@@ -26,6 +26,7 @@ import { VolumeLoudIcon as Megaphone } from '@solar-icons/react/bold/volume-loud
 import { PresentationGraphIcon as School } from '@solar-icons/react/bold/presentation-graph'
 import { TrashBinMinimalisticIcon as Trash2 } from '@solar-icons/react/bold/trash-bin-minimalistic'
 import { ArrowRightIcon as ArrowRight2 } from '@solar-icons/react/bold/arrow-right'
+import { FireIcon as Fire } from '@solar-icons/react/bold/fire'
 import { Select } from '../components/ui'
 
 const C = {
@@ -58,7 +59,7 @@ const C = {
 // authenticated only has column-level SELECT grant on these (no email — that
 // comes from admin_get_users() instead) since migration 033; select('*')
 // fails outright and silently returns no rows.
-const PROFILE_COLUMNS = 'id, username, total_xp, created_at, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, project_draft, signup_country, signup_city, signup_referrer, signup_utm_source, last_active_at, last_action, plan, account_type, organization_id, stripe_customer_id, occupation, phone, heard_from, intended_use, pap_timing'
+const PROFILE_COLUMNS = 'id, username, total_xp, created_at, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, project_draft, signup_country, signup_city, signup_referrer, signup_utm_source, last_active_at, last_action, plan, account_type, organization_id, stripe_customer_id, occupation, phone, heard_from, intended_use, pap_timing, weekly_checkin_streak'
 
 const FETCH_PAGE_SIZE = 1000
 
@@ -1594,6 +1595,10 @@ const USERS_TAB_SORTS = [
   { id: 'projects', label: 'Mais projetos' },
   { id: 'noprojects', label: 'Sem projetos' },
   { id: 'name', label: 'Nome (A-Z)' },
+  { id: 'active_days', label: 'Mais vindas à plataforma' },
+  { id: 'streak', label: 'Maior streak semanal' },
+  { id: 'tracking', label: 'Mais semanas de acompanhamento' },
+  { id: 'entries', label: 'Mais entradas escritas no diário' },
 ]
 
 function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, onResetPassword }) {
@@ -1604,8 +1609,48 @@ function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, 
   const [visibleCount, setVisibleCount] = useState(USERS_TAB_PAGE_SIZE)
   const [confirm, setConfirm] = useState(null)
 
+  // "Vindas à plataforma" = dias distintos com login (activity_log, 1 por
+  // dia, já deduplicado a nível de BD desde 203). "Semanas de acompanhamento"
+  // e entradas do diário vêm de admin_get_journal_stats (migração 261,
+  // pedido do Gustavo 18/11), agregadas aqui por utilizador a partir dos
+  // projetos próprios (fica o máximo de semanas entre os projetos, e a soma
+  // das entradas de todos). RLS de project_journal_entries e activity_log
+  // bloqueia o admin num select direto, daí as duas RPCs.
+  const [activityStats, setActivityStats] = useState(null)
+  const [journalStats, setJournalStats] = useState(null)
+  useEffect(() => {
+    let cancelled = false
+    supabase.rpc('admin_get_activity_stats', { p_days: 9999 }).then(({ data }) => {
+      if (!cancelled) setActivityStats(data)
+    })
+    supabase.rpc('admin_get_journal_stats').then(({ data }) => {
+      if (!cancelled) {
+        const map = {}
+        ;(data || []).forEach(r => { map[r.project_id] = r })
+        setJournalStats(map)
+      }
+    })
+    return () => { cancelled = true }
+  }, [])
+  const loginCountMap = activityStats?.login_counts || {}
+  const journalMap = journalStats || {}
+
   const projectCount = {}
-  projects.forEach(p => { if (p.user_id) projectCount[p.user_id] = (projectCount[p.user_id] || 0) + 1 })
+  const userTracking = {} // semanas de acompanhamento, melhor projeto de cada
+  const userEntries = {} // { total, user, ai } somado por todos os projetos
+  projects.forEach(p => {
+    if (!p.user_id) return
+    projectCount[p.user_id] = (projectCount[p.user_id] || 0) + 1
+    const js = journalMap[p.id]
+    if (!js) return
+    userTracking[p.user_id] = Math.max(userTracking[p.user_id] || 0, js.active_weeks || 0)
+    const prev = userEntries[p.user_id] || { total: 0, user: 0, ai: 0 }
+    userEntries[p.user_id] = {
+      total: prev.total + (js.entry_count || 0),
+      user: prev.user + (js.user_count || 0),
+      ai: prev.ai + (js.ai_count || 0),
+    }
+  })
 
   const filteredAll = users.filter(u => {
     const q = search.toLowerCase()
@@ -1621,6 +1666,10 @@ function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, 
     if (sort === 'projects') return (projectCount[b.id] || 0) - (projectCount[a.id] || 0)
     if (sort === 'noprojects') return (projectCount[a.id] || 0) - (projectCount[b.id] || 0)
     if (sort === 'name') return (a.full_name || a.username || '').localeCompare(b.full_name || b.username || '')
+    if (sort === 'active_days') return (loginCountMap[b.id] || 0) - (loginCountMap[a.id] || 0)
+    if (sort === 'streak') return (b.weekly_checkin_streak || 0) - (a.weekly_checkin_streak || 0)
+    if (sort === 'tracking') return (userTracking[b.id] || 0) - (userTracking[a.id] || 0)
+    if (sort === 'entries') return (userEntries[b.id]?.total || 0) - (userEntries[a.id]?.total || 0)
     return new Date(b.created_at) - new Date(a.created_at)
   })
   // users já vem ordenado por created_at desc do servidor. sort client-
@@ -1743,6 +1792,18 @@ function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, 
                   {u.banned_at && <Badge color={C.red}>Banido</Badge>}
                 </div>
                 <div style={{ fontSize: 11.5, color: C.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.email || (u.username ? `@${u.username}` : '—')}</div>
+                {sort === 'active_days' && loginCountMap[u.id] > 0 && (
+                  <span style={{ fontSize: 10, color: C.yellow }}>{loginCountMap[u.id]} dia{loginCountMap[u.id] > 1 ? 's' : ''} ativo{loginCountMap[u.id] > 1 ? 's' : ''}</span>
+                )}
+                {sort === 'streak' && u.weekly_checkin_streak > 0 && (
+                  <span style={{ fontSize: 10, color: C.yellow }}>streak de {u.weekly_checkin_streak} semana{u.weekly_checkin_streak > 1 ? 's' : ''}</span>
+                )}
+                {sort === 'tracking' && userTracking[u.id] > 0 && (
+                  <span style={{ fontSize: 10, color: C.yellow }}>{userTracking[u.id]} semana{userTracking[u.id] > 1 ? 's' : ''} de acompanhamento</span>
+                )}
+                {sort === 'entries' && userEntries[u.id]?.total > 0 && (
+                  <span style={{ fontSize: 10, color: C.yellow }}>{userEntries[u.id].total} entrada{userEntries[u.id].total > 1 ? 's' : ''} ({userEntries[u.id].user} do utilizador, {userEntries[u.id].ai} da IA)</span>
+                )}
               </div>
 
               <div style={{ textAlign: 'center', fontSize: 13, fontWeight: 700, color: C.text }}>{pCount}</div>
@@ -1950,6 +2011,8 @@ const PROJECTS_TAB_SORTS = [
   { id: 'recent', label: 'Mais recente' },
   { id: 'score', label: 'Maior score' },
   { id: 'views', label: 'Mais vistos' },
+  { id: 'tracking', label: 'Mais semanas de acompanhamento' },
+  { id: 'entries', label: 'Mais entradas no diário' },
 ]
 
 function ProjectsTab({ projects, users, onDeleteProject }) {
@@ -1958,6 +2021,26 @@ function ProjectsTab({ projects, users, onDeleteProject }) {
   const [sort, setSort] = useState('recent')
   const [visibleCount, setVisibleCount] = useState(PROJECTS_TAB_PAGE_SIZE)
   const [confirm, setConfirm] = useState(null)
+
+  // project_journal_entries tem RLS "read own or team", o admin não vê o
+  // total real com um select direto (mesmo problema do admin_get_journal_
+  // coverage). RPC própria (admin_get_journal_stats, migração 261), pedido
+  // do Gustavo 18/11 para poder ordenar por "semanas de acompanhamento"
+  // (active_weeks, mesmo cálculo do ProjectTimelineBadge) e por entradas do
+  // diário, com o detalhe de quantas são do utilizador vs da IA (kind).
+  const [journalStats, setJournalStats] = useState(null)
+  useEffect(() => {
+    let cancelled = false
+    supabase.rpc('admin_get_journal_stats').then(({ data }) => {
+      if (!cancelled) {
+        const map = {}
+        ;(data || []).forEach(r => { map[r.project_id] = r })
+        setJournalStats(map)
+      }
+    })
+    return () => { cancelled = true }
+  }, [])
+  const journalMap = journalStats || {}
 
   const userMap = {}
   users.forEach(u => { userMap[u.id] = u })
@@ -1972,6 +2055,8 @@ function ProjectsTab({ projects, users, onDeleteProject }) {
   }).sort((a, b) => {
     if (sort === 'score') return (b.score || 0) - (a.score || 0)
     if (sort === 'views') return (b.views || 0) - (a.views || 0)
+    if (sort === 'tracking') return (journalMap[b.id]?.active_weeks || 0) - (journalMap[a.id]?.active_weeks || 0)
+    if (sort === 'entries') return (journalMap[b.id]?.entry_count || 0) - (journalMap[a.id]?.entry_count || 0)
     return new Date(b.created_at) - new Date(a.created_at)
   })
   // projects também pode passar das 700 linhas, mesma lição do Users tab,
@@ -2048,6 +2133,16 @@ function ProjectsTab({ projects, users, onDeleteProject }) {
                   {p.area && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><MapPin size={12} /> {p.area}</span>}
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Calendar size={12} /> {created}</span>
                   {p.views > 0 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><BarChart2 size={12} /> {p.views} vistas</span>}
+                  {journalMap[p.id]?.active_weeks > 0 && (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                      <Fire size={12} /> {journalMap[p.id].active_weeks} semana{journalMap[p.id].active_weeks > 1 ? 's' : ''} de acompanhamento
+                    </span>
+                  )}
+                  {journalMap[p.id]?.entry_count > 0 && (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                      {journalMap[p.id].entry_count} entrada{journalMap[p.id].entry_count > 1 ? 's' : ''} ({journalMap[p.id].user_count} do utilizador, {journalMap[p.id].ai_count} da IA)
+                    </span>
+                  )}
                 </div>
               </div>
               {/* Score */}

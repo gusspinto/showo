@@ -617,7 +617,12 @@ Deno.serve(async (req) => {
     }
 
     async function run(): Promise<Response> {
-    const MAX_SENT_PER_RUN = 150
+    // 400 (não 150): descoberto 18/11 que 150 chegava para o cron normal mas
+    // não para o dia em que o backlog antigo (step=0, nunca tocado) e quem já
+    // estava a receber normalmente (step>0) competem ao mesmo tempo pelo
+    // limite. 400 fica com margem larga em relação ao crash de 546
+    // (WORKER_RESOURCE_LIMIT) de 12/11, que só aconteceu com 1538 de uma vez.
+    const MAX_SENT_PER_RUN = 400
 
     const emailById = new Map<string, string>()
     {
@@ -632,19 +637,31 @@ Deno.serve(async (req) => {
     }
 
     const PROFILE_COLS = 'id, full_name, role, organization_id, plan, created_at, onboarding_sequence_step, onboarding_opted_out, occupation'
-    // Sem order by aqui, o Postgres devolve as linhas numa ordem física
-    // arbitrária, não por data de registo. Combinado com o limite de
-    // MAX_SENT_PER_RUN, isso significava gastar o limite sempre a processar
-    // o mesmo subconjunto (quem calhasse ficar "mais à frente" nessa ordem
-    // arbitrária), deixando outras pessoas presas no step 0 para sempre, em
-    // silêncio (descoberto 18/11: 31 pessoas do grupo de 09/11, 9 dias sem
-    // nenhum email). Processar sempre os mais antigos primeiro garante que
-    // quem está à espera há mais tempo é sempre prioritário.
-    let profilesQuery = supabase.from('profiles').select(PROFILE_COLS).not('onboarding_sequence_step', 'is', null).order('created_at', { ascending: true })
-    if (testUserId) profilesQuery = supabase.from('profiles').select(PROFILE_COLS).eq('id', testUserId)
-
-    const { data: profiles, error: profErr } = await profilesQuery
-    if (profErr) throw profErr
+    let profiles: Array<Record<string, any>>
+    if (testUserId) {
+      const { data, error } = await supabase.from('profiles').select(PROFILE_COLS).eq('id', testUserId)
+      if (error) throw error
+      profiles = data ?? []
+    } else {
+      // Dois grupos, nunca um só order by. Quem já estava a receber
+      // normalmente (step > 0) vem sempre primeiro, para nunca mais ficar
+      // parado à espera do backlog, mesmo que o backlog seja mais antigo por
+      // data de registo (bug descoberto 18/11, depois do Gustavo apontar que
+      // 212 pessoas já em andamento ficaram sem o email do dia por o backlog
+      // antigo (step=0) estar a ocupar o limite todo primeiro). Só depois de
+      // servir toda a gente em andamento é que o resto da capacidade vai
+      // para o backlog nunca tocado, mais antigos primeiro.
+      const { data: continuity, error: contErr } = await supabase.from('profiles').select(PROFILE_COLS)
+        .not('onboarding_sequence_step', 'is', null)
+        .gt('onboarding_sequence_step', 0)
+        .order('created_at', { ascending: true })
+      if (contErr) throw contErr
+      const { data: backlog, error: backErr } = await supabase.from('profiles').select(PROFILE_COLS)
+        .eq('onboarding_sequence_step', 0)
+        .order('created_at', { ascending: true })
+      if (backErr) throw backErr
+      profiles = [...(continuity ?? []), ...(backlog ?? [])]
+    }
 
     const now = new Date()
     let sent = 0
