@@ -2019,7 +2019,10 @@ export default function ProjectPage() {
     // Showo, e `if (!user?.id) return` aqui andava a excluir essas visitas
     // por completo, de sempre. Só o dono real continua a não contar.
     const isOwner = !!(user?.id && project.user_id && user.id === project.user_id)
-    if (isOwner) return
+    // Admin a inspecionar o projeto de outra pessoa (ex: QA, ver conteúdo
+    // real) nunca deve contar como visita nem gerar a notificação "alguém
+    // viu o teu projeto" ao dono — o utilizador não pode saber que o admin lá esteve.
+    if (isOwner || isAdmin) return
 
     const viewKey = `viewed_${project.slug}`
     if (!sessionStorage.getItem(viewKey)) {
@@ -2066,7 +2069,7 @@ export default function ProjectPage() {
       if (t1) clearTimeout(t1)
       if (t2) clearTimeout(t2)
     }
-  }, [project?.id, user?.id, authLoading])
+  }, [project?.id, user?.id, authLoading, isAdmin])
 
   useEffect(() => {
     if (prevScoreRef.current === null || prevScoreRef.current === score) return
