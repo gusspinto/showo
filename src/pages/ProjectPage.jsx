@@ -1212,7 +1212,7 @@ export default function ProjectPage() {
   const { slug } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
-  const { user, profile, loading: authLoading, checkGate, consumeAI, refreshProfile, logFunnelEvent } = useAuth()
+  const { user, profile, isAdmin, loading: authLoading, checkGate, consumeAI, refreshProfile, logFunnelEvent } = useAuth()
   const [project, setProject] = useState(() => location.state?.projectData ?? null)
   const [projectJournalEntries, setProjectJournalEntries] = useState([])
   const [showReport, setShowReport] = useState(false)
@@ -1872,13 +1872,15 @@ export default function ProjectPage() {
 
       // Visibility gate: private projects are owner-only — mais o professor
       // da turma onde o aluno o adicionou (senão via "não existe" ao abrir
-      // um projeto privado a partir da turma).
+      // um projeto privado a partir da turma), e o admin da plataforma
+      // (profiles.is_admin), que já tem leitura liberada na RLS (política
+      // "Public read projects") mas ficava bloqueado aqui no frontend.
       if (data.visibility === 'private') {
         const isOwner = currentUser?.id === data.user_id
         const hasToken = data.edit_token && localStorage.getItem(`edit_token_${data.slug}`) === data.edit_token
         let teacherOfClass = false
         let isCollaborator = false
-        if (!isOwner && !hasToken && currentUser?.id) {
+        if (!isOwner && !hasToken && !isAdmin && currentUser?.id) {
           const [{ data: inClass }, { data: collabRow }] = await Promise.all([
             supabase.rpc('is_project_in_my_class', { p_project_id: data.id }),
             // Este gate corria só no frontend e nunca olhava para
@@ -1890,7 +1892,7 @@ export default function ProjectPage() {
           teacherOfClass = !!inClass
           isCollaborator = !!collabRow
         }
-        if (!isOwner && !hasToken && !teacherOfClass && !isCollaborator) {
+        if (!isOwner && !hasToken && !isAdmin && !teacherOfClass && !isCollaborator) {
           setLoading(false)
           return
         }
