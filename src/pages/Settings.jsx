@@ -695,7 +695,7 @@ export default function Settings() {
                       <Textarea label="Apresentação" value={bio} onChange={setBio} placeholder="Apresenta a tua empresa ou o teu trabalho como recrutador..." hint="Aparece no teu perfil público." />
                     </>
                   )}
-                  <Input label="Username" value={username} onChange={v => setUsername(v.toLowerCase().replace(/[^a-z0-9_]/g, ''))} placeholder={isRecruiter ? 'ex: rh_empresa' : 'ex: gustavo_silva'} prefix="@" hint={usernameHint} />
+                  <Input label="Username" value={username} onChange={v => setUsername(v.toLowerCase().replace(/[^a-z0-9_]/g, ''))} placeholder={isRecruiter ? 'ex: showo.pt/rh_empresa' : 'ex: showo.pt/gustavo_silva'} hint={usernameHint} />
 
                   <div className="settings-field">
                     <label className="settings-label">Telemóvel (opcional)</label>
