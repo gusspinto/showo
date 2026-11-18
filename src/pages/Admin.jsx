@@ -400,22 +400,25 @@ const TIME_RANGES = [
 ]
 
 function generateMeetingSummary(users, projects, activityStats, range) {
+  // Mesmo filtro do separador Projetos/Visão geral (fix de 18/11): ficheiros
+  // soltos da Biblioteca (entry_kind 'library') não contam como "projetos".
+  const fullProjectsOnly = projects.filter(p => p.entry_kind === 'full')
   const now = Date.now()
   const totalUsers = users.length
-  const totalProjects = projects.length
+  const totalProjects = fullProjectsOnly.length
   const days = range.days || 365
   const cutoff = now - days * 86400000
 
   const newUsers = users.filter(u => new Date(u.created_at) > cutoff).length
-  const newProjects = projects.filter(p => new Date(p.created_at) > cutoff).length
+  const newProjects = fullProjectsOnly.filter(p => new Date(p.created_at) > cutoff).length
 
   const uniqueActive = (activityStats?.active_range || []).length
   const totalSessions = activityStats?.sessions_range || 0
 
   const projectCountMap = {}
-  projects.forEach(p => { if (p.user_id) projectCountMap[p.user_id] = (projectCountMap[p.user_id] || 0) + 1 })
+  fullProjectsOnly.forEach(p => { if (p.user_id) projectCountMap[p.user_id] = (projectCountMap[p.user_id] || 0) + 1 })
   const withProjects = users.filter(u => projectCountMap[u.id] > 0).length
-  const scores = projects.filter(p => p.score > 0).map(p => p.score)
+  const scores = fullProjectsOnly.filter(p => p.score > 0).map(p => p.score)
   const avgScore = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0
 
   const roleCounts = {}
@@ -501,8 +504,13 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
   // que realmente aparece ao visitante.
   const CONTENT_FIELDS = ['problem', 'solution', 'target_audience', 'features', 'technologies', 'challenges', 'results', 'learnings', 'goal']
   const filledFieldCount = (p) => CONTENT_FIELDS.filter(f => (p[f] || '').trim().length > 60).length
+  // Mesmo filtro do separador Projetos (fix de 18/11): ficheiros soltos da
+  // Biblioteca (entry_kind 'library') são linhas na mesma tabela projects,
+  // mas não contam como "projetos" para nenhuma métrica aqui, senão a Visão
+  // geral mostra um total diferente do separador Projetos (ex: 920 vs 915).
+  const fullProjectsOnly = projects.filter(p => p.entry_kind === 'full')
   const activatedUserIds = new Set(
-    projects.filter(p => p.entry_kind === 'full' && filledFieldCount(p) >= 3).map(p => p.user_id)
+    fullProjectsOnly.filter(p => filledFieldCount(p) >= 3).map(p => p.user_id)
   )
   const activationRate = users.length > 0 ? Math.round((activatedUserIds.size / users.length) * 1000) / 10 : 0
 
@@ -519,8 +527,8 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
     })
     return () => { cancelled = true }
   }, [])
-  const journalRate = projectsWithJournal !== null && projects.length > 0
-    ? Math.round((projectsWithJournal / projects.length) * 1000) / 10
+  const journalRate = projectsWithJournal !== null && fullProjectsOnly.length > 0
+    ? Math.round((projectsWithJournal / fullProjectsOnly.length) * 1000) / 10
     : null
 
   // Retenção vinha de um cálculo ao vivo em cada render, com coortes
@@ -545,14 +553,14 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
 
   const now = Date.now()
   const totalUsers = users.length
-  const totalProjects = projects.length
+  const totalProjects = fullProjectsOnly.length
   const days = range.days || 9999
   const weekAgo = now - 7 * 86400000
   const monthAgo = now - 30 * 86400000
-  const newThisWeek = projects.filter(p => new Date(p.created_at) > weekAgo).length
+  const newThisWeek = fullProjectsOnly.filter(p => new Date(p.created_at) > weekAgo).length
   const newUsersWeek = users.filter(u => new Date(u.created_at) > weekAgo).length
   const newUsersMonth = users.filter(u => new Date(u.created_at) > monthAgo).length
-  const scores = projects.filter(p => p.score > 0).map(p => p.score)
+  const scores = fullProjectsOnly.filter(p => p.score > 0).map(p => p.score)
   const avgScore = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0
 
   const activeWeekIds = new Set(activityStats?.active_week || [])
@@ -780,7 +788,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
   const projWeeks = Array.from({ length: numWeeks }, (_, i) => {
     const weekStart = now - (numWeeks - 1 - i) * 7 * 86400000
     const weekEnd = weekStart + 7 * 86400000
-    const count = projects.filter(p => {
+    const count = fullProjectsOnly.filter(p => {
       const t = new Date(p.created_at).getTime()
       return t >= weekStart && t < weekEnd
     }).length
@@ -790,7 +798,7 @@ function OverviewTab({ users, projects, aiUsageSummary, funnelSummary, billingSu
 
   // Project counts per user
   const projectCountMap = {}
-  projects.forEach(p => { if (p.user_id) projectCountMap[p.user_id] = (projectCountMap[p.user_id] || 0) + 1 })
+  fullProjectsOnly.forEach(p => { if (p.user_id) projectCountMap[p.user_id] = (projectCountMap[p.user_id] || 0) + 1 })
   const usersWithProjects = users.filter(u => projectCountMap[u.id] > 0).length
   const usersWithoutProjects = totalUsers - usersWithProjects
 
