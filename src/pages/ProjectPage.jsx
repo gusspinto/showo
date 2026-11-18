@@ -4668,6 +4668,36 @@ export default function ProjectPage() {
         {/* ── TAB: historia — PAP details (a narrativa AI foi cortada: decisão do Bruno/Gustavo — texto gerado, não o conteúdo real do dono) ── */}
         <div className={`proj-mobile-section${tabActive('historia') ? ' proj-mobile-active' : ''}`}>
 
+        {/* Partilhar: versão mínima, visível na tab default (Projeto), não só
+            na 3ª tab (Partilha). Só 22% de quem cria o projeto chega a
+            partilhar: a única oportunidade fácil era o overlay logo após
+            criar, depois disso o link ficava escondido atrás de um clique
+            extra para a tab Partilha. Isto dá sempre acesso rápido ao link,
+            a versão completa (QR, redes sociais) continua só na tab Partilha. */}
+        {isOwner && (
+          <div className="proj-card" style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ flex: 1, minWidth: 0, background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 7, padding: '7px 12px', fontSize: 12, color: colors.subtle, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {pageUrl}
+            </div>
+            <button
+              onClick={handleCopy}
+              style={{
+                background: copied ? `${colors.green}18` : `${colors.blue}18`,
+                border: `1px solid ${copied ? colors.green + '35' : colors.blue + '30'}`,
+                color: copied ? colors.green : colors.blue,
+                borderRadius: 'var(--radius-md)', padding: '7px 14px',
+                fontSize: 12, fontWeight: 700,
+                cursor: 'pointer', whiteSpace: 'nowrap',
+                transition: 'all 0.2s',
+                fontFamily: 'inherit', flexShrink: 0,
+                display: 'flex', alignItems: 'center', gap: 5,
+              }}
+            >
+              {copied ? <><Check size={12} />Copiado</> : 'Partilhar'}
+            </button>
+          </div>
+        )}
+
         {/* PAP details */}
         {isPap && (project.pap_supervisor || project.pap_date) && (
           <div className="proj-card-pad proj-card" style={{ background: colors.yellowGlow, border: '1px solid var(--color-warning-subtle)' }}>

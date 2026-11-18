@@ -236,8 +236,127 @@ function SettingsSkeleton() {
   )
 }
 
+// Só visível a admins (ver AuthContext.jsx, isAdmin) — essa conta ignora RLS
+// por completo, por isso é o alvo de maior valor se for comprometida. O
+// enroll por si só não protege nada: quem obriga a usar o código a seguir é
+// o MfaChallengeGate em App.jsx, que verifica o AAL em todo o login.
+function MfaSection() {
+  const [factors, setFactors] = useState(null) // null = a carregar
+  const [enrolling, setEnrolling] = useState(false)
+  const [qrCode, setQrCode] = useState('')
+  const [secret, setSecret] = useState('')
+  const [factorId, setFactorId] = useState('')
+  const [code, setCode] = useState('')
+  const [msg, setMsg] = useState(null)
+  const [busy, setBusy] = useState(false)
+
+  async function loadFactors() {
+    const { data } = await supabase.auth.mfa.listFactors()
+    setFactors(data?.totp?.filter(f => f.status === 'verified') ?? [])
+  }
+  useEffect(() => { loadFactors() }, [])
+
+  async function startEnroll() {
+    setMsg(null)
+    setBusy(true)
+    // Uma tentativa anterior abandonada a meio (fechar a aba sem "Cancelar")
+    // deixa um fator "unverified" para trás, e o Supabase recusa um enroll()
+    // novo enquanto esse existir. Limpa-o primeiro, é sempre seguro, nunca
+    // chegou a ser validado por ninguém.
+    const { data: existing } = await supabase.auth.mfa.listFactors()
+    const stale = existing?.totp?.filter(f => f.status === 'unverified') ?? []
+    for (const f of stale) await supabase.auth.mfa.unenroll({ factorId: f.id }).catch(() => {})
+
+    const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp' })
+    setBusy(false)
+    if (error) { setMsg({ type: 'err', text: 'Não foi possível começar. Tenta outra vez.' }); return }
+    setFactorId(data.id)
+    setQrCode(data.totp.qr_code)
+    setSecret(data.totp.secret)
+    setEnrolling(true)
+  }
+
+  async function cancelEnroll() {
+    if (factorId) await supabase.auth.mfa.unenroll({ factorId }).catch(() => {})
+    setEnrolling(false); setQrCode(''); setSecret(''); setFactorId(''); setCode(''); setMsg(null)
+  }
+
+  async function handleVerify(e) {
+    e.preventDefault()
+    setMsg(null)
+    setBusy(true)
+    const { data: challenge, error: chErr } = await supabase.auth.mfa.challenge({ factorId })
+    if (chErr) { setBusy(false); setMsg({ type: 'err', text: 'Falhou o pedido do código. Tenta outra vez.' }); return }
+    const { error: vErr } = await supabase.auth.mfa.verify({ factorId, challengeId: challenge.id, code: code.trim() })
+    setBusy(false)
+    if (vErr) { setMsg({ type: 'err', text: 'Código errado ou expirado. Verifica a app e tenta de novo.' }); setCode(''); return }
+    setEnrolling(false); setQrCode(''); setSecret(''); setCode(''); setFactorId('')
+    setMsg({ type: 'ok', text: 'Autenticação em duas etapas ativada.' })
+    loadFactors()
+  }
+
+  async function handleRemove(fid) {
+    if (!window.confirm('Remover a autenticação em duas etapas? Isto reduz a proteção desta conta.')) return
+    setBusy(true)
+    const { error } = await supabase.auth.mfa.unenroll({ factorId: fid })
+    setBusy(false)
+    if (error) { setMsg({ type: 'err', text: 'Não foi possível remover.' }); return }
+    setMsg({ type: 'ok', text: 'Removida.' })
+    loadFactors()
+  }
+
+  if (factors === null) return <p className="settings-hint">A verificar...</p>
+
+  if (factors.length > 0) {
+    return (
+      <>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--color-success)', fontSize: 14, fontWeight: 600, marginBottom: 12 }}>
+          <Check size={16} /> Ativa
+        </div>
+        <p className="text-base text-muted mb-3" style={{ lineHeight: 1.65 }}>
+          Em cada login é pedido um código da tua app de autenticação, além da password.
+        </p>
+        {msg && <div className={`settings-msg ${msg.type}`}>{msg.text}</div>}
+        <button onClick={() => handleRemove(factors[0].id)} disabled={busy} className="settings-danger-outline">Remover</button>
+      </>
+    )
+  }
+
+  if (!enrolling) {
+    return (
+      <>
+        <p className="text-base text-muted mb-3" style={{ lineHeight: 1.65 }}>
+          Esta conta tem acesso de admin (ignora as restrições normais de privacidade). Ativa um segundo fator para a proteger melhor do que só a password.
+        </p>
+        {msg && <div className={`settings-msg ${msg.type}`}>{msg.text}</div>}
+        <button onClick={startEnroll} disabled={busy} className="settings-save-btn">
+          {busy ? 'A preparar...' : 'Ativar'}
+        </button>
+      </>
+    )
+  }
+
+  return (
+    <form onSubmit={handleVerify} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <p className="text-base text-muted" style={{ lineHeight: 1.65, margin: 0 }}>
+        Lê este código com o Google Authenticator, Authy, ou outra app de autenticação, e introduz abaixo o código de 6 dígitos que aparecer.
+      </p>
+      {qrCode && <img src={qrCode} alt="Código QR" style={{ width: 180, height: 180, alignSelf: 'center', background: '#fff', borderRadius: 8, padding: 8 }} />}
+      {secret && <p className="settings-hint" style={{ wordBreak: 'break-all' }}>Não consegues ler o código? Introduz manualmente: <code>{secret}</code></p>}
+      <Input label="Código de 6 dígitos" value={code} onChange={v => setCode(v.replace(/\D/g, '').slice(0, 6))} placeholder="000000" />
+      {msg && <div className={`settings-msg ${msg.type}`}>{msg.text}</div>}
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button type="submit" disabled={busy || code.length !== 6} className="settings-save-btn">
+          {busy ? 'A verificar...' : 'Confirmar e ativar'}
+        </button>
+        <button type="button" onClick={cancelEnroll} className="settings-secondary-btn">Cancelar</button>
+      </div>
+    </form>
+  )
+}
+
 export default function Settings() {
-  const { user, profile, loading: authLoading, refreshProfile, planId, isSchoolAccount, checkGate } = useAuth()
+  const { user, profile, loading: authLoading, refreshProfile, planId, isSchoolAccount, checkGate, isAdmin } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
   const location = useLocation()
@@ -947,6 +1066,9 @@ export default function Settings() {
                   </div>
                 </SectionCard>
                 <SectionCard title="Alterar password">{passwordBlock}</SectionCard>
+                {isAdmin && (
+                  <SectionCard title="Autenticação em duas etapas"><MfaSection /></SectionCard>
+                )}
                 <SectionCard title="Sessão">
                   <p className="text-base text-muted mb-3" style={{ lineHeight: 1.65 }}>Terminar sessão em todos os dispositivos.</p>
                   <button onClick={async () => { await supabase.auth.signOut(); navigate('/') }} className="settings-danger-btn">Terminar sessão</button>
