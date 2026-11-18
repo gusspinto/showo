@@ -632,7 +632,15 @@ Deno.serve(async (req) => {
     }
 
     const PROFILE_COLS = 'id, full_name, role, organization_id, plan, created_at, onboarding_sequence_step, onboarding_opted_out, occupation'
-    let profilesQuery = supabase.from('profiles').select(PROFILE_COLS).not('onboarding_sequence_step', 'is', null)
+    // Sem order by aqui, o Postgres devolve as linhas numa ordem física
+    // arbitrária, não por data de registo. Combinado com o limite de
+    // MAX_SENT_PER_RUN, isso significava gastar o limite sempre a processar
+    // o mesmo subconjunto (quem calhasse ficar "mais à frente" nessa ordem
+    // arbitrária), deixando outras pessoas presas no step 0 para sempre, em
+    // silêncio (descoberto 18/11: 31 pessoas do grupo de 09/11, 9 dias sem
+    // nenhum email). Processar sempre os mais antigos primeiro garante que
+    // quem está à espera há mais tempo é sempre prioritário.
+    let profilesQuery = supabase.from('profiles').select(PROFILE_COLS).not('onboarding_sequence_step', 'is', null).order('created_at', { ascending: true })
     if (testUserId) profilesQuery = supabase.from('profiles').select(PROFILE_COLS).eq('id', testUserId)
 
     const { data: profiles, error: profErr } = await profilesQuery
