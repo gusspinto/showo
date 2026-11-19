@@ -57,7 +57,35 @@ export default async function handler(req, res) {
     console.error('sitemap: SUPABASE_URL/SUPABASE_ANON_KEY em falta nas env vars do Vercel')
   }
 
-  const allUrls = [...staticUrls, ...projectUrls]
+  // Perfis públicos, mesmo critério do api/og-user.js (pedido do Gustavo
+  // 19/11): sem username não há página /u/:username, banido ou
+  // profile_visibility='private' fica de fora por omissão.
+  let profileUrls = []
+  if (SUPABASE_URL && SUPABASE_KEY) {
+    try {
+      const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/profiles?select=username,created_at&username=not.is.null&banned_at=is.null&or=(profile_visibility.eq.public,profile_visibility.is.null)&order=created_at.desc&limit=1000`,
+        { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+      )
+      if (!r.ok) {
+        console.error('sitemap: Supabase (profiles) respondeu', r.status, await r.text())
+      } else {
+        const profiles = await r.json()
+        if (Array.isArray(profiles)) {
+          profileUrls = profiles.map(p => ({
+            loc: `${BASE}/u/${p.username}`,
+            lastmod: p.created_at ? p.created_at.split('T')[0] : undefined,
+            priority: '0.6',
+            changefreq: 'monthly',
+          }))
+        }
+      }
+    } catch (err) {
+      console.error('sitemap: falha ao buscar profiles', err)
+    }
+  }
+
+  const allUrls = [...staticUrls, ...projectUrls, ...profileUrls]
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
