@@ -6,9 +6,19 @@
    um raio, uma sombra ou um espaçamento novo. Todos os valores vêm dos tokens.
    ══════════════════════════════════════════════════════════════════════════ */
 
+/* Atmosfera de fundo, mesmo princípio do .bg-page.up-root do perfil
+   (UserProfile.css): um gradiente radial no azul da marca, ancorado no
+   topo, a esbater para --color-bg antes dos 72%. Sem isto, os painéis em
+   vidro (--color-glass + blur) não tinham nada colorido por trás para
+   mostrar, ficavam só cartões normais com borda mais subtil. Usa
+   --color-primary (azul fixo da marca), não --up-accent (isso é só do
+   perfil pessoal, não faz sentido aqui). Mesma intensidade por tema
+   (--up-wash-pct) já afinada no perfil, oklch para não lavar no claro. */
 .sdb-root {
   min-height: 100vh;
-  background: var(--color-bg);
+  background: radial-gradient(ellipse 1100px 520px at 50% 0%,
+    color-mix(in oklch, var(--color-primary) var(--up-wash-pct, 30%), var(--color-bg)) 0%,
+    var(--color-bg) 72%);
   font-family: var(--font-body);
   --radius-lg: 16px;
   --radius-xl: 20px;
