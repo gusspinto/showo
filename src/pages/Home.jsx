@@ -369,6 +369,7 @@ export default function Home() {
       <div className="home-footer">
         <button onClick={() => navigate('/termos')}>Termos de utilização</button>
         <button onClick={() => navigate('/privacidade')}>Política de privacidade</button>
+        <button onClick={() => navigate('/changelog')}>O que mudou</button>
       </div>
       </div>
     </div>
