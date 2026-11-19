@@ -636,7 +636,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    const PROFILE_COLS = 'id, full_name, role, organization_id, plan, created_at, onboarding_sequence_step, onboarding_opted_out, occupation'
+    const PROFILE_COLS = 'id, full_name, role, organization_id, plan, created_at, onboarding_sequence_step, onboarding_opted_out, occupation, onboarding_sequence_sent_at'
     let profiles: Array<Record<string, any>>
     if (testUserId) {
       const { data, error } = await supabase.from('profiles').select(PROFILE_COLS).eq('id', testUserId)
@@ -651,9 +651,17 @@ Deno.serve(async (req) => {
       // antigo (step=0) estar a ocupar o limite todo primeiro). Só depois de
       // servir toda a gente em andamento é que o resto da capacidade vai
       // para o backlog nunca tocado, mais antigos primeiro.
+      // 19/11: o .gt('onboarding_sequence_step', 0) sozinho também apanhava
+      // os 979 já graduados (step>=14), que não precisam de mais nenhum
+      // email. O PostgREST tem um limite de 1000 linhas por select, e com
+      // 1579 linhas a bater nesse filtro (979 graduados + 600 em
+      // andamento), gente genuinamente ativa ficava de fora do resultado
+      // sem erro nenhum, voltando a ficar presa, mesmo padrão do bug de
+      // 18/11, desta vez introduzido por esta própria correção. O .lt
+      // abaixo garante que só entram os 600 que precisam mesmo de email.
       const { data: continuity, error: contErr } = await supabase.from('profiles').select(PROFILE_COLS)
-        .not('onboarding_sequence_step', 'is', null)
         .gt('onboarding_sequence_step', 0)
+        .lt('onboarding_sequence_step', TOTAL_DAYS)
         .order('created_at', { ascending: true })
       if (contErr) throw contErr
       const { data: backlog, error: backErr } = await supabase.from('profiles').select(PROFILE_COLS)
@@ -673,6 +681,17 @@ Deno.serve(async (req) => {
       try {
         if (!testUserId && p.onboarding_opted_out) continue
         if (!testUserId && (p.onboarding_sequence_step == null || p.onboarding_sequence_step >= TOTAL_DAYS)) continue
+        // 19/11: descoberto ao vivo que disparar a função mais do que uma
+        // vez no mesmo dia (cron + corridas manuais de correção) avançava
+        // a mesma pessoa vários passos seguidos nesse dia, porque nada
+        // impedia isso além do dedup por email_type exato: alguém muito
+        // atrasado é elegível para vários "dias" ao mesmo tempo. 293
+        // pessoas chegaram a receber 3 emails de onboarding diferentes no
+        // mesmo dia por causa disto (erro meu, ao corrigir o bug do .lt
+        // acima com corridas manuais a mais, sem verificar este efeito).
+        // Nunca mais processar quem já foi tocado hoje, seja qual for o
+        // motivo da corrida.
+        if (!testUserId && p.onboarding_sequence_sent_at && new Date(p.onboarding_sequence_sent_at).toISOString().slice(0, 10) === now.toISOString().slice(0, 10)) continue
 
         const step = forceStep ?? p.onboarding_sequence_step ?? 0
         if (step < 0 || step >= TOTAL_DAYS) { closed++; continue }

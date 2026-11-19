@@ -118,6 +118,7 @@ const GoogleCalendarCallback = lazyPage(() => import('./pages/GoogleCalendarCall
 const DiaryCanvas  = lazyPage(() => import('./pages/DiaryCanvas'))
 const AprendeAUsar = lazyPage(() => import('./pages/AprendeAUsar'))
 const Pricing      = lazyPage(() => import('./pages/Pricing'))
+const Changelog    = lazyPage(() => import('./pages/Changelog'))
 const GithubCallback = lazyPage(() => import('./pages/GithubCallback'))
 const Welcome      = lazyPage(() => import('./pages/Welcome'))
 const Feedback     = lazyPage(() => import('./pages/Feedback'))
@@ -963,6 +964,7 @@ export default function App() {
               <Route path="/oauth/google-calendar" element={<GoogleCalendarCallback />} />
               <Route path="/aprende"            element={<AprendeAUsar />}  />
               <Route path="/pricing"            element={<Pricing />}       />
+              <Route path="/changelog"          element={<Changelog />}     />
               <Route path="/auth/github/callback" element={<GithubCallback />} />
               <Route path="/welcome"            element={<Welcome />}       />
               <Route path="/feedback"           element={<Feedback />}      />
