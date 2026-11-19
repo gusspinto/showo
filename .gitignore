@@ -29,3 +29,4 @@ dist-ssr
 # Rascunhos e outputs de trabalho do Claude Code
 .scratch/
 Claude outputs/
+docs/handoff.md
