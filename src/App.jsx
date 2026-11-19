@@ -23,6 +23,7 @@ import { SidebarProvider } from './context/SidebarContext'
 import RestReminder from './components/RestReminder'
 import CookieConsent from './components/CookieConsent'
 import SplashScreen from './components/SplashScreen'
+import ReviewPopupModal from './components/dashboard/ReviewPopupModal'
 import { Analytics } from '@vercel/analytics/react'
 import { captureError } from './lib/errorTracking'
 import { trackPageview } from './lib/analytics'
@@ -803,6 +804,28 @@ function RecoveryGate({ pwRecovery, children }) {
   return children
 }
 
+// Pop-up de avaliação (checklist de growth): movido de StudentDashboard.jsx
+// (19/11) porque só disparava lá dentro, e muita gente ativa nunca passa
+// pela dashboard numa dada visita (vai direto a /explorar, /mensagens, ou
+// a um link de projeto), ficando sem nunca ver o popup mesmo qualificando.
+// A verificação em si (AuthContext.jsx) já corre em qualquer página; aqui
+// só se decide ONDE é aceitável mostrar o popup, nunca durante Modo Defesa,
+// Coach IA ou o editor do diário, só nestas páginas mais "calmas".
+const REVIEW_POPUP_SAFE_PATHS = ['/dashboard', '/explorar', '/mensagens']
+
+function ReviewPopupGate() {
+  const { reviewPopupEligibleProjectId, markReviewPopupSeen, user } = useAuth()
+  const { pathname } = useLocation()
+  if (!user?.id || !reviewPopupEligibleProjectId || !REVIEW_POPUP_SAFE_PATHS.includes(pathname)) return null
+  return (
+    <ReviewPopupModal
+      userId={user.id}
+      projectId={reviewPopupEligibleProjectId}
+      onClose={markReviewPopupSeen}
+    />
+  )
+}
+
 function AuthErrorBanner() {
   const [msg, setMsg] = useState('')
   const [oauthRetry, setOauthRetry] = useState(false)
@@ -921,6 +944,7 @@ export default function App() {
             <RestReminder />
             <PageViewTracker />
             <ScrollToTop />
+            <ReviewPopupGate />
             <ErrorBoundary>
             <RecoveryGate pwRecovery={pwRecovery}>
             <AuthGate>
