@@ -26,6 +26,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
   const [aiUsage, setAiUsage] = useState({})
   const [vagaApplicationsThisMonth, setVagaApplicationsThisMonth] = useState(0)
+  const [reviewPopupEligibleProjectId, setReviewPopupEligibleProjectId] = useState(null)
 
   const fetchAiUsage = useCallback(async () => {
     const { data } = await supabase.rpc('get_ai_usage')
@@ -341,6 +342,39 @@ export function AuthProvider({ children }) {
     return () => { clearInterval(id); document.removeEventListener('visibilitychange', beat) }
   }, [user?.id])
 
+  // Pop-up de avaliação (checklist de growth, sugestão do Savvy Growth):
+  // movido de StudentDashboard.jsx para aqui (19/11) porque só disparava
+  // dentro da dashboard, e o heartbeat de "online" acima (last_active_at)
+  // provava que muita gente usa a app sem nunca passar por lá (vai direto
+  // a /explorar, /mensagens, ou a um link de projeto). Query leve, só
+  // confirma SE existe algum projeto elegível, não traz a lista toda como
+  // a dashboard precisa para os cartões. Dispara uma única vez na vida da
+  // conta, score >= 41 (critério real, igual ao que já estava na
+  // dashboard, o comentário antigo em ReviewPopupModal.jsx que dizia >=71
+  // estava desatualizado).
+  useEffect(() => {
+    if (!profile?.id || profile.review_popup_seen_at) { setReviewPopupEligibleProjectId(null); return }
+    let cancelled = false
+    supabase
+      .from('projects')
+      .select('id')
+      .eq('user_id', profile.id)
+      .eq('entry_kind', 'full')
+      .gte('score', 41)
+      .limit(1)
+      .then(({ data }) => {
+        if (!cancelled && data?.length) setReviewPopupEligibleProjectId(data[0].id)
+      })
+    return () => { cancelled = true }
+  }, [profile?.id, profile?.review_popup_seen_at])
+
+  async function markReviewPopupSeen() {
+    if (!profile?.id || profile.review_popup_seen_at) return
+    setReviewPopupEligibleProjectId(null)
+    await supabase.from('profiles').update({ review_popup_seen_at: new Date().toISOString() }).eq('id', profile.id)
+    refreshProfile()
+  }
+
   async function signOut() {
     await supabase.auth.signOut()
     setUser(null)
@@ -417,7 +451,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signOut, refreshProfile, isAdmin, plan, planId, isSchoolAccount, checkGate, consumeAI, aiUsage, refreshAiUsage: fetchAiUsage, vagaApplicationsThisMonth, refreshVagaApplications: () => user?.id && fetchVagaApplications(user.id), logFunnelEvent }}>
+    <AuthContext.Provider value={{ user, profile, loading, signOut, refreshProfile, isAdmin, plan, planId, isSchoolAccount, checkGate, consumeAI, aiUsage, refreshAiUsage: fetchAiUsage, vagaApplicationsThisMonth, refreshVagaApplications: () => user?.id && fetchVagaApplications(user.id), logFunnelEvent, reviewPopupEligibleProjectId, markReviewPopupSeen }}>
       {children}
     </AuthContext.Provider>
   )
