@@ -37,34 +37,41 @@
    PEÇAS BASE
    ══════════════════════════════════════════════════════════════════════════ */
 
+/* Experiência "vidro neutro": os três painéis (base, brand, tint) convergem
+   para o mesmo vidro translúcido do cartão do perfil (--color-glass +
+   blur), sem cor nenhuma, nem no que antes era o cartão 100% azul da
+   marca. --on/--on-dim/--on-fill/--on-line passam a apontar para as cores
+   normais do tema (deixam de assumir texto branco sobre fundo azul), para
+   quem já usa essas variáveis (botões onbrand, etc.) continuar a resolver
+   para algo correto sem cada sítio ter de mudar. */
 .sdb-panel {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--color-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--color-glass-border);
   border-radius: var(--radius-lg);
   padding: var(--sp-5);
   min-width: 0;
 }
 
-/* O único objeto totalmente na cor da marca — é o projeto do aluno.
-   Usa o degrau escuro do azul: sobre o azul base, texto branco pequeno fica
-   nos 4.0:1 e chumba nas WCAG AA; sobre este fica acima de 6:1. */
 .sdb-panel--brand {
-  --on:      #fff;
-  --on-dim:  rgba(255, 255, 255, 0.78);
-  --on-line: rgba(255, 255, 255, 0.22);
-  --on-fill: rgba(255, 255, 255, 0.12);
-  background:
-    radial-gradient(130% 150% at 100% 0%, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0) 58%),
-    var(--color-primary-deep);
-  border-color: transparent;
-  color: var(--on);
-  box-shadow: 0 1px 0 rgba(255,255,255,0.16) inset, var(--shadow-md);
+  --on:      var(--color-text);
+  --on-dim:  var(--color-text-secondary);
+  --on-line: var(--color-glass-border);
+  --on-fill: var(--color-glass-hover);
+  background: var(--color-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-color: var(--color-glass-border);
+  color: var(--color-text);
+  box-shadow: var(--shadow-md);
 }
 
-/* Tinta da marca, sem gritar — para blocos que apoiam o principal. */
 .sdb-panel--tint {
-  background: var(--color-primary-subtle);
-  border-color: var(--color-primary-muted);
+  background: var(--color-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-color: var(--color-glass-border);
 }
 
 .sdb-panel--flush { padding: 0; overflow: hidden; }
