@@ -22,6 +22,7 @@
     { "source": "/sitemap.xml", "destination": "/api/sitemap" },
     { "source": "/projeto/:slug", "destination": "/api/og?slug=:slug" },
     { "source": "/u/:username", "destination": "/api/og-user?username=:username" },
+    { "source": "/pricing", "destination": "/api/og-pricing" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
