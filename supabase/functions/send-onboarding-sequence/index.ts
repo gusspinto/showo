@@ -651,9 +651,17 @@ Deno.serve(async (req) => {
       // antigo (step=0) estar a ocupar o limite todo primeiro). Só depois de
       // servir toda a gente em andamento é que o resto da capacidade vai
       // para o backlog nunca tocado, mais antigos primeiro.
+      // 19/11: o .gt('onboarding_sequence_step', 0) sozinho também apanhava
+      // os 979 já graduados (step>=14), que não precisam de mais nenhum
+      // email. O PostgREST tem um limite de 1000 linhas por select, e com
+      // 1579 linhas a bater nesse filtro (979 graduados + 600 em
+      // andamento), gente genuinamente ativa ficava de fora do resultado
+      // sem erro nenhum, voltando a ficar presa, mesmo padrão do bug de
+      // 18/11, desta vez introduzido por esta própria correção. O .lt
+      // abaixo garante que só entram os 600 que precisam mesmo de email.
       const { data: continuity, error: contErr } = await supabase.from('profiles').select(PROFILE_COLS)
-        .not('onboarding_sequence_step', 'is', null)
         .gt('onboarding_sequence_step', 0)
+        .lt('onboarding_sequence_step', TOTAL_DAYS)
         .order('created_at', { ascending: true })
       if (contErr) throw contErr
       const { data: backlog, error: backErr } = await supabase.from('profiles').select(PROFILE_COLS)
