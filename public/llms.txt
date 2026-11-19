@@ -1,0 +1,28 @@
+# Showo
+
+> Plataforma portuguesa de portfolio e gestão de projetos com inteligência artificial, para estudantes, freelancers e profissionais independentes construírem e apresentarem o seu trabalho.
+
+O Showo ajuda qualquer pessoa a desenvolver e documentar um projeto real (escolar, pessoal, freelance ou profissional) e a transformá-lo numa página de portfolio profissional, com IA a guiar o processo: diário de bordo do progresso, análise automática e score do projeto, treino de defesa/entrevista com simulação de perguntas, relatório automático e carta de apresentação.
+
+Site: https://showo.pt
+Idioma: português de Portugal
+
+## Produto
+
+- [Homepage](https://showo.pt): o que é o Showo e como começar
+- [Preços](https://showo.pt/pricing): planos gratuito e pago
+- [Explorar](https://showo.pt/explorar): projetos públicos criados no Showo
+- [Como usar](https://showo.pt/aprende): guia de utilização
+
+## Para quem é
+
+Qualquer pessoa com um projeto para mostrar: alunos a preparar uma Prova de Aptidão Profissional (PAP) ou projeto final, estagiários, freelancers e profissionais independentes a construir portfolio a partir de trabalho real, e qualquer pessoa à procura de emprego que precise de mostrar o que já fez, não só o currículo.
+
+## Funcionalidades principais
+
+- Assistente de IA (coach) para orientar o desenvolvimento do projeto
+- Diário de bordo automático do progresso
+- Análise de IA e score do projeto
+- Treino de defesa/entrevista com perguntas simuladas
+- Página de portfolio profissional pública, partilhável com recrutadores, professores ou clientes
+- Relatório automático e carta de apresentação geradas a partir do projeto

@@ -21,6 +21,9 @@
   "rewrites": [
     { "source": "/sitemap.xml", "destination": "/api/sitemap" },
     { "source": "/projeto/:slug", "destination": "/api/og?slug=:slug" },
+    { "source": "/u/:username", "destination": "/api/og-user?username=:username" },
+    { "source": "/pricing", "destination": "/api/og-pricing" },
+    { "source": "/aprende", "destination": "/api/og-aprende" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

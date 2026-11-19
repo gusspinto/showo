@@ -188,7 +188,7 @@ const FAQ = [
   },
   {
     q: 'Os meus projetos ficam visíveis publicamente?',
-    a: 'Cada projeto tem a sua própria página pública, com um link que só partilhas se quiseres, seja a recrutadores, professores ou ao júri de defesa. Nunca aparece em motores de busca a não ser que sejas tu a partilhar o link.',
+    a: 'Um projeto novo começa sempre privado. Só fica visível a quem tem o link, e só entra em motores de busca como o Google, depois de tu próprio o marcares como público nas definições do projeto.',
   },
 ]
 

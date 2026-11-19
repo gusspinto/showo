@@ -46,11 +46,24 @@ export default async function handler(req, res) {
   if (slug && SUPABASE_URL && SUPABASE_KEY) {
     try {
       const r = await fetch(
-        `${SUPABASE_URL}/rest/v1/projects?slug=eq.${encodeURIComponent(slug)}&select=id,name,ai_tagline,ai_description,goal,area,cover_url,score,creator_name,created_at&limit=1`,
+        `${SUPABASE_URL}/rest/v1/projects?slug=eq.${encodeURIComponent(slug)}&select=id,name,ai_tagline,ai_description,goal,area,cover_url,score,creator_name,created_at,user_id&limit=1`,
         { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
       )
       const [p] = await r.json()
       if (p) {
+        // Username do dono, só para o BreadcrumbList (Showo > perfil >
+        // projeto). Pedido separado porque username vive em profiles, não
+        // em projects, e um perfil sem username (maioria dos users hoje,
+        // ver 19/11) simplesmente não entra na migalha de pão do meio.
+        let ownerUsername = null
+        try {
+          const ur = await fetch(
+            `${SUPABASE_URL}/rest/v1/profiles?id=eq.${p.user_id}&select=username&limit=1`,
+            { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+          )
+          const [u] = await ur.json()
+          ownerUsername = u?.username || null
+        } catch {}
         title = `${p.name} — Showo`
         description = p.ai_tagline || p.ai_description?.slice(0, 160) || p.goal || `Projeto de ${p.creator_name || 'alguém'} no Showo`
         if (p.cover_url) image = p.cover_url
@@ -71,23 +84,42 @@ export default async function handler(req, res) {
 
         description = ensureMinDescription(description, p.area)
 
+        // Migalha de pão (BreadcrumbList): Showo > perfil do dono (só se
+        // tiver username) > projeto. Ajuda quem rastreia a página a
+        // perceber a hierarquia real do site, não só páginas soltas.
+        const breadcrumbItems = [
+          { '@type': 'ListItem', position: 1, name: 'Showo', item: BASE },
+        ]
+        if (ownerUsername) {
+          breadcrumbItems.push({ '@type': 'ListItem', position: 2, name: p.creator_name || ownerUsername, item: `${BASE}/u/${ownerUsername}` })
+        }
+        breadcrumbItems.push({ '@type': 'ListItem', position: breadcrumbItems.length + 1, name: p.name, item: canonical })
+
         jsonLd = {
           '@context': 'https://schema.org',
-          '@type': 'CreativeWork',
-          name: p.name,
-          description: description,
-          url: canonical,
-          image: image,
-          author: p.creator_name ? { '@type': 'Person', name: p.creator_name } : undefined,
-          dateCreated: p.created_at,
-          keywords: [p.area, 'portfolio profissional', 'projeto', 'Showo'].filter(Boolean).join(', '),
-          aggregateRating: p.score ? {
-            '@type': 'AggregateRating',
-            ratingValue: p.score,
-            bestRating: 100,
-            worstRating: 0,
-            ratingCount: 1,
-          } : undefined,
+          '@graph': [
+            {
+              '@type': 'CreativeWork',
+              name: p.name,
+              description: description,
+              url: canonical,
+              image: image,
+              author: p.creator_name ? { '@type': 'Person', name: p.creator_name } : undefined,
+              dateCreated: p.created_at,
+              keywords: [p.area, 'portfolio profissional', 'projeto', 'Showo'].filter(Boolean).join(', '),
+              aggregateRating: p.score ? {
+                '@type': 'AggregateRating',
+                ratingValue: p.score,
+                bestRating: 100,
+                worstRating: 0,
+                ratingCount: 1,
+              } : undefined,
+            },
+            {
+              '@type': 'BreadcrumbList',
+              itemListElement: breadcrumbItems,
+            },
+          ],
         }
       }
     } catch {}
