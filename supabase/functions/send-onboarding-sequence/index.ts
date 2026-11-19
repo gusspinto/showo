@@ -636,7 +636,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    const PROFILE_COLS = 'id, full_name, role, organization_id, plan, created_at, onboarding_sequence_step, onboarding_opted_out, occupation'
+    const PROFILE_COLS = 'id, full_name, role, organization_id, plan, created_at, onboarding_sequence_step, onboarding_opted_out, occupation, onboarding_sequence_sent_at'
     let profiles: Array<Record<string, any>>
     if (testUserId) {
       const { data, error } = await supabase.from('profiles').select(PROFILE_COLS).eq('id', testUserId)
@@ -681,6 +681,17 @@ Deno.serve(async (req) => {
       try {
         if (!testUserId && p.onboarding_opted_out) continue
         if (!testUserId && (p.onboarding_sequence_step == null || p.onboarding_sequence_step >= TOTAL_DAYS)) continue
+        // 19/11: descoberto ao vivo que disparar a função mais do que uma
+        // vez no mesmo dia (cron + corridas manuais de correção) avançava
+        // a mesma pessoa vários passos seguidos nesse dia, porque nada
+        // impedia isso além do dedup por email_type exato: alguém muito
+        // atrasado é elegível para vários "dias" ao mesmo tempo. 293
+        // pessoas chegaram a receber 3 emails de onboarding diferentes no
+        // mesmo dia por causa disto (erro meu, ao corrigir o bug do .lt
+        // acima com corridas manuais a mais, sem verificar este efeito).
+        // Nunca mais processar quem já foi tocado hoje, seja qual for o
+        // motivo da corrida.
+        if (!testUserId && p.onboarding_sequence_sent_at && new Date(p.onboarding_sequence_sent_at).toISOString().slice(0, 10) === now.toISOString().slice(0, 10)) continue
 
         const step = forceStep ?? p.onboarding_sequence_step ?? 0
         if (step < 0 || step >= TOTAL_DAYS) { closed++; continue }
