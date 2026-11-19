@@ -1,0 +1,90 @@
+.changelog-root {
+  min-height: 100dvh;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.changelog-content {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 48px max(16px, env(safe-area-inset-left, 0px)) 96px max(16px, env(safe-area-inset-right, 0px));
+}
+
+.changelog-hero {
+  margin-bottom: 40px;
+}
+
+.changelog-hero-title {
+  font-family: var(--font-heading, inherit);
+  font-size: clamp(28px, 5vw, 38px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 10px;
+  color: var(--color-text);
+}
+
+.changelog-hero-desc {
+  font-size: 16px;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.changelog-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.changelog-item {
+  display: flex;
+  gap: 24px;
+  padding: 24px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.changelog-item:last-child {
+  border-bottom: none;
+}
+
+.changelog-item-date {
+  flex-shrink: 0;
+  width: 140px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding-top: 2px;
+}
+
+.changelog-item-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.changelog-item-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 6px;
+  color: var(--color-text);
+}
+
+.changelog-item-desc {
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+@media (max-width: 560px) {
+  .changelog-item {
+    flex-direction: column;
+    gap: 6px;
+  }
+  .changelog-item-date {
+    width: auto;
+  }
+}

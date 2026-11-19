@@ -24,6 +24,7 @@
     { "source": "/u/:username", "destination": "/api/og-user?username=:username" },
     { "source": "/pricing", "destination": "/api/og-pricing" },
     { "source": "/aprende", "destination": "/api/og-aprende" },
+    { "source": "/changelog", "destination": "/api/og-changelog" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
