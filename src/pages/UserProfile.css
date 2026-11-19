@@ -335,14 +335,14 @@
 .up-chip--manual { transition: padding-right 0.15s; }
 .up-chip-remove {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 0; height: 18px; min-height: 0; padding: 0; margin: 0 -2px; border: none;
+  width: 0; height: 18px; min-height: 0; padding: 0; margin: 0; border: none;
   border-radius: var(--radius-sm); cursor: pointer; overflow: hidden;
   background: transparent; color: var(--color-text-secondary); flex-shrink: 0;
-  opacity: 0; transition: width 0.15s, opacity 0.15s, color 0.15s, background 0.15s;
+  opacity: 0; transition: width 0.15s, margin-left 0.15s, opacity 0.15s, color 0.15s, background 0.15s;
 }
 .up-chip--manual:hover .up-chip-remove,
 .up-chip-remove:focus-visible {
-  width: 18px; opacity: 1;
+  width: 18px; margin-left: 3px; opacity: 1;
   background: var(--color-surface-hover);
 }
 .up-chip-remove:hover { color: var(--color-error); background: var(--color-error-subtle); }
