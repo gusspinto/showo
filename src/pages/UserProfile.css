@@ -342,7 +342,7 @@
 }
 .up-chip--manual:hover .up-chip-remove,
 .up-chip-remove:focus-visible {
-  width: 18px; margin-left: 3px; opacity: 1;
+  width: 18px; margin-left: 7px; opacity: 1;
   background: var(--color-surface-hover);
 }
 .up-chip-remove:hover { color: var(--color-error); background: var(--color-error-subtle); }
