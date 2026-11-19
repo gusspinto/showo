@@ -331,7 +331,14 @@
    invisível até passar o rato no chip, depois "expande" ao lado do texto,
    em vez de estar sempre visível a poluir a lista toda. Mesmo estilo de
    botão do X usado no cartão de sugestões da IA (.up-chip-act), só com a
-   largura a animar de 0 em vez de estar sempre à mostra. */
+   largura a animar de 0 em vez de estar sempre à mostra.
+   O :hover só entra dentro de (hover:hover) e (pointer:fine), ou seja,
+   só com rato a sério. Sem isto, em Chrome Android (e no Chromium com
+   emulação de touch) um toque deixa o elemento preso em :hover até se
+   tocar noutro sítio, por isso o botão nunca mais fechava ao tocar outra
+   vez: a classe .up-chip--manual-open (ligada por clique/toque no
+   próprio chip, ver UserProfile.jsx) é o único mecanismo em touch, sem
+   depender de :hover nenhum, por isso fecha sempre que se volta a tocar. */
 .up-chip--manual { transition: padding-right 0.15s; }
 .up-chip-remove {
   display: inline-flex; align-items: center; justify-content: center;
@@ -340,7 +347,13 @@
   background: transparent; color: var(--color-text-secondary); flex-shrink: 0;
   opacity: 0; transition: width 0.15s, margin-left 0.15s, opacity 0.15s, color 0.15s, background 0.15s;
 }
-.up-chip--manual:hover .up-chip-remove,
+@media (hover: hover) and (pointer: fine) {
+  .up-chip--manual:hover .up-chip-remove {
+    width: 18px; margin-left: 7px; opacity: 1;
+    background: var(--color-surface-hover);
+  }
+}
+.up-chip--manual-open .up-chip-remove,
 .up-chip-remove:focus-visible {
   width: 18px; margin-left: 7px; opacity: 1;
   background: var(--color-surface-hover);

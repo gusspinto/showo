@@ -364,6 +364,7 @@ export default function UserProfile() {
   const [viewingFile, setViewingFile] = useState(null)
   const [customizing, setCustomizing] = useState(false)
   const [skillsReviewOpen, setSkillsReviewOpen] = useState(false)
+  const [revealSkillRemove, setRevealSkillRemove] = useState(null)
   const [draftAppearance, setDraftAppearance] = useState({})
   const [draftHeadline, setDraftHeadline] = useState('')
   const [draftFullName, setDraftFullName] = useState('')
@@ -923,12 +924,17 @@ export default function UserProfile() {
               <div className="up-chips-row">
                 {manualSkills.map(skill => {
                   const n = proofCount(skill)
+                  const revealed = revealSkillRemove === skill
                   return (
-                    <span key={skill} className={`up-chip${n > 0 ? ' up-chip--proven' : ''}${isOwnProfile ? ' up-chip--manual' : ''}`}
-                      title={n > 0 ? `Demonstrada em ${n} projeto${n !== 1 ? 's' : ''}` : undefined}>
+                    <span key={skill}
+                      className={`up-chip${n > 0 ? ' up-chip--proven' : ''}${isOwnProfile ? ' up-chip--manual' : ''}${revealed ? ' up-chip--manual-open' : ''}`}
+                      title={n > 0 ? `Demonstrada em ${n} projeto${n !== 1 ? 's' : ''}` : undefined}
+                      onClick={isOwnProfile ? () => setRevealSkillRemove(prev => prev === skill ? null : skill) : undefined}
+                      style={isOwnProfile ? { cursor: 'pointer' } : undefined}>
                       {n > 0 && <Check size={11} />} {skill}
                       {isOwnProfile && (
-                        <button type="button" className="up-chip-remove" onClick={() => removeSkillFromProfile(skill)}
+                        <button type="button" className="up-chip-remove"
+                          onClick={e => { e.stopPropagation(); removeSkillFromProfile(skill) }}
                           title="Remover" aria-label={`Remover ${skill}`}>
                           <X size={11} />
                         </button>
