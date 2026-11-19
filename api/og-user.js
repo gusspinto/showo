@@ -44,14 +44,23 @@ export default async function handler(req, res) {
 
   if (username && SUPABASE_URL && SUPABASE_KEY) {
     try {
+      // profile_visibility fica de fora do select: confirmado ao vivo
+      // (19/11) que essa coluna não tem GRANT SELECT para anon, e pedi-la
+      // partia a query inteira com 42501 ("permission denied"), fazendo
+      // esta função cair sempre no genérico, para todos os perfis, sem
+      // nenhum erro visível (mesmo padrão já documentado antes: coluna sem
+      // grant parte o select todo, não só essa coluna). A app hoje também
+      // não usa profile_visibility para esconder perfis de visitantes
+      // anónimos (UserProfile.jsx não a verifica), por isso não há
+      // comportamento existente a replicar aqui.
       const r = await fetch(
-        `${SUPABASE_URL}/rest/v1/profiles?username=eq.${encodeURIComponent(username)}&select=id,full_name,bio,profile_headline,avatar_url,banned_at,profile_visibility,company,area&limit=1`,
+        `${SUPABASE_URL}/rest/v1/profiles?username=eq.${encodeURIComponent(username)}&select=id,full_name,bio,profile_headline,avatar_url,banned_at,company,area&limit=1`,
         { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
       )
       const [p] = await r.json()
-      // banned_at / profile_visibility='private': nunca servir conteúdo
-      // real a crawlers para estas contas, fica no genérico por omissão.
-      if (p && !p.banned_at && p.profile_visibility !== 'private') {
+      // banned_at: nunca servir conteúdo real a crawlers para contas
+      // banidas, fica no genérico por omissão.
+      if (p && !p.banned_at) {
         const name = p.full_name || username
 
         let projectCount = 0
