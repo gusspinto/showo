@@ -27,6 +27,7 @@ export function AuthProvider({ children }) {
   const [aiUsage, setAiUsage] = useState({})
   const [vagaApplicationsThisMonth, setVagaApplicationsThisMonth] = useState(0)
   const [reviewPopupEligibleProjectId, setReviewPopupEligibleProjectId] = useState(null)
+  const [feedbackReply, setFeedbackReply] = useState(null)
 
   const fetchAiUsage = useCallback(async () => {
     const { data } = await supabase.rpc('get_ai_usage')
@@ -375,6 +376,36 @@ export function AuthProvider({ children }) {
     refreshProfile()
   }
 
+  // Pop-up de resposta a feedback (20/11): quando o Gustavo responde a um
+  // feedback enviado por alguém (feedback.admin_reply), a pessoa vê a
+  // resposta como popup na próxima vez que usar a app. Uma query leve, só
+  // a resposta mais recente ainda não vista, feita por conta (não por
+  // página, ao contrário do popup de avaliação), porque uma resposta a um
+  // feedback merece aparecer em qualquer sítio, não só em páginas "calmas".
+  useEffect(() => {
+    if (!profile?.id) { setFeedbackReply(null); return }
+    let cancelled = false
+    supabase
+      .from('feedback')
+      .select('id, admin_reply')
+      .eq('user_id', profile.id)
+      .not('admin_reply', 'is', null)
+      .is('admin_reply_seen_at', null)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .then(({ data }) => {
+        if (!cancelled && data?.length) setFeedbackReply(data[0])
+      })
+    return () => { cancelled = true }
+  }, [profile?.id])
+
+  async function markFeedbackReplySeen() {
+    if (!feedbackReply?.id) return
+    const id = feedbackReply.id
+    setFeedbackReply(null)
+    await supabase.rpc('mark_feedback_reply_seen', { p_feedback_id: id })
+  }
+
   async function signOut() {
     await supabase.auth.signOut()
     setUser(null)
@@ -451,7 +482,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signOut, refreshProfile, isAdmin, plan, planId, isSchoolAccount, checkGate, consumeAI, aiUsage, refreshAiUsage: fetchAiUsage, vagaApplicationsThisMonth, refreshVagaApplications: () => user?.id && fetchVagaApplications(user.id), logFunnelEvent, reviewPopupEligibleProjectId, markReviewPopupSeen }}>
+    <AuthContext.Provider value={{ user, profile, loading, signOut, refreshProfile, isAdmin, plan, planId, isSchoolAccount, checkGate, consumeAI, aiUsage, refreshAiUsage: fetchAiUsage, vagaApplicationsThisMonth, refreshVagaApplications: () => user?.id && fetchVagaApplications(user.id), logFunnelEvent, reviewPopupEligibleProjectId, markReviewPopupSeen, feedbackReply, markFeedbackReplySeen }}>
       {children}
     </AuthContext.Provider>
   )
