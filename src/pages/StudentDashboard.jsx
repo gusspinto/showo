@@ -1316,10 +1316,10 @@ export default function StudentDashboard({ user, profile }) {
             {isEmptyState && (
               <section className="sdb-first-project sdb-first-project--accent" onClick={() => navigate('/novo')}>
                 {/* Terceira versão, experimental (o Gustavo ainda não
-                    decidiu): fundo azul sólido, a mesma energia do cartão
-                    "Experimenta o Plus" ao lado, com a moldura tracejada +
-                    "+" centrada e maior em vez do ícone de folha pequeno
-                    num badge, que achou "vazio a mais". */}
+                    decidiu): moldura tracejada + "+" centrada e maior em
+                    vez do ícone de folha pequeno num badge, que achou
+                    "vazio a mais". Fundo em vidro neutro, como o resto
+                    dos cartões da dashboard. */}
                 <span className="sdb-first-project-mark">
                   <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
                     <rect x="3.5" y="3.5" width="17" height="17" rx="4" stroke="currentColor" strokeWidth="1.6" strokeDasharray="3.2 3.2" strokeLinecap="round" />

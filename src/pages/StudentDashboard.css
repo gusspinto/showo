@@ -1444,7 +1444,10 @@
   .sdb-o-pinned         { order: 12; }
 
   .sdb-stat-tile {
-    background: var(--color-surface);
+    background: var(--color-glass);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--color-glass-border);
     border-radius: var(--radius-xl);
     padding: var(--sp-4);
     display: flex;
@@ -1470,7 +1473,10 @@
   display: flex;
   flex-direction: column;
 }
-/* Header: imagem desfocada (suave) quando existe capa */
+/* Header: imagem desfocada (suave) quando existe capa. Sem capa, o fundo
+   era um azul plano (rgba(27,120,247,0.1)); passa a seguir o mesmo vidro
+   do resto, sem cor nenhuma, só com capa é que continua a mostrar a
+   imagem desfocada por cima, isso não muda. */
 .sdb-pinned-head {
   position: relative;
   overflow: hidden;
@@ -1485,7 +1491,9 @@
   justify-content: space-between;
   gap: 8px;
   min-height: 50px;
-  background: rgba(27,120,247,0.1);
+  background: var(--color-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 .sdb-pinned-head[data-has-cover='true']::before {
   content: '';
@@ -1515,11 +1523,11 @@
   background: rgba(255,255,255,0.12) !important;
 }
 .sdb-pinned-head:not([data-has-cover='true']) .sdb-icon-btn {
-  color: var(--color-primary) !important;
+  color: var(--color-text-secondary) !important;
 }
 .sdb-pinned-head:not([data-has-cover='true']) .sdb-icon-btn:hover {
-  color: var(--color-primary-hover) !important;
-  background: var(--color-primary-subtle) !important;
+  color: var(--color-text) !important;
+  background: var(--color-glass-hover) !important;
 }
 .sdb-pinned-head-left {
   display: flex;
@@ -1543,11 +1551,11 @@
   padding: 3px 8px;
   margin-right: 4px;
 }
-/* Sem capa (fundo claro): tag usa cor da marca em vez de branco invisível */
+/* Sem capa: tag neutra, sem cor de marca (fundo deixou de ser azul). */
 .sdb-pinned-head:not([data-has-cover='true']) .sdb-pinned-type {
-  color: var(--color-primary);
-  background: var(--color-primary-subtle);
-  border-color: var(--color-primary-muted);
+  color: var(--color-text-secondary);
+  background: var(--color-glass-hover);
+  border-color: var(--color-glass-border);
 }
 /* Corpo */
 .sdb-pinned-body {
@@ -2475,9 +2483,9 @@
 }
 
 /* ── Cartão "cria o teu primeiro projeto" (empty state) ─────────────────────
-   Era um gradiente azul-noite a fazer de herói. Trocado pela mesma
-   linguagem plana e escura que já usamos nos outros cartões da dashboard
-   (superfície + borda fina) — a cor fica só no botão, não no fundo. */
+   Mesmo vidro neutro dos outros cartões da dashboard, sem cor nenhuma
+   (nem no --accent, que era o mesmo azul 100% sólido do .sdb-panel--brand,
+   ver essa nota). */
 .sdb-first-project {
   margin: 0;
   padding: var(--sp-6) var(--sp-5);
@@ -2488,31 +2496,26 @@
   align-items: flex-start;
   gap: var(--sp-3);
   text-align: left;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--color-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--color-glass-border);
   transition: border-color 0.15s;
 }
 .sdb-first-project:hover {
   border-color: var(--color-border-hover);
 }
-/* Mesmo tratamento do .sdb-panel--brand ("Experimenta o Plus"): azul mais
-   profundo (--color-primary-deep, não o azul base) + o brilho radial no
-   canto, não um azul plano. Pedido do Gustavo: "o mesmo efeito do cartão
-   do Plus, mas ligeiramente diferente": o efeito é igual, o que muda é o
-   conteúdo centrado em vez de alinhado à esquerda. */
+/* Pedido do Gustavo: "o mesmo efeito do cartão do Plus, mas ligeiramente
+   diferente", o efeito é o mesmo vidro, o que muda é o conteúdo centrado
+   em vez de alinhado à esquerda. */
 .sdb-first-project--accent {
   align-items: center;
   text-align: center;
-  background:
-    radial-gradient(130% 150% at 100% 0%, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0) 58%),
-    var(--color-primary-deep);
-  border-color: transparent;
-  box-shadow: 0 1px 0 rgba(255,255,255,0.16) inset, var(--shadow-md);
 }
-.sdb-first-project--accent:hover { border-color: transparent; }
+.sdb-first-project--accent:hover { border-color: var(--color-border-hover); }
 .sdb-first-project-mark {
   display: flex; align-items: center; justify-content: center;
-  color: #fff;
+  color: var(--color-text);
 }
 .sdb-first-project-title {
   margin: 0;
@@ -2522,7 +2525,6 @@
   line-height: 1.3;
   font-family: var(--font-heading);
 }
-.sdb-first-project--accent .sdb-first-project-title { color: #fff; }
 @media (max-width: 640px) {
   .sdb-first-project { padding: var(--sp-5) var(--sp-4); gap: var(--sp-3); }
   .sdb-first-project-title { font-size: 18px; }
