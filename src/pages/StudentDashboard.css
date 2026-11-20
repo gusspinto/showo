@@ -16,10 +16,21 @@
    baixo, nunca volta a ficar liso por mais que desça, só menos intenso
    que o brilho do topo. Usa --color-primary (azul fixo da marca), não
    --up-accent (isso é só do perfil pessoal). oklch para não lavar no
-   claro, mesmo critério já afinado no perfil. */
+   claro, mesmo critério já afinado no perfil.
+
+   Duas camadas extra, pedidas a seguir: sem elas, o topo encostava logo
+   à navbar (preta, fora deste elemento) com a cor já no pico, uma quebra
+   a direito; e o fundo da página ficava sempre na mesma tinta base, sem
+   nunca voltar ao preto da plataforma. A primeira camada (linear, 0 a
+   90px) força o próprio topo a ficar no preto antes de libertar o brilho
+   radial por baixo. O ::after esbate os últimos ~360px da págína (ligado
+   ao fim real do conteúdo da página, position:relative + absolute, não
+   ao ecrã) de volta a --color-bg puro. */
 .sdb-root {
+  position: relative;
   min-height: 100vh;
   background:
+    linear-gradient(to bottom, var(--color-bg) 0%, transparent 90px),
     radial-gradient(ellipse 1100px 520px at 50% 0%,
       color-mix(in oklch, var(--color-primary) var(--up-wash-pct, 30%), var(--color-bg)) 0%,
       transparent 72%),
@@ -28,6 +39,16 @@
   --radius-lg: 16px;
   --radius-xl: 20px;
   overflow-x: clip;
+}
+.sdb-root::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 360px;
+  background: linear-gradient(to bottom, transparent, var(--color-bg));
+  pointer-events: none;
 }
 
 .sdb-page {
