@@ -153,6 +153,13 @@
   --up-wash-pct:       30%;
   --up-shadow-pct:     42%;
   --up-shadow-pct-sm:  32%;
+  /* Base sustentada da atmosfera (StudentDashboard.css, .sdb-root): o
+     brilho (--up-wash-pct) só cobre uma elipse fixa perto do topo; numa
+     página longa, o resto ficava liso outra vez, inconsistente. Esta é a
+     tinta que fica por baixo do brilho E continua o resto da página
+     inteira, bem mais fraca do que o pico, para nunca voltar a ficar
+     completamente plano por mais que a página desça. */
+  --up-wash-pct-base:  12%;
   /* Vidro do cartão do perfil (UserProfile.css, .up-profile-card/.up-empty).
      No escuro, --color-glass (branco bem transparente) já destaca-se do
      fundo preto sozinho. Sem override aqui, por isso. */
@@ -230,6 +237,7 @@ body.light {
   --up-wash-pct:       22%;
   --up-shadow-pct:     30%;
   --up-shadow-pct-sm:  22%;
+  --up-wash-pct-base:  7%;
   /* Ver nota em :root. No claro, --color-glass é branco quase opaco sobre
      uma página quase branca, o cartão mal se separa dela. Vidro escuro
      translúcido em vez disso: o cartão fica visivelmente mais escuro do

@@ -7,18 +7,23 @@
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* Atmosfera de fundo, mesmo princípio do .bg-page.up-root do perfil
-   (UserProfile.css): um gradiente radial no azul da marca, ancorado no
-   topo, a esbater para --color-bg antes dos 72%. Sem isto, os painéis em
-   vidro (--color-glass + blur) não tinham nada colorido por trás para
-   mostrar, ficavam só cartões normais com borda mais subtil. Usa
-   --color-primary (azul fixo da marca), não --up-accent (isso é só do
-   perfil pessoal, não faz sentido aqui). Mesma intensidade por tema
-   (--up-wash-pct) já afinada no perfil, oklch para não lavar no claro. */
+   (UserProfile.css), mas em duas camadas em vez de uma: um brilho junto
+   ao topo (gradiente radial) que se esbate para TRANSPARENTE, por cima
+   de uma tinta base sólida e bem mais fraca (--up-wash-pct-base) que
+   cobre a página inteira. Com uma só camada a esbater para --color-bg, o
+   Gustavo reparou que só o topo tinha atmosfera, o resto (numa página tão
+   comprida como esta) voltava a ficar completamente liso. Com a base por
+   baixo, nunca volta a ficar liso por mais que desça, só menos intenso
+   que o brilho do topo. Usa --color-primary (azul fixo da marca), não
+   --up-accent (isso é só do perfil pessoal). oklch para não lavar no
+   claro, mesmo critério já afinado no perfil. */
 .sdb-root {
   min-height: 100vh;
-  background: radial-gradient(ellipse 1100px 520px at 50% 0%,
-    color-mix(in oklch, var(--color-primary) var(--up-wash-pct, 30%), var(--color-bg)) 0%,
-    var(--color-bg) 72%);
+  background:
+    radial-gradient(ellipse 1100px 520px at 50% 0%,
+      color-mix(in oklch, var(--color-primary) var(--up-wash-pct, 30%), var(--color-bg)) 0%,
+      transparent 72%),
+    color-mix(in oklch, var(--color-primary) var(--up-wash-pct-base, 12%), var(--color-bg));
   font-family: var(--font-body);
   --radius-lg: 16px;
   --radius-xl: 20px;
@@ -2733,8 +2738,10 @@
   justify-content: space-between;
   gap: 12px;
   padding: 10px 12px;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
+  background: var(--color-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--color-glass-border);
   border-radius: var(--radius-md);
   cursor: pointer;
   text-align: left;
@@ -2743,8 +2750,8 @@
 }
 
 .sdb-turma-card:hover {
-  border-color: var(--color-primary);
-  background: var(--color-primary-subtle);
+  border-color: var(--color-border-hover);
+  background: var(--color-glass-hover);
 }
 
 .sdb-turma-card-left {
