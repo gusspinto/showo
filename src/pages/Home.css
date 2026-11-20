@@ -31,7 +31,12 @@
 .home-hero {
   position: relative;
   overflow: hidden;
-  min-height: calc(100dvh - 62px);
+  /* 20/11: em ecrãs altos (ex. monitores grandes), 100dvh sozinho deixava
+     um vazio enorme por cima/baixo do grupo texto+ilustração, que tem
+     altura fixa e não cresce com o ecrã. Limite de 760px mantém o efeito
+     de "preencher o ecrã" em portáteis normais sem exagerar em monitores
+     grandes. */
+  min-height: min(calc(100dvh - 62px), 760px);
   display: flex;
   align-items: center;
   background: var(--color-bg);

@@ -24,6 +24,7 @@ import RestReminder from './components/RestReminder'
 import CookieConsent from './components/CookieConsent'
 import SplashScreen from './components/SplashScreen'
 import ReviewPopupModal from './components/dashboard/ReviewPopupModal'
+import FeedbackReplyModal from './components/FeedbackReplyModal'
 import { Analytics } from '@vercel/analytics/react'
 import { captureError } from './lib/errorTracking'
 import { trackPageview } from './lib/analytics'
@@ -826,6 +827,16 @@ function ReviewPopupGate() {
   )
 }
 
+// Pop-up de resposta a feedback (20/11): ao contrário do popup de
+// avaliação, não há páginas "proibidas" aqui — uma resposta direta do
+// Gustavo a um feedback que a própria pessoa enviou não é uma interrupção
+// indesejada, aparece em qualquer sítio assim que a conta carrega.
+function FeedbackReplyGate() {
+  const { feedbackReply, markFeedbackReplySeen, user } = useAuth()
+  if (!user?.id || !feedbackReply) return null
+  return <FeedbackReplyModal reply={feedbackReply.admin_reply} onClose={markFeedbackReplySeen} />
+}
+
 function AuthErrorBanner() {
   const [msg, setMsg] = useState('')
   const [oauthRetry, setOauthRetry] = useState(false)
@@ -945,6 +956,7 @@ export default function App() {
             <PageViewTracker />
             <ScrollToTop />
             <ReviewPopupGate />
+            <FeedbackReplyGate />
             <ErrorBoundary>
             <RecoveryGate pwRecovery={pwRecovery}>
             <AuthGate>
