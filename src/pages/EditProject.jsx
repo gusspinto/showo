@@ -85,6 +85,17 @@ const glassPanel = {
   boxShadow: 'inset 0 1px 0 0 var(--color-glass-border-bright), 0 16px 40px -20px rgba(0,0,0,0.45)',
 }
 
+// Caixas aninhadas dentro de um cartão de vidro (link público, quotas de
+// ficheiros, estado do GitHub): usavam colors.bgAlt, sólido, e ficavam a
+// parecer um quadrado opaco colado por cima do vidro em vez de parte dele.
+// --color-glass-hover já é translúcido nos dois temas, por isso a caixa
+// aninhada continua a deixar passar o vidro do cartão à volta, só um pouco
+// mais clara para se distinguir do fundo.
+const glassInset = {
+  background: 'var(--color-glass-hover)',
+  border: '1px solid var(--color-glass-border)',
+}
+
 const PROJECT_TYPES = [
   { value: '', label: 'Selecionar tipo...' },
   { value: 'school', label: 'Projeto de escola' },
@@ -1221,7 +1232,7 @@ function AdvancedSection({ project, isOwner, navigate }) {
                 autoFocus
                 value={slugInput}
                 onChange={e => setSlugInput(e.target.value)}
-                style={{ flex: 1, background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 8, padding: '10px 12px', fontSize: 13, color: colors.text, fontFamily: 'inherit' }}
+                style={{ flex: 1, ...glassInset, borderRadius: 8, padding: '10px 12px', fontSize: 13, color: colors.text, fontFamily: 'inherit' }}
               />
             </div>
             {slugError && <p style={{ color: '#ef4444', fontSize: 12, margin: '6px 0 0' }}>{slugError}</p>}
@@ -1240,17 +1251,17 @@ function AdvancedSection({ project, isOwner, navigate }) {
           // pequenas ao lado — antes os três botões competiam pelo mesmo
           // peso visual, lado a lado com o campo do link.
           <div style={{ marginBottom: 10 }}>
-            <div style={{ background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 8, padding: '10px 12px', fontSize: 13, color: colors.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 8 }}>{publicUrl}</div>
+            <div style={{ ...glassInset, borderRadius: 8, padding: '10px 12px', fontSize: 13, color: colors.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 8 }}>{publicUrl}</div>
             <div style={{ display: 'flex', gap: 8 }}>
               <button type="button" onClick={copyLink} style={{ flex: 1, padding: '10px 16px', background: copied ? colors.green : colors.blue, border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, whiteSpace: 'nowrap' }}>
                 {copied ? <><Check size={14} /> Copiado</> : <><Copy size={14} /> Copiar link</>}
               </button>
               {cleanLinkGate.allowed && (
-                <button type="button" onClick={startEditSlug} title="Personalizar link" style={{ width: 40, padding: 0, background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-sm)', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}>
+                <button type="button" onClick={startEditSlug} title="Personalizar link" style={{ width: 40, padding: 0, ...glassInset, borderRadius: 'var(--radius-sm)', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}>
                   <Pencil size={14} />
                 </button>
               )}
-              <a href={publicUrl} target="_blank" rel="noopener noreferrer" style={{ width: 40, background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 'var(--radius-sm)', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <a href={publicUrl} target="_blank" rel="noopener noreferrer" style={{ width: 40, ...glassInset, borderRadius: 'var(--radius-sm)', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <ExternalLink size={14} />
               </a>
             </div>
@@ -1401,7 +1412,7 @@ function ProjectFilesCard({ project }) {
             // linha, barra por baixo — mesma receita do "Uso" do Claude,
             // em vez de duas barras soltas com uma legenda pequena.
             <div style={{ marginBottom: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 10, padding: '10px 12px' }}>
+              <div style={{ ...glassInset, borderRadius: 10, padding: '10px 12px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 7 }}>
                   <span style={{ fontSize: 12.5, fontWeight: 700, color: colors.text }}>Este projeto</span>
                   <span style={{ fontSize: 11.5, fontWeight: 600, color: usedPct > 90 ? '#ef4444' : colors.muted }}>{usedPct}% usado</span>
@@ -1414,7 +1425,7 @@ function ProjectFilesCard({ project }) {
                 </p>
               </div>
               {maxAccountBytes && (
-                <div style={{ background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 10, padding: '10px 12px' }}>
+                <div style={{ ...glassInset, borderRadius: 10, padding: '10px 12px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 7 }}>
                     <span style={{ fontSize: 12.5, fontWeight: 700, color: colors.text }}>Toda a conta</span>
                     <span style={{ fontSize: 11.5, fontWeight: 600, color: accountPct > 90 ? '#ef4444' : colors.muted }}>{accountPct}% usado</span>
@@ -1466,7 +1477,7 @@ function ProjectFilesCard({ project }) {
             type="button"
             disabled={uploading}
             onClick={() => fileInputRef.current?.click()}
-            style={{ marginTop: 14, padding: '10px 16px', background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, width: '100%' }}
+            style={{ marginTop: 14, padding: '10px 16px', ...glassInset, borderRadius: 8, color: colors.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, width: '100%' }}
           >
             <Upload size={13} /> {uploading ? 'A enviar…' : 'Adicionar ficheiros'}
           </button>
@@ -1635,7 +1646,7 @@ function GithubAdvancedCard({ project }) {
           indicador de ligação, nome em destaque, e os botões centrados por
           baixo. Em ecrãs estreitos os botões quebram linha e continuam
           centrados, sem precisar de media query. */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, marginBottom: 16, padding: '18px 16px', background: colors.bgAlt, borderRadius: 12, border: `1px solid ${colors.border}` }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, marginBottom: 16, padding: '18px 16px', ...glassInset, borderRadius: 12 }}>
         {connection ? (
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, maxWidth: '100%' }}>
@@ -1683,7 +1694,7 @@ function GithubAdvancedCard({ project }) {
                     >
                       <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.full_name}</span>
                       {r.private && (
-                        <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, color: colors.subtle, background: colors.bgAlt, borderRadius: 5, padding: '2px 6px' }}>privado</span>
+                        <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, color: colors.subtle, ...glassInset, borderRadius: 5, padding: '2px 6px' }}>privado</span>
                       )}
                     </button>
                   ))}
@@ -1798,7 +1809,7 @@ function GithubAdvancedCard({ project }) {
           )}
 
           {removed != null && !error && (
-            <div style={{ background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 10, padding: '11px 14px', color: colors.muted, fontSize: 13, marginBottom: 12, fontWeight: 600 }}>
+            <div style={{ ...glassInset, borderRadius: 10, padding: '11px 14px', color: colors.muted, fontSize: 13, marginBottom: 12, fontWeight: 600 }}>
               {removed === 0 ? 'Não havia entradas do GitHub no diário.' : `${removed} ${removed === 1 ? 'entrada removida' : 'entradas removidas'} do diário. As que escreveste à mão ficaram.`}
             </div>
           )}
@@ -1852,7 +1863,7 @@ function GithubAdvancedCard({ project }) {
 
 function AdvStat({ label, value }) {
   return (
-    <div style={{ background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 10, padding: '11px 13px' }}>
+    <div style={{ ...glassInset, borderRadius: 10, padding: '11px 13px' }}>
       <div style={{ fontSize: 19, fontWeight: 700, color: colors.text, lineHeight: 1.1 }}>{value}</div>
       <div style={{ fontSize: 10.5, color: colors.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 3 }}>{label}</div>
     </div>
