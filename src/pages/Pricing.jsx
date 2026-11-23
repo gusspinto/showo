@@ -4,6 +4,7 @@ import { CheckCircleIcon as Check } from '@solar-icons/react/linear/check-circle
 import { CloseCircleIcon as CloseCircle } from '@solar-icons/react/linear/close-circle'
 import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/linear/arrow-right'
 import { AltArrowDownIcon as ChevronDown } from '@solar-icons/react/linear/alt-arrow-down'
+import { AltArrowDownIcon as ChevronDownBold } from '@solar-icons/react/bold/alt-arrow-down'
 import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/linear/square-academic-cap'
 import { InfoCircleIcon as InfoCircle } from '@solar-icons/react/linear/info-circle'
 import { Navbar } from '../components/Navbar'
@@ -357,7 +358,7 @@ export default function Pricing() {
                 {((annual && plan.priceAnnualDiscounted) || (!annual && plan.priceMonthlyDiscounted)) && (
                   <div className="pricing-discount-badge-wrap">
                     <span className="pricing-discount-badge">Código {ONBOARDING_DISCOUNT_CODE_LABEL} · -50%</span>
-                    <ChevronDown size={14} className="pricing-discount-arrow" />
+                    <ChevronDownBold size={22} className="pricing-discount-arrow" />
                   </div>
                 )}
 
