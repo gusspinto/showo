@@ -4,12 +4,13 @@ import { CheckCircleIcon as Check } from '@solar-icons/react/linear/check-circle
 import { CloseCircleIcon as CloseCircle } from '@solar-icons/react/linear/close-circle'
 import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/linear/arrow-right'
 import { AltArrowDownIcon as ChevronDown } from '@solar-icons/react/linear/alt-arrow-down'
+import { AltArrowDownIcon as ChevronDownBold } from '@solar-icons/react/bold/alt-arrow-down'
 import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/linear/square-academic-cap'
 import { InfoCircleIcon as InfoCircle } from '@solar-icons/react/linear/info-circle'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { ONBOARDING_DISCOUNT_NOTE, ANNUAL_ONBOARDING_DISCOUNT_NOTE, ONBOARDING_DISCOUNT_CODE_LABEL } from '../lib/plans'
+import { ONBOARDING_DISCOUNT_CODE_LABEL } from '../lib/plans'
 import TestimonialsMarquee from '../components/TestimonialsMarquee'
 import './Pricing.css'
 
@@ -349,14 +350,26 @@ export default function Pricing() {
                   <p className="pricing-tagline">{plan.positioning}</p>
                 </div>
 
+                {/* Badge do código, acima do preço e bem visível (pedido do
+                    Gustavo, 23/11): sem isto, quem vê o preço riscado sem
+                    perceber que o desconto exige colar um código no
+                    checkout (ver handleCta acima, não é automático) acha
+                    que o preço "normal" subiu, não que há uma promoção. */}
+                {((annual && plan.priceAnnualDiscounted) || (!annual && plan.priceMonthlyDiscounted)) && (
+                  <div className="pricing-discount-badge-wrap">
+                    <span className="pricing-discount-badge">Código {ONBOARDING_DISCOUNT_CODE_LABEL} · -50%</span>
+                    <ChevronDownBold size={22} className="pricing-discount-arrow" />
+                  </div>
+                )}
+
                 <div className="pricing-price">
-                  {/* Preço riscado: SHOWO50 (-50%, aplicado sozinho no
-                      checkout), tanto no mensal como no anual. Antes disto,
-                      o riscado do anual era mensal × 12 (poupança de pagar
-                      anual, sem ligação ao cupão) e o preço cheio aparecia
-                      como se já tivesse desconto, o cupão nunca se aplicava
-                      no anual, nem aqui nem no checkout real
-                      (create-annual-checkout). */}
+                  {/* Preço riscado: SHOWO50 (-50%, colado manualmente no
+                      checkout, ver handleCta), tanto no mensal como no
+                      anual. Antes disto, o riscado do anual era mensal × 12
+                      (poupança de pagar anual, sem ligação ao cupão) e o
+                      preço cheio aparecia como se já tivesse desconto, o
+                      cupão nunca se aplicava no anual, nem aqui nem no
+                      checkout real (create-annual-checkout). */}
                   {annual && plan.priceAnnualDiscounted && (
                     <span className="pricing-amount-old">{plan.priceAnnual}</span>
                   )}
@@ -373,14 +386,9 @@ export default function Pricing() {
                   {plan.period && <span className="pricing-period">{annual && plan.priceAnnual ? '/ano' : plan.period}</span>}
                 </div>
                 {annual && plan.priceAnnualDiscounted ? (
-                  <>
-                    <p className="pricing-annual-note">equivale a {plan.annualEquivalentDiscounted ?? plan.annualEquivalent}</p>
-                    <p className="pricing-discount-note">{ANNUAL_ONBOARDING_DISCOUNT_NOTE}</p>
-                  </>
+                  <p className="pricing-annual-note">equivale a {plan.annualEquivalentDiscounted ?? plan.annualEquivalent}</p>
                 ) : annual && plan.annualEquivalent ? (
                   <p className="pricing-annual-note">equivale a {plan.annualEquivalent}</p>
-                ) : !annual && plan.priceMonthlyDiscounted ? (
-                  <p className="pricing-discount-note">{ONBOARDING_DISCOUNT_NOTE}</p>
                 ) : plan.weeklyNote ? (
                   /* Ao dia os cêntimos não dizem nada a ninguém; à semana
                      já se compara com alguma coisa real. É a mesma conta,
@@ -408,8 +416,8 @@ export default function Pricing() {
                 {plan.id !== 'free' && !isCurrent && !isDowngrade && (
                   <p className="pricing-cta-note">Cancela quando quiseres, sem letras miúdas.</p>
                 )}
-                {/* O ONBOARDING_DISCOUNT_NOTE acima, junto ao preço, já diz
-                    "com o código SHOWO50" à vista de toda a gente. É o que
+                {/* O badge do código acima, junto ao preço, já diz
+                    "código SHOWO50" à vista de toda a gente. É o que
                     o Gustavo quis (16/11): o código não é segredo, é a
                     chamada em si que é exclusiva ("liguei só a um grupo
                     pequeno"), não o código. Nada a acrescentar aqui. */}
