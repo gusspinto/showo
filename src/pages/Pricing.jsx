@@ -357,6 +357,7 @@ export default function Pricing() {
                 {((annual && plan.priceAnnualDiscounted) || (!annual && plan.priceMonthlyDiscounted)) && (
                   <div className="pricing-discount-badge-wrap">
                     <span className="pricing-discount-badge">Código {ONBOARDING_DISCOUNT_CODE_LABEL} · -50%</span>
+                    <ChevronDown size={14} className="pricing-discount-arrow" />
                   </div>
                 )}
 

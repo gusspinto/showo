@@ -163,7 +163,8 @@
 /* Badge do código do desconto, bem visível por cima do preço (pedido do
    Gustavo, 23/11), para não parecer que o preço "normal" subiu quando na
    verdade o desconto existe, só exige colar o código no checkout. */
-.pricing-discount-badge-wrap { display: flex; justify-content: center; margin: 0 0 4px; }
+.pricing-discount-badge-wrap { display: flex; flex-direction: column; align-items: center; gap: 2px; margin: 0 0 4px; }
+.pricing-discount-arrow { color: var(--color-primary); }
 .pricing-discount-badge {
   display: inline-block;
   padding: 4px 12px;
