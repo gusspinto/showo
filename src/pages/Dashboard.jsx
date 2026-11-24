@@ -60,6 +60,7 @@ import {
 import MonthCalendar from '../components/dashboard/MonthCalendar'
 import AddReminderModal from '../components/dashboard/AddReminderModal'
 import CalendarSyncModal from '../components/dashboard/CalendarSyncModal'
+import GtaGiveawayCard from '../components/dashboard/GtaGiveawayCard'
 import '../components/dashboard/MonthCalendar.css'
 import './Dashboard.css'
 import StudentDashboard from './StudentDashboard'
@@ -1289,6 +1290,10 @@ export default function Dashboard() {
             </header>
           )
         })()}
+
+        {!isTeacher && !isRecruiter && (
+          <GtaGiveawayCard userId={user?.id} profile={profile} projectCount={projects.length} />
+        )}
 
         {/* ══════════════════════ TEACHER DASHBOARD ══════════════════════ */}
         {isTeacher && turmas.length === 0 && <TeacherEmptyState onCreate={() => setShowCreateTurma(true)} />}

@@ -124,7 +124,6 @@ const Changelog    = lazyPage(() => import('./pages/Changelog'))
 const GithubCallback = lazyPage(() => import('./pages/GithubCallback'))
 const Welcome      = lazyPage(() => import('./pages/Welcome'))
 const Feedback     = lazyPage(() => import('./pages/Feedback'))
-const GtaGiveaway  = lazyPage(() => import('./pages/GtaGiveaway'))
 const PostSemana   = lazyPage(() => import('./pages/PostSemana'))
 
 function PageLoader() {
@@ -1005,7 +1004,6 @@ export default function App() {
               <Route path="/auth/github/callback" element={<GithubCallback />} />
               <Route path="/welcome"            element={<Welcome />}       />
               <Route path="/feedback"           element={<Feedback />}      />
-              <Route path="/gta"                element={<GtaGiveaway />}   />
               <Route path="*"                   element={<NotFound />}      />
             </Routes>
             </Suspense>
