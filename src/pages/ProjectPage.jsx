@@ -3093,10 +3093,23 @@ export default function ProjectPage() {
 
             {/* Campanha GTA VI (24/11, remover depois do sorteio): quem acaba
                 de publicar fica elegível, mas tem de voltar ao dashboard
-                para confirmar. Sem isto, ninguém via esse próximo passo. */}
-            <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
-              Já agora: isto também te dá entrada no sorteio de um GTA VI. <a href="/dashboard" style={{ color: 'var(--color-primary)', fontWeight: 600 }}>Confirma a tua participação</a>.
-            </p>
+                para confirmar. Uma linha de texto passava despercebida no
+                meio de um ecrã já cheio (campo de URL, outros CTAs), por
+                isso é um botão a sério, não um link discreto. */}
+            <button
+              onClick={() => navigate('/dashboard')}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+                width: '100%', textAlign: 'left', marginBottom: 16, padding: '12px 14px',
+                background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary)',
+                borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              <span style={{ fontSize: 13, color: 'var(--color-text)', lineHeight: 1.4 }}>
+                Isto também te dá entrada no sorteio de um GTA VI.
+              </span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-primary)', whiteSpace: 'nowrap' }}>Confirmar →</span>
+            </button>
 
             {/* URL copy field */}
             <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { supabase } from '../../lib/supabase'
 import { resolvePlanId, getPlan } from '../../lib/plans'
+import { useAuth } from '../../context/AuthContext'
 import { Card, CardTitle, Button } from '../ui'
 
 /* Cartão de participação no sorteio do GTA VI (campanha 24/11), no
@@ -18,23 +19,37 @@ import { Card, CardTitle, Button } from '../ui'
    (publicar um projeto), nunca por pagamento, por isso o texto nunca diz
    "paga para teres mais chances". O benefício de assinar é sempre
    apresentado como garantido e à parte do sorteio, não como mais
-   probabilidade de ganhar. */
+   probabilidade de ganhar.
 
-const BRIEFING = [
+   Dispensar: antes disto, um clique no "X" escondia o cartão para
+   sempre (localStorage), mesmo para quem ainda não tinha participado,
+   perdendo gente que só queria tirar o cartão da frente um bocado.
+   Agora só fica escondido para sempre quando já está confirmado (não há
+   mais nada a fazer); nos outros estados, dispensar é só para a sessão
+   atual (sessionStorage), volta a aparecer na próxima visita. Contas de
+   escola não veem o benefício de assinar, o plano delas é atribuído pela
+   escola, não comprado por elas. */
+
+const BRIEFING_BASE = [
   'Publicas o teu primeiro projeto: entras automaticamente no sorteio do GTA VI, de graça.',
   'O sorteio tem o GTA VI para 1 pessoa, e 2 meses de Plus grátis para mais 2 pessoas, todos só por participarem.',
-  'Se assinares o Plus ou o anual esta semana, ganhas já 1 mês extra garantido, sem depender de sorteio nenhum.',
 ]
+const BRIEFING_SUBSCRIBE = 'Se assinares o Plus ou o anual esta semana, ganhas já 1 mês extra garantido, sem depender de sorteio nenhum.'
 
 export default function GtaGiveawayCard({ userId, profile, projectCount }) {
+  const { isSchoolAccount } = useAuth()
   const [status, setStatus] = useState('loading') // loading | needs_project | can_confirm | confirming | confirmed | error
   const [dismissed, setDismissed] = useState(false)
 
-  const key = `showo_gta_dismissed_${userId}`
+  const sessionKey = `showo_gta_dismissed_session_${userId}`
+  const confirmedKey = `showo_gta_dismissed_confirmed_${userId}`
 
   useEffect(() => {
-    try { if (localStorage.getItem(key) === '1') setDismissed(true) } catch { /* ignore */ }
-  }, [key])
+    try {
+      if (localStorage.getItem(confirmedKey) === '1') { setDismissed(true); return }
+      if (sessionStorage.getItem(sessionKey) === '1') setDismissed(true)
+    } catch { /* ignore */ }
+  }, [sessionKey, confirmedKey])
 
   useEffect(() => {
     if (!userId || projectCount == null) return
@@ -60,23 +75,25 @@ export default function GtaGiveawayCard({ userId, profile, projectCount }) {
   }
 
   function dismiss() {
-    try { localStorage.setItem(key, '1') } catch { /* ignore */ }
+    try {
+      if (status === 'confirmed') localStorage.setItem(confirmedKey, '1')
+      else sessionStorage.setItem(sessionKey, '1')
+    } catch { /* ignore */ }
     setDismissed(true)
   }
 
   if (dismissed || status === 'loading') return null
 
   const planLabel = getPlan(resolvePlanId(profile))?.name
+  const briefing = isSchoolAccount ? BRIEFING_BASE : [...BRIEFING_BASE, BRIEFING_SUBSCRIBE]
 
   return (
     <Card padding="md" style={{ position: 'relative', marginBottom: 'var(--sp-4)' }}>
-      {status !== 'confirmed' && (
-        <button
-          onClick={dismiss}
-          aria-label="Dispensar"
-          style={{ position: 'absolute', top: 10, right: 10, width: 26, height: 26, minHeight: 26, background: 'transparent', border: 'none', borderRadius: 7, cursor: 'pointer', color: 'var(--color-text-tertiary)', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-        ><X size={13} /></button>
-      )}
+      <button
+        onClick={dismiss}
+        aria-label="Dispensar"
+        style={{ position: 'absolute', top: 10, right: 10, width: 26, height: 26, minHeight: 26, background: 'transparent', border: 'none', borderRadius: 7, cursor: 'pointer', color: 'var(--color-text-tertiary)', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+      ><X size={13} /></button>
 
       <CardTitle style={{ marginBottom: 10, paddingRight: 24 }}>
         {status === 'confirmed' ? 'Estás dentro do sorteio do GTA VI' : 'Participa no sorteio de um GTA VI'}
@@ -84,7 +101,7 @@ export default function GtaGiveawayCard({ userId, profile, projectCount }) {
 
       {status !== 'confirmed' && (
         <ul style={{ margin: '0 0 14px', padding: '0 0 0 18px', fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
-          {BRIEFING.map((line, i) => <li key={i} style={{ marginBottom: 4 }}>{line}</li>)}
+          {briefing.map((line, i) => <li key={i} style={{ marginBottom: 4 }}>{line}</li>)}
         </ul>
       )}
 
@@ -107,7 +124,7 @@ export default function GtaGiveawayCard({ userId, profile, projectCount }) {
 
       {status === 'confirmed' && (
         <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
-          Boa sorte. Avisamos por email quem ganha. Se ainda não assinaste o Plus ou o anual esta semana, continuas a tempo de garantir o mês extra.
+          Boa sorte. Avisamos por email quem ganha.{!isSchoolAccount && ' Se ainda não assinaste o Plus ou o anual esta semana, continuas a tempo de garantir o mês extra.'}
         </p>
       )}
 
