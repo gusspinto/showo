@@ -2747,6 +2747,9 @@ export default function Admin() {
   const [generatingCode, setGeneratingCode] = useState(false)
   const [ambassadors, setAmbassadors] = useState([])
   const [ambassadorsLoaded, setAmbassadorsLoaded] = useState(false)
+  const [gtaEntries, setGtaEntries] = useState([])
+  const [gtaLoaded, setGtaLoaded] = useState(false)
+  const [grantingBonusId, setGrantingBonusId] = useState(null)
   const [newAmbCode, setNewAmbCode] = useState('')
   const [newAmbUser, setNewAmbUser] = useState('')
   const [newAmbRate, setNewAmbRate] = useState('0.20')
@@ -2902,6 +2905,24 @@ export default function Admin() {
     if (isAdmin && tab === 'ambassadors' && !ambassadorsLoaded) loadAmbassadors()
   }, [isAdmin, tab, ambassadorsLoaded, loadAmbassadors])
 
+  const loadGtaEntries = useCallback(async () => {
+    const { data, error } = await supabase.rpc('admin_get_gta_entries')
+    if (!error) setGtaEntries(data || [])
+    setGtaLoaded(true)
+  }, [])
+
+  useEffect(() => {
+    if (isAdmin && tab === 'gta' && !gtaLoaded) loadGtaEntries()
+  }, [isAdmin, tab, gtaLoaded, loadGtaEntries])
+
+  async function handleGrantGtaBonus(entryId) {
+    setGrantingBonusId(entryId)
+    const { error } = await supabase.rpc('admin_mark_gta_bonus_granted', { p_entry_id: entryId })
+    setGrantingBonusId(null)
+    if (error) { showToast('Erro: ' + error.message); return }
+    setGtaEntries(prev => prev.map(e => e.entry_id === entryId ? { ...e, bonus_granted_at: new Date().toISOString() } : e))
+  }
+
   async function handleCreateAmbassador() {
     if (!newAmbUser.trim() || !newAmbCode.trim()) { showToast('Preenche nome/username e código'); return }
     setCreatingAmb(true)
@@ -3002,6 +3023,7 @@ export default function Admin() {
        dois, com nomes que dizem o que cada um faz. */
     { id: 'orgs',     label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Shield size={14} /> Organizações</span> },
     { id: 'ambassadors', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Megaphone size={14} /> Embaixadores</span> },
+    { id: 'gta', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Star size={14} /> GTA VI ({gtaEntries.length})</span> },
     { id: 'financas', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Star size={14} /> Finanças</span> },
   ]
 
@@ -3171,6 +3193,53 @@ export default function Admin() {
                       ))}
                       {ambassadors.length === 0 && (
                         <tr><td colSpan={7} style={{ padding: 20, textAlign: 'center', color: 'var(--color-text-secondary)' }}>Nenhum embaixador criado</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {tab === 'gta' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                <div style={{ background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 12, overflow: 'hidden' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
+                        {['Utilizador', 'Plano ao confirmar', 'Plano atual', 'Confirmado em', 'Mês grátis'].map(h => (
+                          <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600 }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {gtaEntries.map(e => (
+                        <tr key={e.entry_id} style={{ borderBottom: '1px solid var(--color-border)' }}>
+                          <td
+                            onClick={() => e.username && navigate(`/u/${e.username}`)}
+                            style={{ padding: '10px 14px', cursor: e.username ? 'pointer' : 'default', color: e.username ? 'var(--color-primary)' : 'inherit' }}
+                          >{e.full_name || e.username || e.user_id.slice(0, 8)}</td>
+                          <td style={{ padding: '10px 14px' }}>{e.plan_at_entry || 'N/D'}</td>
+                          <td style={{ padding: '10px 14px' }}>{e.plan_now || 'N/D'}</td>
+                          <td style={{ padding: '10px 14px' }}>{e.confirmed_at ? new Date(e.confirmed_at).toLocaleString('pt-PT') : 'N/D'}</td>
+                          <td style={{ padding: '10px 14px' }}>
+                            {e.bonus_granted_at ? (
+                              <span style={{ fontSize: 12, color: 'var(--color-success)' }}>Dado em {new Date(e.bonus_granted_at).toLocaleDateString('pt-PT')}</span>
+                            ) : (e.plan_now === 'plus' || e.plan_now === 'pro') ? (
+                              <button
+                                disabled={grantingBonusId === e.entry_id}
+                                onClick={() => handleGrantGtaBonus(e.entry_id)}
+                                style={{ fontSize: 12, color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
+                              >
+                                {grantingBonusId === e.entry_id ? 'A marcar...' : 'Marcar como dado'}
+                              </button>
+                            ) : (
+                              <span style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}>Plano Grátis</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                      {gtaEntries.length === 0 && (
+                        <tr><td colSpan={5} style={{ padding: 20, textAlign: 'center', color: 'var(--color-text-secondary)' }}>Ninguém confirmou participação ainda</td></tr>
                       )}
                     </tbody>
                   </table>
