@@ -9,11 +9,22 @@ import { Card, CardTitle, Button } from '../ui'
    componentes normais da plataforma (Card/CardTitle/Button), sem ícone
    decorativo grande. Pedido do Gustavo: antes disto o email dizia "já
    participas" só por ter projeto publicado, sem clique nenhum, não dava
-   a sensação real de participação. Agora há um clique explícito que
-   grava em public.gta_giveaway_entries, com o plano atual da pessoa
-   (resolvePlanId) à data da confirmação, para contabilizar depois quem
-   tem direito ao mês extra garantido por assinar. Não distingue mensal
-   de anual, não há essa informação no perfil. */
+   a sensação real de participação, e não repetia o briefing do email
+   (o que se ganha com cada ação). Agora há um clique explícito que grava
+   em public.gta_giveaway_entries, com o plano atual da pessoa
+   (resolvePlanId) à data da confirmação.
+
+   Enquadramento legal (DL 422/89): a entrada no sorteio é só por mérito
+   (publicar um projeto), nunca por pagamento, por isso o texto nunca diz
+   "paga para teres mais chances". O benefício de assinar é sempre
+   apresentado como garantido e à parte do sorteio, não como mais
+   probabilidade de ganhar. */
+
+const BRIEFING = [
+  'Publicas o teu primeiro projeto: entras automaticamente no sorteio do GTA VI, de graça.',
+  'O sorteio tem o GTA VI para 1 pessoa, e 2 meses de Plus grátis para mais 2 pessoas, todos só por participarem.',
+  'Se assinares o Plus ou o anual esta semana, ganhas já 1 mês extra garantido, sem depender de sorteio nenhum.',
+]
 
 export default function GtaGiveawayCard({ userId, profile, projectCount }) {
   const [status, setStatus] = useState('loading') // loading | needs_project | can_confirm | confirming | confirmed | error
@@ -67,17 +78,18 @@ export default function GtaGiveawayCard({ userId, profile, projectCount }) {
         ><X size={13} /></button>
       )}
 
-      <CardTitle style={{ marginBottom: 6, paddingRight: 24 }}>
+      <CardTitle style={{ marginBottom: 10, paddingRight: 24 }}>
         {status === 'confirmed' ? 'Estás dentro do sorteio do GTA VI' : 'Participa no sorteio de um GTA VI'}
       </CardTitle>
 
+      {status !== 'confirmed' && (
+        <ul style={{ margin: '0 0 14px', padding: '0 0 0 18px', fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
+          {BRIEFING.map((line, i) => <li key={i} style={{ marginBottom: 4 }}>{line}</li>)}
+        </ul>
+      )}
+
       {status === 'needs_project' && (
-        <>
-          <p style={{ margin: '0 0 12px', fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
-            Publica o teu primeiro projeto para entrares automaticamente.
-          </p>
-          <Button size="sm" onClick={() => { window.location.href = '/novo' }}>Publicar o meu projeto</Button>
-        </>
+        <Button size="sm" onClick={() => { window.location.href = '/novo' }}>Publicar o meu projeto</Button>
       )}
 
       {status === 'can_confirm' && (
@@ -95,7 +107,7 @@ export default function GtaGiveawayCard({ userId, profile, projectCount }) {
 
       {status === 'confirmed' && (
         <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
-          Boa sorte. Avisamos por email quem ganha.
+          Boa sorte. Avisamos por email quem ganha. Se ainda não assinaste o Plus ou o anual esta semana, continuas a tempo de garantir o mês extra.
         </p>
       )}
 

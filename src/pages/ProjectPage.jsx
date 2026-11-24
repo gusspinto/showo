@@ -3091,6 +3091,13 @@ export default function ProjectPage() {
               </p>
             )}
 
+            {/* Campanha GTA VI (24/11, remover depois do sorteio): quem acaba
+                de publicar fica elegível, mas tem de voltar ao dashboard
+                para confirmar. Sem isto, ninguém via esse próximo passo. */}
+            <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+              Já agora: isto também te dá entrada no sorteio de um GTA VI. <a href="/dashboard" style={{ color: 'var(--color-primary)', fontWeight: 600 }}>Confirma a tua participação</a>.
+            </p>
+
             {/* URL copy field */}
             <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
               <input
