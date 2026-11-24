@@ -169,7 +169,7 @@ Deno.serve(async (req) => {
       // limpar o resto da lista, sem repetir ninguém (dedup via
       // email_sends) e sem risco do WORKER_RESOURCE_LIMIT já visto noutras
       // campanhas com listas grandes de uma vez.
-      const MAX_SENT_PER_RUN = 300
+      const MAX_SENT_PER_RUN = 100
 
       const { data: already } = await supabase
         .from('email_sends')
