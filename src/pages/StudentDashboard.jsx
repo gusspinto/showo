@@ -49,6 +49,7 @@ import WeeklyRecap, { shouldShowRecap, RecapsPanel } from '../components/dashboa
 import WeeklyPostCard from '../components/dashboard/WeeklyPostCard'
 import WeeklyRecapTeaser from '../components/dashboard/WeeklyRecapTeaser'
 import LimitNudgeBanner from '../components/dashboard/LimitNudgeBanner'
+import GtaGiveawayCard from '../components/dashboard/GtaGiveawayCard'
 import FeaturedWeekBanner from '../components/dashboard/FeaturedWeekBanner'
 import SegmentedTabs from '../components/SegmentedTabs'
 import WeeklyCheckin, { shouldShowCheckin } from '../components/dashboard/WeeklyCheckin'
@@ -935,6 +936,8 @@ export default function StudentDashboard({ user, profile }) {
             </div>
           )}
         </header>
+
+        <GtaGiveawayCard userId={user?.id} profile={profile} projectCount={projects.length} />
 
         {/* ══════════════ CARTÃO DE UPGRADE (só mobile) ══════════════
             Em desktop o CTA vive na sidebar (Navbar.jsx, junto ao sino) —
