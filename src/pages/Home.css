@@ -43,6 +43,41 @@
   color: var(--color-text);
 }
 
+/* Seta de scroll no fundo do hero, centrada, só visível a partir do
+   momento em que o hero preenche o ecrã (min-height acima já trata disso
+   em ecrãs pequenos; em ecrãs altos o hero não chega a 760px e a seta
+   fica perto do conteúdo seguinte, o que também é aceitável). */
+.home-hero-scroll-cue {
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  animation: home-hero-scroll-bounce 1.8s ease-in-out infinite;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+.home-hero-scroll-cue:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+@keyframes home-hero-scroll-bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(6px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-hero-scroll-cue { animation: none; }
+}
+
 /* Painel único: texto+botões à esquerda, ilustração à direita, mais perto
    do texto do que antes. Os limites (max-width 1060 + padding 24px) são
    os mesmos de .home-hw-inner, para o título alinhar com "O que é o

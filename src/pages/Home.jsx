@@ -4,6 +4,7 @@ import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-righ
 import { CupStarIcon as Trophy } from '@solar-icons/react/bold/cup-star'
 import { EyeIcon as Eye } from '@solar-icons/react/bold/eye'
 import { FireIcon as Fire } from '@solar-icons/react/bold/fire'
+import { AltArrowDownIcon as ChevronDown } from '@solar-icons/react/bold/alt-arrow-down'
 import { Navbar } from '../components/Navbar'
 import { supabase } from '../lib/supabase'
 import HomeHow from '../components/HomeHow'
@@ -202,6 +203,22 @@ export default function Home() {
             />
           </div>
         </div>
+
+        {/* ── Seta de scroll ── 25/11: em monitores mais pequenos o hero
+            preenche o ecrã todo e fica tudo preto, sem sinal nenhum de que
+            há mais conteúdo por baixo (números, problemas que resolvemos,
+            etc.). Pedido direto do Gustavo: uma seta no fundo do hero,
+            clicável, que faz scroll suave até à secção seguinte. */}
+        <button
+          type="button"
+          className="home-hero-scroll-cue"
+          aria-label="Ver mais"
+          onClick={() => {
+            document.querySelector('.hs-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }}
+        >
+          <ChevronDown size={22} />
+        </button>
       </div>
 
       {/* ══ Números — prova social, pedido do Gustavo a 25/11 (ver números reais
