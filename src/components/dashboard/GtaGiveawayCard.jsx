@@ -35,6 +35,7 @@ const BRIEFING_BASE = [
   'O sorteio tem o GTA VI para 1 pessoa, e 2 meses de Plus grátis para mais 2 pessoas, todos só por participarem.',
 ]
 const BRIEFING_SUBSCRIBE = 'Se assinares o Plus ou o anual esta semana, ganhas já 1 mês extra garantido, sem depender de sorteio nenhum.'
+const WINNER_ANNOUNCEMENT = 'O vencedor é anunciado no Instagram, @showohq, à vista de todos.'
 
 export default function GtaGiveawayCard({ userId, profile, projectCount }) {
   const { isSchoolAccount } = useAuth()
@@ -100,9 +101,12 @@ export default function GtaGiveawayCard({ userId, profile, projectCount }) {
       </CardTitle>
 
       {status !== 'confirmed' && (
-        <ul style={{ margin: '0 0 14px', padding: '0 0 0 18px', fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
-          {briefing.map((line, i) => <li key={i} style={{ marginBottom: 4 }}>{line}</li>)}
-        </ul>
+        <>
+          <ul style={{ margin: '0 0 8px', padding: '0 0 0 18px', fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
+            {briefing.map((line, i) => <li key={i} style={{ marginBottom: 4 }}>{line}</li>)}
+          </ul>
+          <p style={{ margin: '0 0 14px', fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)' }}>{WINNER_ANNOUNCEMENT}</p>
+        </>
       )}
 
       {status === 'needs_project' && (
@@ -123,9 +127,12 @@ export default function GtaGiveawayCard({ userId, profile, projectCount }) {
       )}
 
       {status === 'confirmed' && (
-        <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
-          Boa sorte. Avisamos por email quem ganha.{!isSchoolAccount && ' Se ainda não assinaste o Plus ou o anual esta semana, continuas a tempo de garantir o mês extra.'}
-        </p>
+        <>
+          <p style={{ margin: '0 0 6px', fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+            Boa sorte. Avisamos por email quem ganha.{!isSchoolAccount && ' Se ainda não assinaste o Plus ou o anual esta semana, continuas a tempo de garantir o mês extra.'}
+          </p>
+          <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)' }}>{WINNER_ANNOUNCEMENT}</p>
+        </>
       )}
 
       {status === 'error' && (
