@@ -8,6 +8,7 @@ import { Navbar } from '../components/Navbar'
 import { supabase } from '../lib/supabase'
 import HomeHow from '../components/HomeHow'
 import HomeProblems from '../components/HomeProblems'
+import HomeStats from '../components/HomeStats'
 import TestimonialsMarquee from '../components/TestimonialsMarquee'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
@@ -202,6 +203,10 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* ══ Números — prova social, pedido do Gustavo a 25/11 (ver números reais
+          verificados por SQL, nunca inventados) ══ */}
+      <HomeStats />
 
       {/* ══ Problemas que resolvemos — por público, o problema desfaz-se em solução ══ */}
       <Reveal className="home-problems-reveal">
