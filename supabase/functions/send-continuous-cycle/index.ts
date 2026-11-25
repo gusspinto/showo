@@ -277,7 +277,14 @@ Deno.serve(async (req) => {
     }
 
     async function run(): Promise<Response> {
-    const MAX_SENT_PER_RUN = 500
+    // Baixado de 500 para 100 a 25/11 depois de confirmar que a corrida real
+    // de 19/11 (454 enviados) foi cortada a meio pelo limite de tempo de
+    // execução da Edge Function, com o lock a ficar preso (mesmo padrão
+    // exato do incidente da campanha GTA VI, ver docs/licoes-aprendidas.md).
+    // Com 1107 elegíveis neste momento, a função precisa de várias corridas
+    // para limpar a fila, mas isto já é esperado (corre 1x por semana e usa
+    // ordem estável por continuous_cycle_sent_at).
+    const MAX_SENT_PER_RUN = 100
 
     const emailById = new Map<string, string>()
     {
@@ -295,11 +302,15 @@ Deno.serve(async (req) => {
     // Ordenado por continuous_cycle_sent_at (nulls first): quem nunca
     // recebeu nenhum, ou está à espera há mais tempo, é sempre prioritário
     // dentro do limite por corrida, mesmo princípio do fix no onboarding.
+    // .limit() explícito: sem isto, o PostgREST corta em 1000 linhas por
+    // omissão, e com 1107+ elegíveis neste momento isso já cortava gente
+    // sem erro nenhum (mesmo padrão da lição de 2026-11-18 no onboarding).
     let profilesQuery = supabase.from('profiles').select(PROFILE_COLS)
       .gte('onboarding_sequence_step', 14)
       .eq('plan', 'free')
       .eq('continuous_cycle_opted_out', false)
       .order('continuous_cycle_sent_at', { ascending: true, nullsFirst: true })
+      .limit(3000)
     if (testUserId) profilesQuery = supabase.from('profiles').select(PROFILE_COLS).eq('id', testUserId)
 
     const { data: profiles, error: profErr } = await profilesQuery
