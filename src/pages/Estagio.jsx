@@ -97,7 +97,7 @@ ${displayName}`)
 
   return (
     <div className="est-page">
-      <Helmet><title>Estágio — Showo</title></Helmet>
+      <Helmet><title>Estágio · Showo</title></Helmet>
       <Navbar />
 
       <div className="est-wrap">

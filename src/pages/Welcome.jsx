@@ -31,7 +31,7 @@ const CATEGORIES = [
 function buildMailto(roleId, fullName) {
   const roleLabel = ROLES.find(r => r.id === roleId)?.label ?? roleId
   const name = fullName ?? ''
-  const subject = encodeURIComponent(`Pedido de acesso como ${roleLabel} — Showo`)
+  const subject = encodeURIComponent(`Pedido de acesso como ${roleLabel} · Showo`)
   const body = encodeURIComponent(`Olá Showo,\n\nChamo-me ${name} e gostaria de aceder à plataforma como ${roleLabel}.\n\n[Apresenta-te brevemente aqui]\n\nObrigado!`)
   return `mailto:hello@showo.pt?subject=${subject}&body=${body}`
 }

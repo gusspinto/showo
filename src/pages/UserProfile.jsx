@@ -703,9 +703,9 @@ export default function UserProfile() {
       style={appearanceVars(appearance)}
     >
       <Helmet>
-        <title>{displayName} — Showo</title>
+        <title>{displayName} · Showo</title>
         <meta name="description" content={profile.bio || `Projetos de ${displayName} no Showo`} />
-        <meta property="og:title" content={`${displayName} — Showo`} />
+        <meta property="og:title" content={`${displayName} · Showo`} />
         <meta property="og:description" content={profile.bio || `Projetos de ${displayName} no Showo`} />
         <meta property="og:url" content={profileUrl} />
       </Helmet>
