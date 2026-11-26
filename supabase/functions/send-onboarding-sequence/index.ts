@@ -663,12 +663,30 @@ Deno.serve(async (req) => {
         .gt('onboarding_sequence_step', 0)
         .lt('onboarding_sequence_step', TOTAL_DAYS)
         .order('created_at', { ascending: true })
+        .limit(3000)
       if (contErr) throw contErr
       const { data: backlog, error: backErr } = await supabase.from('profiles').select(PROFILE_COLS)
         .eq('onboarding_sequence_step', 0)
         .order('created_at', { ascending: true })
+        .limit(3000)
       if (backErr) throw backErr
-      profiles = [...(continuity ?? []), ...(backlog ?? [])]
+
+      // 26/11: "continuity sempre primeiro" (comentário acima) resolveu o
+      // bug de 18/11 mas criou o oposto: com 400+ pessoas em continuity
+      // (hoje 439), o backlog do dia 1 nunca chega a ser tocado, 0 emails
+      // de onboarding_day1 enviados desde 20/11, 228 perfis parados no
+      // passo 0 há mais de 1 dia, alguns desde 17/11. Quota fixa reservada
+      // para o backlog, sempre processada primeiro (mais antigos primeiro,
+      // mesmo critério de sempre), garante que nenhum dos dois grupos
+      // consegue esgotar o limite todo sozinho, independentemente de quão
+      // grande qualquer um deles fique.
+      const BACKLOG_QUOTA = 150
+      const backlogArr = backlog ?? []
+      profiles = [
+        ...backlogArr.slice(0, BACKLOG_QUOTA),
+        ...(continuity ?? []),
+        ...backlogArr.slice(BACKLOG_QUOTA),
+      ]
     }
 
     const now = new Date()
