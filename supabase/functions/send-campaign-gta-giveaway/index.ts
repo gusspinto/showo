@@ -171,10 +171,16 @@ Deno.serve(async (req) => {
       // campanhas com listas grandes de uma vez.
       const MAX_SENT_PER_RUN = 100
 
+      // .limit() explícito: sem isto, o PostgREST corta em 1000 linhas por
+      // omissão. Ao passar de 1000 já enviados (26/11), a lista de
+      // "já enviados" ficou incompleta e 85 pessoas receberam o email da
+      // campanha 2 vezes, mesmo padrão já documentado noutras funções
+      // (ver docs/licoes-aprendidas.md), repetido aqui por falta deste limit.
       const { data: already } = await supabase
         .from('email_sends')
         .select('user_id')
         .eq('email_type', EMAIL_TYPE)
+        .limit(5000)
       const alreadySent = new Set((already ?? []).map(r => r.user_id))
 
       let page = 1
