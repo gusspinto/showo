@@ -199,17 +199,26 @@ Deno.serve(async (req) => {
       // demora quase o dobro do tempo por pessoa.
       const MAX_SENT_PER_RUN = 40
 
-      // .limit() explícito: sem isto, o PostgREST corta em 1000 linhas por
-      // omissão. Ao passar de 1000 já enviados (26/11), a lista de
-      // "já enviados" ficou incompleta e 85 pessoas receberam o email da
-      // campanha 2 vezes, mesmo padrão já documentado noutras funções
-      // (ver docs/licoes-aprendidas.md), repetido aqui por falta deste limit.
-      const { data: already } = await supabase
-        .from('email_sends')
-        .select('user_id')
-        .eq('email_type', EMAIL_TYPE)
-        .limit(5000)
-      const alreadySent = new Set((already ?? []).map(r => r.user_id))
+      // 27/11: .limit(5000) não bastava. Além do limite de 1000 por
+      // omissão do PostgREST (já documentado em 26/11), o próprio projeto
+      // Supabase tem um "Max Rows" nas API settings que ignora em
+      // silêncio qualquer .limit() maior passado pelo cliente, cortando
+      // sempre nas primeiras ~1000 linhas (sem order by, numa ordem
+      // arbitrária e instável entre chamadas). Com o cron a correr de
+      // hora em hora e mais de 1000 linhas já enviadas, isto causou um
+      // terceiro incidente de duplicados, pior que os dois anteriores
+      // (35 pessoas com 12 emails cada). Paginação explícita com .range()
+      // em blocos de 1000 é a única forma fiável de trazer tudo.
+      const alreadySent = new Set<string>()
+      for (let p = 0; ; p++) {
+        const { data: chunk } = await supabase
+          .from('email_sends')
+          .select('user_id')
+          .eq('email_type', EMAIL_TYPE)
+          .range(p * 1000, p * 1000 + 999)
+        for (const r of chunk ?? []) alreadySent.add(r.user_id)
+        if (!chunk || chunk.length < 1000) break
+      }
 
       let page = 1
       const perPage = 200
