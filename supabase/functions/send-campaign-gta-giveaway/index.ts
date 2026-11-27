@@ -14,6 +14,17 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
    Modo de teste: { test_user_id } no corpo, para ver o email a sério antes
    de disparar contra a lista toda.
+
+   26/11: link de "Ir ao meu painel" passou a ser um magic link
+   (supabase.auth.admin.generateLink, type magiclink) em vez de um link
+   simples para /dashboard. Motivo: 234 pessoas com projeto já publicado
+   (um clique de distância de participar) abriram este email e só 2
+   confirmaram. Quem abre o email no telemóvel pode não estar com sessão
+   aberta nesse dispositivo/navegador, cai no ecrã de login, e desiste em
+   vez de voltar a entrar. O magic link autentica diretamente e cai já
+   em /dashboard, elimina esse atrito por completo. Falha a gerar o link
+   para uma pessoa nunca bloqueia o envio: usa o link simples como
+   fallback nesse caso isolado.
    ══════════════════════════════════════════════════════════════════════════ */
 
 const FROM = 'Showo <hello@showo.pt>'
@@ -37,8 +48,21 @@ async function signUserId(userId: string, secret: string): Promise<string> {
   return Array.from(new Uint8Array(sigBuf)).map(b => b.toString(16).padStart(2, '0')).join('')
 }
 
-function buildHtml(opts: { unsubscribeUrl: string; entryCount: number }) {
-  const { unsubscribeUrl, entryCount } = opts
+async function buildDashboardLink(supabase: ReturnType<typeof createClient>, email: string): Promise<string> {
+  const { data, error } = await supabase.auth.admin.generateLink({
+    type: 'magiclink',
+    email,
+    options: { redirectTo: `${APP}/dashboard` },
+  })
+  if (error || !data?.properties?.action_link) {
+    console.error(`[gta-campaign] generateLink falhou para ${email}: ${error?.message ?? 'sem action_link'}`)
+    return `${APP}/dashboard`
+  }
+  return data.properties.action_link
+}
+
+function buildHtml(opts: { unsubscribeUrl: string; entryCount: number; dashboardLink: string }) {
+  const { unsubscribeUrl, entryCount, dashboardLink } = opts
   return `
 <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#080808" style="background:#080808;">
   <tr>
@@ -64,7 +88,7 @@ function buildHtml(opts: { unsubscribeUrl: string; entryCount: number }) {
           <span style="font-weight:700;">Assina o Plus ou o anual esta semana e levas já 1 mês extra.</span>
         </td></tr>
         <tr><td style="padding:0 0 32px;color:#888888;font-size:16px;line-height:1.5;">O prémio é só o empurrão. O que levas a sério é um portefólio pronto a mostrar a quem decidir se confia em ti.</td></tr>
-        <tr><td style="padding:0 0 40px;"><a href="${APP}/dashboard" style="display:inline-block;background:#2B7EF5;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:12px 24px;border-radius:10px;">Ir ao meu painel</a></td></tr>
+        <tr><td style="padding:0 0 40px;"><a href="${esc(dashboardLink)}" style="display:inline-block;background:#2B7EF5;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:12px 24px;border-radius:10px;">Ir ao meu painel</a></td></tr>
         <tr><td style="font-size:11px;color:#555555;">Showo &middot; <a href="${APP}" style="color:#555555;">showo.pt</a> &middot; <a href="${esc(unsubscribeUrl)}" style="color:#555555;">cancelar emails de campanhas</a></td></tr>
       </table>
     </td>
@@ -128,7 +152,8 @@ Deno.serve(async (req) => {
 
       const unsubSig = await signUserId(testUserId, cronSecret)
       const unsubscribeUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/campaign-unsubscribe?u=${testUserId}&sig=${unsubSig}`
-      const html = buildHtml({ unsubscribeUrl, entryCount })
+      const dashboardLink = await buildDashboardLink(supabase, userData.user.email)
+      const html = buildHtml({ unsubscribeUrl, entryCount, dashboardLink })
 
       const res = await fetch('https://api.resend.com/emails', {
         method: 'POST',
@@ -168,8 +193,11 @@ Deno.serve(async (req) => {
       // Limite por corrida: a função pode ser invocada várias vezes para
       // limpar o resto da lista, sem repetir ninguém (dedup via
       // email_sends) e sem risco do WORKER_RESOURCE_LIMIT já visto noutras
-      // campanhas com listas grandes de uma vez.
-      const MAX_SENT_PER_RUN = 100
+      // campanhas com listas grandes de uma vez. Baixado de 100 para 40 em
+      // 26/11 ao introduzir o magic link: cada envio passou a fazer 2
+      // chamadas externas (generateLink + Resend) em vez de 1, a corrida
+      // demora quase o dobro do tempo por pessoa.
+      const MAX_SENT_PER_RUN = 40
 
       // .limit() explícito: sem isto, o PostgREST corta em 1000 linhas por
       // omissão. Ao passar de 1000 já enviados (26/11), a lista de
@@ -215,7 +243,8 @@ Deno.serve(async (req) => {
 
             const unsubSig = await signUserId(u.id, cronSecret)
             const unsubscribeUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/campaign-unsubscribe?u=${u.id}&sig=${unsubSig}`
-            const html = buildHtml({ unsubscribeUrl, entryCount })
+            const dashboardLink = await buildDashboardLink(supabase, u.email)
+            const html = buildHtml({ unsubscribeUrl, entryCount, dashboardLink })
 
             const res = await sendWithRetry({
               from: FROM,
