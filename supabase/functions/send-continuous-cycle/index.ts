@@ -302,19 +302,36 @@ Deno.serve(async (req) => {
     // Ordenado por continuous_cycle_sent_at (nulls first): quem nunca
     // recebeu nenhum, ou está à espera há mais tempo, é sempre prioritário
     // dentro do limite por corrida, mesmo princípio do fix no onboarding.
-    // .limit() explícito: sem isto, o PostgREST corta em 1000 linhas por
-    // omissão, e com 1107+ elegíveis neste momento isso já cortava gente
-    // sem erro nenhum (mesmo padrão da lição de 2026-11-18 no onboarding).
-    let profilesQuery = supabase.from('profiles').select(PROFILE_COLS)
-      .gte('onboarding_sequence_step', 14)
-      .eq('plan', 'free')
-      .eq('continuous_cycle_opted_out', false)
-      .order('continuous_cycle_sent_at', { ascending: true, nullsFirst: true })
-      .limit(3000)
-    if (testUserId) profilesQuery = supabase.from('profiles').select(PROFILE_COLS).eq('id', testUserId)
-
-    const { data: profiles, error: profErr } = await profilesQuery
-    if (profErr) throw profErr
+    //
+    // 27/11: um só .limit(), mesmo grande, não chega. Além do corte de
+    // 1000 linhas por omissão do PostgREST, o projeto Supabase tem um
+    // "Max Rows" nas API settings que ignora em silêncio qualquer .limit()
+    // maior que esse teto, cortando sempre nas primeiras linhas da
+    // ordenação. Com 1158 elegíveis hoje (>1000), isto deixava sempre de
+    // fora as ~158 pessoas mais ao fundo da ordem, para sempre, nunca
+    // processadas (mesma classe de bug da lição de 2026-11-18, causa
+    // diferente). Paginação explícita com .range() em loop até uma página
+    // incompleta é a única forma fiável.
+    let profiles: { id: string; full_name: string | null; plan: string; onboarding_sequence_step: number; continuous_cycle_step: number | null; continuous_cycle_sent_at: string | null; continuous_cycle_opted_out: boolean; occupation: string | null }[] = []
+    if (testUserId) {
+      const { data, error } = await supabase.from('profiles').select(PROFILE_COLS).eq('id', testUserId)
+      if (error) throw error
+      profiles = data ?? []
+    } else {
+      for (let page = 0; ; page++) {
+        const { data: chunk, error: profErr } = await supabase
+          .from('profiles')
+          .select(PROFILE_COLS)
+          .gte('onboarding_sequence_step', 14)
+          .eq('plan', 'free')
+          .eq('continuous_cycle_opted_out', false)
+          .order('continuous_cycle_sent_at', { ascending: true, nullsFirst: true })
+          .range(page * 1000, page * 1000 + 999)
+        if (profErr) throw profErr
+        profiles.push(...(chunk ?? []))
+        if (!chunk || chunk.length < 1000) break
+      }
+    }
 
     const now = new Date()
     const cooldownSince = new Date(now.getTime() - COOLDOWN_DAYS * 86400000)

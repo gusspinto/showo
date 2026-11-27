@@ -659,17 +659,32 @@ Deno.serve(async (req) => {
       // sem erro nenhum, voltando a ficar presa, mesmo padrão do bug de
       // 18/11, desta vez introduzido por esta própria correção. O .lt
       // abaixo garante que só entram os 600 que precisam mesmo de email.
-      const { data: continuity, error: contErr } = await supabase.from('profiles').select(PROFILE_COLS)
+      // 27/11: .limit(3000) sozinho não chega. Além do corte de 1000
+      // linhas por omissão do PostgREST, o projeto Supabase tem um
+      // "Max Rows" nas API settings que ignora em silêncio qualquer
+      // .limit() maior que esse teto, cortando sempre nas primeiras
+      // linhas da ordenação. `continuity` já tinha 649 hoje (439 há 1
+      // dia, a crescer rápido) e ia bater nisto em poucos dias, mesma
+      // classe de bug que já rebentou na GTA VI e no continuous-cycle.
+      // Paginação explícita com .range() em loop até uma página
+      // incompleta é a única forma fiável.
+      async function fetchAllPaged(builder: (q: ReturnType<typeof supabase.from>) => any) {
+        const out: Array<Record<string, any>> = []
+        for (let page = 0; ; page++) {
+          const { data: chunk, error } = await builder(supabase.from('profiles')).range(page * 1000, page * 1000 + 999)
+          if (error) throw error
+          out.push(...(chunk ?? []))
+          if (!chunk || chunk.length < 1000) break
+        }
+        return out
+      }
+      const continuity = await fetchAllPaged(q => q.select(PROFILE_COLS)
         .gt('onboarding_sequence_step', 0)
         .lt('onboarding_sequence_step', TOTAL_DAYS)
-        .order('created_at', { ascending: true })
-        .limit(3000)
-      if (contErr) throw contErr
-      const { data: backlog, error: backErr } = await supabase.from('profiles').select(PROFILE_COLS)
+        .order('created_at', { ascending: true }))
+      const backlog = await fetchAllPaged(q => q.select(PROFILE_COLS)
         .eq('onboarding_sequence_step', 0)
-        .order('created_at', { ascending: true })
-        .limit(3000)
-      if (backErr) throw backErr
+        .order('created_at', { ascending: true }))
 
       // 26/11: "continuity sempre primeiro" (comentário acima) resolveu o
       // bug de 18/11 mas criou o oposto: com 400+ pessoas em continuity
